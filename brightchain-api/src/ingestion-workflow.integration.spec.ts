@@ -256,7 +256,7 @@ describe('Complete Ingestion & Reconstruction Workflow', () => {
             id: 1,
             title: 'Introduction',
             content:
-              'The Owner Free Filesystem (OFF) was first proposed as a method to store data in a distributed manner where no single node holds meaningful information. BrightChain extends this concept with modern cryptographic techniques and a reputation-based quorum system.',
+              'The Owner Free Filesystem (OFF) was first proposed as a method to store data in a distributed manner where no single node holds meaningful information. BrightChain extends this concept with modern cryptographic techniques and a reputation-based BrightTrust system.',
           },
           {
             id: 2,

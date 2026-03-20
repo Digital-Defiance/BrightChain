@@ -19,11 +19,11 @@ const arbHexString = (minLength: number, maxLength: number) =>
 
 describe('DiskMessageMetadataStore - Query Performance Property Tests', () => {
   let tempDir: string;
-  let store: DiskMessageMetadataStore;
+  let _store: DiskMessageMetadataStore;
 
   beforeEach(() => {
     tempDir = mkdtempSync(join(tmpdir(), 'disk-message-query-'));
-    store = new DiskMessageMetadataStore(tempDir, BlockSize.Small);
+    _store = new DiskMessageMetadataStore(tempDir, BlockSize.Small);
   });
 
   afterEach(() => {

@@ -72,7 +72,8 @@ function createIsolatedAuthService(): AuthService {
   } as unknown as SESEmailService;
 
   // Pre-populate the SystemUserService singleton
-  (SystemUserService as any)['systemUser'] = null;
+  (SystemUserService as unknown as Record<string, unknown>)['systemUser'] =
+    null;
   const ecies = ServiceProvider.getInstance()
     .eciesService as unknown as ECIESService;
   const { member: sysUser } = Member.newMember(
@@ -377,7 +378,8 @@ describe('Property 8: Profile retrieval completeness', () => {
     } as unknown as SESEmailService;
 
     // Pre-populate the SystemUserService singleton
-    (SystemUserService as any)['systemUser'] = null;
+    (SystemUserService as unknown as Record<string, unknown>)['systemUser'] =
+      null;
     const ecies = ServiceProvider.getInstance()
       .eciesService as unknown as ECIESService;
     const { member: sysUser } = Member.newMember(
@@ -635,7 +637,8 @@ describe('Property 9: Profile settings update persistence round-trip', () => {
     } as unknown as SESEmailService;
 
     // Pre-populate the SystemUserService singleton
-    (SystemUserService as any)['systemUser'] = null;
+    (SystemUserService as unknown as Record<string, unknown>)['systemUser'] =
+      null;
     const ecies = ServiceProvider.getInstance()
       .eciesService as unknown as ECIESService;
     const { member: sysUser } = Member.newMember(

@@ -8,12 +8,12 @@
  */
 
 import * as fc from 'fast-check';
-import { Checksum } from '../../types/checksum';
+import { IConsistencyProof } from '../../interfaces/ledger/consistencyProof';
 import {
   IMerkleProof,
   MerkleDirection,
 } from '../../interfaces/ledger/merkleProof';
-import { IConsistencyProof } from '../../interfaces/ledger/consistencyProof';
+import { Checksum } from '../../types/checksum';
 import { ProofSerializer } from '../proofSerializer';
 
 // ── Custom Generators ────────────────────────────────────────────────
@@ -109,9 +109,7 @@ describe('ProofSerializer PBT', () => {
           expect(deserialized.path[i].hash.equals(proof.path[i].hash)).toBe(
             true,
           );
-          expect(deserialized.path[i].direction).toBe(
-            proof.path[i].direction,
-          );
+          expect(deserialized.path[i].direction).toBe(proof.path[i].direction);
         }
       }),
       { numRuns: 100 },

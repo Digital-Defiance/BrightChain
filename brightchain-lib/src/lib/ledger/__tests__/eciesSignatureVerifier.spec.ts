@@ -49,7 +49,11 @@ describe('EciesSignatureVerifier integration', () => {
     const signature = member.sign(entryHashBytes) as SignatureUint8Array;
 
     // Verify the way LedgerChainValidator.verifySignature does
-    const isValid = verifier.verify(member.publicKey, entryHashBytes, signature);
+    const isValid = verifier.verify(
+      member.publicKey,
+      entryHashBytes,
+      signature,
+    );
 
     console.log('entryHash length:', entryHashBytes.length);
     console.log('signature length:', signature.length);

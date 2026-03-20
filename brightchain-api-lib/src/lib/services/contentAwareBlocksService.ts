@@ -13,12 +13,12 @@
 import {
   BlockStoreOptions,
   BrightenResult,
+  BrightTrustError,
   ContentIngestionResult,
   ContentWithIdentity,
   IBlockMetadata,
   IContentIngestionService,
   IdentityValidationError,
-  QuorumError,
   type BlockId,
 } from '@brightchain/brightchain-lib';
 import { Member, PlatformID } from '@digitaldefiance/ecies-lib';
@@ -68,7 +68,7 @@ export class ContentAwareBlocksService<
    * @param options - Block store options
    * @returns Combined block store and ingestion result
    * @throws IdentityValidationError if identity validation fails
-   * @throws QuorumError if identity sealing fails
+   * @throws BrightTrustError if identity sealing fails
    */
   async storeBlockWithIdentity(
     dataBuffer: Buffer,
@@ -153,9 +153,9 @@ export class ContentAwareBlocksService<
   }
 
   /**
-   * Create a rejection from a QuorumError.
+   * Create a rejection from a BrightTrustError.
    */
-  static createSealingRejection(error: QuorumError) {
+  static createSealingRejection(error: BrightTrustError) {
     return ContentIngestionService.createSealingRejection(error);
   }
 }

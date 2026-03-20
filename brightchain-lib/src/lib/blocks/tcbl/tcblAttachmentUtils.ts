@@ -1,6 +1,6 @@
 /**
  * @fileoverview Utility functions for working with TCBL attachments
- * in the context of quorum proposals.
+ * in the context of BrightTrust proposals.
  *
  * Provides a unified way to enumerate entries from an attachment
  * that may be either a plain CBL or a TCBL archive. This allows

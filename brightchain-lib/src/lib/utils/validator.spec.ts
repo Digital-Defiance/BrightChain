@@ -34,7 +34,7 @@ describe('Validator', () => {
     it('should include field name in error', () => {
       try {
         Validator.validateBlockSize(999 as BlockSize);
-        fail('Expected error to be thrown');
+        throw new Error('Expected error to be thrown');
       } catch (error) {
         expect(error).toBeInstanceOf(EnhancedValidationError);
         expect((error as EnhancedValidationError).field).toBe('blockSize');
@@ -44,7 +44,7 @@ describe('Validator', () => {
     it('should include context in error', () => {
       try {
         Validator.validateBlockSize(999 as BlockSize, 'calculateCapacity');
-        fail('Expected error to be thrown');
+        throw new Error('Expected error to be thrown');
       } catch (error) {
         expect(error).toBeInstanceOf(EnhancedValidationError);
         expect((error as EnhancedValidationError).context).toMatchObject({
@@ -56,7 +56,7 @@ describe('Validator', () => {
     it('should include valid sizes in error message', () => {
       try {
         Validator.validateBlockSize(999 as BlockSize);
-        fail('Expected error to be thrown');
+        throw new Error('Expected error to be thrown');
       } catch (error) {
         expect(error).toBeInstanceOf(EnhancedValidationError);
         expect((error as EnhancedValidationError).message).toContain(
@@ -109,7 +109,7 @@ describe('Validator', () => {
     it('should include field name in error', () => {
       try {
         Validator.validateBlockType(999 as BlockType);
-        fail('Expected error to be thrown');
+        throw new Error('Expected error to be thrown');
       } catch (error) {
         expect(error).toBeInstanceOf(EnhancedValidationError);
         expect((error as EnhancedValidationError).field).toBe('blockType');
@@ -119,7 +119,7 @@ describe('Validator', () => {
     it('should include context in error', () => {
       try {
         Validator.validateBlockType(999 as BlockType, 'processBlock');
-        fail('Expected error to be thrown');
+        throw new Error('Expected error to be thrown');
       } catch (error) {
         expect(error).toBeInstanceOf(EnhancedValidationError);
         expect((error as EnhancedValidationError).context).toMatchObject({
@@ -160,7 +160,7 @@ describe('Validator', () => {
     it('should include field name in error', () => {
       try {
         Validator.validateEncryptionType(999 as BlockEncryptionType);
-        fail('Expected error to be thrown');
+        throw new Error('Expected error to be thrown');
       } catch (error) {
         expect(error).toBeInstanceOf(EnhancedValidationError);
         expect((error as EnhancedValidationError).field).toBe('encryptionType');
@@ -170,7 +170,7 @@ describe('Validator', () => {
     it('should include context in error', () => {
       try {
         Validator.validateEncryptionType(999 as BlockEncryptionType, 'encrypt');
-        fail('Expected error to be thrown');
+        throw new Error('Expected error to be thrown');
       } catch (error) {
         expect(error).toBeInstanceOf(EnhancedValidationError);
         expect((error as EnhancedValidationError).context).toMatchObject({
@@ -245,7 +245,7 @@ describe('Validator', () => {
             undefined,
             BlockEncryptionType.MultiRecipient,
           );
-          fail('Expected error to be thrown');
+          throw new Error('Expected error to be thrown');
         } catch (error) {
           expect(error).toBeInstanceOf(EnhancedValidationError);
           expect((error as EnhancedValidationError).field).toBe(
@@ -260,7 +260,7 @@ describe('Validator', () => {
             ECIES.MULTIPLE.MAX_RECIPIENTS + 1,
             BlockEncryptionType.MultiRecipient,
           );
-          fail('Expected error to be thrown');
+          throw new Error('Expected error to be thrown');
         } catch (error) {
           expect(error).toBeInstanceOf(EnhancedValidationError);
           expect((error as EnhancedValidationError).message).toContain(
@@ -276,7 +276,7 @@ describe('Validator', () => {
             BlockEncryptionType.MultiRecipient,
             'encrypt',
           );
-          fail('Expected error to be thrown');
+          throw new Error('Expected error to be thrown');
         } catch (error) {
           expect(error).toBeInstanceOf(EnhancedValidationError);
           expect((error as EnhancedValidationError).context).toMatchObject({
@@ -359,7 +359,7 @@ describe('Validator', () => {
     it('should include field name in error message', () => {
       try {
         Validator.validateRequired(undefined, 'myField');
-        fail('Expected error to be thrown');
+        throw new Error('Expected error to be thrown');
       } catch (error) {
         expect(error).toBeInstanceOf(EnhancedValidationError);
         expect((error as EnhancedValidationError).field).toBe('myField');
@@ -370,7 +370,7 @@ describe('Validator', () => {
     it('should include context in error', () => {
       try {
         Validator.validateRequired(undefined, 'field', 'initialize');
-        fail('Expected error to be thrown');
+        throw new Error('Expected error to be thrown');
       } catch (error) {
         expect(error).toBeInstanceOf(EnhancedValidationError);
         expect((error as EnhancedValidationError).context).toMatchObject({
@@ -427,7 +427,7 @@ describe('Validator', () => {
     it('should include field name in error message', () => {
       try {
         Validator.validateNotEmpty('', 'fileName');
-        fail('Expected error to be thrown');
+        throw new Error('Expected error to be thrown');
       } catch (error) {
         expect(error).toBeInstanceOf(EnhancedValidationError);
         expect((error as EnhancedValidationError).field).toBe('fileName');
@@ -440,7 +440,7 @@ describe('Validator', () => {
     it('should include context in error', () => {
       try {
         Validator.validateNotEmpty('', 'field', 'createFile');
-        fail('Expected error to be thrown');
+        throw new Error('Expected error to be thrown');
       } catch (error) {
         expect(error).toBeInstanceOf(EnhancedValidationError);
         expect((error as EnhancedValidationError).context).toMatchObject({

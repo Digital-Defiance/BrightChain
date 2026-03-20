@@ -30,7 +30,7 @@ BrightChain is organized into five layers. Each layer builds on the one below it
 graph TB
     subgraph Governance
         V[Voting]
-        Q[Quorum]
+        Q[BrightTrust]
     end
 
     subgraph Application
@@ -68,7 +68,7 @@ graph TB
 | **Communication** | Messaging, Gossip protocol | Node-to-node data exchange, peer discovery, block replication |
 | **Data Services** | BrightDB, Indexes, Queries, Transactions | MongoDB-like document abstraction over the block store |
 | **Application** | BrightPass, BrightMail, BrightHub | User-facing products built on BrightDB |
-| **Governance** | Voting, Quorum | Consensus decisions, sealed-identity recovery, network policy |
+| **Governance** | Voting, BrightTrust | Consensus decisions, sealed-identity recovery, network policy |
 
 Data flows upward: the Foundation layer stores and retrieves blocks, the Communication layer moves them between nodes, the Data Services layer provides document database abstractions, the Application layer builds user-facing features, and the Governance layer enforces collective decisions.
 

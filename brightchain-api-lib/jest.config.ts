@@ -12,11 +12,25 @@ export default {
         diagnostics: false,
       },
     ],
+    '.*@faker-js.*\\.js$': [
+      'ts-jest',
+      {
+        tsconfig: {
+          allowJs: true,
+          esModuleInterop: true,
+          module: 'esnext',
+          moduleResolution: 'node',
+        },
+        useESM: true,
+        diagnostics: false,
+      },
+    ],
   },
   transformIgnorePatterns: [
-    'node_modules/(?!(@noble|@scure|uuid)/)',
-    '/dist/',
+    '<rootDir>/dist/',
     '<rootDir>/../dist/',
+    'node_modules/\\.store/(?!.*(noble|scure|ethereumjs|faker-js|uuid))',
+    'node_modules/(?!\\.store)(?!(@noble|@scure|@ethereumjs|uuid|@faker-js)/)',
   ],
   testPathIgnorePatterns: ['/node_modules/', '/dist/', '<rootDir>/../dist/'],
   modulePathIgnorePatterns: ['/dist/', '<rootDir>/../dist/'],

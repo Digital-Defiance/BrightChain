@@ -119,32 +119,13 @@ export class BrightHubMessagingController<
    * Decodes the JWT payload without verification (auth middleware handles that).
    * Used as fallback when userId is not explicitly provided in body/query.
    */
+  /**
+   * Extract the authenticated user's ID from req.user (set by auth middleware).
+   * Used as fallback when userId is not explicitly provided in body/query.
+   */
   private extractUserIdFromToken(req: unknown): string | undefined {
-    try {
-      const typedReq = req as {
-        headers?: { authorization?: string };
-        memberContext?: { memberId: string };
-      };
-      // First try memberContext (set by auth middleware)
-      if (typedReq.memberContext?.memberId) {
-        return typedReq.memberContext.memberId;
-      }
-      // Fallback: decode JWT payload from Authorization header
-      const authHeader = typedReq.headers?.authorization;
-      if (!authHeader) return undefined;
-      const token = authHeader.startsWith('Bearer ')
-        ? authHeader.slice(7)
-        : authHeader;
-      // JWT is base64url encoded: header.payload.signature
-      const parts = token.split('.');
-      if (parts.length !== 3) return undefined;
-      const payload = JSON.parse(
-        Buffer.from(parts[1], 'base64url').toString('utf8'),
-      );
-      return payload.memberId as string | undefined;
-    } catch {
-      return undefined;
-    }
+    const user = (req as { user?: { id?: string } }).user;
+    return user?.id;
   }
 
   public setMessagingService(service: IMessagingService): void {
@@ -213,7 +194,7 @@ export class BrightHubMessagingController<
       // ── Core Messaging (21.5) ──
       routeConfig('get', '/conversations', {
         handlerKey: 'getConversations',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Get conversations',
@@ -228,7 +209,7 @@ export class BrightHubMessagingController<
       }),
       routeConfig('post', '/conversations', {
         handlerKey: 'createConversation',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Create a conversation',
@@ -243,7 +224,7 @@ export class BrightHubMessagingController<
       }),
       routeConfig('get', '/conversations/:id', {
         handlerKey: 'getConversation',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Get a conversation with messages',
@@ -258,7 +239,7 @@ export class BrightHubMessagingController<
       }),
       routeConfig('delete', '/conversations/:id', {
         handlerKey: 'deleteConversation',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Delete a conversation',
@@ -273,7 +254,7 @@ export class BrightHubMessagingController<
       }),
       routeConfig('post', '/conversations/:id/messages', {
         handlerKey: 'sendMessage',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Send a message',
@@ -285,7 +266,7 @@ export class BrightHubMessagingController<
       }),
       routeConfig('put', '/:messageId', {
         handlerKey: 'editMessage',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Edit a message',
@@ -297,7 +278,7 @@ export class BrightHubMessagingController<
       }),
       routeConfig('delete', '/:messageId', {
         handlerKey: 'deleteMessage',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Delete a message',
@@ -309,7 +290,7 @@ export class BrightHubMessagingController<
       }),
       routeConfig('post', '/:messageId/reactions', {
         handlerKey: 'addReaction',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Add a reaction to a message',
@@ -321,7 +302,7 @@ export class BrightHubMessagingController<
       }),
       routeConfig('delete', '/:messageId/reactions/:emoji', {
         handlerKey: 'removeReaction',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Remove a reaction from a message',
@@ -333,7 +314,7 @@ export class BrightHubMessagingController<
       }),
       routeConfig('post', '/conversations/:id/read', {
         handlerKey: 'markAsRead',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Mark messages as read',
@@ -348,7 +329,7 @@ export class BrightHubMessagingController<
       }),
       routeConfig('post', '/conversations/:id/typing', {
         handlerKey: 'sendTypingIndicator',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Send typing indicator',
@@ -364,7 +345,7 @@ export class BrightHubMessagingController<
       // ── Additional Messaging (21.6) ──
       routeConfig('get', '/requests', {
         handlerKey: 'getMessageRequests',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Get message requests',
@@ -379,7 +360,7 @@ export class BrightHubMessagingController<
       }),
       routeConfig('post', '/requests/:id/accept', {
         handlerKey: 'acceptMessageRequest',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Accept a message request',
@@ -394,7 +375,7 @@ export class BrightHubMessagingController<
       }),
       routeConfig('post', '/requests/:id/decline', {
         handlerKey: 'declineMessageRequest',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Decline a message request',
@@ -406,7 +387,7 @@ export class BrightHubMessagingController<
       }),
       routeConfig('post', '/conversations/:id/pin', {
         handlerKey: 'pinConversation',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Pin a conversation',
@@ -421,7 +402,7 @@ export class BrightHubMessagingController<
       }),
       routeConfig('delete', '/conversations/:id/pin', {
         handlerKey: 'unpinConversation',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Unpin a conversation',
@@ -436,7 +417,7 @@ export class BrightHubMessagingController<
       }),
       routeConfig('post', '/conversations/:id/archive', {
         handlerKey: 'archiveConversation',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Archive a conversation',
@@ -451,7 +432,7 @@ export class BrightHubMessagingController<
       }),
       routeConfig('post', '/conversations/:id/unarchive', {
         handlerKey: 'unarchiveConversation',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Unarchive a conversation',
@@ -466,7 +447,7 @@ export class BrightHubMessagingController<
       }),
       routeConfig('post', '/conversations/:id/mute', {
         handlerKey: 'muteConversation',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Mute a conversation',
@@ -481,7 +462,7 @@ export class BrightHubMessagingController<
       }),
       routeConfig('delete', '/conversations/:id/mute', {
         handlerKey: 'unmuteConversation',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Unmute a conversation',
@@ -496,7 +477,7 @@ export class BrightHubMessagingController<
       }),
       routeConfig('post', '/:messageId/report', {
         handlerKey: 'reportMessage',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Report a message',
@@ -508,7 +489,7 @@ export class BrightHubMessagingController<
       }),
       routeConfig('get', '/conversations/:id/search', {
         handlerKey: 'searchInConversation',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Search within a conversation',
@@ -520,7 +501,7 @@ export class BrightHubMessagingController<
       }),
       routeConfig('get', '/search', {
         handlerKey: 'searchAllMessages',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Search all conversations',
@@ -532,7 +513,7 @@ export class BrightHubMessagingController<
       }),
       routeConfig('post', '/conversations/:id/participants', {
         handlerKey: 'addParticipants',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Add participants to group',
@@ -547,7 +528,7 @@ export class BrightHubMessagingController<
       }),
       routeConfig('delete', '/conversations/:id/participants/:userId', {
         handlerKey: 'removeParticipant',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Remove a participant from group',
@@ -562,7 +543,7 @@ export class BrightHubMessagingController<
       }),
       routeConfig('put', '/conversations/:id/settings', {
         handlerKey: 'updateGroupSettings',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Update group settings',
@@ -577,7 +558,7 @@ export class BrightHubMessagingController<
       }),
       routeConfig('post', '/:messageId/forward', {
         handlerKey: 'forwardMessage',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Forward a message',
@@ -732,8 +713,7 @@ export class BrightHubMessagingController<
         );
         if (!canMessage) {
           // Create a message request instead of a direct conversation
-          const messagePreview =
-            (body as { message?: string }).message ?? '';
+          const messagePreview = (body as { message?: string }).message ?? '';
           try {
             const request = await service.createMessageRequest(
               userId,
@@ -746,7 +726,9 @@ export class BrightHubMessagingController<
                 message: 'Message request created',
                 data: request as unknown,
               },
-            } as IStatusCodeResponse<IConversationApiResponse | ApiErrorResponse>;
+            } as IStatusCodeResponse<
+              IConversationApiResponse | ApiErrorResponse
+            >;
           } catch (mrError) {
             if (mrError instanceof MessagingServiceError)
               return this.mapMessagingError(mrError);
@@ -838,8 +820,7 @@ export class BrightHubMessagingController<
           params: { id: string };
         }
       ).body;
-      const senderId =
-        body.senderId ?? this.extractUserIdFromToken(req);
+      const senderId = body.senderId ?? this.extractUserIdFromToken(req);
       const { content, attachments, replyToMessageId, forwardedFromId } = body;
       if (!id) return validationError('Missing required parameter: id');
       if (!senderId) return validationError('Missing required field: senderId');
@@ -1287,7 +1268,11 @@ export class BrightHubMessagingController<
       if (!id) return validationError('Missing required parameter: id');
       if (!userId) return validationError('Missing required field: userId');
 
-      await this.getMessagingService().muteConversation(id, userId, body.expiresAt);
+      await this.getMessagingService().muteConversation(
+        id,
+        userId,
+        body.expiresAt,
+      );
       return { statusCode: 200, response: { message: 'Conversation muted' } };
     } catch (error) {
       if (error instanceof MessagingServiceError)
@@ -1331,7 +1316,7 @@ export class BrightHubMessagingController<
           params: { messageId: string };
         }
       ).body;
-      const userId = body.userId ?? this.extractUserIdFromToken(req);
+      const _userId = body.userId ?? this.extractUserIdFromToken(req);
       if (!messageId)
         return validationError('Missing required parameter: messageId');
       if (!body.reason)
@@ -1441,7 +1426,11 @@ export class BrightHubMessagingController<
       if (!body.userIds || !Array.isArray(body.userIds))
         return validationError('Missing required field: userIds (array)');
 
-      await this.getMessagingService().addParticipants(id, adminId, body.userIds);
+      await this.getMessagingService().addParticipants(
+        id,
+        adminId,
+        body.userIds,
+      );
       return { statusCode: 200, response: { message: 'Participants added' } };
     } catch (error) {
       if (error instanceof MessagingServiceError)

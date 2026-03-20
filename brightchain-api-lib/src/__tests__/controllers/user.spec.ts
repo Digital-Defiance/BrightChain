@@ -157,7 +157,8 @@ describe('UserController Error Handling', () => {
   // Reset the SystemUserService singleton before each test to avoid
   // cross-contamination between isolated test environments.
   beforeEach(() => {
-    (SystemUserService as any)['systemUser'] = null;
+    (SystemUserService as unknown as Record<string, unknown>)['systemUser'] =
+      null;
   });
   /**
    * Requirement 3.5: IF member creation fails in the MemberStore,

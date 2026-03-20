@@ -354,7 +354,9 @@ describe('Error Context Preservation Property Tests', () => {
             expect(typeof error.toJSON).toBe('function');
           } else {
             // This should never happen
-            fail('Type guard should return true for BrightChainError');
+            throw new Error(
+              'Type guard should return true for BrightChainError',
+            );
           }
 
           return true;

@@ -19,6 +19,12 @@ tmp
 # dependencies
 node_modules
 
+# Yarn Berry - ignore cache and machine-specific state
+.yarn/cache
+.yarn/install-state.gz
+.yarn/global
+.yarn/sdks
+
 # IDEs and editors
 /.idea
 .project
@@ -64,3 +70,7 @@ Thumbs.db
 .cursor/rules/codacy.mdc
 
 vite.config.*.timestamp*
+
+# Verdaccio local cache
+verdaccio/storage
+verdaccio/plugins

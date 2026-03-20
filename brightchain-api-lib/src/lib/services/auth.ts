@@ -46,7 +46,7 @@ export class AuthService<
   ) {
     // IBrightChainApplication extends IApplication which is compatible with
     // IBrightDbApplication for the fields BrightDbAuthService needs
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     super(
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       application as any,

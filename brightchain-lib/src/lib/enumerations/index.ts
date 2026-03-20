@@ -16,6 +16,7 @@ export * from './blockType';
 export * from './blockValidationErrorType';
 export * from './breadCrumbTraceLevel';
 export * from './brightchainFeatures';
+export * from './brightTrustErrorType';
 export * from './cblErrorType';
 export * from './cpuInstructions';
 export * from './cpuRegisters';
@@ -43,10 +44,10 @@ export * from './multiEncryptedErrorType';
 export * from './nodeCapability';
 export * from './nodeEventType';
 export * from './nodeStatus';
+export * from './nodeIdSource';
 export * from './operationType';
 export * from './pbkdf2ErrorType';
 export * from './peerStatusType';
-export * from './quorumErrorType';
 export * from './replicationStatus';
 export * from './sealingErrorType';
 export * from './secureStorageErrorType';
@@ -82,10 +83,10 @@ export * from './communication';
 // Message passing enumerations
 export * from './messaging';
 
-// Quorum bootstrap redesign enumerations
+// BrightTrust bootstrap redesign enumerations
+export * from './brightTrustOperationalMode';
 export * from './proposalActionType';
 export * from './proposalStatus';
-export * from './quorumOperationalMode';
 
 // TCBL (Tarball CBL) enumerations
 export * from './tcblErrorType';

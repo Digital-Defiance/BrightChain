@@ -702,8 +702,7 @@ describe('Feature: lumen-brightchain-client-protocol, Property 13: Client event 
             switch (event.accessTier) {
               case ClientEventAccessTier.Public:
                 // Should never reject public events
-                fail('Public event was rejected');
-                break;
+                throw new Error('Public event was rejected');
               case ClientEventAccessTier.Admin:
                 expect(sub.type).toBe(MemberType.User);
                 break;

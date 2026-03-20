@@ -1,5 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { BlockSize, BlockStoreType, BrightChainFeatures } from '@brightchain/brightchain-lib';
+import {
+  BlockSize,
+  BlockStoreType,
+  BrightChainFeatures,
+  NodeIdSource,
+} from '@brightchain/brightchain-lib';
 import { HexString } from '@digitaldefiance/ecies-lib';
 import { PlatformID } from '@digitaldefiance/node-ecies-lib';
 import {
@@ -98,4 +103,15 @@ export interface IEnvironment<TID extends PlatformID>
    * Enabled brightchain features
    */
   enabledFeatures: BrightChainFeatures[];
+
+  /**
+   * Unique identifier for this node in the BrightChain network.
+   * Resolution order: NODE_ID env var → SYSTEM_ID → ephemeral GuidV4.
+   */
+  nodeId: string;
+
+  /**
+   * Indicates where the node ID was sourced from.
+   */
+  nodeIdSource: NodeIdSource;
 }

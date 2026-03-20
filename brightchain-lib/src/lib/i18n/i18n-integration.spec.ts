@@ -160,6 +160,8 @@ describe('i18n integration: SuiteCore constants override', () => {
         'PasswordMinLength',
         'UsernameMaxLength',
         'UsernameMinLength',
+        'DisplayNameMaxLength',
+        'DisplayNameMinLength',
       ],
     });
 

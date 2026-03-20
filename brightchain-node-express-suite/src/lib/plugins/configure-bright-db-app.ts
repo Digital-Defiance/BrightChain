@@ -10,8 +10,11 @@
 
 import type { PlatformID } from '@digitaldefiance/node-ecies-lib';
 import type { IApplication } from '@digitaldefiance/node-express-suite';
-import { BrightDbDatabasePlugin, type IBrightDbDatabasePluginOptions } from './bright-db-database-plugin';
 import type { BrightDbEnvironment } from '../environment';
+import {
+  BrightDbDatabasePlugin,
+  type IBrightDbDatabasePluginOptions,
+} from './bright-db-database-plugin';
 
 export interface ConfigureBrightDbAppResult<TID extends PlatformID> {
   plugin: BrightDbDatabasePlugin<TID>;
@@ -31,7 +34,10 @@ export function configureBrightDbApp<TID extends PlatformID>(
 ): ConfigureBrightDbAppResult<TID> {
   const plugin = new BrightDbDatabasePlugin<TID>(environment, pluginOptions);
 
-  if ('useDatabasePlugin' in app && typeof app.useDatabasePlugin === 'function') {
+  if (
+    'useDatabasePlugin' in app &&
+    typeof app.useDatabasePlugin === 'function'
+  ) {
     app.useDatabasePlugin(plugin);
   } else {
     app.plugins.register(plugin);

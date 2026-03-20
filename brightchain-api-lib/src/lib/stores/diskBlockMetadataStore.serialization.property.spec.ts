@@ -1,7 +1,7 @@
 /**
  * @fileoverview Property-based tests for DiskBlockMetadataStore serialization
  *
- * **Feature: backend-blockstore-quorum, Property 29: Block Metadata Serialization Round-Trip**
+ * **Feature: backend-blockstore-brightTrust, Property 29: Block Metadata Serialization Round-Trip**
  * **Validates: Requirements 16.2**
  *
  * This test suite verifies that:

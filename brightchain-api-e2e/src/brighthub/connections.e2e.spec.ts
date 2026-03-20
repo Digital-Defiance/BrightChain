@@ -225,7 +225,7 @@ describe('BrightHub Connections API — List CRUD and Bulk Operations', () => {
         ...authHeader(user.token),
         data: { ownerId: user.memberId },
       });
-      fail('Expected error for non-existent list');
+      throw new Error('Expected error for non-existent list');
     } catch (err) {
       const error = err as AxiosError;
       expect(error.response?.status).toBeGreaterThanOrEqual(400);
@@ -288,7 +288,7 @@ describe('BrightHub Connections API — Categories and Notes', () => {
         },
         authHeader(user.token),
       );
-      fail('Expected 400 for note exceeding 500 characters');
+      throw new Error('Expected 400 for note exceeding 500 characters');
     } catch (err) {
       const error = err as AxiosError;
       expect(error.response?.status).toBe(400);

@@ -12,11 +12,11 @@
  */
 
 import {
+  BrightTrustAuditLogEntry,
   DEFAULT_STATUTE_FALLBACK_DURATION_MS,
+  IBrightTrustDatabase,
   IdentityMode,
   IdentityRecoveryRecord,
-  IQuorumDatabase,
-  QuorumAuditLogEntry,
   StatuteOfLimitationsConfig,
 } from '@brightchain/brightchain-lib';
 import { HexString } from '@digitaldefiance/ecies-lib';
@@ -115,20 +115,20 @@ function makeNonExpiredRecord(id: string): IdentityRecoveryRecord<HexString> {
 }
 
 /**
- * Creates a mock IQuorumDatabase with in-memory identity record storage.
+ * Creates a mock IBrightTrustDatabase with in-memory identity record storage.
  */
 function createMockDatabase(options?: {
   failOnDelete?: Set<HexString>;
-}): IQuorumDatabase<HexString> & {
+}): IBrightTrustDatabase<HexString> & {
   identityRecords: Map<HexString, IdentityRecoveryRecord<HexString>>;
-  auditEntries: QuorumAuditLogEntry<HexString>[];
+  auditEntries: BrightTrustAuditLogEntry<HexString>[];
   statuteConfig: StatuteOfLimitationsConfig | null;
 } {
   const identityRecords = new Map<
     HexString,
     IdentityRecoveryRecord<HexString>
   >();
-  const auditEntries: QuorumAuditLogEntry<HexString>[] = [];
+  const auditEntries: BrightTrustAuditLogEntry<HexString>[] = [];
   let statuteConfig: StatuteOfLimitationsConfig | null = null;
   const failOnDelete = options?.failOnDelete ?? new Set<HexString>();
 
@@ -164,9 +164,11 @@ function createMockDatabase(options?: {
       },
     ),
 
-    appendAuditEntry: jest.fn(async (entry: QuorumAuditLogEntry<HexString>) => {
-      auditEntries.push(entry);
-    }),
+    appendAuditEntry: jest.fn(
+      async (entry: BrightTrustAuditLogEntry<HexString>) => {
+        auditEntries.push(entry);
+      },
+    ),
     getLatestAuditEntry: jest.fn(async () => null),
 
     saveStatuteConfig: jest.fn(async (config: StatuteOfLimitationsConfig) => {

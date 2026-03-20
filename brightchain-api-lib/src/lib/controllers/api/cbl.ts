@@ -47,7 +47,7 @@ function isStoreCBLRequest(
 interface StoreCBLResponse {
   success: boolean;
   message: string;
-  data: CBLStorageResult;
+  data?: CBLStorageResult;
 }
 
 /**
@@ -56,7 +56,7 @@ interface StoreCBLResponse {
 interface RetrieveCBLResponse {
   success: boolean;
   message: string;
-  data: {
+  data?: {
     cblData: string; // Base64 encoded CBL
     isEncrypted: boolean;
   };
@@ -68,6 +68,21 @@ interface RetrieveCBLResponse {
 interface CBLHandlers {
   storeCBL: string;
   retrieveCBL: string;
+}
+
+/**
+ * Helper to check if an error is a StoreError (handles duplicate module resolution).
+ */
+function isStoreError(error: unknown): error is StoreError {
+  if (error instanceof StoreError) return true;
+  if (
+    error instanceof Error &&
+    (error.constructor.name === 'StoreError' ||
+      error.constructor.name === 'TypedError')
+  ) {
+    return true;
+  }
+  return false;
 }
 
 /**
@@ -134,7 +149,7 @@ export class CBLController<
         method: 'post',
         path: '/store',
         handlerKey: 'storeCBL' as keyof CBLHandlers,
-        useAuthentication: false,
+        useAuthentication: true,
         validation: [
           body('cblData')
             .isString()
@@ -156,7 +171,7 @@ export class CBLController<
         method: 'get',
         path: '/retrieve',
         handlerKey: 'retrieveCBL' as keyof CBLHandlers,
-        useAuthentication: false,
+        useAuthentication: true,
         validation: [
           query('magnetUrl')
             .optional()
@@ -187,39 +202,41 @@ export class CBLController<
       });
     }
 
-    try {
-      // Decode CBL data from base64
-      const cblBytes = Buffer.from(body.cblData, 'base64');
+    // Decode CBL data from base64
+    const cblBytes = Buffer.from(body.cblData, 'base64');
 
-      // Validate CBL format (must be valid JSON, unless encrypted)
-      if (!body.isEncrypted) {
-        try {
-          JSON.parse(new TextDecoder().decode(cblBytes));
-        } catch {
-          throw new HandleableError(
-            new Error(
+    // Validate CBL format (must be valid JSON, unless encrypted)
+    if (!body.isEncrypted) {
+      try {
+        JSON.parse(new TextDecoder().decode(cblBytes));
+      } catch {
+        return {
+          statusCode: 400,
+          response: {
+            success: false,
+            message:
               'Invalid CBL format: must be valid JSON (or set isEncrypted=true)',
-            ),
-            { statusCode: 400 },
-          );
-        }
-      }
-
-      // Build storage options
-      const options: CBLWhiteningOptions = {
-        isEncrypted: body.isEncrypted,
-      };
-
-      if (body.durabilityLevel) {
-        const durabilityMap: Record<string, DurabilityLevel> = {
-          ephemeral: DurabilityLevel.Ephemeral,
-          standard: DurabilityLevel.Standard,
-          enhanced: DurabilityLevel.HighDurability,
-          maximum: DurabilityLevel.HighDurability,
+          },
         };
-        options.durabilityLevel = durabilityMap[body.durabilityLevel];
       }
+    }
 
+    // Build storage options
+    const options: CBLWhiteningOptions = {
+      isEncrypted: body.isEncrypted,
+    };
+
+    if (body.durabilityLevel) {
+      const durabilityMap: Record<string, DurabilityLevel> = {
+        ephemeral: DurabilityLevel.Ephemeral,
+        standard: DurabilityLevel.Standard,
+        enhanced: DurabilityLevel.HighDurability,
+        maximum: DurabilityLevel.HighDurability,
+      };
+      options.durabilityLevel = durabilityMap[body.durabilityLevel];
+    }
+
+    try {
       // Store with whitening
       const result = await this.blockStore.storeCBLWithWhitening(
         new Uint8Array(cblBytes),
@@ -235,10 +252,12 @@ export class CBLController<
         },
       };
     } catch (error) {
-      if (error instanceof StoreError) {
-        throw new HandleableError(error, {
-          statusCode: error.message.includes('too large') ? 413 : 500,
-        });
+      if (isStoreError(error)) {
+        const msg = (error as Error).message;
+        return {
+          statusCode: msg.includes('too large') ? 413 : 500,
+          response: { success: false, message: msg },
+        };
       }
       throw error;
     }
@@ -266,9 +285,8 @@ export class CBLController<
     let block2ParityIds: string[] | undefined;
     let isEncrypted = false;
 
-    try {
-      if (magnetUrl) {
-        // Parse magnet URL (includes block size, parity IDs and encryption flag)
+    if (magnetUrl) {
+      try {
         const components: CBLMagnetComponents =
           this.blockStore.parseCBLMagnetUrl(magnetUrl);
         blockId1 = components.blockId1;
@@ -276,21 +294,31 @@ export class CBLController<
         block1ParityIds = components.block1ParityIds;
         block2ParityIds = components.block2ParityIds;
         isEncrypted = components.isEncrypted;
-      } else if (b1 && b2) {
-        blockId1 = b1;
-        blockId2 = b2;
-        block1ParityIds = p1?.split(',').filter((id) => id);
-        block2ParityIds = p2?.split(',').filter((id) => id);
-      } else {
-        throw new HandleableError(
-          new Error(
-            'Either magnetUrl or both b1 and b2 parameters are required',
-          ),
-          { statusCode: 400 },
-        );
+      } catch (error) {
+        const msg =
+          error instanceof Error ? error.message : 'Invalid magnet URL';
+        return {
+          statusCode: 400,
+          response: { success: false, message: msg },
+        };
       }
+    } else if (b1 && b2) {
+      blockId1 = b1;
+      blockId2 = b2;
+      block1ParityIds = p1?.split(',').filter((id) => id);
+      block2ParityIds = p2?.split(',').filter((id) => id);
+    } else {
+      return {
+        statusCode: 400,
+        response: {
+          success: false,
+          message:
+            'Either magnetUrl or both b1 and b2 parameters are required',
+        },
+      };
+    }
 
-      // Retrieve and reconstruct CBL (with parity recovery support)
+    try {
       const cblData = await this.blockStore.retrieveCBL(
         blockId1,
         blockId2,
@@ -310,16 +338,12 @@ export class CBLController<
         },
       };
     } catch (error) {
-      if (error instanceof StoreError) {
-        throw new HandleableError(error, {
-          statusCode: error.message.includes('not found') ? 404 : 500,
-        });
-      }
-      if (
-        error instanceof Error &&
-        error.message.includes('Invalid magnet URL')
-      ) {
-        throw new HandleableError(error, { statusCode: 400 });
+      if (isStoreError(error)) {
+        const msg = (error as Error).message;
+        return {
+          statusCode: msg.includes('not found') ? 404 : 500,
+          response: { success: false, message: msg },
+        };
       }
       throw error;
     }

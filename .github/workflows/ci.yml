@@ -20,9 +20,8 @@ jobs:
           fetch-depth: 0
           submodules: recursive
 
-      - name: Clean workspace
+      - name: Clean build artifacts
         run: |
-          rm -rf node_modules
           rm -rf dist
           rm -rf .cache
 
@@ -33,12 +32,11 @@ jobs:
       - name: Enable Yarn Berry
         run: |
           corepack enable
-
-      - name: Clear Yarn cache
-        run: yarn cache clean
+          yarn set version 4.10.3
 
       - name: Install dependencies
-        run: yarn install --immutable
+        run: |
+          ./do-yarn.sh --immutable
 
       - uses: nrwl/nx-set-shas@v4
 

@@ -57,7 +57,29 @@ const validMnemonicArb = fc
  * 16-17, 19-20, 22-23, 25-30.
  */
 const invalidWordCountArb = fc
-  .constantFrom(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 14, 16, 17, 19, 20, 22, 23, 25, 26)
+  .constantFrom(
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    13,
+    14,
+    16,
+    17,
+    19,
+    20,
+    22,
+    23,
+    25,
+    26,
+  )
   .chain((count) => fc.array(wordArb, { minLength: count, maxLength: count }))
   .map((words) => words.join(' '));
 
@@ -145,16 +167,12 @@ describe('Property 2: Mnemonic format validation against MnemonicRegex', () => {
         const hasError = hasMnemonicError(result.errors);
         const mnemonicValue = (mnemonicPart as { mnemonic?: string }).mnemonic;
 
-        if (mnemonicValue === undefined) {
-          // No mnemonic → no mnemonic error
-          expect(hasError).toBe(false);
-        } else if (MnemonicRegex.test(mnemonicValue.trim())) {
-          // Valid mnemonic → no mnemonic error
-          expect(hasError).toBe(false);
-        } else {
-          // Invalid mnemonic → mnemonic error
-          expect(hasError).toBe(true);
-        }
+        // Compute expected outcome without conditional expects
+        const expectNoError =
+          mnemonicValue === undefined ||
+          MnemonicRegex.test(mnemonicValue.trim());
+
+        expect(hasError).toBe(!expectNoError);
       }),
       { numRuns: 100 },
     );
@@ -202,7 +220,10 @@ describe('Property 3: Whitespace trimming before validation', () => {
           expect(padded).not.toBe(mnemonic);
 
           // But validation should still pass (trimming happens internally)
-          const result = validateRegistration({ ...validBase, mnemonic: padded });
+          const result = validateRegistration({
+            ...validBase,
+            mnemonic: padded,
+          });
           expect(hasMnemonicError(result.errors)).toBe(false);
         },
       ),
@@ -210,4 +231,3 @@ describe('Property 3: Whitespace trimming before validation', () => {
     );
   });
 });
-

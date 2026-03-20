@@ -1,7 +1,7 @@
 /**
  * @fileoverview Property-based tests for CBL API round-trip
  *
- * **Feature: backend-blockstore-quorum, Property 24: CBL API Round-Trip**
+ * **Feature: backend-blockstore-brightTrust, Property 24: CBL API Round-Trip**
  * **Validates: Requirements 14.1, 14.2**
  *
  * This test suite verifies that:

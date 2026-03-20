@@ -1,1 +1,1 @@
-export * from './quorumApi';
+export * from './brightTrustApi';

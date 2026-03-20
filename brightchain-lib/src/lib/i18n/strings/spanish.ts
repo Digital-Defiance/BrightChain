@@ -5,6 +5,16 @@ import {
 } from '../../enumerations/brightChainStrings';
 
 export const SpanishStrings: StringsCollection<BrightChainStringKey> = {
+  // BrightChain
+  [BrightChainStrings.Common_Bright]: 'Brillante',
+  [BrightChainStrings.Common_Chain]: 'Cadena',
+
+  [BrightChainStrings.Common_Privacy]: 'Privacidad',
+  [BrightChainStrings.Common_Participation]: 'Participación',
+  [BrightChainStrings.Common_Power]: 'Poder',
+  [BrightChainStrings.Common_PrivacyParticipationPower]:
+    'Privacidad. Participación. Poder.',
+
   // UI Strings
   [BrightChainStrings.Common_BlockSize]: 'Tamaño de bloque',
   [BrightChainStrings.Common_AtIndexTemplate]:
@@ -216,89 +226,90 @@ export const SpanishStrings: StringsCollection<BrightChainStringKey> = {
   [BrightChainStrings.Error_BlockServiceError_InvalidBlockType]:
     'Tipo de bloque inválido',
 
-  // Quorum Errors
-  [BrightChainStrings.Error_QuorumError_InvalidQuorumId]:
+  // BrightTrust Errors
+  [BrightChainStrings.Error_BrightTrustError_InvalidBrightTrustId]:
     'ID de quórum inválido',
-  [BrightChainStrings.Error_QuorumError_DocumentNotFound]:
+  [BrightChainStrings.Error_BrightTrustError_DocumentNotFound]:
     'Documento no encontrado',
-  [BrightChainStrings.Error_QuorumError_UnableToRestoreDocument]:
+  [BrightChainStrings.Error_BrightTrustError_UnableToRestoreDocument]:
     'No se puede restaurar el documento',
-  [BrightChainStrings.Error_QuorumError_NotImplemented]: 'No implementado',
-  [BrightChainStrings.Error_QuorumError_Uninitialized]:
+  [BrightChainStrings.Error_BrightTrustError_NotImplemented]: 'No implementado',
+  [BrightChainStrings.Error_BrightTrustError_Uninitialized]:
     'El subsistema de quórum no está inicializado',
-  [BrightChainStrings.Error_QuorumError_MemberNotFound]:
+  [BrightChainStrings.Error_BrightTrustError_MemberNotFound]:
     'Miembro no encontrado',
-  [BrightChainStrings.Error_QuorumError_NotEnoughMembers]:
+  [BrightChainStrings.Error_BrightTrustError_NotEnoughMembers]:
     'No hay suficientes miembros para la operación de quórum',
-  [BrightChainStrings.Error_QuorumError_TransitionInProgress]:
+  [BrightChainStrings.Error_BrightTrustError_TransitionInProgress]:
     'Operación bloqueada: ceremonia de transición en curso',
-  [BrightChainStrings.Error_QuorumError_InvalidModeTransition]:
+  [BrightChainStrings.Error_BrightTrustError_InvalidModeTransition]:
     'Transición de modo operativo inválida',
-  [BrightChainStrings.Error_QuorumError_InsufficientMembersForTransition]:
+  [BrightChainStrings.Error_BrightTrustError_InsufficientMembersForTransition]:
     'Miembros insuficientes para iniciar la ceremonia de transición',
-  [BrightChainStrings.Error_QuorumError_MemberAlreadyExists]:
+  [BrightChainStrings.Error_BrightTrustError_MemberAlreadyExists]:
     'El miembro ya existe en el quórum',
-  [BrightChainStrings.Error_QuorumError_InsufficientRemainingMembers]:
+  [BrightChainStrings.Error_BrightTrustError_InsufficientRemainingMembers]:
     'No se puede eliminar miembro: los miembros restantes estarían por debajo del umbral',
-  [BrightChainStrings.Error_QuorumError_MemberBanned]:
+  [BrightChainStrings.Error_BrightTrustError_MemberBanned]:
     'El miembro está prohibido en la red',
-  [BrightChainStrings.Error_QuorumError_MemberSuspended]:
+  [BrightChainStrings.Error_BrightTrustError_MemberSuspended]:
     'El miembro está suspendido en la red',
-  [BrightChainStrings.Error_QuorumError_DuplicateProposal]:
+  [BrightChainStrings.Error_BrightTrustError_DuplicateProposal]:
     'ID de propuesta duplicado',
-  [BrightChainStrings.Error_QuorumError_ProposalExpired]:
+  [BrightChainStrings.Error_BrightTrustError_ProposalExpired]:
     'La propuesta ha expirado',
-  [BrightChainStrings.Error_QuorumError_DuplicateVote]:
+  [BrightChainStrings.Error_BrightTrustError_DuplicateVote]:
     'Voto duplicado de este miembro',
-  [BrightChainStrings.Error_QuorumError_VoterNotOnProposal]:
+  [BrightChainStrings.Error_BrightTrustError_VoterNotOnProposal]:
     'El votante no es un miembro activo en esta propuesta',
-  [BrightChainStrings.Error_QuorumError_AuthenticationFailed]:
+  [BrightChainStrings.Error_BrightTrustError_AuthenticationFailed]:
     'Autenticación fallida',
-  [BrightChainStrings.Error_QuorumError_VotingLocked]:
+  [BrightChainStrings.Error_BrightTrustError_VotingLocked]:
     'La votación está bloqueada debido a fallos de autenticación repetidos',
-  [BrightChainStrings.Error_QuorumError_MissingAttachment]:
+  [BrightChainStrings.Error_BrightTrustError_MissingAttachment]:
     'La propuesta requiere un adjunto pero no se proporcionó ninguno',
-  [BrightChainStrings.Error_QuorumError_AttachmentNotRetrievable]:
+  [BrightChainStrings.Error_BrightTrustError_AttachmentNotRetrievable]:
     'El CBL del adjunto referenciado no es recuperable',
-  [BrightChainStrings.Error_QuorumError_RedistributionFailed]:
+  [BrightChainStrings.Error_BrightTrustError_RedistributionFailed]:
     'La redistribución de participaciones falló',
-  [BrightChainStrings.Error_QuorumError_InsufficientSharesForReconstruction]:
+  [BrightChainStrings.Error_BrightTrustError_InsufficientSharesForReconstruction]:
     'Participaciones insuficientes para la reconstrucción de la clave',
-  [BrightChainStrings.Error_QuorumError_KeyReconstructionValidationFailed]:
+  [BrightChainStrings.Error_BrightTrustError_KeyReconstructionValidationFailed]:
     'La clave reconstruida falló la validación',
-  [BrightChainStrings.Error_QuorumError_IdentityPermanentlyUnrecoverable]:
+  [BrightChainStrings.Error_BrightTrustError_IdentityPermanentlyUnrecoverable]:
     'La identidad es permanentemente irrecuperable debido al vencimiento del plazo de prescripción',
-  [BrightChainStrings.Error_QuorumError_InvalidMembershipProof]:
+  [BrightChainStrings.Error_BrightTrustError_InvalidMembershipProof]:
     'Prueba de membresía inválida',
-  [BrightChainStrings.Error_QuorumError_MissingMembershipProof]:
+  [BrightChainStrings.Error_BrightTrustError_MissingMembershipProof]:
     'Falta prueba de membresía para contenido anónimo',
-  [BrightChainStrings.Error_QuorumError_AliasAlreadyTaken]:
+  [BrightChainStrings.Error_BrightTrustError_AliasAlreadyTaken]:
     'El alias ya está registrado',
-  [BrightChainStrings.Error_QuorumError_AliasNotFound]: 'Alias no encontrado',
-  [BrightChainStrings.Error_QuorumError_AliasInactive]:
+  [BrightChainStrings.Error_BrightTrustError_AliasNotFound]:
+    'Alias no encontrado',
+  [BrightChainStrings.Error_BrightTrustError_AliasInactive]:
     'El alias ha sido desactivado',
-  [BrightChainStrings.Error_QuorumError_IdentitySealingFailed]:
+  [BrightChainStrings.Error_BrightTrustError_IdentitySealingFailed]:
     'El proceso de sellado de identidad falló',
-  [BrightChainStrings.Error_QuorumError_ShardVerificationFailed]:
+  [BrightChainStrings.Error_BrightTrustError_ShardVerificationFailed]:
     'La verificación de fragmentos de identidad falló',
-  [BrightChainStrings.Error_QuorumError_QuorumDatabaseUnavailable]:
+  [BrightChainStrings.Error_BrightTrustError_BrightTrustDatabaseUnavailable]:
     'La base de datos del quórum no está disponible',
-  [BrightChainStrings.Error_QuorumError_TransactionFailed]:
+  [BrightChainStrings.Error_BrightTrustError_TransactionFailed]:
     'La transacción de base de datos falló',
-  [BrightChainStrings.Error_QuorumError_AuditChainCorrupted]:
+  [BrightChainStrings.Error_BrightTrustError_AuditChainCorrupted]:
     'La integridad de la cadena de auditoría está comprometida',
-  // Quorum Ban Mechanism Errors
-  [BrightChainStrings.Error_QuorumError_CannotBanSelf]:
+  // BrightTrust Ban Mechanism Errors
+  [BrightChainStrings.Error_BrightTrustError_CannotBanSelf]:
     'Un miembro no puede proponer prohibirse a sí mismo',
-  [BrightChainStrings.Error_QuorumError_MemberAlreadyBanned]:
+  [BrightChainStrings.Error_BrightTrustError_MemberAlreadyBanned]:
     'El miembro ya está prohibido',
-  [BrightChainStrings.Error_QuorumError_MemberNotBanned]:
+  [BrightChainStrings.Error_BrightTrustError_MemberNotBanned]:
     'El miembro no está actualmente prohibido',
-  [BrightChainStrings.Error_QuorumError_NewMemberCannotProposeBan]:
+  [BrightChainStrings.Error_BrightTrustError_NewMemberCannotProposeBan]:
     'Los miembros admitidos en la época actual no pueden proponer prohibiciones',
-  [BrightChainStrings.Error_QuorumError_BanCoolingPeriodNotElapsed]:
+  [BrightChainStrings.Error_BrightTrustError_BanCoolingPeriodNotElapsed]:
     'El período de enfriamiento de la prohibición aún no ha transcurrido',
-  [BrightChainStrings.Error_QuorumError_InvalidBanRecordSignatures]:
+  [BrightChainStrings.Error_BrightTrustError_InvalidBanRecordSignatures]:
     'El registro de prohibición no tiene suficientes firmas válidas del quórum',
   [BrightChainStrings.Error_IdentityValidationError_InvalidSignature]:
     'La firma del contenido no coincide con la identidad declarada',
@@ -987,22 +998,22 @@ export const SpanishStrings: StringsCollection<BrightChainStringKey> = {
   [BrightChainStrings.Error_MemberProfileDocument_Hint]:
     'Use MemberProfileDocument.create() en lugar de new MemberProfileDocument()',
 
-  // Quorum Document Errors
-  [BrightChainStrings.Error_QuorumDocument_CreatorMustBeSetBeforeSaving]:
+  // BrightTrust Document Errors
+  [BrightChainStrings.Error_BrightTrustDocument_CreatorMustBeSetBeforeSaving]:
     'El creador debe establecerse antes de guardar',
-  [BrightChainStrings.Error_QuorumDocument_CreatorMustBeSetBeforeEncrypting]:
+  [BrightChainStrings.Error_BrightTrustDocument_CreatorMustBeSetBeforeEncrypting]:
     'El creador debe establecerse antes de cifrar',
-  [BrightChainStrings.Error_QuorumDocument_DocumentHasNoEncryptedData]:
+  [BrightChainStrings.Error_BrightTrustDocument_DocumentHasNoEncryptedData]:
     'El documento no tiene datos cifrados',
-  [BrightChainStrings.Error_QuorumDocument_InvalidEncryptedDataFormat]:
+  [BrightChainStrings.Error_BrightTrustDocument_InvalidEncryptedDataFormat]:
     'Formato de datos cifrados inválido',
-  [BrightChainStrings.Error_QuorumDocument_InvalidMemberIdsFormat]:
+  [BrightChainStrings.Error_BrightTrustDocument_InvalidMemberIdsFormat]:
     'Formato de IDs de miembros inválido',
-  [BrightChainStrings.Error_QuorumDocument_InvalidSignatureFormat]:
+  [BrightChainStrings.Error_BrightTrustDocument_InvalidSignatureFormat]:
     'Formato de firma inválido',
-  [BrightChainStrings.Error_QuorumDocument_InvalidCreatorIdFormat]:
+  [BrightChainStrings.Error_BrightTrustDocument_InvalidCreatorIdFormat]:
     'Formato de ID del creador inválido',
-  [BrightChainStrings.Error_QuorumDocument_InvalidChecksumFormat]:
+  [BrightChainStrings.Error_BrightTrustDocument_InvalidChecksumFormat]:
     'Formato de suma de verificación inválido',
 
   // Block Logger
@@ -1253,13 +1264,13 @@ export const SpanishStrings: StringsCollection<BrightChainStringKey> = {
     'Error desconocido en makeTuple',
   [BrightChainStrings.PrimeTupleGeneratorStream_UnknownErrorInFlush]:
     'Error desconocido en flush',
-  [BrightChainStrings.QuorumDataRecord_MustShareWithAtLeastTwoMembers]:
+  [BrightChainStrings.BrightTrustDataRecord_MustShareWithAtLeastTwoMembers]:
     'Debe compartirse con al menos 2 miembros',
-  [BrightChainStrings.QuorumDataRecord_SharesRequiredExceedsMembers]:
+  [BrightChainStrings.BrightTrustDataRecord_SharesRequiredExceedsMembers]:
     'Las partes requeridas superan el número de miembros',
-  [BrightChainStrings.QuorumDataRecord_SharesRequiredMustBeAtLeastTwo]:
+  [BrightChainStrings.BrightTrustDataRecord_SharesRequiredMustBeAtLeastTwo]:
     'Las partes requeridas deben ser al menos 2',
-  [BrightChainStrings.QuorumDataRecord_InvalidChecksum]:
+  [BrightChainStrings.BrightTrustDataRecord_InvalidChecksum]:
     'Suma de verificación inválida',
   [BrightChainStrings.SimpleBrowserStore_BlockNotFoundTemplate]:
     'Bloque no encontrado: {ID}',
@@ -1397,4 +1408,192 @@ export const SpanishStrings: StringsCollection<BrightChainStringKey> = {
   [BrightChainStrings.Dashboard_FailedToLoadReputation]:
     'Error al cargar la reputación',
   [BrightChainStrings.Dashboard_FailedToLoadData]: 'Error al cargar los datos',
+
+  // Admin Dashboard
+  [BrightChainStrings.Admin_Dashboard_Title]: 'Panel de administración',
+  [BrightChainStrings.Admin_Dashboard_AccessDenied]: 'Acceso denegado',
+  [BrightChainStrings.Admin_Dashboard_AccessDeniedDescription]:
+    'No tiene permiso para ver el panel de administración.',
+  [BrightChainStrings.Admin_Dashboard_Loading]: 'Cargando panel…',
+  [BrightChainStrings.Admin_Dashboard_NoData]: 'No hay datos disponibles.',
+  [BrightChainStrings.Admin_Dashboard_RefreshNow]: 'Actualizar ahora',
+  [BrightChainStrings.Admin_Dashboard_ErrorLastSuccessTemplate]:
+    'Error — último éxito: {TIME}',
+  [BrightChainStrings.Admin_Dashboard_ErrorLastSuccessNever]: 'nunca',
+  [BrightChainStrings.Admin_Dashboard_ServerIdentity]: 'Identidad del servidor',
+  [BrightChainStrings.Admin_Dashboard_Hostname]: 'Nombre de host',
+  [BrightChainStrings.Admin_Dashboard_LocalNodeId]: 'ID de nodo local',
+  [BrightChainStrings.Admin_Dashboard_Timestamp]: 'Marca de tiempo',
+  [BrightChainStrings.Admin_Dashboard_NA]: 'N/D',
+  [BrightChainStrings.Admin_Dashboard_Nodes]: 'Nodos',
+  [BrightChainStrings.Admin_Dashboard_NoNodesRegistered]:
+    'No hay nodos registrados.',
+  [BrightChainStrings.Admin_Dashboard_DisconnectedPeers]: 'Pares desconectados',
+  [BrightChainStrings.Admin_Dashboard_LumenClients]: 'Clientes Lumen',
+  [BrightChainStrings.Admin_Dashboard_ConnectedClients]: 'clientes conectados',
+  [BrightChainStrings.Admin_Dashboard_RoomsTemplate]: '{COUNT} sala(s)',
+  [BrightChainStrings.Admin_Dashboard_NodeConnections]: 'Conexiones de nodos',
+  [BrightChainStrings.Admin_Dashboard_NodeToNodeConnections]:
+    'Conexiones nodo a nodo',
+  [BrightChainStrings.Admin_Dashboard_SystemMetrics]: 'Métricas del sistema',
+  [BrightChainStrings.Admin_Dashboard_HeapUsed]: 'Heap utilizado',
+  [BrightChainStrings.Admin_Dashboard_HeapTotal]: 'Heap total',
+  [BrightChainStrings.Admin_Dashboard_RSS]: 'RSS',
+  [BrightChainStrings.Admin_Dashboard_External]: 'Externo',
+  [BrightChainStrings.Admin_Dashboard_UptimeTemplate]:
+    'Tiempo activo: {SECONDS}s',
+  [BrightChainStrings.Admin_Dashboard_NodeVersionTemplate]:
+    'Node {NODE_VERSION} — App v{APP_VERSION}',
+  [BrightChainStrings.Admin_Dashboard_DBStats]: 'Estadísticas de BD',
+  [BrightChainStrings.Admin_Dashboard_Users]: 'Usuarios',
+  [BrightChainStrings.Admin_Dashboard_Roles]: 'Roles',
+  [BrightChainStrings.Admin_Dashboard_Active]: 'Activo',
+  [BrightChainStrings.Admin_Dashboard_Locked]: 'Bloqueado',
+  [BrightChainStrings.Admin_Dashboard_Pending]: 'Pendiente',
+  [BrightChainStrings.Admin_Dashboard_Members]: 'Miembros',
+  [BrightChainStrings.Admin_Dashboard_Threshold]: 'Umbral',
+  [BrightChainStrings.Admin_Dashboard_Pools]: 'Pools',
+  [BrightChainStrings.Admin_Dashboard_NoPools]: 'Sin pools.',
+  [BrightChainStrings.Admin_Dashboard_Dependencies]: 'Dependencias',
+  [BrightChainStrings.Admin_Dashboard_BlockStore]: 'BrightStore',
+  [BrightChainStrings.Admin_Dashboard_TotalBlocks]: 'Bloques totales',
+  [BrightChainStrings.Admin_Dashboard_TotalSize]: 'Tamaño total',
+  [BrightChainStrings.Admin_Dashboard_TotalPosts]: 'Publicaciones totales',
+  [BrightChainStrings.Admin_Dashboard_ActiveUsersLast30Days]:
+    'Usuarios activos (30d)',
+  [BrightChainStrings.Admin_Dashboard_Conversations]: 'Conversaciones',
+  [BrightChainStrings.Admin_Dashboard_Messages]: 'Mensajes',
+  [BrightChainStrings.Admin_Dashboard_TotalVaults]: 'Bóvedas totales',
+  [BrightChainStrings.Admin_Dashboard_SharedVaults]: 'Bóvedas compartidas',
+  [BrightChainStrings.Admin_Dashboard_TotalEmails]: 'Correos totales',
+  [BrightChainStrings.Admin_Dashboard_DeliveryFailures]: 'Fallos de entrega',
+  [BrightChainStrings.Admin_Dashboard_Last24Hours]: 'Últimas 24h',
+  [BrightChainStrings.Admin_Menu_Dashboard]: 'Panel de administración',
+  [BrightChainStrings.Admin_Common_Loading]: 'Cargando…',
+  [BrightChainStrings.Admin_Common_Previous]: 'Anterior',
+  [BrightChainStrings.Admin_Common_Next]: 'Siguiente',
+  [BrightChainStrings.Admin_Common_PageTemplate]: 'Página {PAGE} de {TOTAL}',
+  [BrightChainStrings.Admin_Common_Cancel]: 'Cancelar',
+  [BrightChainStrings.Admin_Common_Delete]: 'Eliminar',
+  [BrightChainStrings.Admin_Common_Yes]: 'Sí',
+  [BrightChainStrings.Admin_Common_No]: 'No',
+  [BrightChainStrings.Admin_Common_Never]: 'Nunca',
+  [BrightChainStrings.Admin_Common_Close]: 'Cerrar',
+  [BrightChainStrings.Admin_Users_Title]: 'Gestión de usuarios',
+  [BrightChainStrings.Admin_Users_FilterAll]: 'Todos',
+  [BrightChainStrings.Admin_Users_FilterActive]: 'Activo',
+  [BrightChainStrings.Admin_Users_FilterLocked]: 'Bloqueado',
+  [BrightChainStrings.Admin_Users_FilterPending]: 'Pendiente',
+  [BrightChainStrings.Admin_Users_ColUsername]: 'Nombre de usuario',
+  [BrightChainStrings.Admin_Users_ColEmail]: 'Correo electrónico',
+  [BrightChainStrings.Admin_Users_ColStatus]: 'Estado',
+  [BrightChainStrings.Admin_Users_ColEmailVerified]: 'Correo verificado',
+  [BrightChainStrings.Admin_Users_ColLastLogin]: 'Último inicio de sesión',
+  [BrightChainStrings.Admin_Users_ColActions]: 'Acciones',
+  [BrightChainStrings.Admin_Users_NoUsersFound]: 'No se encontraron usuarios.',
+  [BrightChainStrings.Admin_Users_UnlockUser]: 'Desbloquear usuario',
+  [BrightChainStrings.Admin_Users_LockUser]: 'Bloquear usuario',
+  [BrightChainStrings.Admin_Users_LockUserTitle]: 'Bloquear usuario',
+  [BrightChainStrings.Admin_Users_UnlockUserTitle]: 'Desbloquear usuario',
+  [BrightChainStrings.Admin_Users_LockConfirmTemplate]:
+    '¿Está seguro de que desea bloquear a {USERNAME}?',
+  [BrightChainStrings.Admin_Users_UnlockConfirmTemplate]:
+    '¿Está seguro de que desea desbloquear a {USERNAME}?',
+  [BrightChainStrings.Admin_Users_LockWarning]:
+    ' Esto impedirá que el usuario inicie sesión.',
+  [BrightChainStrings.Admin_Blocks_Title]: 'Explorador de bloques',
+  [BrightChainStrings.Admin_Blocks_SearchPlaceholder]:
+    'Buscar por ID de bloque',
+  [BrightChainStrings.Admin_Blocks_FilterAllDurability]:
+    'Todas las durabilidades',
+  [BrightChainStrings.Admin_Blocks_FilterStandard]: 'Estándar',
+  [BrightChainStrings.Admin_Blocks_FilterHighDurability]: 'Alta durabilidad',
+  [BrightChainStrings.Admin_Blocks_FilterEphemeral]: 'Efímero',
+  [BrightChainStrings.Admin_Blocks_SortByDate]: 'Ordenar por fecha',
+  [BrightChainStrings.Admin_Blocks_SortBySize]: 'Ordenar por tamaño',
+  [BrightChainStrings.Admin_Blocks_Detail]: 'Detalle del bloque',
+  [BrightChainStrings.Admin_Blocks_ColBlockId]: 'ID de bloque',
+  [BrightChainStrings.Admin_Blocks_ColSize]: 'Tamaño',
+  [BrightChainStrings.Admin_Blocks_ColDurability]: 'Durabilidad',
+  [BrightChainStrings.Admin_Blocks_ColCreated]: 'Creado',
+  [BrightChainStrings.Admin_Blocks_ColAccessCount]: 'Contador de accesos',
+  [BrightChainStrings.Admin_Blocks_ColReplication]: 'Replicación',
+  [BrightChainStrings.Admin_Blocks_ColActions]: 'Acciones',
+  [BrightChainStrings.Admin_Blocks_NoBlocksFound]: 'No se encontraron bloques.',
+  [BrightChainStrings.Admin_Blocks_DiscoverNodes]: 'Descubrir nodos',
+  [BrightChainStrings.Admin_Blocks_NodesHoldingBlockTemplate]:
+    'Nodos con el bloque {BLOCK_ID}:',
+  [BrightChainStrings.Admin_Blocks_NoNodesFound]: 'No se encontraron nodos.',
+  [BrightChainStrings.Admin_Blocks_Checksum]: 'Suma de verificación',
+  [BrightChainStrings.Admin_Blocks_DeleteTitle]: 'Eliminar bloque',
+  [BrightChainStrings.Admin_Blocks_DeleteConfirmTemplate]:
+    '¿Está seguro de que desea eliminar el bloque {BLOCK_ID}? Esto también eliminará los bloques de paridad asociados del almacenamiento local.',
+  [BrightChainStrings.Admin_Blocks_SizeBytes]: '{SIZE} bytes',
+  [BrightChainStrings.Admin_Pass_Title]: 'Admin de BrightPass',
+  [BrightChainStrings.Admin_Pass_EncryptedNotice]:
+    'El contenido de las bóvedas está cifrado y no se puede ver. Solo se muestran los metadatos de la bóveda.',
+  [BrightChainStrings.Admin_Pass_ColOwner]: 'Propietario',
+  [BrightChainStrings.Admin_Pass_ColShared]: 'Compartido',
+  [BrightChainStrings.Admin_Pass_ColCreated]: 'Creado',
+  [BrightChainStrings.Admin_Pass_ColLastAccessed]: 'Último acceso',
+  [BrightChainStrings.Admin_Pass_ColActions]: 'Acciones',
+  [BrightChainStrings.Admin_Pass_NoVaultsFound]: 'No se encontraron bóvedas.',
+  [BrightChainStrings.Admin_Pass_DeleteVault]: 'Eliminar bóveda',
+  [BrightChainStrings.Admin_Pass_DeleteVaultTitle]: 'Eliminar bóveda',
+  [BrightChainStrings.Admin_Pass_DeleteVaultConfirm]:
+    '¿Está seguro de que desea eliminar esta bóveda? Esto eliminará la bóveda y sus bloques asociados. Esta acción no se puede deshacer.',
+  [BrightChainStrings.Admin_Chat_Title]: 'Admin de BrightChat',
+  [BrightChainStrings.Admin_Chat_ColId]: 'ID',
+  [BrightChainStrings.Admin_Chat_ColParticipants]: 'Participantes',
+  [BrightChainStrings.Admin_Chat_ColMessages]: 'Mensajes',
+  [BrightChainStrings.Admin_Chat_ColLastActivity]: 'Última actividad',
+  [BrightChainStrings.Admin_Chat_NoConversationsFound]:
+    'No se encontraron conversaciones.',
+  [BrightChainStrings.Admin_Chat_MessagesForTemplate]:
+    'Mensajes de la conversación {CONVERSATION_ID}',
+  [BrightChainStrings.Admin_Chat_LoadingMessages]: 'Cargando mensajes…',
+  [BrightChainStrings.Admin_Chat_NoMessages]: 'Sin mensajes.',
+  [BrightChainStrings.Admin_Chat_ColSender]: 'Remitente',
+  [BrightChainStrings.Admin_Chat_ColContent]: 'Contenido',
+  [BrightChainStrings.Admin_Chat_ColCreated]: 'Creado',
+  [BrightChainStrings.Admin_Chat_ColStatus]: 'Estado',
+  [BrightChainStrings.Admin_Chat_StatusDeleted]: 'Eliminado',
+  [BrightChainStrings.Admin_Chat_StatusActive]: 'Activo',
+  [BrightChainStrings.Admin_Chat_DeleteMessage]: 'Eliminar mensaje',
+  [BrightChainStrings.Admin_Chat_DeleteMessageTitle]: 'Eliminar mensaje',
+  [BrightChainStrings.Admin_Chat_DeleteMessageConfirm]:
+    '¿Está seguro de que desea eliminar este mensaje? Se eliminará de forma provisional.',
+  [BrightChainStrings.Admin_Hub_Title]: 'Admin de BrightHub',
+  [BrightChainStrings.Admin_Hub_FilterByAuthorId]: 'Filtrar por ID de autor',
+  [BrightChainStrings.Admin_Hub_FilterAllPosts]: 'Todas las publicaciones',
+  [BrightChainStrings.Admin_Hub_FilterActive]: 'Activo',
+  [BrightChainStrings.Admin_Hub_FilterDeleted]: 'Eliminado',
+  [BrightChainStrings.Admin_Hub_ColAuthor]: 'Autor',
+  [BrightChainStrings.Admin_Hub_ColContentPreview]:
+    'Vista previa del contenido',
+  [BrightChainStrings.Admin_Hub_ColCreated]: 'Creado',
+  [BrightChainStrings.Admin_Hub_ColStatus]: 'Estado',
+  [BrightChainStrings.Admin_Hub_ColLikes]: 'Me gusta',
+  [BrightChainStrings.Admin_Hub_ColReposts]: 'Republicaciones',
+  [BrightChainStrings.Admin_Hub_ColActions]: 'Acciones',
+  [BrightChainStrings.Admin_Hub_StatusDeleted]: 'Eliminado',
+  [BrightChainStrings.Admin_Hub_StatusActive]: 'Activo',
+  [BrightChainStrings.Admin_Hub_NoPostsFound]:
+    'No se encontraron publicaciones.',
+  [BrightChainStrings.Admin_Hub_SoftDeletePost]: 'Eliminar publicación',
+  [BrightChainStrings.Admin_Hub_DeletePostTitle]: 'Eliminar publicación',
+  [BrightChainStrings.Admin_Hub_DeletePostConfirm]:
+    '¿Está seguro de que desea eliminar esta publicación? Se marcará como eliminada, pero no se eliminará permanentemente.',
+  [BrightChainStrings.Admin_Mail_Title]: 'Admin de BrightMail',
+  [BrightChainStrings.Admin_Mail_ColSender]: 'Remitente',
+  [BrightChainStrings.Admin_Mail_ColRecipients]: 'Destinatarios',
+  [BrightChainStrings.Admin_Mail_ColSubject]: 'Asunto',
+  [BrightChainStrings.Admin_Mail_ColCreated]: 'Creado',
+  [BrightChainStrings.Admin_Mail_ColDeliveryStatus]: 'Estado de entrega',
+  [BrightChainStrings.Admin_Mail_ColActions]: 'Acciones',
+  [BrightChainStrings.Admin_Mail_NoEmailsFound]: 'No se encontraron correos.',
+  [BrightChainStrings.Admin_Mail_DeleteEmail]: 'Eliminar correo',
+  [BrightChainStrings.Admin_Mail_DeleteEmailTitle]: 'Eliminar correo',
+  [BrightChainStrings.Admin_Mail_DeleteEmailConfirm]:
+    '¿Está seguro de que desea eliminar este correo? Esta acción no se puede deshacer.',
 };

@@ -1,4 +1,3 @@
-/* eslint-disable @nx/enforce-module-boundaries */
 import {
   BlockInfo,
   BlockSize,
@@ -19,6 +18,8 @@ import {
   MemberType,
 } from '@digitaldefiance/ecies-lib';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useShowcaseI18n } from '../i18n/ShowcaseI18nContext';
+import { ShowcaseStrings } from '../i18n/showcaseStrings';
 import './BrightChainSoupDemo.css';
 import { EnhancedSoupVisualization } from './EnhancedSoupVisualization';
 import { SessionIsolatedBrightChain } from './SessionIsolatedBrightChain';
@@ -56,6 +57,7 @@ const ProcessStepIndicator: React.FC<{ step: ProcessStep }> = ({ step }) => {
 };
 
 export const BrightChainSoupDemo: React.FC = () => {
+  const { t } = useShowcaseI18n();
   const [brightChain, setBrightChain] =
     useState<SessionIsolatedBrightChain | null>(null);
   const [receipts, setReceipts] = useState<FileReceipt[]>([]);
@@ -446,12 +448,15 @@ export const BrightChainSoupDemo: React.FC = () => {
       } catch (error) {
         console.error('Failed to retrieve file:', error);
         alert(
-          `Failed to retrieve file: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          t(ShowcaseStrings.Soup_AlertRetrieveFailed, {
+            ERROR: error instanceof Error ? error.message : 'Unknown error',
+          }),
         );
       } finally {
         setAnimatingBlockIds([]);
       }
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [brightChain],
   );
 
@@ -483,7 +488,7 @@ export const BrightChainSoupDemo: React.FC = () => {
 
       const file = files[0];
       if (!file.name.endsWith('.cbl')) {
-        alert('Please upload a .cbl file');
+        alert(t(ShowcaseStrings.Soup_AlertUploadCBLOnly));
         return;
       }
 
@@ -499,15 +504,21 @@ export const BrightChainSoupDemo: React.FC = () => {
         setShowCblUpload(false);
 
         alert(
-          `CBL loaded! File: ${receipt.fileName} (${receipt.blockCount} blocks)\nYou can now retrieve the file if all blocks are in the soup.`,
+          t(ShowcaseStrings.Soup_AlertCBLLoaded, {
+            NAME: receipt.fileName,
+            BLOCKS: String(receipt.blockCount),
+          }),
         );
       } catch (error) {
         console.error('Failed to parse CBL:', error);
         alert(
-          `Failed to parse CBL: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          t(ShowcaseStrings.Soup_AlertParseCBLFailed, {
+            ERROR: error instanceof Error ? error.message : 'Unknown error',
+          }),
         );
       }
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [brightChain],
   );
 
@@ -601,14 +612,18 @@ export const BrightChainSoupDemo: React.FC = () => {
       setShowMagnetInput(false);
 
       alert(
-        `File reconstructed successfully!\n\nSize: ${fileData.length} bytes\n\nThe file has been downloaded and added to receipts.`,
+        t(ShowcaseStrings.Soup_AlertReconstructed, {
+          SIZE: String(fileData.length),
+        }),
       );
 
       setTimeout(() => setWhiteningSteps([]), 3000);
     } catch (error) {
       console.error('Failed to process magnet URL:', error);
       alert(
-        `Failed to process magnet URL: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        t(ShowcaseStrings.Soup_AlertMagnetFailed, {
+          ERROR: error instanceof Error ? error.message : 'Unknown error',
+        }),
       );
 
       // Mark current step as error
@@ -625,6 +640,7 @@ export const BrightChainSoupDemo: React.FC = () => {
         ),
       );
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [brightChain, magnetUrlInput]);
 
   const handleSendMessage = useCallback(async () => {
@@ -730,13 +746,16 @@ export const BrightChainSoupDemo: React.FC = () => {
       setReceipts((prev) => [...prev, messageReceipt]);
       setMessageContent('');
       setDebugInfo(brightChain.getDebugInfo());
-      alert('Message sent and stored in soup!');
+      alert(t(ShowcaseStrings.Soup_AlertMessageSent));
     } catch (error) {
       console.error('Failed to send message:', error);
       alert(
-        `Failed to send message: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        t(ShowcaseStrings.Soup_AlertSendFailed, {
+          ERROR: error instanceof Error ? error.message : 'Unknown error',
+        }),
       );
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [messageContent, senderId, recipientId, messageCBL, members, brightChain]);
 
   const handleRetrieveMessage = useCallback(
@@ -746,37 +765,38 @@ export const BrightChainSoupDemo: React.FC = () => {
       try {
         const content = await messageCBL.getMessageContent(messageId);
         const text = new TextDecoder().decode(content);
-        alert(`Message retrieved from soup:\n\n${text}`);
+        alert(t(ShowcaseStrings.Soup_AlertMessageRetrieved, { TEXT: text }));
       } catch (error) {
         console.error('Failed to retrieve message:', error);
         alert(
-          `Failed to retrieve message: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          t(ShowcaseStrings.Soup_AlertRetrieveMessageFailed, {
+            ERROR: error instanceof Error ? error.message : 'Unknown error',
+          }),
         );
       }
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [messageCBL],
   );
 
   return (
     <div className="brightchain-demo">
       <div className="demo-header">
-        <h1 className="demo-title">BrightChain Demo</h1>
-        <p className="demo-subtitle">
-          Store files and messages as blocks in the decentralized block soup.
-          Everything becomes colorful soup cans!
-        </p>
+        <h1 className="demo-title">{t(ShowcaseStrings.Soup_Title)}</h1>
+        <p className="demo-subtitle">{t(ShowcaseStrings.Soup_Subtitle)}</p>
         <p className="session-info">
-          <strong>Session:</strong> {debugInfo?.sessionId?.substring(0, 20)}...
-          <span className="session-note">(Data clears on page refresh)</span>
+          <strong>{t(ShowcaseStrings.Soup_Session)}</strong>{' '}
+          {debugInfo?.sessionId?.substring(0, 20)}...
+          <span className="session-note">
+            {t(ShowcaseStrings.Soup_DataClearsOnRefresh)}
+          </span>
         </p>
       </div>
 
       {!brightChain ? (
         <div className="loading-container">
           <div className="upload-icon">⚙️</div>
-          <p className="loading-text">
-            Initializing SessionIsolatedBrightChain...
-          </p>
+          <p className="loading-text">{t(ShowcaseStrings.Soup_Initializing)}</p>
         </div>
       ) : (
         <div className="demo-grid">
@@ -788,12 +808,14 @@ export const BrightChainSoupDemo: React.FC = () => {
             >
               <h3 className="reconstruction-header">
                 <span>📦</span>
-                Store Data in Block Soup
+                {t(ShowcaseStrings.Soup_StoreInSoup)}
               </h3>
 
               {/* File Upload */}
               <div style={{ marginBottom: '15px' }}>
-                <h4 style={{ margin: '10px 0' }}>📁 Store Files</h4>
+                <h4 style={{ margin: '10px 0' }}>
+                  {t(ShowcaseStrings.Soup_StoreFiles)}
+                </h4>
                 <div
                   onDrop={handleDrop}
                   onDragOver={(e) => {
@@ -805,7 +827,7 @@ export const BrightChainSoupDemo: React.FC = () => {
                 >
                   <span className="upload-icon">📁</span>
                   <p className="upload-text">
-                    Drop files here or click to upload
+                    {t(ShowcaseStrings.Soup_DropFilesOrClick)}
                   </p>
                   <input
                     ref={fileInputRef}
@@ -823,7 +845,7 @@ export const BrightChainSoupDemo: React.FC = () => {
                     className="upload-input"
                     disabled={isProcessing}
                   >
-                    Choose Files
+                    {t(ShowcaseStrings.Soup_ChooseFiles)}
                   </button>
 
                   {/* CBL Magnet URL Toggle - Grouped with Upload */}
@@ -837,12 +859,10 @@ export const BrightChainSoupDemo: React.FC = () => {
                         checked={enableWhitening}
                         onChange={(e) => setEnableWhitening(e.target.checked)}
                       />
-                      <span>🔐 Store CBL in soup with magnet URL</span>
+                      <span>{t(ShowcaseStrings.Soup_StoreCBLWithMagnet)}</span>
                     </label>
                     <p className="whitening-info">
-                      Stores the CBL in the block soup using XOR whitening and
-                      generates a shareable magnet URL. Without this, you get
-                      the CBL file directly.
+                      {t(ShowcaseStrings.Soup_StoreCBLInfo)}
                     </p>
                   </div>
                 </div>
@@ -857,10 +877,12 @@ export const BrightChainSoupDemo: React.FC = () => {
                     backgroundColor: '#f9f9f9',
                   }}
                 >
-                  <h4 style={{ marginTop: 0 }}>💬 Store Messages</h4>
+                  <h4 style={{ marginTop: 0 }}>
+                    {t(ShowcaseStrings.Soup_StoreMessages)}
+                  </h4>
                   <div style={{ marginBottom: '10px' }}>
                     <label style={{ display: 'block', marginBottom: '5px' }}>
-                      From:
+                      {t(ShowcaseStrings.Soup_From)}
                     </label>
                     <input
                       type="text"
@@ -876,7 +898,7 @@ export const BrightChainSoupDemo: React.FC = () => {
                   </div>
                   <div style={{ marginBottom: '10px' }}>
                     <label style={{ display: 'block', marginBottom: '5px' }}>
-                      To:
+                      {t(ShowcaseStrings.Soup_To)}
                     </label>
                     <input
                       type="text"
@@ -892,12 +914,12 @@ export const BrightChainSoupDemo: React.FC = () => {
                   </div>
                   <div style={{ marginBottom: '10px' }}>
                     <label style={{ display: 'block', marginBottom: '5px' }}>
-                      Message:
+                      {t(ShowcaseStrings.Soup_Message)}
                     </label>
                     <textarea
                       value={messageContent}
                       onChange={(e) => setMessageContent(e.target.value)}
-                      placeholder="Type your message..."
+                      placeholder={t(ShowcaseStrings.Soup_TypeMessage)}
                       style={{
                         width: '100%',
                         minHeight: '60px',
@@ -922,7 +944,7 @@ export const BrightChainSoupDemo: React.FC = () => {
                       width: '100%',
                     }}
                   >
-                    📤 Send Message to Soup
+                    {t(ShowcaseStrings.Soup_SendToSoup)}
                   </button>
                 </div>
               </div>
@@ -930,7 +952,7 @@ export const BrightChainSoupDemo: React.FC = () => {
               {/* Whitening Result Display */}
               {whiteningResult && (
                 <div className="whitening-result">
-                  <h4>🔐 CBL Stored in Soup</h4>
+                  <h4>{t(ShowcaseStrings.Soup_CBLStoredInSoup)}</h4>
                   {superCblInfo?.isSuperCbl && (
                     <div
                       style={{
@@ -940,10 +962,16 @@ export const BrightChainSoupDemo: React.FC = () => {
                         borderRadius: '4px',
                       }}
                     >
-                      <strong>📊 Super CBL Used</strong>
+                      <strong>{t(ShowcaseStrings.Soup_SuperCBLUsed)}</strong>
                       <div style={{ fontSize: '14px', marginTop: '5px' }}>
-                        <div>Hierarchy Depth: {superCblInfo.depth}</div>
-                        <div>Sub-CBLs: {superCblInfo.subCblCount}</div>
+                        <div>
+                          {t(ShowcaseStrings.Soup_HierarchyDepth)}{' '}
+                          {superCblInfo.depth}
+                        </div>
+                        <div>
+                          {t(ShowcaseStrings.Soup_SubCBLs)}{' '}
+                          {superCblInfo.subCblCount}
+                        </div>
                         <div
                           style={{
                             fontSize: '12px',
@@ -951,7 +979,7 @@ export const BrightChainSoupDemo: React.FC = () => {
                             marginTop: '5px',
                           }}
                         >
-                          Large file split into hierarchical structure
+                          {t(ShowcaseStrings.Soup_LargeFileSplit)}
                         </div>
                       </div>
                     </div>
@@ -960,18 +988,17 @@ export const BrightChainSoupDemo: React.FC = () => {
                     className="whitening-info"
                     style={{ marginLeft: 0, marginBottom: '1rem' }}
                   >
-                    Your CBL has been stored in the block soup as two XOR
-                    components. Use this magnet URL to retrieve the file:
+                    {t(ShowcaseStrings.Soup_CBLStoredInfo)}
                   </p>
                   <div className="whitening-ids">
                     <div className="id-row">
-                      <span>Component 1:</span>
+                      <span>{t(ShowcaseStrings.Soup_Component1)}</span>
                       <code>
                         {whiteningResult.blockId1.substring(0, 20)}...
                       </code>
                     </div>
                     <div className="id-row">
-                      <span>Component 2:</span>
+                      <span>{t(ShowcaseStrings.Soup_Component2)}</span>
                       <code>
                         {whiteningResult.blockId2.substring(0, 20)}...
                       </code>
@@ -989,7 +1016,7 @@ export const BrightChainSoupDemo: React.FC = () => {
                         navigator.clipboard
                           .writeText(whiteningResult.magnetUrl)
                           .then(() => {
-                            alert('Magnet URL copied to clipboard!');
+                            alert(t(ShowcaseStrings.Soup_AlertCopied));
                           })
                           .catch(() => {
                             // Fallback for older browsers
@@ -999,11 +1026,11 @@ export const BrightChainSoupDemo: React.FC = () => {
                             input.select();
                             document.execCommand('copy');
                             document.body.removeChild(input);
-                            alert('Magnet URL copied to clipboard!');
+                            alert(t(ShowcaseStrings.Soup_AlertCopied));
                           });
                       }}
                     >
-                      📋 Copy
+                      {t(ShowcaseStrings.Soup_Copy)}
                     </button>
                   </div>
                 </div>
@@ -1013,7 +1040,7 @@ export const BrightChainSoupDemo: React.FC = () => {
               <div className="reconstruction-options">
                 <h3 className="reconstruction-header">
                   <span>🔄</span>
-                  Retrieve from Soup
+                  {t(ShowcaseStrings.Soup_RetrieveFromSoup)}
                 </h3>
                 <div className="reconstruction-buttons">
                   <button
@@ -1021,14 +1048,14 @@ export const BrightChainSoupDemo: React.FC = () => {
                     className="reconstruction-btn"
                   >
                     <span>📄</span>
-                    Upload CBL File
+                    {t(ShowcaseStrings.Soup_UploadCBLFile)}
                   </button>
                   <button
                     onClick={() => setShowMagnetInput(!showMagnetInput)}
                     className="reconstruction-btn"
                   >
                     <span>🧲</span>
-                    Use Magnet URL
+                    {t(ShowcaseStrings.Soup_UseMagnetURL)}
                   </button>
                 </div>
 
@@ -1036,9 +1063,7 @@ export const BrightChainSoupDemo: React.FC = () => {
                 {showCblUpload && (
                   <div className="cbl-upload-section">
                     <p className="cbl-info">
-                      Upload a .cbl file to reconstruct the original file from
-                      the block soup. The blocks must already be in the soup for
-                      reconstruction to work.
+                      {t(ShowcaseStrings.Soup_CBLUploadInfo)}
                     </p>
                     <input
                       ref={cblInputRef}
@@ -1054,7 +1079,7 @@ export const BrightChainSoupDemo: React.FC = () => {
                       className="cbl-upload-btn"
                     >
                       <span>📂</span>
-                      Choose CBL File
+                      {t(ShowcaseStrings.Soup_ChooseCBLFile)}
                     </button>
                   </div>
                 )}
@@ -1063,15 +1088,14 @@ export const BrightChainSoupDemo: React.FC = () => {
                 {showMagnetInput && (
                   <div className="magnet-input-section">
                     <p className="magnet-info">
-                      Paste a magnet URL to retrieve the file. The magnet URL
-                      references the whitened CBL components stored in the soup.
+                      {t(ShowcaseStrings.Soup_MagnetURLInfo)}
                     </p>
                     <div className="magnet-input-group">
                       <input
                         type="text"
                         value={magnetUrlInput}
                         onChange={(e) => setMagnetUrlInput(e.target.value)}
-                        placeholder="magnet:?xt=urn:brightchain:cbl&bs=...&b1=...&b2=..."
+                        placeholder={t(ShowcaseStrings.Soup_MagnetPlaceholder)}
                         className="magnet-text-input"
                       />
                       <button
@@ -1079,7 +1103,7 @@ export const BrightChainSoupDemo: React.FC = () => {
                         className="magnet-submit-btn"
                         disabled={!magnetUrlInput.trim()}
                       >
-                        Load
+                        {t(ShowcaseStrings.Soup_Load)}
                       </button>
                     </div>
                   </div>
@@ -1093,7 +1117,7 @@ export const BrightChainSoupDemo: React.FC = () => {
               >
                 <h3 className="reconstruction-header">
                   <span>💬</span>
-                  Message Passing
+                  {t(ShowcaseStrings.Soup_MessagePassing)}
                 </h3>
                 <button
                   onClick={() => setShowMessagePanel(!showMessagePanel)}
@@ -1101,7 +1125,9 @@ export const BrightChainSoupDemo: React.FC = () => {
                   style={{ width: '100%' }}
                 >
                   <span>{showMessagePanel ? '▼' : '▶'}</span>
-                  {showMessagePanel ? 'Hide' : 'Show'} Message Panel
+                  {showMessagePanel
+                    ? t(ShowcaseStrings.Soup_HideMessagePanel)
+                    : t(ShowcaseStrings.Soup_ShowMessagePanel)}
                 </button>
 
                 {showMessagePanel && (
@@ -1115,12 +1141,14 @@ export const BrightChainSoupDemo: React.FC = () => {
                         backgroundColor: '#f9f9f9',
                       }}
                     >
-                      <h4 style={{ marginTop: 0 }}>Send Message</h4>
+                      <h4 style={{ marginTop: 0 }}>
+                        {t(ShowcaseStrings.Soup_SendMessage)}
+                      </h4>
                       <div style={{ marginBottom: '10px' }}>
                         <label
                           style={{ display: 'block', marginBottom: '5px' }}
                         >
-                          From:
+                          {t(ShowcaseStrings.Soup_From)}
                         </label>
                         <input
                           type="text"
@@ -1138,7 +1166,7 @@ export const BrightChainSoupDemo: React.FC = () => {
                         <label
                           style={{ display: 'block', marginBottom: '5px' }}
                         >
-                          To:
+                          {t(ShowcaseStrings.Soup_To)}
                         </label>
                         <input
                           type="text"
@@ -1156,12 +1184,12 @@ export const BrightChainSoupDemo: React.FC = () => {
                         <label
                           style={{ display: 'block', marginBottom: '5px' }}
                         >
-                          Message:
+                          {t(ShowcaseStrings.Soup_Message)}
                         </label>
                         <textarea
                           value={messageContent}
                           onChange={(e) => setMessageContent(e.target.value)}
-                          placeholder="Type your message..."
+                          placeholder={t(ShowcaseStrings.Soup_TypeMessage)}
                           style={{
                             width: '100%',
                             minHeight: '80px',
@@ -1188,15 +1216,20 @@ export const BrightChainSoupDemo: React.FC = () => {
                           width: '100%',
                         }}
                       >
-                        📤 Send Message
+                        {t(ShowcaseStrings.Soup_SendMessage)}
                       </button>
                     </div>
 
                     <div>
-                      <h4>📬 Messages ({messages.length})</h4>
+                      <h4>
+                        {t(ShowcaseStrings.Soup_MessagesTemplate).replace(
+                          '{COUNT}',
+                          String(messages.length),
+                        )}
+                      </h4>
                       {messages.length === 0 ? (
                         <p style={{ color: '#666', fontStyle: 'italic' }}>
-                          No messages yet. Send your first message! ✨
+                          {t(ShowcaseStrings.Soup_NoMessagesYet)}
                         </p>
                       ) : (
                         messages.map((msg) => (
@@ -1213,8 +1246,10 @@ export const BrightChainSoupDemo: React.FC = () => {
                             <div
                               style={{ marginBottom: '6px', fontSize: '12px' }}
                             >
-                              <strong>From:</strong> {msg.senderId} →{' '}
-                              <strong>To:</strong> {msg.recipients.join(', ')}
+                              <strong>{t(ShowcaseStrings.Soup_From)}</strong>{' '}
+                              {msg.senderId} →{' '}
+                              <strong>{t(ShowcaseStrings.Soup_To)}</strong>{' '}
+                              {msg.recipients.join(', ')}
                             </div>
                             <div
                               style={{
@@ -1247,7 +1282,7 @@ export const BrightChainSoupDemo: React.FC = () => {
                                 fontSize: '12px',
                               }}
                             >
-                              📥 Retrieve from Soup
+                              {t(ShowcaseStrings.Soup_RetrieveFromSoupBtn)}
                             </button>
                           </div>
                         ))
@@ -1262,7 +1297,7 @@ export const BrightChainSoupDemo: React.FC = () => {
                 <div className="file-actions-section">
                   <h3 className="actions-header">
                     <span>💬</span>
-                    Stored Messages
+                    {t(ShowcaseStrings.Soup_StoredMessages)}
                   </h3>
                   <div className="actions-grid">
                     {messages.map((msg) => (
@@ -1297,7 +1332,7 @@ export const BrightChainSoupDemo: React.FC = () => {
                           className="action-btn primary"
                         >
                           <span>📥</span>
-                          Retrieve from Soup
+                          {t(ShowcaseStrings.Soup_RetrieveFromSoupBtn)}
                         </button>
                       </div>
                     ))}
@@ -1323,7 +1358,7 @@ export const BrightChainSoupDemo: React.FC = () => {
               <div className="file-actions-section">
                 <h3 className="actions-header">
                   <span>⚡</span>
-                  Stored Files & Messages
+                  {t(ShowcaseStrings.Soup_StoredFilesAndMessages)}
                 </h3>
                 <div className="actions-grid">
                   {receipts.map((receipt) => (
@@ -1336,7 +1371,9 @@ export const BrightChainSoupDemo: React.FC = () => {
                           onClick={() => {
                             if (
                               confirm(
-                                `Remove "${receipt.fileName}" from the list? (Blocks will remain in the soup)`,
+                                t(ShowcaseStrings.Soup_RemoveConfirmTemplate, {
+                                  NAME: receipt.fileName,
+                                }),
                               )
                             ) {
                               setReceipts((prev) =>
@@ -1347,7 +1384,7 @@ export const BrightChainSoupDemo: React.FC = () => {
                               }
                             }
                           }}
-                          title="Remove from list"
+                          title={t(ShowcaseStrings.Soup_RemoveFromList)}
                         >
                           ✕
                         </button>
@@ -1362,15 +1399,15 @@ export const BrightChainSoupDemo: React.FC = () => {
                             }}
                           >
                             <div>
-                              <strong>From:</strong>{' '}
+                              <strong>{t(ShowcaseStrings.Soup_From)}</strong>{' '}
                               {receipt.messageMetadata.senderId}
                             </div>
                             <div>
-                              <strong>To:</strong>{' '}
+                              <strong>{t(ShowcaseStrings.Soup_To)}</strong>{' '}
                               {receipt.messageMetadata.recipients.join(', ')}
                             </div>
                             <div>
-                              <strong>Time:</strong>{' '}
+                              <strong>{t(ShowcaseStrings.Soup_Time)}:</strong>{' '}
                               {receipt.messageMetadata.timestamp.toLocaleString()}
                             </div>
                           </div>
@@ -1382,7 +1419,7 @@ export const BrightChainSoupDemo: React.FC = () => {
                             className="action-btn primary"
                           >
                             <span>📥</span>
-                            Retrieve Message
+                            {t(ShowcaseStrings.Soup_RetrieveMessage)}
                           </button>
                         ) : (
                           <>
@@ -1392,14 +1429,14 @@ export const BrightChainSoupDemo: React.FC = () => {
                               disabled={isProcessing}
                             >
                               <span>📥</span>
-                              Retrieve File
+                              {t(ShowcaseStrings.Soup_RetrieveFile)}
                             </button>
                             <button
                               onClick={() => handleDownloadCBL(receipt)}
                               className="action-btn secondary"
                             >
                               <span>📄</span>
-                              Download CBL
+                              {t(ShowcaseStrings.Soup_DownloadCBL)}
                             </button>
                           </>
                         )}
@@ -1409,7 +1446,7 @@ export const BrightChainSoupDemo: React.FC = () => {
                         .whitening && (
                         <details className="magnet-details">
                           <summary className="magnet-summary">
-                            🧲 Magnet URL
+                            {t(ShowcaseStrings.Soup_MagnetURL)}
                           </summary>
                           <div className="magnet-url-container">
                             <input
@@ -1437,7 +1474,7 @@ export const BrightChainSoupDemo: React.FC = () => {
                                 navigator.clipboard
                                   .writeText(magnetUrl)
                                   .then(() => {
-                                    alert('Magnet URL copied to clipboard!');
+                                    alert(t(ShowcaseStrings.Soup_AlertCopied));
                                   })
                                   .catch(() => {
                                     // Fallback for older browsers
@@ -1448,18 +1485,17 @@ export const BrightChainSoupDemo: React.FC = () => {
                                     input.select();
                                     document.execCommand('copy');
                                     document.body.removeChild(input);
-                                    alert('Magnet URL copied to clipboard!');
+                                    alert(t(ShowcaseStrings.Soup_AlertCopied));
                                   });
                               }}
                               title="Copy to clipboard"
                             >
-                              📋 Copy
+                              {t(ShowcaseStrings.Soup_Copy)}
                             </button>
                           </div>
                           <div className="magnet-url-info">
                             <small>
-                              Whitened CBL magnet URL (use "Use Magnet URL" to
-                              retrieve)
+                              {t(ShowcaseStrings.Soup_WhitenedCBLInfo)}
                             </small>
                           </div>
                         </details>
@@ -1478,7 +1514,7 @@ export const BrightChainSoupDemo: React.FC = () => {
               <div className="process-steps">
                 <h3 className="process-header">
                   <span>🔄</span>
-                  Processing Steps
+                  {t(ShowcaseStrings.Soup_ProcessingSteps)}
                 </h3>
                 {processSteps.map((step) => (
                   <ProcessStepIndicator key={step.id} step={step} />
@@ -1491,7 +1527,7 @@ export const BrightChainSoupDemo: React.FC = () => {
               <div className="process-steps whitening-steps">
                 <h3 className="process-header">
                   <span>🔐</span>
-                  CBL Storage Steps
+                  {t(ShowcaseStrings.Soup_CBLStorageSteps)}
                 </h3>
                 {whiteningSteps.map((step) => (
                   <ProcessStepIndicator key={step.id} step={step} />
@@ -1504,21 +1540,23 @@ export const BrightChainSoupDemo: React.FC = () => {
               <div className="block-details">
                 <h3 className="block-details-header">
                   <span>🥫</span>
-                  Block Details
+                  {t(ShowcaseStrings.Soup_BlockDetails)}
                 </h3>
                 <div className="block-info">
                   <p>
-                    <strong>Index:</strong> #{selectedBlock.index}
+                    <strong>{t(ShowcaseStrings.Soup_Index)}</strong> #
+                    {selectedBlock.index}
                   </p>
                   <p>
-                    <strong>Size:</strong> {selectedBlock.size} bytes
+                    <strong>{t(ShowcaseStrings.Soup_Size)}</strong>{' '}
+                    {selectedBlock.size} bytes
                   </p>
                   <p>
-                    <strong>ID:</strong>
+                    <strong>{t(ShowcaseStrings.Soup_Id)}</strong>
                   </p>
                   <div className="block-id">{selectedBlock.id}</div>
                   <p>
-                    <strong>Color:</strong>
+                    <strong>{t(ShowcaseStrings.Soup_Color)}</strong>
                     <span
                       className="block-color-swatch"
                       style={{
@@ -1534,21 +1572,21 @@ export const BrightChainSoupDemo: React.FC = () => {
             <div className="stats-panel">
               <h3 className="stats-header">
                 <span>📊</span>
-                Soup Stats
+                {t(ShowcaseStrings.Soup_SoupStats)}
               </h3>
               <div className="stats-grid">
                 <div className="stat-item">
-                  <span>Total Files:</span>
+                  <span>{t(ShowcaseStrings.Soup_TotalFiles)}</span>
                   <span className="stat-value">{receipts.length}</span>
                 </div>
                 <div className="stat-item">
-                  <span>Total Blocks:</span>
+                  <span>{t(ShowcaseStrings.Soup_TotalBlocks)}</span>
                   <span className="stat-value">
                     {debugInfo?.blockCount || 0}
                   </span>
                 </div>
                 <div className="stat-item">
-                  <span>Block Size:</span>
+                  <span>{t(ShowcaseStrings.Soup_BlockSize)}</span>
                   <span className="stat-value">{BlockSize.Small} bytes</span>
                 </div>
               </div>
@@ -1559,23 +1597,25 @@ export const BrightChainSoupDemo: React.FC = () => {
               <div className="debug-panel">
                 <h3 className="debug-header">
                   <span>🔧</span>
-                  Session Debug
+                  {t(ShowcaseStrings.Soup_SessionDebug)}
                 </h3>
                 <div className="debug-info">
                   <p>
-                    <strong>Session ID:</strong>
+                    <strong>{t(ShowcaseStrings.Soup_SessionId)}</strong>
                   </p>
                   <div className="session-id">{debugInfo.sessionId}</div>
                   <p>
-                    <strong>Blocks in Memory:</strong> {debugInfo.blockCount}
+                    <strong>{t(ShowcaseStrings.Soup_BlocksInMemory)}</strong>{' '}
+                    {debugInfo.blockCount}
                   </p>
                   <p>
-                    <strong>Block Size:</strong> {debugInfo.blockSize} bytes
+                    <strong>{t(ShowcaseStrings.Soup_BlockSize)}</strong>{' '}
+                    {debugInfo.blockSize} bytes
                   </p>
                   {debugInfo.blockIds.length > 0 && (
                     <>
                       <p>
-                        <strong>Block IDs:</strong>
+                        <strong>{t(ShowcaseStrings.Soup_BlockIds)}</strong>
                       </p>
                       <div className="block-ids">
                         {debugInfo.blockIds.map((id: string, index: number) => (
@@ -1597,7 +1637,7 @@ export const BrightChainSoupDemo: React.FC = () => {
                     }}
                     className="clear-session-btn"
                   >
-                    Clear Session
+                    {t(ShowcaseStrings.Soup_ClearSession)}
                   </button>
                 </div>
               </div>

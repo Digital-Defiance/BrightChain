@@ -26,7 +26,7 @@ BrightStack is the full-stack paradigm: **BrightChain + Express + React + Node.j
 - **Owner-Free File System (OFFS)** - Decentralized storage with plausible deniability and legal protection
 - **Super CBL Architecture** - Unlimited file sizes through hierarchical block lists
 - **Identity Management** - BIP39/32 key derivation with SECP256k1 cryptography
-- **Brokered Anonymity** - Anonymous operations with accountability via quorum consensus
+- **Brokered Anonymity** - Anonymous operations with accountability via BrightTrust consensus
 
 ### Communication Layer
 - **Messaging System** - Encrypted message passing with gossip protocol propagation
@@ -57,7 +57,7 @@ BrightStack is the full-stack paradigm: **BrightChain + Express + React + Node.j
   - Government compliance: Audit logs, bulletin board, verifiable receipts
   - Hierarchical aggregation for large-scale elections
 
-- **Quorum Governance** - Democratic decision-making with Shamir's Secret Sharing
+- **BrightTrust Governance** - Democratic decision-making with Shamir's Secret Sharing
   - Configurable thresholds (2 to 1,048,575 members)
   - Document sealing/unsealing with majority consensus
   - Temporal expiration for statute of limitations

@@ -21,8 +21,10 @@
 import { EmailSerializer } from '@brightchain/brightchain-lib';
 
 import type { IEmailGatewayConfig } from './emailGatewayConfig';
-import type { IDomainAwareComponent } from './emailGatewayService';
-import type { IOutboundQueueItem } from './emailGatewayService';
+import type {
+  IDomainAwareComponent,
+  IOutboundQueueItem,
+} from './emailGatewayService';
 import type { OutboundQueue } from './outboundQueue';
 import type { IOutboundQueueStore } from './outboundQueueStore';
 

@@ -1,7 +1,7 @@
 /**
  * @fileoverview Property-based tests for Block API round-trip
  *
- * **Feature: backend-blockstore-quorum, Property 13: Block API Round-Trip**
+ * **Feature: backend-blockstore-brightTrust, Property 13: Block API Round-Trip**
  * **Validates: Requirements 11.1, 11.2, 11.4**
  *
  * This test suite verifies that:

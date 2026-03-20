@@ -10,9 +10,13 @@ import {
 import { GiCookingPot } from 'react-icons/gi';
 import { useInView } from 'react-intersection-observer';
 import { Link } from 'react-router-dom';
+import buildWithBrightStackImg from '../assets/images/build-with-brightstack.png';
+import { useShowcaseI18n } from '../i18n/ShowcaseI18nContext';
+import { ShowcaseStrings } from '../i18n/showcaseStrings';
 import './About.css';
 
 const About = () => {
+  const { t } = useShowcaseI18n();
   const [ref, inView] = useInView({
     triggerOnce: true,
     threshold: 0.1,
@@ -27,12 +31,11 @@ const About = () => {
         transition={{ duration: 0.6 }}
       >
         <h2 className="section-title">
-          Built with <span className="gradient-text">❤️</span> by Digital
-          Defiance
+          {t(ShowcaseStrings.About_Title_BuiltWith)}{' '}
+          <span className="gradient-text">❤️</span>{' '}
+          {t(ShowcaseStrings.About_Title_By)}
         </h2>
-        <p className="about-subtitle">
-          Open source innovation in decentralized infrastructure
-        </p>
+        <p className="about-subtitle">{t(ShowcaseStrings.About_Subtitle)}</p>
 
         <div className="about-content">
           <motion.div
@@ -42,111 +45,46 @@ const About = () => {
             transition={{ delay: 0.2, duration: 0.6 }}
           >
             <h3 className="about-heading">
-              <FaRocket /> Our Vision
+              <FaRocket /> {t(ShowcaseStrings.About_Vision_Title)}
             </h3>
-            <p>
-              At <strong>Digital Defiance</strong>, we believe in empowering
-              individuals and organizations with truly decentralized
-              infrastructure that respects privacy, promotes sustainability, and
-              enables democratic participation.
-            </p>
-            <p>
-              <strong>BrightChain</strong> revolutionizes data storage using the
-              &ldquo;Bright Block Soup&rdquo; concept. Your files are broken
-              into blocks and mixed with random data using XOR operations,
-              making them appear completely random while maintaining perfect
-              security. By eliminating mining waste, monetizing unused storage,
-              and implementing features like homomorphic voting and brokered
-              anonymity, we&rsquo;ve created a platform that works for everyone.
-            </p>
-            <p>
-              <strong>Not a Cryptocurrency.</strong> When you hear
-              &ldquo;blockchain,&rdquo; you probably think Bitcoin. BrightChain
-              has no currency, no proof of work, and no mining. Instead of
-              burning energy to mint coins, BrightChain values real
-              contributions of storage and compute. Those contributions are
-              tracked in a unit called the <strong>Joule</strong>, which is tied
-              to real-world energy costs by formula &mdash; not market
-              speculation. You can&rsquo;t mine Joules or trade them; they
-              reflect actual resource costs, and we refine that formula over
-              time.
-            </p>
-            <p>
-              <strong>The Storage vs. Power Density Advantage</strong>: Every
-              blockchain has waste somewhere. BrightChain cuts down on waste in
-              every way possible, but does have some overhead in the way of its
-              storage mechanism. However, storage is one of the areas that has
-              been the most cost-effective and where we've achieved massive
-              density in recent years, whereas datacenters are struggling to
-              achieve the needed power density for CPU requirements of
-              blockchains and AI. The tradeoff of minimal storage overhead for
-              anonymity and absolution of concern from copyright lawsuits and
-              the like, or hosting inappropriate material, enables everyone to
-              be all in and make the most out of our vast storage resources
-              spread out across the globe.
-            </p>
+            <p>{t(ShowcaseStrings.About_Vision_P1)}</p>
+            <p>{t(ShowcaseStrings.About_Vision_P2)}</p>
+            <p>{t(ShowcaseStrings.About_Vision_NotCrypto)}</p>
+            <p>{t(ShowcaseStrings.About_Vision_StorageDensity)}</p>
 
             <h3 className="about-heading" style={{ marginTop: '2rem' }}>
-              <img
-                height="40"
-                width="397"
-                src="https://raw.githubusercontent.com/Digital-Defiance/BrightChain/main/brightchain-react/src/assets/images/build-with-brightstack.png"
-              />
+              <img height="40" width="397" src={buildWithBrightStackImg} />
             </h3>
-            <p>
-              <strong>BrightStack</strong> is the full-stack paradigm for
-              decentralized apps: BrightChain + Express + React + Node. If you
-              know the MERN stack, you already know BrightStack &mdash; just
-              swap MongoDB for <strong>BrightDB</strong>.
-            </p>
-            <p>
-              <strong>BrightDB</strong> is a MongoDB-like document database on
-              the Owner-Free Filesystem with full CRUD, queries, indexes,
-              transactions, and aggregation pipelines. Same patterns you use
-              with MongoDB &mdash; collections, find, insert, update &mdash; but
-              every document is stored as privacy-preserving whitened blocks.
-            </p>
-            <p>
-              BrightPass, BrightMail, and BrightHub were all built on
-              BrightStack, proving that decentralized app development can be as
-              easy as traditional full-stack.
-            </p>
+            <p>{t(ShowcaseStrings.About_BrightStack_P1)}</p>
+            <p>{t(ShowcaseStrings.About_BrightStack_P2)}</p>
+            <p>{t(ShowcaseStrings.About_BrightStack_P3)}</p>
             <p className="highlight-text">
-              <FaCode /> <strong>100% Open Source.</strong> BrightChain is fully
-              open source under the MIT License. Build your own dApps on
-              BrightStack and contribute to the decentralized future.
+              <FaCode /> {t(ShowcaseStrings.About_OpenSource)}
             </p>
-            <p>BrightChain is a work in progress. Presently, we aim to leave the
-              build stable on a daily basis, but things can slip through the
-              cracks and BrightChain is not yet mature. We apologize for any
-              inconvenience or instability.
-            </p>
+            <p>{t(ShowcaseStrings.About_WorkInProgress)}</p>
 
             <h3 className="about-heading" style={{ marginTop: '2rem' }}>
-              <FaCode /> Other Implementations
+              <FaCode /> {t(ShowcaseStrings.About_OtherImpl_Title)}
             </h3>
             <p>
-              While this TypeScript/Node.js implementation is the primary and
-              most mature version of BrightChain, a parallel{' '}
+              {t(ShowcaseStrings.About_OtherImpl_P1_Before)}
               <a
                 href="https://github.com/Digital-Defiance/brightchain-cpp"
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                <strong>C++ core library</strong>
+                <strong>{t(ShowcaseStrings.About_OtherImpl_P1_CppLink)}</strong>
               </a>{' '}
-              with{' '}
               <a
                 href="https://github.com/Digital-Defiance/BrightChain-Apple"
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                <strong>macOS/iOS UI</strong>
-              </a>{' '}
-              is in development. This native implementation brings BrightChain's
-              privacy and security features to Apple platforms. Both
-              repositories are in early development and not yet ready for
-              production use.
+                <strong>
+                  {t(ShowcaseStrings.About_OtherImpl_P1_AppleLink)}
+                </strong>
+              </a>
+              {t(ShowcaseStrings.About_OtherImpl_P1_After)}
             </p>
           </motion.div>
 
@@ -160,12 +98,8 @@ const About = () => {
               <div className="feature-icon">
                 <FaHeart />
               </div>
-              <h4>Owner-Free Storage</h4>
-              <p>
-                Cryptographic randomness removes storage liability. No single
-                block contains identifiable content, providing legal immunity
-                for node operators.
-              </p>
+              <h4>{t(ShowcaseStrings.About_Feature_OwnerFree_Title)}</h4>
+              <p>{t(ShowcaseStrings.About_Feature_OwnerFree_Desc)}</p>
             </motion.div>
 
             <motion.div
@@ -177,11 +111,8 @@ const About = () => {
               <div className="feature-icon">
                 <FaCode />
               </div>
-              <h4>Energy Efficient</h4>
-              <p>
-                No wasteful proof-of-work mining. All computation serves useful
-                purposes — storage, verification, and network operations.
-              </p>
+              <h4>{t(ShowcaseStrings.About_Feature_EnergyEfficient_Title)}</h4>
+              <p>{t(ShowcaseStrings.About_Feature_EnergyEfficient_Desc)}</p>
             </motion.div>
 
             <motion.div
@@ -193,11 +124,8 @@ const About = () => {
               <div className="feature-icon">
                 <FaUsers />
               </div>
-              <h4>Anonymous yet Accountable</h4>
-              <p>
-                Privacy with moderation capabilities. Brokered anonymity
-                balances privacy with accountability via quorum consensus.
-              </p>
+              <h4>{t(ShowcaseStrings.About_Feature_Anonymous_Title)}</h4>
+              <p>{t(ShowcaseStrings.About_Feature_Anonymous_Desc)}</p>
             </motion.div>
           </div>
         </div>
@@ -208,16 +136,12 @@ const About = () => {
           animate={inView ? { opacity: 1, y: 0 } : {}}
           transition={{ delay: 0.6, duration: 0.6 }}
         >
-          <h3>Join the Revolution</h3>
-          <p>
-            Help us build the future of decentralized infrastructure. Contribute
-            to BrightChain, report issues, or star us on GitHub to show your
-            support for sustainable blockchain technology.
-          </p>
+          <h3>{t(ShowcaseStrings.About_CTA_Title)}</h3>
+          <p>{t(ShowcaseStrings.About_CTA_Desc)}</p>
           <div className="cta-buttons">
             <Link to="/demo" className="btn btn-primary">
               <GiCookingPot />
-              🥫 Interactive Demo
+              {t(ShowcaseStrings.About_CTA_InteractiveDemo)}
             </Link>
             <a
               href="https://digitaldefiance.org"
@@ -226,7 +150,7 @@ const About = () => {
               className="btn btn-secondary"
             >
               <FaLightbulb />
-              Learn More
+              {t(ShowcaseStrings.About_CTA_LearnMore)}
             </a>
             <a
               href="https://github.com/Digital-Defiance/BrightChain"
@@ -235,20 +159,17 @@ const About = () => {
               className="btn btn-secondary"
             >
               <FaGithub />
-              Visit BrightChain on GitHub
+              {t(ShowcaseStrings.About_CTA_GitHub)}
             </a>
             <a href="/docs/" className="btn btn-secondary">
               <FaCode />
-              Read the Documentation
+              {t(ShowcaseStrings.About_CTA_Docs)}
             </a>
           </div>
         </motion.div>
 
         <div className="about-footer">
-          <p>
-            © {new Date().getFullYear()} Digital Defiance. Made with{' '}
-            <span className="heart">❤️</span> for the development community.
-          </p>
+          <p>{t(ShowcaseStrings.About_Footer_CopyrightTemplate)}</p>
           <p className="footer-links">
             <a
               href="https://github.com/Digital-Defiance/BrightChain/blob/main/LICENSE"
@@ -275,10 +196,10 @@ const About = () => {
             </a>
             {' • '}
             <a href="/demo" rel="noopener noreferrer">
-              Interactive Demo
+              {t(ShowcaseStrings.Hero_CTA_SoupDemo)}
             </a>
             {' • '}
-            <a href="/docs/">Documentation</a>
+            <a href="/docs/">{t(ShowcaseStrings.Nav_Docs)}</a>
           </p>
         </div>
       </motion.div>

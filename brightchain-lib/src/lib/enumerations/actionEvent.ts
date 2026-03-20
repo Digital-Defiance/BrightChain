@@ -1,8 +1,8 @@
-export enum QuorumDataRecordActionEventType {
+export enum BrightTrustDataRecordActionEventType {
   Initiate,
   Confirm,
   Deny,
   Cancel,
   Override,
 }
-export default QuorumDataRecordActionEventType;
+export default BrightTrustDataRecordActionEventType;

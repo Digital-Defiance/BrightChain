@@ -75,7 +75,7 @@ function makeInput(
 ): IBrightChainMemberInitInput<GuidV4Buffer> {
   return {
     systemUser: { id: hexToGuidBuffer(systemId), type: MemberType.System },
-    adminUser: { id: hexToGuidBuffer(adminId), type: MemberType.User },
+    adminUser: { id: hexToGuidBuffer(adminId), type: MemberType.Admin },
     memberUser: { id: hexToGuidBuffer(memberId), type: MemberType.User },
   };
 }

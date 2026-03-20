@@ -21,15 +21,15 @@ import type {
 } from '@digitaldefiance/node-express-suite';
 import type { IDatabase } from '@digitaldefiance/suite-core-lib';
 import { brightchainDatabaseInit } from '../databaseInit';
-import type { DocumentStore } from '../datastore/document-store';
 import { BrightDbDocumentStoreAdapter } from '../datastore/bright-db-document-store-adapter';
+import type { DocumentStore } from '../datastore/document-store';
 import type { BrightDbEnvironment } from '../environment';
 import type { IBrightDbApplication } from '../interfaces/bright-db-application';
 import { BrightDbAuthService } from '../services/auth';
 import { BrightDbAuthenticationProvider } from '../services/bright-db-authentication-provider';
 import {
-  seedDevStore,
   printDevStoreResults,
+  seedDevStore,
   type IDevStoreSeederResult,
 } from '../services/dev-store-seeder';
 
@@ -150,7 +150,10 @@ export class BrightDbDatabasePlugin<TID extends PlatformID>
         this._brightDb,
         app.environment.jwtSecret,
       );
-      const memberStore = new MemberStore<TID>(this._blockStore, this._brightDb);
+      const memberStore = new MemberStore<TID>(
+        this._blockStore,
+        this._brightDb,
+      );
       const energyStore = new EnergyAccountStore();
       this._initMemberStore = memberStore;
 
@@ -186,7 +189,9 @@ export class BrightDbDatabasePlugin<TID extends PlatformID>
    * BrightChain doesn't use connection URIs — returns empty string.
    */
   async setupDevStore(): Promise<string> {
-    console.log('[BrightDB] Dev database mode — using ephemeral MemoryBlockStore.');
+    console.log(
+      '[BrightDB] Dev database mode — using ephemeral MemoryBlockStore.',
+    );
     return '';
   }
 
@@ -219,8 +224,7 @@ export class BrightDbDatabasePlugin<TID extends PlatformID>
     }
 
     const poolName =
-      this._environment.devDatabasePoolName ??
-      this._environment.memberPoolName;
+      this._environment.devDatabasePoolName ?? this._environment.memberPoolName;
 
     const result: IDevStoreSeederResult = await seedDevStore(
       this._blockStore,
@@ -265,8 +269,13 @@ export class BrightDbDatabasePlugin<TID extends PlatformID>
    */
   get db(): DocumentStore | undefined {
     if (!this._brightDb) return undefined;
-    if (!this._documentStoreAdapter || this._documentStoreAdapter.brightDb !== this._brightDb) {
-      this._documentStoreAdapter = new BrightDbDocumentStoreAdapter(this._brightDb);
+    if (
+      !this._documentStoreAdapter ||
+      this._documentStoreAdapter.brightDb !== this._brightDb
+    ) {
+      this._documentStoreAdapter = new BrightDbDocumentStoreAdapter(
+        this._brightDb,
+      );
     }
     return this._documentStoreAdapter;
   }

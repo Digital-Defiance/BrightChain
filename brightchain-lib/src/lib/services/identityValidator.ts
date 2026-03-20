@@ -26,12 +26,12 @@ import {
   ContentWithIdentity,
   IdentityMode,
 } from '../interfaces/contentWithIdentity';
+import { IBrightTrustDatabase } from '../interfaces/services/brightTrustDatabase';
 import {
   IdentityValidationResult,
   IIdentityValidator,
 } from '../interfaces/services/identityValidator';
 import { IMembershipProofService } from '../interfaces/services/membershipProof';
-import { IQuorumDatabase } from '../interfaces/services/quorumDatabase';
 import { ANONYMOUS_ID } from './identitySealingPipeline';
 
 /**
@@ -72,7 +72,7 @@ export class IdentityValidator<TID extends PlatformID = Uint8Array>
   implements IIdentityValidator<TID>
 {
   constructor(
-    private readonly db: IQuorumDatabase<TID>,
+    private readonly db: IBrightTrustDatabase<TID>,
     private readonly eciesService: ECIESService<TID>,
     private readonly membershipProofService: IMembershipProofService<TID>,
   ) {}

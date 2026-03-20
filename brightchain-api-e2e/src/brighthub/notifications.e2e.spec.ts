@@ -220,7 +220,7 @@ describe('BrightHub Notifications API — Creation and Retrieval', () => {
   it('should require userId query parameter', async () => {
     try {
       await axios.get(NOTIF_BASE, authHeader(postAuthor.token));
-      fail('Expected 400 for missing userId');
+      throw new Error('Expected 400 for missing userId');
     } catch (err) {
       const error = err as AxiosError;
       expect(error.response?.status).toBe(400);
@@ -429,7 +429,7 @@ describe('BrightHub Notifications API — Preference Updates', () => {
   it('should require userId for preferences', async () => {
     try {
       await axios.get(`${NOTIF_BASE}/preferences`, authHeader(user.token));
-      fail('Expected 400 for missing userId');
+      throw new Error('Expected 400 for missing userId');
     } catch (err) {
       const error = err as AxiosError;
       expect(error.response?.status).toBe(400);
@@ -443,7 +443,7 @@ describe('BrightHub Notifications API — Preference Updates', () => {
         { categorySettings: {} },
         authHeader(user.token),
       );
-      fail('Expected 400 for missing userId');
+      throw new Error('Expected 400 for missing userId');
     } catch (err) {
       const error = err as AxiosError;
       expect(error.response?.status).toBe(400);
@@ -602,7 +602,7 @@ describe('BrightHub Notifications API — Quiet Hours', () => {
         },
         authHeader(postAuthor.token),
       );
-      fail('Expected 400 for missing userId');
+      throw new Error('Expected 400 for missing userId');
     } catch (err) {
       const error = err as AxiosError;
       expect(error.response?.status).toBe(400);
@@ -696,7 +696,7 @@ describe('BrightHub Notifications API — Do Not Disturb', () => {
         { enabled: true },
         authHeader(user.token),
       );
-      fail('Expected 400 for missing userId');
+      throw new Error('Expected 400 for missing userId');
     } catch (err) {
       const error = err as AxiosError;
       expect(error.response?.status).toBe(400);

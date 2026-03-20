@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import {
-  BlockService,
   BreachDetector,
   CBLService,
   ChecksumService,
@@ -11,11 +10,7 @@ import {
   TOTPEngine,
   VCBLService,
 } from '@brightchain/brightchain-lib';
-import {
-  EmailString,
-  Member,
-  MemberType,
-} from '@digitaldefiance/ecies-lib';
+import { EmailString, Member, MemberType } from '@digitaldefiance/ecies-lib';
 import { CoreLanguageCode } from '@digitaldefiance/i18n-lib';
 import { PlatformID } from '@digitaldefiance/node-ecies-lib';
 import {
@@ -41,7 +36,6 @@ import {
   validationError,
 } from '../../utils/errorResponse';
 import { BaseController } from '../base';
-import { SessionsController } from './sessions';
 
 // ─── Response Interfaces ────────────────────────────────────────
 
@@ -187,19 +181,9 @@ export class BrightPassController<
   }
 
   private getAuthMemberId(req: { headers: any }): string {
-    const sessionsController =
-      this.application.getController<SessionsController>('sessions');
-    try {
-      const member = sessionsController.getMemberFromSession(
-        (req.headers as any).authorization as string,
-      );
-      if (!member) {
-        throw new Error('No member found');
-      }
-      return member.id.toString();
-    } catch {
-      throw new AuthenticationRequiredError();
-    }
+    const user = (req as { user?: { id?: string } }).user;
+    if (user && typeof user.id === 'string') return user.id;
+    throw new AuthenticationRequiredError();
   }
 
   protected initRouteDefinitions(): void {

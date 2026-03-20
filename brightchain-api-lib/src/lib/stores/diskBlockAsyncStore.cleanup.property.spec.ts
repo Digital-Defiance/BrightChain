@@ -1,7 +1,7 @@
 /**
  * @fileoverview Property-based tests for DiskBlockAsyncStore cleanup with CBL protection
  *
- * **Feature: backend-blockstore-quorum, Property 4: Block Cleanup with CBL Protection**
+ * **Feature: backend-blockstore-brightTrust, Property 4: Block Cleanup with CBL Protection**
  * **Validates: Requirements 3.2, 3.4**
  *
  * This test suite verifies that:

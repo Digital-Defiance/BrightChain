@@ -112,7 +112,7 @@ describe('BrightHub Follow API — Follow / Unfollow', () => {
         { followerId: userA.memberId },
         authHeader(userA.token),
       );
-      fail('Expected error for self-follow');
+      throw new Error('Expected error for self-follow');
     } catch (err) {
       const error = err as AxiosError;
       expect(error.response?.status).toBe(400);
@@ -165,7 +165,7 @@ describe('BrightHub Follow API — Follow / Unfollow', () => {
         {},
         authHeader(userA.token),
       );
-      fail('Expected 400 for missing followerId');
+      throw new Error('Expected 400 for missing followerId');
     } catch (err) {
       const error = err as AxiosError;
       expect(error.response?.status).toBe(400);
@@ -180,7 +180,7 @@ describe('BrightHub Follow API — Follow / Unfollow', () => {
         { followerId: userA.memberId },
         authHeader(userA.token),
       );
-      fail('Expected error for following non-existent user');
+      throw new Error('Expected error for following non-existent user');
     } catch (err) {
       const error = err as AxiosError;
       expect(error.response?.status).toBeGreaterThanOrEqual(400);
@@ -273,7 +273,7 @@ describe('BrightHub Timeline API — Home Timeline', () => {
   it('should require userId query parameter for home timeline', async () => {
     try {
       await axios.get(`${TIMELINE_BASE}/home`, authHeader(follower.token));
-      fail('Expected 400 for missing userId');
+      throw new Error('Expected 400 for missing userId');
     } catch (err) {
       const error = err as AxiosError;
       expect(error.response?.status).toBe(400);
@@ -570,7 +570,7 @@ describe('BrightHub Search API — Post Search', () => {
   it('should require q query parameter', async () => {
     try {
       await axios.get(SEARCH_BASE, authHeader(user.token));
-      fail('Expected 400 for missing q parameter');
+      throw new Error('Expected 400 for missing q parameter');
     } catch (err) {
       const error = err as AxiosError;
       expect(error.response?.status).toBe(400);
@@ -742,7 +742,7 @@ describe('BrightHub Users API — Profile Retrieval', () => {
     const fakeId = '00000000-0000-0000-0000-000000000000';
     try {
       await axios.get(`${USERS_BASE}/${fakeId}`, authHeader(user.token));
-      fail('Expected 404 for non-existent user');
+      throw new Error('Expected 404 for non-existent user');
     } catch (err) {
       const error = err as AxiosError;
       expect(error.response?.status).toBeGreaterThanOrEqual(400);

@@ -2,7 +2,10 @@
 import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import react from '@vitejs/plugin-react';
+import { createRequire } from 'node:module';
 import { defineConfig } from 'vite';
+
+const require = createRequire(import.meta.url);
 
 export default defineConfig(({ mode }) => ({
   root: import.meta.dirname,
@@ -62,11 +65,17 @@ export default defineConfig(({ mode }) => ({
       // Stub out server-only modules
       'file-type': '/dev/null',
       'pg-hstore': '/dev/null',
+      // Provide Buffer polyfill for browser (used by bloom-filters).
+      // Must resolve to the actual package path so Vite doesn't use
+      // its built-in browser-external stub.
+      buffer: require.resolve('buffer/'),
     },
   },
 
   define: {
     'process.env': {},
+    // Some CJS packages reference `global` instead of `globalThis`
+    global: 'globalThis',
   },
 
   server: {

@@ -4,6 +4,7 @@ import {
   Application,
   json,
   NextFunction,
+  raw,
   Request,
   Response,
   urlencoded,
@@ -83,12 +84,12 @@ export class Middlewares {
             ],
             scriptSrc: [
               "'self'",
-              //"'unsafe-inline'",
-              "'strict-dynamic'",
+              "'unsafe-inline'",
               'https://kit.fontawesome.com',
               (req: IncomingMessage, res: ServerResponse) =>
                 `'nonce-${(res as Response).locals['cspNonce']}'`,
               `'sha256-6PKsc2tce3h07DOGUTGAjjPqKvoXMqTLynuHAwpWTL4='`, // fontawesome
+              "'strict-dynamic'",
             ],
             styleSrc: [
               "'self'",
@@ -108,6 +109,8 @@ export class Middlewares {
     );
     // Enable CORS
     app.use(cors(Middlewares.corsOptionsDelegate));
+    // Parse incoming requests with raw binary payloads (e.g. file upload chunks)
+    app.use(raw({ type: 'application/octet-stream', limit: '50mb' }));
     // Parse incoming requests with JSON payloads
     app.use(json());
     // Parse incoming requests with urlencoded payloads

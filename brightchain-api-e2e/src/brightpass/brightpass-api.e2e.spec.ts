@@ -137,7 +137,7 @@ describe('BrightPass API — Authentication Enforcement', () => {
     async ({ method, path, body }) => {
       try {
         await axios({ method, url: path, data: body });
-        fail(`Expected 401 for ${method.toUpperCase()} ${path}`);
+        throw new Error(`Expected 401 for ${method.toUpperCase()} ${path}`);
       } catch (err) {
         const error = err as AxiosError;
         expect(error.response?.status).toBe(401);
@@ -279,7 +279,7 @@ describe('BrightPass API — Vault Lifecycle', () => {
         `${BASE}/vaults/${vaultId}/entries/${entryId}`,
         authHeader(token),
       );
-      fail('Expected 404 for deleted entry');
+      throw new Error('Expected 404 for deleted entry');
     } catch (err) {
       const error = err as AxiosError;
       expect(error.response?.status).toBe(404);
@@ -342,7 +342,7 @@ describe('BrightPass API — Error Cases', () => {
         { masterPassword: 'WrongPassword!999' },
         authHeader(token),
       );
-      fail('Expected error for invalid master password');
+      throw new Error('Expected error for invalid master password');
     } catch (err) {
       const error = err as AxiosError;
       expect(error.response?.status).toBeGreaterThanOrEqual(400);
@@ -357,7 +357,7 @@ describe('BrightPass API — Error Cases', () => {
         { masterPassword: MASTER_PASSWORD },
         authHeader(token),
       );
-      fail('Expected 404 for non-existent vault');
+      throw new Error('Expected 404 for non-existent vault');
     } catch (err) {
       const error = err as AxiosError;
       expect(error.response?.status).toBeGreaterThanOrEqual(400);
@@ -371,7 +371,7 @@ describe('BrightPass API — Error Cases', () => {
         `${BASE}/vaults/${vaultId}/entries/${fakeEntryId}`,
         authHeader(token),
       );
-      fail('Expected 404 for non-existent entry');
+      throw new Error('Expected 404 for non-existent entry');
     } catch (err) {
       const error = err as AxiosError;
       expect(error.response?.status).toBeGreaterThanOrEqual(400);
@@ -381,7 +381,7 @@ describe('BrightPass API — Error Cases', () => {
   it('should reject vault creation with missing required fields', async () => {
     try {
       await axios.post(`${BASE}/vaults`, { name: '' }, authHeader(token));
-      fail('Expected error for missing required fields');
+      throw new Error('Expected error for missing required fields');
     } catch (err) {
       const error = err as AxiosError;
       expect(error.response?.status).toBeGreaterThanOrEqual(400);
@@ -395,7 +395,7 @@ describe('BrightPass API — Error Cases', () => {
         {},
         authHeader(token),
       );
-      fail('Expected error for missing required fields');
+      throw new Error('Expected error for missing required fields');
     } catch (err) {
       const error = err as AxiosError;
       expect(error.response?.status).toBeGreaterThanOrEqual(400);
@@ -408,7 +408,7 @@ describe('BrightPass API — Error Cases', () => {
         ...authHeader(token),
         data: { masterPassword: 'WrongPassword!999' },
       });
-      fail('Expected error for wrong master password on delete');
+      throw new Error('Expected error for wrong master password on delete');
     } catch (err) {
       const error = err as AxiosError;
       expect(error.response?.status).toBeGreaterThanOrEqual(400);
@@ -696,7 +696,7 @@ describe('BrightPass API — Emergency Access', () => {
         { shares: [] },
         authHeader(token),
       );
-      fail('Expected error for empty shares');
+      throw new Error('Expected error for empty shares');
     } catch (err) {
       const error = err as AxiosError;
       expect(error.response?.status).toBeGreaterThanOrEqual(400);
@@ -764,7 +764,7 @@ describe('BrightPass API — Import', () => {
         { format: 'invalid_format', fileContent: '' },
         authHeader(token),
       );
-      fail('Expected error for invalid import format');
+      throw new Error('Expected error for invalid import format');
     } catch (err) {
       const error = err as AxiosError;
       expect(error.response?.status).toBeGreaterThanOrEqual(400);

@@ -113,6 +113,33 @@ function createMockApplication(): IBrightChainApplication {
     ready: true,
     services: {},
     plugins: {},
+    authProvider: {
+      verifyToken: async (token: string) => ({ userId: token || 'test-user' }),
+      findUserById: async (userId: string) => ({
+        id: userId,
+        accountStatus: 'Active',
+        email: 'test@example.com',
+        timezone: 'UTC',
+      }),
+      buildRequestUserDTO: async (userId: string) => ({
+        id: userId,
+        username: userId,
+        email: 'test@example.com',
+        roles: [],
+        rolePrivileges: {
+          admin: false,
+          member: true,
+          child: false,
+          system: false,
+        },
+        emailVerified: true,
+        timezone: 'UTC',
+        siteLanguage: 'en',
+        darkMode: false,
+        currency: 'USD',
+        directChallenge: false,
+      }),
+    },
     getModel: () => {
       throw new Error('not implemented');
     },
@@ -154,6 +181,19 @@ function buildTestEnv(): TestEnv {
   const mockApp = createMockApplication();
   const app = express();
   app.use(express.json());
+  // Inject a bearer token header so authenticateToken middleware passes
+  app.use(
+    (
+      req: express.Request,
+      _res: express.Response,
+      next: express.NextFunction,
+    ) => {
+      if (!req.headers.authorization) {
+        req.headers.authorization = 'Bearer test-user';
+      }
+      next();
+    },
+  );
 
   const emailController = new EmailController(mockApp);
   emailController.setMessagePassingService(service);
@@ -688,6 +728,7 @@ describe('Feature: email-api-controllers, Property 4: Unread count tracks read s
             // 2. Check unread count → expect N
             const unreadBefore = await request(server)
               .get('/api/emails/inbox/unread-count')
+              .set('Authorization', `Bearer ${recipientAddress}`)
               .query({ memberId: recipientAddress })
               .expect(200);
 
@@ -699,6 +740,7 @@ describe('Feature: email-api-controllers, Property 4: Unread count tracks read s
             for (const msgId of toMarkAsRead) {
               const readRes = await request(server)
                 .post(`/api/emails/${encodeURIComponent(msgId)}/read`)
+                .set('Authorization', `Bearer ${recipientAddress}`)
                 .send({ memberId: recipientAddress })
                 .expect(200);
 
@@ -709,6 +751,7 @@ describe('Feature: email-api-controllers, Property 4: Unread count tracks read s
             // 4. Check unread count again → expect N - M
             const unreadAfter = await request(server)
               .get('/api/emails/inbox/unread-count')
+              .set('Authorization', `Bearer ${recipientAddress}`)
               .query({ memberId: recipientAddress })
               .expect(200);
 

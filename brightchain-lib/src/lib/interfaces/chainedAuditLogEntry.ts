@@ -9,14 +9,14 @@
  */
 
 import { PlatformID, SignatureUint8Array } from '@digitaldefiance/ecies-lib';
-import { QuorumAuditLogEntry } from './auditLogEntry';
+import { BrightTrustAuditLogEntry } from './auditLogEntry';
 
 /**
  * A tamper-evident audit log entry linked in a hash chain.
  * @template TID - Platform ID type for frontend/backend DTO compatibility
  */
 export interface ChainedAuditLogEntry<TID extends PlatformID = Uint8Array>
-  extends QuorumAuditLogEntry<TID> {
+  extends BrightTrustAuditLogEntry<TID> {
   /** SHA-3 hash of the previous entry's serialized form. Null for the genesis entry. */
   previousEntryHash: string | null;
   /** SHA-3 hash of this entry's content (excluding signature and blockIds). */

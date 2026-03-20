@@ -207,27 +207,27 @@ export class SyncController<
     this.routeDefinitions = [
       routeConfig('post', '/blocks/:blockId/replicate', {
         handlerKey: 'replicateBlock',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
       }),
       routeConfig('get', '/blocks/:blockId/locations', {
         handlerKey: 'getBlockLocations',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
       }),
       routeConfig('get', '/blocks/:blockId', {
         handlerKey: 'getBlockData',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
       }),
       routeConfig('post', '/request', {
         handlerKey: 'syncRequest',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
       }),
       routeConfig('post', '/reconcile', {
         handlerKey: 'reconcile',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
       }),
     ];

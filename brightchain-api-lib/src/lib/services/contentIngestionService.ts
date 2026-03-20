@@ -12,6 +12,8 @@
  */
 
 import {
+  BrightTrustError,
+  BrightTrustErrorType,
   ContentIngestionRejection,
   ContentIngestionResult,
   ContentWithIdentity,
@@ -21,8 +23,6 @@ import {
   IdentityValidationErrorType,
   IIdentitySealingPipeline,
   IIdentityValidator,
-  QuorumError,
-  QuorumErrorType,
 } from '@brightchain/brightchain-lib';
 import { PlatformID } from '@digitaldefiance/ecies-lib';
 
@@ -73,7 +73,7 @@ export class ContentIngestionService<TID extends PlatformID = Uint8Array>
    * @param content - The content with identity to validate and seal
    * @returns Ingestion result with processed content
    * @throws IdentityValidationError with specific error type on validation failure
-   * @throws QuorumError with IdentitySealingFailed on sealing failure
+   * @throws BrightTrustError with IdentitySealingFailed on sealing failure
    */
   async processContent(
     content: ContentWithIdentity<TID>,
@@ -138,21 +138,23 @@ export class ContentIngestionService<TID extends PlatformID = Uint8Array>
   }
 
   /**
-   * Create a rejection result from a QuorumError (sealing failure).
+   * Create a rejection result from a BrightTrustError (sealing failure).
    *
-   * @param error - The quorum error
+   * @param error - The BrightTrust error
    * @returns A structured rejection result
    */
-  static createSealingRejection(error: QuorumError): ContentIngestionRejection {
-    const errorType = error.type as QuorumErrorType;
+  static createSealingRejection(
+    error: BrightTrustError,
+  ): ContentIngestionRejection {
+    const errorType = error.type as BrightTrustErrorType;
     let reason: string;
 
     switch (errorType) {
-      case QuorumErrorType.IdentitySealingFailed:
+      case BrightTrustErrorType.IdentitySealingFailed:
         reason =
           'Identity sealing failed during shard generation or distribution';
         break;
-      case QuorumErrorType.ShardVerificationFailed:
+      case BrightTrustErrorType.ShardVerificationFailed:
         reason =
           'Identity shard verification failed — shards do not reconstruct correctly';
         break;
@@ -175,9 +177,9 @@ export class ContentIngestionService<TID extends PlatformID = Uint8Array>
   }
 
   /**
-   * Determine if an error is a QuorumError.
+   * Determine if an error is a BrightTrustError.
    */
-  static isQuorumError(error: unknown): error is QuorumError {
-    return error instanceof QuorumError;
+  static isBrightTrustError(error: unknown): error is BrightTrustError {
+    return error instanceof BrightTrustError;
   }
 }

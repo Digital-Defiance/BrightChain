@@ -1,10 +1,25 @@
 {
   "name": "@brightchain/brightchain-react-components",
-  "version": "0.29.23",
+  "version": "0.29.24",
   "type": "commonjs",
   "main": "./src/index.js",
   "types": "./src/index.d.ts",
   "dependencies": {
+    "@brightchain/brightchain-lib": "*",
+    "@digitaldefiance/ecies-lib": "*",
+    "@digitaldefiance/express-suite-react-components": "*",
+    "@digitaldefiance/i18n-lib": "*",
+    "@fortawesome/fontawesome-svg-core": "^7.2.0",
+    "@fortawesome/react-fontawesome": "^3.2.0",
+    "@mui/icons-material": "^7.3.7",
+    "@mui/material": "^7.3.7",
+    "@mui/utils": "7.3.9",
+    "react": "19.2.4",
+    "react-router-dom": "6.11.2",
     "tslib": "^2.3.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3"
   }
 }

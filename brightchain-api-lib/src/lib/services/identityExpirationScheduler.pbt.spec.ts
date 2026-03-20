@@ -10,12 +10,12 @@
  */
 
 import {
+  BrightTrustAuditLogEntry,
+  BrightTrustError,
+  BrightTrustErrorType,
+  IBrightTrustDatabase,
   IdentityMode,
   IdentityRecoveryRecord,
-  IQuorumDatabase,
-  QuorumAuditLogEntry,
-  QuorumError,
-  QuorumErrorType,
   StatuteOfLimitationsConfig,
 } from '@brightchain/brightchain-lib';
 import { HexString, ShortHexGuid } from '@digitaldefiance/ecies-lib';
@@ -70,15 +70,15 @@ const mockIdProvider = {
 };
 
 /**
- * Creates a minimal mock IQuorumDatabase with in-memory identity record storage.
+ * Creates a minimal mock IBrightTrustDatabase with in-memory identity record storage.
  */
-function createMockDatabase(): IQuorumDatabase & {
+function createMockDatabase(): IBrightTrustDatabase & {
   identityRecords: Map<ShortHexGuid, IdentityRecoveryRecord>;
-  auditEntries: QuorumAuditLogEntry[];
+  auditEntries: BrightTrustAuditLogEntry[];
   statuteConfig: StatuteOfLimitationsConfig | null;
 } {
   const identityRecords = new Map<ShortHexGuid, IdentityRecoveryRecord>();
-  const auditEntries: QuorumAuditLogEntry[] = [];
+  const auditEntries: BrightTrustAuditLogEntry[] = [];
   let statuteConfig: StatuteOfLimitationsConfig | null = null;
 
   return {
@@ -110,7 +110,7 @@ function createMockDatabase(): IQuorumDatabase & {
     ),
 
     // Audit log
-    appendAuditEntry: jest.fn(async (entry: QuorumAuditLogEntry) => {
+    appendAuditEntry: jest.fn(async (entry: BrightTrustAuditLogEntry) => {
       auditEntries.push(entry);
     }),
     getLatestAuditEntry: jest.fn(async () => null),
@@ -121,7 +121,7 @@ function createMockDatabase(): IQuorumDatabase & {
     }),
     getStatuteConfig: jest.fn(async () => statuteConfig),
 
-    // Stubs for remaining IQuorumDatabase methods
+    // Stubs for remaining IBrightTrustDatabase methods
     saveEpoch: jest.fn(async () => {}),
     getEpoch: jest.fn(async () => null),
     getCurrentEpoch: jest.fn(async () => {
@@ -269,10 +269,10 @@ describe('P11: Temporal Expiration Permanence', () => {
    * Property: For any expired IdentityRecoveryRecord, after the scheduler
    * deletes it, an IDENTITY_DISCLOSURE attempt targeting that record's content
    * is rejected because getIdentityRecord returns null, which would cause
-   * QuorumStateMachine to throw IdentityPermanentlyUnrecoverable.
+   * BrightTrustStateMachine to throw IdentityPermanentlyUnrecoverable.
    *
    * We simulate the disclosure check logic here since we're testing the
-   * scheduler + database interaction, not the full QuorumStateMachine.
+   * scheduler + database interaction, not the full BrightTrustStateMachine.
    */
   it('disclosure rejected with permanent error after expiration', async () => {
     await fc.assert(
@@ -294,32 +294,32 @@ describe('P11: Temporal Expiration Permanence', () => {
         );
         await scheduler.runOnce();
 
-        // Simulate the IDENTITY_DISCLOSURE check from QuorumStateMachine
+        // Simulate the IDENTITY_DISCLOSURE check from BrightTrustStateMachine
         const targetRecordId = record.id;
         const foundRecord = await db.getIdentityRecord(targetRecordId);
 
         // Record should be null (deleted)
         expect(foundRecord).toBeNull();
 
-        // The QuorumStateMachine would throw this error
+        // The BrightTrustStateMachine would throw this error
         expect(() => {
           if (!foundRecord) {
-            throw new QuorumError(
-              QuorumErrorType.IdentityPermanentlyUnrecoverable,
+            throw new BrightTrustError(
+              BrightTrustErrorType.IdentityPermanentlyUnrecoverable,
             );
           }
-        }).toThrow(QuorumError);
+        }).toThrow(BrightTrustError);
 
         try {
           if (!foundRecord) {
-            throw new QuorumError(
-              QuorumErrorType.IdentityPermanentlyUnrecoverable,
+            throw new BrightTrustError(
+              BrightTrustErrorType.IdentityPermanentlyUnrecoverable,
             );
           }
         } catch (err) {
-          expect(err).toBeInstanceOf(QuorumError);
-          expect((err as QuorumError).type).toBe(
-            QuorumErrorType.IdentityPermanentlyUnrecoverable,
+          expect(err).toBeInstanceOf(BrightTrustError);
+          expect((err as BrightTrustError).type).toBe(
+            BrightTrustErrorType.IdentityPermanentlyUnrecoverable,
           );
         }
       }),

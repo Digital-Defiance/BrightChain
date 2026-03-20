@@ -119,14 +119,14 @@ export class DirectoryController<
   // ─── Route definitions ──────────────────────────────────────────────────
 
   protected initRouteDefinitions(): void {
-    const noAuth = {
-      useAuthentication: false,
+    const auth = {
+      useAuthentication: true,
       useCryptoAuthentication: false,
     };
 
     this.routeDefinitions = [
       routeConfig('get', '/search', {
-        ...noAuth,
+        ...auth,
         handlerKey: 'searchDirectory',
         openapi: {
           summary: 'Search the public key directory',
@@ -146,7 +146,7 @@ export class DirectoryController<
         },
       }),
       routeConfig('get', '/profile/:memberId', {
-        ...noAuth,
+        ...auth,
         handlerKey: 'getProfile',
         openapi: {
           summary: 'Get a member public profile',
@@ -166,7 +166,7 @@ export class DirectoryController<
         },
       }),
       routeConfig('put', '/profile', {
-        ...noAuth,
+        ...auth,
         handlerKey: 'updateProfile',
         openapi: {
           summary: 'Create or update a public profile',
@@ -186,7 +186,7 @@ export class DirectoryController<
         },
       }),
       routeConfig('post', '/profile/:memberId/privacy', {
-        ...noAuth,
+        ...auth,
         handlerKey: 'togglePrivacy',
         openapi: {
           summary: 'Toggle privacy mode for a profile',

@@ -304,7 +304,7 @@ describe('Collection.bulkWrite', () => {
         ],
         { ordered: false },
       );
-      fail('Expected BulkWriteError');
+      throw new Error('Expected BulkWriteError');
     } catch (err) {
       expect(err).toBeInstanceOf(BulkWriteError);
       const bwe = err as BulkWriteError;

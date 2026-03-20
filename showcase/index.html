@@ -14,7 +14,7 @@
     />
     <meta
       name="keywords"
-      content="BrightChain, BrightStack, BrightDB, Decentralized Storage, Homomorphic Voting, Cryptography, ECIES, AES-256-GCM, Paillier Encryption, Owner-Free File System, OFFS, Brokered Anonymity, Quorum, P2P, IPFS, Ethereum, Sustainable Blockchain, MERN"
+      content="BrightChain, BrightStack, BrightDB, Decentralized Storage, Homomorphic Voting, Cryptography, ECIES, AES-256-GCM, Paillier Encryption, Owner-Free File System, OFFS, Brokered Anonymity, BrightTrust, P2P, IPFS, Ethereum, Sustainable Blockchain, MERN"
     />
     <title>BrightChain - The Decentralized App Platform</title>
     <script>
@@ -35,10 +35,59 @@
             id === 'path' ||
             id === 'os' ||
             id === 'util' ||
-            id === 'events' ||
             id === 'stream'
           ) {
             return {};
+          }
+          // Return a minimal EventEmitter polyfill for 'events' module
+          if (id === 'events') {
+            function EventEmitter() {
+              this._events = {};
+            }
+            EventEmitter.prototype.on = function (event, listener) {
+              if (!this._events[event]) this._events[event] = [];
+              this._events[event].push(listener);
+              return this;
+            };
+            EventEmitter.prototype.emit = function (event) {
+              var args = Array.prototype.slice.call(arguments, 1);
+              var listeners = this._events[event] || [];
+              for (var i = 0; i < listeners.length; i++) {
+                listeners[i].apply(this, args);
+              }
+              return listeners.length > 0;
+            };
+            EventEmitter.prototype.removeListener = function (event, listener) {
+              var listeners = this._events[event] || [];
+              this._events[event] = listeners.filter(function (l) {
+                return l !== listener;
+              });
+              return this;
+            };
+            EventEmitter.prototype.once = function (event, listener) {
+              var self = this;
+              function wrapped() {
+                self.removeListener(event, wrapped);
+                listener.apply(self, arguments);
+              }
+              return this.on(event, wrapped);
+            };
+            EventEmitter.prototype.addListener = EventEmitter.prototype.on;
+            EventEmitter.prototype.off = EventEmitter.prototype.removeListener;
+            EventEmitter.prototype.removeAllListeners = function (event) {
+              if (event) {
+                delete this._events[event];
+              } else {
+                this._events = {};
+              }
+              return this;
+            };
+            EventEmitter.prototype.listeners = function (event) {
+              return (this._events[event] || []).slice();
+            };
+            EventEmitter.EventEmitter = EventEmitter;
+            EventEmitter.default = EventEmitter;
+            return EventEmitter;
           }
           // Handle emotion modules
           if (id === '@emotion/is-prop-valid') {

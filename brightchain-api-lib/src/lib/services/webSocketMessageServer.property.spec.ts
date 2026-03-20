@@ -14,30 +14,23 @@ describe('WebSocketMessageServer - Property Tests', () => {
   let wsServer: WebSocketMessageServer;
   let port: number;
 
-  beforeEach((done) => {
+  beforeEach(async () => {
     port = 8766 + Math.floor(Math.random() * 1000);
     httpServer = createServer();
     wsServer = new WebSocketMessageServer(httpServer);
-    httpServer.listen(port, done);
+    await new Promise<void>((resolve) => httpServer.listen(port, resolve));
   });
 
-  afterEach((done) => {
-    // Close all connections first
+  afterEach(async () => {
     const connectedNodes = wsServer.getConnectedNodes();
-    if (connectedNodes.length > 0) {
-      // Force close all connections
+    const delay = connectedNodes.length > 0 ? 200 : 100;
+    await new Promise<void>((resolve) => {
       wsServer.close(() => {
         httpServer.close(() => {
-          setTimeout(done, 200); // Increased timeout
+          setTimeout(resolve, delay);
         });
       });
-    } else {
-      wsServer.close(() => {
-        httpServer.close(() => {
-          setTimeout(done, 100);
-        });
-      });
-    }
+    });
   });
 
   /**

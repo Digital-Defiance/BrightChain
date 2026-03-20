@@ -159,8 +159,8 @@ function createTestRegistry(
   const aclManager = new WriteAclManager(mockBlockStore, authenticator);
 
   // Cache the ACL via setAcl with a valid admin signature
-  const adminKey = aclDoc.aclAdministrators[0];
-  const adminSig = makeValidAdminSignature(aclDoc);
+  const _adminKey = aclDoc.aclAdministrators[0];
+  const _adminSig = makeValidAdminSignature(aclDoc);
   // We need to set the ACL synchronously for test setup — use setCachedAcl
   aclManager.setCachedAcl(aclDoc);
 

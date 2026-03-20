@@ -295,7 +295,7 @@ describe('BrightChain OpenAPI Schemas', () => {
       });
     });
 
-    describe('Quorum schemas', () => {
+    describe('BrightTrust schemas', () => {
       it('should have AddMemberRequest schema', () => {
         expect(BrightChainSchemas['AddMemberRequest']).toBeDefined();
         expect(BrightChainSchemas['AddMemberRequest'].required).toContain(
@@ -303,11 +303,13 @@ describe('BrightChain OpenAPI Schemas', () => {
         );
       });
 
-      it('should have QuorumMember schema', () => {
-        expect(BrightChainSchemas['QuorumMember']).toBeDefined();
-        expect(BrightChainSchemas['QuorumMember'].properties.id).toBeDefined();
+      it('should have BrightTrustMember schema', () => {
+        expect(BrightChainSchemas['BrightTrustMember']).toBeDefined();
         expect(
-          BrightChainSchemas['QuorumMember'].properties.publicKey,
+          BrightChainSchemas['BrightTrustMember'].properties.id,
+        ).toBeDefined();
+        expect(
+          BrightChainSchemas['BrightTrustMember'].properties.publicKey,
         ).toBeDefined();
       });
 

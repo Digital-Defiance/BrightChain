@@ -102,7 +102,7 @@ export class BrightHubPostController<
     this.routeDefinitions = [
       routeConfig('post', '/', {
         handlerKey: 'createPost',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Create a new post',
@@ -120,7 +120,7 @@ export class BrightHubPostController<
       }),
       routeConfig('get', '/:id', {
         handlerKey: 'getPost',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Get a single post',
@@ -134,7 +134,7 @@ export class BrightHubPostController<
       }),
       routeConfig('get', '/:id/thread', {
         handlerKey: 'getThread',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Get a thread by root post ID',
@@ -149,7 +149,7 @@ export class BrightHubPostController<
       }),
       routeConfig('put', '/:id', {
         handlerKey: 'editPost',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Edit a post',
@@ -167,7 +167,7 @@ export class BrightHubPostController<
       }),
       routeConfig('delete', '/:id', {
         handlerKey: 'deletePost',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Delete a post',
@@ -181,7 +181,7 @@ export class BrightHubPostController<
       }),
       routeConfig('post', '/:id/like', {
         handlerKey: 'likePost',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Like a post',
@@ -194,7 +194,7 @@ export class BrightHubPostController<
       }),
       routeConfig('delete', '/:id/like', {
         handlerKey: 'unlikePost',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Unlike a post',
@@ -206,7 +206,7 @@ export class BrightHubPostController<
       }),
       routeConfig('post', '/:id/repost', {
         handlerKey: 'repostPost',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Repost a post',
@@ -218,7 +218,7 @@ export class BrightHubPostController<
       }),
       routeConfig('post', '/:id/quote', {
         handlerKey: 'createQuotePost',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Create a quote post',
@@ -391,12 +391,13 @@ export class BrightHubPostController<
   ): Promise<IStatusCodeResponse<IPostApiResponse | ApiErrorResponse>> {
     try {
       const { id } = (req as { params: { id: string } }).params;
-      const { userId, content } = (
-        req as {
-          body: { userId: string; content: string };
-          params: { id: string };
-        }
-      ).body;
+      const typedReq = req as {
+        body: { userId?: string; content?: string };
+        params: { id: string };
+        user?: { id?: string };
+      };
+      const userId = typedReq.body.userId ?? typedReq.user?.id;
+      const content = typedReq.body.content;
 
       if (!id) return validationError('Missing required parameter: id');
       if (!userId) return validationError('Missing required field: userId');
@@ -426,9 +427,12 @@ export class BrightHubPostController<
   ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> {
     try {
       const { id } = (req as { params: { id: string } }).params;
-      const { userId } = (
-        req as { body: { userId: string }; params: { id: string } }
-      ).body;
+      const typedReq = req as {
+        body: { userId?: string };
+        params: { id: string };
+        user?: { id?: string };
+      };
+      const userId = typedReq.body.userId ?? typedReq.user?.id;
 
       if (!id) return validationError('Missing required parameter: id');
       if (!userId) return validationError('Missing required field: userId');
@@ -456,9 +460,13 @@ export class BrightHubPostController<
   ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> {
     try {
       const { id } = (req as { params: { id: string } }).params;
-      const { userId } = (
-        req as { body: { userId: string }; params: { id: string } }
-      ).body;
+      const typedReq = req as {
+        body: { userId?: string };
+        params: { id: string };
+        user?: { id?: string };
+      };
+      // Fall back to authenticated user id when body.userId is missing
+      const userId = typedReq.body.userId ?? typedReq.user?.id;
 
       if (!id) return validationError('Missing required parameter: id');
       if (!userId) return validationError('Missing required field: userId');
@@ -485,9 +493,12 @@ export class BrightHubPostController<
   ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> {
     try {
       const { id } = (req as { params: { id: string } }).params;
-      const { userId } = (
-        req as { body: { userId: string }; params: { id: string } }
-      ).body;
+      const typedReq = req as {
+        body: { userId?: string };
+        params: { id: string };
+        user?: { id?: string };
+      };
+      const userId = typedReq.body.userId ?? typedReq.user?.id;
 
       if (!id) return validationError('Missing required parameter: id');
       if (!userId) return validationError('Missing required field: userId');
@@ -515,9 +526,12 @@ export class BrightHubPostController<
   ): Promise<IStatusCodeResponse<IPostApiResponse | ApiErrorResponse>> {
     try {
       const { id } = (req as { params: { id: string } }).params;
-      const { userId } = (
-        req as { body: { userId: string }; params: { id: string } }
-      ).body;
+      const typedReq = req as {
+        body: { userId?: string };
+        params: { id: string };
+        user?: { id?: string };
+      };
+      const userId = typedReq.body.userId ?? typedReq.user?.id;
 
       if (!id) return validationError('Missing required parameter: id');
       if (!userId) return validationError('Missing required field: userId');
@@ -544,12 +558,13 @@ export class BrightHubPostController<
   ): Promise<IStatusCodeResponse<IPostApiResponse | ApiErrorResponse>> {
     try {
       const { id } = (req as { params: { id: string } }).params;
-      const { userId, commentary } = (
-        req as {
-          body: { userId: string; commentary: string };
-          params: { id: string };
-        }
-      ).body;
+      const typedReq = req as {
+        body: { userId?: string; commentary?: string };
+        params: { id: string };
+        user?: { id?: string };
+      };
+      const userId = typedReq.body.userId ?? typedReq.user?.id;
+      const commentary = typedReq.body.commentary;
 
       if (!id) return validationError('Missing required parameter: id');
       if (!userId) return validationError('Missing required field: userId');

@@ -1,5 +1,5 @@
 /**
- * BrightPass Sharing, Quorum, and Password Change property tests (Properties 12, 14-16).
+ * BrightPass Sharing, BrightTrust, and Password Change property tests (Properties 12, 14-16).
  * Split from brightpass.property.spec.ts to avoid ts-jest compilation hang.
  *
  * Feature: brightpass-password-manager
@@ -139,7 +139,7 @@ describe('BrightPassService – Sharing & Password Change', () => {
     });
   });
 
-  describe('Property 16: Quorum threshold enforcement', () => {
+  describe('Property 16: quorum threshold enforcement', () => {
     /**
      * **Validates: Requirements 4.4**
      */
@@ -195,7 +195,7 @@ describe('BrightPassService – Sharing & Password Change', () => {
       );
     });
 
-    it('non-member cannot approve quorum access', async () => {
+    it('non-member cannot approve BrightTrust access', async () => {
       await fc.assert(
         fc.asyncProperty(
           memberIdArb,
@@ -222,7 +222,7 @@ describe('BrightPassService – Sharing & Password Change', () => {
       );
     });
 
-    it('vault without quorum governance opens normally', async () => {
+    it('vault without BrightTrust governance opens normally', async () => {
       await fc.assert(
         fc.asyncProperty(
           memberIdArb,

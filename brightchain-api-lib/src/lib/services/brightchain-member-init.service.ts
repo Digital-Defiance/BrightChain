@@ -602,14 +602,13 @@ export class BrightChainMemberInitService<TID extends PlatformID> {
       existingUserRoles.map((ur) => `${ur.userId}:${ur.roleId}`),
     );
 
-    // Mnemonics — match by the _id values we're about to insert
-    const candidateMnemonicIds = mnemonicDocuments.map((d) =>
-      String(mnemonicsModel.dehydrate(d)['_id']),
-    );
+    // Mnemonics — match by the stable hmac value (unique index), NOT _id
+    // which is a freshly generated GUID each run.
+    const candidateHmacs = mnemonicDocuments.map((d) => d.hmac);
     const existingMnemonics = await mnemonicsModel.collection
-      .find({ _id: { $in: candidateMnemonicIds } } as never)
+      .find({ hmac: { $in: candidateHmacs } } as never)
       .toArray();
-    const existingMnemonicIds = new Set(existingMnemonics.map((m) => m._id));
+    const existingMnemonicHmacs = new Set(existingMnemonics.map((m) => m.hmac));
 
     // Compare typed documents against existing data using stable fields.
     const rolesToInsert = roleDocuments.filter(
@@ -624,8 +623,7 @@ export class BrightChainMemberInitService<TID extends PlatformID> {
       return !existingUserRolePairs.has(pair);
     });
     const mnemonicsToInsert = mnemonicDocuments.filter(
-      (d) =>
-        !existingMnemonicIds.has(String(mnemonicsModel.dehydrate(d)['_id'])),
+      (d) => !existingMnemonicHmacs.has(d.hmac),
     );
 
     const totalToInsert =
@@ -736,6 +734,8 @@ export class BrightChainMemberInitService<TID extends PlatformID> {
     switch (type) {
       case MemberType.System:
         return 'System';
+      case MemberType.Admin:
+        return 'Admin';
       case MemberType.User:
         return 'User';
       default:

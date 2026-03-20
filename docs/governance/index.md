@@ -5,7 +5,7 @@ has_children: true
 ---
 # Governance & Voting
 
-Quorum system, voting architecture, and brokered anonymity
+BrightTrust system, voting architecture, and brokered anonymity
 
 {% assign pages = site.pages | where_exp: "page", "page.parent == 'Governance & Voting'" | sort: "nav_order" %}
 {% for page in pages %}

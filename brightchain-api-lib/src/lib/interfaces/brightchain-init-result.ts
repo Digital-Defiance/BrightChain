@@ -6,7 +6,7 @@ import { PlatformID } from '@digitaldefiance/node-ecies-lib';
  * that satisfies the upstream Application's TInitResults generic parameter.
  * @template TID - Platform ID type
  */
-export interface IBrightChainInitResult<TID extends PlatformID> {
+export interface IBrightChainInitResult<_TID extends PlatformID> {
   /** Placeholder — BrightChain does not use Mongoose init results */
   readonly _brand?: 'BrightChainInitResult';
 }

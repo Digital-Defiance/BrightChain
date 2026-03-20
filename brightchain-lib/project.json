@@ -39,10 +39,11 @@
       }
     },
     "publish": {
-      "command": "node tools/scripts/publish.mjs brightchain-lib {args.ver} {args.tag}",
-      "dependsOn": [
-        "build"
-      ]
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npm publish --access public",
+        "cwd": "dist/brightchain-lib"
+      }
     },
     "lint": {
       "executor": "@nx/eslint:lint",

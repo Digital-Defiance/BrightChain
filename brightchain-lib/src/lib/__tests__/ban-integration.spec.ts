@@ -27,19 +27,19 @@ import {
 import { MemberStatusType } from '../enumerations/memberStatusType';
 import { ProposalActionType } from '../enumerations/proposalActionType';
 import { ProposalStatus } from '../enumerations/proposalStatus';
-import { QuorumError } from '../errors/quorumError';
+import { BrightTrustError } from '../errors/brightTrustError';
 import { initializeBrightChain } from '../init';
 import { IGossipService } from '../interfaces/availability/gossipService';
+import { BrightTrustEpoch } from '../interfaces/brightTrustEpoch';
 import { ChainedAuditLogEntry } from '../interfaces/chainedAuditLogEntry';
 import { IBanRecord } from '../interfaces/network/banRecord';
 import { OperationalState } from '../interfaces/operationalState';
 import { Proposal } from '../interfaces/proposal';
-import { QuorumEpoch } from '../interfaces/quorumEpoch';
-import { IQuorumDatabase } from '../interfaces/services/quorumDatabase';
-import { IQuorumMember } from '../interfaces/services/quorumService';
+import { IBrightTrustDatabase } from '../interfaces/services/brightTrustDatabase';
+import { IBrightTrustMember } from '../interfaces/services/brightTrustService';
 import { Vote } from '../interfaces/vote';
 import { BanListCache } from '../services/banListCache';
-import { QuorumStateMachine } from '../services/quorumStateMachine';
+import { BrightTrustStateMachine } from '../services/brightTrustStateMachine';
 import { SealingService } from '../services/sealing.service';
 import { ServiceProvider } from '../services/service.provider';
 
@@ -57,9 +57,9 @@ jest.setTimeout(120000);
 
 type TID = GuidV4Uint8Array;
 
-interface InMemoryDb extends IQuorumDatabase<TID> {
-  _epochs: Map<number, QuorumEpoch<TID>>;
-  _members: Map<string, IQuorumMember<TID>>;
+interface InMemoryDb extends IBrightTrustDatabase<TID> {
+  _epochs: Map<number, BrightTrustEpoch<TID>>;
+  _members: Map<string, IBrightTrustMember<TID>>;
   _proposals: Map<string, Proposal<TID>>;
   _votes: Map<string, Vote<TID>[]>;
   _auditEntries: ChainedAuditLogEntry<TID>[];
@@ -73,8 +73,8 @@ function toHex(id: TID): string {
 }
 
 function createInMemoryDb(): InMemoryDb {
-  const epochs = new Map<number, QuorumEpoch<TID>>();
-  const members = new Map<string, IQuorumMember<TID>>();
+  const epochs = new Map<number, BrightTrustEpoch<TID>>();
+  const members = new Map<string, IBrightTrustMember<TID>>();
   const proposals = new Map<string, Proposal<TID>>();
   const votes = new Map<string, Vote<TID>[]>();
   const auditEntries: ChainedAuditLogEntry<TID>[] = [];
@@ -93,7 +93,7 @@ function createInMemoryDb(): InMemoryDb {
     _operationalState: null,
 
     // Epoch
-    saveEpoch: jest.fn(async (epoch: QuorumEpoch<TID>) => {
+    saveEpoch: jest.fn(async (epoch: BrightTrustEpoch<TID>) => {
       epochs.set(epoch.epochNumber, epoch);
     }),
     getEpoch: jest.fn(async (n: number) => epochs.get(n) ?? null),
@@ -105,7 +105,7 @@ function createInMemoryDb(): InMemoryDb {
     }),
 
     // Members
-    saveMember: jest.fn(async (m: IQuorumMember<TID>) => {
+    saveMember: jest.fn(async (m: IBrightTrustMember<TID>) => {
       members.set(toHex(m.id), m);
     }),
     getMember: jest.fn(async (id: TID) => members.get(toHex(id)) ?? null),
@@ -240,16 +240,16 @@ function createMockGossipService(): IGossipService & {
     offMessageDelivery: jest.fn(noop),
     onDeliveryAck: jest.fn(noop),
     offDeliveryAck: jest.fn(noop),
-    announceQuorumProposal: jest.fn(async (metadata) => {
+    announceBrightTrustProposal: jest.fn(async (metadata) => {
       proposalAnnouncements.push(metadata);
     }),
-    announceQuorumVote: jest.fn(async (metadata) => {
+    announceBrightTrustVote: jest.fn(async (metadata) => {
       voteAnnouncements.push(metadata);
     }),
-    onQuorumProposal: jest.fn(noop),
-    offQuorumProposal: jest.fn(noop),
-    onQuorumVote: jest.fn(noop),
-    offQuorumVote: jest.fn(noop),
+    onBrightTrustProposal: jest.fn(noop),
+    offBrightTrustProposal: jest.fn(noop),
+    onBrightTrustVote: jest.fn(noop),
+    offBrightTrustVote: jest.fn(noop),
   };
 }
 
@@ -275,7 +275,7 @@ function createTestMember(name: string): IMemberWithMnemonic<TID> {
  * Uses a very short cooling period (1ms past) so the ban executes immediately.
  */
 async function submitAndApproveBan(
-  qsm: QuorumStateMachine<TID>,
+  qsm: BrightTrustStateMachine<TID>,
   db: InMemoryDb,
   proposer: Member<TID>,
   target: Member<TID>,
@@ -347,7 +347,7 @@ describe('Ban Mechanism Integration Tests', () => {
       const db = createInMemoryDb();
       const gossip = createMockGossipService();
       // Use a very short cooling period so tests don't need to wait
-      const qsm = new QuorumStateMachine<TID>(
+      const qsm = new BrightTrustStateMachine<TID>(
         db,
         sealingService,
         gossip,
@@ -430,7 +430,7 @@ describe('Ban Mechanism Integration Tests', () => {
     it('should enforce cooling period — threshold reached early does not execute', async () => {
       const db = createInMemoryDb();
       const gossip = createMockGossipService();
-      const qsm = new QuorumStateMachine<TID>(
+      const qsm = new BrightTrustStateMachine<TID>(
         db,
         sealingService,
         gossip,
@@ -474,7 +474,7 @@ describe('Ban Mechanism Integration Tests', () => {
     it('should reject ban proposal when supermajority is not reached', async () => {
       const db = createInMemoryDb();
       const gossip = createMockGossipService();
-      const qsm = new QuorumStateMachine<TID>(
+      const qsm = new BrightTrustStateMachine<TID>(
         db,
         sealingService,
         gossip,
@@ -528,7 +528,7 @@ describe('Ban Mechanism Integration Tests', () => {
     it('should require supermajority (75%) threshold for BAN_MEMBER', async () => {
       const db = createInMemoryDb();
       const gossip = createMockGossipService();
-      const qsm = new QuorumStateMachine<TID>(
+      const qsm = new BrightTrustStateMachine<TID>(
         db,
         sealingService,
         gossip,
@@ -564,7 +564,7 @@ describe('Ban Mechanism Integration Tests', () => {
     it('should prevent a member from banning themselves', async () => {
       const db = createInMemoryDb();
       const gossip = createMockGossipService();
-      const qsm = new QuorumStateMachine<TID>(
+      const qsm = new BrightTrustStateMachine<TID>(
         db,
         sealingService,
         gossip,
@@ -587,13 +587,13 @@ describe('Ban Mechanism Integration Tests', () => {
           },
           expiresAt: new Date(Date.now() + 86400000),
         }),
-      ).rejects.toThrow(QuorumError);
+      ).rejects.toThrow(BrightTrustError);
     });
 
     it('should prevent banning an already-banned member', async () => {
       const db = createInMemoryDb();
       const gossip = createMockGossipService();
-      const qsm = new QuorumStateMachine<TID>(
+      const qsm = new BrightTrustStateMachine<TID>(
         db,
         sealingService,
         gossip,
@@ -621,13 +621,13 @@ describe('Ban Mechanism Integration Tests', () => {
           },
           expiresAt: new Date(Date.now() + 86400000),
         }),
-      ).rejects.toThrow(QuorumError);
+      ).rejects.toThrow(BrightTrustError);
     });
 
     it('should filter proposer-ally votes from ban tally', async () => {
       const db = createInMemoryDb();
       const gossip = createMockGossipService();
-      const qsm = new QuorumStateMachine<TID>(
+      const qsm = new BrightTrustStateMachine<TID>(
         db,
         sealingService,
         gossip,
@@ -710,7 +710,7 @@ describe('Ban Mechanism Integration Tests', () => {
     it('should succeed when enough non-ally votes reach supermajority', async () => {
       const db = createInMemoryDb();
       const gossip = createMockGossipService();
-      const qsm = new QuorumStateMachine<TID>(
+      const qsm = new BrightTrustStateMachine<TID>(
         db,
         sealingService,
         gossip,
@@ -897,15 +897,18 @@ describe('Ban Mechanism Integration Tests', () => {
         requiredSignatures: 3, // requires 3 but only 1 provided
       };
 
-      const quorumKeys = new Map<HexString, Uint8Array>();
-      const result = await banListCache.verifySignatures(record, quorumKeys);
+      const brightTrustKeys = new Map<HexString, Uint8Array>();
+      const result = await banListCache.verifySignatures(
+        record,
+        brightTrustKeys,
+      );
       expect(result).toBe(false);
     });
 
-    it('should integrate with QuorumStateMachine ban execution', async () => {
+    it('should integrate with BrightTrustStateMachine ban execution', async () => {
       const db = createInMemoryDb();
       const gossip = createMockGossipService();
-      const qsm = new QuorumStateMachine<TID>(
+      const qsm = new BrightTrustStateMachine<TID>(
         db,
         sealingService,
         gossip,
@@ -942,7 +945,7 @@ describe('Ban Mechanism Integration Tests', () => {
     it('should submit UNBAN_MEMBER proposal, vote, and restore member to Active', async () => {
       const db = createInMemoryDb();
       const gossip = createMockGossipService();
-      const qsm = new QuorumStateMachine<TID>(
+      const qsm = new BrightTrustStateMachine<TID>(
         db,
         sealingService,
         gossip,
@@ -1023,7 +1026,7 @@ describe('Ban Mechanism Integration Tests', () => {
     it('should enforce cooling period on unban proposals', async () => {
       const db = createInMemoryDb();
       const gossip = createMockGossipService();
-      const qsm = new QuorumStateMachine<TID>(
+      const qsm = new BrightTrustStateMachine<TID>(
         db,
         sealingService,
         gossip,
@@ -1077,7 +1080,7 @@ describe('Ban Mechanism Integration Tests', () => {
     it('should reject UNBAN_MEMBER for a member that is not banned', async () => {
       const db = createInMemoryDb();
       const gossip = createMockGossipService();
-      const qsm = new QuorumStateMachine<TID>(
+      const qsm = new BrightTrustStateMachine<TID>(
         db,
         sealingService,
         gossip,
@@ -1099,13 +1102,13 @@ describe('Ban Mechanism Integration Tests', () => {
           },
           expiresAt: new Date(Date.now() + 86400000),
         }),
-      ).rejects.toThrow(QuorumError);
+      ).rejects.toThrow(BrightTrustError);
     });
 
     it('should remove ban record from BanListCache after unban', async () => {
       const db = createInMemoryDb();
       const gossip = createMockGossipService();
-      const qsm = new QuorumStateMachine<TID>(
+      const qsm = new BrightTrustStateMachine<TID>(
         db,
         sealingService,
         gossip,

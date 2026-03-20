@@ -177,7 +177,7 @@ export class BrightHubConnectionController<
       // ── List Management (21.3) ──
       routeConfig('post', '/lists', {
         handlerKey: 'createList',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Create a connection list',
@@ -192,7 +192,7 @@ export class BrightHubConnectionController<
       }),
       routeConfig('get', '/lists', {
         handlerKey: 'getUserLists',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: "Get user's connection lists",
@@ -207,7 +207,7 @@ export class BrightHubConnectionController<
       }),
       routeConfig('put', '/lists/:id', {
         handlerKey: 'updateList',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Update a connection list',
@@ -222,7 +222,7 @@ export class BrightHubConnectionController<
       }),
       routeConfig('delete', '/lists/:id', {
         handlerKey: 'deleteList',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Delete a connection list',
@@ -234,7 +234,7 @@ export class BrightHubConnectionController<
       }),
       routeConfig('post', '/lists/:id/members', {
         handlerKey: 'addMembers',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Add members to a list',
@@ -246,7 +246,7 @@ export class BrightHubConnectionController<
       }),
       routeConfig('delete', '/lists/:id/members', {
         handlerKey: 'removeMembers',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Remove members from a list',
@@ -258,7 +258,7 @@ export class BrightHubConnectionController<
       }),
       routeConfig('get', '/lists/:id/members', {
         handlerKey: 'getListMembers',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Get list members',
@@ -274,7 +274,7 @@ export class BrightHubConnectionController<
       // ── Additional Endpoints (21.4) ──
       routeConfig('get', '/connections/categories', {
         handlerKey: 'getCategories',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Get connection categories',
@@ -289,7 +289,7 @@ export class BrightHubConnectionController<
       }),
       routeConfig('post', '/connections/:id/note', {
         handlerKey: 'addNote',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Add a note to a connection',
@@ -301,7 +301,7 @@ export class BrightHubConnectionController<
       }),
       routeConfig('get', '/connections/suggestions', {
         handlerKey: 'getSuggestions',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Get connection suggestions',
@@ -316,7 +316,7 @@ export class BrightHubConnectionController<
       }),
       routeConfig('get', '/connections/mutual/:userId', {
         handlerKey: 'getMutualConnections',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Get mutual connections',
@@ -331,7 +331,7 @@ export class BrightHubConnectionController<
       }),
       routeConfig('post', '/connections/:id/priority', {
         handlerKey: 'setPriority',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Set connection priority',
@@ -343,7 +343,7 @@ export class BrightHubConnectionController<
       }),
       routeConfig('post', '/connections/:id/quiet', {
         handlerKey: 'setQuietMode',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Set quiet mode for connection',
@@ -358,7 +358,7 @@ export class BrightHubConnectionController<
       }),
       routeConfig('post', '/connections/:id/mute/temporary', {
         handlerKey: 'setTemporaryMute',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Set temporary mute for connection',
@@ -373,7 +373,7 @@ export class BrightHubConnectionController<
       }),
       routeConfig('get', '/connections/export', {
         handlerKey: 'exportConnections',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Export connections',
@@ -388,7 +388,7 @@ export class BrightHubConnectionController<
       }),
       routeConfig('post', '/connections/import', {
         handlerKey: 'importConnections',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Import connections',
@@ -403,7 +403,7 @@ export class BrightHubConnectionController<
       }),
       routeConfig('post', '/hubs', {
         handlerKey: 'createHub',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Create a hub',
@@ -415,7 +415,7 @@ export class BrightHubConnectionController<
       }),
       routeConfig('get', '/hubs', {
         handlerKey: 'getHubs',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: "Get user's hubs",
@@ -430,7 +430,7 @@ export class BrightHubConnectionController<
       }),
       routeConfig('post', '/hubs/:id/members', {
         handlerKey: 'addHubMembers',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Add members to a hub',
@@ -445,7 +445,7 @@ export class BrightHubConnectionController<
       }),
       routeConfig('delete', '/hubs/:id/members', {
         handlerKey: 'removeHubMembers',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Remove members from a hub',
@@ -460,7 +460,7 @@ export class BrightHubConnectionController<
       }),
       routeConfig('post', '/lists/:id/members/bulk', {
         handlerKey: 'bulkMembers',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Bulk add or remove members from a list',
@@ -475,7 +475,7 @@ export class BrightHubConnectionController<
       }),
       routeConfig('get', '/connections/:id/insights', {
         handlerKey: 'getConnectionInsights',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Get connection insights',
@@ -490,7 +490,7 @@ export class BrightHubConnectionController<
       }),
       routeConfig('get', '/follow-requests', {
         handlerKey: 'getFollowRequests',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Get pending follow requests',
@@ -505,7 +505,7 @@ export class BrightHubConnectionController<
       }),
       routeConfig('post', '/follow-requests/:id/approve', {
         handlerKey: 'approveFollowRequest',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Approve a follow request',
@@ -517,7 +517,7 @@ export class BrightHubConnectionController<
       }),
       routeConfig('post', '/follow-requests/:id/reject', {
         handlerKey: 'rejectFollowRequest',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Reject a follow request',

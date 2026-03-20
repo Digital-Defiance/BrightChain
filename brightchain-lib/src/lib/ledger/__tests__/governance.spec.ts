@@ -5,9 +5,9 @@
 import { SignatureUint8Array } from '@digitaldefiance/ecies-lib';
 import { BlockSize } from '../../enumerations/blockSize';
 import { LedgerError, LedgerErrorType } from '../../errors/ledgerError';
+import { QuorumType } from '../../interfaces/ledger/brightTrustPolicy';
 import { GovernanceActionType } from '../../interfaces/ledger/governanceAction';
 import { ILedgerSigner } from '../../interfaces/ledger/ledgerSigner';
-import { QuorumType } from '../../interfaces/ledger/quorumPolicy';
 import { SignerRole } from '../../interfaces/ledger/signerRole';
 import { SignerStatus } from '../../interfaces/ledger/signerStatus';
 import { ChecksumService } from '../../services/checksum.service';
@@ -63,7 +63,7 @@ async function createGovernanceLedger(opts?: {
     }
   }
 
-  const quorumPolicy =
+  const brightTrustPolicy =
     opts?.quorumType === QuorumType.Threshold
       ? { type: QuorumType.Threshold as const, threshold: opts.threshold ?? 1 }
       : opts?.quorumType === QuorumType.Majority
@@ -73,7 +73,7 @@ async function createGovernanceLedger(opts?: {
           : { type: QuorumType.Threshold as const, threshold: 1 };
 
   const genesisPayload = govSerializer.serializeGenesis({
-    quorumPolicy,
+    brightTrustPolicy: brightTrustPolicy,
     signers,
   });
 
@@ -440,7 +440,7 @@ describe('Governance-integrated Ledger', () => {
         extraSigners: [{ seed: 2, role: SignerRole.Admin }],
       });
 
-      expect(ledger.quorumPolicy!.type).toBe(QuorumType.Threshold);
+      expect(ledger.brightTrustPolicy!.type).toBe(QuorumType.Threshold);
 
       await ledger.appendGovernance(
         [
@@ -452,7 +452,7 @@ describe('Governance-integrated Ledger', () => {
         adminSigner,
       );
 
-      expect(ledger.quorumPolicy!.type).toBe(QuorumType.Majority);
+      expect(ledger.brightTrustPolicy!.type).toBe(QuorumType.Majority);
     });
   });
 
@@ -461,7 +461,7 @@ describe('Governance-integrated Ledger', () => {
   describe('quorum enforcement', () => {
     it('multi-signature governance entry with majority quorum', async () => {
       const admin2 = makeSigner(2);
-      const admin3 = makeSigner(3);
+      const _admin3 = makeSigner(3);
       const { ledger, adminSigner, govSerializer } =
         await createGovernanceLedger({
           quorumType: QuorumType.Majority,
@@ -525,9 +525,7 @@ describe('Governance-integrated Ledger', () => {
           adminSigner,
         );
       } catch (e) {
-        expect((e as LedgerError).errorType).toBe(
-          LedgerErrorType.QuorumNotMet,
-        );
+        expect((e as LedgerError).errorType).toBe(LedgerErrorType.QuorumNotMet);
       }
     });
   });

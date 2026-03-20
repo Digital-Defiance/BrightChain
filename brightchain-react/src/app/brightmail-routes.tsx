@@ -16,10 +16,14 @@
  * Requirements: 1.3, 1.7, 3.1, 3.2, 3.3
  */
 
-import { BrightMailLayout, InboxView, ThreadView } from '@brightchain/brightmail-react-components';
+import {
+  BrightMailLayout,
+  InboxView,
+  ThreadView,
+} from '@brightchain/brightmail-react-components';
 import { PrivateRoute } from '@digitaldefiance/express-suite-react-components';
 import { Box, CircularProgress } from '@mui/material';
-import React, { lazy, Suspense } from 'react';
+import React, { Suspense } from 'react';
 import { Route, Routes } from 'react-router-dom';
 
 const LoadingFallback: React.FC = () => (

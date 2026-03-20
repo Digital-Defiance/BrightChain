@@ -7,8 +7,8 @@
  * @see Requirements 13.1, 17.3-17.4, 18.3
  */
 
+import { IBrightTrustPolicy } from './brightTrustPolicy';
 import { SignerRole } from './signerRole';
-import { IQuorumPolicy } from './quorumPolicy';
 
 export enum GovernanceActionType {
   AddSigner = 'add_signer',
@@ -38,7 +38,7 @@ export type IGovernanceAction =
     }
   | {
       readonly type: GovernanceActionType.UpdateQuorum;
-      readonly newPolicy: IQuorumPolicy;
+      readonly newPolicy: IBrightTrustPolicy;
     }
   | {
       readonly type: GovernanceActionType.SuspendSigner;

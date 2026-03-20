@@ -24,7 +24,7 @@ import {
 import { initializeBrightChain } from '../init';
 import { asBlockId } from '../interfaces/branded/primitives/blockId';
 import { IMessageMetadata } from '../interfaces/messaging/messageMetadata';
-import { IQuorumMember } from '../interfaces/services/quorumService';
+import { IBrightTrustMember } from '../interfaces/services/brightTrustService';
 import { IBlockMetadata } from '../interfaces/storage/blockMetadata';
 
 jest.setTimeout(30_000);
@@ -124,23 +124,23 @@ describe('Category 2 — Entity ID format (Validates: Requirements 1.4)', () => 
 });
 
 // ===========================================================================
-// Category 3 — Quorum interface generics
+// Category 3 — BrightTrust interface generics
 // ===========================================================================
-describe('Category 3 — Quorum interface generics (Validates: Requirements 1.10)', () => {
+describe('Category 3 — BrightTrust interface generics (Validates: Requirements 1.10)', () => {
   /**
-   * Verify IQuorumMember<TID> uses TID for its id field, not HexString.
+   * Verify IBrightTrustMember<TID> uses TID for its id field, not HexString.
    *
-   * On unfixed code, IQuorumMember.id is typed as HexString and there is a
+   * On unfixed code, IBrightTrustMember.id is typed as HexString and there is a
    * dead _platformId?: TID field. This structural test will FAIL because
    * the _platformId field exists (it shouldn't) and the id field requires
    * HexString (it should accept TID).
    */
-  it('IQuorumMember<GuidV4Uint8Array> has no dead _platformId field', () => {
+  it('IBrightTrustMember<GuidV4Uint8Array> has no dead _platformId field', () => {
     const rawBytes = idProvider.generate();
     const id = idProvider.fromBytes(rawBytes);
 
     // On fixed code, id field accepts TID directly — no cast needed
-    const member: IQuorumMember<GuidV4Uint8Array> = {
+    const member: IBrightTrustMember<GuidV4Uint8Array> = {
       id: id,
       publicKey: new Uint8Array(33),
       metadata: { name: 'test' },
@@ -151,7 +151,7 @@ describe('Category 3 — Quorum interface generics (Validates: Requirements 1.10
 
     // On unfixed code, _platformId exists as a dead optional field on the interface.
     // On fixed code, there should be no _platformId field — TID is used for id directly.
-    // Verify the correctly-typed IQuorumMember object does NOT have _platformId in its keys.
+    // Verify the correctly-typed IBrightTrustMember object does NOT have _platformId in its keys.
     const keys = Object.keys(member);
     expect(keys).not.toContain('_platformId');
 

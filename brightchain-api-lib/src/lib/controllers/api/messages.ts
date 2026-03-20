@@ -131,23 +131,23 @@ export class MessagesController<
   protected initRouteDefinitions(): void {
     this.routeDefinitions = [
       routeConfig('post', '/', {
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         handlerKey: 'sendMessage',
       }),
       routeConfig('get', '/:id', {
         handlerKey: 'getMessage',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
       }),
       routeConfig('get', '/', {
         handlerKey: 'queryMessages',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
       }),
       routeConfig('delete', '/:id', {
         handlerKey: 'deleteMessage',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
       }),
     ];

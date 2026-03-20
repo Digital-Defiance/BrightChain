@@ -12,7 +12,7 @@ module.exports = {
     ],
   },
   transformIgnorePatterns: [
-    'node_modules/(?!(@noble|@scure|uuid)/)',
+    'node_modules/(?!(@noble|@scure|@ethereumjs|uuid)/)',
     '/dist/',
     '<rootDir>/../dist/',
   ],

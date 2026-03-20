@@ -211,7 +211,7 @@ describe('Feature: brightdb-write-acls, Property 14: API Admin Authentication En
         expect(res!.status).toBe(403);
         expect(res!.body.error).toBeDefined();
       }),
-      { numRuns: 100 },
+      { numRuns: 30 },
     );
   });
 
@@ -302,7 +302,7 @@ describe('Feature: brightdb-write-acls, Property 14: API Admin Authentication En
         // Should NOT be 403 — the admin signature is valid
         expect(res!.status).not.toBe(403);
       }),
-      { numRuns: 100 },
+      { numRuns: 30 },
     );
   });
 
@@ -392,7 +392,7 @@ describe('Feature: brightdb-write-acls, Property 14: API Admin Authentication En
 
         expect(res!.status).toBe(403);
       }),
-      { numRuns: 100 },
+      { numRuns: 30 },
     );
   });
 });

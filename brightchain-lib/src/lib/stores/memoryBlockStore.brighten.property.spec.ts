@@ -1,7 +1,7 @@
 /**
  * @fileoverview Property-based tests for MemoryBlockStore XOR Brightening operations
  *
- * **Feature: backend-blockstore-quorum, Property 5: XOR Brightening Correctness**
+ * **Feature: backend-blockstore-brightTrust, Property 5: XOR Brightening Correctness**
  * **Validates: Requirements 6.1, 6.2, 6.3**
  *
  * This test suite verifies that:

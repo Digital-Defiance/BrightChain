@@ -1,4 +1,4 @@
-import { expect, test } from '../fixtures';
+import { expect, test, waitForPageContent, waitForSuspense } from '../fixtures';
 
 /**
  * Playwright E2E tests for the ThreadView component.
@@ -54,17 +54,22 @@ test.describe('ThreadView', () => {
       );
 
       await page.goto(`/brighthub/thread/${rootId}`);
-      await page.waitForLoadState('networkidle');
+      await waitForSuspense(page);
+      await waitForPageContent(page);
 
       // Thread view should render as an article
       const threadView = page.getByRole('article');
-      await expect(threadView).toBeVisible();
+      await expect(threadView).toBeVisible({ timeout: 15_000 });
 
       // Root post content should be visible
-      await expect(page.getByText('Root post for thread test')).toBeVisible();
+      await expect(page.getByText('Root post for thread test')).toBeVisible({
+        timeout: 10_000,
+      });
 
       // Reply should be visible
-      await expect(page.getByText('Reply to root post')).toBeVisible();
+      await expect(page.getByText('Reply to root post')).toBeVisible({
+        timeout: 10_000,
+      });
     });
 
     test('should show reply count and participant count', async ({
@@ -79,10 +84,11 @@ test.describe('ThreadView', () => {
       );
 
       await page.goto(`/brighthub/thread/${rootId}`);
-      await page.waitForLoadState('networkidle');
+      await waitForSuspense(page);
+      await waitForPageContent(page);
 
       // Should show reply count (at least "1 reply")
-      await expect(page.getByText(/1 repl/i)).toBeVisible();
+      await expect(page.getByText(/1 repl/i)).toBeVisible({ timeout: 15_000 });
     });
 
     test('should show nested replies with indentation', async ({
@@ -123,11 +129,18 @@ test.describe('ThreadView', () => {
       );
 
       await page.goto(`/brighthub/thread/${rootId}`);
-      await page.waitForLoadState('networkidle');
+      await waitForSuspense(page);
+      await waitForPageContent(page);
 
-      await expect(page.getByText('Nested thread root')).toBeVisible();
-      await expect(page.getByText('First level reply')).toBeVisible();
-      await expect(page.getByText('Second level reply')).toBeVisible();
+      await expect(page.getByText('Nested thread root')).toBeVisible({
+        timeout: 15_000,
+      });
+      await expect(page.getByText('First level reply')).toBeVisible({
+        timeout: 10_000,
+      });
+      await expect(page.getByText('Second level reply')).toBeVisible({
+        timeout: 10_000,
+      });
     });
 
     test('should show empty state when thread has no replies', async ({
@@ -146,9 +159,12 @@ test.describe('ThreadView', () => {
       const rootId = rootRes.data.data._id;
 
       await page.goto(`/brighthub/thread/${rootId}`);
-      await page.waitForLoadState('networkidle');
+      await waitForSuspense(page);
+      await waitForPageContent(page);
 
-      await expect(page.getByText('Post with no replies')).toBeVisible();
+      await expect(page.getByText('Post with no replies')).toBeVisible({
+        timeout: 15_000,
+      });
     });
   });
 
@@ -165,11 +181,12 @@ test.describe('ThreadView', () => {
       );
 
       await page.goto(`/brighthub/thread/${rootId}`);
-      await page.waitForLoadState('networkidle');
+      await waitForSuspense(page);
+      await waitForPageContent(page);
 
       // Reply buttons should be present on posts
       const replyButtons = page.getByRole('button', { name: /reply/i });
-      await expect(replyButtons.first()).toBeVisible();
+      await expect(replyButtons.first()).toBeVisible({ timeout: 15_000 });
     });
 
     test('should show like button on each post in thread', async ({
@@ -184,10 +201,16 @@ test.describe('ThreadView', () => {
       );
 
       await page.goto(`/brighthub/thread/${rootId}`);
-      await page.waitForLoadState('networkidle');
+      await waitForSuspense(page);
+      await waitForPageContent(page);
+
+      // Wait for post content to render first
+      await expect(page.getByText('Root post for thread test')).toBeVisible({
+        timeout: 15_000,
+      });
 
       const likeButtons = page.getByRole('button', { name: /like/i });
-      await expect(likeButtons.first()).toBeVisible();
+      await expect(likeButtons.first()).toBeVisible({ timeout: 10_000 });
     });
 
     test('should show repost button on each post in thread', async ({
@@ -202,10 +225,16 @@ test.describe('ThreadView', () => {
       );
 
       await page.goto(`/brighthub/thread/${rootId}`);
-      await page.waitForLoadState('networkidle');
+      await waitForSuspense(page);
+      await waitForPageContent(page);
+
+      // Wait for post content to render first
+      await expect(page.getByText('Root post for thread test')).toBeVisible({
+        timeout: 15_000,
+      });
 
       const repostButtons = page.getByRole('button', { name: /repost/i });
-      await expect(repostButtons.first()).toBeVisible();
+      await expect(repostButtons.first()).toBeVisible({ timeout: 10_000 });
     });
   });
 });

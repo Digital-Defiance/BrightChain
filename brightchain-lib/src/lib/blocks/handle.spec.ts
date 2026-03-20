@@ -201,7 +201,7 @@ describe('BlockHandle', () => {
         expect(typeof maybeHandle.calculateChecksum).toBe('function');
         expect(typeof maybeHandle.clearCache).toBe('function');
       } else {
-        fail('isBlockHandle should return true for valid handle');
+        throw new Error('isBlockHandle should return true for valid handle');
       }
     });
   });

@@ -13,6 +13,7 @@
     "src/**/*.spec.ts",
     "src/**/*.test.ts"
   ],
+  "files": ["../types/global.d.ts"],
   "include": [
     "src/**/*.ts"
   ]

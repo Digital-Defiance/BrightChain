@@ -10,7 +10,6 @@ import { ILedgerSignatureVerifier } from '../../interfaces/ledger/ledgerSignatur
 import { ChecksumService } from '../../services/checksum.service';
 import { Checksum } from '../../types/checksum';
 import { IncrementalMerkleTree } from '../incrementalMerkleTree';
-import { Ledger } from '../ledger';
 import { LedgerChainValidator } from '../ledgerChainValidator';
 import { LedgerEntrySerializer } from '../ledgerEntrySerializer';
 
@@ -292,7 +291,10 @@ describe('LedgerChainValidator', () => {
       const chain = buildChain(5);
       // Build the expected Merkle root from entry hashes
       const entryHashes = chain.map((e) => e.entryHash);
-      const tree = IncrementalMerkleTree.fromLeaves(entryHashes, checksumService);
+      const tree = IncrementalMerkleTree.fromLeaves(
+        entryHashes,
+        checksumService,
+      );
       const correctRoot = tree.root;
 
       const result = validator.validateAll(chain, correctRoot);
@@ -359,7 +361,10 @@ describe('LedgerChainValidator', () => {
     it('should pass when valid Merkle proofs are provided', () => {
       const chain = buildChain(5);
       const entryHashes = chain.map((e) => e.entryHash);
-      const tree = IncrementalMerkleTree.fromLeaves(entryHashes, checksumService);
+      const tree = IncrementalMerkleTree.fromLeaves(
+        entryHashes,
+        checksumService,
+      );
       const merkleRoot = tree.root;
 
       // Validate entries [2, 3, 4] with Merkle proofs
@@ -383,7 +388,10 @@ describe('LedgerChainValidator', () => {
     it('should detect mismatch when an invalid Merkle proof is provided', () => {
       const chain = buildChain(5);
       const entryHashes = chain.map((e) => e.entryHash);
-      const tree = IncrementalMerkleTree.fromLeaves(entryHashes, checksumService);
+      const tree = IncrementalMerkleTree.fromLeaves(
+        entryHashes,
+        checksumService,
+      );
       const merkleRoot = tree.root;
 
       const subRange = chain.slice(2, 5);
@@ -429,7 +437,10 @@ describe('LedgerChainValidator', () => {
     it('should skip Merkle validation when merkleRoot is provided but merkleProofs is not', () => {
       const chain = buildChain(5);
       const entryHashes = chain.map((e) => e.entryHash);
-      const tree = IncrementalMerkleTree.fromLeaves(entryHashes, checksumService);
+      const tree = IncrementalMerkleTree.fromLeaves(
+        entryHashes,
+        checksumService,
+      );
       const merkleRoot = tree.root;
 
       const subRange = chain.slice(2, 5);
@@ -479,7 +490,10 @@ describe('LedgerChainValidator', () => {
     it('should verify Merkle root when provided', async () => {
       const chain = buildChain(5);
       const entryHashes = chain.map((e) => e.entryHash);
-      const tree = IncrementalMerkleTree.fromLeaves(entryHashes, checksumService);
+      const tree = IncrementalMerkleTree.fromLeaves(
+        entryHashes,
+        checksumService,
+      );
       const correctRoot = tree.root;
 
       const result = await validator.validateAllParallel(chain, correctRoot);

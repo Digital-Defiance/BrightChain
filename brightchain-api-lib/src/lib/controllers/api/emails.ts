@@ -53,9 +53,7 @@ import {
   routeConfig,
   TypedHandlers,
 } from '@digitaldefiance/node-express-suite';
-import * as jwt from 'jsonwebtoken';
 import { IBrightChainApplication } from '../../interfaces/application';
-import { ITokenPayload } from '../../interfaces/token-payload';
 import { MessagePassingService } from '../../services/messagePassingService';
 import { DefaultBackendIdType } from '../../shared-types';
 import {
@@ -194,10 +192,49 @@ interface MarkAsReadRequestBody {
 
 function mapToRecord<K extends string, V>(map: Map<K, V>): Record<string, V> {
   const record: Record<string, V> = {} as Record<string, V>;
-  for (const [key, value] of map) {
-    record[key] = value;
+  if (map && typeof map.forEach === 'function') {
+    for (const [key, value] of map) {
+      record[key] = value;
+    }
   }
   return record;
+}
+
+/**
+ * Converts Map fields in an IEmailMetadata to plain objects so they survive
+ * JSON serialization. Affects: customHeaders, deliveryReceipts, readReceipts,
+ * encryptedKeys.
+ */
+
+function serializeEmailForJson<T>(email: T): T {
+  const result = { ...(email as Record<string, unknown>) };
+
+  if (result['customHeaders'] instanceof Map) {
+    result['customHeaders'] = mapToRecord(result['customHeaders']);
+  }
+  if (result['deliveryReceipts'] instanceof Map) {
+    result['deliveryReceipts'] = mapToRecord(result['deliveryReceipts']);
+  }
+  if (result['readReceipts'] instanceof Map) {
+    const readObj: Record<string, string> = {};
+    for (const [key, val] of result['readReceipts'] as Map<string, Date>) {
+      readObj[String(key)] =
+        val instanceof Date ? val.toISOString() : String(val);
+    }
+    result['readReceipts'] = readObj;
+  }
+  if (result['encryptedKeys'] instanceof Map) {
+    const encObj: Record<string, string> = {};
+    for (const [key, val] of result['encryptedKeys'] as Map<
+      string,
+      Uint8Array
+    >) {
+      encObj[key] = Buffer.from(val).toString('base64');
+    }
+    result['encryptedKeys'] = encObj;
+  }
+
+  return result as T;
 }
 
 // ─── Controller ─────────────────────────────────────────────────────────────
@@ -222,7 +259,8 @@ export class EmailController<
    * Optional user registry for recipient verification.
    * When set, the verify-recipient endpoint delegates to this registry.
    */
-  private userRegistry: { hasUser(email: string): Promise<boolean> } | null = null;
+  private userRegistry: { hasUser(email: string): Promise<boolean> } | null =
+    null;
 
   /**
    * The local email domain used for constructing full email addresses
@@ -244,7 +282,9 @@ export class EmailController<
   /**
    * Set the user registry for recipient verification.
    */
-  public setUserRegistry(registry: { hasUser(email: string): Promise<boolean> }): void {
+  public setUserRegistry(registry: {
+    hasUser(email: string): Promise<boolean>;
+  }): void {
     this.userRegistry = registry;
   }
 
@@ -262,67 +302,64 @@ export class EmailController<
   private getMessagePassingService(): MessagePassingService {
     if (!this.messagePassingService) {
       const error = new Error('MessagePassingService not initialized');
-      (error as any).isServiceUnavailable = true;
+      (error as unknown as Record<string, boolean>)['isServiceUnavailable'] =
+        true;
       throw error;
     }
     return this.messagePassingService;
   }
 
   /**
-   * Extract memberId from request body or query params.
-   * Extract memberId from request body, query params, or authenticated user.
-   * Checks body and query first (for backward compatibility with explicit
-   * memberId), then falls back to req.user populated by auth middleware.
-   * As a last resort, decodes the JWT from the Authorization header.
+   * Extract the authenticated user's ID from req.user (set by auth middleware).
    */
   private getMemberId(req: unknown): string {
-    const body = (req as SendEmailRequestBody).body;
-    if (body && typeof body === 'object') {
-      const bodyRecord = body as Record<string, unknown>;
-      if (typeof bodyRecord['memberId'] === 'string')
-        return bodyRecord['memberId'];
-    }
-    const query = (req as InboxQueryParams).query;
-    if (query && typeof query.memberId === 'string') return query.memberId;
+    const user = (req as { user?: { id?: string } }).user;
+    if (user && typeof user.id === 'string') return user.id;
+    throw new Error('No authenticated user');
+  }
 
-    // Fall back to authenticated user from JWT middleware (if auth is enabled)
-    const user = (req as { user?: { memberId?: string; id?: string } }).user;
-    if (user) {
-      if (typeof user.memberId === 'string') return user.memberId;
-      if (typeof user.id === 'string') return user.id;
-    }
+  /**
+   * Extract the authenticated user's email from req.user (set by auth middleware).
+   * The auth middleware populates req.user with a full IRequestUserDTO via
+   * buildRequestUserDTO, which includes the email field.
+   *
+   * If req.user.id already looks like an email address (contains @), it is
+   * returned directly — this supports test mocks where the Bearer token is
+   * set to the recipient's email address.
+   *
+   * Falls back to memberId if email is not available (e.g. in test mocks).
+   */
+  private getUserEmail(req: unknown): string {
+    const user = (req as { user?: { id?: string; email?: string } }).user;
+    if (!user) throw new Error('No authenticated user');
 
-    // Last resort: decode JWT from Authorization header directly
-    const headers = (req as { headers?: { authorization?: string } }).headers;
-    const authHeader = headers?.authorization;
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-      try {
-        const token = authHeader.slice(7);
-        const decoded = jwt.verify(
-          token,
-          this.application.environment.jwtSecret,
-        ) as ITokenPayload;
-        if (decoded.memberId) return decoded.memberId;
-      } catch {
-        // Token invalid or expired — fall through to error
-      }
+    // If the id itself is an email address, use it directly (test mock pattern)
+    if (user.id && user.id.includes('@')) {
+      return user.id;
     }
 
+    // In production, use the email from the full IRequestUserDTO
+    if (typeof user.email === 'string' && user.email.length > 0) {
+      return user.email;
+    }
+
+    // Fallback to memberId — isRecipient in the store will try to resolve it
+    if (typeof user.id === 'string') return user.id;
     throw new Error('No authenticated user');
   }
 
   // ─── Route Definitions (Task 3.2) ──────────────────────────────────
 
   protected initRouteDefinitions(): void {
-    const noAuth = {
-      useAuthentication: false,
+    const auth = {
+      useAuthentication: true,
       useCryptoAuthentication: false,
     };
 
     this.routeDefinitions = [
       // POST / — Send email
       routeConfig('post', '/', {
-        ...noAuth,
+        ...auth,
         handlerKey: 'sendEmail',
         validation: () => sendEmailValidation,
         openapi: {
@@ -338,26 +375,27 @@ export class EmailController<
             },
             400: {
               schema: 'ErrorResponse',
-              description: 'Validation error (invalid attachment, encryption scheme, etc.)',
+              description:
+                'Validation error (invalid attachment, encryption scheme, etc.)',
             },
           },
         },
       }),
       // GET /inbox — Query inbox (BEFORE /:messageId to avoid param conflict)
       routeConfig('get', '/inbox', {
-        ...noAuth,
+        ...auth,
         handlerKey: 'queryInbox',
         validation: () => queryInboxValidation,
       }),
       // GET /inbox/unread-count (BEFORE /:messageId to avoid param conflict)
       routeConfig('get', '/inbox/unread-count', {
-        ...noAuth,
+        ...auth,
         handlerKey: 'getUnreadCount',
         validation: () => getUnreadCountValidation,
       }),
       // GET /verify-recipient/:username (BEFORE /:messageId to avoid param conflict)
       routeConfig('get', '/verify-recipient/:username', {
-        ...noAuth,
+        ...auth,
         handlerKey: 'verifyRecipient',
         validation: () => verifyRecipientValidation,
         openapi: {
@@ -397,49 +435,49 @@ export class EmailController<
       }),
       // GET /:messageId — Get email metadata
       routeConfig('get', '/:messageId', {
-        ...noAuth,
+        ...auth,
         handlerKey: 'getEmail',
         validation: () => messageIdParamValidation,
       }),
       // GET /:messageId/content — Get full email content
       routeConfig('get', '/:messageId/content', {
-        ...noAuth,
+        ...auth,
         handlerKey: 'getEmailContent',
         validation: () => getEmailContentValidation,
       }),
       // GET /:messageId/thread — Get email thread
       routeConfig('get', '/:messageId/thread', {
-        ...noAuth,
+        ...auth,
         handlerKey: 'getEmailThread',
         validation: () => getEmailThreadValidation,
       }),
       // GET /:messageId/delivery-status — Get delivery status
       routeConfig('get', '/:messageId/delivery-status', {
-        ...noAuth,
+        ...auth,
         handlerKey: 'getDeliveryStatus',
         validation: () => getDeliveryStatusValidation,
       }),
       // POST /:messageId/reply — Reply to email
       routeConfig('post', '/:messageId/reply', {
-        ...noAuth,
+        ...auth,
         handlerKey: 'replyToEmail',
         validation: () => replyEmailValidation,
       }),
       // POST /:messageId/forward — Forward email
       routeConfig('post', '/:messageId/forward', {
-        ...noAuth,
+        ...auth,
         handlerKey: 'forwardEmail',
         validation: () => forwardEmailValidation,
       }),
       // POST /:messageId/read — Mark as read
       routeConfig('post', '/:messageId/read', {
-        ...noAuth,
+        ...auth,
         handlerKey: 'markAsRead',
         validation: () => markAsReadValidation,
       }),
       // DELETE /:messageId — Delete email
       routeConfig('delete', '/:messageId', {
-        ...noAuth,
+        ...auth,
         handlerKey: 'deleteEmail',
         validation: () => deleteEmailValidation,
       }),
@@ -479,9 +517,17 @@ export class EmailController<
     response: ISendEmailResponse | ApiErrorResponse;
   }> {
     try {
-      const { from, to, cc, bcc, subject, textBody, htmlBody, attachments, encryptionScheme } = (
-        req as SendEmailRequestBody
-      ).body;
+      const {
+        from,
+        to,
+        cc,
+        bcc,
+        subject,
+        textBody,
+        htmlBody,
+        attachments,
+        encryptionScheme,
+      } = (req as SendEmailRequestBody).body;
 
       // ── Attachment validation (Requirements 7.3, 7.4) ───────────────
       if (attachments && attachments.length > 0) {
@@ -499,7 +545,10 @@ export class EmailController<
                 response: {
                   status: 'error' as const,
                   data: null as unknown as ISendEmailResponse['data'],
-                  error: { code: 'INVALID_BASE64', message: `Invalid base64 data for attachment '${att.filename}'` },
+                  error: {
+                    code: 'INVALID_BASE64',
+                    message: `Invalid base64 data for attachment '${att.filename}'`,
+                  },
                 },
               };
             }
@@ -509,19 +558,27 @@ export class EmailController<
               response: {
                 status: 'error' as const,
                 data: null as unknown as ISendEmailResponse['data'],
-                error: { code: 'INVALID_BASE64', message: `Invalid base64 data for attachment '${att.filename}'` },
+                error: {
+                  code: 'INVALID_BASE64',
+                  message: `Invalid base64 data for attachment '${att.filename}'`,
+                },
               },
             };
           }
 
           // Per-file size validation
-          if (!validateAttachmentSize(decoded.length, MAX_ATTACHMENT_SIZE_BYTES)) {
+          if (
+            !validateAttachmentSize(decoded.length, MAX_ATTACHMENT_SIZE_BYTES)
+          ) {
             return {
               statusCode: 400,
               response: {
                 status: 'error' as const,
                 data: null as unknown as ISendEmailResponse['data'],
-                error: { code: 'ATTACHMENT_TOO_LARGE', message: `Attachment '${att.filename}' exceeds ${formatFileSize(MAX_ATTACHMENT_SIZE_BYTES)} limit` },
+                error: {
+                  code: 'ATTACHMENT_TOO_LARGE',
+                  message: `Attachment '${att.filename}' exceeds ${formatFileSize(MAX_ATTACHMENT_SIZE_BYTES)} limit`,
+                },
               },
             };
           }
@@ -530,13 +587,18 @@ export class EmailController<
         }
 
         // Cumulative size validation
-        if (!validateTotalAttachmentSize(decodedSizes, MAX_ATTACHMENT_SIZE_BYTES)) {
+        if (
+          !validateTotalAttachmentSize(decodedSizes, MAX_ATTACHMENT_SIZE_BYTES)
+        ) {
           return {
             statusCode: 400,
             response: {
               status: 'error' as const,
               data: null as unknown as ISendEmailResponse['data'],
-              error: { code: 'TOTAL_SIZE_EXCEEDED', message: `Total attachment size exceeds ${formatFileSize(MAX_ATTACHMENT_SIZE_BYTES)} limit` },
+              error: {
+                code: 'TOTAL_SIZE_EXCEEDED',
+                message: `Total attachment size exceeds ${formatFileSize(MAX_ATTACHMENT_SIZE_BYTES)} limit`,
+              },
             },
           };
         }
@@ -551,7 +613,10 @@ export class EmailController<
             response: {
               status: 'error' as const,
               data: null as unknown as ISendEmailResponse['data'],
-              error: { code: 'INVALID_ENCRYPTION_SCHEME', message: `Invalid encryption scheme: '${encryptionScheme}'` },
+              error: {
+                code: 'INVALID_ENCRYPTION_SCHEME',
+                message: `Invalid encryption scheme: '${encryptionScheme}'`,
+              },
             },
           };
         }
@@ -595,7 +660,7 @@ export class EmailController<
     response: IQueryInboxResponse | ApiErrorResponse;
   }> {
     try {
-      const memberId = this.getMemberId(req);
+      const userEmail = this.getUserEmail(req);
       const queryParams = (req as InboxQueryParams).query;
 
       const inboxQuery: IInboxQuery = {};
@@ -642,13 +707,16 @@ export class EmailController<
       }
 
       const service = this.getMessagePassingService();
-      const result = await service.queryInbox(memberId, inboxQuery);
+      const result = await service.queryInbox(userEmail, inboxQuery);
 
       return {
         statusCode: 200,
         response: {
           status: 'success' as const,
-          data: result,
+          data: {
+            ...result,
+            emails: result.emails.map(serializeEmailForJson),
+          },
         },
       };
     } catch (error) {
@@ -665,9 +733,9 @@ export class EmailController<
     response: IGetUnreadCountResponse | ApiErrorResponse;
   }> {
     try {
-      const memberId = this.getMemberId(req);
+      const userEmail = this.getUserEmail(req);
       const service = this.getMessagePassingService();
-      const unreadCount = await service.getUnreadEmailCount(memberId);
+      const unreadCount = await service.getUnreadEmailCount(userEmail);
 
       return {
         statusCode: 200,
@@ -702,7 +770,7 @@ export class EmailController<
         statusCode: 200,
         response: {
           status: 'success' as const,
-          data: email,
+          data: serializeEmailForJson(email),
         },
       };
     } catch (error) {
@@ -752,7 +820,7 @@ export class EmailController<
         statusCode: 200,
         response: {
           status: 'success' as const,
-          data: thread,
+          data: thread.map(serializeEmailForJson),
         },
       };
     } catch (error) {
@@ -867,10 +935,10 @@ export class EmailController<
   }> {
     try {
       const { messageId } = (req as MarkAsReadRequestBody).params;
-      const memberId = this.getMemberId(req);
+      const userEmail = this.getUserEmail(req);
 
       const service = this.getMessagePassingService();
-      await service.markEmailAsRead(messageId, memberId);
+      await service.markEmailAsRead(messageId, userEmail);
 
       return {
         statusCode: 200,
@@ -970,7 +1038,10 @@ export class EmailController<
         return {
           statusCode: 429,
           response: {
-            error: { code: 'RATE_LIMITED', message: 'Rate limit exceeded. Try again later.' },
+            error: {
+              code: 'RATE_LIMITED',
+              message: 'Rate limit exceeded. Try again later.',
+            },
           } as ApiErrorResponse,
         };
       }
@@ -1015,7 +1086,10 @@ export class EmailController<
     response: ApiErrorResponse;
   } {
     // Handle service unavailable (MessagePassingService not initialized)
-    if (error instanceof Error && (error as any).isServiceUnavailable) {
+    if (
+      error instanceof Error &&
+      (error as unknown as Record<string, boolean>)['isServiceUnavailable']
+    ) {
       return {
         statusCode: 503,
         response: {

@@ -9,6 +9,18 @@ import {
 } from '../utils/errorResponse';
 
 /**
+ * Derive role strings from MemberType.
+ * Admin and System members are granted the 'admin' role, matching the
+ * convention used throughout the codebase (e.g. IntrospectionController.isAdmin).
+ */
+function deriveRolesFromMemberType(type: MemberType): string[] {
+  if (type === MemberType.Admin || type === MemberType.System) {
+    return ['admin'];
+  }
+  return [];
+}
+
+/**
  * Member context attached to the request after successful authentication.
  * Contains the decoded JWT payload with member information.
  * @requirements 8.3
@@ -115,6 +127,7 @@ export function createJwtAuthMiddleware(config: IJwtAuthConfig) {
         memberId: decoded.memberId,
         username: decoded.username,
         type: decoded.type,
+        roles: decoded.roles ?? deriveRolesFromMemberType(decoded.type),
         iat: decoded.iat,
         exp: decoded.exp,
       };
@@ -123,7 +136,7 @@ export function createJwtAuthMiddleware(config: IJwtAuthConfig) {
       // Using 'any' here to avoid type conflicts with the existing IRequestUserDTO interface
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (req as any).user = {
-        memberId: decoded.memberId,
+        id: decoded.memberId,
         username: decoded.username,
         type: decoded.type,
       };

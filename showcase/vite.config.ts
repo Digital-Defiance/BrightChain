@@ -16,8 +16,24 @@ const __dirname = dirname(__filename);
 // Without both, Vite resolves them to different module instances and
 // crypto operations (sign vs verify) silently break.
 
+// Use createRequire to find the actual package location regardless of hoisting.
+// Hardcoding `__dirname + '/node_modules/...'` breaks in CI when yarn hoists
+// packages to the workspace root instead of nesting them in showcase/node_modules/.
+// We resolve an exported subpath (e.g. '@noble/hashes/utils') to find the
+// package root, then derive the esm directory from it. This avoids resolving
+// './package.json' which isn't in the exports map.
+const require = createRequire(import.meta.url);
+const nobleHashesEsmDir = resolve(
+  dirname(require.resolve('@noble/hashes/utils')),
+  'esm',
+);
+const nobleCurvesEsmDir = resolve(
+  dirname(require.resolve('@noble/curves/secp256k1')),
+  'esm',
+);
+
 function nobleHashAlias(subpath: string, esmFile: string) {
-  const full = resolve(__dirname, 'node_modules/@noble/hashes/esm', esmFile);
+  const full = resolve(nobleHashesEsmDir, esmFile);
   return [
     { find: `@noble/hashes/${subpath}`, replacement: full },
     { find: `@noble/hashes/${subpath}.js`, replacement: full },
@@ -25,7 +41,7 @@ function nobleHashAlias(subpath: string, esmFile: string) {
 }
 
 function nobleCurveAlias(subpath: string, esmFile: string) {
-  const full = resolve(__dirname, 'node_modules/@noble/curves/esm', esmFile);
+  const full = resolve(nobleCurvesEsmDir, esmFile);
   return [
     { find: `@noble/curves/${subpath}`, replacement: full },
     { find: `@noble/curves/${subpath}.js`, replacement: full },
@@ -46,24 +62,12 @@ const nobleAliases = [
   ...nobleHashAlias('ripemd160', 'legacy.js'),
   ...nobleHashAlias('legacy', 'legacy.js'),
   ...nobleHashAlias('crypto', 'crypto.js'),
-  // @noble/hashes/_assert: alias to the v1.4.0 copy nested inside
-  // ethereum-cryptography. The hoisted v1.8.0 renamed { bool, bytes, number }
-  // to { abytes, anumber, aoutput }, breaking ethereum-cryptography@2.x.
-  // The v1.4.0 _assert is self-contained (no imports), so this is safe.
-  {
-    find: '@noble/hashes/_assert',
-    replacement: resolve(
-      __dirname,
-      'node_modules/ethereum-cryptography/node_modules/@noble/hashes/_assert.js',
-    ),
-  },
-  {
-    find: '@noble/hashes/_assert.js',
-    replacement: resolve(
-      __dirname,
-      'node_modules/ethereum-cryptography/node_modules/@noble/hashes/_assert.js',
-    ),
-  },
+  // @noble/hashes/_assert is intentionally NOT aliased here.
+  // ethereum-cryptography@2.2.1 depends on @noble/hashes@1.4.0 whose _assert
+  // exports { bool, bytes, number, ... }. The hoisted v1.8.0 _assert has a
+  // completely different API (abytes, anumber, aexists, aoutput) — aliasing to
+  // it causes "Cannot read properties of undefined (reading 'bool')".
+  // Leaving _assert unaliased lets each package resolve its own compatible copy.
 
   // @noble/curves sub-paths
   ...nobleCurveAlias('secp256k1', 'secp256k1.js'),
@@ -116,7 +120,7 @@ export default defineConfig({
   base: '/',
   build: {
     outDir: 'dist',
-    sourcemap: true,
+    sourcemap: process.env['GENERATE_SOURCEMAP'] !== 'false',
     commonjsOptions: {
       transformMixedEsModules: true,
       requireReturnsDefault: 'auto',
@@ -135,6 +139,7 @@ export default defineConfig({
   },
   optimizeDeps: {
     include: [
+      'events',
       'tslib',
       '@digitaldefiance/ecies-lib',
       '@digitaldefiance/i18n-lib',
@@ -165,11 +170,9 @@ export default defineConfig({
   },
   resolve: {
     // NOTE: @noble/hashes is intentionally NOT deduped.
-    // ethereum-cryptography@2.x ships a nested @noble/hashes@1.4.0 whose
-    // _assert exports { bool, bytes, number }. The hoisted v1.8.0 removed
-    // those. We alias _assert to the v1.4.0 copy (see nobleAliases above)
-    // but do NOT dedupe @noble/hashes itself, as that would force ALL
-    // sub-paths to v1.8.0 including _assert.
+    // ethereum-cryptography@2.2.1 depends on @noble/hashes@1.4.0 whose _assert
+    // has a different API than v1.8.0. We intentionally leave _assert unaliased
+    // (see nobleAliases above) so each package resolves its own compatible copy.
     dedupe: [
       'tslib',
       '@noble/curves',
@@ -185,7 +188,7 @@ export default defineConfig({
         '../brightchain-lib/src/browser.ts',
       ),
       // Replace js-sha3 with @noble/hashes for browser compatibility
-      'js-sha3': resolve(__dirname, 'node_modules/@noble/hashes/esm/sha3.js'),
+      'js-sha3': resolve(nobleHashesEsmDir, 'sha3.js'),
       // Spread all noble aliases into resolve.alias
       ...nobleResolveAliases,
       // Use browser build of reed-solomon-erasure.wasm (no fs dependency)
@@ -198,7 +201,12 @@ export default defineConfig({
         'browser.js',
       ),
       // Force uuid to use browser-compatible version (uses Web Crypto API instead of Node crypto)
-      uuid: resolve(__dirname, 'node_modules/uuid/dist/esm-browser/index.js'),
+      uuid: resolve(
+        dirname(require.resolve('uuid/package.json')),
+        'dist/esm-browser/index.js',
+      ),
+      // Polyfill Node.js 'events' module for browser (needed by @ethereumjs/util AsyncEventEmitter)
+      events: require.resolve('events/'),
     },
   },
   define: {

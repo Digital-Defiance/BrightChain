@@ -14,15 +14,15 @@ import {
   MemberType,
   uint8ArrayToHex,
 } from '@digitaldefiance/ecies-lib';
-import { QuorumErrorType } from '../enumerations/quorumErrorType';
-import { QuorumOperationalMode } from '../enumerations/quorumOperationalMode';
-import { QuorumError } from '../errors/quorumError';
+import { BrightTrustErrorType } from '../enumerations/brightTrustErrorType';
+import { BrightTrustOperationalMode } from '../enumerations/brightTrustOperationalMode';
+import { BrightTrustError } from '../errors/brightTrustError';
 import { initializeBrightChain } from '../init';
 import { AliasRecord } from '../interfaces/aliasRecord';
+import { BrightTrustEpoch } from '../interfaces/brightTrustEpoch';
 import { IdentityRecoveryRecord } from '../interfaces/identityRecoveryRecord';
-import { QuorumEpoch } from '../interfaces/quorumEpoch';
-import { IQuorumDatabase } from '../interfaces/services/quorumDatabase';
-import { IQuorumMember } from '../interfaces/services/quorumService';
+import { IBrightTrustDatabase } from '../interfaces/services/brightTrustDatabase';
+import { IBrightTrustMember } from '../interfaces/services/brightTrustService';
 import { AliasRegistry } from './aliasRegistry';
 import { IdentitySealingPipeline } from './identitySealingPipeline';
 import { SealingService } from './sealing.service';
@@ -35,7 +35,7 @@ function createMockDatabase(
   enhancedProvider: ReturnType<
     typeof ServiceProvider.getInstance<GuidV4Uint8Array>
   >['idProvider'],
-): IQuorumDatabase<GuidV4Uint8Array> & {
+): IBrightTrustDatabase<GuidV4Uint8Array> & {
   aliases: Map<string, AliasRecord<GuidV4Uint8Array>>;
   identityRecords: Map<HexString, IdentityRecoveryRecord<GuidV4Uint8Array>>;
 } {
@@ -45,7 +45,10 @@ function createMockDatabase(
     IdentityRecoveryRecord<GuidV4Uint8Array>
   >();
 
-  const memberLookup = new Map<HexString, IQuorumMember<GuidV4Uint8Array>>();
+  const memberLookup = new Map<
+    HexString,
+    IBrightTrustMember<GuidV4Uint8Array>
+  >();
   for (const m of memberPool) {
     const memberId = uint8ArrayToHex(
       enhancedProvider.toBytes(m.member.id),
@@ -163,19 +166,19 @@ describe('AliasRegistry Unit Tests', () => {
   function createEpoch(
     memberCount: number,
     threshold: number,
-  ): QuorumEpoch<GuidV4Uint8Array> {
+  ): BrightTrustEpoch<GuidV4Uint8Array> {
     return {
       epochNumber: 1,
       memberIds: memberPool.slice(0, memberCount).map((m) => m.member.id),
       threshold,
-      mode: QuorumOperationalMode.Quorum,
+      mode: BrightTrustOperationalMode.BrightTrust,
       createdAt: new Date(),
     };
   }
 
   function createRegistry(
-    db: IQuorumDatabase<GuidV4Uint8Array>,
-    epoch: QuorumEpoch<GuidV4Uint8Array>,
+    db: IBrightTrustDatabase<GuidV4Uint8Array>,
+    epoch: BrightTrustEpoch<GuidV4Uint8Array>,
   ): AliasRegistry<GuidV4Uint8Array> {
     const pipeline = new IdentitySealingPipeline<GuidV4Uint8Array>(
       db,
@@ -245,13 +248,13 @@ describe('AliasRegistry Unit Tests', () => {
       // Second registration with same name fails
       await expect(
         registry.registerAlias('UniqueAlias', ownerBId, ownerB.publicKey),
-      ).rejects.toThrow(QuorumError);
+      ).rejects.toThrow(BrightTrustError);
 
       try {
         await registry.registerAlias('UniqueAlias', ownerBId, ownerB.publicKey);
       } catch (error) {
-        expect((error as QuorumError).type).toBe(
-          QuorumErrorType.AliasAlreadyTaken,
+        expect((error as BrightTrustError).type).toBe(
+          BrightTrustErrorType.AliasAlreadyTaken,
         );
       }
     });
@@ -310,13 +313,15 @@ describe('AliasRegistry Unit Tests', () => {
       const registry = createRegistry(db, epoch);
 
       await expect(registry.deregisterAlias('NonExistent')).rejects.toThrow(
-        QuorumError,
+        BrightTrustError,
       );
 
       try {
         await registry.deregisterAlias('NonExistent');
       } catch (error) {
-        expect((error as QuorumError).type).toBe(QuorumErrorType.AliasNotFound);
+        expect((error as BrightTrustError).type).toBe(
+          BrightTrustErrorType.AliasNotFound,
+        );
       }
     });
 
@@ -334,13 +339,15 @@ describe('AliasRegistry Unit Tests', () => {
       await registry.deregisterAlias('AlreadyInactive');
 
       await expect(registry.deregisterAlias('AlreadyInactive')).rejects.toThrow(
-        QuorumError,
+        BrightTrustError,
       );
 
       try {
         await registry.deregisterAlias('AlreadyInactive');
       } catch (error) {
-        expect((error as QuorumError).type).toBe(QuorumErrorType.AliasInactive);
+        expect((error as BrightTrustError).type).toBe(
+          BrightTrustErrorType.AliasInactive,
+        );
       }
     });
   });
@@ -353,12 +360,14 @@ describe('AliasRegistry Unit Tests', () => {
 
       await expect(
         registry.lookupAlias('NonExistent', new Map()),
-      ).rejects.toThrow(QuorumError);
+      ).rejects.toThrow(BrightTrustError);
 
       try {
         await registry.lookupAlias('NonExistent', new Map());
       } catch (error) {
-        expect((error as QuorumError).type).toBe(QuorumErrorType.AliasNotFound);
+        expect((error as BrightTrustError).type).toBe(
+          BrightTrustErrorType.AliasNotFound,
+        );
       }
     });
 
@@ -377,7 +386,7 @@ describe('AliasRegistry Unit Tests', () => {
       // Attempt lookup with empty shares — should fail
       await expect(
         registry.lookupAlias('LookupTest', new Map()),
-      ).rejects.toThrow(QuorumError);
+      ).rejects.toThrow(BrightTrustError);
     });
 
     it('should recover identity with sufficient shares', async () => {

@@ -12,24 +12,24 @@
  */
 
 import {
-  Environment as BaseEnvironment,
-  IConstants,
-} from '@digitaldefiance/node-express-suite';
-import {
   BlockSize,
   BlockStoreType,
   validBlockSizes,
 } from '@brightchain/brightchain-lib';
 import { PlatformID } from '@digitaldefiance/node-ecies-lib';
 import {
+  Environment as BaseEnvironment,
+  IConstants,
+} from '@digitaldefiance/node-express-suite';
+import {
   IAzureEnvironmentConfig,
   IS3EnvironmentConfig,
 } from './interfaces/environment';
 import { DefaultBackendIdType } from './shared-types';
 
-export class BrightDbEnvironment<TID extends PlatformID = DefaultBackendIdType>
-  extends BaseEnvironment<TID>
-{
+export class BrightDbEnvironment<
+  TID extends PlatformID = DefaultBackendIdType,
+> extends BaseEnvironment<TID> {
   protected _blockStorePath?: string;
   protected _blockStoreBlockSizes: BlockSize[];
   protected _useMemoryDocumentStore: boolean;

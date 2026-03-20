@@ -67,11 +67,19 @@
       }
     }
   },
-  "nxCloudAccessToken": "NjZhYTQ0M2EtZGE0ZS00YjFlLTkzZDEtZDMyYzk2OGY5MjhifHJlYWQtd3JpdGU=",
+  "nxCloudAccessToken": "",
+  "neverConnectToCloud": true,
   "useInferencePlugins": false,
   "release": {
     "version": {
       "preVersionCommand": "yarn dlx nx run-many -t build"
+    },
+    "groups": {
+      "brightchain-db": {
+        "projects": ["brightchain-db"],
+        "releaseTagPattern": "brightchain-db@{version}",
+        "projectsRelationship": "independent"
+      }
     }
   }
 }

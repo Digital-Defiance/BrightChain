@@ -12,9 +12,7 @@
  * @module emailGatewayConfig
  */
 
-import {
-  type ISpamThresholds,
-} from '@brightchain/brightchain-lib';
+import { type ISpamThresholds } from '@brightchain/brightchain-lib';
 
 /**
  * Test mode configuration for the Email Gateway.

@@ -8,17 +8,17 @@
  * @see Requirements 10.1, 10.2, 10.3, 10.4, 10.7, 10.8, 15.4
  */
 
-import { Checksum } from '../types/checksum';
 import {
   LedgerSerializationError,
   LedgerSerializationErrorType,
 } from '../errors/ledgerSerializationError';
+import { IConsistencyProof } from '../interfaces/ledger/consistencyProof';
 import {
   IMerkleProof,
   IMerkleProofStep,
   MerkleDirection,
 } from '../interfaces/ledger/merkleProof';
-import { IConsistencyProof } from '../interfaces/ledger/consistencyProof';
+import { Checksum } from '../types/checksum';
 
 /** Current serialization format version. */
 const FORMAT_VERSION = 0x01;
@@ -113,11 +113,7 @@ export class ProofSerializer {
       );
     }
 
-    const view = new DataView(
-      data.buffer,
-      data.byteOffset,
-      data.byteLength,
-    );
+    const view = new DataView(data.buffer, data.byteOffset, data.byteLength);
 
     // version
     const version = data[0];
@@ -237,11 +233,7 @@ export class ProofSerializer {
       );
     }
 
-    const view = new DataView(
-      data.buffer,
-      data.byteOffset,
-      data.byteLength,
-    );
+    const view = new DataView(data.buffer, data.byteOffset, data.byteLength);
 
     // version
     const version = data[0];

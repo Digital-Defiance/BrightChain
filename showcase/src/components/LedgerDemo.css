@@ -464,8 +464,8 @@
 .event-log-entry.append { color: #3b82f6; }
 .event-log-entry.error { color: #ef4444; }
 
-/* Quorum indicator */
-.quorum-info {
+/* BrightTrust indicator */
+.brightTrust-info {
   font-size: 0.8rem;
   padding: 0.5rem 0.75rem;
   background: rgba(168, 85, 247, 0.1);

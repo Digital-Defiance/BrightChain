@@ -1,0 +1,34 @@
+# Verdaccio local cache for Font Awesome private registry
+# Run: npx verdaccio --config ./verdaccio/config.yaml
+
+storage: ./storage
+plugins: ./plugins
+
+uplinks:
+  fontawesome:
+    url: https://npm.fontawesome.com/
+    auth:
+      type: bearer
+      token: "6FCB579F-0020-4E8E-A1E3-BE339BC462A7"
+    cache: true
+
+packages:
+  '@awesome.me/*':
+    access: $all
+    publish: $none
+    proxy: fontawesome
+
+  '**':
+    access: $all
+    publish: $none
+    proxy: ''
+
+server:
+  keepAliveTimeout: 60
+
+listen: 0.0.0.0:4873
+
+log:
+  type: stdout
+  format: pretty
+  level: warn

@@ -61,7 +61,13 @@ describe('Property 7: Frontend POST body mnemonic inclusion', () => {
           data: { message: 'ok' },
         });
 
-        await authService.register('user', 'u@test.com', 'pass', 'UTC', mnemonic);
+        await authService.register(
+          'user',
+          'u@test.com',
+          'pass',
+          'UTC',
+          mnemonic,
+        );
 
         expect(mockPost).toHaveBeenCalledTimes(1);
         const [, body] = mockPost.mock.calls[0];

@@ -88,7 +88,10 @@ async function validateDataDir(dirPath: string): Promise<void> {
 export async function brightchainDatabaseInit(
   environment: IDatabaseInitEnvironment,
   options?: {
-    modelRegistrations?: (db: BrightDb, blockStore: IBlockStore) => void | Promise<void>;
+    modelRegistrations?: (
+      db: BrightDb,
+      blockStore: IBlockStore,
+    ) => void | Promise<void>;
   },
 ): Promise<IInitResult<IGenericInitData>> {
   try {

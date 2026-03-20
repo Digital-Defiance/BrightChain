@@ -161,7 +161,7 @@ describe('EnhancedValidationError', () => {
 
       try {
         throwError();
-        fail('Should have thrown');
+        throw new Error('Should have thrown');
       } catch (error) {
         expect(isBrightChainError(error)).toBe(true);
       }
@@ -190,7 +190,7 @@ describe('EnhancedValidationError', () => {
           expect(error.field).toBe('blockType');
           expect(error.context?.['blockType']).toBe('Unknown');
         } else {
-          fail('Error should be EnhancedValidationError');
+          throw new Error('Error should be EnhancedValidationError');
         }
       }
     });

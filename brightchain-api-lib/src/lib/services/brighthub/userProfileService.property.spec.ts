@@ -32,11 +32,20 @@ import {
 describe('Feature: brighthub-social-network, User_Profile_Service Property Tests', () => {
   let service: UserProfileService;
   let mockApp: ReturnType<typeof createMockApplication>;
-  let userProfilesCollection: MockCollection<any>;
-  let followsCollection: MockCollection<any>;
-  let followRequestsCollection: MockCollection<any>;
-  let blocksCollection: MockCollection<any>;
-  let mutesCollection: MockCollection<any>;
+  let userProfilesCollection: MockCollection<{
+    _id: string;
+    [key: string]: unknown;
+  }>;
+  let followsCollection: MockCollection<{
+    _id: string;
+    [key: string]: unknown;
+  }>;
+  let followRequestsCollection: MockCollection<{
+    _id: string;
+    [key: string]: unknown;
+  }>;
+  let blocksCollection: MockCollection<{ _id: string; [key: string]: unknown }>;
+  let mutesCollection: MockCollection<{ _id: string; [key: string]: unknown }>;
 
   beforeEach(() => {
     mockApp = createMockApplication();
@@ -86,7 +95,7 @@ describe('Feature: brighthub-social-network, User_Profile_Service Property Tests
    */
   async function setupUser(
     userId: string,
-    overrides: Partial<any> = {},
+    overrides: Record<string, unknown> = {},
   ): Promise<void> {
     const profile = createMockUserProfile(userId, overrides);
     userProfilesCollection.data.push(profile);
@@ -137,10 +146,22 @@ describe('Feature: brighthub-social-network, User_Profile_Service Property Tests
 
             // Verify counts updated
             const followerProfile = userProfilesCollection.data.find(
-              (p: any) => p._id === followerId,
+              (p: {
+                _id: string;
+                followingCount?: number;
+                followerCount?: number;
+                bio?: string;
+                displayName?: string;
+              }) => p._id === followerId,
             );
             const followedProfile = userProfilesCollection.data.find(
-              (p: any) => p._id === followedId,
+              (p: {
+                _id: string;
+                followingCount?: number;
+                followerCount?: number;
+                bio?: string;
+                displayName?: string;
+              }) => p._id === followedId,
             );
             expect(followerProfile?.followingCount).toBe(1);
             expect(followedProfile?.followerCount).toBe(1);
@@ -155,10 +176,22 @@ describe('Feature: brighthub-social-network, User_Profile_Service Property Tests
 
             // Verify counts updated
             const updatedFollowerProfile = userProfilesCollection.data.find(
-              (p: any) => p._id === followerId,
+              (p: {
+                _id: string;
+                followingCount?: number;
+                followerCount?: number;
+                bio?: string;
+                displayName?: string;
+              }) => p._id === followerId,
             );
             const updatedFollowedProfile = userProfilesCollection.data.find(
-              (p: any) => p._id === followedId,
+              (p: {
+                _id: string;
+                followingCount?: number;
+                followerCount?: number;
+                bio?: string;
+                displayName?: string;
+              }) => p._id === followedId,
             );
             expect(updatedFollowerProfile?.followingCount).toBe(0);
             expect(updatedFollowedProfile?.followerCount).toBe(0);
@@ -191,14 +224,20 @@ describe('Feature: brighthub-social-network, User_Profile_Service Property Tests
 
             // Should only have one follow record
             const follows = followsCollection.data.filter(
-              (f: any) =>
+              (f: { _id: string; followerId?: string; followedId?: string }) =>
                 f.followerId === followerId && f.followedId === followedId,
             );
             expect(follows.length).toBe(1);
 
             // Counts should be 1, not followCount
             const followerProfile = userProfilesCollection.data.find(
-              (p: any) => p._id === followerId,
+              (p: {
+                _id: string;
+                followingCount?: number;
+                followerCount?: number;
+                bio?: string;
+                displayName?: string;
+              }) => p._id === followerId,
             );
             expect(followerProfile?.followingCount).toBe(1);
 
@@ -231,7 +270,8 @@ describe('Feature: brighthub-social-network, User_Profile_Service Property Tests
 
           // Verify no follow record created
           const follows = followsCollection.data.filter(
-            (f: any) => f.followerId === userId && f.followedId === userId,
+            (f: { _id: string; followerId?: string; followedId?: string }) =>
+              f.followerId === userId && f.followedId === userId,
           );
           expect(follows.length).toBe(0);
 
@@ -329,7 +369,8 @@ describe('Feature: brighthub-social-network, User_Profile_Service Property Tests
 
             // Request should be approved
             const request = followRequestsCollection.data.find(
-              (r: any) => r._id === requestId,
+              (r: { _id: string; status?: string; message?: string }) =>
+                r._id === requestId,
             );
             expect(request?.status).toBe(FollowRequestStatus.Approved);
 
@@ -371,7 +412,8 @@ describe('Feature: brighthub-social-network, User_Profile_Service Property Tests
 
             // Request should be rejected
             const request = followRequestsCollection.data.find(
-              (r: any) => r._id === requestId,
+              (r: { _id: string; status?: string; message?: string }) =>
+                r._id === requestId,
             );
             expect(request?.status).toBe(FollowRequestStatus.Rejected);
 
@@ -433,7 +475,13 @@ describe('Feature: brighthub-social-network, User_Profile_Service Property Tests
 
           // Verify bio updated
           const profile = userProfilesCollection.data.find(
-            (p: any) => p._id === userId,
+            (p: {
+              _id: string;
+              followingCount?: number;
+              followerCount?: number;
+              bio?: string;
+              displayName?: string;
+            }) => p._id === userId,
           );
           expect(profile?.bio).toBe(bio);
 
@@ -550,7 +598,7 @@ describe('Feature: brighthub-social-network, User_Profile_Service Property Tests
 
             // Should only have one block record
             const blocks = blocksCollection.data.filter(
-              (b: any) =>
+              (b: { _id: string; blockerId?: string; blockedId?: string }) =>
                 b.blockerId === blockerId && b.blockedId === blockedId,
             );
             expect(blocks.length).toBe(1);
@@ -639,7 +687,8 @@ describe('Feature: brighthub-social-network, User_Profile_Service Property Tests
 
             // Should only have one mute record
             const mutes = mutesCollection.data.filter(
-              (m: any) => m.muterId === muterId && m.mutedId === mutedId,
+              (m: { _id: string; muterId?: string; mutedId?: string }) =>
+                m.muterId === muterId && m.mutedId === mutedId,
             );
             expect(mutes.length).toBe(1);
 
@@ -781,7 +830,13 @@ describe('Feature: brighthub-social-network, User_Profile_Service Property Tests
 
             // Verify update
             const profile = userProfilesCollection.data.find(
-              (p: any) => p._id === userId,
+              (p: {
+                _id: string;
+                followingCount?: number;
+                followerCount?: number;
+                bio?: string;
+                displayName?: string;
+              }) => p._id === userId,
             );
             expect(profile?.displayName).toBe(displayName.trim());
 

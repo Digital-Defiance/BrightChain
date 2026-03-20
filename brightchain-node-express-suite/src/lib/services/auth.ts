@@ -35,17 +35,15 @@ import {
   KeyWrappingService,
   SystemUserService,
 } from '@digitaldefiance/node-express-suite';
-import {
-  TranslatableSuiteError,
-} from '@digitaldefiance/suite-core-lib';
 import type { SuiteCoreStringKeyValue } from '@digitaldefiance/suite-core-lib';
+import { TranslatableSuiteError } from '@digitaldefiance/suite-core-lib';
 import * as bcrypt from 'bcrypt';
 import { createHmac, randomUUID } from 'crypto';
 import * as jwt from 'jsonwebtoken';
 import type { IAuthCredentials } from '../interfaces/auth-credentials';
 import type { IAuthToken } from '../interfaces/auth-token';
-import type { ITokenPayload } from '../interfaces/token-payload';
 import type { IBrightDbApplication } from '../interfaces/bright-db-application';
+import type { ITokenPayload } from '../interfaces/token-payload';
 import type { BrightDbAuthenticationProvider } from './bright-db-authentication-provider';
 
 const BCRYPT_ROUNDS = 12;
@@ -83,6 +81,7 @@ export class BrightDbAuthService<TID extends PlatformID = Buffer> {
     email: string,
     password: SecureString,
     mnemonic?: SecureString,
+    displayName?: string,
   ): Promise<IAuthToken> {
     // Check for duplicate email
     const existing = await this.memberStore.queryIndex({ email });
@@ -115,8 +114,9 @@ export class BrightDbAuthService<TID extends PlatformID = Buffer> {
       }
 
       // HMAC uniqueness check
-      const hmacSecretHex =
-        this.application.environment.get('MNEMONIC_HMAC_SECRET');
+      const hmacSecretHex = this.application.environment.get(
+        'MNEMONIC_HMAC_SECRET',
+      );
       if (!hmacSecretHex) {
         throw new Error('MNEMONIC_HMAC_SECRET is not configured');
       }
@@ -185,8 +185,9 @@ export class BrightDbAuthService<TID extends PlatformID = Buffer> {
       // Reconstruct the member from the mnemonic so we have the private key.
       // createMember() generates the keypair internally but only returns a
       // reference — we need the live Member with private key to wrap it.
-      const eciesService =
-        sp.eciesService as unknown as ECIESService<typeof reference.id>;
+      const eciesService = sp.eciesService as unknown as ECIESService<
+        typeof reference.id
+      >;
       const { member: reconstructed } = Member.newMember(
         eciesService,
         MemberType.User,
@@ -252,6 +253,62 @@ export class BrightDbAuthService<TID extends PlatformID = Buffer> {
     const energyAccount = EnergyAccount.createWithTrialCredits(memberChecksum);
     await this.energyStore.set(memberChecksum, energyAccount);
 
+    // Always upsert the user into the users collection so admin endpoints
+    // (list, lock/unlock) can find dynamically registered users — not just
+    // the three seeded during init.
+    try {
+      const usersCol = this.application.db.collection<
+        Record<string, unknown> & { _id?: string }
+      >('users');
+      const now = new Date().toISOString();
+      const publicKeyHex = liveMember.publicKey
+        ? Buffer.from(liveMember.publicKey).toString('hex')
+        : '';
+      const userDoc: Record<string, unknown> = {
+        _id: memberId,
+        username,
+        email,
+        publicKey: publicKeyHex,
+        mnemonicRecovery: mnemonicRecovery,
+        backupCodes: [],
+        accountStatus: 'Active',
+        emailVerified: false,
+        directChallenge: false,
+        timezone: 'UTC',
+        siteLanguage: 'en-US',
+        darkMode: false,
+        createdBy: memberId,
+        updatedBy: memberId,
+        createdAt: now,
+        updatedAt: now,
+      };
+      if (passwordWrappedPrivateKey) {
+        userDoc['passwordWrappedPrivateKey'] = passwordWrappedPrivateKey;
+      }
+      if (displayName) {
+        userDoc['displayName'] = displayName;
+      }
+      try {
+        await usersCol.create(userDoc as never);
+      } catch {
+        // If the doc already exists (e.g. seeded user), update it instead
+        try {
+          const updateFields: Record<string, unknown> = { updatedAt: now };
+          if (displayName) {
+            updateFields['displayName'] = displayName;
+          }
+          await usersCol.updateOne(
+            { _id: memberId } as never,
+            updateFields as never,
+          );
+        } catch {
+          // Best-effort — admin visibility is non-critical for registration
+        }
+      }
+    } catch {
+      // Best-effort — users collection may not be initialized yet
+    }
+
     await this.sendWelcomeEmail(email, username);
 
     const token = this.signToken(memberId, username, MemberType.User);
@@ -278,7 +335,9 @@ export class BrightDbAuthService<TID extends PlatformID = Buffer> {
 
     const reference = results[0];
 
-    const storedHash = await this.getPasswordHash(reference.id as unknown as TID);
+    const storedHash = await this.getPasswordHash(
+      reference.id as unknown as TID,
+    );
     const passwordValue = credentials.password.value;
     if (!passwordValue) {
       throw new Error('Password value is empty');
@@ -308,11 +367,17 @@ export class BrightDbAuthService<TID extends PlatformID = Buffer> {
     };
   }
 
-  signToken(memberId: string, username: string, type: MemberType): string {
+  signToken(
+    memberId: string,
+    username: string,
+    type: MemberType,
+    roles?: string[],
+  ): string {
     const payload: Omit<ITokenPayload, 'iat' | 'exp'> = {
       memberId,
       username,
       type,
+      ...(roles && roles.length > 0 ? { roles } : {}),
     };
 
     return jwt.sign(payload, this.jwtSecret, {
@@ -339,7 +404,9 @@ export class BrightDbAuthService<TID extends PlatformID = Buffer> {
   }
 
   async getPasswordHash(memberId: TID): Promise<string> {
-    const profile = await this.memberStore.getMemberProfile(memberId as unknown as Uint8Array);
+    const profile = await this.memberStore.getMemberProfile(
+      memberId as unknown as Uint8Array,
+    );
     const passwordHash = profile.privateProfile?.passwordHash;
     if (!passwordHash) {
       throw new Error('No password hash found for member');
@@ -469,7 +536,10 @@ export class BrightDbAuthService<TID extends PlatformID = Buffer> {
 
     // 4. Verify user's signature on the signed portion of the challenge
     const signedData = requestBuffer.subarray(0, signedDataLength);
-    const userSigBuf = Buffer.from(signature, 'hex') as import('@digitaldefiance/node-ecies-lib').SignatureBuffer;
+    const userSigBuf = Buffer.from(
+      signature,
+      'hex',
+    ) as import('@digitaldefiance/node-ecies-lib').SignatureBuffer;
     const nodeEcies = new ECIESService();
 
     const publicKeyHex = await this.memberStore.getMemberPublicKeyHex(
@@ -479,7 +549,11 @@ export class BrightDbAuthService<TID extends PlatformID = Buffer> {
       throw new Error('Invalid credentials');
     }
     const publicKeyBuf = Buffer.from(publicKeyHex, 'hex');
-    const userSigValid = nodeEcies.verifyMessage(publicKeyBuf, signedData, userSigBuf);
+    const userSigValid = nodeEcies.verifyMessage(
+      publicKeyBuf,
+      signedData,
+      userSigBuf,
+    );
     if (!userSigValid) {
       throw new Error('Invalid credentials');
     }
@@ -494,8 +568,7 @@ export class BrightDbAuthService<TID extends PlatformID = Buffer> {
     } catch {
       const resolvedName = username ?? email ?? 'unknown';
       const resolvedEmail = email ?? `${resolvedName}@brightchain.local`;
-      const eciesService =
-        sp.eciesService as unknown as ECIESService<TID>;
+      const eciesService = sp.eciesService as unknown as ECIESService<TID>;
       const { member: shell } = Member.newMember<TID>(
         eciesService,
         reference.type,
@@ -518,14 +591,20 @@ export class BrightDbAuthService<TID extends PlatformID = Buffer> {
       userId: string;
       token: string;
     }>('used_direct_login_tokens');
-    const existing = await tokenCollection.findOne({
-      userId: memberId,
-      token: nonceHex,
-    } as Partial<{ _id?: string; userId: string; token: string }>).exec();
+    const existing = await tokenCollection
+      .findOne({
+        userId: memberId,
+        token: nonceHex,
+      } as Partial<{ _id?: string; userId: string; token: string }>)
+      .exec();
     if (existing) {
       throw new Error('Challenge already used');
     }
-    await tokenCollection.create({ userId: memberId, token: nonceHex } as { _id?: string; userId: string; token: string });
+    await tokenCollection.create({ userId: memberId, token: nonceHex } as {
+      _id?: string;
+      userId: string;
+      token: string;
+    });
 
     // 7. Build user DTO via auth provider if available
     const userDTO = this.authProvider

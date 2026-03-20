@@ -31,6 +31,15 @@ const DEFAULT_PAGE_LIMIT = 20;
 const MAX_PAGE_LIMIT = 100;
 
 /**
+ * Database record type for main users collection (read-only lookup)
+ */
+interface MainUserRecord {
+  _id: string;
+  username: string;
+  email: string;
+}
+
+/**
  * Database record type for user profiles
  */
 interface UserProfileRecord {
@@ -138,6 +147,7 @@ export class UserProfileService implements IUserProfileService {
   private readonly followRequestsCollection: Collection<FollowRequestRecord>;
   private readonly blocksCollection: Collection<BlockRecord>;
   private readonly mutesCollection: Collection<MuteRecord>;
+  private readonly usersCollection: Collection<MainUserRecord>;
   private notificationService?: INotificationService;
   private connectionService?: IConnectionService;
 
@@ -153,6 +163,7 @@ export class UserProfileService implements IUserProfileService {
     this.blocksCollection =
       application.getModel<BlockRecord>('brighthub_blocks');
     this.mutesCollection = application.getModel<MuteRecord>('brighthub_mutes');
+    this.usersCollection = application.getModel<MainUserRecord>('users');
   }
 
   /**
@@ -179,6 +190,7 @@ export class UserProfileService implements IUserProfileService {
   public async createProfileForUser(
     userId: string,
     username: string,
+    displayName?: string,
   ): Promise<void> {
     // Check if profile already exists (idempotent)
     const existing = await this.userProfilesCollection
@@ -190,7 +202,7 @@ export class UserProfileService implements IUserProfileService {
     await this.userProfilesCollection.create({
       _id: userId,
       username,
-      displayName: username,
+      displayName: displayName || username,
       bio: '',
       followerCount: 0,
       followingCount: 0,
@@ -210,6 +222,44 @@ export class UserProfileService implements IUserProfileService {
       createdAt: now,
       updatedAt: now,
     });
+  }
+
+  /**
+   * Ensure a BrightHub profile exists for the given user.
+   * Looks up the username from the main users collection if needed.
+   * Returns the profile record.
+   */
+  private async ensureProfile(
+    userId: string,
+  ): Promise<UserProfileRecord | null> {
+    let profile = await this.userProfilesCollection
+      .findOne({ _id: userId })
+      .exec();
+    if (profile) return profile;
+
+    // Look up username from main users collection.
+    // Only auto-create a profile when the user actually exists in the
+    // users collection — otherwise return null so callers can throw
+    // UserNotFound for truly non-existent user IDs.
+    let username = userId;
+    try {
+      const mainUser = await this.usersCollection
+        .findOne({ _id: userId })
+        .exec();
+      if (!mainUser) {
+        return null;
+      }
+      if (mainUser.username) {
+        username = mainUser.username;
+      }
+    } catch {
+      // If the users collection lookup fails, don't auto-create
+      return null;
+    }
+
+    await this.createProfileForUser(userId, username);
+    profile = await this.userProfilesCollection.findOne({ _id: userId }).exec();
+    return profile;
   }
 
   /**
@@ -324,16 +374,17 @@ export class UserProfileService implements IUserProfileService {
       );
     }
 
-    // Get target user profile
-    const targetProfile = await this.userProfilesCollection
-      .findOne({ _id: followedId })
-      .exec();
+    // Get target user profile (auto-create if needed)
+    const targetProfile = await this.ensureProfile(followedId);
     if (!targetProfile) {
       throw new UserProfileServiceError(
         UserProfileErrorCode.UserNotFound,
         'User not found',
       );
     }
+
+    // Ensure follower also has a profile
+    await this.ensureProfile(followerId);
 
     // Check if approval is required
     const needsApproval = await this.requiresApproval(
@@ -785,10 +836,29 @@ export class UserProfileService implements IUserProfileService {
   async getProfile(
     userId: string,
     requesterId?: string,
+    usernameHint?: string,
   ): Promise<IBaseUserProfile<string>> {
-    const profile = await this.userProfilesCollection
-      .findOne({ _id: userId })
-      .exec();
+    let profile = await this.ensureProfile(userId);
+
+    // If usernameHint was provided and the profile was just auto-created
+    // with a UUID as username, update it to the real username.
+    if (
+      profile &&
+      usernameHint &&
+      profile.username === userId &&
+      usernameHint !== userId
+    ) {
+      const now = new Date().toISOString();
+      await this.userProfilesCollection
+        .updateOne(
+          { _id: userId },
+          { username: usernameHint, displayName: usernameHint, updatedAt: now },
+        )
+        .exec();
+      profile = await this.userProfilesCollection
+        .findOne({ _id: userId })
+        .exec();
+    }
 
     if (!profile) {
       throw new UserProfileServiceError(
@@ -964,6 +1034,9 @@ export class UserProfileService implements IUserProfileService {
     userId: string,
     updates: IUpdateProfileOptions,
   ): Promise<IBaseUserProfile<string>> {
+    // Ensure profile exists before updating
+    await this.ensureProfile(userId);
+
     const profile = await this.userProfilesCollection
       .findOne({ _id: userId })
       .exec();
@@ -1358,6 +1431,41 @@ export class UserProfileService implements IUserProfileService {
       .exec();
 
     return updatedSettings;
+  }
+
+  /**
+   * Search for user profiles by username or display name.
+   * Uses case-insensitive substring matching.
+   */
+  async searchUsers(
+    query: string,
+    options?: IPaginationOptions,
+  ): Promise<IPaginatedResult<IBaseUserProfile<string>>> {
+    const limit = this.getLimit(options);
+    const lowerQuery = query.toLowerCase();
+
+    // Fetch a reasonable batch and filter in memory since the Collection
+    // interface doesn't expose regex queries directly.
+    const findQuery = this.userProfilesCollection.find(
+      {} as Partial<UserProfileRecord>,
+    );
+    const allProfiles = await (findQuery.limit
+      ? findQuery.limit(500).exec()
+      : findQuery.exec());
+
+    const matched = allProfiles.filter(
+      (p) =>
+        p.username.toLowerCase().includes(lowerQuery) ||
+        p.displayName.toLowerCase().includes(lowerQuery),
+    );
+
+    const items = matched.slice(0, limit).map((r) => this.recordToProfile(r));
+
+    return {
+      items,
+      hasMore: matched.length > limit,
+      totalCount: matched.length,
+    };
   }
 }
 
