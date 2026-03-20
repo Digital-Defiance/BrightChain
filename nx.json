@@ -72,6 +72,13 @@
   "release": {
     "version": {
       "preVersionCommand": "yarn dlx nx run-many -t build"
+    },
+    "groups": {
+      "brightchain-db": {
+        "projects": ["brightchain-db"],
+        "releaseTagPattern": "brightchain-db@{version}",
+        "projectsRelationship": "independent"
+      }
     }
   }
 }

@@ -35,9 +35,11 @@
         "production": {}
       }
     },
-    "nx-release-publish": {
+    "publish": {
+      "executor": "nx:run-commands",
       "options": {
-        "packageRoot": "dist/{projectRoot}"
+        "command": "npm publish --access public",
+        "cwd": "dist/brightchain-react-components"
       }
     },
     "lint": {

@@ -365,6 +365,65 @@ function FAQ() {
               </p>
             </div>
           </div>
+
+          <div className="faq-item">
+            <h2>
+              12. What is Paillier encryption and how does it enable private
+              voting?
+            </h2>
+            <p>
+              Paillier is a public-key encryption scheme with a special property
+              called additive homomorphism — you can add encrypted values
+              together without ever decrypting them. If you encrypt a
+              &quot;1&quot; for Candidate A and someone else encrypts a
+              &quot;1&quot; for Candidate A, you can multiply those ciphertexts
+              together and the result, when decrypted, is &quot;2.&quot; Nobody
+              ever sees an individual ballot. In BrightChain&apos;s voting
+              system, each vote is encrypted with a Paillier public key, the
+              encrypted ballots are homomorphically aggregated into a single
+              ciphertext per candidate, and only the final tally is decrypted —
+              never any individual vote.
+            </p>
+            <p>
+              For added security, the Paillier private key can be split across
+              multiple guardians using threshold cryptography, so no single
+              party can decrypt the tally alone. This approach works natively
+              for common voting methods like plurality, approval, and scored
+              voting, where tallying is just addition. Methods that require
+              elimination rounds (like ranked-choice) need intermediate
+              decryptions between rounds, and some methods (like quadratic
+              voting) can&apos;t be done homomorphically at all.
+            </p>
+          </div>
+
+          <div className="faq-item">
+            <h2>13. What does the Paillier Bridge do?</h2>
+            <p>
+              The Paillier Bridge is a deterministic key derivation construction
+              that lets you derive Paillier homomorphic encryption keys directly
+              from your existing ECDH (Elliptic Curve Diffie-Hellman) key pair.
+            </p>
+            <p>
+              Instead of managing two separate key pairs — one for
+              identity/authentication (ECC) and one for homomorphic vote
+              encryption (Paillier) — the bridge pipes your ECDH shared secret
+              through HKDF and HMAC-DRBG to deterministically generate the large
+              primes needed for a 3072-bit Paillier key. This means your entire
+              cryptographic identity, including your voting keys, can be
+              recovered from a single 32-byte ECC private key. The bridge is
+              one-way (you can&apos;t reverse a Paillier key back to the EC
+              key), fully deterministic (same input always yields the same
+              output), and achieves 128-bit security consistent with NIST
+              recommendations.
+            </p>
+            <p>
+              See our{' '}
+              <a href="https://github.brightchain.org/docs/papers/paillier-bridge.html">
+                paper
+              </a>{' '}
+              on the topic for more information.
+            </p>
+          </div>
         </div>
 
         <div className="faq-footer">
