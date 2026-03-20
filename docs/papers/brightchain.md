@@ -1,7 +1,7 @@
 ---
+layout: default
 title: "BrightChain: A Unified Cryptographic Platform for Privacy-Preserving Decentralized Applications"
-parent: "Overview & Vision"
-nav_order: 1
+parent: "Papers"
 ---
 # BrightChain: A Unified Cryptographic Platform for Privacy-Preserving Decentralized Applications
 
@@ -307,7 +307,7 @@ Given an ECDH private key `sk` (32 bytes, secp256k1) and the corresponding publi
 
 3. **Deterministic Random Generation.** Initialize an HMAC-DRBG (NIST SP 800-90A) with the 64-byte seed.
 
-4. **Prime Generation.** Using the DRBG, generate two 1536-bit primes p and q via Miller-Rabin primality testing with 256 iterations (error probability < 2⁻⁵¹²), subject to the constraint |p - q| > 2⁷⁶⁸ to prevent Fermat factorization.
+4. **Prime Generation.** Using the DRBG, generate two 1536-bit primes p and q via a two-phase Miller-Rabin primality test with 256 iterations (error probability < 2⁻⁵¹²). Phase 1 tests against 12 deterministic small-prime witnesses {2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37}; Phase 2 generates 244 additional witnesses via HMAC-SHA256 keyed on the candidate. Three safety checks are enforced: p ≠ q (explicit), |p − q| > 2⁷⁶⁸ (Fermat factoring resistance), and gcd(n, λ) = 1 (Paillier correctness).
 
 5. **Paillier Parameters.** Compute:
    - Public key: n = p · q (3072 bits), g = n + 1
@@ -325,7 +325,20 @@ Given an ECDH private key `sk` (32 bytes, secp256k1) and the corresponding publi
 
 **Property 5 (Security level preservation).** The 128-bit security level of secp256k1 is preserved through the derivation chain: HKDF provides 256 bits of PRK entropy, HMAC-DRBG maintains the security level, and the 3072-bit Paillier modulus provides equivalent 128-bit security per NIST SP 800-57.
 
-The bridge has been validated with constant-time operations to resist timing attacks and cross-platform determinism tests ensuring identical key generation in Node.js and browser environments.
+The bridge has been validated with cross-platform determinism tests ensuring identical key generation in Node.js and browser environments, including HMAC-SHA256 witness consistency for the Phase 2 Miller-Rabin rounds. Note that the implementation is *not* constant-time: BigInt operations and Miller-Rabin modular exponentiation may leak timing information. In a local key derivation scenario (the intended use case) this is acceptable; in shared-hardware or remote-computation scenarios, timing side channels could leak information about the derived primes.
+
+### 7.4 Key Serialization
+
+Derived Paillier keys are serialized in a binary format with integrity protection:
+
+- **Public Key**: `[magic:4][version:1][keyId:32][n_length:4][n:variable][checksum:32]`
+- **Private Key**: `[magic:4][version:1][lambda_length:4][lambda:variable][mu_length:4][mu:variable][checksum:32]`
+
+The magic bytes `"BCVK"` and version number (currently 2) provide format identification. A trailing SHA-256 checksum computed over the payload ensures that corrupted or truncated buffers are rejected during deserialization. The format is implemented identically in both the browser (Web Crypto API) and Node.js (`crypto` module) packages.
+
+### 7.5 Companion Paper
+
+A detailed companion paper [26] provides the full algorithmic specification of the bridge construction, including byte-level DRBG state, reproducible test vectors, a safe prime feasibility benchmark, and an extended security analysis. The companion paper is intended for implementors and reviewers seeking to verify or reproduce the construction independently.
 
 ---
 
@@ -639,7 +652,7 @@ This is analogous to how HTTPS adoption accelerated when web servers made TLS co
 
 **Scalability.** While the hierarchical Super CBL architecture, pool-based isolation, and hierarchical gossip provide theoretical scalability, the system has not been evaluated under adversarial network conditions or at the scale of thousands of nodes.
 
-**Formal Verification.** The security properties of the Brokered Anonymity protocol and the ECDH-to-Paillier bridge have been analyzed informally and validated through property-based testing, but formal proofs in a proof assistant (e.g., Coq, Isabelle) have not been conducted.
+**Formal Verification.** The security properties of the Brokered Anonymity protocol have been analyzed informally and validated through property-based testing, but formal proofs in a proof assistant (e.g., Coq, Isabelle) have not been conducted. The ECDH-to-Paillier bridge has been analyzed in detail in a companion paper [26] with reproducible test vectors and an extended security discussion, but has not been independently audited or formally verified.
 
 ### 14.4 Future Directions
 
@@ -647,7 +660,7 @@ Near-term priorities include implementing the reputation system to close the fee
 
 Medium-term goals include threshold decryption for voting (k-of-n guardians), zero-knowledge proofs for vote validity, UPnP/NAT-PMP traversal for consumer router compatibility (partially implemented), and hardware security module (HSM) integration for enterprise deployments.
 
-Longer-term, the CIL/CLR smart contract system would enable BrightChain to support programmable governance — contracts that encode organizational bylaws, automate resource allocation, and provide cryptographically guaranteed indices as a by-product of contract execution. The brightchain-cpp native implementation [25] opens a path toward mobile and embedded deployments, and cross-implementation determinism testing between the TypeScript and C++ codebases will further validate the platform's portability guarantees. Post-quantum cryptographic migration is also under consideration, as the secp256k1 curve and Paillier cryptosystem are both vulnerable to quantum attacks.
+Longer-term, the CIL/CLR smart contract system would enable BrightChain to support programmable governance — contracts that encode organizational bylaws, automate resource allocation, and provide cryptographically guaranteed indices as a by-product of contract execution. The brightchain-cpp native implementation [25] opens a path toward mobile and embedded deployments, and cross-implementation determinism testing between the TypeScript and C++ codebases will further validate the platform's portability guarantees. Post-quantum cryptographic migration is under consideration, as the secp256k1 curve and Paillier cryptosystem are both vulnerable to Shor's algorithm; the companion paper [26] evaluates lattice-based alternatives (BGV, BFV, CKKS) and concludes that the bridge construction's modular HKDF → DRBG pipeline can be adapted to lattice parameter generation, but the JS/TS library ecosystem is not yet mature enough for production use. Safe primes (where (p−1)/2 is also prime) were benchmarked at ~174× slower than regular primes on current hardware (Apple M4 Max, 2024) and deferred pending future hardware improvements [26].
 
 ---
 
@@ -714,3 +727,6 @@ BrightChain is open source and available at https://github.com/Digital-Defiance/
 [24] I. Reed and G. Solomon, "Polynomial Codes Over Certain Finite Fields," Journal of the Society for Industrial and Applied Mathematics, vol. 8, no. 2, pp. 300–304, 1960.
 
 [25] Digital Defiance, "brightchain-cpp: Native C++ Implementation of BrightChain," https://github.com/Digital-Defiance/brightchain-cpp
+
+[26] J. Mulein, "ECDH-to-Paillier Bridge Key Derivation: A Deterministic Cross-Domain Key Bridge for Homomorphic Voting," Digital Defiance, 2025. Available: https://github.brightchain.org/docs/papers/paillier-bridge.html
+
