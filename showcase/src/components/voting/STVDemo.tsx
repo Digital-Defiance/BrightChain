@@ -1,9 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState } from 'react';
+import { useShowcaseI18n } from '../../i18n/ShowcaseI18nContext';
+import { ShowcaseStrings } from '../../i18n/showcaseStrings';
 import { LoadingSpinner } from './LoadingSpinner';
 import { useVotingDemo } from './useVotingDemo';
 
 export const STVDemo = () => {
+  const { t } = useShowcaseI18n();
   const { isInitializing, setIsInitializing, withTallying } = useVotingDemo();
   const [showIntro, setShowIntro] = useState(true);
   const [voters] = useState([
@@ -34,7 +37,7 @@ export const STVDemo = () => {
     { name: 'Purple Party', emoji: '🟣', votes: 0 },
   ];
 
-  const quota = Math.floor(voters.length / (seatsToFill + 1)) + 1; // Droop quota
+  const quota = Math.floor(voters.length / (seatsToFill + 1)) + 1;
 
   const toggleCandidate = (idx: number) => {
     if (currentRanking.includes(idx)) {
@@ -56,12 +59,10 @@ export const STVDemo = () => {
 
   const runSTV = () =>
     withTallying(async () => {
-      // Simplified STV simulation
       const voteCount = candidates.map(() => 0);
       const elected: number[] = [];
       const rounds: any[] = [];
 
-      // Initial count - first preferences
       rankings.forEach((ranking) => {
         if (ranking.length > 0) {
           voteCount[ranking[0]]++;
@@ -75,7 +76,6 @@ export const STVDemo = () => {
         eliminated: [],
       });
 
-      // Check for quota
       voteCount.forEach((votes, idx) => {
         if (votes >= quota && !elected.includes(idx)) {
           elected.push(idx);
@@ -98,7 +98,7 @@ export const STVDemo = () => {
 
   if (isInitializing)
     return (
-      <LoadingSpinner message="Initializing cryptographic voting system..." />
+      <LoadingSpinner message={t(ShowcaseStrings.Vote_InitializingCrypto)} />
     );
 
   if (showIntro) {
@@ -107,38 +107,28 @@ export const STVDemo = () => {
         <div className="election-intro">
           <div className="intro-header">
             <span className="intro-emoji">📊</span>
-            <h3>STV - Proportional Representation!</h3>
+            <h3>{t(ShowcaseStrings.STV_IntroTitle)}</h3>
           </div>
           <div className="intro-story">
-            <p>
-              🏛️ <strong>The Goal:</strong> Elect 3 representatives that reflect
-              the diversity of voter preferences!
-            </p>
-            <p>
-              📊 <strong>STV (Single Transferable Vote):</strong> Rank
-              candidates. Votes transfer when your top choice wins or is
-              eliminated.
-            </p>
+            <p>{t(ShowcaseStrings.STV_IntroGoal)}</p>
+            <p>{t(ShowcaseStrings.STV_IntroSTV)}</p>
             <div className="intro-stakes">
               <p>
-                🎯 <strong>Quota:</strong> Need {quota} votes to win a seat
-                (Droop quota: {voters.length}/(3+1) + 1)
+                {t(ShowcaseStrings.STV_IntroQuotaTemplate)
+                  .replace('{QUOTA}', String(quota))
+                  .replace('{VOTERS}', String(voters.length))}
               </p>
-              <p>
-                🔄 <strong>Transfers:</strong> Surplus votes from winners and
-                votes from eliminated candidates transfer to next preferences
-              </p>
+              <p>{t(ShowcaseStrings.STV_IntroTransfers)}</p>
             </div>
             <p className="intro-challenge">
-              🌍 Used in Ireland, Australia Senate, and many city councils for
-              fair representation!
+              {t(ShowcaseStrings.STV_IntroChallenge)}
             </p>
           </div>
           <button
             onClick={() => setShowIntro(false)}
             className="start-election-btn"
           >
-            📊 Start Ranking!
+            {t(ShowcaseStrings.STV_StartBtn)}
           </button>
         </div>
       </div>
@@ -151,16 +141,24 @@ export const STVDemo = () => {
   return (
     <div className="voting-demo">
       <div className="demo-header">
-        <h3>📊 STV - City Council (3 seats)</h3>
+        <h3>
+          {t(ShowcaseStrings.STV_DemoTitle).replace(
+            '{SEATS}',
+            String(seatsToFill),
+          )}
+        </h3>
         <p className="election-tagline">
-          🎯 Quota: {quota} votes needed per seat
+          {t(ShowcaseStrings.STV_DemoTaglineTemplate).replace(
+            '{QUOTA}',
+            String(quota),
+          )}
         </p>
       </div>
 
       {!results && (
         <>
           <div className="candidates-section">
-            <h4>Parties Running</h4>
+            <h4>{t(ShowcaseStrings.STV_PartiesRunning)}</h4>
             <div className="candidates-grid">
               {candidates.map((c, idx) => (
                 <div key={idx} className="candidate-card">
@@ -173,8 +171,13 @@ export const STVDemo = () => {
 
           {!hasVoted && (
             <div className="stv-ranking-section">
-              <h4>📝 {voters[currentVoter]}'s Ranking</h4>
-              <p>Click to add candidates in order of preference:</p>
+              <h4>
+                {t(ShowcaseStrings.STV_RankingTemplate).replace(
+                  '{VOTER}',
+                  voters[currentVoter],
+                )}
+              </h4>
+              <p>{t(ShowcaseStrings.STV_RankingInstruction)}</p>
 
               <div className="current-ranking">
                 {currentRanking.map((idx, rank) => (
@@ -208,14 +211,16 @@ export const STVDemo = () => {
                 disabled={currentRanking.length === 0}
                 className="submit-vote-btn"
               >
-                Submit Ranking ({currentVoter + 1}/{voters.length})
+                {t(ShowcaseStrings.STV_SubmitRankingTemplate)
+                  .replace('{CURRENT}', String(currentVoter + 1))
+                  .replace('{TOTAL}', String(voters.length))}
               </button>
             </div>
           )}
 
           {hasVoted && (
             <button onClick={runSTV} className="tally-btn">
-              📊 Run STV Count!
+              {t(ShowcaseStrings.STV_RunSTVCount)}
             </button>
           )}
         </>
@@ -223,14 +228,14 @@ export const STVDemo = () => {
 
       {results && (
         <div className="results-section">
-          <h4>🏛️ Council Elected!</h4>
+          <h4>{t(ShowcaseStrings.STV_CouncilElected)}</h4>
 
           <div className="tally-visualization">
-            <h5>📊 STV Counting Process</h5>
+            <h5>{t(ShowcaseStrings.STV_CountingTitle)}</h5>
             <p className="tally-explain">
-              Quota: {quota} votes | Seats: {seatsToFill}
-              <br />
-              First preference count determines initial winners
+              {t(ShowcaseStrings.STV_CountingExplainTemplate)
+                .replace('{QUOTA}', String(quota))
+                .replace('{SEATS}', String(seatsToFill))}
             </p>
           </div>
 
@@ -249,7 +254,7 @@ export const STVDemo = () => {
                     {c.emoji} {c.name}
                   </span>
                   <span>
-                    {votes} votes {metQuota && '(Quota met!)'}
+                    {votes} votes {metQuota && t(ShowcaseStrings.STV_QuotaMet)}
                   </span>
                 </div>
                 <div className="progress-bar">
@@ -262,13 +267,17 @@ export const STVDemo = () => {
                     style={{ left: `${(quota / voters.length) * 100}%` }}
                   />
                 </div>
-                {isElected && <span className="badge">✓ ELECTED</span>}
+                {isElected && (
+                  <span className="badge">
+                    {t(ShowcaseStrings.STV_ElectedBadge)}
+                  </span>
+                )}
               </div>
             );
           })}
 
           <div className="stv-winners">
-            <h3>🎉 Elected Representatives</h3>
+            <h3>{t(ShowcaseStrings.STV_ElectedReps)}</h3>
             <div className="winner-grid">
               {results.elected.map((idx: number) => (
                 <div key={idx} className="stv-winner-card">
@@ -279,13 +288,14 @@ export const STVDemo = () => {
               ))}
             </div>
             <p className="stv-explanation">
-              💡 These {results.elected.length} parties each met the quota of{' '}
-              {quota} votes and won seats on the council!
+              {t(ShowcaseStrings.STV_ElectedExplainTemplate)
+                .replace('{COUNT}', String(results.elected.length))
+                .replace('{QUOTA}', String(quota))}
             </p>
           </div>
 
           <button onClick={reset} className="reset-btn">
-            New Election
+            {t(ShowcaseStrings.STV_NewElection)}
           </button>
         </div>
       )}

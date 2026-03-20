@@ -7,6 +7,8 @@ import { motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
 import { FaExchangeAlt, FaKey, FaLock, FaUnlock } from 'react-icons/fa';
 import { useInView } from 'react-intersection-observer';
+import { useShowcaseI18n } from '../i18n/ShowcaseI18nContext';
+import { ShowcaseStrings } from '../i18n/showcaseStrings';
 import './Demo.css';
 import { VotingDemo } from './voting/VotingDemo';
 
@@ -16,6 +18,7 @@ const Demo = () => {
     threshold: 0.1,
   });
 
+  const { t } = useShowcaseI18n();
   const [service] = useState(() => new ECIESService());
   const [aliceKeys, setAliceKeys] = useState<ISimpleKeyPair | null>(null);
   const [bobKeys, setBobKeys] = useState<ISimpleKeyPair | null>(null);
@@ -100,11 +103,12 @@ const Demo = () => {
         transition={{ duration: 0.6 }}
       >
         <h2 className="section-title">
-          Interactive <span className="gradient-text">Demo</span>
+          {t(ShowcaseStrings.Demo_Title_Interactive)}{' '}
+          <span className="gradient-text">
+            {t(ShowcaseStrings.Demo_Title_Demo)}
+          </span>
         </h2>
-        <p className="features-subtitle">
-          Visualizing ECIES encryption capabilities
-        </p>
+        <p className="features-subtitle">{t(ShowcaseStrings.Demo_Subtitle)}</p>
         <p
           className="demo-disclaimer"
           style={{
@@ -115,14 +119,7 @@ const Demo = () => {
             fontSize: '0.9rem',
           }}
         >
-          <em>
-            Note: This visualization uses{' '}
-            <code>@digitaldefiance/ecies-lib</code> (the browser library) for
-            demonstration purposes. <code>@digitaldefiance/node-ecies-lib</code>{' '}
-            provides identical functionality with the same API for Node.js
-            server applications. Both libraries are binary-compatible, so data
-            encrypted with one can be decrypted by the other.
-          </em>
+          <em>{t(ShowcaseStrings.Demo_Disclaimer)}</em>
         </p>
 
         {keyGenError && (
@@ -137,7 +134,7 @@ const Demo = () => {
             }}
           >
             <p>
-              <strong>Error:</strong> {keyGenError}
+              <strong>{t(ShowcaseStrings.Demo_Error)}</strong> {keyGenError}
             </p>
           </div>
         )}
@@ -151,21 +148,23 @@ const Demo = () => {
             transition={{ delay: 0.2 }}
           >
             <h3>
-              <FaKey /> Alice (Sender)
+              <FaKey /> {t(ShowcaseStrings.Demo_Alice_Title)}
             </h3>
             {aliceKeys && (
               <div className="key-display">
-                <span className="key-label">Public Key:</span>
+                <span className="key-label">
+                  {t(ShowcaseStrings.Demo_Alice_PublicKey)}
+                </span>
                 {uint8ArrayToHex(aliceKeys.publicKey)}
               </div>
             )}
             <div className="demo-input-group">
-              <label>Message to Encrypt:</label>
+              <label>{t(ShowcaseStrings.Demo_Alice_MessageLabel)}</label>
               <textarea
                 className="demo-textarea"
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
-                placeholder="Enter a secret message..."
+                placeholder={t(ShowcaseStrings.Demo_Alice_Placeholder)}
               />
             </div>
             <button
@@ -174,10 +173,10 @@ const Demo = () => {
               disabled={isEncrypting || !bobKeys}
             >
               {isEncrypting ? (
-                'Encrypting...'
+                t(ShowcaseStrings.Demo_Alice_Encrypting)
               ) : (
                 <>
-                  <FaLock /> Encrypt for Bob
+                  <FaLock /> {t(ShowcaseStrings.Demo_Alice_EncryptForBob)}
                 </>
               )}
             </button>
@@ -191,18 +190,21 @@ const Demo = () => {
             transition={{ delay: 0.4 }}
           >
             <h3>
-              <FaKey /> Bob (Receiver)
+              <FaKey /> {t(ShowcaseStrings.Demo_Bob_Title)}
             </h3>
             {bobKeys && (
               <div className="key-display">
-                <span className="key-label">Public Key:</span>
+                <span className="key-label">
+                  {t(ShowcaseStrings.Demo_Bob_PublicKey)}
+                </span>
                 {uint8ArrayToHex(bobKeys.publicKey)}
               </div>
             )}
             {encryptedData && (
               <div className="demo-result">
                 <h4>
-                  <FaExchangeAlt /> Encrypted Payload:
+                  <FaExchangeAlt />{' '}
+                  {t(ShowcaseStrings.Demo_Bob_EncryptedPayload)}
                 </h4>
                 <div className="hex-display">
                   {uint8ArrayToHex(encryptedData)}
@@ -217,17 +219,17 @@ const Demo = () => {
                 style={{ background: 'var(--accent-color)' }}
               >
                 {isDecrypting ? (
-                  'Decrypting...'
+                  t(ShowcaseStrings.Demo_Bob_Decrypting)
                 ) : (
                   <>
-                    <FaUnlock /> Decrypt Message
+                    <FaUnlock /> {t(ShowcaseStrings.Demo_Bob_DecryptMessage)}
                   </>
                 )}
               </button>
             </div>
             {decryptedMessage && (
               <div className="demo-result" style={{ marginTop: '1rem' }}>
-                <h4>Decrypted Message:</h4>
+                <h4>{t(ShowcaseStrings.Demo_Bob_DecryptedMessage)}</h4>
                 <div
                   className="demo-textarea"
                   style={{ background: 'var(--bg-primary)' }}

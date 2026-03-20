@@ -3,6 +3,8 @@ import { BlockInfo, FileReceipt } from '@brightchain/brightchain-lib';
 import { AnimatePresence, motion } from 'framer-motion';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
+import { useShowcaseI18n } from '../i18n/ShowcaseI18nContext';
+import { ShowcaseStrings } from '../i18n/showcaseStrings';
 import { ConnectionLines } from './ConnectionLines';
 import { EnhancedSoupCan } from './EnhancedSoupCan';
 import './EnhancedSoupCan.css';
@@ -30,6 +32,7 @@ const FileButton: React.FC<FileButtonProps> = ({
   isSelected,
   onClick,
 }) => {
+  const { t } = useShowcaseI18n();
   return (
     <motion.button
       className={`file-selector-btn ${isSelected ? 'selected' : ''}`}
@@ -45,7 +48,10 @@ const FileButton: React.FC<FileButtonProps> = ({
         <div className="file-info">
           <div className="file-name">{file.fileName}</div>
           <div className="file-stats">
-            {file.blocks.length} blocks • {file.originalSize} bytes
+            {t(ShowcaseStrings.ESV_FileStats, {
+              blocks: String(file.blocks.length),
+              size: String(file.originalSize),
+            })}
           </div>
         </div>
       </div>
@@ -74,6 +80,7 @@ export const EnhancedSoupVisualization: React.FC<
   memberBlockIds = [],
 }) => {
   const [hoveredBlockId, setHoveredBlockId] = useState<string | null>(null);
+  const { t } = useShowcaseI18n();
   const [highlightedBlocks, setHighlightedBlocks] = useState<Set<string>>(
     new Set(),
   );
@@ -172,7 +179,7 @@ export const EnhancedSoupVisualization: React.FC<
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5 }}
           >
-            Select a file to highlight its blocks:
+            {t(ShowcaseStrings.ESV_SelectFile)}
           </motion.h3>
           <div className="file-selector-grid">
             <AnimatePresence>
@@ -205,7 +212,9 @@ export const EnhancedSoupVisualization: React.FC<
           transition={{ duration: 0.5, delay: 0.2 }}
         >
           <span className="soup-icon">🥫</span>
-          <h3>Block Soup ({allBlocks.length} blocks)</h3>
+          <h3>
+            {t(ShowcaseStrings.ESV_BlockSoup)} ({allBlocks.length})
+          </h3>
           {selectedFileId && (
             <motion.div
               className="selection-info"
@@ -213,7 +222,7 @@ export const EnhancedSoupVisualization: React.FC<
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.3 }}
             >
-              Showing connections for:{' '}
+              {t(ShowcaseStrings.ESV_ShowingConnections)}{' '}
               {files.find((f) => f.id === selectedFileId)?.fileName}
             </motion.div>
           )}
@@ -276,10 +285,8 @@ export const EnhancedSoupVisualization: React.FC<
             transition={{ duration: 0.5 }}
           >
             <div className="empty-icon">🍲</div>
-            <h4>Empty Soup</h4>
-            <p>
-              Upload some files to see them transformed into colorful soup cans!
-            </p>
+            <h4>{t(ShowcaseStrings.ESV_EmptySoup)}</h4>
+            <p>{t(ShowcaseStrings.ESV_EmptySoupHint)}</p>
           </motion.div>
         )}
       </div>

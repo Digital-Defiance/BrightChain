@@ -14,8 +14,8 @@
   },
   "dependencies": {
     "@brightchain/brightchain-lib": "^0.29.23",
-    "@digitaldefiance/ecies-lib": "^4.23.1",
-    "@digitaldefiance/i18n-lib": "^4.6.4",
+    "@digitaldefiance/ecies-lib": "*",
+    "@digitaldefiance/i18n-lib": "*",
     "@ethereumjs/wallet": "^10.0.0",
     "@noble/curves": "^1.4.2",
     "@noble/hashes": "^1.4.0",

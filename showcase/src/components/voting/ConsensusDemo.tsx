@@ -1,9 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState } from 'react';
+import { useShowcaseI18n } from '../../i18n/ShowcaseI18nContext';
+import { ShowcaseStrings } from '../../i18n/showcaseStrings';
 import { LoadingSpinner } from './LoadingSpinner';
 import { useVotingDemo } from './useVotingDemo';
 
 export const ConsensusDemo = () => {
+  const { t } = useShowcaseI18n();
   const { isInitializing, setIsInitializing, isTallying, withTallying } =
     useVotingDemo();
   const [showIntro, setShowIntro] = useState(true);
@@ -46,7 +49,7 @@ export const ConsensusDemo = () => {
 
   if (isInitializing)
     return (
-      <LoadingSpinner message="Initializing cryptographic voting system..." />
+      <LoadingSpinner message={t(ShowcaseStrings.Vote_InitializingCrypto)} />
     );
 
   if (showIntro) {
@@ -55,37 +58,24 @@ export const ConsensusDemo = () => {
         <div className="election-intro">
           <div className="intro-header">
             <span className="intro-emoji">🤝</span>
-            <h3>Consensus Decision Making!</h3>
+            <h3>{t(ShowcaseStrings.Cons_IntroTitle)}</h3>
           </div>
           <div className="intro-story">
-            <p>
-              🏕️ <strong>The Scenario:</strong> A small co-op needs to make a
-              major decision. Everyone's voice matters!
-            </p>
-            <p>
-              🤝 <strong>Consensus Voting:</strong> Requires 95%+ agreement. One
-              or two objections can block the proposal.
-            </p>
+            <p>{t(ShowcaseStrings.Cons_IntroScenario)}</p>
+            <p>{t(ShowcaseStrings.Cons_IntroConsensus)}</p>
             <div className="intro-stakes security-warning">
-              <p>
-                ⚠️ <strong>INSECURE METHOD:</strong> No privacy - everyone sees
-                who supports/opposes!
-              </p>
-              <p>
-                🎯 <strong>Why use it?</strong> Small groups where trust and
-                unity are more important than privacy.
-              </p>
+              <p>{t(ShowcaseStrings.Cons_IntroInsecure)}</p>
+              <p>{t(ShowcaseStrings.Cons_IntroWhyUse)}</p>
             </div>
             <p className="intro-challenge">
-              🌍 Used in co-ops, intentional communities, and consensus-based
-              organizations!
+              {t(ShowcaseStrings.Cons_IntroUsedIn)}
             </p>
           </div>
           <button
             onClick={() => setShowIntro(false)}
             className="start-election-btn"
           >
-            🤝 Start Voting!
+            {t(ShowcaseStrings.Cons_StartBtn)}
           </button>
         </div>
       </div>
@@ -99,35 +89,41 @@ export const ConsensusDemo = () => {
   return (
     <div className="voting-demo">
       <div className="demo-header">
-        <h3>🤝 Consensus Voting - Co-op Decision</h3>
+        <h3>{t(ShowcaseStrings.Cons_DemoTitle)}</h3>
         <p className="election-tagline">
-          🎯 Requires {(threshold * 100).toFixed(0)}% agreement ({requiredVotes}
-          /{voters.length} members)
+          {t(ShowcaseStrings.Cons_DemoTaglineTemplate, {
+            PERCENT: (threshold * 100).toFixed(0),
+            REQUIRED: String(requiredVotes),
+            TOTAL: String(voters.length),
+          })}
         </p>
       </div>
 
       <div className="security-warning-banner">
-        ⚠️ INSECURE: No privacy - all votes are visible to build consensus!
+        {t(ShowcaseStrings.Cons_InsecureBanner)}
       </div>
 
       {!results && (
         <>
           <div className="consensus-question">
-            <h4>Proposal: Should we invest $50k in solar panels?</h4>
-            <p>
-              This is a major financial decision requiring near-unanimous
-              support.
-            </p>
+            <h4>{t(ShowcaseStrings.Cons_Proposal)}</h4>
+            <p>{t(ShowcaseStrings.Cons_ProposalDesc)}</p>
           </div>
 
           <div className="consensus-tracker">
-            <h5>📊 Live Consensus Tracker</h5>
+            <h5>{t(ShowcaseStrings.Cons_TrackerTitle)}</h5>
             <div className="consensus-bar">
               <div
                 className="consensus-support"
                 style={{ width: `${currentPercent}%` }}
               >
-                {supportCount > 0 && <span>{supportCount} Support</span>}
+                {supportCount > 0 && (
+                  <span>
+                    {t(ShowcaseStrings.Cons_SupportTemplate, {
+                      COUNT: String(supportCount),
+                    })}
+                  </span>
+                )}
               </div>
               <div
                 className="consensus-threshold"
@@ -138,14 +134,22 @@ export const ConsensusDemo = () => {
             </div>
             <p className="consensus-status">
               {currentPercent >= threshold * 100
-                ? `✅ CONSENSUS REACHED (${supportCount}/${votes.size})`
-                : `❌ Need ${requiredVotes - supportCount} more to reach consensus`}
+                ? t(ShowcaseStrings.Cons_ConsensusReachedTemplate, {
+                    SUPPORT: String(supportCount),
+                    TOTAL: String(votes.size),
+                  })
+                : t(ShowcaseStrings.Cons_NeedMoreTemplate, {
+                    NEEDED: String(requiredVotes - supportCount),
+                  })}
             </p>
           </div>
 
           <div className="voters-section">
             <h4>
-              Co-op Members ({votes.size}/{voters.length} voted)
+              {t(ShowcaseStrings.Cons_MembersTemplate, {
+                VOTED: String(votes.size),
+                TOTAL: String(voters.length),
+              })}
             </h4>
             <div className="consensus-votes">
               {voters.map((voter) => {
@@ -160,7 +164,9 @@ export const ConsensusDemo = () => {
                     <strong>{voter}</strong>
                     {hasVoted ? (
                       <span className="vote-display">
-                        {vote ? '✅ Support' : '❌ Oppose'}
+                        {vote
+                          ? t(ShowcaseStrings.Cons_Support)
+                          : t(ShowcaseStrings.Cons_Oppose)}
                       </span>
                     ) : (
                       <div className="vote-buttons">
@@ -168,13 +174,13 @@ export const ConsensusDemo = () => {
                           onClick={() => castVote(voter, true)}
                           className="vote-btn yes-btn"
                         >
-                          ✅ Support
+                          {t(ShowcaseStrings.Cons_BtnSupport)}
                         </button>
                         <button
                           onClick={() => castVote(voter, false)}
                           className="vote-btn no-btn"
                         >
-                          ❌ Oppose
+                          {t(ShowcaseStrings.Cons_BtnOppose)}
                         </button>
                       </div>
                     )}
@@ -190,7 +196,9 @@ export const ConsensusDemo = () => {
               className="tally-btn"
               disabled={isTallying}
             >
-              {isTallying ? '🔓 Decrypting votes...' : '🤝 Check Consensus!'}
+              {isTallying
+                ? t(ShowcaseStrings.Vote_DecryptingVotes)
+                : t(ShowcaseStrings.Cons_CheckConsensus)}
             </button>
           )}
         </>
@@ -198,16 +206,22 @@ export const ConsensusDemo = () => {
 
       {results && (
         <div className="results-section">
-          <h4>🤝 Consensus Result!</h4>
+          <h4>{t(ShowcaseStrings.Cons_ResultsTitle)}</h4>
 
           <div className="tally-visualization">
-            <h5>📊 Final Count</h5>
+            <h5>{t(ShowcaseStrings.Cons_FinalCountTitle)}</h5>
             <p className="tally-explain">
-              Required: {requiredVotes}/{voters.length} (
-              {(threshold * 100).toFixed(0)}%)
+              {t(ShowcaseStrings.Cons_RequiredTemplate, {
+                REQUIRED: String(requiredVotes),
+                TOTAL: String(voters.length),
+                PERCENT: (threshold * 100).toFixed(0),
+              })}
               <br />
-              Actual: {results.supportCount}/{votes.size} (
-              {(results.percent * 100).toFixed(1)}%)
+              {t(ShowcaseStrings.Cons_ActualTemplate, {
+                SUPPORT: String(results.supportCount),
+                VOTED: String(votes.size),
+                ACTUAL_PERCENT: (results.percent * 100).toFixed(1),
+              })}
             </p>
           </div>
 
@@ -217,47 +231,55 @@ export const ConsensusDemo = () => {
                 className="final-support"
                 style={{ width: `${results.percent * 100}%` }}
               >
-                ✅ {results.supportCount} Support
+                {t(ShowcaseStrings.Cons_SupportCountTemplate, {
+                  COUNT: String(results.supportCount),
+                })}
               </div>
               <div
                 className="final-oppose"
                 style={{ width: `${(1 - results.percent) * 100}%` }}
               >
-                ❌ {votes.size - results.supportCount} Oppose
+                {t(ShowcaseStrings.Cons_OpposeCountTemplate, {
+                  COUNT: String(votes.size - results.supportCount),
+                })}
               </div>
             </div>
             <div
               className="threshold-marker"
               style={{ left: `${threshold * 100}%` }}
             >
-              ⬆️ {(threshold * 100).toFixed(0)}% Threshold
+              {t(ShowcaseStrings.Cons_ThresholdTemplate, {
+                PERCENT: (threshold * 100).toFixed(0),
+              })}
             </div>
           </div>
 
           <div className="referendum-outcome">
             <h3>
               {results.passes
-                ? '✅ CONSENSUS ACHIEVED!'
-                : '❌ CONSENSUS FAILED!'}
+                ? t(ShowcaseStrings.Cons_ConsensusAchieved)
+                : t(ShowcaseStrings.Cons_ConsensusFailed)}
             </h3>
             <p>
               {results.passes
-                ? `The proposal passes with ${results.supportCount} members supporting (${(results.percent * 100).toFixed(1)}%)`
-                : `Failed to reach ${(threshold * 100).toFixed(0)}% threshold. ${votes.size - results.supportCount} member(s) opposed, blocking consensus.`}
+                ? t(ShowcaseStrings.Cons_OutcomePassTemplate, {
+                    COUNT: String(results.supportCount),
+                    PERCENT: (results.percent * 100).toFixed(1),
+                  })
+                : t(ShowcaseStrings.Cons_OutcomeFailTemplate, {
+                    THRESHOLD: (threshold * 100).toFixed(0),
+                    OPPOSE: String(votes.size - results.supportCount),
+                  })}
             </p>
             {!results.passes && (
               <div className="consensus-note">
-                <p>
-                  💡 In consensus decision-making, even one or two objections
-                  matter. The group must address concerns or modify the
-                  proposal.
-                </p>
+                <p>{t(ShowcaseStrings.Cons_FailNote)}</p>
               </div>
             )}
           </div>
 
           <button onClick={reset} className="reset-btn">
-            New Proposal
+            {t(ShowcaseStrings.Cons_ResetBtn)}
           </button>
         </div>
       )}

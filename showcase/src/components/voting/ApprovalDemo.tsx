@@ -15,10 +15,13 @@ import {
   VoteEncoder,
 } from '@digitaldefiance/ecies-lib';
 import { useEffect, useState } from 'react';
+import { useShowcaseI18n } from '../../i18n/ShowcaseI18nContext';
+import { ShowcaseStrings } from '../../i18n/showcaseStrings';
 import { LoadingSpinner } from './LoadingSpinner';
 import { useVotingDemo } from './useVotingDemo';
 
 export const ApprovalDemo = () => {
+  const { t } = useShowcaseI18n();
   const provider = getEnhancedIdProvider<Uint8Array>();
   const [poll, setPoll] = useState<Poll<Uint8Array> | null>(null);
   const [authority, setAuthority] = useState<Member | null>(null);
@@ -38,16 +41,28 @@ export const ApprovalDemo = () => {
     {
       name: 'TypeScript',
       emoji: '🔷',
-      description: 'Type-safe JavaScript superset',
+      description: t(ShowcaseStrings.Appr_Cand1_Desc),
     },
     {
       name: 'Python',
       emoji: '🐍',
-      description: 'Versatile scripting language',
+      description: t(ShowcaseStrings.Appr_Cand2_Desc),
     },
-    { name: 'Rust', emoji: '🦀', description: 'Memory-safe systems language' },
-    { name: 'Go', emoji: '🐹', description: 'Fast concurrent language' },
-    { name: 'Java', emoji: '☕', description: 'Enterprise platform' },
+    {
+      name: 'Rust',
+      emoji: '🦀',
+      description: t(ShowcaseStrings.Appr_Cand3_Desc),
+    },
+    {
+      name: 'Go',
+      emoji: '🐹',
+      description: t(ShowcaseStrings.Appr_Cand4_Desc),
+    },
+    {
+      name: 'Java',
+      emoji: '☕',
+      description: t(ShowcaseStrings.Appr_Cand5_Desc),
+    },
   ];
 
   useEffect(() => {
@@ -176,7 +191,7 @@ export const ApprovalDemo = () => {
 
   if (isInitializing)
     return (
-      <LoadingSpinner message="Initializing cryptographic voting system..." />
+      <LoadingSpinner message={t(ShowcaseStrings.Vote_InitializingCrypto)} />
     );
 
   if (showIntro) {
@@ -185,40 +200,26 @@ export const ApprovalDemo = () => {
         <div className="election-intro">
           <div className="intro-header">
             <span className="intro-emoji">✅</span>
-            <h3>TechCorp's Big Decision!</h3>
+            <h3>{t(ShowcaseStrings.Appr_IntroTitle)}</h3>
           </div>
           <div className="intro-story">
             <p>
-              📢 <strong>Emergency Team Meeting:</strong> "We need to pick our
-              tech stack for the next 5 years, but everyone has different
-              opinions!"
+              <strong>{t(ShowcaseStrings.Appr_IntroStory)}</strong>
             </p>
-            <p>
-              The CTO has a brilliant idea: <strong>Approval Voting</strong>.
-              Instead of fighting over ONE language, everyone can vote for ALL
-              the languages they'd be happy working with.
-            </p>
+            <p>{t(ShowcaseStrings.Appr_IntroApprovalVoting)}</p>
             <div className="intro-stakes">
-              <p>
-                🤔 <strong>The twist:</strong> You can approve as many or as few
-                as you want. Love TypeScript AND Python? Vote for both! Only
-                trust Rust? That's your vote!
-              </p>
-              <p>
-                🎯 <strong>The winner:</strong> Whichever language gets the most
-                approvals becomes the team's primary language.
-              </p>
+              <p>{t(ShowcaseStrings.Appr_IntroStakes)}</p>
+              <p>{t(ShowcaseStrings.Appr_IntroWinner)}</p>
             </div>
             <p className="intro-challenge">
-              This is how the UN elects its Secretary-General. No vote
-              splitting, no strategic games - just honest preferences!
+              {t(ShowcaseStrings.Appr_IntroChallenge)}
             </p>
           </div>
           <button
             onClick={() => setShowIntro(false)}
             className="start-election-btn"
           >
-            🚀 Let's Vote!
+            {t(ShowcaseStrings.Appr_StartBtn)}
           </button>
         </div>
       </div>
@@ -230,16 +231,16 @@ export const ApprovalDemo = () => {
   return (
     <div className="voting-demo">
       <div className="demo-header">
-        <h3>✅ Approval Voting - TechCorp Stack Selection</h3>
+        <h3>{t(ShowcaseStrings.Appr_DemoTitle)}</h3>
         <p className="election-tagline">
-          👍 Vote for ALL languages you approve. Most approvals wins!
+          {t(ShowcaseStrings.Appr_DemoTagline)}
         </p>
       </div>
 
       {!results ? (
         <>
           <div className="candidates-section">
-            <h4>Team's Preferred Programming Languages</h4>
+            <h4>{t(ShowcaseStrings.Appr_CandidatesTitle)}</h4>
             <div className="candidates-grid">
               {candidates.map((candidate, idx) => (
                 <div key={idx} className="candidate-card">
@@ -253,7 +254,9 @@ export const ApprovalDemo = () => {
 
           <div className="voters-section">
             <h4>
-              Cast Votes ({votedVoters.length}/{voters.length} voted)
+              {t(ShowcaseStrings.Appr_VotersTitle)
+                .replace('{VOTED}', String(votedVoters.length))
+                .replace('{TOTAL}', String(voters.length))}
             </h4>
             {voters.map((voter) => {
               const hasVoted = votedVoters.includes(voter);
@@ -263,7 +266,11 @@ export const ApprovalDemo = () => {
                 <div key={voter} className="voter-card approval-voter">
                   <div className="voter-header">
                     <strong>{voter}</strong>
-                    {hasVoted && <span className="voted-badge">✓ Voted</span>}
+                    {hasVoted && (
+                      <span className="voted-badge">
+                        {t(ShowcaseStrings.Appr_VotedBadge)}
+                      </span>
+                    )}
                   </div>
 
                   {!hasVoted && (
@@ -284,7 +291,10 @@ export const ApprovalDemo = () => {
                         disabled={selections.length === 0}
                         className="submit-vote-btn"
                       >
-                        Submit ({selections.length} selected)
+                        {t(ShowcaseStrings.Appr_SubmitBtn).replace(
+                          '{COUNT}',
+                          String(selections.length),
+                        )}
                       </button>
                     </>
                   )}
@@ -301,15 +311,18 @@ export const ApprovalDemo = () => {
                 disabled={isTallying}
               >
                 {isTallying
-                  ? '🔓 Decrypting votes...'
-                  : 'Tally Votes & Reveal Results'}
+                  ? t(ShowcaseStrings.Vote_DecryptingVotes)
+                  : t(ShowcaseStrings.Appr_TallyBtn)}
               </button>
               <button
                 onClick={() => setShowEventLog(!showEventLog)}
                 className="event-log-btn"
                 style={{ marginLeft: '10px' }}
               >
-                📊 {showEventLog ? 'Hide' : 'Show'} Event Log
+                📊{' '}
+                {showEventLog
+                  ? t(ShowcaseStrings.Vote_HideEventLog)
+                  : t(ShowcaseStrings.Vote_ShowEventLog)}
               </button>
             </>
           )}
@@ -324,10 +337,9 @@ export const ApprovalDemo = () => {
                 borderRadius: '8px',
               }}
             >
-              <h4>📊 Event Logger (Requirement 1.3)</h4>
+              <h4>{t(ShowcaseStrings.Vote_EventLogTitle)}</h4>
               <p style={{ fontSize: '0.9em', color: '#666' }}>
-                Comprehensive event tracking with microsecond timestamps and
-                sequence numbers
+                {t(ShowcaseStrings.Vote_EventLogDesc)}
               </p>
               <div style={{ maxHeight: '300px', overflow: 'auto' }}>
                 {eventLogger.getEventsForPoll(poll.id).map((event, idx) => (
@@ -368,7 +380,7 @@ export const ApprovalDemo = () => {
                     )}
                     {event.voterToken && (
                       <div style={{ color: '#888', fontSize: '0.85em' }}>
-                        Voter Token:{' '}
+                        {t(ShowcaseStrings.Vote_VoterToken)}{' '}
                         {Array.from(event.voterToken.slice(0, 4))
                           .map((b) => b.toString(16).padStart(2, '0'))
                           .join('')}
@@ -393,20 +405,25 @@ export const ApprovalDemo = () => {
                   borderRadius: '4px',
                 }}
               >
-                <strong>Sequence Integrity:</strong>{' '}
-                {eventLogger.verifySequence() ? '✅ Valid' : '❌ Gaps Detected'}
+                <strong>{t(ShowcaseStrings.Vote_SequenceIntegrity)}</strong>{' '}
+                {eventLogger.verifySequence()
+                  ? t(ShowcaseStrings.Vote_SequenceValid)
+                  : t(ShowcaseStrings.Vote_SequenceGaps)}
               </div>
               <div
                 style={{ marginTop: '5px', fontSize: '0.85em', color: '#666' }}
               >
-                Total Events: {eventLogger.getEventsForPoll(poll.id).length}
+                {t(ShowcaseStrings.Vote_TotalEventsTemplate).replace(
+                  '{COUNT}',
+                  String(eventLogger.getEventsForPoll(poll.id).length),
+                )}
               </div>
             </div>
           )}
         </>
       ) : (
         <div className="results-section">
-          <h4>🏆 Results</h4>
+          <h4>{t(ShowcaseStrings.Vote_ResultsTitle)}</h4>
           {candidates.map((candidate, idx) => {
             const tally = Number(results.tallies[idx]);
             const percentage = (tally / votedVoters.length) * 100;
@@ -422,7 +439,9 @@ export const ApprovalDemo = () => {
                     {candidate.emoji} {candidate.name}
                   </span>
                   <span>
-                    {tally} approvals ({percentage.toFixed(0)}%)
+                    {t(ShowcaseStrings.Vote_ApprovalsTemplate)
+                      .replace('{COUNT}', String(tally))
+                      .replace('{PERCENT}', percentage.toFixed(0))}
                   </span>
                 </div>
                 <div className="progress-bar">
@@ -435,7 +454,7 @@ export const ApprovalDemo = () => {
             );
           })}
           <button onClick={reset} className="reset-btn">
-            Run Another Election
+            {t(ShowcaseStrings.Vote_RunAnotherElection)}
           </button>
         </div>
       )}

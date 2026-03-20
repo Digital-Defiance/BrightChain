@@ -29,6 +29,8 @@ import {
   type SignatureUint8Array,
 } from '@digitaldefiance/ecies-lib';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useShowcaseI18n } from '../i18n/ShowcaseI18nContext';
+import { ShowcaseStrings } from '../i18n/showcaseStrings';
 import './LedgerDemo.css';
 
 // ── Helpers ──────────────────────────────────────────────────────────
@@ -111,6 +113,7 @@ interface DisplayEntry {
 // ── Component ────────────────────────────────────────────────────────
 
 export const LedgerDemo: React.FC = () => {
+  const { t } = useShowcaseI18n();
   const [ledger, setLedger] = useState<Ledger | null>(null);
   const [govSerializer] = useState(() => new GovernancePayloadSerializer());
   const [serializer] = useState(
@@ -466,18 +469,14 @@ export const LedgerDemo: React.FC = () => {
   return (
     <div className="ledger-demo">
       <div className="demo-header">
-        <h1 className="demo-title">⛓️ Blockchain Ledger</h1>
-        <p className="demo-subtitle">
-          An append-only, cryptographically chained, digitally signed ledger
-          with role-based governance. Add entries, manage signers, and validate
-          the chain.
-        </p>
+        <h1 className="demo-title">{t(ShowcaseStrings.Ledger_Title)}</h1>
+        <p className="demo-subtitle">{t(ShowcaseStrings.Ledger_Subtitle)}</p>
       </div>
 
       {isInitializing && (
         <div className="ledger-initializing">
           <div className="initializing-spinner" />
-          <p>Generating SECP256k1 key pairs for signers…</p>
+          <p>{t(ShowcaseStrings.Ledger_Initializing)}</p>
         </div>
       )}
 
@@ -487,7 +486,9 @@ export const LedgerDemo: React.FC = () => {
           <div className="stats-bar">
             <div className="stat-item">
               <span className="stat-value">{chainLength}</span>
-              <span className="stat-label">Entries</span>
+              <span className="stat-label">
+                {t(ShowcaseStrings.Ledger_Entries)}
+              </span>
             </div>
             <div className="stat-item">
               <span className="stat-value">
@@ -497,15 +498,21 @@ export const LedgerDemo: React.FC = () => {
                   ).length
                 }
               </span>
-              <span className="stat-label">Active Signers</span>
+              <span className="stat-label">
+                {t(ShowcaseStrings.Ledger_ActiveSigners)}
+              </span>
             </div>
             <div className="stat-item">
               <span className="stat-value">{activeAdminCount}</span>
-              <span className="stat-label">Admins</span>
+              <span className="stat-label">
+                {t(ShowcaseStrings.Ledger_Admins)}
+              </span>
             </div>
             <div className="stat-item">
               <span className="stat-value">{quorumPolicy?.type ?? '—'}</span>
-              <span className="stat-label">Quorum</span>
+              <span className="stat-label">
+                {t(ShowcaseStrings.Ledger_Quorum)}
+              </span>
             </div>
             <div
               style={{
@@ -515,10 +522,10 @@ export const LedgerDemo: React.FC = () => {
               }}
             >
               <button className="secondary-btn" onClick={handleValidate}>
-                🔍 Validate Chain
+                {t(ShowcaseStrings.Ledger_ValidateChain)}
               </button>
               <button className="secondary-btn" onClick={handleReset}>
-                🔄 Reset
+                {t(ShowcaseStrings.Ledger_Reset)}
               </button>
             </div>
           </div>
@@ -538,7 +545,7 @@ export const LedgerDemo: React.FC = () => {
             <div>
               {/* Active Signer Selector */}
               <div className="ledger-panel">
-                <h3>🔑 Active Signer</h3>
+                <h3>{t(ShowcaseStrings.Ledger_ActiveSigner)}</h3>
                 <select
                   className="control-select"
                   value={activeSigner?.seed ?? ''}
@@ -559,14 +566,14 @@ export const LedgerDemo: React.FC = () => {
 
               {/* Append Data */}
               <div className="ledger-panel">
-                <h3>📝 Append Entry</h3>
+                <h3>{t(ShowcaseStrings.Ledger_AppendEntry)}</h3>
                 <div className="ledger-controls">
                   <div className="control-group">
-                    <label>Payload (text)</label>
+                    <label>{t(ShowcaseStrings.Ledger_PayloadLabel)}</label>
                     <input
                       className="control-input"
                       type="text"
-                      placeholder="Enter data…"
+                      placeholder={t(ShowcaseStrings.Ledger_PayloadPlaceholder)}
                       value={payloadText}
                       onChange={(e) => setPayloadText(e.target.value)}
                       onKeyDown={(e) => e.key === 'Enter' && handleAppendData()}
@@ -577,14 +584,14 @@ export const LedgerDemo: React.FC = () => {
                     onClick={handleAppendData}
                     disabled={!payloadText.trim()}
                   >
-                    Append to Chain
+                    {t(ShowcaseStrings.Ledger_AppendBtn)}
                   </button>
                 </div>
               </div>
 
               {/* Signer Management */}
               <div className="ledger-panel">
-                <h3>👥 Authorized Signers</h3>
+                <h3>{t(ShowcaseStrings.Ledger_AuthorizedSigners)}</h3>
                 {quorumPolicy && (
                   <div className="quorum-info">
                     Quorum: {quorumPolicy.type}
@@ -620,7 +627,7 @@ export const LedgerDemo: React.FC = () => {
                               className="action-btn danger"
                               onClick={() => handleSuspendSigner(as)}
                             >
-                              Suspend
+                              {t(ShowcaseStrings.Ledger_Suspend)}
                             </button>
                           )}
                         {as.status === SignerStatus.Active &&
@@ -630,7 +637,7 @@ export const LedgerDemo: React.FC = () => {
                               className="action-btn danger"
                               onClick={() => handleSuspendSigner(as)}
                             >
-                              Suspend
+                              {t(ShowcaseStrings.Ledger_Suspend)}
                             </button>
                           )}
                         {as.status === SignerStatus.Suspended && (
@@ -638,7 +645,7 @@ export const LedgerDemo: React.FC = () => {
                             className="action-btn"
                             onClick={() => handleReactivateSigner(as)}
                           >
-                            Reactivate
+                            {t(ShowcaseStrings.Ledger_Reactivate)}
                           </button>
                         )}
                         {as.role === SignerRole.Writer &&
@@ -649,7 +656,7 @@ export const LedgerDemo: React.FC = () => {
                                 handleChangeRole(as, SignerRole.Admin)
                               }
                             >
-                              → Admin
+                              {t(ShowcaseStrings.Ledger_ToAdmin)}
                             </button>
                           )}
                         {as.role === SignerRole.Admin &&
@@ -661,7 +668,7 @@ export const LedgerDemo: React.FC = () => {
                                 handleChangeRole(as, SignerRole.Writer)
                               }
                             >
-                              → Writer
+                              {t(ShowcaseStrings.Ledger_ToWriter)}
                             </button>
                           )}
                         {(as.status !== SignerStatus.Active ||
@@ -671,7 +678,7 @@ export const LedgerDemo: React.FC = () => {
                             className="action-btn danger"
                             onClick={() => handleRemoveSigner(as)}
                           >
-                            Retire
+                            {t(ShowcaseStrings.Ledger_Retire)}
                           </button>
                         )}
                       </div>
@@ -685,7 +692,9 @@ export const LedgerDemo: React.FC = () => {
                     <input
                       className="control-input"
                       type="text"
-                      placeholder="New signer name"
+                      placeholder={t(
+                        ShowcaseStrings.Ledger_NewSignerPlaceholder,
+                      )}
                       value={newSignerName}
                       onChange={(e) => setNewSignerName(e.target.value)}
                     />
@@ -707,14 +716,14 @@ export const LedgerDemo: React.FC = () => {
                     onClick={handleAddSigner}
                     disabled={!newSignerName.trim()}
                   >
-                    + Add Signer
+                    {t(ShowcaseStrings.Ledger_AddSigner)}
                   </button>
                 </div>
               </div>
 
               {/* Event Log */}
               <div className="ledger-panel">
-                <h3>📋 Event Log</h3>
+                <h3>{t(ShowcaseStrings.Ledger_EventLog)}</h3>
                 <div className="event-log">
                   {log.map((entry) => (
                     <div
@@ -732,7 +741,7 @@ export const LedgerDemo: React.FC = () => {
             {/* Main Area — Chain Visualization */}
             <div>
               <div className="ledger-panel">
-                <h3>⛓️ Chain</h3>
+                <h3>{t(ShowcaseStrings.Ledger_Chain)}</h3>
                 <div className="chain-container">
                   <div className="chain-entries">
                     {entries.map((de, i) => (
@@ -751,10 +760,10 @@ export const LedgerDemo: React.FC = () => {
                           </div>
                           <span className={`entry-type-badge ${de.type}`}>
                             {de.type === 'genesis'
-                              ? '🌱 Genesis'
+                              ? t(ShowcaseStrings.Ledger_Genesis)
                               : de.type === 'governance'
-                                ? '⚖️ Governance'
-                                : '📄 Data'}
+                                ? t(ShowcaseStrings.Ledger_Governance)
+                                : t(ShowcaseStrings.Ledger_Data)}
                           </span>
                           <div className="entry-hash">
                             {hexShort(de.entry.entryHash, 12)}
@@ -778,61 +787,84 @@ export const LedgerDemo: React.FC = () => {
                 <div className="entry-detail">
                   <h4>Entry #{selectedEntry.entry.sequenceNumber} Details</h4>
                   <div className="detail-row">
-                    <span className="detail-label">Type</span>
+                    <span className="detail-label">
+                      {t(ShowcaseStrings.Ledger_Type)}
+                    </span>
                     <span className="detail-value">{selectedEntry.type}</span>
                   </div>
                   <div className="detail-row">
-                    <span className="detail-label">Sequence</span>
+                    <span className="detail-label">
+                      {t(ShowcaseStrings.Ledger_Sequence)}
+                    </span>
                     <span className="detail-value">
                       {selectedEntry.entry.sequenceNumber}
                     </span>
                   </div>
                   <div className="detail-row">
-                    <span className="detail-label">Timestamp</span>
+                    <span className="detail-label">
+                      {t(ShowcaseStrings.Ledger_Timestamp)}
+                    </span>
                     <span className="detail-value">
                       {selectedEntry.entry.timestamp.toISOString()}
                     </span>
                   </div>
                   <div className="detail-row">
-                    <span className="detail-label">Entry Hash</span>
+                    <span className="detail-label">
+                      {t(ShowcaseStrings.Ledger_EntryHash)}
+                    </span>
                     <span className="detail-value">
                       {hexShort(selectedEntry.entry.entryHash, 24)}
                     </span>
                   </div>
                   <div className="detail-row">
-                    <span className="detail-label">Previous Hash</span>
+                    <span className="detail-label">
+                      {t(ShowcaseStrings.Ledger_PreviousHash)}
+                    </span>
                     <span className="detail-value">
                       {selectedEntry.entry.previousEntryHash
                         ? hexShort(selectedEntry.entry.previousEntryHash, 24)
-                        : 'null (genesis)'}
+                        : t(ShowcaseStrings.Ledger_NullGenesis)}
                     </span>
                   </div>
                   <div className="detail-row">
-                    <span className="detail-label">Signer</span>
+                    <span className="detail-label">
+                      {t(ShowcaseStrings.Ledger_Signer)}
+                    </span>
                     <span className="detail-value">
                       {signerName(signers, selectedEntry.entry.signerPublicKey)}
                     </span>
                   </div>
                   <div className="detail-row">
-                    <span className="detail-label">Signer Key</span>
+                    <span className="detail-label">
+                      {t(ShowcaseStrings.Ledger_SignerKey)}
+                    </span>
                     <span className="detail-value">
                       {hexShort(selectedEntry.entry.signerPublicKey, 16)}
                     </span>
                   </div>
                   <div className="detail-row">
-                    <span className="detail-label">Signature</span>
+                    <span className="detail-label">
+                      {t(ShowcaseStrings.Ledger_Signature)}
+                    </span>
                     <span className="detail-value">
                       {hexShort(selectedEntry.entry.signature, 16)}
                     </span>
                   </div>
                   <div className="detail-row">
-                    <span className="detail-label">Payload Size</span>
+                    <span className="detail-label">
+                      {t(ShowcaseStrings.Ledger_PayloadSize)}
+                    </span>
                     <span className="detail-value">
-                      {selectedEntry.entry.payload.length} bytes
+                      {t(ShowcaseStrings.Ledger_BytesTemplate).replace(
+                        '{0}',
+                        String(selectedEntry.entry.payload.length),
+                      )}
                     </span>
                   </div>
                   <div className="detail-row">
-                    <span className="detail-label">Payload</span>
+                    <span className="detail-label">
+                      {t(ShowcaseStrings.Ledger_Payload)}
+                    </span>
                     <span className="detail-value">
                       {selectedEntry.payloadPreview}
                     </span>

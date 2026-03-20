@@ -5,6 +5,8 @@ import {
   FileReceipt,
 } from '@brightchain/brightchain-lib';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useShowcaseI18n } from '../i18n/ShowcaseI18nContext';
+import { ShowcaseStrings } from '../i18n/showcaseStrings';
 import { ProcessStep } from './AnimationController';
 import './BrightChainSoupDemo.css';
 import {
@@ -38,6 +40,7 @@ const AnimatedProcessStep: React.FC<AnimatedProcessStepProps> = ({
   isEducationalMode,
   onStepClick,
 }) => {
+  const { t } = useShowcaseI18n();
   const getIcon = () => {
     switch (step.status) {
       case 'complete':
@@ -80,10 +83,12 @@ const AnimatedProcessStep: React.FC<AnimatedProcessStepProps> = ({
         {isEducationalMode && step.status === 'active' && (
           <div className="educational-tooltip">
             <p>
-              🎓 <strong>What's happening:</strong> {step.description}
+              🎓 <strong>{t(ShowcaseStrings.Anim_WhatHappening)}</strong>{' '}
+              {step.description}
             </p>
             <p>
-              ⏱️ <strong>Duration:</strong> {step.duration}ms
+              ⏱️ <strong>{t(ShowcaseStrings.Anim_DurationLabel)}</strong>{' '}
+              {step.duration}ms
             </p>
           </div>
         )}
@@ -109,27 +114,34 @@ const AnimationControls: React.FC<AnimationControlsProps> = ({
   onReset,
   onSpeedChange,
 }) => {
+  const { t } = useShowcaseI18n();
   return (
     <div className="animation-controls">
       <div className="playback-controls">
         <button
           onClick={isPlaying ? onPause : onPlay}
           className={`control-btn ${isPlaying ? 'pause' : 'play'}`}
-          title={isPlaying ? 'Pause Animation' : 'Play Animation'}
+          title={
+            isPlaying
+              ? t(ShowcaseStrings.Anim_PauseBtn)
+              : t(ShowcaseStrings.Anim_PlayBtn)
+          }
         >
           {isPlaying ? '⏸️' : '▶️'}
         </button>
         <button
           onClick={onReset}
           className="control-btn reset"
-          title="Reset Animation"
+          title={t(ShowcaseStrings.Anim_ResetBtn)}
         >
           🔄
         </button>
       </div>
 
       <div className="speed-control">
-        <label htmlFor="speed-slider">Speed: {speed}x</label>
+        <label htmlFor="speed-slider">
+          {t(ShowcaseStrings.Anim_SpeedLabel, { SPEED: String(speed) })}
+        </label>
         <input
           id="speed-slider"
           type="range"
@@ -162,6 +174,7 @@ const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
   sequenceCount,
   errorCount,
 }) => {
+  const { t } = useShowcaseI18n();
   const getPerformanceStatus = () => {
     if (frameRate >= 30) return 'good';
     if (frameRate >= 20) return 'warning';
@@ -170,33 +183,33 @@ const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
 
   return (
     <div className="performance-monitor">
-      <h4>🔧 Performance Monitor</h4>
+      <h4>{t(ShowcaseStrings.Anim_PerfTitle)}</h4>
       <div className="performance-grid">
         <div className={`performance-item ${getPerformanceStatus()}`}>
-          <span>Frame Rate:</span>
+          <span>{t(ShowcaseStrings.Anim_PerfFrameRate)}</span>
           <span>{frameRate} fps</span>
         </div>
         <div className="performance-item">
-          <span>Frame Time:</span>
+          <span>{t(ShowcaseStrings.Anim_PerfFrameTime)}</span>
           <span>{averageFrameTime}ms</span>
         </div>
         <div className="performance-item">
-          <span>Dropped Frames:</span>
+          <span>{t(ShowcaseStrings.Anim_PerfDropped)}</span>
           <span>{droppedFrames}</span>
         </div>
         {memoryUsage > 0 && (
           <div className="performance-item">
-            <span>Memory:</span>
+            <span>{t(ShowcaseStrings.Anim_PerfMemory)}</span>
             <span>{memoryUsage}MB</span>
           </div>
         )}
         <div className="performance-item">
-          <span>Sequences:</span>
+          <span>{t(ShowcaseStrings.Anim_PerfSequences)}</span>
           <span>{sequenceCount}</span>
         </div>
         {errorCount > 0 && (
           <div className="performance-item error">
-            <span>Errors:</span>
+            <span>{t(ShowcaseStrings.Anim_PerfErrors)}</span>
             <span>{errorCount}</span>
           </div>
         )}
@@ -206,6 +219,7 @@ const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
 };
 
 const AnimatedBrightChainDemoContent: React.FC = () => {
+  const { t } = useShowcaseI18n();
   const [brightChain, setBrightChain] =
     useState<SessionIsolatedBrightChain | null>(null);
   const [receipts, setReceipts] = useState<FileReceipt[]>([]);
@@ -226,6 +240,12 @@ const AnimatedBrightChainDemoContent: React.FC = () => {
   const [completionProcessType, setCompletionProcessType] = useState<
     'encoding' | 'reconstruction'
   >('encoding');
+  const [isUploading, setIsUploading] = useState(false);
+  const [encodingAnimationDone, setEncodingAnimationDone] = useState(false);
+  const [reconstructionAnimationDone, setReconstructionAnimationDone] =
+    useState(false);
+  const pendingEncodingClearRef = useRef(false);
+  const pendingReconstructionClearRef = useRef(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Animation controller hook
@@ -266,12 +286,16 @@ const AnimatedBrightChainDemoContent: React.FC = () => {
         return;
       }
 
+      setIsUploading(true);
+
       for (const file of Array.from(files)) {
         try {
           // Set current encoding file for animation
+          setEncodingAnimationDone(false);
+          pendingEncodingClearRef.current = false;
           setCurrentEncodingFile(file);
 
-          // Start animation sequence
+          // Start animation sequence (controller steps)
           await playEncodingAnimation(file);
 
           // Perform actual BrightChain operations
@@ -282,8 +306,14 @@ const AnimatedBrightChainDemoContent: React.FC = () => {
           setReceipts((prev) => [...prev, receipt]);
           setDebugInfo(brightChain.getDebugInfo());
 
-          // Clear current encoding file
-          setCurrentEncodingFile(null);
+          // Mark that storage is done — the EncodingAnimation's
+          // onAnimationComplete callback will clear the file when ready.
+          // If the animation already finished, clear immediately.
+          pendingEncodingClearRef.current = true;
+          if (encodingAnimationDone) {
+            setCurrentEncodingFile(null);
+            pendingEncodingClearRef.current = false;
+          }
 
           // Show completion summary if in educational mode
           if (educationalConfig.enabled) {
@@ -293,14 +323,18 @@ const AnimatedBrightChainDemoContent: React.FC = () => {
         } catch (error) {
           console.error('Failed to store file:', error);
           setCurrentEncodingFile(null);
+          pendingEncodingClearRef.current = false;
         }
       }
+
+      setIsUploading(false);
     },
     [
       brightChain,
       isInitialized,
       playEncodingAnimation,
       educationalConfig.enabled,
+      encodingAnimationDone,
     ],
   );
 
@@ -313,6 +347,8 @@ const AnimatedBrightChainDemoContent: React.FC = () => {
 
       try {
         // Set current reconstruction receipt for animation
+        setReconstructionAnimationDone(false);
+        pendingReconstructionClearRef.current = false;
         setCurrentReconstructionReceipt(receipt);
 
         // Start reconstruction animation
@@ -332,8 +368,13 @@ const AnimatedBrightChainDemoContent: React.FC = () => {
           `File "${receipt.fileName}" retrieved and downloaded successfully`,
         );
 
-        // Clear current reconstruction receipt
-        setCurrentReconstructionReceipt(null);
+        // Mark that retrieval is done — the ReconstructionAnimation's
+        // onAnimationComplete callback will clear the receipt when ready.
+        pendingReconstructionClearRef.current = true;
+        if (reconstructionAnimationDone) {
+          setCurrentReconstructionReceipt(null);
+          pendingReconstructionClearRef.current = false;
+        }
 
         // Show completion summary if in educational mode
         if (educationalConfig.enabled) {
@@ -343,6 +384,7 @@ const AnimatedBrightChainDemoContent: React.FC = () => {
       } catch (error) {
         console.error('Failed to retrieve file:', error);
         setCurrentReconstructionReceipt(null);
+        pendingReconstructionClearRef.current = false;
         alert(
           `Failed to retrieve file: ${error instanceof Error ? error.message : 'Unknown error'}`,
         );
@@ -353,6 +395,7 @@ const AnimatedBrightChainDemoContent: React.FC = () => {
       isInitialized,
       playReconstructionAnimation,
       educationalConfig.enabled,
+      reconstructionAnimationDone,
     ],
   );
 
@@ -387,9 +430,7 @@ const AnimatedBrightChainDemoContent: React.FC = () => {
     return (
       <div className="loading-container">
         <div className="upload-icon">⚙️</div>
-        <p className="loading-text">
-          Initializing Animated BrightChain Demo...
-        </p>
+        <p className="loading-text">{t(ShowcaseStrings.Anim_Initializing)}</p>
       </div>
     );
   }
@@ -397,14 +438,14 @@ const AnimatedBrightChainDemoContent: React.FC = () => {
   return (
     <div className="animated-brightchain-demo">
       <div className="demo-header">
-        <h1 className="demo-title">Animated BrightChain Block Soup Demo</h1>
-        <p className="demo-subtitle">
-          Experience the BrightChain process with step-by-step animations and
-          educational content!
-        </p>
+        <h1 className="demo-title">{t(ShowcaseStrings.Anim_Title)}</h1>
+        <p className="demo-subtitle">{t(ShowcaseStrings.Anim_Subtitle)}</p>
         <p className="session-info">
-          <strong>Session:</strong> {debugInfo?.sessionId?.substring(0, 20)}...
-          <span className="session-note">(Data clears on page refresh)</span>
+          <strong>{t(ShowcaseStrings.Anim_Session)}</strong>{' '}
+          {debugInfo?.sessionId?.substring(0, 20)}...
+          <span className="session-note">
+            {t(ShowcaseStrings.Anim_DataClearsOnRefresh)}
+          </span>
         </p>
       </div>
 
@@ -438,6 +479,12 @@ const AnimatedBrightChainDemoContent: React.FC = () => {
               animationSpeed={animationState.speed}
               onAnimationComplete={() => {
                 console.log('Encoding animation completed');
+                setEncodingAnimationDone(true);
+                // If storage already finished, clear the file now
+                if (pendingEncodingClearRef.current) {
+                  setCurrentEncodingFile(null);
+                  pendingEncodingClearRef.current = false;
+                }
               }}
             />
           )}
@@ -451,6 +498,12 @@ const AnimatedBrightChainDemoContent: React.FC = () => {
               animationSpeed={animationState.speed}
               onAnimationComplete={() => {
                 console.log('Reconstruction animation completed');
+                setReconstructionAnimationDone(true);
+                // If retrieval already finished, clear the receipt now
+                if (pendingReconstructionClearRef.current) {
+                  setCurrentReconstructionReceipt(null);
+                  pendingReconstructionClearRef.current = false;
+                }
               }}
             />
           )}
@@ -466,7 +519,9 @@ const AnimatedBrightChainDemoContent: React.FC = () => {
             className={`upload-area ${dragOver ? 'drag-over' : ''}`}
           >
             <span className="upload-icon">📁</span>
-            <p className="upload-text">Drop files here or click to upload</p>
+            <p className="upload-text">
+              {t(ShowcaseStrings.Anim_DropFilesOrClick)}
+            </p>
             <input
               ref={fileInputRef}
               type="file"
@@ -475,15 +530,15 @@ const AnimatedBrightChainDemoContent: React.FC = () => {
                 e.target.files && handleFileUpload(e.target.files)
               }
               className="upload-input"
-              disabled={animationState.isPlaying}
+              disabled={isUploading}
               style={{ display: 'none' }}
             />
             <button
               onClick={() => fileInputRef.current?.click()}
               className="upload-input"
-              disabled={animationState.isPlaying}
+              disabled={isUploading}
             >
-              Choose Files
+              {t(ShowcaseStrings.Anim_ChooseFiles)}
             </button>
           </div>
 
@@ -491,12 +546,13 @@ const AnimatedBrightChainDemoContent: React.FC = () => {
           <div className="storage-section">
             <h2 className="storage-header">
               <span>🗃️</span>
-              Block Soup Storage ({receipts.length} files)
+              {t(ShowcaseStrings.Anim_StorageTemplate, {
+                COUNT: String(receipts.length),
+              })}
             </h2>
             {receipts.length === 0 ? (
               <div className="storage-empty">
-                No files stored yet. Upload some files to see the animated
-                magic! ✨
+                {t(ShowcaseStrings.Anim_NoFilesYet)}
               </div>
             ) : (
               receipts.map((receipt) => (
@@ -514,17 +570,17 @@ const AnimatedBrightChainDemoContent: React.FC = () => {
                     <button
                       onClick={() => handleRetrieve(receipt)}
                       className="action-btn primary"
-                      disabled={animationState.isPlaying}
+                      disabled={isUploading || !!currentReconstructionReceipt}
                     >
                       <span>📥</span>
-                      Retrieve File
+                      {t(ShowcaseStrings.Anim_RetrieveFile)}
                     </button>
                     <button
                       onClick={() => handleDownloadCBL(receipt)}
                       className="action-btn secondary"
                     >
                       <span>📄</span>
-                      Download CBL
+                      {t(ShowcaseStrings.Anim_DownloadCBL)}
                     </button>
                   </div>
                 </div>
@@ -541,8 +597,8 @@ const AnimatedBrightChainDemoContent: React.FC = () => {
               <h3 className="sequence-header">
                 <span>🎬</span>
                 {currentSequence.type === 'encoding'
-                  ? 'Encoding Animation'
-                  : 'Reconstruction Animation'}
+                  ? t(ShowcaseStrings.Anim_EncodingAnimation)
+                  : t(ShowcaseStrings.Anim_ReconstructionAnimation)}
               </h3>
               {currentSequence.steps.map((step) => (
                 <AnimatedProcessStep
@@ -559,7 +615,7 @@ const AnimatedBrightChainDemoContent: React.FC = () => {
             <div className="current-step-details">
               <h3 className="step-details-header">
                 <span>⚡</span>
-                Current Step
+                {t(ShowcaseStrings.Anim_CurrentStep)}
               </h3>
               <div className="step-info">
                 <h4>{currentStep.name}</h4>
@@ -579,17 +635,19 @@ const AnimatedBrightChainDemoContent: React.FC = () => {
             <div className="block-details">
               <h3 className="block-details-header">
                 <span>🥫</span>
-                Block Details
+                {t(ShowcaseStrings.Anim_BlockDetails)}
               </h3>
               <div className="block-info">
                 <p>
-                  <strong>Index:</strong> #{selectedBlock.index}
+                  <strong>{t(ShowcaseStrings.Anim_Index)}:</strong> #
+                  {selectedBlock.index}
                 </p>
                 <p>
-                  <strong>Size:</strong> {selectedBlock.size} bytes
+                  <strong>{t(ShowcaseStrings.Anim_Size)}:</strong>{' '}
+                  {selectedBlock.size} bytes
                 </p>
                 <p>
-                  <strong>ID:</strong>
+                  <strong>{t(ShowcaseStrings.Anim_Id)}:</strong>
                 </p>
                 <div className="block-id">{selectedBlock.id}</div>
               </div>
@@ -600,25 +658,25 @@ const AnimatedBrightChainDemoContent: React.FC = () => {
           <div className="stats-panel">
             <h3 className="stats-header">
               <span>📊</span>
-              Animation Stats
+              {t(ShowcaseStrings.Anim_Stats)}
             </h3>
             <div className="stats-grid">
               <div className="stat-item">
-                <span>Total Files:</span>
+                <span>{t(ShowcaseStrings.Anim_TotalFiles)}:</span>
                 <span className="stat-value">{receipts.length}</span>
               </div>
               <div className="stat-item">
-                <span>Total Blocks:</span>
+                <span>{t(ShowcaseStrings.Anim_TotalBlocks)}:</span>
                 <span className="stat-value">
                   {receipts.reduce((sum, r) => sum + r.blockCount, 0)}
                 </span>
               </div>
               <div className="stat-item">
-                <span>Animation Speed:</span>
+                <span>{t(ShowcaseStrings.Anim_AnimationSpeed)}:</span>
                 <span className="stat-value">{animationState.speed}x</span>
               </div>
               <div className="stat-item">
-                <span>Frame Rate:</span>
+                <span>{t(ShowcaseStrings.Anim_FrameRate)}:</span>
                 <span className="stat-value">
                   {performanceMetrics.frameRate} fps
                 </span>

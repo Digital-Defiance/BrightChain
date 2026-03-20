@@ -10,10 +10,14 @@ import {
 } from '@digitaldefiance/ecies-lib';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState } from 'react';
+import { useShowcaseI18n } from '../../i18n/ShowcaseI18nContext';
+import { ShowcaseStrings } from '../../i18n/showcaseStrings';
 import { LoadingSpinner } from './LoadingSpinner';
 import { useVotingDemo } from './useVotingDemo';
 
 export const YesNoAbstainDemo = () => {
+  const { t } = useShowcaseI18n();
+
   const [poll, setPoll] = useState<Poll<Uint8Array> | null>(null);
   const [authority, setAuthority] = useState<Member | null>(null);
   const [voters] = useState([
@@ -103,7 +107,7 @@ export const YesNoAbstainDemo = () => {
 
   if (isInitializing)
     return (
-      <LoadingSpinner message="Initializing cryptographic voting system..." />
+      <LoadingSpinner message={t(ShowcaseStrings.Vote_InitializingCrypto)} />
     );
 
   if (showIntro) {
@@ -112,38 +116,27 @@ export const YesNoAbstainDemo = () => {
         <div className="election-intro">
           <div className="intro-header">
             <span className="intro-emoji">🤷</span>
-            <h3>UN Security Council Resolution!</h3>
+            <h3>{t(ShowcaseStrings.YNA_IntroTitle)}</h3>
           </div>
           <div className="intro-story">
             <p>
-              🌍 <strong>The Resolution:</strong> "Should the UN impose
-              sanctions on Country X for human rights violations?"
+              <strong>{t(ShowcaseStrings.YNA_IntroResolution)}</strong>
             </p>
-            <p>
-              🤷 <strong>Yes/No/Abstain:</strong> Sometimes you're not ready to
-              decide. Abstentions don't count toward the total but are recorded.
-            </p>
+            <p>{t(ShowcaseStrings.YNA_IntroStory)}</p>
             <div className="intro-stakes">
-              <p>
-                ✅ <strong>YES:</strong> Impose sanctions immediately
-              </p>
-              <p>
-                ❌ <strong>NO:</strong> Reject the resolution
-              </p>
-              <p>
-                🤷 <strong>ABSTAIN:</strong> Neutral - don't want to take a side
-              </p>
+              <p>{t(ShowcaseStrings.YNA_IntroYes)}</p>
+              <p>{t(ShowcaseStrings.YNA_IntroNo)}</p>
+              <p>{t(ShowcaseStrings.YNA_IntroAbstain)}</p>
             </div>
             <p className="intro-challenge">
-              🏛️ Used in UN votes, parliamentary procedures, and board meetings
-              worldwide.
+              {t(ShowcaseStrings.YNA_IntroChallenge)}
             </p>
           </div>
           <button
             onClick={() => setShowIntro(false)}
             className="start-election-btn"
           >
-            🌎 Cast Votes!
+            {t(ShowcaseStrings.YNA_StartBtn)}
           </button>
         </div>
       </div>
@@ -153,21 +146,21 @@ export const YesNoAbstainDemo = () => {
   return (
     <div className="voting-demo">
       <div className="demo-header">
-        <h3>🤷 Yes/No/Abstain - UN Resolution</h3>
-        <p className="election-tagline">
-          🌍 Three choices: Support, Oppose, or Stay Neutral
-        </p>
+        <h3>{t(ShowcaseStrings.YNA_DemoTitle)}</h3>
+        <p className="election-tagline">{t(ShowcaseStrings.YNA_DemoTagline)}</p>
       </div>
 
       {!results ? (
         <>
           <div className="referendum-question">
-            <h4>Impose sanctions on Country X?</h4>
+            <h4>{t(ShowcaseStrings.YNA_ReferendumQuestion)}</h4>
           </div>
 
           <div className="voters-section">
             <h4>
-              Security Council Members ({votes.size}/{voters.length} voted)
+              {t(ShowcaseStrings.YNA_CouncilVotingTemplate)
+                .replace('{VOTED}', String(votes.size))
+                .replace('{TOTAL}', String(voters.length))}
             </h4>
             <div className="voters-grid">
               {voters.map((voter) => (
@@ -175,12 +168,11 @@ export const YesNoAbstainDemo = () => {
                   <strong>{voter}</strong>
                   {votes.has(voter) ? (
                     <div className="vote-cast">
-                      ✓{' '}
                       {votes.get(voter) === 0
-                        ? '👍 YES'
+                        ? t(ShowcaseStrings.YNA_VotedYes)
                         : votes.get(voter) === 1
-                          ? '👎 NO'
-                          : '🤷 ABSTAIN'}
+                          ? t(ShowcaseStrings.YNA_VotedNo)
+                          : t(ShowcaseStrings.YNA_VotedAbstain)}
                     </div>
                   ) : (
                     <div className="abstain-buttons">
@@ -188,19 +180,19 @@ export const YesNoAbstainDemo = () => {
                         onClick={() => castVote(voter, 0)}
                         className="vote-btn yes-btn"
                       >
-                        👍 YES
+                        {t(ShowcaseStrings.YNA_BtnYes)}
                       </button>
                       <button
                         onClick={() => castVote(voter, 1)}
                         className="vote-btn no-btn"
                       >
-                        👎 NO
+                        {t(ShowcaseStrings.YNA_BtnNo)}
                       </button>
                       <button
                         onClick={() => castVote(voter, 2)}
                         className="vote-btn abstain-btn"
                       >
-                        🤷 ABSTAIN
+                        {t(ShowcaseStrings.YNA_BtnAbstain)}
                       </button>
                     </div>
                   )}
@@ -215,19 +207,20 @@ export const YesNoAbstainDemo = () => {
               className="tally-btn"
               disabled={isTallying}
             >
-              {isTallying ? '🔓 Decrypting votes...' : '📊 Tally Resolution!'}
+              {isTallying
+                ? t(ShowcaseStrings.Vote_DecryptingVotes)
+                : t(ShowcaseStrings.YNA_TallyBtn)}
             </button>
           )}
         </>
       ) : (
         <div className="results-section">
-          <h4>🌎 Resolution Results!</h4>
+          <h4>{t(ShowcaseStrings.YNA_ResultsTitle)}</h4>
 
           <div className="tally-visualization">
-            <h5>📊 Vote Counting</h5>
+            <h5>{t(ShowcaseStrings.YNA_TallyTitle)}</h5>
             <p className="tally-explain">
-              Abstentions are recorded but don't count toward the decision.
-              Winner needs majority of YES/NO votes:
+              {t(ShowcaseStrings.YNA_TallyExplain)}
             </p>
           </div>
 
@@ -236,60 +229,73 @@ export const YesNoAbstainDemo = () => {
               className={`abstain-result ${results.winner === 0 ? 'winner' : ''}`}
             >
               <span className="abstain-emoji">👍</span>
-              <h3>YES</h3>
+              <h3>{t(ShowcaseStrings.YNA_LabelYes)}</h3>
               <p className="abstain-count">
-                {Number(results.tallies[0])} votes
-              </p>
-              <p className="abstain-percent">
-                {(
-                  (Number(results.tallies[0]) /
-                    (Number(results.tallies[0]) + Number(results.tallies[1]))) *
-                  100
-                ).toFixed(1)}
-                %
+                {t(ShowcaseStrings.Vote_VotesTemplate)
+                  .replace('{COUNT}', String(Number(results.tallies[0])))
+                  .replace(
+                    '{PERCENT}',
+                    (
+                      (Number(results.tallies[0]) /
+                        (Number(results.tallies[0]) +
+                          Number(results.tallies[1]))) *
+                      100
+                    ).toFixed(1),
+                  )}
               </p>
             </div>
             <div
               className={`abstain-result ${results.winner === 1 ? 'winner' : ''}`}
             >
               <span className="abstain-emoji">👎</span>
-              <h3>NO</h3>
+              <h3>{t(ShowcaseStrings.YNA_LabelNo)}</h3>
               <p className="abstain-count">
-                {Number(results.tallies[1])} votes
-              </p>
-              <p className="abstain-percent">
-                {(
-                  (Number(results.tallies[1]) /
-                    (Number(results.tallies[0]) + Number(results.tallies[1]))) *
-                  100
-                ).toFixed(1)}
-                %
+                {t(ShowcaseStrings.Vote_VotesTemplate)
+                  .replace('{COUNT}', String(Number(results.tallies[1])))
+                  .replace(
+                    '{PERCENT}',
+                    (
+                      (Number(results.tallies[1]) /
+                        (Number(results.tallies[0]) +
+                          Number(results.tallies[1]))) *
+                      100
+                    ).toFixed(1),
+                  )}
               </p>
             </div>
             <div className="abstain-result neutral">
               <span className="abstain-emoji">🤷</span>
-              <h3>ABSTAIN</h3>
+              <h3>{t(ShowcaseStrings.YNA_LabelAbstain)}</h3>
               <p className="abstain-count">
-                {Number(results.tallies[2])} votes
+                {t(ShowcaseStrings.Vote_VotesTemplate)
+                  .replace('{COUNT}', String(Number(results.tallies[2])))
+                  .replace('{PERCENT}', '—')}
               </p>
-              <p className="abstain-note">Not counted in decision</p>
+              <p className="abstain-note">
+                {t(ShowcaseStrings.YNA_AbstainNote)}
+              </p>
             </div>
           </div>
 
           <div className="referendum-outcome">
             <h3>
               {results.winner === 0
-                ? '✅ Resolution PASSES!'
-                : '❌ Resolution FAILS!'}
+                ? t(ShowcaseStrings.YNA_ResolutionPasses)
+                : t(ShowcaseStrings.YNA_ResolutionFails)}
             </h3>
             <p>
-              Deciding votes:{' '}
-              {Number(results.tallies[0]) + Number(results.tallies[1])} |
-              Abstentions: {Number(results.tallies[2])}
+              {t(ShowcaseStrings.YNA_DecidingVotesTemplate)
+                .replace(
+                  '{DECIDING}',
+                  String(
+                    Number(results.tallies[0]) + Number(results.tallies[1]),
+                  ),
+                )
+                .replace('{ABSTENTIONS}', String(Number(results.tallies[2])))}
             </p>
           </div>
           <button onClick={reset} className="reset-btn">
-            New Resolution
+            {t(ShowcaseStrings.YNA_ResetBtn)}
           </button>
         </div>
       )}

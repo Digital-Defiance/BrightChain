@@ -1,6 +1,6 @@
 {
   "name": "@brightchain/db",
-  "version": "0.29.22",
+  "version": "0.29.24",
   "description": "MongoDB-like document database driver backed by BrightChain block store",
   "license": "MIT",
   "main": "./src/index.js",
@@ -17,5 +17,14 @@
     "@digitaldefiance/branded-interface": "^0.0.5",
     "@digitaldefiance/node-express-suite": "^4.23.4",
     "express": ">=5.0.0"
+  },
+  "scripts": {
+    "build:dev": "npx nx build brightchain-db --configuration=development",
+    "build:prod": "npx nx build brightchain-db --configuration=production",
+    "lint": "npx nx lint brightchain-db",
+    "lint:fix": "npx nx lint brightchain-db --fix",
+    "test": "NODE_ENV=development npx nx test brightchain-db --configuration=development --outputStyle=stream 2>&1",
+    "test:dev:16": "NODE_ENV=development npx nx test brightchain-db --maxWorkers=16 --parallel=16 --configuration=development --outputStyle=stream 2>&1",
+    "test:dev:16:logged": "NODE_ENV=development npx nx test brightchain-db --maxWorkers=16 --parallel=16 --configuration=development --outputStyle=stream 2>&1 | ansifilter -o test.log"
   }
 }

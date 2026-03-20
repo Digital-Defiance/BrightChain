@@ -9,10 +9,13 @@ import {
   VoteEncoder,
 } from '@digitaldefiance/ecies-lib';
 import { useEffect, useState } from 'react';
+import { useShowcaseI18n } from '../../i18n/ShowcaseI18nContext';
+import { ShowcaseStrings } from '../../i18n/showcaseStrings';
 import { LoadingSpinner } from './LoadingSpinner';
 import { useVotingDemo } from './useVotingDemo';
 
 export const WeightedDemo = () => {
+  const { t } = useShowcaseI18n();
   const [poll, setPoll] = useState<Poll<Uint8Array> | null>(null);
   const [authority, setAuthority] = useState<Member | null>(null);
   const [results, setResults] = useState<PollResults | null>(null);
@@ -32,17 +35,17 @@ export const WeightedDemo = () => {
     {
       name: 'Expand to Asia',
       emoji: '🌏',
-      description: 'Open offices in Tokyo and Singapore',
+      description: t(ShowcaseStrings.Weight_Proposal1_Desc),
     },
     {
       name: 'Acquire Competitor',
       emoji: '🤝',
-      description: 'Merge with TechStartup Inc.',
+      description: t(ShowcaseStrings.Weight_Proposal2_Desc),
     },
     {
       name: 'Go Public (IPO)',
       emoji: '📈',
-      description: 'List on NASDAQ next quarter',
+      description: t(ShowcaseStrings.Weight_Proposal3_Desc),
     },
   ];
 
@@ -134,7 +137,7 @@ export const WeightedDemo = () => {
 
   if (isInitializing)
     return (
-      <LoadingSpinner message="Initializing cryptographic voting system..." />
+      <LoadingSpinner message={t(ShowcaseStrings.Vote_InitializingCrypto)} />
     );
 
   if (showIntro) {
@@ -143,52 +146,47 @@ export const WeightedDemo = () => {
         <div className="election-intro">
           <div className="intro-header">
             <span className="intro-emoji">⚖️</span>
-            <h3>Boardroom Drama at StartupCo!</h3>
+            <h3>{t(ShowcaseStrings.Weight_IntroTitle)}</h3>
           </div>
           <div className="intro-story">
             <p>
-              💼 <strong>The Scene:</strong> It's the annual shareholder
-              meeting. The company is worth $100M and everyone wants a say in
-              what happens next.
+              💼 <strong>{t(ShowcaseStrings.Weight_IntroStoryScene)}</strong>
             </p>
             <p>
-              📈 But here's the thing: <strong>Not all votes are equal.</strong>{' '}
-              The VC fund owns 45% of shares. The founders own 30% and 15%.
-              Employees and angels own the rest.
+              📈 <strong>{t(ShowcaseStrings.Weight_IntroStoryTwist)}</strong>
             </p>
             <div className="intro-stakes">
               <div className="stake-item">
                 <span>🏛️</span>
                 <p>
-                  <strong>Expand to Asia?</strong> Huge growth potential, but
-                  risky
+                  <strong>Expand to Asia?</strong>{' '}
+                  {t(ShowcaseStrings.Weight_StakeExpand)}
                 </p>
               </div>
               <div className="stake-item">
                 <span>🤝</span>
                 <p>
-                  <strong>Acquire competitor?</strong> Eliminate competition,
-                  but expensive
+                  <strong>Acquire competitor?</strong>{' '}
+                  {t(ShowcaseStrings.Weight_StakeAcquire)}
                 </p>
               </div>
               <div className="stake-item">
                 <span>📈</span>
                 <p>
-                  <strong>Go public?</strong> IPO means liquidity, but scrutiny
+                  <strong>Go public?</strong>{' '}
+                  {t(ShowcaseStrings.Weight_StakeIPO)}
                 </p>
               </div>
             </div>
             <p className="intro-challenge">
-              🔒 Each vote is weighted by shares owned. The VC fund's vote
-              counts 18x more than the angel investor's. That's corporate
-              democracy!
+              🔒 {t(ShowcaseStrings.Weight_IntroChallenge)}
             </p>
           </div>
           <button
             onClick={() => setShowIntro(false)}
             className="start-election-btn"
           >
-            📄 Enter the Boardroom
+            {t(ShowcaseStrings.Weight_StartBtn)}
           </button>
         </div>
       </div>
@@ -200,16 +198,16 @@ export const WeightedDemo = () => {
   return (
     <div className="voting-demo">
       <div className="demo-header">
-        <h3>⚖️ Weighted Voting - StartupCo Board Meeting</h3>
+        <h3>{t(ShowcaseStrings.Weight_DemoTitle)}</h3>
         <p className="election-tagline">
-          💰 Your shares = Your voting power. Welcome to corporate governance!
+          {t(ShowcaseStrings.Weight_DemoTagline)}
         </p>
       </div>
 
       {!results ? (
         <>
           <div className="candidates-section">
-            <h4>Strategic Proposals</h4>
+            <h4>{t(ShowcaseStrings.Weight_ProposalsTitle)}</h4>
             <div className="candidates-grid">
               {proposals.map((proposal, idx) => (
                 <div key={idx} className="candidate-card">
@@ -223,7 +221,9 @@ export const WeightedDemo = () => {
 
           <div className="voters-section">
             <h4>
-              Shareholders ({votes.size}/{shareholders.length} voted)
+              {t(ShowcaseStrings.Weight_ShareholdersTemplate)
+                .replace('{VOTED}', String(votes.size))
+                .replace('{TOTAL}', String(shareholders.length))}
             </h4>
             <div className="weighted-voters">
               {shareholders.map((shareholder) => {
@@ -241,15 +241,23 @@ export const WeightedDemo = () => {
                         <strong>{shareholder.name}</strong>
                       </div>
                       <div className="shares-info">
-                        {shareholder.shares.toString()} shares ({sharePercent}%)
+                        {t(ShowcaseStrings.Weight_ShareInfoTemplate)
+                          .replace('{SHARES}', shareholder.shares.toString())
+                          .replace('{PERCENT}', String(sharePercent))}
                       </div>
                     </div>
 
                     {votes.has(shareholder.name) ? (
                       <div className="vote-cast">
-                        ✓ Voted for{' '}
-                        {proposals[votes.get(shareholder.name)!].emoji}{' '}
-                        {proposals[votes.get(shareholder.name)!].name}
+                        {t(ShowcaseStrings.Weight_VoteCastTemplate)
+                          .replace(
+                            '{EMOJI}',
+                            proposals[votes.get(shareholder.name)!].emoji,
+                          )
+                          .replace(
+                            '{NAME}',
+                            proposals[votes.get(shareholder.name)!].name,
+                          )}
                       </div>
                     ) : (
                       <div className="vote-buttons">
@@ -282,13 +290,15 @@ export const WeightedDemo = () => {
               className="tally-btn"
               disabled={isTallying}
             >
-              {isTallying ? '🔓 Decrypting votes...' : 'Tally Weighted Votes'}
+              {isTallying
+                ? t(ShowcaseStrings.Vote_DecryptingVotes)
+                : t(ShowcaseStrings.Weight_TallyBtn)}
             </button>
           )}
         </>
       ) : (
         <div className="results-section">
-          <h4>🏆 Results (by Share Weight)</h4>
+          <h4>{t(ShowcaseStrings.Weight_ResultsTitle)}</h4>
           {proposals.map((proposal, idx) => {
             const tally = results.tallies[idx];
             const percentage = Number((tally * 100n) / totalShares);
@@ -304,7 +314,9 @@ export const WeightedDemo = () => {
                     {proposal.emoji} {proposal.name}
                   </span>
                   <span>
-                    {tally.toString()} shares ({percentage.toFixed(1)}%)
+                    {t(ShowcaseStrings.Weight_SharesTemplate)
+                      .replace('{TALLY}', tally.toString())
+                      .replace('{PERCENT}', percentage.toFixed(1))}
                   </span>
                 </div>
                 <div className="progress-bar">
@@ -317,12 +329,15 @@ export const WeightedDemo = () => {
             );
           })}
           <div className="weighted-note">
-            💡 The winning proposal received{' '}
-            {Number((results.tallies[results.winner!] * 100n) / totalShares)}%
-            of total shares
+            {t(ShowcaseStrings.Weight_WinnerNoteTemplate).replace(
+              '{PERCENT}',
+              String(
+                Number((results.tallies[results.winner!] * 100n) / totalShares),
+              ),
+            )}
           </div>
           <button onClick={reset} className="reset-btn">
-            Run Another Vote
+            {t(ShowcaseStrings.Weight_ResetBtn)}
           </button>
         </div>
       )}

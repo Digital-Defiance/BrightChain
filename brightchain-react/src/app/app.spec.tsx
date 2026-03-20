@@ -31,13 +31,21 @@ jest.mock('@brightchain/brightchain-react-components', () => ({
     <div data-testid="brightchain-logo">BrightChainLogo Mock</div>
   ),
   BrightChainSubLogo: (props: Record<string, unknown>) => (
-    <span data-testid="brightchain-sub-logo">{String((props as any).subText || '')}</span>
+    <span data-testid="brightchain-sub-logo">
+      {String((props as any).subText || '')}
+    </span>
   ),
-  BrightPassDemo: () => <div data-testid="brightpass-demo">BrightPassDemo Mock</div>,
+  BrightPassDemo: () => (
+    <div data-testid="brightpass-demo">BrightPassDemo Mock</div>
+  ),
   DatabaseDemo: () => <div data-testid="database-demo">DatabaseDemo Mock</div>,
   IdentityDemo: () => <div data-testid="identity-demo">IdentityDemo Mock</div>,
-  MessagingDemo: () => <div data-testid="messaging-demo">MessagingDemo Mock</div>,
-  StoragePoolsDemo: () => <div data-testid="storage-pools-demo">StoragePoolsDemo Mock</div>,
+  MessagingDemo: () => (
+    <div data-testid="messaging-demo">MessagingDemo Mock</div>
+  ),
+  StoragePoolsDemo: () => (
+    <div data-testid="storage-pools-demo">StoragePoolsDemo Mock</div>
+  ),
 }));
 
 // Mock brightchain-lib to prevent i18n initialization
@@ -45,6 +53,12 @@ jest.mock('@brightchain/brightchain-lib', () => ({
   constants: { CONSTANTS: {} },
   CoreConstants: { Site: 'BrightChain' },
   BrightChainComponentId: 'BrightChain',
+  BrightChainFeatures: {
+    BrightChat: 'BrightChat',
+    BrightHub: 'BrightHub',
+    BrightMail: 'BrightMail',
+    BrightPass: 'BrightPass',
+  },
   BrightChainStrings: new Proxy(
     {},
     { get: (_target: unknown, prop: string) => `BrightChain:${String(prop)}` },

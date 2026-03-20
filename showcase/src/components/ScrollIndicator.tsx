@@ -1,5 +1,7 @@
 import { motion } from 'framer-motion';
 import React, { useEffect, useState } from 'react';
+import { useShowcaseI18n } from '../i18n/ShowcaseI18nContext';
+import { ShowcaseStrings } from '../i18n/showcaseStrings';
 import './ScrollIndicator.css';
 
 interface ScrollIndicatorProps {
@@ -11,6 +13,7 @@ export const ScrollIndicator: React.FC<ScrollIndicatorProps> = ({
   targetId = 'demo',
   showProgress = false,
 }) => {
+  const { t } = useShowcaseI18n();
   const [scrollProgress, setScrollProgress] = useState(0);
   const [isVisible, setIsVisible] = useState(true);
 
@@ -56,7 +59,7 @@ export const ScrollIndicator: React.FC<ScrollIndicatorProps> = ({
               <div className="mouse-wheel" />
             </div>
           </motion.div>
-          <div className="scroll-text">Scroll to explore</div>
+          <div className="scroll-text">{t(ShowcaseStrings.Scroll_Explore)}</div>
         </motion.div>
       )}
 

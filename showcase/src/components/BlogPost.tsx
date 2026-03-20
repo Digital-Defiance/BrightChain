@@ -3,9 +3,12 @@ import { useEffect, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Link, useParams } from 'react-router-dom';
 import remarkGfm from 'remark-gfm';
+import { useShowcaseI18n } from '../i18n/ShowcaseI18nContext';
+import { ShowcaseStrings } from '../i18n/showcaseStrings';
 import './BlogPost.css';
 
 function BlogPost() {
+  const { t } = useShowcaseI18n();
   const { slug } = useParams<{ slug: string }>();
   const [content, setContent] = useState('');
   const [metadata, setMetadata] = useState<any>({});
@@ -121,7 +124,9 @@ function BlogPost() {
     return (
       <div className="blog-post-wrapper">
         <div className="blog-post-container">
-          <div className="blog-post-loading">Loading post...</div>
+          <div className="blog-post-loading">
+            {t(ShowcaseStrings.BlogPost_Loading)}
+          </div>
         </div>
       </div>
     );
@@ -132,10 +137,10 @@ function BlogPost() {
       <div className="blog-post-wrapper">
         <div className="blog-post-container">
           <div className="blog-post-error">
-            <h1>Post Not Found</h1>
-            <p>The blog post you're looking for doesn't exist.</p>
+            <h1>{t(ShowcaseStrings.BlogPost_NotFoundTitle)}</h1>
+            <p>{t(ShowcaseStrings.BlogPost_NotFoundDesc)}</p>
             <Link to="/blog" className="back-link">
-              ← Back to Blog
+              {t(ShowcaseStrings.BlogPost_BackToBlog)}
             </Link>
           </div>
         </div>
@@ -148,8 +153,7 @@ function BlogPost() {
       <div className="blog-post-container">
         {metadata.isNew && (
           <div className="new-post-banner">
-            ✨ This post was just published! It will appear in the blog list
-            after the next site deployment.
+            {t(ShowcaseStrings.BlogPost_NewBanner)}
           </div>
         )}
         <article className="blog-post">
@@ -165,7 +169,11 @@ function BlogPost() {
             )}
             {metadata.title && <h1>{metadata.title}</h1>}
             {metadata.author && (
-              <div className="blog-post-author">By {metadata.author}</div>
+              <div className="blog-post-author">
+                {t(ShowcaseStrings.BlogPost_ByAuthorTemplate, {
+                  AUTHOR: metadata.author,
+                })}
+              </div>
             )}
           </header>
 
@@ -176,7 +184,7 @@ function BlogPost() {
 
         <div className="blog-post-footer">
           <Link to="/blog" className="back-link">
-            ← Back to Blog
+            {t(ShowcaseStrings.BlogPost_BackToBlog)}
           </Link>
         </div>
       </div>
