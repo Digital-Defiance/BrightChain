@@ -260,7 +260,7 @@ describe('isEmailError', () => {
       expect(maybeError.details).toEqual({ date: 'not-a-date' });
       expect(maybeError.message).toBe('Invalid date');
     } else {
-      fail('Expected isEmailError to return true');
+      throw new Error('Expected isEmailError to return true');
     }
   });
 });

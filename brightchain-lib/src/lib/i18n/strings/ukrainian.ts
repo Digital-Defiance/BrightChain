@@ -5,6 +5,16 @@ import {
 } from '../../enumerations/brightChainStrings';
 
 export const UkrainianStrings: StringsCollection<BrightChainStringKey> = {
+  // BrightChain
+  [BrightChainStrings.Common_Bright]: 'Яскравий',
+  [BrightChainStrings.Common_Chain]: 'Ланцюг',
+
+  [BrightChainStrings.Common_Privacy]: 'Приватність',
+  [BrightChainStrings.Common_Participation]: 'Участь',
+  [BrightChainStrings.Common_Power]: 'Сила',
+  [BrightChainStrings.Common_PrivacyParticipationPower]:
+    'Приватність. Участь. Сила.',
+
   // UI Strings
   [BrightChainStrings.Common_BlockSize]: 'Розмір блоку',
   [BrightChainStrings.Common_AtIndexTemplate]:
@@ -215,88 +225,90 @@ export const UkrainianStrings: StringsCollection<BrightChainStringKey> = {
   [BrightChainStrings.Error_BlockServiceError_InvalidBlockType]:
     'Недійсний тип блоку',
 
-  // Quorum Errors
-  [BrightChainStrings.Error_QuorumError_InvalidQuorumId]:
+  // BrightTrust Errors
+  [BrightChainStrings.Error_BrightTrustError_InvalidBrightTrustId]:
     'Недійсний ідентифікатор кворуму',
-  [BrightChainStrings.Error_QuorumError_DocumentNotFound]:
+  [BrightChainStrings.Error_BrightTrustError_DocumentNotFound]:
     'Документ не знайдено',
-  [BrightChainStrings.Error_QuorumError_UnableToRestoreDocument]:
+  [BrightChainStrings.Error_BrightTrustError_UnableToRestoreDocument]:
     'Неможливо відновити документ',
-  [BrightChainStrings.Error_QuorumError_NotImplemented]: 'Не реалізовано',
-  [BrightChainStrings.Error_QuorumError_Uninitialized]:
+  [BrightChainStrings.Error_BrightTrustError_NotImplemented]: 'Не реалізовано',
+  [BrightChainStrings.Error_BrightTrustError_Uninitialized]:
     'Підсистема кворуму не ініціалізована',
-  [BrightChainStrings.Error_QuorumError_MemberNotFound]: 'Учасник не знайдений',
-  [BrightChainStrings.Error_QuorumError_NotEnoughMembers]:
+  [BrightChainStrings.Error_BrightTrustError_MemberNotFound]:
+    'Учасник не знайдений',
+  [BrightChainStrings.Error_BrightTrustError_NotEnoughMembers]:
     'Недостатньо учасників для операції кворуму',
-  [BrightChainStrings.Error_QuorumError_TransitionInProgress]:
+  [BrightChainStrings.Error_BrightTrustError_TransitionInProgress]:
     'Операцію заблоковано: церемонія переходу в процесі',
-  [BrightChainStrings.Error_QuorumError_InvalidModeTransition]:
+  [BrightChainStrings.Error_BrightTrustError_InvalidModeTransition]:
     'Недійсний перехід операційного режиму',
-  [BrightChainStrings.Error_QuorumError_InsufficientMembersForTransition]:
+  [BrightChainStrings.Error_BrightTrustError_InsufficientMembersForTransition]:
     'Недостатньо учасників для початку церемонії переходу',
-  [BrightChainStrings.Error_QuorumError_MemberAlreadyExists]:
+  [BrightChainStrings.Error_BrightTrustError_MemberAlreadyExists]:
     'Учасник вже існує в кворумі',
-  [BrightChainStrings.Error_QuorumError_InsufficientRemainingMembers]:
+  [BrightChainStrings.Error_BrightTrustError_InsufficientRemainingMembers]:
     'Неможливо видалити учасника: залишок учасників буде нижче порогу',
-  [BrightChainStrings.Error_QuorumError_MemberBanned]:
+  [BrightChainStrings.Error_BrightTrustError_MemberBanned]:
     'Учасника заблоковано в мережі',
-  [BrightChainStrings.Error_QuorumError_MemberSuspended]:
+  [BrightChainStrings.Error_BrightTrustError_MemberSuspended]:
     'Учасника призупинено в мережі',
-  [BrightChainStrings.Error_QuorumError_DuplicateProposal]:
+  [BrightChainStrings.Error_BrightTrustError_DuplicateProposal]:
     'Дублікат ідентифікатора пропозиції',
-  [BrightChainStrings.Error_QuorumError_ProposalExpired]:
+  [BrightChainStrings.Error_BrightTrustError_ProposalExpired]:
     'Термін дії пропозиції закінчився',
-  [BrightChainStrings.Error_QuorumError_DuplicateVote]:
+  [BrightChainStrings.Error_BrightTrustError_DuplicateVote]:
     'Дублікат голосу від цього учасника',
-  [BrightChainStrings.Error_QuorumError_VoterNotOnProposal]:
+  [BrightChainStrings.Error_BrightTrustError_VoterNotOnProposal]:
     'Голосуючий не є активним учасником цієї пропозиції',
-  [BrightChainStrings.Error_QuorumError_AuthenticationFailed]:
+  [BrightChainStrings.Error_BrightTrustError_AuthenticationFailed]:
     'Помилка автентифікації',
-  [BrightChainStrings.Error_QuorumError_VotingLocked]:
+  [BrightChainStrings.Error_BrightTrustError_VotingLocked]:
     'Голосування заблоковано через повторні помилки автентифікації',
-  [BrightChainStrings.Error_QuorumError_MissingAttachment]:
+  [BrightChainStrings.Error_BrightTrustError_MissingAttachment]:
     'Пропозиція потребує вкладення, але його не надано',
-  [BrightChainStrings.Error_QuorumError_AttachmentNotRetrievable]:
+  [BrightChainStrings.Error_BrightTrustError_AttachmentNotRetrievable]:
     'Посилання на вкладення CBL недоступне',
-  [BrightChainStrings.Error_QuorumError_RedistributionFailed]:
+  [BrightChainStrings.Error_BrightTrustError_RedistributionFailed]:
     'Перерозподіл часток не вдався',
-  [BrightChainStrings.Error_QuorumError_InsufficientSharesForReconstruction]:
+  [BrightChainStrings.Error_BrightTrustError_InsufficientSharesForReconstruction]:
     'Недостатньо часток для відновлення ключа',
-  [BrightChainStrings.Error_QuorumError_KeyReconstructionValidationFailed]:
+  [BrightChainStrings.Error_BrightTrustError_KeyReconstructionValidationFailed]:
     'Відновлений ключ не пройшов перевірку',
-  [BrightChainStrings.Error_QuorumError_IdentityPermanentlyUnrecoverable]:
+  [BrightChainStrings.Error_BrightTrustError_IdentityPermanentlyUnrecoverable]:
     'Ідентичність назавжди невідновна через закінчення строку давності',
-  [BrightChainStrings.Error_QuorumError_InvalidMembershipProof]:
+  [BrightChainStrings.Error_BrightTrustError_InvalidMembershipProof]:
     'Недійсне підтвердження членства',
-  [BrightChainStrings.Error_QuorumError_MissingMembershipProof]:
+  [BrightChainStrings.Error_BrightTrustError_MissingMembershipProof]:
     'Відсутнє підтвердження членства для анонімного контенту',
-  [BrightChainStrings.Error_QuorumError_AliasAlreadyTaken]:
+  [BrightChainStrings.Error_BrightTrustError_AliasAlreadyTaken]:
     'Псевдонім вже зареєстровано',
-  [BrightChainStrings.Error_QuorumError_AliasNotFound]: 'Псевдонім не знайдено',
-  [BrightChainStrings.Error_QuorumError_AliasInactive]:
+  [BrightChainStrings.Error_BrightTrustError_AliasNotFound]:
+    'Псевдонім не знайдено',
+  [BrightChainStrings.Error_BrightTrustError_AliasInactive]:
     'Псевдонім деактивовано',
-  [BrightChainStrings.Error_QuorumError_IdentitySealingFailed]:
+  [BrightChainStrings.Error_BrightTrustError_IdentitySealingFailed]:
     'Конвеєр запечатування ідентичності не вдався',
-  [BrightChainStrings.Error_QuorumError_ShardVerificationFailed]:
+  [BrightChainStrings.Error_BrightTrustError_ShardVerificationFailed]:
     'Перевірка фрагментів ідентичності не вдалася',
-  [BrightChainStrings.Error_QuorumError_QuorumDatabaseUnavailable]:
+  [BrightChainStrings.Error_BrightTrustError_BrightTrustDatabaseUnavailable]:
     'База даних кворуму недоступна',
-  [BrightChainStrings.Error_QuorumError_TransactionFailed]:
+  [BrightChainStrings.Error_BrightTrustError_TransactionFailed]:
     'Транзакція бази даних не вдалася',
-  [BrightChainStrings.Error_QuorumError_AuditChainCorrupted]:
+  [BrightChainStrings.Error_BrightTrustError_AuditChainCorrupted]:
     'Цілісність ланцюга аудиту порушена',
-  // Quorum Ban Mechanism Errors
-  [BrightChainStrings.Error_QuorumError_CannotBanSelf]:
+  // BrightTrust Ban Mechanism Errors
+  [BrightChainStrings.Error_BrightTrustError_CannotBanSelf]:
     'Учасник не може запропонувати заблокувати себе',
-  [BrightChainStrings.Error_QuorumError_MemberAlreadyBanned]:
+  [BrightChainStrings.Error_BrightTrustError_MemberAlreadyBanned]:
     'Учасник вже заблокований',
-  [BrightChainStrings.Error_QuorumError_MemberNotBanned]:
+  [BrightChainStrings.Error_BrightTrustError_MemberNotBanned]:
     'Учасник наразі не заблокований',
-  [BrightChainStrings.Error_QuorumError_NewMemberCannotProposeBan]:
+  [BrightChainStrings.Error_BrightTrustError_NewMemberCannotProposeBan]:
     'Учасники, прийняті в поточну епоху, не можуть пропонувати блокування',
-  [BrightChainStrings.Error_QuorumError_BanCoolingPeriodNotElapsed]:
+  [BrightChainStrings.Error_BrightTrustError_BanCoolingPeriodNotElapsed]:
     'Період охолодження блокування ще не минув',
-  [BrightChainStrings.Error_QuorumError_InvalidBanRecordSignatures]:
+  [BrightChainStrings.Error_BrightTrustError_InvalidBanRecordSignatures]:
     'Запис про блокування не має достатньої кількості дійсних підписів кворуму',
   [BrightChainStrings.Error_IdentityValidationError_InvalidSignature]:
     'Підпис контенту не відповідає заявленій ідентичності',
@@ -979,22 +991,22 @@ export const UkrainianStrings: StringsCollection<BrightChainStringKey> = {
   [BrightChainStrings.Error_MemberProfileDocument_Hint]:
     'Використовуйте MemberProfileDocument.create() замість new MemberProfileDocument()',
 
-  // Quorum Document Errors
-  [BrightChainStrings.Error_QuorumDocument_CreatorMustBeSetBeforeSaving]:
+  // BrightTrust Document Errors
+  [BrightChainStrings.Error_BrightTrustDocument_CreatorMustBeSetBeforeSaving]:
     'Створювач повинен бути встановлений перед збереженням',
-  [BrightChainStrings.Error_QuorumDocument_CreatorMustBeSetBeforeEncrypting]:
+  [BrightChainStrings.Error_BrightTrustDocument_CreatorMustBeSetBeforeEncrypting]:
     'Створювач повинен бути встановлений перед шифруванням',
-  [BrightChainStrings.Error_QuorumDocument_DocumentHasNoEncryptedData]:
+  [BrightChainStrings.Error_BrightTrustDocument_DocumentHasNoEncryptedData]:
     'Документ не має зашифрованих даних',
-  [BrightChainStrings.Error_QuorumDocument_InvalidEncryptedDataFormat]:
+  [BrightChainStrings.Error_BrightTrustDocument_InvalidEncryptedDataFormat]:
     'Недійсний формат зашифрованих даних',
-  [BrightChainStrings.Error_QuorumDocument_InvalidMemberIdsFormat]:
+  [BrightChainStrings.Error_BrightTrustDocument_InvalidMemberIdsFormat]:
     'Недійсний формат ідентифікаторів учасників',
-  [BrightChainStrings.Error_QuorumDocument_InvalidSignatureFormat]:
+  [BrightChainStrings.Error_BrightTrustDocument_InvalidSignatureFormat]:
     'Недійсний формат підпису',
-  [BrightChainStrings.Error_QuorumDocument_InvalidCreatorIdFormat]:
+  [BrightChainStrings.Error_BrightTrustDocument_InvalidCreatorIdFormat]:
     'Недійсний формат ідентифікатора створювача',
-  [BrightChainStrings.Error_QuorumDocument_InvalidChecksumFormat]:
+  [BrightChainStrings.Error_BrightTrustDocument_InvalidChecksumFormat]:
     'Недійсний формат контрольної суми',
 
   // Block Logger
@@ -1242,13 +1254,13 @@ export const UkrainianStrings: StringsCollection<BrightChainStringKey> = {
     'Невідома помилка в makeTuple',
   [BrightChainStrings.PrimeTupleGeneratorStream_UnknownErrorInFlush]:
     'Невідома помилка в flush',
-  [BrightChainStrings.QuorumDataRecord_MustShareWithAtLeastTwoMembers]:
+  [BrightChainStrings.BrightTrustDataRecord_MustShareWithAtLeastTwoMembers]:
     'Потрібно поділитися щонайменше з 2 учасниками',
-  [BrightChainStrings.QuorumDataRecord_SharesRequiredExceedsMembers]:
+  [BrightChainStrings.BrightTrustDataRecord_SharesRequiredExceedsMembers]:
     'Необхідна кількість часток перевищує кількість учасників',
-  [BrightChainStrings.QuorumDataRecord_SharesRequiredMustBeAtLeastTwo]:
+  [BrightChainStrings.BrightTrustDataRecord_SharesRequiredMustBeAtLeastTwo]:
     'Необхідна кількість часток повинна бути щонайменше 2',
-  [BrightChainStrings.QuorumDataRecord_InvalidChecksum]:
+  [BrightChainStrings.BrightTrustDataRecord_InvalidChecksum]:
     'Недійсна контрольна сума',
   [BrightChainStrings.SimpleBrowserStore_BlockNotFoundTemplate]:
     'Блок не знайдено: {ID}',
@@ -1385,4 +1397,188 @@ export const UkrainianStrings: StringsCollection<BrightChainStringKey> = {
     'Не вдалося завантажити репутацію',
   [BrightChainStrings.Dashboard_FailedToLoadData]:
     'Не вдалося завантажити дані',
+
+  // Admin Dashboard
+  [BrightChainStrings.Admin_Dashboard_Title]: 'Панель адміністратора',
+  [BrightChainStrings.Admin_Dashboard_AccessDenied]: 'Доступ заборонено',
+  [BrightChainStrings.Admin_Dashboard_AccessDeniedDescription]:
+    'У вас немає дозволу на перегляд панелі адміністратора.',
+  [BrightChainStrings.Admin_Dashboard_Loading]: 'Завантаження панелі…',
+  [BrightChainStrings.Admin_Dashboard_NoData]: 'Дані відсутні.',
+  [BrightChainStrings.Admin_Dashboard_RefreshNow]: 'Оновити зараз',
+  [BrightChainStrings.Admin_Dashboard_ErrorLastSuccessTemplate]:
+    'Помилка — останній успіх: {TIME}',
+  [BrightChainStrings.Admin_Dashboard_ErrorLastSuccessNever]: 'ніколи',
+  [BrightChainStrings.Admin_Dashboard_ServerIdentity]: 'Ідентифікація сервера',
+  [BrightChainStrings.Admin_Dashboard_Hostname]: "Ім'я хоста",
+  [BrightChainStrings.Admin_Dashboard_LocalNodeId]: 'ID локального вузла',
+  [BrightChainStrings.Admin_Dashboard_Timestamp]: 'Мітка часу',
+  [BrightChainStrings.Admin_Dashboard_NA]: 'Н/Д',
+  [BrightChainStrings.Admin_Dashboard_Nodes]: 'Вузли',
+  [BrightChainStrings.Admin_Dashboard_NoNodesRegistered]:
+    'Немає зареєстрованих вузлів.',
+  [BrightChainStrings.Admin_Dashboard_DisconnectedPeers]: "Від'єднані піри",
+  [BrightChainStrings.Admin_Dashboard_LumenClients]: 'Клієнти Lumen',
+  [BrightChainStrings.Admin_Dashboard_ConnectedClients]: "під'єднані клієнти",
+  [BrightChainStrings.Admin_Dashboard_RoomsTemplate]: '{COUNT} кімнат(а)',
+  [BrightChainStrings.Admin_Dashboard_NodeConnections]: "З'єднання вузлів",
+  [BrightChainStrings.Admin_Dashboard_NodeToNodeConnections]:
+    "З'єднання вузол-вузол",
+  [BrightChainStrings.Admin_Dashboard_SystemMetrics]: 'Системні метрики',
+  [BrightChainStrings.Admin_Dashboard_HeapUsed]: 'Використано купи',
+  [BrightChainStrings.Admin_Dashboard_HeapTotal]: 'Купа загалом',
+  [BrightChainStrings.Admin_Dashboard_RSS]: 'RSS',
+  [BrightChainStrings.Admin_Dashboard_External]: 'Зовнішнє',
+  [BrightChainStrings.Admin_Dashboard_UptimeTemplate]: 'Час роботи: {SECONDS}с',
+  [BrightChainStrings.Admin_Dashboard_NodeVersionTemplate]:
+    'Node {NODE_VERSION} — App v{APP_VERSION}',
+  [BrightChainStrings.Admin_Dashboard_DBStats]: 'Статистика БД',
+  [BrightChainStrings.Admin_Dashboard_Users]: 'Користувачі',
+  [BrightChainStrings.Admin_Dashboard_Roles]: 'Ролі',
+  [BrightChainStrings.Admin_Dashboard_Active]: 'Активний',
+  [BrightChainStrings.Admin_Dashboard_Locked]: 'Заблокований',
+  [BrightChainStrings.Admin_Dashboard_Pending]: 'Очікує',
+  [BrightChainStrings.Admin_Dashboard_Members]: 'Учасники',
+  [BrightChainStrings.Admin_Dashboard_Threshold]: 'Поріг',
+  [BrightChainStrings.Admin_Dashboard_Pools]: 'Пули',
+  [BrightChainStrings.Admin_Dashboard_NoPools]: 'Немає пулів.',
+  [BrightChainStrings.Admin_Dashboard_Dependencies]: 'Залежності',
+  [BrightChainStrings.Admin_Dashboard_BlockStore]: 'BrightStore',
+  [BrightChainStrings.Admin_Dashboard_TotalBlocks]: 'Блоків загалом',
+  [BrightChainStrings.Admin_Dashboard_TotalSize]: 'Загальний розмір',
+  [BrightChainStrings.Admin_Dashboard_TotalPosts]: 'Публікацій загалом',
+  [BrightChainStrings.Admin_Dashboard_ActiveUsersLast30Days]:
+    'Активні користувачі (30д)',
+  [BrightChainStrings.Admin_Dashboard_Conversations]: 'Розмови',
+  [BrightChainStrings.Admin_Dashboard_Messages]: 'Повідомлення',
+  [BrightChainStrings.Admin_Dashboard_TotalVaults]: 'Сховищ загалом',
+  [BrightChainStrings.Admin_Dashboard_SharedVaults]: 'Спільні сховища',
+  [BrightChainStrings.Admin_Dashboard_TotalEmails]: 'Листів загалом',
+  [BrightChainStrings.Admin_Dashboard_DeliveryFailures]: 'Помилки доставки',
+  [BrightChainStrings.Admin_Dashboard_Last24Hours]: 'Останні 24 год',
+  [BrightChainStrings.Admin_Menu_Dashboard]: 'Панель адміністратора',
+  [BrightChainStrings.Admin_Common_Loading]: 'Завантаження…',
+  [BrightChainStrings.Admin_Common_Previous]: 'Попередня',
+  [BrightChainStrings.Admin_Common_Next]: 'Наступна',
+  [BrightChainStrings.Admin_Common_PageTemplate]: 'Сторінка {PAGE} з {TOTAL}',
+  [BrightChainStrings.Admin_Common_Cancel]: 'Скасувати',
+  [BrightChainStrings.Admin_Common_Delete]: 'Видалити',
+  [BrightChainStrings.Admin_Common_Yes]: 'Так',
+  [BrightChainStrings.Admin_Common_No]: 'Ні',
+  [BrightChainStrings.Admin_Common_Never]: 'Ніколи',
+  [BrightChainStrings.Admin_Common_Close]: 'Закрити',
+  [BrightChainStrings.Admin_Users_Title]: 'Керування користувачами',
+  [BrightChainStrings.Admin_Users_FilterAll]: 'Усі',
+  [BrightChainStrings.Admin_Users_FilterActive]: 'Активний',
+  [BrightChainStrings.Admin_Users_FilterLocked]: 'Заблокований',
+  [BrightChainStrings.Admin_Users_FilterPending]: 'Очікує',
+  [BrightChainStrings.Admin_Users_ColUsername]: "Ім'я користувача",
+  [BrightChainStrings.Admin_Users_ColEmail]: 'Електронна пошта',
+  [BrightChainStrings.Admin_Users_ColStatus]: 'Статус',
+  [BrightChainStrings.Admin_Users_ColEmailVerified]: 'Пошту підтверджено',
+  [BrightChainStrings.Admin_Users_ColLastLogin]: 'Останній вхід',
+  [BrightChainStrings.Admin_Users_ColActions]: 'Дії',
+  [BrightChainStrings.Admin_Users_NoUsersFound]: 'Користувачів не знайдено.',
+  [BrightChainStrings.Admin_Users_UnlockUser]: 'Розблокувати користувача',
+  [BrightChainStrings.Admin_Users_LockUser]: 'Заблокувати користувача',
+  [BrightChainStrings.Admin_Users_LockUserTitle]: 'Заблокувати користувача',
+  [BrightChainStrings.Admin_Users_UnlockUserTitle]: 'Розблокувати користувача',
+  [BrightChainStrings.Admin_Users_LockConfirmTemplate]:
+    'Ви впевнені, що хочете заблокувати {USERNAME}?',
+  [BrightChainStrings.Admin_Users_UnlockConfirmTemplate]:
+    'Ви впевнені, що хочете розблокувати {USERNAME}?',
+  [BrightChainStrings.Admin_Users_LockWarning]:
+    ' Це завадить користувачу увійти в систему.',
+  [BrightChainStrings.Admin_Blocks_Title]: 'Оглядач блоків',
+  [BrightChainStrings.Admin_Blocks_SearchPlaceholder]: 'Пошук за ID блоку',
+  [BrightChainStrings.Admin_Blocks_FilterAllDurability]:
+    'Усі рівні довговічності',
+  [BrightChainStrings.Admin_Blocks_FilterStandard]: 'Стандартний',
+  [BrightChainStrings.Admin_Blocks_FilterHighDurability]:
+    'Висока довговічність',
+  [BrightChainStrings.Admin_Blocks_FilterEphemeral]: 'Тимчасовий',
+  [BrightChainStrings.Admin_Blocks_SortByDate]: 'Сортувати за датою',
+  [BrightChainStrings.Admin_Blocks_SortBySize]: 'Сортувати за розміром',
+  [BrightChainStrings.Admin_Blocks_Detail]: 'Деталі блоку',
+  [BrightChainStrings.Admin_Blocks_ColBlockId]: 'ID блоку',
+  [BrightChainStrings.Admin_Blocks_ColSize]: 'Розмір',
+  [BrightChainStrings.Admin_Blocks_ColDurability]: 'Довговічність',
+  [BrightChainStrings.Admin_Blocks_ColCreated]: 'Створено',
+  [BrightChainStrings.Admin_Blocks_ColAccessCount]: 'Кількість доступів',
+  [BrightChainStrings.Admin_Blocks_ColReplication]: 'Реплікація',
+  [BrightChainStrings.Admin_Blocks_ColActions]: 'Дії',
+  [BrightChainStrings.Admin_Blocks_NoBlocksFound]: 'Блоків не знайдено.',
+  [BrightChainStrings.Admin_Blocks_DiscoverNodes]: 'Виявити вузли',
+  [BrightChainStrings.Admin_Blocks_NodesHoldingBlockTemplate]:
+    'Вузли з блоком {BLOCK_ID}:',
+  [BrightChainStrings.Admin_Blocks_NoNodesFound]: 'Вузлів не знайдено.',
+  [BrightChainStrings.Admin_Blocks_Checksum]: 'Контрольна сума',
+  [BrightChainStrings.Admin_Blocks_DeleteTitle]: 'Видалити блок',
+  [BrightChainStrings.Admin_Blocks_DeleteConfirmTemplate]:
+    "Ви впевнені, що хочете видалити блок {BLOCK_ID}? Це також видалить пов'язані блоки парності з локального сховища.",
+  [BrightChainStrings.Admin_Blocks_SizeBytesTemplate]: '{SIZE} байт',
+  [BrightChainStrings.Admin_Pass_Title]: 'Адміністрування BrightPass',
+  [BrightChainStrings.Admin_Pass_EncryptedNotice]:
+    'Вміст сховищ зашифрований і не може бути переглянутий. Відображаються лише метадані сховища.',
+  [BrightChainStrings.Admin_Pass_ColOwner]: 'Власник',
+  [BrightChainStrings.Admin_Pass_ColShared]: 'Спільний',
+  [BrightChainStrings.Admin_Pass_ColCreated]: 'Створено',
+  [BrightChainStrings.Admin_Pass_ColLastAccessed]: 'Останній доступ',
+  [BrightChainStrings.Admin_Pass_ColActions]: 'Дії',
+  [BrightChainStrings.Admin_Pass_NoVaultsFound]: 'Сховищ не знайдено.',
+  [BrightChainStrings.Admin_Pass_DeleteVault]: 'Видалити сховище',
+  [BrightChainStrings.Admin_Pass_DeleteVaultTitle]: 'Видалити сховище',
+  [BrightChainStrings.Admin_Pass_DeleteVaultConfirm]:
+    "Ви впевнені, що хочете видалити це сховище? Це видалить сховище та пов'язані з ним блоки. Цю дію неможливо скасувати.",
+  [BrightChainStrings.Admin_Chat_Title]: 'Адміністрування BrightChat',
+  [BrightChainStrings.Admin_Chat_ColId]: 'ID',
+  [BrightChainStrings.Admin_Chat_ColParticipants]: 'Учасники',
+  [BrightChainStrings.Admin_Chat_ColMessages]: 'Повідомлення',
+  [BrightChainStrings.Admin_Chat_ColLastActivity]: 'Остання активність',
+  [BrightChainStrings.Admin_Chat_NoConversationsFound]: 'Розмов не знайдено.',
+  [BrightChainStrings.Admin_Chat_MessagesForTemplate]:
+    'Повідомлення розмови {CONVERSATION_ID}',
+  [BrightChainStrings.Admin_Chat_LoadingMessages]: 'Завантаження повідомлень…',
+  [BrightChainStrings.Admin_Chat_NoMessages]: 'Немає повідомлень.',
+  [BrightChainStrings.Admin_Chat_ColSender]: 'Відправник',
+  [BrightChainStrings.Admin_Chat_ColContent]: 'Зміст',
+  [BrightChainStrings.Admin_Chat_ColCreated]: 'Створено',
+  [BrightChainStrings.Admin_Chat_ColStatus]: 'Статус',
+  [BrightChainStrings.Admin_Chat_StatusDeleted]: 'Видалено',
+  [BrightChainStrings.Admin_Chat_StatusActive]: 'Активний',
+  [BrightChainStrings.Admin_Chat_DeleteMessage]: 'Видалити повідомлення',
+  [BrightChainStrings.Admin_Chat_DeleteMessageTitle]: 'Видалити повідомлення',
+  [BrightChainStrings.Admin_Chat_DeleteMessageConfirm]:
+    "Ви впевнені, що хочете видалити це повідомлення? Воно буде м'яко видалено.",
+  [BrightChainStrings.Admin_Hub_Title]: 'Адміністрування BrightHub',
+  [BrightChainStrings.Admin_Hub_FilterByAuthorId]: 'Фільтрувати за ID автора',
+  [BrightChainStrings.Admin_Hub_FilterAllPosts]: 'Усі публікації',
+  [BrightChainStrings.Admin_Hub_FilterActive]: 'Активний',
+  [BrightChainStrings.Admin_Hub_FilterDeleted]: 'Видалено',
+  [BrightChainStrings.Admin_Hub_ColAuthor]: 'Автор',
+  [BrightChainStrings.Admin_Hub_ColContentPreview]: 'Попередній перегляд',
+  [BrightChainStrings.Admin_Hub_ColCreated]: 'Створено',
+  [BrightChainStrings.Admin_Hub_ColStatus]: 'Статус',
+  [BrightChainStrings.Admin_Hub_ColLikes]: 'Вподобання',
+  [BrightChainStrings.Admin_Hub_ColReposts]: 'Репости',
+  [BrightChainStrings.Admin_Hub_ColActions]: 'Дії',
+  [BrightChainStrings.Admin_Hub_StatusDeleted]: 'Видалено',
+  [BrightChainStrings.Admin_Hub_StatusActive]: 'Активний',
+  [BrightChainStrings.Admin_Hub_NoPostsFound]: 'Публікацій не знайдено.',
+  [BrightChainStrings.Admin_Hub_SoftDeletePost]: 'Видалити публікацію',
+  [BrightChainStrings.Admin_Hub_DeletePostTitle]: 'Видалити публікацію',
+  [BrightChainStrings.Admin_Hub_DeletePostConfirm]:
+    'Ви впевнені, що хочете видалити цю публікацію? Вона буде позначена як видалена, але не буде остаточно вилучена.',
+  [BrightChainStrings.Admin_Mail_Title]: 'Адміністрування BrightMail',
+  [BrightChainStrings.Admin_Mail_ColSender]: 'Відправник',
+  [BrightChainStrings.Admin_Mail_ColRecipients]: 'Одержувачі',
+  [BrightChainStrings.Admin_Mail_ColSubject]: 'Тема',
+  [BrightChainStrings.Admin_Mail_ColCreated]: 'Створено',
+  [BrightChainStrings.Admin_Mail_ColDeliveryStatus]: 'Статус доставки',
+  [BrightChainStrings.Admin_Mail_ColActions]: 'Дії',
+  [BrightChainStrings.Admin_Mail_NoEmailsFound]: 'Листів не знайдено.',
+  [BrightChainStrings.Admin_Mail_DeleteEmail]: 'Видалити лист',
+  [BrightChainStrings.Admin_Mail_DeleteEmailTitle]: 'Видалити лист',
+  [BrightChainStrings.Admin_Mail_DeleteEmailConfirm]:
+    'Ви впевнені, що хочете видалити цей лист? Цю дію неможливо скасувати.',
 };

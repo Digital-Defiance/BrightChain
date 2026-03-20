@@ -54,7 +54,9 @@ export class SystemKeyring implements IKeyring {
     }
 
     try {
-      const { SecureEnclaveKeyring } = await import('./secureEnclaveKeyring.js');
+      const { SecureEnclaveKeyring } = await import(
+        './secureEnclaveKeyring.js'
+      );
       return await SecureEnclaveKeyring.isAvailable();
     } catch {
       return false;

@@ -460,7 +460,7 @@ describe('Owner Free Filesystem (OFF) Integration Tests', () => {
         },
         security: {
           encryption: 'ECIES',
-          quorum: {
+          brightTrust: {
             members: 7,
             threshold: 4,
           },
@@ -532,7 +532,7 @@ describe('Owner Free Filesystem (OFF) Integration Tests', () => {
 
       expect(recoveredConfig).toEqual(config);
       expect(recoveredConfig.network.port).toBe(8080);
-      expect(recoveredConfig.security.quorum.threshold).toBe(4);
+      expect(recoveredConfig.security.brightTrust.threshold).toBe(4);
     });
   });
 });

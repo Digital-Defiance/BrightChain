@@ -27,12 +27,17 @@ export interface DecryptedVault {
  * @template TID - ID type. Defaults to `string` for frontend/JSON compatibility.
  */
 export interface IDecryptedVault<TID = string> {
-  id: TID;
-  name: string;
-  ownerId: TID;
+  metadata: {
+    id: TID;
+    name: string;
+    ownerId: TID;
+    createdAt: Date | string;
+    updatedAt: Date | string;
+    entryCount: number;
+    sharedWith: TID[];
+    vcblBlockId: BlockId;
+  };
   propertyRecords: EntryPropertyRecord[];
-  createdAt: string;
-  updatedAt: string;
 }
 
 export interface EntrySearchQuery {

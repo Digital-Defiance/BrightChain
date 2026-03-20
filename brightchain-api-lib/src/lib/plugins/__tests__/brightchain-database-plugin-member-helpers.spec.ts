@@ -276,7 +276,7 @@ describe('buildMemberInitInput', () => {
 
     // Verify member types
     expect(input.systemUser.type).toBe(MemberType.System);
-    expect(input.adminUser.type).toBe(MemberType.User);
+    expect(input.adminUser.type).toBe(MemberType.Admin);
     expect(input.memberUser.type).toBe(MemberType.User);
   });
 
@@ -312,7 +312,7 @@ describe('buildMemberInitInput', () => {
     );
   });
 
-  it('assigns MemberType.System to systemUser and MemberType.User to admin and member', () => {
+  it('assigns MemberType.System to systemUser and MemberType.Admin to admin and MemberType.User to member', () => {
     restoreEnv = setupEnv();
     const env = createEnv();
     const plugin = createPlugin(env);
@@ -320,7 +320,7 @@ describe('buildMemberInitInput', () => {
     const input = plugin.buildMemberInitInput();
 
     expect(input.systemUser.type).toBe(MemberType.System);
-    expect(input.adminUser.type).toBe(MemberType.User);
+    expect(input.adminUser.type).toBe(MemberType.Admin);
     expect(input.memberUser.type).toBe(MemberType.User);
   });
 

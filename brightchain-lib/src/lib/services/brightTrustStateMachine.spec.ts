@@ -1,0 +1,426 @@
+/**
+ * Unit tests for BrightTrustStateMachine public methods.
+ *
+ * These complement the property-based tests (P1, P4, P5, P6, P14, P16, P17, P18)
+ * by providing targeted unit tests for public methods that lack dedicated coverage.
+ */
+import {
+  EmailString,
+  GuidV4Uint8Array,
+  IMemberWithMnemonic,
+  Member,
+  MemberType,
+} from '@digitaldefiance/ecies-lib';
+import { BrightTrustErrorType } from '../enumerations/brightTrustErrorType';
+import { BrightTrustOperationalMode } from '../enumerations/brightTrustOperationalMode';
+import { ProposalActionType } from '../enumerations/proposalActionType';
+import { ProposalStatus } from '../enumerations/proposalStatus';
+import { BrightTrustError } from '../errors/brightTrustError';
+import { initializeBrightChain } from '../init';
+import { IGossipService } from '../interfaces/availability/gossipService';
+import { BrightTrustEpoch } from '../interfaces/brightTrustEpoch';
+import { OperationalState } from '../interfaces/operationalState';
+import { Proposal } from '../interfaces/proposal';
+import { IBrightTrustDatabase } from '../interfaces/services/brightTrustDatabase';
+import { IBrightTrustMember } from '../interfaces/services/brightTrustService';
+import { Vote } from '../interfaces/vote';
+import { BrightTrustStateMachine } from './brightTrustStateMachine';
+import { SealingService } from './sealing.service';
+import { ServiceProvider } from './service.provider';
+
+jest.setTimeout(30000);
+
+function createMockDatabase(): IBrightTrustDatabase<GuidV4Uint8Array> & {
+  savedEpochs: BrightTrustEpoch<GuidV4Uint8Array>[];
+  savedOperationalStates: OperationalState[];
+  proposals: Map<GuidV4Uint8Array, Proposal<GuidV4Uint8Array>>;
+  votes: Map<GuidV4Uint8Array, Vote<GuidV4Uint8Array>[]>;
+  activeMembers: IBrightTrustMember<GuidV4Uint8Array>[];
+} {
+  const epochs = new Map<number, BrightTrustEpoch<GuidV4Uint8Array>>();
+  const savedEpochs: BrightTrustEpoch<GuidV4Uint8Array>[] = [];
+  const savedOperationalStates: OperationalState[] = [];
+  const proposals = new Map<GuidV4Uint8Array, Proposal<GuidV4Uint8Array>>();
+  const votes = new Map<GuidV4Uint8Array, Vote<GuidV4Uint8Array>[]>();
+  const activeMembers: IBrightTrustMember<GuidV4Uint8Array>[] = [];
+  let operationalState: OperationalState | null = null;
+
+  return {
+    savedEpochs,
+    savedOperationalStates,
+    proposals,
+    votes,
+    activeMembers,
+    saveEpoch: jest.fn(async (epoch: BrightTrustEpoch<GuidV4Uint8Array>) => {
+      epochs.set(epoch.epochNumber, epoch);
+      savedEpochs.push(epoch);
+    }),
+    getEpoch: jest.fn(
+      async (epochNumber: number) => epochs.get(epochNumber) ?? null,
+    ),
+    getCurrentEpoch: jest.fn(async () => {
+      const maxEpoch = Math.max(...Array.from(epochs.keys()), 0);
+      const epoch = epochs.get(maxEpoch);
+      if (!epoch) throw new Error('No epochs');
+      return epoch;
+    }),
+    saveMember: jest.fn(
+      async (member: IBrightTrustMember<GuidV4Uint8Array>) => {
+        const idx = activeMembers.findIndex((m) => m.id === member.id);
+        if (idx >= 0) activeMembers[idx] = member;
+        else activeMembers.push(member);
+      },
+    ),
+    getMember: jest.fn(
+      async (memberId: GuidV4Uint8Array) =>
+        activeMembers.find((m) => m.id === memberId) ?? null,
+    ),
+    listActiveMembers: jest.fn(async () => [...activeMembers]),
+    saveDocument: jest.fn(async () => {}),
+    getDocument: jest.fn(async () => null),
+    listDocumentsByEpoch: jest.fn(async () => []),
+    saveProposal: jest.fn(async (proposal: Proposal<GuidV4Uint8Array>) => {
+      proposals.set(proposal.id, proposal);
+    }),
+    getProposal: jest.fn(
+      async (proposalId: GuidV4Uint8Array) => proposals.get(proposalId) ?? null,
+    ),
+    saveVote: jest.fn(async (vote: Vote<GuidV4Uint8Array>) => {
+      const existing = votes.get(vote.proposalId) ?? [];
+      existing.push(vote);
+      votes.set(vote.proposalId, existing);
+    }),
+    getVotesForProposal: jest.fn(
+      async (proposalId: GuidV4Uint8Array) => votes.get(proposalId) ?? [],
+    ),
+    saveIdentityRecord: jest.fn(async () => {}),
+    getIdentityRecord: jest.fn(async () => null),
+    deleteIdentityRecord: jest.fn(async () => {}),
+    listExpiredIdentityRecords: jest.fn(async () => []),
+    saveAlias: jest.fn(async () => {}),
+    getAlias: jest.fn(async () => null),
+    isAliasAvailable: jest.fn(async () => true),
+    appendAuditEntry: jest.fn(async () => {}),
+    getLatestAuditEntry: jest.fn(async () => null),
+    saveJournalEntry: jest.fn(async () => {}),
+    getJournalEntries: jest.fn(async () => []),
+    deleteJournalEntries: jest.fn(async () => {}),
+    saveStatuteConfig: jest.fn(async () => {}),
+    getStatuteConfig: jest.fn(async () => null),
+    saveOperationalState: jest.fn(async (state: OperationalState) => {
+      operationalState = state;
+      savedOperationalStates.push(state);
+    }),
+    getOperationalState: jest.fn(async () => operationalState),
+    withTransaction: jest.fn(async <R>(fn: () => Promise<R>) => fn()),
+    saveBanRecord: jest.fn(async () => {}),
+    deleteBanRecord: jest.fn(async () => {}),
+    getBanRecord: jest.fn(async () => null),
+    getAllBanRecords: jest.fn(async () => []),
+    getMemberAdmissionProposerId: jest.fn(async () => null),
+    isAvailable: jest.fn(async () => true),
+  };
+}
+
+function createMockGossipService(): IGossipService {
+  const noop = () => {};
+  const asyncNoop = async () => {};
+  return {
+    announceBlock: jest.fn(asyncNoop),
+    announceRemoval: jest.fn(asyncNoop),
+    announcePoolDeletion: jest.fn(asyncNoop),
+    announceCBLIndexUpdate: jest.fn(asyncNoop),
+    announceCBLIndexDelete: jest.fn(asyncNoop),
+    announceHeadUpdate: jest.fn(asyncNoop),
+    announceACLUpdate: jest.fn(asyncNoop),
+    handleAnnouncement: jest.fn(asyncNoop),
+    onAnnouncement: jest.fn(noop),
+    offAnnouncement: jest.fn(noop),
+    getPendingAnnouncements: jest.fn(() => []),
+    flushAnnouncements: jest.fn(asyncNoop),
+    start: jest.fn(noop),
+    stop: jest.fn(asyncNoop),
+    getConfig: jest.fn(() => ({
+      fanout: 3,
+      defaultTtl: 3,
+      batchIntervalMs: 1000,
+      maxBatchSize: 100,
+      messagePriority: {
+        normal: { fanout: 5, ttl: 5 },
+        high: { fanout: 7, ttl: 7 },
+      },
+    })),
+    announceMessage: jest.fn(asyncNoop),
+    sendDeliveryAck: jest.fn(asyncNoop),
+    onMessageDelivery: jest.fn(noop),
+    offMessageDelivery: jest.fn(noop),
+    onDeliveryAck: jest.fn(noop),
+    offDeliveryAck: jest.fn(noop),
+    announceBrightTrustProposal: jest.fn(asyncNoop),
+    announceBrightTrustVote: jest.fn(asyncNoop),
+    onBrightTrustProposal: jest.fn(noop),
+    offBrightTrustProposal: jest.fn(noop),
+    onBrightTrustVote: jest.fn(noop),
+    offBrightTrustVote: jest.fn(noop),
+  };
+}
+
+describe('BrightTrustStateMachine Unit Tests', () => {
+  let sealingService: SealingService<GuidV4Uint8Array>;
+  const memberPool: IMemberWithMnemonic<GuidV4Uint8Array>[] = [];
+
+  beforeAll(() => {
+    initializeBrightChain();
+    const sp = ServiceProvider.getInstance<GuidV4Uint8Array>();
+    sealingService = sp.sealingService;
+    const eciesService = sp.eciesService;
+
+    const names = ['Alice', 'Bob', 'Charlie', 'David', 'Eve'];
+    for (const name of names) {
+      memberPool.push(
+        Member.newMember<GuidV4Uint8Array>(
+          eciesService,
+          MemberType.System,
+          name,
+          new EmailString(`${name.toLowerCase()}@example.com`),
+        ),
+      );
+    }
+  });
+
+  function getMembers(count: number): Member<GuidV4Uint8Array>[] {
+    return memberPool.slice(0, count).map((m) => m.member);
+  }
+
+  describe('getConfiguredThreshold', () => {
+    it('should return 0 before initialization', () => {
+      const sm = new BrightTrustStateMachine(
+        createMockDatabase(),
+        sealingService,
+        createMockGossipService(),
+      );
+      expect(sm.getConfiguredThreshold()).toBe(0);
+    });
+
+    it('should return the configured threshold after initialization', async () => {
+      const sm = new BrightTrustStateMachine(
+        createMockDatabase(),
+        sealingService,
+        createMockGossipService(),
+      );
+      await sm.initialize(getMembers(3), 2);
+      expect(sm.getConfiguredThreshold()).toBe(2);
+    });
+  });
+
+  describe('getMetrics', () => {
+    it('should return default metrics before initialization', async () => {
+      const sm = new BrightTrustStateMachine(
+        createMockDatabase(),
+        sealingService,
+        createMockGossipService(),
+      );
+      const metrics = await sm.getMetrics();
+      expect(metrics.proposals.total).toBe(0);
+      expect(metrics.proposals.pending).toBe(0);
+      expect(metrics.votes.latency_ms).toBe(0);
+      expect(metrics.redistribution.progress).toBe(-1);
+      expect(metrics.redistribution.failures).toBe(0);
+      expect(metrics.members.active).toBe(0);
+      expect(metrics.epoch.current).toBe(0);
+      expect(metrics.expiration.last_run).toBeNull();
+      expect(metrics.expiration.deleted_total).toBe(0);
+    });
+
+    it('should reflect active member count after initialization', async () => {
+      const sm = new BrightTrustStateMachine(
+        createMockDatabase(),
+        sealingService,
+        createMockGossipService(),
+      );
+      await sm.initialize(getMembers(3), 2);
+      const metrics = await sm.getMetrics();
+      expect(metrics.members.active).toBe(3);
+      expect(metrics.epoch.current).toBe(1);
+    });
+  });
+
+  describe('getEpoch', () => {
+    it('should return null for non-existent epoch number', async () => {
+      const sm = new BrightTrustStateMachine(
+        createMockDatabase(),
+        sealingService,
+        createMockGossipService(),
+      );
+      await sm.initialize(getMembers(3), 2);
+      expect(await sm.getEpoch(999)).toBeNull();
+    });
+
+    it('should return epoch 1 after initialization', async () => {
+      const sm = new BrightTrustStateMachine(
+        createMockDatabase(),
+        sealingService,
+        createMockGossipService(),
+      );
+      await sm.initialize(getMembers(3), 2);
+      const epoch = await sm.getEpoch(1);
+      expect(epoch).not.toBeNull();
+      expect(epoch?.epochNumber).toBe(1);
+    });
+
+    it('should throw when called before initialization', async () => {
+      const sm = new BrightTrustStateMachine(
+        createMockDatabase(),
+        sealingService,
+        createMockGossipService(),
+      );
+      await expect(sm.getEpoch(1)).rejects.toThrow(BrightTrustError);
+    });
+  });
+
+  describe('getCurrentEpoch', () => {
+    it('should return epoch 1 after initialization', async () => {
+      const sm = new BrightTrustStateMachine(
+        createMockDatabase(),
+        sealingService,
+        createMockGossipService(),
+      );
+      await sm.initialize(getMembers(3), 2);
+      const epoch = await sm.getCurrentEpoch();
+      expect(epoch.epochNumber).toBe(1);
+      expect(epoch.memberIds).toHaveLength(3);
+    });
+
+    it('should throw when called before initialization', async () => {
+      const sm = new BrightTrustStateMachine(
+        createMockDatabase(),
+        sealingService,
+        createMockGossipService(),
+      );
+      await expect(sm.getCurrentEpoch()).rejects.toThrow(BrightTrustError);
+    });
+  });
+
+  describe('getProposal', () => {
+    it('should return null for non-existent proposal', async () => {
+      const sm = new BrightTrustStateMachine(
+        createMockDatabase(),
+        sealingService,
+        createMockGossipService(),
+      );
+      await sm.initialize(getMembers(3), 2);
+      const sp = ServiceProvider.getInstance<GuidV4Uint8Array>();
+      expect(await sm.getProposal(sp.idProvider.generateTyped())).toBeNull();
+    });
+
+    it('should return a proposal after it is submitted', async () => {
+      const sm = new BrightTrustStateMachine(
+        createMockDatabase(),
+        sealingService,
+        createMockGossipService(),
+      );
+      await sm.initialize(getMembers(3), 2);
+
+      const submitted = await sm.submitProposal({
+        description: 'Test proposal',
+        actionType: ProposalActionType.CUSTOM,
+        actionPayload: { test: true },
+        expiresAt: new Date(Date.now() + 3600000),
+      });
+
+      const retrieved = await sm.getProposal(submitted.id);
+      expect(retrieved).not.toBeNull();
+      expect(retrieved?.id).toBe(submitted.id);
+      expect(retrieved?.description).toBe('Test proposal');
+      expect(retrieved?.status).toBe(ProposalStatus.Pending);
+    });
+
+    it('should throw when called before initialization', async () => {
+      const sm = new BrightTrustStateMachine(
+        createMockDatabase(),
+        sealingService,
+        createMockGossipService(),
+      );
+      const sp = ServiceProvider.getInstance<GuidV4Uint8Array>();
+      await expect(
+        sm.getProposal(sp.idProvider.generateTyped()),
+      ).rejects.toThrow(BrightTrustError);
+    });
+  });
+
+  describe('unsealDocument', () => {
+    it('should throw DocumentNotFound for non-existent document', async () => {
+      const sm = new BrightTrustStateMachine(
+        createMockDatabase(),
+        sealingService,
+        createMockGossipService(),
+      );
+      await sm.initialize(getMembers(3), 2);
+      const sp = ServiceProvider.getInstance<GuidV4Uint8Array>();
+
+      try {
+        await sm.unsealDocument(sp.idProvider.generateTyped(), []);
+        throw new Error('Expected BrightTrustError to be thrown');
+      } catch (e) {
+        expect(e).toBeInstanceOf(BrightTrustError);
+        expect((e as BrightTrustError).type).toBe(
+          BrightTrustErrorType.DocumentNotFound,
+        );
+      }
+    });
+
+    it('should throw when called before initialization', async () => {
+      const sm = new BrightTrustStateMachine(
+        createMockDatabase(),
+        sealingService,
+        createMockGossipService(),
+      );
+      const sp = ServiceProvider.getInstance<GuidV4Uint8Array>();
+      await expect(
+        sm.unsealDocument(sp.idProvider.generateTyped(), []),
+      ).rejects.toThrow(BrightTrustError);
+    });
+  });
+
+  describe('getMode', () => {
+    it('should return Bootstrap mode when members < threshold', async () => {
+      const sm = new BrightTrustStateMachine(
+        createMockDatabase(),
+        sealingService,
+        createMockGossipService(),
+      );
+      await sm.initialize(getMembers(1), 3);
+      expect(await sm.getMode()).toBe(BrightTrustOperationalMode.Bootstrap);
+    });
+
+    it('should return BrightTrust mode when members >= threshold', async () => {
+      const sm = new BrightTrustStateMachine(
+        createMockDatabase(),
+        sealingService,
+        createMockGossipService(),
+      );
+      await sm.initialize(getMembers(3), 3);
+      expect(await sm.getMode()).toBe(BrightTrustOperationalMode.BrightTrust);
+    });
+  });
+
+  describe('submitProposal validation', () => {
+    it('should reject proposals with description exceeding 4096 characters', async () => {
+      const sm = new BrightTrustStateMachine(
+        createMockDatabase(),
+        sealingService,
+        createMockGossipService(),
+      );
+      await sm.initialize(getMembers(3), 2);
+
+      await expect(
+        sm.submitProposal({
+          description: 'x'.repeat(4097),
+          actionType: ProposalActionType.CUSTOM,
+          actionPayload: {},
+          expiresAt: new Date(Date.now() + 3600000),
+        }),
+      ).rejects.toThrow();
+    });
+  });
+});

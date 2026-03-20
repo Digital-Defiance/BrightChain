@@ -111,7 +111,7 @@ describe('Ledger', () => {
 
       try {
         await ledger.getEntry(99);
-        fail('Expected LedgerError');
+        throw new Error('Expected LedgerError');
       } catch (e) {
         expect(e).toBeInstanceOf(LedgerError);
         expect((e as LedgerError).errorType).toBe(
@@ -151,7 +151,7 @@ describe('Ledger', () => {
 
       try {
         await ledger.getEntries(2, 0);
-        fail('Expected LedgerError');
+        throw new Error('Expected LedgerError');
       } catch (e) {
         expect(e).toBeInstanceOf(LedgerError);
         expect((e as LedgerError).errorType).toBe(LedgerErrorType.InvalidRange);
@@ -163,7 +163,7 @@ describe('Ledger', () => {
 
       try {
         await ledger.getEntries(0, 5);
-        fail('Expected LedgerError');
+        throw new Error('Expected LedgerError');
       } catch (e) {
         expect(e).toBeInstanceOf(LedgerError);
         expect((e as LedgerError).errorType).toBe(LedgerErrorType.InvalidRange);

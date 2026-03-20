@@ -103,7 +103,7 @@ Topic-based community spaces with advanced access control:
 
 **Brokered Anonymity:**
 - All communication metadata encrypted
-- Identity information reconstructable only via quorum consensus
+- Identity information reconstructable only via BrightTrust consensus
 - Time-limited identity retention
 
 **Information Leakage Prevention:**

@@ -135,6 +135,7 @@ export function usePerformanceOptimizer(config?: Partial<PerformanceConfig>) {
         optimizerRef.current.destroy();
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [config]);
 
   // Update queue state helper

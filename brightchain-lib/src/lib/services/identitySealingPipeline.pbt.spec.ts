@@ -20,16 +20,16 @@ import {
   uint8ArrayToHex,
 } from '@digitaldefiance/ecies-lib';
 import * as fc from 'fast-check';
-import { QuorumOperationalMode } from '../enumerations/quorumOperationalMode';
+import { BrightTrustOperationalMode } from '../enumerations/brightTrustOperationalMode';
 import { initializeBrightChain } from '../init';
+import { BrightTrustEpoch } from '../interfaces/brightTrustEpoch';
 import {
   ContentWithIdentity,
   IdentityMode,
 } from '../interfaces/contentWithIdentity';
 import { IdentityRecoveryRecord } from '../interfaces/identityRecoveryRecord';
-import { QuorumEpoch } from '../interfaces/quorumEpoch';
-import { IQuorumDatabase } from '../interfaces/services/quorumDatabase';
-import { IQuorumMember } from '../interfaces/services/quorumService';
+import { IBrightTrustDatabase } from '../interfaces/services/brightTrustDatabase';
+import { IBrightTrustMember } from '../interfaces/services/brightTrustService';
 import { IdentitySealingPipeline } from './identitySealingPipeline';
 import { SealingService } from './sealing.service';
 import { ServiceProvider } from './service.provider';
@@ -37,7 +37,7 @@ import { ServiceProvider } from './service.provider';
 jest.setTimeout(120000);
 
 /**
- * Creates a mock IQuorumDatabase that stores identity records in memory
+ * Creates a mock IBrightTrustDatabase that stores identity records in memory
  * and returns member records with public keys from the provided member pool.
  */
 function createMockDatabase(
@@ -45,14 +45,17 @@ function createMockDatabase(
   enhancedProvider: ReturnType<
     typeof ServiceProvider.getInstance<GuidV4Uint8Array>
   >['idProvider'],
-): IQuorumDatabase<GuidV4Uint8Array> {
+): IBrightTrustDatabase<GuidV4Uint8Array> {
   const identityRecords = new Map<
     HexString,
     IdentityRecoveryRecord<GuidV4Uint8Array>
   >();
 
   // Build member lookup by HexString
-  const memberLookup = new Map<HexString, IQuorumMember<GuidV4Uint8Array>>();
+  const memberLookup = new Map<
+    HexString,
+    IBrightTrustMember<GuidV4Uint8Array>
+  >();
   for (const m of memberPool) {
     const memberId = uint8ArrayToHex(
       enhancedProvider.toBytes(m.member.id),
@@ -163,13 +166,13 @@ describe('IdentitySealingPipeline Property-Based Tests', () => {
   function createEpoch(
     memberCount: number,
     threshold: number,
-  ): QuorumEpoch<GuidV4Uint8Array> {
+  ): BrightTrustEpoch<GuidV4Uint8Array> {
     const members = memberPool.slice(0, memberCount);
     return {
       epochNumber: 1,
       memberIds: members.map((m) => m.member.id),
       threshold,
-      mode: QuorumOperationalMode.Quorum,
+      mode: BrightTrustOperationalMode.BrightTrust,
       createdAt: new Date(),
     };
   }

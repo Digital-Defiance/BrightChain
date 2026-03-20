@@ -151,7 +151,9 @@ describe('QueryEngine – advanced operators', () => {
   });
 
   it('deepEquals with mixed types', () => {
-    expect(deepEquals(null, undefined)).toBe(false);
+    // null and undefined are treated as equal (MongoDB semantics:
+    // querying for null matches missing fields)
+    expect(deepEquals(null, undefined)).toBe(true);
     expect(deepEquals(0, false)).toBe(false);
     expect(deepEquals('', false)).toBe(false);
     expect(deepEquals([], [])).toBe(true);

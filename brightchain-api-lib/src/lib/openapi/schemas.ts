@@ -483,7 +483,7 @@ export const BrightChainSchemas: Record<string, any> = {
     },
   },
 
-  // Quorum schemas
+  // BrightTrust schemas
   AddMemberRequest: {
     type: 'object',
     properties: {
@@ -497,11 +497,11 @@ export const BrightChainSchemas: Record<string, any> = {
     type: 'object',
     properties: {
       message: { type: 'string' },
-      member: { $ref: '#/components/schemas/QuorumMember' },
+      member: { $ref: '#/components/schemas/BrightTrustMember' },
       mnemonic: { type: 'string' },
     },
   },
-  QuorumMember: {
+  BrightTrustMember: {
     type: 'object',
     properties: {
       id: { type: 'string' },
@@ -518,7 +518,7 @@ export const BrightChainSchemas: Record<string, any> = {
       message: { type: 'string' },
       members: {
         type: 'array',
-        items: { $ref: '#/components/schemas/QuorumMember' },
+        items: { $ref: '#/components/schemas/BrightTrustMember' },
       },
     },
   },
@@ -588,8 +588,14 @@ export const BrightChainSchemas: Record<string, any> = {
   RecipientVerificationResult: {
     type: 'object',
     properties: {
-      username: { type: 'string', description: 'The local-part username that was checked' },
-      exists: { type: 'boolean', description: 'Whether the username exists on this server' },
+      username: {
+        type: 'string',
+        description: 'The local-part username that was checked',
+      },
+      exists: {
+        type: 'boolean',
+        description: 'Whether the username exists on this server',
+      },
     },
     required: ['username', 'exists'],
   },
@@ -624,7 +630,11 @@ export const BrightChainSchemas: Record<string, any> = {
     properties: {
       filename: { type: 'string' },
       mimeType: { type: 'string' },
-      data: { type: 'string', format: 'byte', description: 'Base64-encoded file data' },
+      data: {
+        type: 'string',
+        format: 'byte',
+        description: 'Base64-encoded file data',
+      },
     },
     required: ['filename', 'mimeType', 'data'],
   },
@@ -633,14 +643,30 @@ export const BrightChainSchemas: Record<string, any> = {
     type: 'object',
     properties: {
       from: { $ref: '#/components/schemas/MailboxInput' },
-      to: { type: 'array', items: { $ref: '#/components/schemas/MailboxInput' } },
-      cc: { type: 'array', items: { $ref: '#/components/schemas/MailboxInput' } },
-      bcc: { type: 'array', items: { $ref: '#/components/schemas/MailboxInput' } },
+      to: {
+        type: 'array',
+        items: { $ref: '#/components/schemas/MailboxInput' },
+      },
+      cc: {
+        type: 'array',
+        items: { $ref: '#/components/schemas/MailboxInput' },
+      },
+      bcc: {
+        type: 'array',
+        items: { $ref: '#/components/schemas/MailboxInput' },
+      },
       subject: { type: 'string' },
       textBody: { type: 'string' },
       htmlBody: { type: 'string' },
-      attachments: { type: 'array', items: { $ref: '#/components/schemas/AttachmentInput' } },
-      encryptionScheme: { type: 'string', enum: ['none', 'ecies', 'smime'], description: 'Encryption scheme for the email' },
+      attachments: {
+        type: 'array',
+        items: { $ref: '#/components/schemas/AttachmentInput' },
+      },
+      encryptionScheme: {
+        type: 'string',
+        enum: ['none', 'ecies', 'smime'],
+        description: 'Encryption scheme for the email',
+      },
     },
     required: ['from'],
   },
@@ -653,7 +679,10 @@ export const BrightChainSchemas: Record<string, any> = {
         type: 'object',
         properties: {
           messageId: { type: 'string' },
-          deliveryStatus: { type: 'object', additionalProperties: { type: 'string' } },
+          deliveryStatus: {
+            type: 'object',
+            additionalProperties: { type: 'string' },
+          },
         },
       },
     },

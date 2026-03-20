@@ -103,7 +103,7 @@ export class SessionsController<
   }
 
   private async handleGetSessions(
-    req: Parameters<
+    _req: Parameters<
       ApiRequestHandler<IApiMessageResponse | ApiErrorResponse>
     >[0],
   ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> {

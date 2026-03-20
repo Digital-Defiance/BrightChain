@@ -108,13 +108,13 @@ export interface PoolAnnouncementMetadata {
 }
 
 /**
- * Metadata for quorum proposal announcements via gossip protocol.
- * Attached to 'quorum_proposal' type BlockAnnouncements to propagate
- * proposal submissions across quorum nodes.
+ * Metadata for BrightTrust proposal announcements via gossip protocol.
+ * Attached to 'brightTrust_proposal' type BlockAnnouncements to propagate
+ * proposal submissions across BrightTrust nodes.
  *
  * @see Requirements 5.2, 5.3
  */
-export interface QuorumProposalMetadata {
+export interface BrightTrustProposalMetadata {
   /** Unique identifier for the proposal */
   proposalId: HexString;
 
@@ -141,13 +141,13 @@ export interface QuorumProposalMetadata {
 }
 
 /**
- * Metadata for quorum vote announcements via gossip protocol.
- * Attached to 'quorum_vote' type BlockAnnouncements to propagate
- * vote submissions across quorum nodes.
+ * Metadata for BrightTrust vote announcements via gossip protocol.
+ * Attached to 'brightTrust_vote' type BlockAnnouncements to propagate
+ * vote submissions across BrightTrust nodes.
  *
  * @see Requirements 7.1, 7.2
  */
-export interface QuorumVoteMetadata {
+export interface BrightTrustVoteMetadata {
   /** The proposal ID this vote is for */
   proposalId: HexString;
 
@@ -184,8 +184,8 @@ export interface BlockAnnouncement {
    * - 'acl_update' for approved ACL updates (requires poolId and aclBlockId)
    * - 'pool_announce' for pool creation/update announcements (requires poolId and poolAnnouncement)
    * - 'pool_remove' for pool removal announcements (requires poolId)
-   * - 'quorum_proposal' for quorum proposal announcements (requires quorumProposal metadata)
-   * - 'quorum_vote' for quorum vote announcements (requires quorumVote metadata)
+   * - 'brightTrust_proposal' for BrightTrust proposal announcements (requires brightTrustProposal metadata)
+   * - 'brightTrust_vote' for BrightTrust vote announcements (requires brightTrustVote metadata)
    *
    * @see Requirements 1.1, 2.1, 5.2, 7.1, 8.1, 8.6, 13.4
    */
@@ -200,8 +200,8 @@ export interface BlockAnnouncement {
     | 'acl_update'
     | 'pool_announce'
     | 'pool_remove'
-    | 'quorum_proposal'
-    | 'quorum_vote';
+    | 'brightTrust_proposal'
+    | 'brightTrust_vote';
 
   /**
    * The block ID being announced (hex string)
@@ -286,22 +286,22 @@ export interface BlockAnnouncement {
   poolAnnouncement?: PoolAnnouncementMetadata;
 
   /**
-   * Optional quorum proposal metadata for quorum proposal gossip.
-   * Required for 'quorum_proposal' type announcements.
-   * Contains the full proposal details for quorum voting.
+   * Optional BrightTrust proposal metadata for BrightTrust proposal gossip.
+   * Required for 'brightTrust_proposal' type announcements.
+   * Contains the full proposal details for BrightTrust voting.
    *
    * @see Requirements 5.2, 5.3
    */
-  quorumProposal?: QuorumProposalMetadata;
+  brightTrustProposal?: BrightTrustProposalMetadata;
 
   /**
-   * Optional quorum vote metadata for quorum vote gossip.
-   * Required for 'quorum_vote' type announcements.
+   * Optional BrightTrust vote metadata for BrightTrust vote gossip.
+   * Required for 'brightTrust_vote' type announcements.
    * Contains the vote decision and optional encrypted share.
    *
    * @see Requirements 7.1, 7.2
    */
-  quorumVote?: QuorumVoteMetadata;
+  brightTrustVote?: BrightTrustVoteMetadata;
 
   /**
    * Optional write proof for head_update announcements in Restricted_Mode.
@@ -628,60 +628,66 @@ export interface IGossipService {
   offDeliveryAck(handler: (announcement: BlockAnnouncement) => void): void;
 
   /**
-   * Announce a quorum proposal to the network via priority gossip.
-   * Creates a BlockAnnouncement of type 'quorum_proposal' with the proposal metadata
+   * Announce a BrightTrust proposal to the network via priority gossip.
+   * Creates a BlockAnnouncement of type 'brightTrust_proposal' with the proposal metadata
    * and queues it for propagation using high-priority fanout/TTL.
    *
-   * @param metadata - The quorum proposal metadata to announce
+   * @param metadata - The BrightTrust proposal metadata to announce
    * @returns Promise that resolves when the announcement is queued
    * @see Requirements 5.2, 5.3
    */
-  announceQuorumProposal(metadata: QuorumProposalMetadata): Promise<void>;
+  announceBrightTrustProposal(
+    metadata: BrightTrustProposalMetadata,
+  ): Promise<void>;
 
   /**
-   * Announce a quorum vote to the network via priority gossip.
-   * Creates a BlockAnnouncement of type 'quorum_vote' with the vote metadata
+   * Announce a BrightTrust vote to the network via priority gossip.
+   * Creates a BlockAnnouncement of type 'brightTrust_vote' with the vote metadata
    * and queues it for propagation using high-priority fanout/TTL.
    *
-   * @param metadata - The quorum vote metadata to announce
+   * @param metadata - The BrightTrust vote metadata to announce
    * @returns Promise that resolves when the announcement is queued
    * @see Requirements 7.1, 7.2
    */
-  announceQuorumVote(metadata: QuorumVoteMetadata): Promise<void>;
+  announceBrightTrustVote(metadata: BrightTrustVoteMetadata): Promise<void>;
 
   /**
-   * Register a handler for quorum proposal events.
-   * The handler is called when a BlockAnnouncement of type 'quorum_proposal'
-   * with quorumProposal metadata is received.
+   * Register a handler for BrightTrust proposal events.
+   * The handler is called when a BlockAnnouncement of type 'brightTrust_proposal'
+   * with brightTrustProposal metadata is received.
    *
-   * @param handler - Function to call when a quorum proposal announcement is received
+   * @param handler - Function to call when a BrightTrust proposal announcement is received
    * @see Requirements 5.5
    */
-  onQuorumProposal(handler: (announcement: BlockAnnouncement) => void): void;
+  onBrightTrustProposal(
+    handler: (announcement: BlockAnnouncement) => void,
+  ): void;
 
   /**
-   * Remove a quorum proposal event handler.
+   * Remove a BrightTrust proposal event handler.
    *
    * @param handler - The handler to remove
    */
-  offQuorumProposal(handler: (announcement: BlockAnnouncement) => void): void;
+  offBrightTrustProposal(
+    handler: (announcement: BlockAnnouncement) => void,
+  ): void;
 
   /**
-   * Register a handler for quorum vote events.
-   * The handler is called when a BlockAnnouncement of type 'quorum_vote'
-   * with quorumVote metadata is received.
+   * Register a handler for BrightTrust vote events.
+   * The handler is called when a BlockAnnouncement of type 'brightTrust_vote'
+   * with brightTrustVote metadata is received.
    *
-   * @param handler - Function to call when a quorum vote announcement is received
+   * @param handler - Function to call when a BrightTrust vote announcement is received
    * @see Requirements 7.3
    */
-  onQuorumVote(handler: (announcement: BlockAnnouncement) => void): void;
+  onBrightTrustVote(handler: (announcement: BlockAnnouncement) => void): void;
 
   /**
-   * Remove a quorum vote event handler.
+   * Remove a BrightTrust vote event handler.
    *
    * @param handler - The handler to remove
    */
-  offQuorumVote(handler: (announcement: BlockAnnouncement) => void): void;
+  offBrightTrustVote(handler: (announcement: BlockAnnouncement) => void): void;
 }
 
 /**
@@ -698,8 +704,8 @@ const VALID_ANNOUNCEMENT_TYPES = [
   'acl_update',
   'pool_announce',
   'pool_remove',
-  'quorum_proposal',
-  'quorum_vote',
+  'brightTrust_proposal',
+  'brightTrust_vote',
 ] as const;
 
 /**
@@ -882,34 +888,34 @@ export function validateBlockAnnouncement(
     return true;
   }
 
-  // quorum_proposal requires quorumProposal metadata,
+  // brightTrust_proposal requires brightTrustProposal metadata,
   // must not have messageDelivery, deliveryAck, or cblIndexEntry (Req 5.2, 5.3)
-  if (announcement.type === 'quorum_proposal') {
-    if (!announcement.quorumProposal) {
+  if (announcement.type === 'brightTrust_proposal') {
+    if (!announcement.brightTrustProposal) {
       return false;
     }
     if (
-      !announcement.quorumProposal.proposalId ||
-      typeof announcement.quorumProposal.proposalId !== 'string'
+      !announcement.brightTrustProposal.proposalId ||
+      typeof announcement.brightTrustProposal.proposalId !== 'string'
     ) {
       return false;
     }
     if (
-      !announcement.quorumProposal.description ||
-      typeof announcement.quorumProposal.description !== 'string' ||
-      announcement.quorumProposal.description.length > 4096
+      !announcement.brightTrustProposal.description ||
+      typeof announcement.brightTrustProposal.description !== 'string' ||
+      announcement.brightTrustProposal.description.length > 4096
     ) {
       return false;
     }
     if (
-      !announcement.quorumProposal.proposerMemberId ||
-      typeof announcement.quorumProposal.proposerMemberId !== 'string'
+      !announcement.brightTrustProposal.proposerMemberId ||
+      typeof announcement.brightTrustProposal.proposerMemberId !== 'string'
     ) {
       return false;
     }
     if (
-      typeof announcement.quorumProposal.requiredThreshold !== 'number' ||
-      announcement.quorumProposal.requiredThreshold < 1
+      typeof announcement.brightTrustProposal.requiredThreshold !== 'number' ||
+      announcement.brightTrustProposal.requiredThreshold < 1
     ) {
       return false;
     }
@@ -923,34 +929,34 @@ export function validateBlockAnnouncement(
     return true;
   }
 
-  // quorum_vote requires quorumVote metadata,
+  // brightTrust_vote requires brightTrustVote metadata,
   // must not have messageDelivery, deliveryAck, or cblIndexEntry (Req 7.1, 7.2)
-  if (announcement.type === 'quorum_vote') {
-    if (!announcement.quorumVote) {
+  if (announcement.type === 'brightTrust_vote') {
+    if (!announcement.brightTrustVote) {
       return false;
     }
     if (
-      !announcement.quorumVote.proposalId ||
-      typeof announcement.quorumVote.proposalId !== 'string'
+      !announcement.brightTrustVote.proposalId ||
+      typeof announcement.brightTrustVote.proposalId !== 'string'
     ) {
       return false;
     }
     if (
-      !announcement.quorumVote.voterMemberId ||
-      typeof announcement.quorumVote.voterMemberId !== 'string'
+      !announcement.brightTrustVote.voterMemberId ||
+      typeof announcement.brightTrustVote.voterMemberId !== 'string'
     ) {
       return false;
     }
     if (
-      announcement.quorumVote.decision !== 'approve' &&
-      announcement.quorumVote.decision !== 'reject'
+      announcement.brightTrustVote.decision !== 'approve' &&
+      announcement.brightTrustVote.decision !== 'reject'
     ) {
       return false;
     }
     if (
-      announcement.quorumVote.comment !== undefined &&
-      (typeof announcement.quorumVote.comment !== 'string' ||
-        announcement.quorumVote.comment.length > 1024)
+      announcement.brightTrustVote.comment !== undefined &&
+      (typeof announcement.brightTrustVote.comment !== 'string' ||
+        announcement.brightTrustVote.comment.length > 1024)
     ) {
       return false;
     }

@@ -179,9 +179,9 @@ Uses Shamir's Secret Sharing (`@digitaldefiance/secrets`) to split the vault key
 - Revocation invalidates all existing shares
 - New shares generated with different polynomial
 
-## Quorum Governance
+## BrightTrust Governance
 
-Shared vaults can optionally require quorum governance. When configured with threshold T, opening the vault requires T member approvals before access is granted.
+Shared vaults can optionally require BrightTrust governance. When configured with threshold T, opening the vault requires T member approvals before access is granted.
 
 ## Audit Logging
 
@@ -190,7 +190,7 @@ All vault operations are recorded in an append-only audit log stored as encrypte
 - Vault created/opened/deleted/shared
 - Entries created/read/updated/deleted
 - Emergency access configured/recovered
-- Quorum governance configured
+- BrightTrust governance configured
 
 Audit logs are encrypted with the system member's public key using ECIES.
 
@@ -257,7 +257,7 @@ brightchain-lib/src/lib/
 | TOTP Support | Yes | Yes (otpauth) | ✅ Match |
 | Import Support | Multiple | 8 formats | ✅ Match |
 | Breach Detection | HIBP | HIBP (k-anonymity) | ✅ Match |
-| Quorum Governance | Limited | Full support | ✅ Enhanced |
+| BrightTrust Governance | Limited | Full support | ✅ Enhanced |
 
 ## Related Documentation
 

@@ -1,7 +1,9 @@
-/* eslint-disable @nx/enforce-module-boundaries, @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { BlockInfo } from '@brightchain/brightchain-lib';
 import { AnimatePresence, motion } from 'framer-motion';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useShowcaseI18n } from '../i18n/ShowcaseI18nContext';
+import { ShowcaseStrings } from '../i18n/showcaseStrings';
 import './EncodingAnimation.css';
 
 export interface EncodingAnimationProps {
@@ -45,9 +47,11 @@ export const EncodingAnimation: React.FC<EncodingAnimationProps> = ({
   onBlockStored,
   onAnimationComplete,
 }) => {
+  const { t } = useShowcaseI18n();
   const [currentStep, setCurrentStep] = useState(0);
   const [chunks, setChunks] = useState<FileChunk[]>([]);
   const [_fileData, setFileData] = useState<Uint8Array | null>(null);
+  const hasStartedRef = useRef(false);
   const [animationSteps, setAnimationSteps] = useState<AnimationStep[]>([
     {
       id: 'file-read',
@@ -142,6 +146,7 @@ export const EncodingAnimation: React.FC<EncodingAnimationProps> = ({
       console.error('Failed to read file:', error);
       throw error;
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [file, animationSpeed]);
 
   // Step 2: Break file into chunks
@@ -149,6 +154,9 @@ export const EncodingAnimation: React.FC<EncodingAnimationProps> = ({
     async (data: Uint8Array) => {
       setCurrentStep(1);
       updateStepStatus(1, 'active', 0);
+
+      // Clear any previous chunks before starting
+      setChunks([]);
 
       const newChunks: FileChunk[] = [];
       const totalChunks = Math.ceil(data.length / blockSize);
@@ -167,7 +175,8 @@ export const EncodingAnimation: React.FC<EncodingAnimationProps> = ({
         };
 
         newChunks.push(chunk);
-        setChunks((prev) => [...prev, chunk]);
+        // Replace entire array with newChunks so far to avoid duplicates
+        setChunks([...newChunks]);
 
         // Call callback if provided
         if (onChunkCreated) {
@@ -186,6 +195,7 @@ export const EncodingAnimation: React.FC<EncodingAnimationProps> = ({
       updateStepStatus(1, 'complete', 100);
       return newChunks;
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [
       blockSize,
       generateChunkColor,
@@ -243,6 +253,7 @@ export const EncodingAnimation: React.FC<EncodingAnimationProps> = ({
       updateStepStatus(2, 'complete', 100);
       return paddedChunks;
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [blockSize, onPaddingAdded, isEducationalMode, animationSpeed],
   );
 
@@ -287,6 +298,7 @@ export const EncodingAnimation: React.FC<EncodingAnimationProps> = ({
       updateStepStatus(3, 'complete', 100);
       return chunksWithChecksums;
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [onChecksumCalculated, isEducationalMode, animationSpeed],
   );
 
@@ -323,6 +335,7 @@ export const EncodingAnimation: React.FC<EncodingAnimationProps> = ({
 
       updateStepStatus(4, 'complete', 100);
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [onBlockStored, isEducationalMode, animationSpeed],
   );
 
@@ -338,6 +351,7 @@ export const EncodingAnimation: React.FC<EncodingAnimationProps> = ({
     }
 
     updateStepStatus(5, 'complete', 100);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [animationSpeed]);
 
   // Step 7: Generate magnet URL
@@ -352,6 +366,7 @@ export const EncodingAnimation: React.FC<EncodingAnimationProps> = ({
     }
 
     updateStepStatus(6, 'complete', 100);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [animationSpeed]);
 
   // Helper function to update step status
@@ -406,14 +421,16 @@ export const EncodingAnimation: React.FC<EncodingAnimationProps> = ({
 
   // Start animation when component mounts
   useEffect(() => {
+    if (hasStartedRef.current) return;
+    hasStartedRef.current = true;
     startAnimation();
   }, [startAnimation]);
 
   return (
     <div className="encoding-animation">
       <div className="animation-header">
-        <h3>🎬 File Encoding Animation</h3>
-        <p>Watch as your file is transformed into BrightChain blocks</p>
+        <h3>{t(ShowcaseStrings.Enc_Title)}</h3>
+        <p>{t(ShowcaseStrings.Enc_Subtitle)}</p>
       </div>
 
       {/* Animation Steps Progress */}
@@ -474,8 +491,12 @@ export const EncodingAnimation: React.FC<EncodingAnimationProps> = ({
               transition={{ duration: 0.5 }}
             >
               <div className="chunks-header">
-                <h4>📦 File Chunks ({chunks.length})</h4>
-                <p>Each chunk will become a block in the soup</p>
+                <h4>
+                  {t(ShowcaseStrings.Enc_ChunksTitle, {
+                    COUNT: String(chunks.length),
+                  })}
+                </h4>
+                <p>{t(ShowcaseStrings.Enc_ChunksSubtitle)}</p>
               </div>
               <div className="chunks-grid">
                 {chunks.map((chunk, index) => (
@@ -524,7 +545,7 @@ export const EncodingAnimation: React.FC<EncodingAnimationProps> = ({
           >
             <div className="educational-header">
               <span>🎓</span>
-              <h4>What's Happening Now</h4>
+              <h4>{t(ShowcaseStrings.Enc_EduWhatsHappening)}</h4>
             </div>
             <div className="educational-content">
               <p>
@@ -534,36 +555,44 @@ export const EncodingAnimation: React.FC<EncodingAnimationProps> = ({
               {currentStep === 1 && (
                 <div className="technical-details">
                   <p>
-                    <strong>Technical Details:</strong>
+                    <strong>{t(ShowcaseStrings.Enc_TechDetails)}</strong>
                   </p>
                   <ul>
-                    <li>Block size: {blockSize} bytes</li>
-                    <li>Expected chunks: {Math.ceil(file.size / blockSize)}</li>
-                    <li>Each chunk becomes one block in the soup</li>
+                    <li>
+                      {t(ShowcaseStrings.Enc_BlockSizeInfo, {
+                        SIZE: String(blockSize),
+                      })}
+                    </li>
+                    <li>
+                      {t(ShowcaseStrings.Enc_ExpectedChunks, {
+                        COUNT: String(Math.ceil(file.size / blockSize)),
+                      })}
+                    </li>
+                    <li>{t(ShowcaseStrings.Enc_ChunkBecomesBlock)}</li>
                   </ul>
                 </div>
               )}
               {currentStep === 2 && (
                 <div className="technical-details">
                   <p>
-                    <strong>Why Padding?</strong>
+                    <strong>{t(ShowcaseStrings.Enc_WhyPadding)}</strong>
                   </p>
                   <ul>
-                    <li>All blocks must be the same size</li>
-                    <li>Random padding prevents data analysis</li>
-                    <li>Padding is removed during reconstruction</li>
+                    <li>{t(ShowcaseStrings.Enc_PaddingSameSize)}</li>
+                    <li>{t(ShowcaseStrings.Enc_PaddingPreventsAnalysis)}</li>
+                    <li>{t(ShowcaseStrings.Enc_PaddingRemoved)}</li>
                   </ul>
                 </div>
               )}
               {currentStep === 3 && (
                 <div className="technical-details">
                   <p>
-                    <strong>Checksum Purpose:</strong>
+                    <strong>{t(ShowcaseStrings.Enc_ChecksumPurpose)}</strong>
                   </p>
                   <ul>
-                    <li>Ensures data integrity</li>
-                    <li>Used as unique block identifier</li>
-                    <li>Enables verification during retrieval</li>
+                    <li>{t(ShowcaseStrings.Enc_EnsuresIntegrity)}</li>
+                    <li>{t(ShowcaseStrings.Enc_UniqueIdentifier)}</li>
+                    <li>{t(ShowcaseStrings.Enc_EnablesVerification)}</li>
                   </ul>
                 </div>
               )}

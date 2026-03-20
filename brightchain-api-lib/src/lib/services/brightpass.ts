@@ -117,10 +117,10 @@ interface StoredVault {
   emergencyConfig?: EmergencyAccessConfig;
   /** Encrypted shares for emergency recovery */
   emergencyShares?: EncryptedShare[];
-  /** Quorum governance threshold (0 = no quorum required) */
-  quorumThreshold: number;
-  /** Set of member IDs who have approved access in the current quorum session */
-  quorumApprovals: Set<string>;
+  /** Trust governance threshold (0 = no quorum required) */
+  trustThreshold: number;
+  /** Set of member IDs who have approved access in the current BrightTrust session */
+  trustApprovals: Set<string>;
 }
 
 /**
@@ -567,8 +567,8 @@ export class BrightPassService<TID extends PlatformID = Uint8Array> {
       blockIds: [],
       entries: new Map(),
       auditLogger,
-      quorumThreshold: 0,
-      quorumApprovals: new Set(),
+      trustThreshold: 0,
+      trustApprovals: new Set(),
     };
 
     this.vaults.set(vaultId, stored);
@@ -641,7 +641,7 @@ export class BrightPassService<TID extends PlatformID = Uint8Array> {
     }
 
     // Enforce quorum governance if configured
-    if (vault.quorumThreshold > 0 && !this.isQuorumMet(vaultId)) {
+    if (vault.trustThreshold > 0 && !this.isQuorumTrustMet(vaultId)) {
       throw new VaultAuthenticationError();
     }
 
@@ -657,43 +657,49 @@ export class BrightPassService<TID extends PlatformID = Uint8Array> {
     if (this.vcblService && this.member && indexEntry?.vcblBlockId) {
       const hasVcbl = await this.blockStore.has(indexEntry.vcblBlockId);
       if (hasVcbl) {
-        // Retrieve encrypted VCBL from block store
-        const blockHandle = this.blockStore.get(indexEntry.vcblBlockId);
-        const encryptedVcbl = blockHandle.fullData;
+        try {
+          // Retrieve encrypted VCBL from block store
+          const blockHandle = this.blockStore.get(indexEntry.vcblBlockId);
+          const encryptedVcbl = blockHandle.fullData;
 
-        // Decrypt VCBL using vault key
-        const decryptedVcbl = VaultEncryption.decrypt(
-          vault.vaultKey,
-          new Uint8Array(encryptedVcbl),
-        );
+          // Decrypt VCBL using vault key
+          const decryptedVcbl = VaultEncryption.decrypt(
+            vault.vaultKey,
+            new Uint8Array(encryptedVcbl),
+          );
 
-        // Parse VCBL using VCBLBlock to extract property records and entry addresses
-        const vcblBlock = new VCBLBlock(
-          decryptedVcbl,
-          this.member,
-          this.blockStore.blockSize,
-          undefined,
-          this.vcblService,
-        );
+          // Parse VCBL using VCBLBlock to extract property records and entry addresses
+          const vcblBlock = new VCBLBlock(
+            decryptedVcbl,
+            this.member,
+            this.blockStore.blockSize,
+            undefined,
+            this.vcblService,
+          );
 
-        // Extract property records from VCBL (Req 3.3)
-        const propertyRecords = vcblBlock.propertyRecords;
+          // Extract property records from VCBL (Req 3.3)
+          const propertyRecords = vcblBlock.propertyRecords;
 
-        // Extract entry addresses from VCBL (Req 3.4)
-        const entryAddresses = vcblBlock.addresses;
+          // Extract entry addresses from VCBL (Req 3.4)
+          const entryAddresses = vcblBlock.addresses;
 
-        // Update in-memory vault with parsed data for consistency,
-        // but only if the VCBL actually has records. When the VCBL is stale
-        // (e.g. block store update was skipped), preserve in-memory state.
-        if (propertyRecords.length > 0 || vault.entries.size === 0) {
-          vault.propertyRecords = [...propertyRecords];
-          vault.blockIds = entryAddresses.map((addr) => addr.toHex());
+          // Update in-memory vault with parsed data for consistency,
+          // but only if the VCBL actually has records. When the VCBL is stale
+          // (e.g. block store update was skipped), preserve in-memory state.
+          if (propertyRecords.length > 0 || vault.entries.size === 0) {
+            vault.propertyRecords = [...propertyRecords];
+            vault.blockIds = entryAddresses.map((addr) => addr.toHex());
+          }
+
+          return {
+            metadata: { ...vault.metadata },
+            propertyRecords: [...vault.propertyRecords],
+          };
+        } catch {
+          // VCBL parsing failed (e.g. corrupt block, decryption mismatch,
+          // stale VCBL data). Fall through to return in-memory data instead
+          // of crashing the entire openVault call.
         }
-
-        return {
-          metadata: { ...vault.metadata },
-          propertyRecords: [...vault.propertyRecords],
-        };
       }
     }
 
@@ -1185,15 +1191,15 @@ export class BrightPassService<TID extends PlatformID = Uint8Array> {
       );
     }
 
-    vault.quorumThreshold = threshold;
-    vault.quorumApprovals = new Set();
+    vault.trustThreshold = threshold;
+    vault.trustApprovals = new Set();
     vault.metadata.updatedAt = new Date();
 
     await vault.auditLogger.log({
       id: uuidv4(),
       vaultId,
       memberId: vault.metadata.ownerId,
-      action: AuditAction.QUORUM_CONFIGURED,
+      action: AuditAction.BRIGHT_TRUST_CONFIGURED,
       metadata: { quorumThreshold: String(threshold) },
     });
   }
@@ -1214,17 +1220,17 @@ export class BrightPassService<TID extends PlatformID = Uint8Array> {
       throw new VaultAuthenticationError();
     }
 
-    vault.quorumApprovals.add(memberId);
-    return vault.quorumApprovals.size >= vault.quorumThreshold;
+    vault.trustApprovals.add(memberId);
+    return vault.trustApprovals.size >= vault.trustThreshold;
   }
 
   /**
-   * Check whether the quorum threshold has been met for a vault.
+   * Check whether the quorum trust threshold has been met for a vault.
    */
-  isQuorumMet(vaultId: string): boolean {
+  isQuorumTrustMet(vaultId: string): boolean {
     const vault = this.getVaultOrThrow(vaultId);
-    if (vault.quorumThreshold === 0) return true;
-    return vault.quorumApprovals.size >= vault.quorumThreshold;
+    if (vault.trustThreshold === 0) return true;
+    return vault.trustApprovals.size >= vault.trustThreshold;
   }
 
   /**
@@ -1232,7 +1238,7 @@ export class BrightPassService<TID extends PlatformID = Uint8Array> {
    */
   resetQuorumApprovals(vaultId: string): void {
     const vault = this.getVaultOrThrow(vaultId);
-    vault.quorumApprovals = new Set();
+    vault.trustApprovals = new Set();
   }
 
   // ─── Master Password ─────────────────────────────────────────

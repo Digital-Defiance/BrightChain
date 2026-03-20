@@ -49,15 +49,24 @@ export class BrightDbCollection<T extends BsonDocument = BsonDocument>
     return this._collection.insertOne(doc, options);
   }
 
-  async insertMany(docs: T[], options?: WriteOptions): Promise<InsertManyResult> {
+  async insertMany(
+    docs: T[],
+    options?: WriteOptions,
+  ): Promise<InsertManyResult> {
     return this._collection.insertMany(docs, options);
   }
 
-  async findOne(filter?: FilterQuery<T>, options?: FindOptions<T>): Promise<T | null> {
+  async findOne(
+    filter?: FilterQuery<T>,
+    options?: FindOptions<T>,
+  ): Promise<T | null> {
     return this._collection.findOne(filter, options);
   }
 
-  find(filter?: FilterQuery<T>, options?: FindOptions<T>): T[] | PromiseLike<T[]> {
+  find(
+    filter?: FilterQuery<T>,
+    options?: FindOptions<T>,
+  ): T[] | PromiseLike<T[]> {
     return this._collection.find(filter, options);
   }
 
@@ -81,11 +90,17 @@ export class BrightDbCollection<T extends BsonDocument = BsonDocument>
     return this._collection.updateMany(filter, update, options);
   }
 
-  async deleteOne(filter: FilterQuery<T>, options?: WriteOptions): Promise<DeleteResult> {
+  async deleteOne(
+    filter: FilterQuery<T>,
+    options?: WriteOptions,
+  ): Promise<DeleteResult> {
     return this._collection.deleteOne(filter, options);
   }
 
-  async deleteMany(filter: FilterQuery<T>, options?: WriteOptions): Promise<DeleteResult> {
+  async deleteMany(
+    filter: FilterQuery<T>,
+    options?: WriteOptions,
+  ): Promise<DeleteResult> {
     return this._collection.deleteMany(filter, options);
   }
 

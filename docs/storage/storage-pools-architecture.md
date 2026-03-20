@@ -297,7 +297,7 @@ interface IPoolACL<TId = string> {
 
 ACLs are stored as signed blocks in the block store itself. This makes them tamper-evident, auditable, and subject to the same replication and durability mechanisms as data blocks. Each ACL update references the previous ACL's block ID, forming an auditable chain.
 
-### Quorum-Based Updates
+### BrightTrust-Based Updates
 
 ACL changes require majority approval from current Admins:
 
@@ -518,7 +518,7 @@ const acl = await aclStore.bootstrapPool('secure-pool', nodeId, privateKey, {
   publicWrite: false,
 });
 
-// Add a member with Read + Write permissions (single-admin, no quorum needed)
+// Add a member with Read + Write permissions (single-admin, no BrightTrust needed)
 await aclStore.addMember(
   'secure-pool',
   {

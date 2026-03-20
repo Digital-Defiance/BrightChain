@@ -73,12 +73,12 @@ describe('Feature: unified-gossip-delivery, Property 10: Retry with exponential 
       announceCBLIndexDelete: async () => {},
       announceHeadUpdate: async () => {},
       announceACLUpdate: async () => {},
-      announceQuorumProposal: async () => {},
-      announceQuorumVote: async () => {},
-      onQuorumProposal: () => {},
-      offQuorumProposal: () => {},
-      onQuorumVote: () => {},
-      offQuorumVote: () => {},
+      announceBrightTrustProposal: async () => {},
+      announceBrightTrustVote: async () => {},
+      onBrightTrustProposal: () => {},
+      offBrightTrustProposal: () => {},
+      onBrightTrustVote: () => {},
+      offBrightTrustVote: () => {},
     };
     return stub;
   }
@@ -633,12 +633,12 @@ describe('Feature: unified-gossip-delivery, Property 11: Max retries exhausted m
       announceCBLIndexDelete: async () => {},
       announceHeadUpdate: async () => {},
       announceACLUpdate: async () => {},
-      announceQuorumProposal: async () => {},
-      announceQuorumVote: async () => {},
-      onQuorumProposal: () => {},
-      offQuorumProposal: () => {},
-      onQuorumVote: () => {},
-      offQuorumVote: () => {},
+      announceBrightTrustProposal: async () => {},
+      announceBrightTrustVote: async () => {},
+      onBrightTrustProposal: () => {},
+      offBrightTrustProposal: () => {},
+      onBrightTrustVote: () => {},
+      offBrightTrustVote: () => {},
     };
     return stub;
   }

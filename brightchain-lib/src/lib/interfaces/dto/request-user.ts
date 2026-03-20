@@ -1,14 +1,7 @@
-import { IRole } from '../role';
-
-export interface IRequestUserDTO {
-  id: string;
-  roles: Array<IRole>;
-  username: string;
-  email: string;
-  expireMemoryMnemonicSeconds?: number;
-  expireMemoryWalletSeconds?: number;
-  timezone: string;
-  siteLanguage: string;
-  lastLogin?: string;
-  emailVerified: boolean;
-}
+/**
+ * Re-export IRequestUserDTO from the upstream suite-core-lib.
+ * This ensures brightchain-lib's IRequestUserDTO is structurally identical
+ * to the upstream version, avoiding type conflicts in consuming projects
+ * (e.g. brightchain-api) that import from both packages.
+ */
+export type { IRequestUserDTO } from '@digitaldefiance/suite-core-lib';

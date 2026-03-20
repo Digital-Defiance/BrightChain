@@ -49,12 +49,12 @@ describe('BrightChainBackupCodeService Unit Tests', () => {
     jest.restoreAllMocks();
   });
 
-  it('getSystemUser throws before setSystemUser is called', () => {
+  it('getSystemUser throws before setSystemUser is called', async () => {
     const { service } = createService();
     // generateCodes internally calls getSystemUser()
-    expect(service.generateCodes(new Uint8Array(12) as any)).rejects.toThrow(
-      'System user not available',
-    );
+    await expect(
+      service.generateCodes(new Uint8Array(12) as unknown as Uint8Array),
+    ).rejects.toThrow('System user not available');
   });
 
   it('getCodeCount returns 0 when no backup codes exist', async () => {

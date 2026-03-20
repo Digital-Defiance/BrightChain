@@ -182,7 +182,7 @@ describe('TCBL Detection and Polymorphic Handling', () => {
         expect(cblRef.entries).toHaveLength(1);
         expect(cblRef.entries[0].fileName).toBe('test.txt');
       } else {
-        fail('isTcbl should have returned true');
+        throw new Error('isTcbl should have returned true');
       }
     });
 

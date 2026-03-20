@@ -84,6 +84,7 @@ describe('SecureEnclaveKeyring E2E', () => {
     fn: () => Promise<void>,
     timeout?: number,
   ) => {
+    /* eslint-disable jest/valid-title */
     it(
       name,
       async () => {
@@ -95,6 +96,7 @@ describe('SecureEnclaveKeyring E2E', () => {
       },
       timeout,
     );
+    /* eslint-enable jest/valid-title */
   };
 
   // For tests that only need macOS Apple Silicon (not full availability)

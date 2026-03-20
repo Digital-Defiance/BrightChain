@@ -7,7 +7,7 @@ nav_order: 1
 
 ## Overview
 
-BrightPass is a next-generation password keychain system built on BrightChain's encrypted block storage infrastructure. It delivers 1Password-competitive features—vault management, credential storage, password generation, TOTP/2FA, breach detection, and emergency access—while leveraging BrightChain's Owner-Free Filesystem, ECIES encryption (AES-256-GCM), BIP39/32 key derivation, Shamir's Secret Sharing, and Quorum governance.
+BrightPass is a next-generation password keychain system built on BrightChain's encrypted block storage infrastructure. It delivers 1Password-competitive features—vault management, credential storage, password generation, TOTP/2FA, breach detection, and emergency access—while leveraging BrightChain's Owner-Free Filesystem, ECIES encryption (AES-256-GCM), BIP39/32 key derivation, Shamir's Secret Sharing, and BrightTrust governance.
 
 The core innovation is the **VCBL (Vault Constituent Block List)**, which extends BrightChain's ExtendedCBL with a vault header and a parallel array of Entry Property Records. This design enables vault listing, searching, and filtering by reading only the VCBL—individual entry blocks are decrypted on demand.
 
@@ -258,10 +258,10 @@ Multi-member vault access using ECIES encryption:
 - Update VCBL to remove revoked member
 - Distribute new key only to remaining members
 
-**Quorum Governance:**
+**BrightTrust Governance:**
 - Configurable threshold for vault access
 - Requires T of N member approvals
-- Enforced via BrightChain's Quorum system
+- Enforced via BrightChain's BrightTrust system
 
 ## Encryption Model
 
@@ -579,7 +579,7 @@ BrightPass has achieved **enterprise-grade production-ready status** with compre
 - ✅ Entry CRUD operations
 - ✅ Attachment handling (block store integration)
 - ✅ Vault sharing and revocation
-- ✅ Quorum governance
+- ✅ BrightTrust governance
 - ✅ Emergency access (Shamir)
 - ✅ **Block store refactor complete** (IBlockStore interface)
 - ✅ **80+ property-based tests** (all passing)

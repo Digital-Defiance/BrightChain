@@ -7,6 +7,9 @@ jest.mock('@digitaldefiance/ecies-lib', () => ({
   IECIESConfig: {},
   Member: { newMember: jest.fn() },
   EmailString: jest.fn(),
+  CrcService: jest.fn().mockImplementation(() => ({
+    crc16: jest.fn(() => new Uint8Array(2)),
+  })),
 }));
 
 // Mock suite-core-lib — its module-level code instantiates ObjectIdProvider
@@ -27,17 +30,28 @@ jest.mock('@brightchain/brightchain-react-components', () => ({
   BrightChainSoupDemo: () => (
     <div data-testid="soup-demo">BrightChainSoupDemo Mock</div>
   ),
-  BrightChainLogo: (props: Record<string, unknown>) => (
+  BrightChainLogo: (_props: Record<string, unknown>) => (
     <div data-testid="brightchain-logo">BrightChainLogo Mock</div>
   ),
-  BrightChainSubLogo: (props: Record<string, unknown>) => (
-    <span data-testid="brightchain-sub-logo">{String((props as any).subText || '')}</span>
+  BrightChainLogoI18N: (_props: Record<string, unknown>) => (
+    <div data-testid="brightchain-logo-i18n">BrightChainLogoI18N Mock</div>
   ),
-  BrightPassDemo: () => <div data-testid="brightpass-demo">BrightPassDemo Mock</div>,
+  BrightChainSubLogo: (props: Record<string, unknown>) => (
+    <span data-testid="brightchain-sub-logo">
+      {String((props as unknown as Record<string, unknown>).subText || '')}
+    </span>
+  ),
+  BrightPassDemo: () => (
+    <div data-testid="brightpass-demo">BrightPassDemo Mock</div>
+  ),
   DatabaseDemo: () => <div data-testid="database-demo">DatabaseDemo Mock</div>,
   IdentityDemo: () => <div data-testid="identity-demo">IdentityDemo Mock</div>,
-  MessagingDemo: () => <div data-testid="messaging-demo">MessagingDemo Mock</div>,
-  StoragePoolsDemo: () => <div data-testid="storage-pools-demo">StoragePoolsDemo Mock</div>,
+  MessagingDemo: () => (
+    <div data-testid="messaging-demo">MessagingDemo Mock</div>
+  ),
+  StoragePoolsDemo: () => (
+    <div data-testid="storage-pools-demo">StoragePoolsDemo Mock</div>
+  ),
 }));
 
 // Mock brightchain-lib to prevent i18n initialization
@@ -51,6 +65,12 @@ jest.mock('@brightchain/brightchain-lib', () => ({
   ),
   registerI18nComponentPackage: jest.fn(),
   ISuiteCoreConstants: {},
+  BrightChainFeatures: {
+    BrightChat: 'BrightChat',
+    BrightHub: 'BrightHub',
+    BrightMail: 'BrightMail',
+    BrightPass: 'BrightPass',
+  },
 
   CONSTANTS: {
     THEME_COLORS: {
@@ -75,6 +95,7 @@ jest.mock('@brightchain/brightchain-lib', () => ({
     ERROR_RED: '#d32f2f',
     ALERT_ORANGE: '#ed6c02',
     SECURE_GREEN: '#2e7d32',
+    TAGLINE_COLOR: '#666666',
   },
   i18nEngine: {
     translate: jest.fn((key: string) => key),
@@ -173,8 +194,18 @@ jest.mock('@digitaldefiance/express-suite-react-components', () => ({
     setLanguage: jest.fn(),
   }),
   createMenuType: (value: string) => value,
-  MenuTypes: { SideMenu: 'SideMenu' },
+  MenuTypes: { SideMenu: 'SideMenu', UserMenu: 'UserMenu' },
   IMenuConfig: {},
+  useMenu: () => ({
+    registerMenuOption: jest.fn(),
+    unregisterMenuOption: jest.fn(),
+    menuOptions: [],
+  }),
+  useAuth: () => ({
+    admin: false,
+    userData: null,
+    isAuthenticated: false,
+  }),
 }));
 
 jest.mock('@digitaldefiance/i18n-lib', () => ({

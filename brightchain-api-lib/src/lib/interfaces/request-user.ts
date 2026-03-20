@@ -34,6 +34,10 @@ export interface IRequestUser<
    */
   email: string;
   /**
+   * The optional display name of the user
+   */
+  displayName?: string;
+  /**
    * How long to keep the mnemonic in memory (in seconds)
    */
   expireMemoryMnemonicSeconds?: number;

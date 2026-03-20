@@ -11,10 +11,10 @@ import {
 } from '@digitaldefiance/ecies-lib';
 import type { CSPRNGType, Shares } from '@digitaldefiance/secrets';
 import * as secretsModule from '@digitaldefiance/secrets';
+import { BrightTrustDataRecord } from '../brightTrustDataRecord';
 import { SEALING } from '../constants';
 import { SealingErrorType } from '../enumerations/sealingErrorType';
 import { SealingError } from '../errors/sealingError';
-import { QuorumDataRecord } from '../quorumDataRecord';
 import { Validator } from '../utils/validator';
 
 // Handle both ESM default export and CommonJS module.exports patterns
@@ -26,7 +26,7 @@ const secrets = (secretsModule as any).default || secretsModule;
  * - Splitting secrets into shares using Shamir's Secret Sharing
  * - Encrypting shares for members using ECIES
  * - Recombining shares to recover secrets
- * - Managing quorum-based data access
+ * - Managing BrightTrust-based data access
  */
 
 export class SealingService<TID extends PlatformID = Uint8Array> {
@@ -40,12 +40,12 @@ export class SealingService<TID extends PlatformID = Uint8Array> {
     this.enhancedProvider = enhancedProvider;
   }
 
-  /** Public accessor for the ECIES service (needed by QuorumStateMachine for member resolution). */
+  /** Public accessor for the ECIES service (needed by BrightTrustStateMachine for member resolution). */
   public get eciesServiceRef(): ECIESService<TID> {
     return this.eciesService;
   }
 
-  /** Public accessor for the enhanced ID provider (needed by QuorumStateMachine for member resolution). */
+  /** Public accessor for the enhanced ID provider (needed by BrightTrustStateMachine for member resolution). */
   public get enhancedProviderRef(): TypedIdProviderWrapper<TID> {
     return this.enhancedProvider;
   }
@@ -107,12 +107,11 @@ export class SealingService<TID extends PlatformID = Uint8Array> {
   }
 
   /**
-   * Validate inputs for quorum sealing operations
+   * Validate inputs for BrightTrust sealing operations
    */
-  public static validateQuorumSealInputs<TID extends PlatformID = Uint8Array>(
-    amongstMembers: Member<TID>[],
-    sharesRequired?: number,
-  ) {
+  public static validateBrightTrustSealInputs<
+    TID extends PlatformID = Uint8Array,
+  >(amongstMembers: Member<TID>[], sharesRequired?: number) {
     if (amongstMembers.length < SEALING.MIN_SHARES) {
       throw new SealingError(SealingErrorType.NotEnoughMembersToUnlock);
     }
@@ -153,23 +152,26 @@ export class SealingService<TID extends PlatformID = Uint8Array> {
    * @param data The data to seal
    * @param amongstMembers The members to distribute shares to
    * @param sharesRequired Optional number of shares required to unseal (defaults to all members)
-   * @returns QuorumDataRecord containing the sealed data and encrypted shares
+   * @returns BrightTrustDataRecord containing the sealed data and encrypted shares
    * @throws {SealingError} If validation fails or sealing operation fails
    */
-  public async quorumSeal<T>(
+  public async brightTrustSeal<T>(
     agent: Member<TID>,
     data: T,
     amongstMembers: Member<TID>[],
     sharesRequired?: number,
-  ): Promise<QuorumDataRecord<TID>> {
+  ): Promise<BrightTrustDataRecord<TID>> {
     // Validate required inputs
-    Validator.validateRequired(agent, 'agent', 'quorumSeal');
-    Validator.validateRequired(data, 'data', 'quorumSeal');
+    Validator.validateRequired(agent, 'agent', 'brightTrustSeal');
+    Validator.validateRequired(data, 'data', 'brightTrustSeal');
 
     if (!amongstMembers || !Array.isArray(amongstMembers)) {
       throw new SealingError(SealingErrorType.InvalidMemberArray);
     }
-    SealingService.validateQuorumSealInputs(amongstMembers, sharesRequired);
+    SealingService.validateBrightTrustSealInputs(
+      amongstMembers,
+      sharesRequired,
+    );
     sharesRequired = sharesRequired ?? amongstMembers.length;
     const aesGcmService: AESGCMService = new AESGCMService();
     const key = crypto.getRandomValues(
@@ -197,7 +199,7 @@ export class SealingService<TID extends PlatformID = Uint8Array> {
       amongstMembers,
     );
 
-    return new QuorumDataRecord<TID>(
+    return new BrightTrustDataRecord<TID>(
       agent,
       amongstMembers.map((m) => m.id),
       sharesRequired,
@@ -220,17 +222,17 @@ export class SealingService<TID extends PlatformID = Uint8Array> {
    * @param data The data to seal
    * @param amongstMembers The members to distribute shares to (can be 1)
    * @param threshold Optional number of shares required to unseal (defaults to member count, minimum 1)
-   * @returns QuorumDataRecord containing the sealed data and encrypted shares
+   * @returns BrightTrustDataRecord containing the sealed data and encrypted shares
    * @throws {SealingError} If validation fails or sealing operation fails
    */
-  public async quorumSealBootstrap<T>(
+  public async brightTrustSealBootstrap<T>(
     agent: Member<TID>,
     data: T,
     amongstMembers: Member<TID>[],
     threshold?: number,
-  ): Promise<QuorumDataRecord<TID>> {
-    Validator.validateRequired(agent, 'agent', 'quorumSealBootstrap');
-    Validator.validateRequired(data, 'data', 'quorumSealBootstrap');
+  ): Promise<BrightTrustDataRecord<TID>> {
+    Validator.validateRequired(agent, 'agent', 'brightTrustSealBootstrap');
+    Validator.validateRequired(data, 'data', 'brightTrustSealBootstrap');
 
     if (!amongstMembers || !Array.isArray(amongstMembers)) {
       throw new SealingError(SealingErrorType.InvalidMemberArray);
@@ -278,7 +280,7 @@ export class SealingService<TID extends PlatformID = Uint8Array> {
       );
     }
 
-    return new QuorumDataRecord<TID>(
+    return new BrightTrustDataRecord<TID>(
       agent,
       amongstMembers.map((m) => m.id),
       threshold,
@@ -427,14 +429,14 @@ export class SealingService<TID extends PlatformID = Uint8Array> {
   }
 
   /**
-   * Given a quorum sealed document, decrypt the shares using the given members' private keys
+   * Given a BrightTrust sealed document, decrypt the shares using the given members' private keys
    * @param document The sealed document
    * @param membersWithPrivateKey Members with loaded private keys
    * @returns Decrypted shares
    * @throws {SealingError} If validation fails or decryption fails
    */
   public async decryptShares(
-    document: QuorumDataRecord<TID>,
+    document: BrightTrustDataRecord<TID>,
     membersWithPrivateKey: Member<TID>[],
   ): Promise<Shares> {
     // Validate required inputs
@@ -482,22 +484,22 @@ export class SealingService<TID extends PlatformID = Uint8Array> {
    * @returns The unsealed data
    * @throws {SealingError} If validation fails or unsealing fails
    */
-  public async quorumUnseal<T>(
-    document: QuorumDataRecord<TID>,
+  public async brightTrustUnseal<T>(
+    document: BrightTrustDataRecord<TID>,
     membersWithPrivateKey: Member<TID>[],
   ): Promise<T> {
     // Validate required inputs
-    Validator.validateRequired(document, 'document', 'quorumUnseal');
+    Validator.validateRequired(document, 'document', 'brightTrustUnseal');
     Validator.validateRequired(
       membersWithPrivateKey,
       'membersWithPrivateKey',
-      'quorumUnseal',
+      'brightTrustUnseal',
     );
 
     if (membersWithPrivateKey.length < document.sharesRequired) {
       throw new SealingError(SealingErrorType.NotEnoughMembersToUnlock);
     }
-    return await this.quorumUnsealWithShares<T>(
+    return await this.brightTrustUnsealWithShares<T>(
       document,
       await this.decryptShares(document, membersWithPrivateKey),
     );
@@ -510,16 +512,20 @@ export class SealingService<TID extends PlatformID = Uint8Array> {
    * @returns The unsealed data
    * @throws {SealingError} If validation fails or unsealing fails
    */
-  public async quorumUnsealWithShares<T>(
-    document: QuorumDataRecord<TID>,
+  public async brightTrustUnsealWithShares<T>(
+    document: BrightTrustDataRecord<TID>,
     recoveredShares: Shares,
   ): Promise<T> {
     // Validate required inputs
-    Validator.validateRequired(document, 'document', 'quorumUnsealWithShares');
+    Validator.validateRequired(
+      document,
+      'document',
+      'brightTrustUnsealWithShares',
+    );
     Validator.validateRequired(
       recoveredShares,
       'recoveredShares',
-      'quorumUnsealWithShares',
+      'brightTrustUnsealWithShares',
     );
 
     try {

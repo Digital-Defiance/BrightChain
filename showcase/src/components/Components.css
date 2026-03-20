@@ -265,7 +265,6 @@
 .component-description {
   color: var(--text-secondary);
   line-height: 1.6;
-  flex-grow: 1;
 }
 
 .component-stats {
@@ -292,6 +291,7 @@
   flex-direction: column;
   gap: 0.5rem;
   padding: 0;
+  flex-grow: 1;
 }
 
 .component-highlights li {

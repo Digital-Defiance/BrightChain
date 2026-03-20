@@ -174,7 +174,7 @@ describe('DeviceProvisioningService - Property Tests', () => {
               0,
             );
             // If we reach here, the test should fail
-            fail('Expected DeviceKeyStorageError to be thrown');
+            throw new Error('Expected DeviceKeyStorageError to be thrown');
           } catch (error) {
             expect(error).toBeInstanceOf(DeviceKeyStorageError);
           }

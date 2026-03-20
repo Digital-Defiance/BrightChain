@@ -19,9 +19,9 @@ export const BritishEnglishStrings: StringsCollection<BrightChainStringKey> = {
   [BrightChainStrings.Error_BlockServiceError_Uninitialized]:
     'BlockService subsystem not initialised',
 
-  // Quorum Error - "initialized" -> "initialised"
-  [BrightChainStrings.Error_QuorumError_Uninitialized]:
-    'Quorum subsystem not initialised',
+  // BrightTrust Error - "initialized" -> "initialised"
+  [BrightChainStrings.Error_BrightTrustError_Uninitialized]:
+    'BrightTrust subsystem not initialised',
 
   // Document Error - "initialized" -> "initialised"
   [BrightChainStrings.Error_DocumentError_AlreadyInitialized]:

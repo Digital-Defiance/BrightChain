@@ -206,15 +206,25 @@ function matchesType(value: unknown, expectedType: string): boolean {
 }
 
 /**
- * Deep equality check (handles primitives, arrays, plain objects, Dates).
+ * Deep equality check (handles primitives, arrays, plain objects, Dates, Uint8Array/Buffer).
  */
 export function deepEquals(a: unknown, b: unknown): boolean {
   if (a === b) return true;
-  if (a === null || b === null || a === undefined || b === undefined)
-    return a === b;
+  // Treat null and undefined as equal (MongoDB semantics: querying for null
+  // matches documents where the field is missing or explicitly null).
+  if ((a === null || a === undefined) && (b === null || b === undefined))
+    return true;
   if (typeof a !== typeof b) return false;
   if (a instanceof Date && b instanceof Date)
     return a.getTime() === b.getTime();
+  // Handle Uint8Array/Buffer comparison (including GuidBuffer which extends Buffer)
+  if (a instanceof Uint8Array && b instanceof Uint8Array) {
+    if (a.length !== b.length) return false;
+    for (let i = 0; i < a.length; i++) {
+      if (a[i] !== b[i]) return false;
+    }
+    return true;
+  }
   if (Array.isArray(a) && Array.isArray(b)) {
     if (a.length !== b.length) return false;
     return a.every((item, i) => deepEquals(item, b[i]));

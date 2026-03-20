@@ -7,7 +7,7 @@ nav_order: 5
 
 ## Overview
 
-The `StaticHelpersChecksum` class provides static helper functions for BrightChain and BrightChain Quorum. It includes utilities for encryption, Shamir's Secret Sharing, ECDSA, BIP39 Mnemonic generation, AES encryption, and RSA key generation, encryption/decryption.
+The `StaticHelpersChecksum` class provides static helper functions for BrightChain and BrightChain BrightTrust. It includes utilities for encryption, Shamir's Secret Sharing, ECDSA, BIP39 Mnemonic generation, AES encryption, and RSA key generation, encryption/decryption.
 
 ## Methods
 
@@ -110,4 +110,4 @@ The `StaticHelpersChecksum` class provides static helper functions for BrightCha
 
 ## Conclusion
 
-The `StaticHelpersChecksum` class provides essential utilities for checksum calculations, validation, and conversion, ensuring data integrity and security in the BrightChain and BrightChain Quorum systems.
+The `StaticHelpersChecksum` class provides essential utilities for checksum calculations, validation, and conversion, ensuring data integrity and security in the BrightChain and BrightChain BrightTrust systems.

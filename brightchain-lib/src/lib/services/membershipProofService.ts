@@ -1,6 +1,6 @@
 /**
  * @fileoverview MembershipProofService — generates and verifies ring signatures
- * proving quorum membership without revealing which specific member created content.
+ * proving BrightTrust membership without revealing which specific member created content.
  *
  * Uses an Abe-Ohkubo-Suzuki (AOS) style ring signature scheme built on
  * secp256k1 ECDSA primitives. The proof is bound to a specific content hash,
@@ -182,7 +182,7 @@ function scalarMultiply(a: Uint8Array, b: Uint8Array): Uint8Array {
 
 /**
  * MembershipProofService generates and verifies ring signatures
- * proving quorum membership without revealing which member.
+ * proving BrightTrust membership without revealing which member.
  *
  * The ring signature scheme ensures:
  * - Any member can generate a valid proof
@@ -203,7 +203,7 @@ export class MembershipProofService<TID extends PlatformID = Uint8Array>
 
   /**
    * Generate a ring signature proving the signer is one of the current
-   * quorum members. The proof is bound to the specific content hash.
+   * BrightTrust members. The proof is bound to the specific content hash.
    *
    * Algorithm (AOS ring signature):
    * 1. Find signer's index s in the key ring
@@ -215,7 +215,7 @@ export class MembershipProofService<TID extends PlatformID = Uint8Array>
    *    r_s = k - c_s * privateKey mod n
    *
    * @param signerPrivateKey - The signer's secp256k1 private key (32 bytes)
-   * @param memberPublicKeys - Public keys of all current quorum members
+   * @param memberPublicKeys - Public keys of all current BrightTrust members
    * @param contentHash - Hash of the content being signed
    * @returns The serialized ring signature proof
    * @throws Error if signer is not in the member set or member set is empty
@@ -293,7 +293,7 @@ export class MembershipProofService<TID extends PlatformID = Uint8Array>
    * 3. The ring is valid if the recomputed c_0 matches the stored c_0
    *
    * @param proof - The serialized ring signature proof
-   * @param memberPublicKeys - Public keys of all current quorum members
+   * @param memberPublicKeys - Public keys of all current BrightTrust members
    * @param contentHash - Hash of the content the proof should be bound to
    * @returns True if the proof is valid
    */

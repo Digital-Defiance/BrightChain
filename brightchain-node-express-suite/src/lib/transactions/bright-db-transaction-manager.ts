@@ -72,7 +72,10 @@ export class BrightDbTransactionManager {
             resultPromise,
             new Promise<never>((_, reject) =>
               setTimeout(
-                () => reject(new Error(`Transaction timed out after ${timeoutMs}ms`)),
+                () =>
+                  reject(
+                    new Error(`Transaction timed out after ${timeoutMs}ms`),
+                  ),
                 timeoutMs,
               ),
             ),

@@ -75,6 +75,16 @@ function createStoreForErrorTests(): S3BlockStore {
   });
 }
 
+/** Helper to capture a thrown error without conditional expects */
+function getThrown(fn: () => unknown): unknown {
+  try {
+    fn();
+  } catch (e) {
+    return e;
+  }
+  return undefined;
+}
+
 // ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
@@ -167,14 +177,11 @@ describe('S3BlockStore', () => {
     it('throws CloudAuthenticationFailed with no auth config', () => {
       expect(() => new S3BlockStore({ ...baseConfig })).toThrow(StoreError);
 
-      try {
-        new S3BlockStore({ ...baseConfig });
-      } catch (e) {
-        expect(e).toBeInstanceOf(StoreError);
-        expect((e as StoreError).type).toBe(
-          StoreErrorType.CloudAuthenticationFailed,
-        );
-      }
+      const error = getThrown(() => new S3BlockStore({ ...baseConfig }));
+      expect(error).toBeInstanceOf(StoreError);
+      expect((error as StoreError).type).toBe(
+        StoreErrorType.CloudAuthenticationFailed,
+      );
     });
 
     it('throws CloudAuthenticationFailed with only accessKeyId (no secret)', () => {
@@ -186,17 +193,17 @@ describe('S3BlockStore', () => {
           }),
       ).toThrow(StoreError);
 
-      try {
-        new S3BlockStore({
-          ...baseConfig,
-          accessKeyId: 'AKIAIOSFODNN7EXAMPLE',
-        });
-      } catch (e) {
-        expect(e).toBeInstanceOf(StoreError);
-        expect((e as StoreError).type).toBe(
-          StoreErrorType.CloudAuthenticationFailed,
-        );
-      }
+      const error = getThrown(
+        () =>
+          new S3BlockStore({
+            ...baseConfig,
+            accessKeyId: 'AKIAIOSFODNN7EXAMPLE',
+          }),
+      );
+      expect(error).toBeInstanceOf(StoreError);
+      expect((error as StoreError).type).toBe(
+        StoreErrorType.CloudAuthenticationFailed,
+      );
     });
   });
 
@@ -328,19 +335,17 @@ describe('S3BlockStore', () => {
     it('createS3Store throws FactoryNotRegistered when no factory is registered', () => {
       BlockStoreFactory.clearS3StoreFactory();
 
-      try {
+      const error = getThrown(() =>
         BlockStoreFactory.createS3Store({
           region: 'us-east-1',
           containerOrBucketName: 'test',
           blockSize: BlockSize.Small,
-        });
-        fail('Expected StoreError to be thrown');
-      } catch (e) {
-        expect(e).toBeInstanceOf(StoreError);
-        expect((e as StoreError).type).toBe(
-          StoreErrorType.FactoryNotRegistered,
-        );
-      }
+        }),
+      );
+      expect(error).toBeInstanceOf(StoreError);
+      expect((error as StoreError).type).toBe(
+        StoreErrorType.FactoryNotRegistered,
+      );
     });
   });
 });

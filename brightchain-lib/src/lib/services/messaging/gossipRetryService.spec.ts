@@ -136,7 +136,7 @@ describe('GossipRetryService', () => {
     it('should set nextRetryAt to now + initialTimeoutMs', () => {
       const metadata = createSampleMetadata();
       const now = new Date('2024-01-01T00:00:00Z');
-      jest.setSystemTime(now);
+      jest.setSystemTime(now.getTime());
 
       retryService.trackDelivery('msg-1', [bid('block-1')], metadata);
 
@@ -387,7 +387,7 @@ describe('GossipRetryService', () => {
   describe('checkRetries (retry loop)', () => {
     it('should re-announce message after timeout', () => {
       const now = new Date('2024-01-01T00:00:00Z');
-      jest.setSystemTime(now);
+      jest.setSystemTime(now.getTime());
 
       const metadata = createSampleMetadata();
       retryService.trackDelivery(
@@ -397,7 +397,7 @@ describe('GossipRetryService', () => {
       );
 
       // Advance past the initial timeout (30s)
-      jest.setSystemTime(new Date(now.getTime() + 31000));
+      jest.setSystemTime(now.getTime() + 31000);
       retryService.checkRetries();
 
       expect(gossipService.announceMessage).toHaveBeenCalledWith(
@@ -408,13 +408,13 @@ describe('GossipRetryService', () => {
 
     it('should not re-announce before timeout', () => {
       const now = new Date('2024-01-01T00:00:00Z');
-      jest.setSystemTime(now);
+      jest.setSystemTime(now.getTime());
 
       const metadata = createSampleMetadata();
       retryService.trackDelivery('msg-1', [bid('block-1')], metadata);
 
       // Advance only 20s (before 30s timeout)
-      jest.setSystemTime(new Date(now.getTime() + 20000));
+      jest.setSystemTime(now.getTime() + 20000);
       retryService.checkRetries();
 
       expect(gossipService.announceMessage).not.toHaveBeenCalled();
@@ -422,13 +422,13 @@ describe('GossipRetryService', () => {
 
     it('should increment retry count after each retry', () => {
       const now = new Date('2024-01-01T00:00:00Z');
-      jest.setSystemTime(now);
+      jest.setSystemTime(now.getTime());
 
       const metadata = createSampleMetadata();
       retryService.trackDelivery('msg-1', [bid('block-1')], metadata);
 
       // First retry at 30s
-      jest.setSystemTime(new Date(now.getTime() + 31000));
+      jest.setSystemTime(now.getTime() + 31000);
       retryService.checkRetries();
 
       const pending = retryService.getPendingDelivery('msg-1');
@@ -437,13 +437,13 @@ describe('GossipRetryService', () => {
 
     it('should use exponential backoff: 30s, 60s, 120s, 240s, 240s (capped)', () => {
       const now = new Date('2024-01-01T00:00:00Z');
-      jest.setSystemTime(now);
+      jest.setSystemTime(now.getTime());
 
       const metadata = createSampleMetadata();
       retryService.trackDelivery('msg-1', [bid('block-1')], metadata);
 
       // Retry 1: after 30s, next retry at +30s
-      jest.setSystemTime(new Date(now.getTime() + 31000));
+      jest.setSystemTime(now.getTime() + 31000);
       retryService.checkRetries();
       let pending = retryService.getPendingDelivery('msg-1')!;
       expect(pending.retryCount).toBe(1);
@@ -452,7 +452,7 @@ describe('GossipRetryService', () => {
       expect(pending.nextRetryAt.getTime()).toBe(retry1Time + 30000);
 
       // Retry 2: after 30s from retry 1, next retry at +60s
-      jest.setSystemTime(new Date(retry1Time + 31000));
+      jest.setSystemTime(retry1Time + 31000);
       retryService.checkRetries();
       pending = retryService.getPendingDelivery('msg-1')!;
       expect(pending.retryCount).toBe(2);
@@ -461,7 +461,7 @@ describe('GossipRetryService', () => {
       expect(pending.nextRetryAt.getTime()).toBe(retry2Time + 60000);
 
       // Retry 3: after 60s from retry 2, next retry at +120s
-      jest.setSystemTime(new Date(retry2Time + 61000));
+      jest.setSystemTime(retry2Time + 61000);
       retryService.checkRetries();
       pending = retryService.getPendingDelivery('msg-1')!;
       expect(pending.retryCount).toBe(3);
@@ -470,7 +470,7 @@ describe('GossipRetryService', () => {
       expect(pending.nextRetryAt.getTime()).toBe(retry3Time + 120000);
 
       // Retry 4: after 120s from retry 3, next retry at +240s
-      jest.setSystemTime(new Date(retry3Time + 121000));
+      jest.setSystemTime(retry3Time + 121000);
       retryService.checkRetries();
       pending = retryService.getPendingDelivery('msg-1')!;
       expect(pending.retryCount).toBe(4);
@@ -479,7 +479,7 @@ describe('GossipRetryService', () => {
       expect(pending.nextRetryAt.getTime()).toBe(retry4Time + 240000);
 
       // Retry 5: after 240s from retry 4, next retry at +240s (capped)
-      jest.setSystemTime(new Date(retry4Time + 241000));
+      jest.setSystemTime(retry4Time + 241000);
       retryService.checkRetries();
       pending = retryService.getPendingDelivery('msg-1')!;
       expect(pending.retryCount).toBe(5);
@@ -492,7 +492,7 @@ describe('GossipRetryService', () => {
   describe('max retries exhausted', () => {
     it('should mark unacked recipients as Failed when max retries exhausted', () => {
       const now = new Date('2024-01-01T00:00:00Z');
-      jest.setSystemTime(now);
+      jest.setSystemTime(now.getTime());
 
       const metadata = createSampleMetadata({
         recipientIds: ['r1', 'r2'],
@@ -511,13 +511,13 @@ describe('GossipRetryService', () => {
       let currentTime = now.getTime();
       for (let i = 0; i < 5; i++) {
         currentTime += 300000; // advance well past any backoff
-        jest.setSystemTime(new Date(currentTime));
+        jest.setSystemTime(currentTime);
         retryService.checkRetries();
       }
 
       // After 5 retries, next checkRetries should mark as failed
       currentTime += 300000;
-      jest.setSystemTime(new Date(currentTime));
+      jest.setSystemTime(currentTime);
       retryService.checkRetries();
 
       // Should have emitted MESSAGE_FAILED
@@ -532,7 +532,7 @@ describe('GossipRetryService', () => {
 
     it('should update metadata store for failed recipients', () => {
       const now = new Date('2024-01-01T00:00:00Z');
-      jest.setSystemTime(now);
+      jest.setSystemTime(now.getTime());
 
       const metadata = createSampleMetadata({
         recipientIds: ['r1'],
@@ -543,13 +543,13 @@ describe('GossipRetryService', () => {
       let currentTime = now.getTime();
       for (let i = 0; i < 5; i++) {
         currentTime += 300000;
-        jest.setSystemTime(new Date(currentTime));
+        jest.setSystemTime(currentTime);
         retryService.checkRetries();
       }
 
       // Trigger failure
       currentTime += 300000;
-      jest.setSystemTime(new Date(currentTime));
+      jest.setSystemTime(currentTime);
       retryService.checkRetries();
 
       expect(metadataStore.updateDeliveryStatus).toHaveBeenCalledWith(
@@ -561,7 +561,7 @@ describe('GossipRetryService', () => {
 
     it('should not mark already-delivered recipients as Failed', () => {
       const now = new Date('2024-01-01T00:00:00Z');
-      jest.setSystemTime(now);
+      jest.setSystemTime(now.getTime());
 
       const metadata = createSampleMetadata({
         recipientIds: ['r1', 'r2'],
@@ -583,12 +583,12 @@ describe('GossipRetryService', () => {
       let currentTime = now.getTime();
       for (let i = 0; i < 5; i++) {
         currentTime += 300000;
-        jest.setSystemTime(new Date(currentTime));
+        jest.setSystemTime(currentTime);
         retryService.checkRetries();
       }
 
       currentTime += 300000;
-      jest.setSystemTime(new Date(currentTime));
+      jest.setSystemTime(currentTime);
       retryService.checkRetries();
 
       // Should only update r2 (the unacked one), not r1
@@ -606,7 +606,7 @@ describe('GossipRetryService', () => {
 
       // Timer should be running - verify by tracking a delivery and advancing time
       const now = new Date('2024-01-01T00:00:00Z');
-      jest.setSystemTime(now);
+      jest.setSystemTime(now.getTime());
 
       const metadata = createSampleMetadata();
       retryService.trackDelivery('msg-1', [bid('block-1')], metadata);
@@ -619,7 +619,7 @@ describe('GossipRetryService', () => {
 
     it('should stop the retry timer', () => {
       const now = new Date('2024-01-01T00:00:00Z');
-      jest.setSystemTime(now);
+      jest.setSystemTime(now.getTime());
 
       retryService.start();
 
@@ -639,7 +639,7 @@ describe('GossipRetryService', () => {
       retryService.start(); // Should not create duplicate timers
 
       const now = new Date('2024-01-01T00:00:00Z');
-      jest.setSystemTime(now);
+      jest.setSystemTime(now.getTime());
 
       const metadata = createSampleMetadata();
       retryService.trackDelivery('msg-1', [bid('block-1')], metadata);
@@ -675,7 +675,7 @@ describe('GossipRetryService', () => {
 
     it('should respect custom maxRetries for failure detection', () => {
       const now = new Date('2024-01-01T00:00:00Z');
-      jest.setSystemTime(now);
+      jest.setSystemTime(now.getTime());
 
       const customService = new GossipRetryService(
         gossipService,
@@ -693,13 +693,13 @@ describe('GossipRetryService', () => {
       let currentTime = now.getTime();
       for (let i = 0; i < 2; i++) {
         currentTime += 300000;
-        jest.setSystemTime(new Date(currentTime));
+        jest.setSystemTime(currentTime);
         customService.checkRetries();
       }
 
       // Next check should mark as failed
       currentTime += 300000;
-      jest.setSystemTime(new Date(currentTime));
+      jest.setSystemTime(currentTime);
       customService.checkRetries();
 
       expect(eventEmitter.emit).toHaveBeenCalledWith(

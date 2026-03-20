@@ -4,7 +4,6 @@ import {
   faLock,
 } from '@awesome.me/kit-a20d532681/icons/classic/solid';
 import { faCircleNodes } from '@awesome.me/kit-a20d532681/icons/classic/thin';
-import { faShredder } from '@awesome.me/kit-a20d532681/icons/duotone/solid';
 import {
   BrightChainFeatures,
   CONSTANTS,
@@ -15,7 +14,7 @@ import {
   THEME_COLORS,
 } from '@brightchain/brightchain-lib';
 import {
-  BrightChainLogo,
+  BrightChainLogoI18N,
   BrightChainSoupDemo,
   BrightChainSubLogo,
   BrightPassDemo,
@@ -78,11 +77,13 @@ import SendIcon from '@mui/icons-material/Send';
 import { Box, CircularProgress, CssBaseline } from '@mui/material';
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import { FC, lazy, Suspense, useCallback } from 'react';
+import { FC, lazy, LazyExoticComponent, Suspense, useCallback } from 'react';
 import { Route, Routes, useNavigate } from 'react-router-dom';
 import { IncludeOnMenu } from '../enumerations/includeOnMenu';
 import { environment } from '../environments/environment';
 import '../styles.scss';
+import AdminDashboardPage from './components/AdminDashboardPage';
+import { AdminMenuRegistration } from './components/AdminMenuRegistration';
 import DashboardPage from './components/DashboardPage';
 import { GlobalNotificationBell } from './components/GlobalNotificationBell';
 import { SplashPage } from './components/SplashPage';
@@ -93,46 +94,6 @@ const UnifiedNotificationsPage = lazy(() =>
     default: m.default,
   })),
 );
-
-// Register sub-component i18n packages with the BrightChain engine.
-// Must run after i18nEngine import above triggers engine creation.
-registerI18nComponentPackage(createBrightMailComponentPackage());
-registerI18nComponentPackage(createBrightHubComponentPackage());
-registerI18nComponentPackage(createBrightPassComponentPackage());
-registerI18nComponentPackage(createBrightChatComponentPackage());
-
-// Lazy-loaded module routes
-const BrightMailRoutes = lazy(() =>
-  import('./brightmail-routes').then((m) => ({
-    default: m.default,
-  })),
-);
-const BrightPassRoutes = lazy(() =>
-  import('./brightpass-routes').then((m) => ({
-    default: m.default,
-  })),
-);
-const BrightHubRoutes = lazy(() =>
-  import('./brighthub-routes').then((m) => ({
-    default: m.BrightHubRoutes,
-  })),
-);
-const BrightChatRoutes = lazy(() =>
-  import('./brightchat-routes').then((m) => ({
-    default: m.default,
-  })),
-);
-
-const getApiBaseUrl = (): string => {
-  if (typeof window !== 'undefined') {
-    const appConfig = (window as { APP_CONFIG?: { apiUrl?: string } })
-      .APP_CONFIG;
-    if (appConfig?.apiUrl) {
-      return appConfig.apiUrl;
-    }
-  }
-  return environment.apiUrl || 'http://localhost:3000';
-};
 
 const getEnabledFeatures = (): BrightChainFeatures[] => {
   if (typeof window !== 'undefined') {
@@ -151,6 +112,70 @@ const getEnabledFeatures = (): BrightChainFeatures[] => {
       BrightChainFeatures.BrightPass,
     ]
   );
+};
+
+const enabledFeatures = getEnabledFeatures();
+const brightChatEnabled = enabledFeatures.includes(
+  BrightChainFeatures.BrightChat,
+);
+const brightHubEnabled = enabledFeatures.includes(
+  BrightChainFeatures.BrightHub,
+);
+const brightMailEnabled = enabledFeatures.includes(
+  BrightChainFeatures.BrightMail,
+);
+const brightPassEnabled = enabledFeatures.includes(
+  BrightChainFeatures.BrightPass,
+);
+
+// Register sub-component i18n packages with the BrightChain engine.
+// Must run after i18nEngine import above triggers engine creation.
+let BrightChatRoutes: LazyExoticComponent<FC<object>>;
+if (brightChatEnabled) {
+  registerI18nComponentPackage(createBrightChatComponentPackage());
+  BrightChatRoutes = lazy(() =>
+    import('./brightchat-routes').then((m) => ({
+      default: m.default,
+    })),
+  );
+}
+let BrightHubRoutes: LazyExoticComponent<FC<object>>;
+if (brightHubEnabled) {
+  registerI18nComponentPackage(createBrightHubComponentPackage());
+  BrightHubRoutes = lazy(() =>
+    import('./brighthub-routes').then((m) => ({
+      default: m.BrightHubRoutes,
+    })),
+  );
+}
+let BrightMailRoutes: LazyExoticComponent<FC<object>>;
+if (brightMailEnabled) {
+  registerI18nComponentPackage(createBrightMailComponentPackage());
+  BrightMailRoutes = lazy(() =>
+    import('./brightmail-routes').then((m) => ({
+      default: m.default,
+    })),
+  );
+}
+let BrightPassRoutes: LazyExoticComponent<FC<object>>;
+if (brightPassEnabled) {
+  registerI18nComponentPackage(createBrightPassComponentPackage());
+  BrightPassRoutes = lazy(() =>
+    import('./brightpass-routes').then((m) => ({
+      default: m.default,
+    })),
+  );
+}
+
+const getApiBaseUrl = (): string => {
+  if (typeof window !== 'undefined') {
+    const appConfig = (window as { APP_CONFIG?: { apiUrl?: string } })
+      .APP_CONFIG;
+    if (appConfig?.apiUrl) {
+      return appConfig.apiUrl;
+    }
+  }
+  return environment.apiUrl || 'http://localhost:3000';
 };
 
 const getEmailDomain = (): string => {
@@ -409,12 +434,13 @@ const InnerApp: FC = () => {
 
   return (
     <MenuProvider menuConfigs={menuConfigs}>
+      <AdminMenuRegistration />
       <Box className="app-container" sx={{ paddingTop: '64px' }}>
         <TopMenu
           Logo={
-            <BrightChainLogo
-              brightColor={THEME_COLORS.CHAIN_BLUE_DARK}
-              chainColor={THEME_COLORS.CHAIN_BLUE_LIGHT}
+            <BrightChainLogoI18N
+              primaryColor={THEME_COLORS.CHAIN_BLUE_DARK}
+              secondaryColor={THEME_COLORS.CHAIN_BLUE_LIGHT}
               taglineColor={THEME_COLORS.TAGLINE_COLOR}
               height={40}
               width={200}
@@ -447,6 +473,14 @@ const InnerApp: FC = () => {
               element={
                 <PrivateRoute>
                   <DashboardPage />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/admin/dashboard"
+              element={
+                <PrivateRoute>
+                  <AdminDashboardPage />
                 </PrivateRoute>
               }
             />
@@ -531,10 +565,18 @@ const InnerApp: FC = () => {
                 </PrivateRoute>
               }
             />
-            <Route path="/brightmail/*" element={<BrightMailRoutes />} />
-            <Route path="/brightpass/*" element={<BrightPassRoutes />} />
-            <Route path="/brighthub/*" element={<BrightHubRoutes />} />
-            <Route path="/brightchat/*" element={<BrightChatRoutes />} />
+            {BrightMailRoutes && (
+              <Route path="/brightmail/*" element={<BrightMailRoutes />} />
+            )}
+            {BrightPassRoutes && (
+              <Route path="/brightpass/*" element={<BrightPassRoutes />} />
+            )}
+            {BrightHubRoutes && (
+              <Route path="/brighthub/*" element={<BrightHubRoutes />} />
+            )}
+            {BrightChatRoutes && (
+              <Route path="/brightchat/*" element={<BrightChatRoutes />} />
+            )}
             <Route
               path="/notifications"
               element={

@@ -1,3 +1,10 @@
+import type { Collection } from '@brightchain/db';
+import type {
+  AggregationStage,
+  BsonDocument,
+  FilterQuery,
+  UpdateQuery,
+} from '@digitaldefiance/suite-core-lib';
 import { BrightDbCollection } from '../lib/services/bright-db-collection';
 
 /**
@@ -5,16 +12,41 @@ import { BrightDbCollection } from '../lib/services/bright-db-collection';
  */
 function createMockCollection() {
   return {
-    insertOne: jest.fn().mockResolvedValue({ acknowledged: true, insertedId: '1' }),
-    insertMany: jest.fn().mockResolvedValue({ acknowledged: true, insertedCount: 2, insertedIds: { 0: '1', 1: '2' } }),
+    insertOne: jest
+      .fn()
+      .mockResolvedValue({ acknowledged: true, insertedId: '1' }),
+    insertMany: jest.fn().mockResolvedValue({
+      acknowledged: true,
+      insertedCount: 2,
+      insertedIds: { 0: '1', 1: '2' },
+    }),
     findOne: jest.fn().mockResolvedValue({ _id: '1', name: 'test' }),
     find: jest.fn().mockResolvedValue([{ _id: '1' }]),
     findById: jest.fn().mockResolvedValue({ _id: '1' }),
-    updateOne: jest.fn().mockResolvedValue({ acknowledged: true, matchedCount: 1, modifiedCount: 1, upsertedCount: 0 }),
-    updateMany: jest.fn().mockResolvedValue({ acknowledged: true, matchedCount: 2, modifiedCount: 2, upsertedCount: 0 }),
-    deleteOne: jest.fn().mockResolvedValue({ acknowledged: true, deletedCount: 1 }),
-    deleteMany: jest.fn().mockResolvedValue({ acknowledged: true, deletedCount: 3 }),
-    replaceOne: jest.fn().mockResolvedValue({ acknowledged: true, matchedCount: 1, modifiedCount: 1, upsertedCount: 0 }),
+    updateOne: jest.fn().mockResolvedValue({
+      acknowledged: true,
+      matchedCount: 1,
+      modifiedCount: 1,
+      upsertedCount: 0,
+    }),
+    updateMany: jest.fn().mockResolvedValue({
+      acknowledged: true,
+      matchedCount: 2,
+      modifiedCount: 2,
+      upsertedCount: 0,
+    }),
+    deleteOne: jest
+      .fn()
+      .mockResolvedValue({ acknowledged: true, deletedCount: 1 }),
+    deleteMany: jest
+      .fn()
+      .mockResolvedValue({ acknowledged: true, deletedCount: 3 }),
+    replaceOne: jest.fn().mockResolvedValue({
+      acknowledged: true,
+      matchedCount: 1,
+      modifiedCount: 1,
+      upsertedCount: 0,
+    }),
     countDocuments: jest.fn().mockResolvedValue(5),
     estimatedDocumentCount: jest.fn().mockResolvedValue(5),
     distinct: jest.fn().mockResolvedValue(['a', 'b']),
@@ -22,8 +54,19 @@ function createMockCollection() {
     createIndex: jest.fn().mockResolvedValue('idx_name'),
     dropIndex: jest.fn().mockResolvedValue(undefined),
     listIndexes: jest.fn().mockReturnValue(['_id_']),
-    bulkWrite: jest.fn().mockResolvedValue({ acknowledged: true, insertedCount: 1, matchedCount: 0, modifiedCount: 0, deletedCount: 0, upsertedCount: 0, insertedIds: {}, upsertedIds: {} }),
-    watch: jest.fn().mockReturnValue(() => { /* unsubscribe */ }),
+    bulkWrite: jest.fn().mockResolvedValue({
+      acknowledged: true,
+      insertedCount: 1,
+      matchedCount: 0,
+      modifiedCount: 0,
+      deletedCount: 0,
+      upsertedCount: 0,
+      insertedIds: {},
+      upsertedIds: {},
+    }),
+    watch: jest.fn().mockReturnValue(() => {
+      /* unsubscribe */
+    }),
     setSchema: jest.fn(),
     getSchema: jest.fn().mockReturnValue(undefined),
     removeSchema: jest.fn(),
@@ -45,7 +88,7 @@ describe('BrightDbCollection', () => {
 
   beforeEach(() => {
     mockColl = createMockCollection();
-    adapter = new BrightDbCollection(mockColl as any);
+    adapter = new BrightDbCollection(mockColl as unknown as Collection);
   });
 
   it('delegates insertOne to underlying collection', async () => {
@@ -63,7 +106,9 @@ describe('BrightDbCollection', () => {
   });
 
   it('delegates findOne to underlying collection', async () => {
-    const result = await adapter.findOne({ name: 'test' } as any);
+    const result = await adapter.findOne({
+      name: 'test',
+    } as unknown as FilterQuery<BsonDocument>);
     expect(mockColl.findOne).toHaveBeenCalled();
     expect(result).toEqual({ _id: '1', name: 'test' });
   });
@@ -81,13 +126,18 @@ describe('BrightDbCollection', () => {
   });
 
   it('delegates updateOne to underlying collection', async () => {
-    const result = await adapter.updateOne({ _id: '1' } as any, { $set: { name: 'updated' } } as any);
+    const result = await adapter.updateOne(
+      { _id: '1' } as unknown as FilterQuery<BsonDocument>,
+      { $set: { name: 'updated' } } as unknown as UpdateQuery<BsonDocument>,
+    );
     expect(mockColl.updateOne).toHaveBeenCalled();
     expect(result.modifiedCount).toBe(1);
   });
 
   it('delegates deleteOne to underlying collection', async () => {
-    const result = await adapter.deleteOne({ _id: '1' } as any);
+    const result = await adapter.deleteOne({
+      _id: '1',
+    } as unknown as FilterQuery<BsonDocument>);
     expect(mockColl.deleteOne).toHaveBeenCalled();
     expect(result.deletedCount).toBe(1);
   });
@@ -105,7 +155,9 @@ describe('BrightDbCollection', () => {
   });
 
   it('delegates aggregate to underlying collection', async () => {
-    const pipeline = [{ $match: { active: true } }] as any;
+    const pipeline = [
+      { $match: { active: true } },
+    ] as unknown as AggregationStage[];
     const result = await adapter.aggregate(pipeline);
     expect(mockColl.aggregate).toHaveBeenCalledWith(pipeline);
     expect(result).toEqual([{ count: 5 }]);

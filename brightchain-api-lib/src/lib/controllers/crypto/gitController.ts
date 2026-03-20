@@ -110,14 +110,14 @@ export class GitController<
   // ─── Route definitions ──────────────────────────────────────────────────
 
   protected initRouteDefinitions(): void {
-    const noAuth = {
-      useAuthentication: false,
+    const auth = {
+      useAuthentication: true,
       useCryptoAuthentication: false,
     };
 
     this.routeDefinitions = [
       routeConfig('post', '/sign-commit', {
-        ...noAuth,
+        ...auth,
         handlerKey: 'signCommit',
         openapi: {
           summary: 'Sign a Git commit',
@@ -137,7 +137,7 @@ export class GitController<
         },
       }),
       routeConfig('post', '/sign-tag', {
-        ...noAuth,
+        ...auth,
         handlerKey: 'signTag',
         openapi: {
           summary: 'Sign a Git tag',
@@ -157,7 +157,7 @@ export class GitController<
         },
       }),
       routeConfig('post', '/verify', {
-        ...noAuth,
+        ...auth,
         handlerKey: 'verifySignature',
         openapi: {
           summary: 'Verify a Git signature',
@@ -177,7 +177,7 @@ export class GitController<
         },
       }),
       routeConfig('post', '/export-public-key', {
-        ...noAuth,
+        ...auth,
         handlerKey: 'exportPublicKey',
         openapi: {
           summary: 'Export Git signing public key',

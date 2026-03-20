@@ -71,6 +71,35 @@ describe('CBL Controller API Integration Tests', () => {
       ready: true,
       services: {},
       plugins: {},
+      authProvider: {
+        verifyToken: async (token: string) => ({
+          userId: token || 'test-user',
+        }),
+        findUserById: async (userId: string) => ({
+          id: userId,
+          accountStatus: 'Active',
+          email: 'test@example.com',
+          timezone: 'UTC',
+        }),
+        buildRequestUserDTO: async (userId: string) => ({
+          id: userId,
+          username: userId,
+          email: 'test@example.com',
+          roles: [],
+          rolePrivileges: {
+            admin: false,
+            member: true,
+            child: false,
+            system: false,
+          },
+          emailVerified: true,
+          timezone: 'UTC',
+          siteLanguage: 'en',
+          darkMode: false,
+          currency: 'USD',
+          directChallenge: false,
+        }),
+      },
       getModel: () => {
         throw new Error('not implemented');
       },
@@ -84,9 +113,18 @@ describe('CBL Controller API Integration Tests', () => {
     // Create controller (it creates its own block store from environment)
     const controller = new CBLController(mockApp);
 
-    // Set up Express app
+    // Set up Express app with auth bypass for integration tests.
+    // The controller routes require authentication, so we inject a fake
+    // bearer token via middleware that the mock authProvider will accept.
     app = express();
     app.use(express.json());
+    // Inject a bearer token header so authenticateToken middleware passes
+    app.use((req, _res, next) => {
+      if (!req.headers.authorization) {
+        req.headers.authorization = 'Bearer test-user';
+      }
+      next();
+    });
     app.use('/api/cbl', controller.router);
   });
 

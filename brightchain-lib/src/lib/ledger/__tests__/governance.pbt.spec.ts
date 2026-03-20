@@ -2,16 +2,16 @@
  * Property-based tests for governance-integrated Ledger.
  * Properties 11–15, 17, 18 from the design document.
  */
-import * as fc from 'fast-check';
 import { SignatureUint8Array } from '@digitaldefiance/ecies-lib';
+import * as fc from 'fast-check';
 import { BlockSize } from '../../enumerations/blockSize';
 import { LedgerError, LedgerErrorType } from '../../errors/ledgerError';
+import { QuorumType } from '../../interfaces/ledger/brightTrustPolicy';
 import {
   GovernanceActionType,
   IGovernanceAction,
 } from '../../interfaces/ledger/governanceAction';
 import { ILedgerSigner } from '../../interfaces/ledger/ledgerSigner';
-import { QuorumType } from '../../interfaces/ledger/quorumPolicy';
 import { SignerRole } from '../../interfaces/ledger/signerRole';
 import { SignerStatus } from '../../interfaces/ledger/signerStatus';
 import { ChecksumService } from '../../services/checksum.service';
@@ -65,7 +65,10 @@ async function createLedger(
   ];
 
   const genesisPayload = govSerializer.serializeGenesis({
-    quorumPolicy: { type: QuorumType.Threshold, threshold: quorumThreshold },
+    brightTrustPolicy: {
+      type: QuorumType.Threshold,
+      threshold: quorumThreshold,
+    },
     signers,
   });
 
@@ -175,42 +178,35 @@ describe('Governance Property-Based Tests', () => {
   // Feature: block-chain-ledger, Property 12: Governance Actions Modify Signer Set
   it('Property 12: governance actions correctly modify the signer set', async () => {
     await fc.assert(
-      fc.asyncProperty(
-        arbSeed,
-        arbRole,
-        async (seed, role) => {
-          const newSeed = (seed % 180) + 10;
-          const { ledger, primaryAdmin } = await createLedger([1]);
+      fc.asyncProperty(arbSeed, arbRole, async (seed, role) => {
+        const newSeed = (seed % 180) + 10;
+        const { ledger, primaryAdmin } = await createLedger([1]);
 
-          // Add signer
-          await ledger.appendGovernance(
-            [
-              {
-                type: GovernanceActionType.AddSigner,
-                publicKey: makeSigner(newSeed).publicKey,
-                role,
-              },
-            ],
-            primaryAdmin,
-          );
-          const info = ledger.getSignerInfo(makeSigner(newSeed).publicKey);
-          expect(info).toBeDefined();
-          expect(info!.role).toBe(role);
-          expect(info!.status).toBe(SignerStatus.Active);
+        // Add signer
+        await ledger.appendGovernance(
+          [
+            {
+              type: GovernanceActionType.AddSigner,
+              publicKey: makeSigner(newSeed).publicKey,
+              role,
+            },
+          ],
+          primaryAdmin,
+        );
+        const info = ledger.getSignerInfo(makeSigner(newSeed).publicKey);
+        expect(info).toBeDefined();
+        expect(info!.role).toBe(role);
+        expect(info!.status).toBe(SignerStatus.Active);
 
-          // If admin or writer, can append; if reader, cannot
-          if (role === SignerRole.Admin || role === SignerRole.Writer) {
-            await ledger.append(
-              new Uint8Array([0x01]),
-              makeSigner(newSeed),
-            );
-          } else {
-            await expect(
-              ledger.append(new Uint8Array([0x01]), makeSigner(newSeed)),
-            ).rejects.toThrow(LedgerError);
-          }
-        },
-      ),
+        // If admin or writer, can append; if reader, cannot
+        if (role === SignerRole.Admin || role === SignerRole.Writer) {
+          await ledger.append(new Uint8Array([0x01]), makeSigner(newSeed));
+        } else {
+          await expect(
+            ledger.append(new Uint8Array([0x01]), makeSigner(newSeed)),
+          ).rejects.toThrow(LedgerError);
+        }
+      }),
       { numRuns: 100 },
     );
   });
@@ -246,7 +242,7 @@ describe('Governance Property-Based Tests', () => {
             ],
             nonAdmin,
           );
-          fail('Expected LedgerError');
+          throw new Error('Expected LedgerError');
         } catch (e) {
           expect(e).toBeInstanceOf(LedgerError);
           expect((e as LedgerError).errorType).toBe(
@@ -261,55 +257,49 @@ describe('Governance Property-Based Tests', () => {
   // Feature: block-chain-ledger, Property 14: Quorum Enforcement
   it('Property 14: governance with fewer than required signatures is rejected; with enough succeeds', async () => {
     await fc.assert(
-      fc.asyncProperty(
-        fc.integer({ min: 2, max: 4 }),
-        async (adminCount) => {
-          const adminSeeds = Array.from(
-            { length: adminCount },
-            (_, i) => i + 1,
-          );
-          const { ledger, govSerializer } = await createLedger(
-            adminSeeds,
-            [],
-            [],
-            adminCount, // threshold = all admins
-          );
+      fc.asyncProperty(fc.integer({ min: 2, max: 4 }), async (adminCount) => {
+        const adminSeeds = Array.from({ length: adminCount }, (_, i) => i + 1);
+        const { ledger, govSerializer } = await createLedger(
+          adminSeeds,
+          [],
+          [],
+          adminCount, // threshold = all admins
+        );
 
-          const primaryAdmin = makeSigner(1);
-          const actions: IGovernanceAction[] = [
-            {
-              type: GovernanceActionType.AddSigner,
-              publicKey: makeSigner(100).publicKey,
-              role: SignerRole.Reader,
-            },
-          ];
+        const primaryAdmin = makeSigner(1);
+        const actions: IGovernanceAction[] = [
+          {
+            type: GovernanceActionType.AddSigner,
+            publicKey: makeSigner(100).publicKey,
+            role: SignerRole.Reader,
+          },
+        ];
 
-          // With only primary signer (1 of adminCount), should fail
-          if (adminCount > 1) {
-            try {
-              await ledger.appendGovernance(actions, primaryAdmin);
-              fail('Expected QuorumNotMet');
-            } catch (e) {
-              expect((e as LedgerError).errorType).toBe(
-                LedgerErrorType.QuorumNotMet,
-              );
-            }
+        // With only primary signer (1 of adminCount), should fail
+        if (adminCount > 1) {
+          try {
+            await ledger.appendGovernance(actions, primaryAdmin);
+            throw new Error('Expected QuorumNotMet');
+          } catch (e) {
+            expect((e as LedgerError).errorType).toBe(
+              LedgerErrorType.QuorumNotMet,
+            );
           }
+        }
 
-          // With all admins, should succeed
-          const actionsForSigning =
-            govSerializer.serializeActionsForSigning(actions);
-          const cosigners = adminSeeds.slice(1).map((s) => ({
-            signer: makeSigner(s),
-            signature: makeSigner(s).sign(
-              actionsForSigning,
-            ) as SignatureUint8Array,
-          }));
+        // With all admins, should succeed
+        const actionsForSigning =
+          govSerializer.serializeActionsForSigning(actions);
+        const cosigners = adminSeeds.slice(1).map((s) => ({
+          signer: makeSigner(s),
+          signature: makeSigner(s).sign(
+            actionsForSigning,
+          ) as SignatureUint8Array,
+        }));
 
-          await ledger.appendGovernance(actions, primaryAdmin, cosigners);
-          expect(ledger.getSignerInfo(makeSigner(100).publicKey)).toBeDefined();
-        },
-      ),
+        await ledger.appendGovernance(actions, primaryAdmin, cosigners);
+        expect(ledger.getSignerInfo(makeSigner(100).publicKey)).toBeDefined();
+      }),
       { numRuns: 100 },
     );
   });
@@ -317,66 +307,63 @@ describe('Governance Property-Based Tests', () => {
   // Feature: block-chain-ledger, Property 15: Safety Constraints
   it('Property 15: actions that would leave zero active admins or drop below quorum are rejected', async () => {
     await fc.assert(
-      fc.asyncProperty(
-        fc.integer({ min: 1, max: 3 }),
-        async (extraAdmins) => {
-          const adminSeeds = Array.from(
-            { length: extraAdmins + 1 },
-            (_, i) => i + 1,
+      fc.asyncProperty(fc.integer({ min: 1, max: 3 }), async (extraAdmins) => {
+        const adminSeeds = Array.from(
+          { length: extraAdmins + 1 },
+          (_, i) => i + 1,
+        );
+        const { ledger } = await createLedger(adminSeeds, [], [], 1);
+        const primaryAdmin = makeSigner(1);
+
+        // Remove all admins except one — should succeed
+        for (let i = 1; i < adminSeeds.length; i++) {
+          await ledger.appendGovernance(
+            [
+              {
+                type: GovernanceActionType.RemoveSigner,
+                publicKey: makeSigner(adminSeeds[i]).publicKey,
+              },
+            ],
+            primaryAdmin,
           );
-          const { ledger } = await createLedger(adminSeeds, [], [], 1);
-          const primaryAdmin = makeSigner(1);
+        }
 
-          // Remove all admins except one — should succeed
-          for (let i = 1; i < adminSeeds.length; i++) {
-            await ledger.appendGovernance(
-              [
-                {
-                  type: GovernanceActionType.RemoveSigner,
-                  publicKey: makeSigner(adminSeeds[i]).publicKey,
-                },
-              ],
-              primaryAdmin,
-            );
-          }
+        // Removing the last admin should fail
+        try {
+          await ledger.appendGovernance(
+            [
+              {
+                type: GovernanceActionType.RemoveSigner,
+                publicKey: primaryAdmin.publicKey,
+              },
+            ],
+            primaryAdmin,
+          );
+          throw new Error('Expected GovernanceSafetyViolation');
+        } catch (e) {
+          expect((e as LedgerError).errorType).toBe(
+            LedgerErrorType.GovernanceSafetyViolation,
+          );
+        }
 
-          // Removing the last admin should fail
-          try {
-            await ledger.appendGovernance(
-              [
-                {
-                  type: GovernanceActionType.RemoveSigner,
-                  publicKey: primaryAdmin.publicKey,
-                },
-              ],
-              primaryAdmin,
-            );
-            fail('Expected GovernanceSafetyViolation');
-          } catch (e) {
-            expect((e as LedgerError).errorType).toBe(
-              LedgerErrorType.GovernanceSafetyViolation,
-            );
-          }
-
-          // Suspending the last admin should also fail
-          try {
-            await ledger.appendGovernance(
-              [
-                {
-                  type: GovernanceActionType.SuspendSigner,
-                  publicKey: primaryAdmin.publicKey,
-                },
-              ],
-              primaryAdmin,
-            );
-            fail('Expected GovernanceSafetyViolation');
-          } catch (e) {
-            expect((e as LedgerError).errorType).toBe(
-              LedgerErrorType.GovernanceSafetyViolation,
-            );
-          }
-        },
-      ),
+        // Suspending the last admin should also fail
+        try {
+          await ledger.appendGovernance(
+            [
+              {
+                type: GovernanceActionType.SuspendSigner,
+                publicKey: primaryAdmin.publicKey,
+              },
+            ],
+            primaryAdmin,
+          );
+          throw new Error('Expected GovernanceSafetyViolation');
+        } catch (e) {
+          expect((e as LedgerError).errorType).toBe(
+            LedgerErrorType.GovernanceSafetyViolation,
+          );
+        }
+      }),
       { numRuns: 100 },
     );
   });
@@ -453,9 +440,9 @@ describe('Governance Property-Based Tests', () => {
           ],
           primaryAdmin,
         );
-        expect(
-          ledger.getSignerInfo(target.publicKey)!.status,
-        ).toBe(SignerStatus.Suspended);
+        expect(ledger.getSignerInfo(target.publicKey)!.status).toBe(
+          SignerStatus.Suspended,
+        );
 
         // suspended → suspended (invalid)
         try {
@@ -468,7 +455,7 @@ describe('Governance Property-Based Tests', () => {
             ],
             primaryAdmin,
           );
-          fail('Expected InvalidStateTransition');
+          throw new Error('Expected InvalidStateTransition');
         } catch (e) {
           expect((e as LedgerError).errorType).toBe(
             LedgerErrorType.InvalidStateTransition,
@@ -485,9 +472,9 @@ describe('Governance Property-Based Tests', () => {
           ],
           primaryAdmin,
         );
-        expect(
-          ledger.getSignerInfo(target.publicKey)!.status,
-        ).toBe(SignerStatus.Active);
+        expect(ledger.getSignerInfo(target.publicKey)!.status).toBe(
+          SignerStatus.Active,
+        );
 
         // active → active reactivate (invalid)
         try {
@@ -500,7 +487,7 @@ describe('Governance Property-Based Tests', () => {
             ],
             primaryAdmin,
           );
-          fail('Expected InvalidStateTransition');
+          throw new Error('Expected InvalidStateTransition');
         } catch (e) {
           expect((e as LedgerError).errorType).toBe(
             LedgerErrorType.InvalidStateTransition,
@@ -517,9 +504,9 @@ describe('Governance Property-Based Tests', () => {
           ],
           primaryAdmin,
         );
-        expect(
-          ledger.getSignerInfo(target.publicKey)!.status,
-        ).toBe(SignerStatus.Retired);
+        expect(ledger.getSignerInfo(target.publicKey)!.status).toBe(
+          SignerStatus.Retired,
+        );
 
         // retired → active reactivate (invalid)
         try {
@@ -532,7 +519,7 @@ describe('Governance Property-Based Tests', () => {
             ],
             primaryAdmin,
           );
-          fail('Expected InvalidStateTransition');
+          throw new Error('Expected InvalidStateTransition');
         } catch (e) {
           expect((e as LedgerError).errorType).toBe(
             LedgerErrorType.InvalidStateTransition,

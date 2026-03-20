@@ -1,7 +1,7 @@
 /**
  * @fileoverview Property-based tests for Error Response Format Consistency
  *
- * **Feature: backend-blockstore-quorum, Property 27: Error Response Format Consistency**
+ * **Feature: backend-blockstore-brightTrust, Property 27: Error Response Format Consistency**
  * **Validates: Requirements 15.6**
  *
  * This test suite verifies that:
@@ -19,7 +19,7 @@ import {
   handleError,
   internalError,
   isStandardErrorResponse,
-  mapQuorumError,
+  mapBrightTrustError,
   mapStoreError,
   notFoundError,
   notImplementedError,
@@ -28,8 +28,8 @@ import {
   validationError,
 } from '@brightchain/brightchain-api-lib';
 import {
-  QuorumError,
-  QuorumErrorType,
+  BrightTrustError,
+  BrightTrustErrorType,
   StoreError,
   StoreErrorType,
 } from '@brightchain/brightchain-lib';
@@ -293,26 +293,26 @@ describe('Error Response Format Consistency Property Tests', () => {
     });
 
     /**
-     * Property: mapQuorumError SHALL map QuorumError types to appropriate HTTP status codes.
+     * Property: mapBrightTrustError SHALL map BrightTrustError types to appropriate HTTP status codes.
      *
      * **Validates: Requirements 15.6**
      */
-    it('should map QuorumError to appropriate status codes', () => {
-      const quorumErrorMappings: Array<{
-        type: QuorumErrorType;
+    it('should map BrightTrustError to appropriate status codes', () => {
+      const brightTrustErrorMappings: Array<{
+        type: BrightTrustErrorType;
         expectedStatus: number;
       }> = [
-        { type: QuorumErrorType.MemberNotFound, expectedStatus: 404 },
-        { type: QuorumErrorType.DocumentNotFound, expectedStatus: 404 },
-        { type: QuorumErrorType.NotEnoughMembers, expectedStatus: 400 },
+        { type: BrightTrustErrorType.MemberNotFound, expectedStatus: 404 },
+        { type: BrightTrustErrorType.DocumentNotFound, expectedStatus: 404 },
+        { type: BrightTrustErrorType.NotEnoughMembers, expectedStatus: 400 },
       ];
 
       fc.assert(
         fc.property(
-          fc.constantFrom(...quorumErrorMappings),
+          fc.constantFrom(...brightTrustErrorMappings),
           ({ type, expectedStatus }) => {
-            const error = new QuorumError(type);
-            const result = mapQuorumError(error);
+            const error = new BrightTrustError(type);
+            const result = mapBrightTrustError(error);
             const response = result.response as any;
 
             expect(result.statusCode).toBe(expectedStatus);
@@ -337,10 +337,10 @@ describe('Error Response Format Consistency Property Tests', () => {
             fc
               .constantFrom(...Object.values(StoreErrorType))
               .map((type) => new StoreError(type)),
-            // QuorumError
+            // BrightTrustError
             fc
-              .constantFrom(...Object.values(QuorumErrorType))
-              .map((type) => new QuorumError(type)),
+              .constantFrom(...Object.values(BrightTrustErrorType))
+              .map((type) => new BrightTrustError(type)),
             // Generic Error
             fc
               .string({ minLength: 1, maxLength: 200 })

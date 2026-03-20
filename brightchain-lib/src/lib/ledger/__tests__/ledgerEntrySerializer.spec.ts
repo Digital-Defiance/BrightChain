@@ -109,7 +109,7 @@ describe('LedgerEntrySerializer', () => {
       const tooShort = new Uint8Array(MIN_ENTRY_SIZE - 1);
       try {
         serializer.deserialize(tooShort);
-        fail('Expected LedgerSerializationError');
+        throw new Error('Expected LedgerSerializationError');
       } catch (e) {
         expect(e).toBeInstanceOf(LedgerSerializationError);
         expect((e as LedgerSerializationError).errorType).toBe(
@@ -135,7 +135,7 @@ describe('LedgerEntrySerializer', () => {
 
       try {
         serializer.deserialize(corrupted);
-        fail('Expected LedgerSerializationError');
+        throw new Error('Expected LedgerSerializationError');
       } catch (e) {
         expect(e).toBeInstanceOf(LedgerSerializationError);
         expect((e as LedgerSerializationError).errorType).toBe(
@@ -158,7 +158,7 @@ describe('LedgerEntrySerializer', () => {
 
       try {
         serializer.deserialize(corrupted);
-        fail('Expected LedgerSerializationError');
+        throw new Error('Expected LedgerSerializationError');
       } catch (e) {
         expect(e).toBeInstanceOf(LedgerSerializationError);
         expect((e as LedgerSerializationError).errorType).toBe(
@@ -187,7 +187,7 @@ describe('LedgerEntrySerializer', () => {
 
       try {
         serializer.deserialize(buf);
-        fail('Expected LedgerSerializationError');
+        throw new Error('Expected LedgerSerializationError');
       } catch (e) {
         expect(e).toBeInstanceOf(LedgerSerializationError);
         expect((e as LedgerSerializationError).errorType).toBe(

@@ -13,15 +13,18 @@ import { SignatureUint8Array } from '@digitaldefiance/ecies-lib';
 import { describe, expect, it } from '@jest/globals';
 import fc from 'fast-check';
 
+import { IAuthorizedSigner } from '../../interfaces/ledger/authorizedSigner';
+import {
+  IBrightTrustPolicy,
+  QuorumType,
+} from '../../interfaces/ledger/brightTrustPolicy';
 import {
   GovernanceActionType,
   IGovernanceAction,
 } from '../../interfaces/ledger/governanceAction';
 import { IGovernancePayload } from '../../interfaces/ledger/governancePayload';
-import { QuorumType, IQuorumPolicy } from '../../interfaces/ledger/quorumPolicy';
 import { SignerRole } from '../../interfaces/ledger/signerRole';
 import { SignerStatus } from '../../interfaces/ledger/signerStatus';
-import { IAuthorizedSigner } from '../../interfaces/ledger/authorizedSigner';
 import {
   GovernancePayloadSerializer,
   IGenesisPayloadData,
@@ -54,7 +57,11 @@ function arbSignature(): fc.Arbitrary<SignatureUint8Array> {
 }
 
 function arbSignerRole(): fc.Arbitrary<SignerRole> {
-  return fc.constantFrom(SignerRole.Admin, SignerRole.Writer, SignerRole.Reader);
+  return fc.constantFrom(
+    SignerRole.Admin,
+    SignerRole.Writer,
+    SignerRole.Reader,
+  );
 }
 
 function arbSignerStatus(): fc.Arbitrary<SignerStatus> {
@@ -65,13 +72,16 @@ function arbSignerStatus(): fc.Arbitrary<SignerStatus> {
   );
 }
 
-function arbQuorumPolicy(): fc.Arbitrary<IQuorumPolicy> {
+function arbBrightTrustPolicy(): fc.Arbitrary<IBrightTrustPolicy> {
   return fc.oneof(
-    fc.constant({ type: QuorumType.Unanimous } as IQuorumPolicy),
-    fc.constant({ type: QuorumType.Majority } as IQuorumPolicy),
+    fc.constant({ type: QuorumType.Unanimous } as IBrightTrustPolicy),
+    fc.constant({ type: QuorumType.Majority } as IBrightTrustPolicy),
     fc
       .integer({ min: 1, max: 100 })
-      .map((t) => ({ type: QuorumType.Threshold, threshold: t }) as IQuorumPolicy),
+      .map(
+        (t) =>
+          ({ type: QuorumType.Threshold, threshold: t }) as IBrightTrustPolicy,
+      ),
   );
 }
 
@@ -89,17 +99,15 @@ function arbMemberMetadata(): fc.Arbitrary<Map<string, string>> {
 
 function arbGovernanceAction(): fc.Arbitrary<IGovernanceAction> {
   return fc.oneof(
-    fc
-      .tuple(arbPubKey(), arbSignerRole(), arbMemberMetadata())
-      .map(
-        ([publicKey, role, metadata]) =>
-          ({
-            type: GovernanceActionType.AddSigner,
-            publicKey,
-            role,
-            metadata,
-          }) as IGovernanceAction,
-      ),
+    fc.tuple(arbPubKey(), arbSignerRole(), arbMemberMetadata()).map(
+      ([publicKey, role, metadata]) =>
+        ({
+          type: GovernanceActionType.AddSigner,
+          publicKey,
+          role,
+          metadata,
+        }) as IGovernanceAction,
+    ),
     arbPubKey().map(
       (publicKey) =>
         ({
@@ -107,17 +115,15 @@ function arbGovernanceAction(): fc.Arbitrary<IGovernanceAction> {
           publicKey,
         }) as IGovernanceAction,
     ),
-    fc
-      .tuple(arbPubKey(), arbSignerRole())
-      .map(
-        ([publicKey, newRole]) =>
-          ({
-            type: GovernanceActionType.ChangeRole,
-            publicKey,
-            newRole,
-          }) as IGovernanceAction,
-      ),
-    arbQuorumPolicy().map(
+    fc.tuple(arbPubKey(), arbSignerRole()).map(
+      ([publicKey, newRole]) =>
+        ({
+          type: GovernanceActionType.ChangeRole,
+          publicKey,
+          newRole,
+        }) as IGovernanceAction,
+    ),
+    arbBrightTrustPolicy().map(
       (newPolicy) =>
         ({
           type: GovernanceActionType.UpdateQuorum,
@@ -138,16 +144,14 @@ function arbGovernanceAction(): fc.Arbitrary<IGovernanceAction> {
           publicKey,
         }) as IGovernanceAction,
     ),
-    fc
-      .tuple(arbPubKey(), arbMemberMetadata())
-      .map(
-        ([publicKey, metadata]) =>
-          ({
-            type: GovernanceActionType.SetMemberData,
-            publicKey,
-            metadata,
-          }) as IGovernanceAction,
-      ),
+    fc.tuple(arbPubKey(), arbMemberMetadata()).map(
+      ([publicKey, metadata]) =>
+        ({
+          type: GovernanceActionType.SetMemberData,
+          publicKey,
+          metadata,
+        }) as IGovernanceAction,
+    ),
   );
 }
 
@@ -184,10 +188,10 @@ function arbAuthorizedSigner(): fc.Arbitrary<IAuthorizedSigner> {
 function arbGenesisPayloadData(): fc.Arbitrary<IGenesisPayloadData> {
   return fc
     .tuple(
-      arbQuorumPolicy(),
+      arbBrightTrustPolicy(),
       fc.array(arbAuthorizedSigner(), { minLength: 1, maxLength: 5 }),
     )
-    .map(([quorumPolicy, signers]) => ({ quorumPolicy, signers }));
+    .map(([brightTrustPolicy, signers]) => ({ brightTrustPolicy, signers }));
 }
 
 // ---------------------------------------------------------------------------
@@ -279,9 +283,9 @@ describe('GovernancePayloadSerializer Property Tests', () => {
 
         // Must start with governance prefix
         expect(serialized[0]).toBe(0x01);
-        expect(GovernancePayloadSerializer.isGovernancePayload(serialized)).toBe(
-          true,
-        );
+        expect(
+          GovernancePayloadSerializer.isGovernancePayload(serialized),
+        ).toBe(true);
 
         const deserialized = serializer.deserialize(serialized);
 
@@ -312,7 +316,7 @@ describe('GovernancePayloadSerializer Property Tests', () => {
   });
 
   // Feature: block-chain-ledger, Property 16 (genesis variant): Genesis payload round-trip
-  it('Property 16 (genesis): genesis payload round-trip preserves quorum and signers', () => {
+  it('Property 16 (genesis): genesis payload round-trip preserves BrightTrust and signers', () => {
     fc.assert(
       fc.property(arbGenesisPayloadData(), (genesisData) => {
         const serialized = serializer.serializeGenesis(genesisData);
@@ -325,11 +329,13 @@ describe('GovernancePayloadSerializer Property Tests', () => {
 
         const g = deserialized.genesis!;
 
-        // Quorum policy round-trip
-        expect(g.quorumPolicy.type).toBe(genesisData.quorumPolicy.type);
-        if (genesisData.quorumPolicy.type === QuorumType.Threshold) {
-          expect(g.quorumPolicy.threshold).toBe(
-            genesisData.quorumPolicy.threshold,
+        // BrightTrust policy round-trip
+        expect(g.brightTrustPolicy.type).toBe(
+          genesisData.brightTrustPolicy.type,
+        );
+        if (genesisData.brightTrustPolicy.type === QuorumType.Threshold) {
+          expect(g.brightTrustPolicy.threshold).toBe(
+            genesisData.brightTrustPolicy.threshold,
           );
         }
 
@@ -337,7 +343,10 @@ describe('GovernancePayloadSerializer Property Tests', () => {
         expect(g.signers.length).toBe(genesisData.signers.length);
         for (let i = 0; i < genesisData.signers.length; i++) {
           expect(
-            uint8Equal(g.signers[i].publicKey, genesisData.signers[i].publicKey),
+            uint8Equal(
+              g.signers[i].publicKey,
+              genesisData.signers[i].publicKey,
+            ),
           ).toBe(true);
           expect(g.signers[i].role).toBe(genesisData.signers[i].role);
           expect(g.signers[i].status).toBe(genesisData.signers[i].status);

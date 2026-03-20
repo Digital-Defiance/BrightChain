@@ -189,22 +189,22 @@ export class NodesController<
     this.routeDefinitions = [
       routeConfig('get', '/', {
         handlerKey: 'listNodes',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
       }),
       routeConfig('get', '/:nodeId', {
         handlerKey: 'getNode',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
       }),
       routeConfig('post', '/discover', {
         handlerKey: 'discoverBlock',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
       }),
       routeConfig('post', '/register', {
         handlerKey: 'registerNode',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
       }),
     ];

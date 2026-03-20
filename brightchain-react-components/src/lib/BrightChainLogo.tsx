@@ -3,9 +3,13 @@ import React from 'react';
 import './BrightChainLogo.scss';
 
 export interface BrightChainLogoProps {
-  brightColor?: string;
-  chainColor?: string;
+  primaryColor?: string;
+  primaryText?: string;
+  primarySecondaryBreak?: boolean;
+  secondaryColor?: string;
+  secondaryText?: string;
   taglineColor?: string;
+  taglineText?: string;
   className?: string;
   style?: React.CSSProperties;
   width?: number | string;
@@ -13,9 +17,13 @@ export interface BrightChainLogoProps {
 }
 
 export const BrightChainLogo: React.FC<BrightChainLogoProps> = ({
-  brightColor = CONSTANTS.THEME_COLORS.CHAIN_BLUE_DARK,
-  chainColor = CONSTANTS.THEME_COLORS.CHAIN_BLUE_LIGHT,
+  primaryColor: brightColor = CONSTANTS.THEME_COLORS.CHAIN_BLUE_DARK,
+  primaryText = 'Bright',
+  primarySecondaryBreak = false,
+  secondaryColor: chainColor = CONSTANTS.THEME_COLORS.CHAIN_BLUE_LIGHT,
+  secondaryText = 'Chain',
   taglineColor = '#ffffff',
+  taglineText = 'Privacy. Participation. Power.',
   className,
   style,
   width = 3151,
@@ -43,12 +51,9 @@ export const BrightChainLogo: React.FC<BrightChainLogoProps> = ({
       fontSize="300"
       transform="translate(619.09 328.43)"
     >
-      <tspan fill={brightColor} x="50" y="0">
-        Bright
-      </tspan>
-      <tspan fill={chainColor} x="960" y="0">
-        Chain
-      </tspan>
+      <tspan fill={brightColor}>{primaryText}</tspan>
+      {primarySecondaryBreak === true && <tspan dx="10"> </tspan>}
+      <tspan fill={chainColor}>{secondaryText}</tspan>
     </text>
     <text
       fontFamily="'IBMPlexSans', 'IBM Plex Sans', sans-serif"
@@ -56,7 +61,7 @@ export const BrightChainLogo: React.FC<BrightChainLogoProps> = ({
       transform="translate(634.5 554.91)"
     >
       <tspan fill={taglineColor} x="50" y="0">
-        Privacy. Participation. Power.
+        {taglineText}
       </tspan>
     </text>
   </svg>

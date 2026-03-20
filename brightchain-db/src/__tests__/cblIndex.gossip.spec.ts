@@ -11,13 +11,13 @@ import type {
   AnnouncementHandler,
   BlockAnnouncement,
   BlockId,
+  BrightTrustProposalMetadata,
+  BrightTrustVoteMetadata,
   DeliveryAckMetadata,
   GossipConfig,
   ICBLIndexEntry,
   IGossipService,
   MessageDeliveryMetadata,
-  QuorumProposalMetadata,
-  QuorumVoteMetadata,
 } from '@brightchain/brightchain-lib';
 import { CBLVisibility } from '@brightchain/brightchain-lib';
 import { CBLIndex } from '../lib/cblIndex';
@@ -66,14 +66,16 @@ class MockCBLGossipService implements IGossipService {
   onDeliveryAck(_handler: (a: BlockAnnouncement) => void): void {}
   offDeliveryAck(_handler: (a: BlockAnnouncement) => void): void {}
 
-  async announceQuorumProposal(
-    _metadata: QuorumProposalMetadata,
+  async announceBrightTrustProposal(
+    _metadata: BrightTrustProposalMetadata,
   ): Promise<void> {}
-  async announceQuorumVote(_metadata: QuorumVoteMetadata): Promise<void> {}
-  onQuorumProposal(_handler: (a: BlockAnnouncement) => void): void {}
-  offQuorumProposal(_handler: (a: BlockAnnouncement) => void): void {}
-  onQuorumVote(_handler: (a: BlockAnnouncement) => void): void {}
-  offQuorumVote(_handler: (a: BlockAnnouncement) => void): void {}
+  async announceBrightTrustVote(
+    _metadata: BrightTrustVoteMetadata,
+  ): Promise<void> {}
+  onBrightTrustProposal(_handler: (a: BlockAnnouncement) => void): void {}
+  offBrightTrustProposal(_handler: (a: BlockAnnouncement) => void): void {}
+  onBrightTrustVote(_handler: (a: BlockAnnouncement) => void): void {}
+  offBrightTrustVote(_handler: (a: BlockAnnouncement) => void): void {}
 
   async announceCBLIndexUpdate(entry: ICBLIndexEntry): Promise<void> {
     this.cblIndexUpdates.push(entry);

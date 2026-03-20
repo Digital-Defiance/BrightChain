@@ -9,10 +9,13 @@ import {
   VoteEncoder,
 } from '@digitaldefiance/ecies-lib';
 import { useEffect, useState } from 'react';
+import { useShowcaseI18n } from '../../i18n/ShowcaseI18nContext';
+import { ShowcaseStrings } from '../../i18n/showcaseStrings';
 import { LoadingSpinner } from './LoadingSpinner';
 import { useVotingDemo } from './useVotingDemo';
 
 export const TwoRoundDemo = () => {
+  const { t } = useShowcaseI18n();
   const { isInitializing, setIsInitializing, withTallying } = useVotingDemo();
   const [poll, setPoll] = useState<Poll<Uint8Array> | null>(null);
   const [authority, setAuthority] = useState<Member | null>(null);
@@ -41,10 +44,22 @@ export const TwoRoundDemo = () => {
   const [showIntro, setShowIntro] = useState(true);
 
   const candidates = [
-    { name: 'Maria Santos', emoji: '👩‍💼', party: 'Progressive Party' },
-    { name: 'John Smith', emoji: '👨‍💼', party: 'Conservative Party' },
-    { name: 'Li Wei', emoji: '👨‍🔬', party: 'Tech Forward' },
-    { name: 'Aisha Khan', emoji: '👩‍⚖️', party: 'Justice Coalition' },
+    {
+      name: 'Maria Santos',
+      emoji: '👩‍💼',
+      party: t(ShowcaseStrings.TR_Cand1_Party),
+    },
+    {
+      name: 'John Smith',
+      emoji: '👨‍💼',
+      party: t(ShowcaseStrings.TR_Cand2_Party),
+    },
+    { name: 'Li Wei', emoji: '👨‍🔬', party: t(ShowcaseStrings.TR_Cand3_Party) },
+    {
+      name: 'Aisha Khan',
+      emoji: '👩‍⚖️',
+      party: t(ShowcaseStrings.TR_Cand4_Party),
+    },
   ];
 
   useEffect(() => {
@@ -71,6 +86,7 @@ export const TwoRoundDemo = () => {
       }
     };
     init();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const castRound1Vote = (voterName: string, candidateIdx: number) => {
@@ -100,8 +116,6 @@ export const TwoRoundDemo = () => {
       );
       const results = tallier.tally(poll);
       setRound1Results(results);
-
-      // Find top 2
       const tallies = results.tallies.map((t, idx) => ({
         idx,
         votes: Number(t),
@@ -164,7 +178,7 @@ export const TwoRoundDemo = () => {
 
   if (isInitializing)
     return (
-      <LoadingSpinner message="Initializing cryptographic voting system..." />
+      <LoadingSpinner message={t(ShowcaseStrings.Vote_InitializingCrypto)} />
     );
 
   if (showIntro) {
@@ -173,38 +187,24 @@ export const TwoRoundDemo = () => {
         <div className="election-intro">
           <div className="intro-header">
             <span className="intro-emoji">2️⃣</span>
-            <h3>Presidential Election - Two Rounds!</h3>
+            <h3>{t(ShowcaseStrings.TR_IntroTitle)}</h3>
           </div>
           <div className="intro-story">
-            <p>
-              🗳️ <strong>The System:</strong> Four candidates compete. If nobody
-              gets 50%+ in Round 1, the top 2 face off in Round 2!
-            </p>
-            <p>
-              🎯 <strong>Why Two Rounds?</strong> Ensures the winner has
-              majority support, not just plurality. Used in France, Brazil, and
-              many presidential elections.
-            </p>
+            <p>{t(ShowcaseStrings.TR_IntroSystem)}</p>
+            <p>{t(ShowcaseStrings.TR_IntroWhyTwoRounds)}</p>
             <div className="intro-stakes">
-              <p>
-                📊 <strong>Round 1:</strong> Vote for your favorite among all 4
-                candidates
-              </p>
-              <p>
-                🔄 <strong>Round 2:</strong> If needed, choose between the top 2
-                finishers
-              </p>
+              <p>{t(ShowcaseStrings.TR_IntroRound1)}</p>
+              <p>{t(ShowcaseStrings.TR_IntroRound2)}</p>
             </div>
             <p className="intro-challenge">
-              ⚠️ This requires intermediate decryption between rounds - votes
-              aren't private between rounds!
+              {t(ShowcaseStrings.TR_IntroChallenge)}
             </p>
           </div>
           <button
             onClick={() => setShowIntro(false)}
             className="start-election-btn"
           >
-            🗳️ Start Round 1!
+            {t(ShowcaseStrings.TR_StartBtn)}
           </button>
         </div>
       </div>
@@ -214,17 +214,18 @@ export const TwoRoundDemo = () => {
   return (
     <div className="voting-demo">
       <div className="demo-header">
-        <h3>2️⃣ Two-Round Voting - Presidential Election</h3>
+        <h3>{t(ShowcaseStrings.TR_DemoTitle)}</h3>
         <p className="election-tagline">
-          🔄 Round {currentRound}:{' '}
-          {currentRound === 1 ? 'Choose your favorite' : 'Final runoff!'}
+          {currentRound === 1
+            ? t(ShowcaseStrings.TR_TaglineRound1)
+            : t(ShowcaseStrings.TR_TaglineRound2)}
         </p>
       </div>
 
       {currentRound === 1 && !round1Results && (
         <>
           <div className="candidates-section">
-            <h4>Round 1 Candidates</h4>
+            <h4>{t(ShowcaseStrings.TR_Round1Candidates)}</h4>
             <div className="candidates-grid">
               {candidates.map((c, idx) => (
                 <div key={idx} className="candidate-card">
@@ -238,7 +239,9 @@ export const TwoRoundDemo = () => {
 
           <div className="voters-section">
             <h4>
-              Voters ({round1Votes.size}/{voters.length} voted)
+              {t(ShowcaseStrings.TR_VotersTemplate)
+                .replace('{VOTED}', String(round1Votes.size))
+                .replace('{TOTAL}', String(voters.length))}
             </h4>
             <div className="voters-grid">
               {voters.map((voter) => (
@@ -246,7 +249,10 @@ export const TwoRoundDemo = () => {
                   <strong>{voter}</strong>
                   {round1Votes.has(voter) ? (
                     <div className="vote-cast">
-                      ✓ Voted for {candidates[round1Votes.get(voter)!].emoji}
+                      {t(ShowcaseStrings.TR_VotedForTemplate).replace(
+                        '{EMOJI}',
+                        candidates[round1Votes.get(voter)!].emoji,
+                      )}
                     </div>
                   ) : (
                     <div className="vote-buttons">
@@ -268,7 +274,7 @@ export const TwoRoundDemo = () => {
 
           {round1Votes.size > 0 && (
             <button onClick={tallyRound1} className="tally-btn">
-              📊 Count Round 1 Votes!
+              {t(ShowcaseStrings.TR_CountRound1)}
             </button>
           )}
         </>
@@ -276,12 +282,12 @@ export const TwoRoundDemo = () => {
 
       {round1Results && !round2Results && (
         <div className="round-results">
-          <h4>🗳️ Round 1 Results</h4>
+          <h4>{t(ShowcaseStrings.TR_Round1Results)}</h4>
 
           <div className="tally-visualization">
-            <h5>📊 First Round Tally</h5>
+            <h5>{t(ShowcaseStrings.TR_Round1TallyTitle)}</h5>
             <p className="tally-explain">
-              Checking if anyone got 50%+ majority...
+              {t(ShowcaseStrings.TR_Round1TallyExplain)}
             </p>
           </div>
 
@@ -300,7 +306,9 @@ export const TwoRoundDemo = () => {
                     {c.emoji} {c.name}
                   </span>
                   <span>
-                    {votes} votes ({percent.toFixed(1)}%)
+                    {t(ShowcaseStrings.Vote_VotesTemplate)
+                      .replace('{COUNT}', String(votes))
+                      .replace('{PERCENT}', percent.toFixed(1))}
                   </span>
                 </div>
                 <div className="progress-bar">
@@ -309,17 +317,23 @@ export const TwoRoundDemo = () => {
                     style={{ width: `${percent}%` }}
                   />
                 </div>
-                {isTopTwo && <span className="badge">→ Round 2</span>}
+                {isTopTwo && (
+                  <span className="badge">
+                    {t(ShowcaseStrings.TR_AdvanceRound2)}
+                  </span>
+                )}
                 {!isTopTwo && (
-                  <span className="badge eliminated-badge">Eliminated</span>
+                  <span className="badge eliminated-badge">
+                    {t(ShowcaseStrings.TR_EliminatedBadge)}
+                  </span>
                 )}
               </div>
             );
           })}
 
           <div className="runoff-announcement">
-            <h3>🔄 No Majority! Runoff Required!</h3>
-            <p>Top 2 candidates advance to Round 2:</p>
+            <h3>{t(ShowcaseStrings.TR_NoMajority)}</h3>
+            <p>{t(ShowcaseStrings.TR_TopTwoAdvance)}</p>
             <div className="runoff-candidates">
               {topTwo.map((idx) => (
                 <div key={idx} className="runoff-card">
@@ -332,7 +346,7 @@ export const TwoRoundDemo = () => {
           </div>
 
           <button onClick={startRound2} className="tally-btn">
-            ▶️ Start Round 2 Runoff!
+            {t(ShowcaseStrings.TR_StartRound2)}
           </button>
         </div>
       )}
@@ -340,7 +354,7 @@ export const TwoRoundDemo = () => {
       {currentRound === 2 && !round2Results && (
         <>
           <div className="runoff-section">
-            <h4>🔥 Round 2 Runoff</h4>
+            <h4>{t(ShowcaseStrings.TR_Round2Runoff)}</h4>
             <div className="runoff-candidates-large">
               {topTwo.map((idx) => (
                 <div key={idx} className="runoff-candidate-large">
@@ -350,7 +364,10 @@ export const TwoRoundDemo = () => {
                   <h3>{candidates[idx].name}</h3>
                   <p>{candidates[idx].party}</p>
                   <p className="round1-result">
-                    Round 1: {Number(round1Results!.tallies[idx])} votes
+                    {t(ShowcaseStrings.TR_Round1ResultTemplate).replace(
+                      '{VOTES}',
+                      String(Number(round1Results!.tallies[idx])),
+                    )}
                   </p>
                 </div>
               ))}
@@ -359,7 +376,9 @@ export const TwoRoundDemo = () => {
 
           <div className="voters-section">
             <h4>
-              Final Vote ({round2Votes.size}/{voters.length} voted)
+              {t(ShowcaseStrings.TR_FinalVoteTemplate)
+                .replace('{VOTED}', String(round2Votes.size))
+                .replace('{TOTAL}', String(voters.length))}
             </h4>
             <div className="voters-grid">
               {voters.map((voter) => (
@@ -367,8 +386,10 @@ export const TwoRoundDemo = () => {
                   <strong>{voter}</strong>
                   {round2Votes.has(voter) ? (
                     <div className="vote-cast">
-                      ✓ Voted for{' '}
-                      {candidates[topTwo[round2Votes.get(voter)!]].emoji}
+                      {t(ShowcaseStrings.TR_VotedForTemplate).replace(
+                        '{EMOJI}',
+                        candidates[topTwo[round2Votes.get(voter)!]].emoji,
+                      )}
                     </div>
                   ) : (
                     <div className="vote-buttons">
@@ -390,7 +411,7 @@ export const TwoRoundDemo = () => {
 
           {round2Votes.size > 0 && (
             <button onClick={tallyRound2} className="tally-btn">
-              🏆 Final Count!
+              {t(ShowcaseStrings.TR_FinalCount)}
             </button>
           )}
         </>
@@ -398,12 +419,12 @@ export const TwoRoundDemo = () => {
 
       {round2Results && (
         <div className="results-section">
-          <h4>🎉 Election Winner!</h4>
+          <h4>{t(ShowcaseStrings.TR_ElectionWinner)}</h4>
 
           <div className="tally-visualization">
-            <h5>📊 Round 2 Final Tally</h5>
+            <h5>{t(ShowcaseStrings.TR_Round2TallyTitle)}</h5>
             <p className="tally-explain">
-              Head-to-head runoff between top 2 candidates:
+              {t(ShowcaseStrings.TR_Round2TallyExplain)}
             </p>
           </div>
 
@@ -422,7 +443,9 @@ export const TwoRoundDemo = () => {
                     {candidates[idx].emoji} {candidates[idx].name}
                   </span>
                   <span>
-                    {votes} votes ({percent.toFixed(1)}%)
+                    {t(ShowcaseStrings.Vote_VotesTemplate)
+                      .replace('{COUNT}', String(votes))
+                      .replace('{PERCENT}', percent.toFixed(1))}
                   </span>
                 </div>
                 <div className="progress-bar">
@@ -436,21 +459,31 @@ export const TwoRoundDemo = () => {
           })}
 
           <div className="winner-announcement">
-            <h2>🏆 {candidates[topTwo[round2Results.winner!]].name} Wins!</h2>
+            <h2>
+              {t(ShowcaseStrings.TR_WinnerAnnouncementTemplate).replace(
+                '{NAME}',
+                candidates[topTwo[round2Results.winner!]].name,
+              )}
+            </h2>
             <p>
-              Secured {Number(round2Results.tallies[round2Results.winner!])}{' '}
-              votes (
-              {(
-                (Number(round2Results.tallies[round2Results.winner!]) /
-                  round2Votes.size) *
-                100
-              ).toFixed(1)}
-              %) in the runoff
+              {t(ShowcaseStrings.TR_WinnerSecuredTemplate)
+                .replace(
+                  '{VOTES}',
+                  String(Number(round2Results.tallies[round2Results.winner!])),
+                )
+                .replace(
+                  '{PERCENT}',
+                  (
+                    (Number(round2Results.tallies[round2Results.winner!]) /
+                      round2Votes.size) *
+                    100
+                  ).toFixed(1),
+                )}
             </p>
           </div>
 
           <button onClick={reset} className="reset-btn">
-            New Election
+            {t(ShowcaseStrings.TR_NewElection)}
           </button>
         </div>
       )}

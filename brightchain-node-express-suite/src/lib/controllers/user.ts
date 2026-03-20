@@ -75,18 +75,16 @@ interface IUpdateProfileRequest {
 
 /**
  * Shape of req.user as set by the JWT auth middleware.
- * The middleware sets `memberId` (not `id`), so we accept both for
- * backward-compatibility with any callers that set `id` directly.
+ * The middleware sets `id` to match IRequestUserDTO.
  */
 interface IRequestUser {
   id?: string;
-  memberId?: string;
   username: string;
 }
 
-/** Extract the member ID from req.user, preferring memberId over id. */
+/** Extract the member ID from req.user. */
 function getUserId(user: IRequestUser): string {
-  const id = user.memberId ?? user.id;
+  const id = user.id;
   if (!id) throw new Error('No member ID on request user');
   return id;
 }
@@ -123,7 +121,7 @@ export class BrightDbUserController<
     }
 
     try {
-      const { username, email, password, mnemonic } =
+      const { username, email, password, mnemonic, displayName } =
         req.body as unknown as IRegistrationRequest;
 
       const authService =
@@ -133,11 +131,12 @@ export class BrightDbUserController<
         email,
         new SecureString(password),
         mnemonic ? new SecureString(mnemonic) : undefined,
+        displayName,
       );
 
       // Hook for subclasses to perform post-registration actions
       // (e.g. creating BrightHub social profiles)
-      await this.onPostRegister(result.memberId, username);
+      await this.onPostRegister(result.memberId, username, displayName);
 
       const authResponse: IAuthResponse<string> = {
         token: result.token,
@@ -176,6 +175,7 @@ export class BrightDbUserController<
   protected async onPostRegister(
     _memberId: string,
     _username: string,
+    _displayName?: string,
   ): Promise<void> {
     // No-op in base class
   }
@@ -486,7 +486,11 @@ export class BrightDbUserController<
 
       const authService =
         this.application.services.get<BrightDbAuthService<TID>>('auth');
-      await authService.changePassword(typedId as unknown as TID, currentPassword, newPassword);
+      await authService.changePassword(
+        typedId as unknown as TID,
+        currentPassword,
+        newPassword,
+      );
 
       return {
         statusCode: 200,
@@ -727,7 +731,9 @@ export class BrightDbUserController<
       const authService =
         this.application.services.get<BrightDbAuthService<TID>>('auth');
       if (!authService) {
-        throw new Error('Auth service not available — ensure BrightDbDatabasePlugin.init() ran');
+        throw new Error(
+          'Auth service not available — ensure BrightDbDatabasePlugin.init() ran',
+        );
       }
       const { member, memberId, userDTO } =
         await authService.verifyDirectLoginChallenge(
@@ -741,11 +747,27 @@ export class BrightDbUserController<
       const env = this.application.environment as any;
       const serverPublicKey: string = env.systemPublicKeyHex ?? '';
 
-      const token = authService.signToken(memberId, member.name, member.type);
+      const token = authService.signToken(
+        memberId,
+        member.name,
+        member.type,
+        userDTO?.rolePrivileges?.admin ? ['admin'] : [],
+      );
+
+      // Strip the internal `member` property from the DTO before serialization —
+      // it may contain BigInt fields (storageQuota, storageUsed) that cannot be
+      // serialized by JSON.stringify.
+      let cleanUserDTO = userDTO;
+      if (userDTO && 'member' in userDTO) {
+        const { member: _m, ...rest } = userDTO as typeof userDTO & {
+          member: unknown;
+        };
+        cleanUserDTO = rest;
+      }
 
       const response: IApiLoginResponse = {
         message: getSuiteCoreTranslation(SuiteCoreStringKey.LoggedIn_Success),
-        user: userDTO ?? {
+        user: cleanUserDTO ?? {
           id: memberId,
           username: member.name,
           email: member.email.toString(),
@@ -829,6 +851,7 @@ export class BrightDbUserController<
           id: user.id,
           email: user.email,
           username: user.username,
+          ...(user.displayName && { displayName: user.displayName }),
           roles: user.roles || [],
           rolePrivileges: user.rolePrivileges,
           timezone: user.timezone,
@@ -908,6 +931,7 @@ export class BrightDbUserController<
         currency,
         darkMode,
         directChallenge,
+        displayName,
       } = req.body as {
         email?: string;
         timezone?: string;
@@ -915,6 +939,7 @@ export class BrightDbUserController<
         currency?: string;
         darkMode?: boolean;
         directChallenge?: boolean;
+        displayName?: string;
       };
 
       const sp = ServiceProvider.getInstance();
@@ -930,7 +955,6 @@ export class BrightDbUserController<
             'db',
           );
         if (db) {
-          const usersCol = db.collection('user_settings');
           const updateFields: Record<string, unknown> = {};
           if (email !== undefined) updateFields['email'] = email;
           if (timezone !== undefined) updateFields['timezone'] = timezone;
@@ -940,9 +964,21 @@ export class BrightDbUserController<
           if (darkMode !== undefined) updateFields['darkMode'] = darkMode;
           if (directChallenge !== undefined)
             updateFields['directChallenge'] = directChallenge;
+          if (displayName !== undefined)
+            updateFields['displayName'] = displayName;
 
           if (Object.keys(updateFields).length > 0) {
+            // Update the main users collection so buildRequestUserDTO
+            // returns the latest settings on subsequent verify calls.
+            const usersCol = db.collection('users');
             await usersCol.updateOne(
+              { _id: idHex } as never,
+              { $set: updateFields } as never,
+            );
+
+            // Also persist to user_settings for dedicated settings queries.
+            const settingsCol = db.collection('user_settings');
+            await settingsCol.updateOne(
               { _id: idHex } as never,
               { $set: updateFields } as never,
               { upsert: true } as never,
@@ -962,6 +998,7 @@ export class BrightDbUserController<
         ...(currency !== undefined && { currency }),
         ...(darkMode !== undefined && { darkMode }),
         ...(directChallenge !== undefined && { directChallenge }),
+        ...(displayName !== undefined && { displayName }),
       };
 
       return {
@@ -1038,6 +1075,7 @@ export class BrightDbUserController<
         decoded.memberId,
         decoded.username,
         decoded.type,
+        decoded.roles,
       );
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any

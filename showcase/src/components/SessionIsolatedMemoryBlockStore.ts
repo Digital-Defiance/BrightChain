@@ -1,4 +1,3 @@
-/* eslint-disable @nx/enforce-module-boundaries */
 /**
  * Session-isolated memory block store for the BrightChain demo
  *
@@ -254,7 +253,7 @@ export class SessionIsolatedMemoryBlockStore implements IBlockStore {
    */
   public async getRandomBlocks(
     count: number,
-    blockSize: BlockSize,
+    _blockSize: BlockSize,
   ): Promise<Checksum[]> {
     const allKeys = Array.from(this.blocks.keys());
     const result: Checksum[] = [];

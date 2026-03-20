@@ -187,7 +187,7 @@ describe('Block Edge Cases', () => {
 
       try {
         block.validateSync();
-        fail('Expected ChecksumMismatchError');
+        throw new Error('Expected ChecksumMismatchError');
       } catch (error) {
         expect(error).toBeInstanceOf(ChecksumMismatchError);
         const checksumError = error as ChecksumMismatchError;

@@ -1,7 +1,7 @@
 /**
  * @fileoverview Property-based tests for DiskBlockAsyncStore expiration identification
  *
- * **Feature: backend-blockstore-quorum, Property 3: Block Expiration Identification**
+ * **Feature: backend-blockstore-brightTrust, Property 3: Block Expiration Identification**
  * **Validates: Requirements 3.1, 3.4**
  *
  * This test suite verifies that:

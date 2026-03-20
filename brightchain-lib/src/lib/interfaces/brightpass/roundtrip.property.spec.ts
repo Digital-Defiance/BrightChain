@@ -277,15 +277,20 @@ const arbAutofillPayload: fc.Arbitrary<AutofillPayload> = fc.record({
 });
 
 const arbIDecryptedVault: fc.Arbitrary<IDecryptedVault<string>> = fc.record({
-  id: fc.uuid(),
-  name: fc.string({ minLength: 1, maxLength: 100 }),
-  ownerId: fc.uuid(),
+  metadata: fc.record({
+    id: fc.uuid(),
+    name: fc.string({ minLength: 1, maxLength: 100 }),
+    ownerId: fc.uuid(),
+    createdAt: fc.string({ minLength: 1, maxLength: 30 }),
+    updatedAt: fc.string({ minLength: 1, maxLength: 30 }),
+    entryCount: fc.nat({ max: 10000 }),
+    sharedWith: fc.array(fc.uuid(), { minLength: 0, maxLength: 5 }),
+    vcblBlockId: arbBlockId,
+  }),
   propertyRecords: fc.array(arbEntryPropertyRecord, {
     minLength: 0,
     maxLength: 3,
   }),
-  createdAt: fc.string({ minLength: 1, maxLength: 30 }),
-  updatedAt: fc.string({ minLength: 1, maxLength: 30 }),
 });
 
 const arbIAutofillPayload: fc.Arbitrary<IAutofillPayload<string>> = fc.record({

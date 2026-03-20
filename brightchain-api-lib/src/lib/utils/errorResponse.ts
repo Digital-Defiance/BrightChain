@@ -1,6 +1,6 @@
 import {
-  QuorumError,
-  QuorumErrorType,
+  BrightTrustError,
+  BrightTrustErrorType,
   StoreError,
   StoreErrorType,
 } from '@brightchain/brightchain-lib';
@@ -19,7 +19,7 @@ export enum ErrorCode {
   BLOCK_ALREADY_EXISTS = 'BLOCK_ALREADY_EXISTS',
   METADATA_CORRUPTED = 'METADATA_CORRUPTED',
 
-  // Quorum errors
+  // BrightTrust errors
   MEMBER_NOT_FOUND = 'MEMBER_NOT_FOUND',
   DOCUMENT_NOT_FOUND = 'DOCUMENT_NOT_FOUND',
   INSUFFICIENT_SHARES = 'INSUFFICIENT_SHARES',
@@ -632,17 +632,17 @@ function mapStoreErrorToResult(error: StoreError): ErrorMappingResult {
 }
 
 /**
- * Map a QuorumError to an appropriate API error response.
- * @deprecated Use mapQuorumErrorWithRequestId instead
+ * Map a BrightTrustError to an appropriate API error response.
+ * @deprecated Use mapBrightTrustErrorWithRequestId instead
  *
- * @param error - The QuorumError to map
+ * @param error - The BrightTrustError to map
  * @returns Object with statusCode and response
  */
-export function mapQuorumError(error: QuorumError): {
+export function mapBrightTrustError(error: BrightTrustError): {
   statusCode: number;
   response: ApiErrorResponse;
 } {
-  const mapping = mapQuorumErrorToResult(error);
+  const mapping = mapBrightTrustErrorToResult(error);
   return createApiErrorResult(
     mapping.statusCode,
     mapping.code,
@@ -652,17 +652,17 @@ export function mapQuorumError(error: QuorumError): {
 }
 
 /**
- * Map a QuorumError to an appropriate API error response with requestId.
+ * Map a BrightTrustError to an appropriate API error response with requestId.
  *
- * @param error - The QuorumError to map
+ * @param error - The BrightTrustError to map
  * @param requestId - The unique request ID for tracing
  * @returns Object with statusCode and response
  */
-export function mapQuorumErrorWithRequestId(
-  error: QuorumError,
+export function mapBrightTrustErrorWithRequestId(
+  error: BrightTrustError,
   requestId: string,
 ): { statusCode: number; response: StandardErrorResponse } {
-  const mapping = mapQuorumErrorToResult(error);
+  const mapping = mapBrightTrustErrorToResult(error);
   return createApiErrorResultWithRequestId(
     mapping.statusCode,
     mapping.code,
@@ -673,23 +673,25 @@ export function mapQuorumErrorWithRequestId(
 }
 
 /**
- * Map a QuorumError to error mapping result.
+ * Map a BrightTrustError to error mapping result.
  */
-function mapQuorumErrorToResult(error: QuorumError): ErrorMappingResult {
+function mapBrightTrustErrorToResult(
+  error: BrightTrustError,
+): ErrorMappingResult {
   switch (error.type) {
-    case QuorumErrorType.MemberNotFound:
+    case BrightTrustErrorType.MemberNotFound:
       return {
         statusCode: 404,
         code: ErrorCode.MEMBER_NOT_FOUND,
         message: error.message,
       };
-    case QuorumErrorType.DocumentNotFound:
+    case BrightTrustErrorType.DocumentNotFound:
       return {
         statusCode: 404,
         code: ErrorCode.DOCUMENT_NOT_FOUND,
         message: error.message,
       };
-    case QuorumErrorType.NotEnoughMembers:
+    case BrightTrustErrorType.NotEnoughMembers:
       return {
         statusCode: 400,
         code: ErrorCode.INVALID_MEMBER_COUNT,
@@ -719,8 +721,8 @@ export function handleError(error: unknown): {
   if (error instanceof StoreError) {
     return mapStoreError(error);
   }
-  if (error instanceof QuorumError) {
-    return mapQuorumError(error);
+  if (error instanceof BrightTrustError) {
+    return mapBrightTrustError(error);
   }
   if (error instanceof Error) {
     return internalError(error);
@@ -743,8 +745,8 @@ export function handleErrorWithRequestId(
   if (error instanceof StoreError) {
     return mapStoreErrorWithRequestId(error, requestId);
   }
-  if (error instanceof QuorumError) {
-    return mapQuorumErrorWithRequestId(error, requestId);
+  if (error instanceof BrightTrustError) {
+    return mapBrightTrustErrorWithRequestId(error, requestId);
   }
   return createInternalError(
     requestId,

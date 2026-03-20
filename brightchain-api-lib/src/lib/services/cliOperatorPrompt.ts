@@ -1,7 +1,7 @@
 /**
  * CLIOperatorPrompt — Node.js readline-based implementation of IOperatorPrompt.
  *
- * Presents quorum proposals to the node operator via the terminal and collects
+ * Presents BrightTrust proposals to the node operator via the terminal and collects
  * vote decisions with password authentication on approve votes.
  *
  * Tracks failed authentication attempts per proposal and locks voting after
@@ -53,7 +53,7 @@ const DEFAULT_CONFIG: CLIOperatorPromptConfig = {
 // ─── Implementation ─────────────────────────────────────────────────────────
 
 /**
- * CLI-based operator prompt for quorum voting.
+ * CLI-based operator prompt for BrightTrust voting.
  *
  * Uses Node.js readline to interact with the operator via stdin/stdout.
  * Tracks failed authentication attempts per proposal and enforces lockout
@@ -150,7 +150,7 @@ export class CLIOperatorPrompt implements IOperatorPrompt {
    */
   private displayProposal(proposal: ProposalDisplay): void {
     this.output.write('\n══════════════════════════════════════════════════\n');
-    this.output.write('  QUORUM PROPOSAL — VOTE REQUIRED\n');
+    this.output.write('  BRIGHT_TRUST PROPOSAL — VOTE REQUIRED\n');
     this.output.write('══════════════════════════════════════════════════\n\n');
     this.output.write(`  Proposal ID:  ${proposal.proposalId}\n`);
     this.output.write(`  Description:  ${proposal.description}\n`);
@@ -232,7 +232,7 @@ export class CLIOperatorPrompt implements IOperatorPrompt {
 
   /**
    * Record a failed attempt externally (for use when authentication
-   * is validated outside this class, e.g., by the QuorumStateMachine).
+   * is validated outside this class, e.g., by the BrightTrustStateMachine).
    */
   recordAuthFailure(proposalId: HexString): void {
     this.recordFailedAttempt(proposalId);

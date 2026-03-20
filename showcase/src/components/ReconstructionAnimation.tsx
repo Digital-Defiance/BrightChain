@@ -1,7 +1,8 @@
-/* eslint-disable @nx/enforce-module-boundaries */
 import { FileReceipt } from '@brightchain/brightchain-lib';
 import { AnimatePresence, motion } from 'framer-motion';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useShowcaseI18n } from '../i18n/ShowcaseI18nContext';
+import { ShowcaseStrings } from '../i18n/showcaseStrings';
 import './ReconstructionAnimation.css';
 
 export interface ReconstructionAnimationProps {
@@ -58,51 +59,53 @@ export const ReconstructionAnimation: React.FC<
   onFileReassembled,
   onAnimationComplete,
 }) => {
+  const { t } = useShowcaseI18n();
   const [currentStep, setCurrentStep] = useState(0);
   const [blocks, setBlocks] = useState<ReconstructionBlock[]>([]);
   const [cblData, setCBLData] = useState<string[]>([]);
   const [reassemblyProgress, setReassemblyProgress] = useState(0);
   const [downloadReady, setDownloadReady] = useState(false);
+  const hasStartedRef = useRef(false);
   const [animationSteps, setAnimationSteps] = useState<AnimationStep[]>([
     {
       id: 'cbl-processing',
-      name: 'Processing CBL',
-      description: 'Reading Constituent Block List metadata',
+      name: t(ShowcaseStrings.Recon_Step_ProcessCBL),
+      description: t(ShowcaseStrings.Recon_Step_ProcessCBL_Desc),
       status: 'pending',
       progress: 0,
     },
     {
       id: 'block-selection',
-      name: 'Selecting Blocks',
-      description: 'Identifying required blocks from soup',
+      name: t(ShowcaseStrings.Recon_Step_SelectBlocks),
+      description: t(ShowcaseStrings.Recon_Step_SelectBlocks_Desc),
       status: 'pending',
       progress: 0,
     },
     {
       id: 'block-retrieval',
-      name: 'Retrieving Blocks',
-      description: 'Collecting blocks from storage',
+      name: t(ShowcaseStrings.Recon_Step_RetrieveBlocks),
+      description: t(ShowcaseStrings.Recon_Step_RetrieveBlocks_Desc),
       status: 'pending',
       progress: 0,
     },
     {
       id: 'validation',
-      name: 'Validating Checksums',
-      description: 'Verifying block integrity',
+      name: t(ShowcaseStrings.Recon_Step_ValidateChecksums),
+      description: t(ShowcaseStrings.Recon_Step_ValidateChecksums_Desc),
       status: 'pending',
       progress: 0,
     },
     {
       id: 'reassembly',
-      name: 'Reassembling File',
-      description: 'Combining blocks and removing padding',
+      name: t(ShowcaseStrings.Recon_Step_Reassemble),
+      description: t(ShowcaseStrings.Recon_Step_Reassemble_Desc),
       status: 'pending',
       progress: 0,
     },
     {
       id: 'download-ready',
-      name: 'Download Ready',
-      description: 'File reconstruction complete',
+      name: t(ShowcaseStrings.Recon_Step_DownloadReady),
+      description: t(ShowcaseStrings.Recon_Step_DownloadReady_Desc),
       status: 'pending',
       progress: 0,
     },
@@ -159,6 +162,7 @@ export const ReconstructionAnimation: React.FC<
       console.error('Failed to process CBL:', error);
       throw error;
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [receipt, animationSpeed, onCBLProcessed]);
 
   // Step 2: Select blocks
@@ -166,6 +170,9 @@ export const ReconstructionAnimation: React.FC<
     async (blockIds: string[]) => {
       setCurrentStep(1);
       updateStepStatus(1, 'active', 0);
+
+      // Clear any previous blocks before starting
+      setBlocks([]);
 
       const newBlocks: ReconstructionBlock[] = [];
 
@@ -183,7 +190,8 @@ export const ReconstructionAnimation: React.FC<
         };
 
         newBlocks.push(block);
-        setBlocks((prev) => [...prev, block]);
+        // Replace entire array with newBlocks so far to avoid duplicates
+        setBlocks([...newBlocks]);
 
         // Call callback if provided
         if (onBlockSelected) {
@@ -209,6 +217,7 @@ export const ReconstructionAnimation: React.FC<
       updateStepStatus(1, 'complete', 100);
       return newBlocks;
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [
       blockSize,
       generateBlockColor,
@@ -258,6 +267,7 @@ export const ReconstructionAnimation: React.FC<
 
       updateStepStatus(2, 'complete', 100);
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [onBlockRetrieved, isEducationalMode, animationSpeed],
   );
 
@@ -303,6 +313,7 @@ export const ReconstructionAnimation: React.FC<
 
       updateStepStatus(3, 'complete', 100);
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [onChecksumValidated, isEducationalMode, animationSpeed],
   );
 
@@ -328,6 +339,7 @@ export const ReconstructionAnimation: React.FC<
 
     updateStepStatus(4, 'complete', 100);
     return fileData;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [receipt.originalSize, onFileReassembled, animationSpeed]);
 
   // Step 6: Download ready
@@ -343,6 +355,7 @@ export const ReconstructionAnimation: React.FC<
 
     setDownloadReady(true);
     updateStepStatus(5, 'complete', 100);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [animationSpeed]);
 
   // Helper function to update step status
@@ -395,14 +408,16 @@ export const ReconstructionAnimation: React.FC<
 
   // Start animation when component mounts
   useEffect(() => {
+    if (hasStartedRef.current) return;
+    hasStartedRef.current = true;
     startAnimation();
   }, [startAnimation]);
 
   return (
     <div className="reconstruction-animation">
       <div className="animation-header">
-        <h3>🔄 File Reconstruction Animation</h3>
-        <p>Watch as blocks are reassembled into your original file</p>
+        <h3>{t(ShowcaseStrings.Recon_Title)}</h3>
+        <p>{t(ShowcaseStrings.Recon_Subtitle)}</p>
       </div>
 
       {/* Animation Steps Progress */}
@@ -461,8 +476,8 @@ export const ReconstructionAnimation: React.FC<
             transition={{ duration: 0.5 }}
           >
             <div className="cbl-header">
-              <h4>📋 Constituent Block List</h4>
-              <p>Block references extracted from CBL</p>
+              <h4>{t(ShowcaseStrings.Recon_CBLTitle)}</h4>
+              <p>{t(ShowcaseStrings.Recon_CBLSubtitle)}</p>
             </div>
             <div className="cbl-data">
               {cblData.map((blockId, index) => (
@@ -492,8 +507,12 @@ export const ReconstructionAnimation: React.FC<
               transition={{ duration: 0.5 }}
             >
               <div className="blocks-header">
-                <h4>🥫 Blocks ({blocks.length})</h4>
-                <p>Blocks being retrieved and validated</p>
+                <h4>
+                  {t(ShowcaseStrings.Recon_BlocksTemplate, {
+                    COUNT: String(blocks.length),
+                  })}
+                </h4>
+                <p>{t(ShowcaseStrings.Recon_BlocksSubtitle)}</p>
               </div>
               <div className="blocks-grid">
                 {blocks.map((block, index) => (
@@ -540,8 +559,8 @@ export const ReconstructionAnimation: React.FC<
             transition={{ duration: 0.5 }}
           >
             <div className="reassembly-header">
-              <h4>🔧 File Reassembly</h4>
-              <p>Combining blocks and removing padding</p>
+              <h4>{t(ShowcaseStrings.Recon_ReassemblyTitle)}</h4>
+              <p>{t(ShowcaseStrings.Recon_ReassemblySubtitle)}</p>
             </div>
             <div className="reassembly-progress-bar">
               <motion.div
@@ -566,21 +585,27 @@ export const ReconstructionAnimation: React.FC<
             transition={{ duration: 0.5, type: 'spring' }}
           >
             <div className="download-ready-icon">✅</div>
-            <h3>File Reconstruction Complete!</h3>
-            <p>Your file is ready for download</p>
+            <h3>{t(ShowcaseStrings.Recon_Complete)}</h3>
+            <p>{t(ShowcaseStrings.Recon_ReadyForDownload)}</p>
             <div className="download-ready-details">
               <div className="detail-item">
-                <span className="detail-label">File Name:</span>
+                <span className="detail-label">
+                  {t(ShowcaseStrings.Recon_FileName)}
+                </span>
                 <span className="detail-value">{receipt.fileName}</span>
               </div>
               <div className="detail-item">
-                <span className="detail-label">Size:</span>
+                <span className="detail-label">
+                  {t(ShowcaseStrings.Recon_Size)}
+                </span>
                 <span className="detail-value">
                   {receipt.originalSize} bytes
                 </span>
               </div>
               <div className="detail-item">
-                <span className="detail-label">Blocks:</span>
+                <span className="detail-label">
+                  {t(ShowcaseStrings.Recon_Blocks)}
+                </span>
                 <span className="detail-value">{receipt.blockCount}</span>
               </div>
             </div>
@@ -597,7 +622,7 @@ export const ReconstructionAnimation: React.FC<
           >
             <div className="educational-header">
               <span>🎓</span>
-              <h4>What's Happening Now</h4>
+              <h4>{t(ShowcaseStrings.Recon_WhatsHappening)}</h4>
             </div>
             <div className="educational-content">
               <p>
@@ -607,48 +632,58 @@ export const ReconstructionAnimation: React.FC<
               {currentStep === 0 && (
                 <div className="technical-details">
                   <p>
-                    <strong>Technical Details:</strong>
+                    <strong>{t(ShowcaseStrings.Recon_TechDetails)}</strong>
                   </p>
                   <ul>
-                    <li>CBL contains references to all blocks</li>
-                    <li>Block count: {receipt.blockCount}</li>
-                    <li>Original file size: {receipt.originalSize} bytes</li>
+                    <li>{t(ShowcaseStrings.Recon_CBLContainsRefs)}</li>
+                    <li>
+                      {t(ShowcaseStrings.Recon_BlockCountTemplate, {
+                        COUNT: String(receipt.blockCount),
+                      })}
+                    </li>
+                    <li>
+                      {t(ShowcaseStrings.Recon_OriginalSizeTemplate, {
+                        SIZE: String(receipt.originalSize),
+                      })}
+                    </li>
                   </ul>
                 </div>
               )}
               {currentStep === 1 && (
                 <div className="technical-details">
                   <p>
-                    <strong>Block Selection:</strong>
+                    <strong>{t(ShowcaseStrings.Recon_BlockSelection)}</strong>
                   </p>
                   <ul>
-                    <li>Identifying blocks in the soup</li>
-                    <li>Blocks are selected by their checksums</li>
-                    <li>All blocks must be present for reconstruction</li>
+                    <li>{t(ShowcaseStrings.Recon_IdentifyingBlocks)}</li>
+                    <li>{t(ShowcaseStrings.Recon_SelectedByChecksums)}</li>
+                    <li>{t(ShowcaseStrings.Recon_AllBlocksRequired)}</li>
                   </ul>
                 </div>
               )}
               {currentStep === 3 && (
                 <div className="technical-details">
                   <p>
-                    <strong>Checksum Validation:</strong>
+                    <strong>
+                      {t(ShowcaseStrings.Recon_ChecksumValidation)}
+                    </strong>
                   </p>
                   <ul>
-                    <li>Ensures blocks haven't been corrupted</li>
-                    <li>Compares stored checksum with calculated checksum</li>
-                    <li>Invalid blocks would cause reconstruction to fail</li>
+                    <li>{t(ShowcaseStrings.Recon_EnsuresNotCorrupted)}</li>
+                    <li>{t(ShowcaseStrings.Recon_ComparesChecksums)}</li>
+                    <li>{t(ShowcaseStrings.Recon_InvalidBlocksFail)}</li>
                   </ul>
                 </div>
               )}
               {currentStep === 4 && (
                 <div className="technical-details">
                   <p>
-                    <strong>File Reassembly:</strong>
+                    <strong>{t(ShowcaseStrings.Recon_FileReassembly)}</strong>
                   </p>
                   <ul>
-                    <li>Blocks are combined in correct order</li>
-                    <li>Random padding is removed</li>
-                    <li>Original file is reconstructed byte-for-byte</li>
+                    <li>{t(ShowcaseStrings.Recon_CombinedInOrder)}</li>
+                    <li>{t(ShowcaseStrings.Recon_PaddingRemoved)}</li>
+                    <li>{t(ShowcaseStrings.Recon_ReconstructedByteForByte)}</li>
                   </ul>
                 </div>
               )}

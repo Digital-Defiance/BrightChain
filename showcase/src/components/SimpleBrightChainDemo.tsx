@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { BlockSize, BrightChain } from '@brightchain/brightchain-lib';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 // Simple interfaces to avoid import issues
@@ -198,21 +199,11 @@ export const SimpleBrightChainDemo: React.FC = () => {
 
   useEffect(() => {
     // Initialize BrightChain when component mounts
-    const initBrightChain = async () => {
-      try {
-        // Dynamic import to avoid build issues
-        const { BrightChain, BlockSize } = await import(
-          '@brightchain/brightchain-lib'
-        );
-
-        // Browser version doesn't need initialization
-        setBrightChain(new BrightChain(BlockSize.Small));
-      } catch (error) {
-        console.error('Failed to initialize BrightChain:', error);
-      }
-    };
-
-    initBrightChain();
+    try {
+      setBrightChain(new BrightChain(BlockSize.Small));
+    } catch (error) {
+      console.error('Failed to initialize BrightChain:', error);
+    }
   }, []);
 
   const updateStep = (id: string, updates: Partial<ProcessStep>) => {

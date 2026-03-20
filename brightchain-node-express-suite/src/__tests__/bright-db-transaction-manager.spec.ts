@@ -1,19 +1,30 @@
+import type { BrightDb } from '@brightchain/db';
 import { BrightDbTransactionManager } from '../lib/transactions/bright-db-transaction-manager';
 
 function createMockDb(commitShouldFail = false) {
   const mockSession = {
     id: 'test-session',
     inTransaction: false,
-    startTransaction: jest.fn(function (this: any) { this.inTransaction = true; }),
-    commitTransaction: jest.fn(async function (this: any) {
+    startTransaction: jest.fn(function (this: { inTransaction: boolean }) {
+      this.inTransaction = true;
+    }),
+    commitTransaction: jest.fn(async function (this: {
+      inTransaction: boolean;
+    }) {
       if (commitShouldFail) throw new Error('commit failed');
       this.inTransaction = false;
     }),
-    abortTransaction: jest.fn(async function (this: any) { this.inTransaction = false; }),
+    abortTransaction: jest.fn(async function (this: {
+      inTransaction: boolean;
+    }) {
+      this.inTransaction = false;
+    }),
     endSession: jest.fn(),
   };
   return {
-    db: { startSession: jest.fn().mockReturnValue(mockSession) } as any,
+    db: {
+      startSession: jest.fn().mockReturnValue(mockSession),
+    } as unknown as BrightDb,
     session: mockSession,
   };
 }
@@ -47,7 +58,9 @@ describe('BrightDbTransactionManager', () => {
     const { db, session } = createMockDb();
     const mgr = new BrightDbTransactionManager(db, true);
     await expect(
-      mgr.execute(async () => { throw new Error('boom'); }),
+      mgr.execute(async () => {
+        throw new Error('boom');
+      }),
     ).rejects.toThrow('boom');
     expect(session.abortTransaction).toHaveBeenCalled();
     expect(session.endSession).toHaveBeenCalled();
@@ -74,7 +87,9 @@ describe('BrightDbTransactionManager', () => {
     const mgr = new BrightDbTransactionManager(db, true);
     await expect(
       mgr.execute(
-        async () => { throw new Error('persistent'); },
+        async () => {
+          throw new Error('persistent');
+        },
         { maxRetries: 1 },
       ),
     ).rejects.toThrow('persistent');

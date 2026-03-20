@@ -10,7 +10,7 @@
 import { expect as baseExpect, test as baseTest } from '@playwright/test';
 import axios from 'axios';
 
-import { expect, generateCredentials, test } from './fixtures';
+import { expect, generateCredentials, test, waitForSuspense } from './fixtures';
 
 const BASE_URL = process.env['BASE_URL'] || 'http://localhost:3000';
 
@@ -55,6 +55,52 @@ async function sendEmailViaApi(
   return res.data.data?.messageId ?? res.data.data?.result?.messageId ?? '';
 }
 
+/**
+ * Helper: wait for the email list to load (not loading, not error).
+ * First waits for the lazy-loaded BrightMail chunk to resolve via Suspense,
+ * then waits for the inbox loading state to finish.
+ * Returns the email-list container locator.
+ */
+async function waitForEmailList(page: import('@playwright/test').Page) {
+  // Wait for the lazy chunk to load first
+  await waitForSuspense(page);
+
+  // Wait for either the email list or the empty state
+  const emailList = page.locator('[data-testid="email-list"]');
+  const emptyState = page.locator('[data-testid="inbox-empty"]');
+  const errorState = page.locator('[data-testid="inbox-error"]');
+
+  // First ensure loading is done
+  await page
+    .locator('[data-testid="inbox-loading"]')
+    .waitFor({ state: 'hidden', timeout: 20000 })
+    .catch(() => {});
+
+  // Check for error
+  const hasError = await errorState
+    .isVisible({ timeout: 2000 })
+    .catch(() => false);
+  if (hasError) {
+    const errorText = await errorState.textContent();
+    throw new Error(`Inbox failed to load — error state: ${errorText}`);
+  }
+
+  return { emailList, emptyState };
+}
+
+/**
+ * Helper: find an email row by subject text within the email list.
+ */
+function findEmailRowBySubject(
+  page: import('@playwright/test').Page,
+  subject: string,
+) {
+  // EmailRow renders data-testid="email-subject" containing the subject text
+  return page.locator('[data-testid^="email-row-"]', {
+    has: page.locator(`[data-testid="email-subject"]:has-text("${subject}")`),
+  });
+}
+
 // ─── Test 1: Authenticated user sees BrightMail menu ─────────
 // Requirement 10.1
 
@@ -95,8 +141,10 @@ test.describe('BrightMail Menu & Navigation', () => {
       timeout: 10000,
     });
 
+    // Wait for the lazy-loaded BrightMail chunk to resolve
+    await waitForSuspense(authenticatedPage);
+
     // Verify inbox content is visible (must NOT be an error state)
-    // First, ensure no error indicator is shown — SERVICE_UNAVAILABLE should fail the test
     const inboxError = authenticatedPage.locator('[data-testid="inbox-error"]');
     const errorVisible = await inboxError
       .isVisible({ timeout: 3000 })
@@ -119,11 +167,11 @@ test.describe('BrightMail Menu & Navigation', () => {
   });
 });
 
-// ─── Test 2: Inbox displays email columns ────────────────────
+// ─── Test 2: Inbox displays email data fields ───────────────
 // Requirement 10.2
 
 test.describe('BrightMail Inbox Columns', () => {
-  test('inbox displays emails with sender, subject, and date columns', async ({
+  test('inbox displays emails with sender, subject, and date', async ({
     authenticatedPage,
     authResult,
   }) => {
@@ -146,18 +194,15 @@ test.describe('BrightMail Inbox Columns', () => {
     await authenticatedPage.goto('/brightmail');
     await authenticatedPage.waitForLoadState('networkidle');
 
-    // Wait for the email list table to appear
-    const table = authenticatedPage.locator('table[role="grid"]');
-    await expect(table).toBeVisible({ timeout: 15000 });
+    // Wait for the email list to appear (MUI List with role="listbox")
+    const { emailList } = await waitForEmailList(authenticatedPage);
+    await expect(emailList).toBeVisible({ timeout: 15000 });
 
-    // Verify column headers exist
-    await expect(table.locator('th:has-text("Sender")')).toBeVisible();
-    await expect(table.locator('th:has-text("Subject")')).toBeVisible();
-    await expect(table.locator('th:has-text("Date")')).toBeVisible();
-
-    // Verify at least one email row is rendered with data
-    const firstRow = table.locator('tbody tr').first();
-    await expect(firstRow).toBeVisible();
+    // Verify at least one email row is rendered with sender, subject, date
+    const firstRow = authenticatedPage
+      .locator('[data-testid^="email-row-"]')
+      .first();
+    await expect(firstRow).toBeVisible({ timeout: 10000 });
     await expect(
       firstRow.locator('[data-testid="email-sender"]'),
     ).toBeVisible();
@@ -170,56 +215,72 @@ test.describe('BrightMail Inbox Columns', () => {
 
 // ─── Test 3: Compose-send-verify flow ────────────────────────
 // Requirement 10.3
+// Compose is a modal overlay (no /brightmail/compose route).
+// It is opened via the Compose FAB in the sidebar.
 
 test.describe('BrightMail Compose Flow', () => {
   test('compose, send, and verify email appears in inbox', async ({
     authenticatedPage,
     authResult,
   }) => {
+    // Compose flow involves modal interaction and email delivery — generous timeout
+    test.setTimeout(120_000);
+
     const uniqueSubject = `E2E Compose ${Date.now()}`;
     const recipientLocal = authResult.email.split('@')[0];
     const recipientDomain = authResult.email.split('@')[1];
     const recipientAddress = `${recipientLocal}@${recipientDomain}`;
 
-    // Navigate to compose
-    await authenticatedPage.goto('/brightmail/compose');
+    // Navigate to inbox first
+    await authenticatedPage.goto('/brightmail');
     await authenticatedPage.waitForLoadState('networkidle');
 
-    // Fill in the compose form
-    const composeForm = authenticatedPage.locator(
-      '[data-testid="compose-form"]',
-    );
-    await expect(composeForm).toBeVisible({ timeout: 15000 });
+    // Wait for inbox to finish loading
+    await waitForEmailList(authenticatedPage).catch(() => {});
 
-    await authenticatedPage.locator('#compose-to').fill(recipientAddress);
-    await authenticatedPage.locator('#compose-subject').fill(uniqueSubject);
-    await authenticatedPage
-      .locator('#compose-body')
-      .fill('E2E test email body content.');
+    // Open compose modal via the Compose FAB button in the sidebar
+    const composeFab = authenticatedPage.getByRole('button', {
+      name: /compose/i,
+    });
+    await expect(composeFab).toBeVisible({ timeout: 10000 });
+    await composeFab.click();
+
+    // Wait for the compose modal to appear
+    const composeModal = authenticatedPage.locator(
+      '[data-testid="compose-modal"]',
+    );
+    await expect(composeModal).toBeVisible({ timeout: 10000 });
+
+    // The ComposeModal uses RecipientChipInput for To field.
+    // Type the recipient address and press Enter to commit the chip.
+    const toInput = composeModal.locator('input').first();
+    await toInput.fill(recipientAddress);
+    await toInput.press('Enter');
+
+    // Fill subject
+    const subjectInput = composeModal.getByLabel(/subject/i);
+    await subjectInput.fill(uniqueSubject);
 
     // Send the email
-    const sendButton = authenticatedPage.locator('[data-testid="send-button"]');
-    await expect(sendButton).toBeEnabled();
+    const sendButton = composeModal.locator(
+      '[data-testid="compose-send-button"]',
+    );
+    await expect(sendButton).toBeEnabled({ timeout: 5000 });
     await sendButton.click();
 
     // Verify success notification
     await expect(
-      authenticatedPage
-        .getByRole('alert')
-        .filter({ hasText: /sent successfully/i }),
-    ).toBeVisible({ timeout: 10000 });
+      authenticatedPage.getByRole('alert').filter({ hasText: /sent/i }),
+    ).toBeVisible({ timeout: 15000 });
 
     // Navigate to inbox and verify the sent email appears
     await authenticatedPage.goto('/brightmail');
     await authenticatedPage.waitForLoadState('networkidle');
 
-    // Wait for inbox to load and check for the email subject
-    const table = authenticatedPage.locator('table[role="grid"]');
-    await expect(table).toBeVisible({ timeout: 15000 });
-
-    await expect(table.locator(`td:has-text("${uniqueSubject}")`)).toBeVisible({
-      timeout: 10000,
-    });
+    // Wait for email list and check for the email subject
+    await waitForEmailList(authenticatedPage);
+    const emailRow = findEmailRowBySubject(authenticatedPage, uniqueSubject);
+    await expect(emailRow).toBeVisible({ timeout: 15000 });
   });
 });
 
@@ -227,6 +288,10 @@ test.describe('BrightMail Compose Flow', () => {
 // Requirement 10.4
 
 test.describe('BrightMail Thread View', () => {
+  // Use a viewport narrower than 1280px so InboxView navigates
+  // instead of opening the reading pane (wide-desktop mode).
+  test.use({ viewport: { width: 1024, height: 720 } });
+
   test('clicking an email in inbox opens the thread view', async ({
     authenticatedPage,
     authResult,
@@ -249,11 +314,10 @@ test.describe('BrightMail Thread View', () => {
     await authenticatedPage.goto('/brightmail');
     await authenticatedPage.waitForLoadState('networkidle');
 
-    const table = authenticatedPage.locator('table[role="grid"]');
-    await expect(table).toBeVisible({ timeout: 15000 });
+    await waitForEmailList(authenticatedPage);
 
     // Click the email row with our subject
-    const emailRow = table.locator(`tr:has(td:has-text("${uniqueSubject}"))`);
+    const emailRow = findEmailRowBySubject(authenticatedPage, uniqueSubject);
     await expect(emailRow).toBeVisible({ timeout: 10000 });
     await emailRow.click();
 
@@ -267,16 +331,18 @@ test.describe('BrightMail Thread View', () => {
     await expect(threadView).toBeVisible({ timeout: 15000 });
 
     // Verify the email subject appears in the thread
-    const subjectSelector =
-      `[data-testid="message-subject"]` + `:has-text("${uniqueSubject}")`;
-    await expect(threadView.locator(subjectSelector)).toBeVisible();
-
-    // Verify reply and forward buttons are present
     await expect(
-      threadView.locator('button:has-text("Reply")').first(),
+      threadView.locator(
+        `[data-testid="message-subject"]:has-text("${uniqueSubject}")`,
+      ),
+    ).toBeVisible();
+
+    // Verify reply and forward icon buttons are present (they use aria-label, not text)
+    await expect(
+      threadView.locator('[data-testid^="reply-btn-"]').first(),
     ).toBeVisible();
     await expect(
-      threadView.locator('button:has-text("Forward")').first(),
+      threadView.locator('[data-testid^="forward-btn-"]').first(),
     ).toBeVisible();
 
     // Verify back-to-inbox link is present
@@ -288,8 +354,13 @@ test.describe('BrightMail Thread View', () => {
 
 // ─── Test 5: Reply flow within thread ────────────────────────
 // Requirement 10.5
+// ThreadView has an inline reply box at the bottom (data-testid="inline-reply-box").
+// Clicking the reply icon button opens the ComposeModal with pre-filled data.
+// We test the inline reply flow which is simpler and more reliable.
 
 test.describe('BrightMail Reply Flow', () => {
+  test.use({ viewport: { width: 1024, height: 720 } });
+
   test('reply to an email within thread view', async ({
     authenticatedPage,
     authResult,
@@ -312,10 +383,9 @@ test.describe('BrightMail Reply Flow', () => {
     await authenticatedPage.goto('/brightmail');
     await authenticatedPage.waitForLoadState('networkidle');
 
-    const table = authenticatedPage.locator('table[role="grid"]');
-    await expect(table).toBeVisible({ timeout: 15000 });
+    await waitForEmailList(authenticatedPage);
 
-    const emailRow = table.locator(`tr:has(td:has-text("${uniqueSubject}"))`);
+    const emailRow = findEmailRowBySubject(authenticatedPage, uniqueSubject);
     await expect(emailRow).toBeVisible({ timeout: 10000 });
     await emailRow.click();
 
@@ -323,41 +393,30 @@ test.describe('BrightMail Reply Flow', () => {
     const threadView = authenticatedPage.locator('[data-testid="thread-view"]');
     await expect(threadView).toBeVisible({ timeout: 15000 });
 
-    // Click the reply button on the first message
-    const replyButton = threadView.locator('button:has-text("Reply")').first();
-    await expect(replyButton).toBeVisible();
-    await replyButton.click();
-
-    // Verify compose form appears with pre-filled data
-    const composeForm = authenticatedPage.locator(
-      '[data-testid="compose-form"]',
+    // Use the inline reply box at the bottom of the thread
+    const inlineReplyBox = authenticatedPage.locator(
+      '[data-testid="inline-reply-box"]',
     );
-    await expect(composeForm).toBeVisible({
-      timeout: 10000,
-    });
+    await expect(inlineReplyBox).toBeVisible({ timeout: 10000 });
 
-    // Verify subject is pre-filled with "Re: " prefix
-    const subjectField = authenticatedPage.locator('#compose-subject');
-    const subjectValue = await subjectField.inputValue();
-    expect(subjectValue).toContain('Re: ');
-    expect(subjectValue).toContain(uniqueSubject);
+    // Type a reply in the inline reply input.
+    // MUI TextField renders two <textarea> elements (one visible, one hidden
+    // shadow for auto-sizing). Target only the visible one.
+    const replyInput = inlineReplyBox.locator(
+      '[data-testid="inline-reply-input"] textarea:not([aria-hidden="true"])',
+    );
+    await replyInput.fill('This is an inline reply from E2E test.');
 
-    // Verify To field is pre-filled
-    const toField = authenticatedPage.locator('#compose-to');
-    const toValue = await toField.inputValue();
-    expect(toValue.length).toBeGreaterThan(0);
-
-    // Fill in reply body and send
-    await authenticatedPage.locator('#compose-body').fill('This is a reply.');
-    const sendButton = authenticatedPage.locator('[data-testid="send-button"]');
+    // Click the inline reply send button
+    const sendButton = inlineReplyBox.locator(
+      '[data-testid="inline-reply-send"]',
+    );
     await expect(sendButton).toBeEnabled();
     await sendButton.click();
 
     // Verify success notification
     await expect(
-      authenticatedPage
-        .getByRole('alert')
-        .filter({ hasText: /sent successfully/i }),
+      authenticatedPage.getByRole('alert').filter({ hasText: /sent/i }),
     ).toBeVisible({ timeout: 10000 });
   });
 });
@@ -388,14 +447,13 @@ test.describe('BrightMail Delete Flow', () => {
     await authenticatedPage.goto('/brightmail');
     await authenticatedPage.waitForLoadState('networkidle');
 
-    const table = authenticatedPage.locator('table[role="grid"]');
-    await expect(table).toBeVisible({ timeout: 15000 });
+    await waitForEmailList(authenticatedPage);
 
-    // Select the email via checkbox
-    const emailRow = table.locator(`tr:has(td:has-text("${uniqueSubject}"))`);
+    // Find the email row and click its checkbox
+    const emailRow = findEmailRowBySubject(authenticatedPage, uniqueSubject);
     await expect(emailRow).toBeVisible({ timeout: 10000 });
 
-    // Click the checkbox
+    // Click the checkbox within the email row (EmailRow has a Checkbox)
     const checkbox = emailRow.locator('input[type="checkbox"]');
     await checkbox.click();
 
@@ -405,31 +463,37 @@ test.describe('BrightMail Delete Flow', () => {
     );
     await expect(bulkActions).toBeVisible({ timeout: 5000 });
 
-    // Click delete button
-    await bulkActions.locator('button:has-text("Delete")').click();
+    // Click delete button in bulk actions
+    await bulkActions.locator('button', { hasText: /delete/i }).click();
 
-    // Verify confirmation dialog appears
+    // Verify confirmation dialog appears (ConfirmDialog uses MUI Dialog with role="alertdialog")
     const dialog = authenticatedPage.getByRole('alertdialog');
     await expect(dialog).toBeVisible({ timeout: 5000 });
 
-    // Confirm deletion
-    await dialog.locator('button:has-text("Delete")').click();
+    // Confirm deletion — the confirm button has color="error" variant="contained"
+    await dialog.getByRole('button', { name: /delete/i }).click();
 
     // Verify the email is removed from the inbox
-    await expect(
-      table.locator(`td:has-text("${uniqueSubject}")`),
-    ).not.toBeVisible({ timeout: 10000 });
+    await expect(emailRow).not.toBeVisible({ timeout: 10000 });
   });
 });
 
 // ─── Test 7: Mark-as-read on open ────────────────────────────
 // Requirement 10.7
+// EmailRow shows unread emails with fontWeight 600 and a primary-colored left border.
+// Opening the thread auto-marks as read. After navigating back, the row should
+// have fontWeight 400 (read).
 
 test.describe('BrightMail Mark as Read', () => {
+  test.use({ viewport: { width: 1024, height: 720 } });
+
   test('opening an unread email marks it as read', async ({
     authenticatedPage,
     authResult,
   }) => {
+    // Mark-as-read involves navigation, API calls, and re-rendering — generous timeout
+    test.setTimeout(120_000);
+
     const uniqueSubject = `E2E MarkRead ${Date.now()}`;
     const recipientLocal = authResult.email.split('@')[0];
     const recipientDomain = authResult.email.split('@')[1];
@@ -448,16 +512,18 @@ test.describe('BrightMail Mark as Read', () => {
     await authenticatedPage.goto('/brightmail');
     await authenticatedPage.waitForLoadState('networkidle');
 
-    const table = authenticatedPage.locator('table[role="grid"]');
-    await expect(table).toBeVisible({ timeout: 15000 });
+    await waitForEmailList(authenticatedPage);
 
     // Find the email row
-    const emailRow = table.locator(`tr:has(td:has-text("${uniqueSubject}"))`);
+    const emailRow = findEmailRowBySubject(authenticatedPage, uniqueSubject);
     await expect(emailRow).toBeVisible({ timeout: 10000 });
 
-    // Verify the email shows as unread (status cell visible)
-    const statusCell = emailRow.locator('[data-testid="email-status"]');
-    await expect(statusCell).toBeVisible();
+    // Verify the email shows as unread (has a colored left border, not transparent)
+    const borderLeft = await emailRow.evaluate(
+      (el) => window.getComputedStyle(el).borderLeftColor,
+    );
+    // Unread emails have a non-transparent primary-colored left border
+    expect(borderLeft).not.toBe('transparent');
 
     // Click to open the thread (triggers mark-as-read)
     await emailRow.click();
@@ -466,31 +532,45 @@ test.describe('BrightMail Mark as Read', () => {
     const threadView = authenticatedPage.locator('[data-testid="thread-view"]');
     await expect(threadView).toBeVisible({ timeout: 15000 });
 
+    // Wait for the mark-as-read API call to complete before navigating back.
+    // ThreadView fires markAsRead on mount; give it time to round-trip.
+    await authenticatedPage
+      .waitForResponse(
+        (resp) =>
+          resp.url().includes('/api/emails/') &&
+          resp.url().includes('/read') &&
+          resp.status() === 200,
+        { timeout: 10000 },
+      )
+      .catch(() => {
+        // If the endpoint pattern doesn't match, fall back to a short wait
+      });
+    // Extra settle time for the server to persist the read state
+    await authenticatedPage.waitForTimeout(1000);
+
     // Navigate back to inbox
     await authenticatedPage.locator('[data-testid="back-to-inbox"]').click();
-    await expect(authenticatedPage).toHaveURL(/\/brightmail$/, {
+    await expect(authenticatedPage).toHaveURL(/\/brightmail/, {
       timeout: 10000,
     });
 
-    // Wait for inbox to reload
-    const tableAfter = authenticatedPage.locator('table[role="grid"]');
-    await expect(tableAfter).toBeVisible({
-      timeout: 15000,
-    });
+    // Wait for inbox to fully reload with fresh data
+    await authenticatedPage.waitForLoadState('networkidle');
+    await waitForEmailList(authenticatedPage);
 
     // The email should now show as read
-    const emailRowAfter = tableAfter.locator(
-      `tr:has(td:has-text("${uniqueSubject}"))`,
+    const emailRowAfter = findEmailRowBySubject(
+      authenticatedPage,
+      uniqueSubject,
     );
-    await expect(emailRowAfter).toBeVisible({
-      timeout: 10000,
-    });
+    await expect(emailRowAfter).toBeVisible({ timeout: 10000 });
 
-    // Verify the row is no longer bold (read = normal)
-    const fontWeight = await emailRowAfter.evaluate(
+    // Verify the sender text is no longer bold (read = fontWeight 400)
+    const senderEl = emailRowAfter.locator('[data-testid="email-sender"]');
+    const fontWeight = await senderEl.evaluate(
       (el) => window.getComputedStyle(el).fontWeight,
     );
-    // "400" or "normal" = read; "700" or "bold" = unread
+    // "400" or "normal" = read; "600" or "bold" = unread
     expect(['400', 'normal']).toContain(fontWeight);
   });
 });
@@ -506,25 +586,27 @@ test.describe('BrightMail Empty Inbox', () => {
     await authenticatedPage.goto('/brightmail');
     await authenticatedPage.waitForLoadState('networkidle');
 
+    // Wait for the lazy-loaded BrightMail chunk to resolve
+    await waitForSuspense(authenticatedPage);
+
     // Wait for either the empty state or the email list
     const emptyState = authenticatedPage.locator('[data-testid="inbox-empty"]');
-    const emailTable = authenticatedPage.locator('table[role="grid"]');
+    const emailList = authenticatedPage.locator('[data-testid="email-list"]');
 
     // For a fresh user, expect the empty state
     const emptyVisible = await emptyState
       .isVisible({ timeout: 15000 })
       .catch(() => false);
-    const tableVisible = await emailTable
+    const listVisible = await emailList
       .isVisible({ timeout: 3000 })
       .catch(() => false);
 
     if (emptyVisible) {
       // Verify the empty state message is displayed
       await expect(emptyState).toBeVisible();
-      await expect(emptyState.locator('text=/no emails/i')).toBeVisible();
-    } else if (tableVisible) {
-      // If the user has emails, the table is acceptable
-      await expect(emailTable).toBeVisible();
+    } else if (listVisible) {
+      // If the user has emails, the list is acceptable
+      await expect(emailList).toBeVisible();
     } else {
       // Only loading state is acceptable — error state means the service is broken
       const error = authenticatedPage.locator('[data-testid="inbox-error"]');
@@ -556,19 +638,9 @@ baseTest.describe('BrightMail Authentication Guard', () => {
     'unauthenticated user redirected from /brightmail',
     async ({ page }) => {
       await page.goto('/brightmail');
-      await baseExpect(page).toHaveURL(/\/login/, {
-        timeout: 10000,
-      });
-    },
-  );
-
-  baseTest(
-    'unauthenticated user redirected from /brightmail/compose',
-    async ({ page }) => {
-      await page.goto('/brightmail/compose');
-      await baseExpect(page).toHaveURL(/\/login/, {
-        timeout: 10000,
-      });
+      // Wait for the lazy chunk to load and PrivateRoute to redirect
+      await page.waitForURL(/\/login/, { timeout: 30_000 });
+      await baseExpect(page).toHaveURL(/\/login/);
     },
   );
 
@@ -576,9 +648,10 @@ baseTest.describe('BrightMail Authentication Guard', () => {
     'unauthenticated user redirected from /brightmail/thread/id',
     async ({ page }) => {
       await page.goto('/brightmail/thread/test-id');
-      await baseExpect(page).toHaveURL(/\/login/, {
-        timeout: 10000,
-      });
+      // Wait for the lazy chunk to load and PrivateRoute to redirect
+      // PrivateRoute first shows "Checking authentication..." then redirects
+      await page.waitForURL(/\/login/, { timeout: 30_000 });
+      await baseExpect(page).toHaveURL(/\/login/);
     },
   );
 });

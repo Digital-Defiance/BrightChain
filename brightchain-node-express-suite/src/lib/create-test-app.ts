@@ -7,9 +7,9 @@
  * @module create-test-app
  */
 
-import { BrightDbDatabasePlugin } from './plugins/bright-db-database-plugin';
-import { BrightDbEnvironment } from './environment';
 import type { PlatformID } from '@digitaldefiance/node-ecies-lib';
+import { BrightDbEnvironment } from './environment';
+import { BrightDbDatabasePlugin } from './plugins/bright-db-database-plugin';
 
 export interface CreateTestAppResult<TID extends PlatformID> {
   plugin: BrightDbDatabasePlugin<TID>;

@@ -40,11 +40,11 @@ export interface IBanListCache<TID extends PlatformID = Uint8Array> {
   readonly size: number;
 
   /**
-   * Verify a ban record's quorum signatures against known public keys.
+   * Verify a ban record's BrightTrust signatures against known public keys.
    * Returns true if the record has at least `requiredSignatures` valid signatures.
    */
   verifySignatures(
     record: IBanRecord<TID>,
-    quorumPublicKeys: Map<HexString, Uint8Array>,
+    brightTrustPublicKeys: Map<HexString, Uint8Array>,
   ): Promise<boolean>;
 }

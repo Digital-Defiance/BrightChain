@@ -9,12 +9,12 @@
       "executor": "@nx/playwright:playwright",
       "outputs": ["{workspaceRoot}/dist/.playwright/brightchain-react-e2e"],
       "dependsOn": [
-        "brightchain-api:build",
-        "brightchain-react:build"
+        "brightchain-api:build"
       ],
       "options": {
         "config": "brightchain-react-e2e/playwright.config.ts"
-      }
+      },
+      "parallelism": false
     },
     "lint": {
       "executor": "@nx/eslint:lint"

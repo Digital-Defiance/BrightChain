@@ -12,6 +12,13 @@ export const BrightChainStrings = createI18nStringKeys(BrightChainComponentId, {
   // Error_LanguageNotFoundForEnumTemplate, Error_NoTranslationsForEnumLanguageTemplate,
   // Error_UnknownEnumValueForEnumTemplate, Error_LanguageNotFoundInStringsTemplate, Error_Disposed
 
+  Common_Bright: 'Common_Bright',
+  Common_Chain: 'Common_Chain',
+  Common_Privacy: 'Common_Privacy',
+  Common_Participation: 'Common_Participation',
+  Common_Power: 'Common_Power',
+  Common_PrivacyParticipationPower: 'Common_PrivacyParticipationPower',
+
   Common_BlockSize: 'Common_BlockSize',
   Common_AtIndexTemplate: 'Common_AtIndexTemplate',
 
@@ -612,79 +619,92 @@ export const BrightChainStrings = createI18nStringKeys(BrightChainComponentId, {
   // NOTE: PBKDF2 error strings moved to @digitaldefiance/suite-core-lib SuiteCoreStringKey
   // Use SuiteCoreStringKey for: Error_Pbkdf2InvalidSaltLength, Error_Pbkdf2InvalidHashLength
 
-  // Quorum Errors
-  Error_QuorumError_InvalidQuorumId: 'Error_QuorumError_InvalidQuorumId',
-  Error_QuorumError_DocumentNotFound: 'Error_QuorumError_DocumentNotFound',
-  Error_QuorumError_UnableToRestoreDocument:
-    'Error_QuorumError_UnableToRestoreDocument',
-  Error_QuorumError_NotImplemented: 'Error_QuorumError_NotImplemented',
-  Error_QuorumError_Uninitialized: 'Error_QuorumError_Uninitialized',
-  Error_QuorumError_MemberNotFound: 'Error_QuorumError_MemberNotFound',
-  Error_QuorumError_NotEnoughMembers: 'Error_QuorumError_NotEnoughMembers',
-  // Quorum Mode Errors
-  Error_QuorumError_TransitionInProgress:
-    'Error_QuorumError_TransitionInProgress',
-  Error_QuorumError_InvalidModeTransition:
-    'Error_QuorumError_InvalidModeTransition',
-  Error_QuorumError_InsufficientMembersForTransition:
-    'Error_QuorumError_InsufficientMembersForTransition',
-  // Quorum Member Management Errors
-  Error_QuorumError_MemberAlreadyExists:
-    'Error_QuorumError_MemberAlreadyExists',
-  Error_QuorumError_InsufficientRemainingMembers:
-    'Error_QuorumError_InsufficientRemainingMembers',
-  Error_QuorumError_MemberBanned: 'Error_QuorumError_MemberBanned',
-  Error_QuorumError_MemberSuspended: 'Error_QuorumError_MemberSuspended',
-  // Quorum Proposal/Voting Errors
-  Error_QuorumError_DuplicateProposal: 'Error_QuorumError_DuplicateProposal',
-  Error_QuorumError_ProposalExpired: 'Error_QuorumError_ProposalExpired',
-  Error_QuorumError_DuplicateVote: 'Error_QuorumError_DuplicateVote',
-  Error_QuorumError_VoterNotOnProposal: 'Error_QuorumError_VoterNotOnProposal',
-  Error_QuorumError_AuthenticationFailed:
-    'Error_QuorumError_AuthenticationFailed',
-  Error_QuorumError_VotingLocked: 'Error_QuorumError_VotingLocked',
-  Error_QuorumError_MissingAttachment: 'Error_QuorumError_MissingAttachment',
-  Error_QuorumError_AttachmentNotRetrievable:
-    'Error_QuorumError_AttachmentNotRetrievable',
-  // Quorum Ban Mechanism Errors
-  Error_QuorumError_CannotBanSelf: 'Error_QuorumError_CannotBanSelf',
-  Error_QuorumError_MemberAlreadyBanned:
-    'Error_QuorumError_MemberAlreadyBanned',
-  Error_QuorumError_MemberNotBanned: 'Error_QuorumError_MemberNotBanned',
-  Error_QuorumError_NewMemberCannotProposeBan:
-    'Error_QuorumError_NewMemberCannotProposeBan',
-  Error_QuorumError_BanCoolingPeriodNotElapsed:
-    'Error_QuorumError_BanCoolingPeriodNotElapsed',
-  Error_QuorumError_InvalidBanRecordSignatures:
-    'Error_QuorumError_InvalidBanRecordSignatures',
-  // Quorum Share Redistribution Errors
-  Error_QuorumError_RedistributionFailed:
-    'Error_QuorumError_RedistributionFailed',
-  Error_QuorumError_InsufficientSharesForReconstruction:
-    'Error_QuorumError_InsufficientSharesForReconstruction',
-  Error_QuorumError_KeyReconstructionValidationFailed:
-    'Error_QuorumError_KeyReconstructionValidationFailed',
-  // Quorum Identity Errors
-  Error_QuorumError_IdentityPermanentlyUnrecoverable:
-    'Error_QuorumError_IdentityPermanentlyUnrecoverable',
-  Error_QuorumError_InvalidMembershipProof:
-    'Error_QuorumError_InvalidMembershipProof',
-  Error_QuorumError_MissingMembershipProof:
-    'Error_QuorumError_MissingMembershipProof',
-  Error_QuorumError_AliasAlreadyTaken: 'Error_QuorumError_AliasAlreadyTaken',
-  Error_QuorumError_AliasNotFound: 'Error_QuorumError_AliasNotFound',
-  Error_QuorumError_AliasInactive: 'Error_QuorumError_AliasInactive',
-  Error_QuorumError_IdentitySealingFailed:
-    'Error_QuorumError_IdentitySealingFailed',
-  Error_QuorumError_ShardVerificationFailed:
-    'Error_QuorumError_ShardVerificationFailed',
-  // Quorum Database Errors
-  Error_QuorumError_QuorumDatabaseUnavailable:
-    'Error_QuorumError_QuorumDatabaseUnavailable',
-  Error_QuorumError_TransactionFailed: 'Error_QuorumError_TransactionFailed',
-  // Quorum Audit Errors
-  Error_QuorumError_AuditChainCorrupted:
-    'Error_QuorumError_AuditChainCorrupted',
+  // BrightTrust Errors
+  Error_BrightTrustError_InvalidBrightTrustId:
+    'Error_BrightTrustError_InvalidBrightTrustId',
+  Error_BrightTrustError_DocumentNotFound:
+    'Error_BrightTrustError_DocumentNotFound',
+  Error_BrightTrustError_UnableToRestoreDocument:
+    'Error_BrightTrustError_UnableToRestoreDocument',
+  Error_BrightTrustError_NotImplemented:
+    'Error_BrightTrustError_NotImplemented',
+  Error_BrightTrustError_Uninitialized: 'Error_BrightTrustError_Uninitialized',
+  Error_BrightTrustError_MemberNotFound:
+    'Error_BrightTrustError_MemberNotFound',
+  Error_BrightTrustError_NotEnoughMembers:
+    'Error_BrightTrustError_NotEnoughMembers',
+  // BrightTrust Mode Errors
+  Error_BrightTrustError_TransitionInProgress:
+    'Error_BrightTrustError_TransitionInProgress',
+  Error_BrightTrustError_InvalidModeTransition:
+    'Error_BrightTrustError_InvalidModeTransition',
+  Error_BrightTrustError_InsufficientMembersForTransition:
+    'Error_BrightTrustError_InsufficientMembersForTransition',
+  // BrightTrust Member Management Errors
+  Error_BrightTrustError_MemberAlreadyExists:
+    'Error_BrightTrustError_MemberAlreadyExists',
+  Error_BrightTrustError_InsufficientRemainingMembers:
+    'Error_BrightTrustError_InsufficientRemainingMembers',
+  Error_BrightTrustError_MemberBanned: 'Error_BrightTrustError_MemberBanned',
+  Error_BrightTrustError_MemberSuspended:
+    'Error_BrightTrustError_MemberSuspended',
+  // BrightTrust Proposal/Voting Errors
+  Error_BrightTrustError_DuplicateProposal:
+    'Error_BrightTrustError_DuplicateProposal',
+  Error_BrightTrustError_ProposalExpired:
+    'Error_BrightTrustError_ProposalExpired',
+  Error_BrightTrustError_DuplicateVote: 'Error_BrightTrustError_DuplicateVote',
+  Error_BrightTrustError_VoterNotOnProposal:
+    'Error_BrightTrustError_VoterNotOnProposal',
+  Error_BrightTrustError_AuthenticationFailed:
+    'Error_BrightTrustError_AuthenticationFailed',
+  Error_BrightTrustError_VotingLocked: 'Error_BrightTrustError_VotingLocked',
+  Error_BrightTrustError_MissingAttachment:
+    'Error_BrightTrustError_MissingAttachment',
+  Error_BrightTrustError_AttachmentNotRetrievable:
+    'Error_BrightTrustError_AttachmentNotRetrievable',
+  // BrightTrust Ban Mechanism Errors
+  Error_BrightTrustError_CannotBanSelf: 'Error_BrightTrustError_CannotBanSelf',
+  Error_BrightTrustError_MemberAlreadyBanned:
+    'Error_BrightTrustError_MemberAlreadyBanned',
+  Error_BrightTrustError_MemberNotBanned:
+    'Error_BrightTrustError_MemberNotBanned',
+  Error_BrightTrustError_NewMemberCannotProposeBan:
+    'Error_BrightTrustError_NewMemberCannotProposeBan',
+  Error_BrightTrustError_BanCoolingPeriodNotElapsed:
+    'Error_BrightTrustError_BanCoolingPeriodNotElapsed',
+  Error_BrightTrustError_InvalidBanRecordSignatures:
+    'Error_BrightTrustError_InvalidBanRecordSignatures',
+  // BrightTrust Share Redistribution Errors
+  Error_BrightTrustError_RedistributionFailed:
+    'Error_BrightTrustError_RedistributionFailed',
+  Error_BrightTrustError_InsufficientSharesForReconstruction:
+    'Error_BrightTrustError_InsufficientSharesForReconstruction',
+  Error_BrightTrustError_KeyReconstructionValidationFailed:
+    'Error_BrightTrustError_KeyReconstructionValidationFailed',
+  // BrightTrust Identity Errors
+  Error_BrightTrustError_IdentityPermanentlyUnrecoverable:
+    'Error_BrightTrustError_IdentityPermanentlyUnrecoverable',
+  Error_BrightTrustError_InvalidMembershipProof:
+    'Error_BrightTrustError_InvalidMembershipProof',
+  Error_BrightTrustError_MissingMembershipProof:
+    'Error_BrightTrustError_MissingMembershipProof',
+  Error_BrightTrustError_AliasAlreadyTaken:
+    'Error_BrightTrustError_AliasAlreadyTaken',
+  Error_BrightTrustError_AliasNotFound: 'Error_BrightTrustError_AliasNotFound',
+  Error_BrightTrustError_AliasInactive: 'Error_BrightTrustError_AliasInactive',
+  Error_BrightTrustError_IdentitySealingFailed:
+    'Error_BrightTrustError_IdentitySealingFailed',
+  Error_BrightTrustError_ShardVerificationFailed:
+    'Error_BrightTrustError_ShardVerificationFailed',
+  // BrightTrust Database Errors
+  Error_BrightTrustError_BrightTrustDatabaseUnavailable:
+    'Error_BrightTrustError_BrightTrustDatabaseUnavailable',
+  Error_BrightTrustError_TransactionFailed:
+    'Error_BrightTrustError_TransactionFailed',
+  // BrightTrust Audit Errors
+  Error_BrightTrustError_AuditChainCorrupted:
+    'Error_BrightTrustError_AuditChainCorrupted',
   // Identity Validation Errors
   Error_IdentityValidationError_InvalidSignature:
     'Error_IdentityValidationError_InvalidSignature',
@@ -902,33 +922,35 @@ export const BrightChainStrings = createI18nStringKeys(BrightChainComponentId, {
   // Member Profile Document Errors
   Error_MemberProfileDocument_Hint: 'Error_MemberProfileDocument_Hint',
 
-  // Quorum Document Errors
-  Error_QuorumDocument_CreatorMustBeSetBeforeSaving:
-    'Error_QuorumDocument_CreatorMustBeSetBeforeSaving',
-  Error_QuorumDocument_CreatorMustBeSetBeforeEncrypting:
-    'Error_QuorumDocument_CreatorMustBeSetBeforeEncrypting',
-  Error_QuorumDocument_DocumentHasNoEncryptedData:
-    'Error_QuorumDocument_DocumentHasNoEncryptedData',
-  Error_QuorumDocument_InvalidEncryptedDataFormat:
-    'Error_QuorumDocument_InvalidEncryptedDataFormat',
-  Error_QuorumDocument_InvalidMemberIdsFormat:
-    'Error_QuorumDocument_InvalidMemberIdsFormat',
-  Error_QuorumDocument_InvalidSignatureFormat:
-    'Error_QuorumDocument_InvalidSignatureFormat',
-  Error_QuorumDocument_InvalidCreatorIdFormat:
-    'Error_QuorumDocument_InvalidCreatorIdFormat',
-  Error_QuorumDocument_InvalidChecksumFormat:
-    'Error_QuorumDocument_InvalidChecksumFormat',
+  // BrightTrust Document Errors
+  Error_BrightTrustDocument_CreatorMustBeSetBeforeSaving:
+    'Error_BrightTrustDocument_CreatorMustBeSetBeforeSaving',
+  Error_BrightTrustDocument_CreatorMustBeSetBeforeEncrypting:
+    'Error_BrightTrustDocument_CreatorMustBeSetBeforeEncrypting',
+  Error_BrightTrustDocument_DocumentHasNoEncryptedData:
+    'Error_BrightTrustDocument_DocumentHasNoEncryptedData',
+  Error_BrightTrustDocument_InvalidEncryptedDataFormat:
+    'Error_BrightTrustDocument_InvalidEncryptedDataFormat',
+  Error_BrightTrustDocument_InvalidMemberIdsFormat:
+    'Error_BrightTrustDocument_InvalidMemberIdsFormat',
+  Error_BrightTrustDocument_InvalidSignatureFormat:
+    'Error_BrightTrustDocument_InvalidSignatureFormat',
+  Error_BrightTrustDocument_InvalidCreatorIdFormat:
+    'Error_BrightTrustDocument_InvalidCreatorIdFormat',
+  Error_BrightTrustDocument_InvalidChecksumFormat:
+    'Error_BrightTrustDocument_InvalidChecksumFormat',
 
-  // Quorum Data Record
-  QuorumDataRecord_MustShareWithAtLeastTwoMembers:
-    'QuorumDataRecord_MustShareWithAtLeastTwoMembers',
-  QuorumDataRecord_SharesRequiredExceedsMembers:
-    'QuorumDataRecord_SharesRequiredExceedsMembers',
-  QuorumDataRecord_SharesRequiredMustBeAtLeastTwo:
-    'QuorumDataRecord_SharesRequiredMustBeAtLeastTwo',
-  QuorumDataRecord_InvalidChecksum: 'QuorumDataRecord_InvalidChecksum',
-  QuorumDataRecord_InvalidSignature: 'QuorumDataRecord_InvalidSignature',
+  // BrightTrust Data Record
+  BrightTrustDataRecord_MustShareWithAtLeastTwoMembers:
+    'BrightTrustDataRecord_MustShareWithAtLeastTwoMembers',
+  BrightTrustDataRecord_SharesRequiredExceedsMembers:
+    'BrightTrustDataRecord_SharesRequiredExceedsMembers',
+  BrightTrustDataRecord_SharesRequiredMustBeAtLeastTwo:
+    'BrightTrustDataRecord_SharesRequiredMustBeAtLeastTwo',
+  BrightTrustDataRecord_InvalidChecksum:
+    'BrightTrustDataRecord_InvalidChecksum',
+  BrightTrustDataRecord_InvalidSignature:
+    'BrightTrustDataRecord_InvalidSignature',
 
   // Block Logger
   BlockLogger_Redacted: 'BlockLogger_Redacted',
@@ -1245,6 +1267,193 @@ export const BrightChainStrings = createI18nStringKeys(BrightChainComponentId, {
   Dashboard_FailedToLoadBalance: 'Dashboard_FailedToLoadBalance',
   Dashboard_FailedToLoadReputation: 'Dashboard_FailedToLoadReputation',
   Dashboard_FailedToLoadData: 'Dashboard_FailedToLoadData',
+
+  // Admin Dashboard
+  Admin_Dashboard_Title: 'Admin_Dashboard_Title',
+  Admin_Dashboard_AccessDenied: 'Admin_Dashboard_AccessDenied',
+  Admin_Dashboard_AccessDeniedDescription:
+    'Admin_Dashboard_AccessDeniedDescription',
+  Admin_Dashboard_Loading: 'Admin_Dashboard_Loading',
+  Admin_Dashboard_NoData: 'Admin_Dashboard_NoData',
+  Admin_Dashboard_RefreshNow: 'Admin_Dashboard_RefreshNow',
+  Admin_Dashboard_ErrorLastSuccessTemplate:
+    'Admin_Dashboard_ErrorLastSuccessTemplate',
+  Admin_Dashboard_ErrorLastSuccessNever:
+    'Admin_Dashboard_ErrorLastSuccessNever',
+  Admin_Dashboard_ServerIdentity: 'Admin_Dashboard_ServerIdentity',
+  Admin_Dashboard_Hostname: 'Admin_Dashboard_Hostname',
+  Admin_Dashboard_LocalNodeId: 'Admin_Dashboard_LocalNodeId',
+  Admin_Dashboard_Timestamp: 'Admin_Dashboard_Timestamp',
+  Admin_Dashboard_NA: 'Admin_Dashboard_NA',
+  Admin_Dashboard_Nodes: 'Admin_Dashboard_Nodes',
+  Admin_Dashboard_NoNodesRegistered: 'Admin_Dashboard_NoNodesRegistered',
+  Admin_Dashboard_DisconnectedPeers: 'Admin_Dashboard_DisconnectedPeers',
+  Admin_Dashboard_LumenClients: 'Admin_Dashboard_LumenClients',
+  Admin_Dashboard_ConnectedClients: 'Admin_Dashboard_ConnectedClients',
+  Admin_Dashboard_RoomsTemplate: 'Admin_Dashboard_RoomsTemplate',
+  Admin_Dashboard_NodeConnections: 'Admin_Dashboard_NodeConnections',
+  Admin_Dashboard_NodeToNodeConnections:
+    'Admin_Dashboard_NodeToNodeConnections',
+  Admin_Dashboard_SystemMetrics: 'Admin_Dashboard_SystemMetrics',
+  Admin_Dashboard_HeapUsed: 'Admin_Dashboard_HeapUsed',
+  Admin_Dashboard_HeapTotal: 'Admin_Dashboard_HeapTotal',
+  Admin_Dashboard_RSS: 'Admin_Dashboard_RSS',
+  Admin_Dashboard_External: 'Admin_Dashboard_External',
+  Admin_Dashboard_UptimeTemplate: 'Admin_Dashboard_UptimeTemplate',
+  Admin_Dashboard_NodeVersionTemplate: 'Admin_Dashboard_NodeVersionTemplate',
+  Admin_Dashboard_DBStats: 'Admin_Dashboard_DBStats',
+  Admin_Dashboard_Users: 'Admin_Dashboard_Users',
+  Admin_Dashboard_Roles: 'Admin_Dashboard_Roles',
+  Admin_Dashboard_Active: 'Admin_Dashboard_Active',
+  Admin_Dashboard_Locked: 'Admin_Dashboard_Locked',
+  Admin_Dashboard_Pending: 'Admin_Dashboard_Pending',
+  Admin_Dashboard_Members: 'Admin_Dashboard_Members',
+  Admin_Dashboard_Threshold: 'Admin_Dashboard_Threshold',
+  Admin_Dashboard_Pools: 'Admin_Dashboard_Pools',
+  Admin_Dashboard_NoPools: 'Admin_Dashboard_NoPools',
+  Admin_Dashboard_Dependencies: 'Admin_Dashboard_Dependencies',
+  Admin_Dashboard_BlockStore: 'Admin_Dashboard_BlockStore',
+  Admin_Dashboard_TotalBlocks: 'Admin_Dashboard_TotalBlocks',
+  Admin_Dashboard_TotalSize: 'Admin_Dashboard_TotalSize',
+  Admin_Dashboard_TotalPosts: 'Admin_Dashboard_TotalPosts',
+  Admin_Dashboard_ActiveUsersLast30Days:
+    'Admin_Dashboard_ActiveUsersLast30Days',
+  Admin_Dashboard_Conversations: 'Admin_Dashboard_Conversations',
+  Admin_Dashboard_Messages: 'Admin_Dashboard_Messages',
+  Admin_Dashboard_TotalVaults: 'Admin_Dashboard_TotalVaults',
+  Admin_Dashboard_SharedVaults: 'Admin_Dashboard_SharedVaults',
+  Admin_Dashboard_TotalEmails: 'Admin_Dashboard_TotalEmails',
+  Admin_Dashboard_DeliveryFailures: 'Admin_Dashboard_DeliveryFailures',
+  Admin_Dashboard_Last24Hours: 'Admin_Dashboard_Last24Hours',
+
+  // Admin Menu
+  Admin_Menu_Dashboard: 'Admin_Menu_Dashboard',
+
+  // Admin Common (shared across panels)
+  Admin_Common_Loading: 'Admin_Common_Loading',
+  Admin_Common_Previous: 'Admin_Common_Previous',
+  Admin_Common_Next: 'Admin_Common_Next',
+  Admin_Common_PageTemplate: 'Admin_Common_PageTemplate',
+  Admin_Common_Cancel: 'Admin_Common_Cancel',
+  Admin_Common_Delete: 'Admin_Common_Delete',
+  Admin_Common_Yes: 'Admin_Common_Yes',
+  Admin_Common_No: 'Admin_Common_No',
+  Admin_Common_Never: 'Admin_Common_Never',
+  Admin_Common_Close: 'Admin_Common_Close',
+
+  // Admin User Management
+  Admin_Users_Title: 'Admin_Users_Title',
+  Admin_Users_FilterAll: 'Admin_Users_FilterAll',
+  Admin_Users_FilterActive: 'Admin_Users_FilterActive',
+  Admin_Users_FilterLocked: 'Admin_Users_FilterLocked',
+  Admin_Users_FilterPending: 'Admin_Users_FilterPending',
+  Admin_Users_ColUsername: 'Admin_Users_ColUsername',
+  Admin_Users_ColEmail: 'Admin_Users_ColEmail',
+  Admin_Users_ColStatus: 'Admin_Users_ColStatus',
+  Admin_Users_ColEmailVerified: 'Admin_Users_ColEmailVerified',
+  Admin_Users_ColLastLogin: 'Admin_Users_ColLastLogin',
+  Admin_Users_ColActions: 'Admin_Users_ColActions',
+  Admin_Users_NoUsersFound: 'Admin_Users_NoUsersFound',
+  Admin_Users_UnlockUser: 'Admin_Users_UnlockUser',
+  Admin_Users_LockUser: 'Admin_Users_LockUser',
+  Admin_Users_LockUserTitle: 'Admin_Users_LockUserTitle',
+  Admin_Users_UnlockUserTitle: 'Admin_Users_UnlockUserTitle',
+  Admin_Users_LockConfirmTemplate: 'Admin_Users_LockConfirmTemplate',
+  Admin_Users_UnlockConfirmTemplate: 'Admin_Users_UnlockConfirmTemplate',
+  Admin_Users_LockWarning: 'Admin_Users_LockWarning',
+
+  // Admin Block Explorer
+  Admin_Blocks_Title: 'Admin_Blocks_Title',
+  Admin_Blocks_SearchPlaceholder: 'Admin_Blocks_SearchPlaceholder',
+  Admin_Blocks_FilterAllDurability: 'Admin_Blocks_FilterAllDurability',
+  Admin_Blocks_FilterStandard: 'Admin_Blocks_FilterStandard',
+  Admin_Blocks_FilterHighDurability: 'Admin_Blocks_FilterHighDurability',
+  Admin_Blocks_FilterEphemeral: 'Admin_Blocks_FilterEphemeral',
+  Admin_Blocks_SortByDate: 'Admin_Blocks_SortByDate',
+  Admin_Blocks_SortBySize: 'Admin_Blocks_SortBySize',
+  Admin_Blocks_Detail: 'Admin_Blocks_Detail',
+  Admin_Blocks_ColBlockId: 'Admin_Blocks_ColBlockId',
+  Admin_Blocks_ColSize: 'Admin_Blocks_ColSize',
+  Admin_Blocks_ColDurability: 'Admin_Blocks_ColDurability',
+  Admin_Blocks_ColCreated: 'Admin_Blocks_ColCreated',
+  Admin_Blocks_ColAccessCount: 'Admin_Blocks_ColAccessCount',
+  Admin_Blocks_ColReplication: 'Admin_Blocks_ColReplication',
+  Admin_Blocks_ColActions: 'Admin_Blocks_ColActions',
+  Admin_Blocks_NoBlocksFound: 'Admin_Blocks_NoBlocksFound',
+  Admin_Blocks_DiscoverNodes: 'Admin_Blocks_DiscoverNodes',
+  Admin_Blocks_NodesHoldingBlockTemplate:
+    'Admin_Blocks_NodesHoldingBlockTemplate',
+  Admin_Blocks_NoNodesFound: 'Admin_Blocks_NoNodesFound',
+  Admin_Blocks_Checksum: 'Admin_Blocks_Checksum',
+  Admin_Blocks_DeleteTitle: 'Admin_Blocks_DeleteTitle',
+  Admin_Blocks_DeleteConfirmTemplate: 'Admin_Blocks_DeleteConfirmTemplate',
+  Admin_Blocks_SizeBytesTemplate: 'Admin_Blocks_SizeBytesTemplate',
+
+  // Admin BrightPass
+  Admin_Pass_Title: 'Admin_Pass_Title',
+  Admin_Pass_EncryptedNotice: 'Admin_Pass_EncryptedNotice',
+  Admin_Pass_ColOwner: 'Admin_Pass_ColOwner',
+  Admin_Pass_ColShared: 'Admin_Pass_ColShared',
+  Admin_Pass_ColCreated: 'Admin_Pass_ColCreated',
+  Admin_Pass_ColLastAccessed: 'Admin_Pass_ColLastAccessed',
+  Admin_Pass_ColActions: 'Admin_Pass_ColActions',
+  Admin_Pass_NoVaultsFound: 'Admin_Pass_NoVaultsFound',
+  Admin_Pass_DeleteVault: 'Admin_Pass_DeleteVault',
+  Admin_Pass_DeleteVaultTitle: 'Admin_Pass_DeleteVaultTitle',
+  Admin_Pass_DeleteVaultConfirm: 'Admin_Pass_DeleteVaultConfirm',
+
+  // Admin BrightChat
+  Admin_Chat_Title: 'Admin_Chat_Title',
+  Admin_Chat_ColId: 'Admin_Chat_ColId',
+  Admin_Chat_ColParticipants: 'Admin_Chat_ColParticipants',
+  Admin_Chat_ColMessages: 'Admin_Chat_ColMessages',
+  Admin_Chat_ColLastActivity: 'Admin_Chat_ColLastActivity',
+  Admin_Chat_NoConversationsFound: 'Admin_Chat_NoConversationsFound',
+  Admin_Chat_MessagesForTemplate: 'Admin_Chat_MessagesForTemplate',
+  Admin_Chat_LoadingMessages: 'Admin_Chat_LoadingMessages',
+  Admin_Chat_NoMessages: 'Admin_Chat_NoMessages',
+  Admin_Chat_ColSender: 'Admin_Chat_ColSender',
+  Admin_Chat_ColContent: 'Admin_Chat_ColContent',
+  Admin_Chat_ColCreated: 'Admin_Chat_ColCreated',
+  Admin_Chat_ColStatus: 'Admin_Chat_ColStatus',
+  Admin_Chat_StatusDeleted: 'Admin_Chat_StatusDeleted',
+  Admin_Chat_StatusActive: 'Admin_Chat_StatusActive',
+  Admin_Chat_DeleteMessage: 'Admin_Chat_DeleteMessage',
+  Admin_Chat_DeleteMessageTitle: 'Admin_Chat_DeleteMessageTitle',
+  Admin_Chat_DeleteMessageConfirm: 'Admin_Chat_DeleteMessageConfirm',
+
+  // Admin BrightHub
+  Admin_Hub_Title: 'Admin_Hub_Title',
+  Admin_Hub_FilterByAuthorId: 'Admin_Hub_FilterByAuthorId',
+  Admin_Hub_FilterAllPosts: 'Admin_Hub_FilterAllPosts',
+  Admin_Hub_FilterActive: 'Admin_Hub_FilterActive',
+  Admin_Hub_FilterDeleted: 'Admin_Hub_FilterDeleted',
+  Admin_Hub_ColAuthor: 'Admin_Hub_ColAuthor',
+  Admin_Hub_ColContentPreview: 'Admin_Hub_ColContentPreview',
+  Admin_Hub_ColCreated: 'Admin_Hub_ColCreated',
+  Admin_Hub_ColStatus: 'Admin_Hub_ColStatus',
+  Admin_Hub_ColLikes: 'Admin_Hub_ColLikes',
+  Admin_Hub_ColReposts: 'Admin_Hub_ColReposts',
+  Admin_Hub_ColActions: 'Admin_Hub_ColActions',
+  Admin_Hub_StatusDeleted: 'Admin_Hub_StatusDeleted',
+  Admin_Hub_StatusActive: 'Admin_Hub_StatusActive',
+  Admin_Hub_NoPostsFound: 'Admin_Hub_NoPostsFound',
+  Admin_Hub_SoftDeletePost: 'Admin_Hub_SoftDeletePost',
+  Admin_Hub_DeletePostTitle: 'Admin_Hub_DeletePostTitle',
+  Admin_Hub_DeletePostConfirm: 'Admin_Hub_DeletePostConfirm',
+
+  // Admin BrightMail
+  Admin_Mail_Title: 'Admin_Mail_Title',
+  Admin_Mail_ColSender: 'Admin_Mail_ColSender',
+  Admin_Mail_ColRecipients: 'Admin_Mail_ColRecipients',
+  Admin_Mail_ColSubject: 'Admin_Mail_ColSubject',
+  Admin_Mail_ColCreated: 'Admin_Mail_ColCreated',
+  Admin_Mail_ColDeliveryStatus: 'Admin_Mail_ColDeliveryStatus',
+  Admin_Mail_ColActions: 'Admin_Mail_ColActions',
+  Admin_Mail_NoEmailsFound: 'Admin_Mail_NoEmailsFound',
+  Admin_Mail_DeleteEmail: 'Admin_Mail_DeleteEmail',
+  Admin_Mail_DeleteEmailTitle: 'Admin_Mail_DeleteEmailTitle',
+  Admin_Mail_DeleteEmailConfirm: 'Admin_Mail_DeleteEmailConfirm',
 } as const);
 
 export type BrightChainStringKey = BrandedStringKeyValue<

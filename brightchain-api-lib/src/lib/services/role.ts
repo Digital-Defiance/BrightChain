@@ -1,6 +1,5 @@
-import { DefaultIdType } from '@brightchain/brightchain-lib';
-import { PlatformID } from '@digitaldefiance/node-ecies-lib';
 import { AbstractRoleService } from '@brightchain/node-express-suite';
+import { PlatformID } from '@digitaldefiance/node-ecies-lib';
 import { IRoleBase, ITokenRole } from '@digitaldefiance/suite-core-lib';
 import { IBrightChainApplication } from '../interfaces';
 import { DefaultBackendIdType } from '../shared-types';
@@ -17,7 +16,13 @@ export class RoleService<
   TDate extends Date = Date,
   TTokenRole extends ITokenRole<TID, TDate> = ITokenRole<TID, TDate>,
   TRole extends IRoleBase<TID> = IRoleBase<TID>,
-> extends AbstractRoleService<TID, TDate, TTokenRole, TRole, IBrightChainApplication<TID>> {
+> extends AbstractRoleService<
+  TID,
+  TDate,
+  TTokenRole,
+  TRole,
+  IBrightChainApplication<TID>
+> {
   constructor(application: IBrightChainApplication<TID>) {
     super(application);
   }

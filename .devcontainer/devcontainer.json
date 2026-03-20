@@ -55,7 +55,8 @@
         "Orta.vscode-jest",
         "saoudrizwan.claude-dev",
         "Codium.codium",
-        "bierner.markdown-mermaid"
+        "bierner.markdown-mermaid",
+        "DigitalDefiance.vscode-mcp-acs-verdaccio"
       ],
       // Set *default* container specific settings.json values on container create.
       "settings": {

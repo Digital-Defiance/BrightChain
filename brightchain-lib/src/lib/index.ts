@@ -196,11 +196,11 @@ export * from './ecies-config';
 export * from './isolatedKeyModInverse';
 
 /**
- * Quorum and data record handling.
+ * BrightTrust and data record handling.
  */
-export * from './quorum';
-export * from './quorumDataRecord';
-export * from './quorumDataRecordDto';
+export * from './brightTrust';
+export * from './brightTrustDataRecord';
+export * from './brightTrustDataRecordDto';
 
 /**
  * Secure storage utilities.

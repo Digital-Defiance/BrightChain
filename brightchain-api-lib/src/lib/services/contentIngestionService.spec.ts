@@ -5,12 +5,14 @@
  * - Valid content accepted (real, alias, anonymous modes)
  * - Each IdentityValidationErrorType rejection reason
  * - IdentitySealingPipeline called only after validation passes
- * - QuorumError sealing failures produce correct rejections
+ * - BrightTrustError sealing failures produce correct rejections
  *
  * @see Task 19.4
  */
 
 import {
+  BrightTrustError,
+  BrightTrustErrorType,
   ContentWithIdentity,
   IdentityMode,
   IdentitySealingResult,
@@ -19,8 +21,6 @@ import {
   IdentityValidationResult,
   IIdentitySealingPipeline,
   IIdentityValidator,
-  QuorumError,
-  QuorumErrorType,
 } from '@brightchain/brightchain-lib';
 import { HexString } from '@digitaldefiance/ecies-lib';
 import { ContentIngestionService } from './contentIngestionService';
@@ -232,27 +232,27 @@ describe('ContentIngestionService', () => {
   });
 
   describe('processContent — sealing error propagation', () => {
-    it('should propagate QuorumError when sealing fails', async () => {
+    it('should propagate BrightTrustError when sealing fails', async () => {
       const content = makeContent();
       validator.validateContent.mockResolvedValue(makeValidationResult());
       sealingPipeline.sealIdentity.mockRejectedValue(
-        new QuorumError(QuorumErrorType.IdentitySealingFailed),
+        new BrightTrustError(BrightTrustErrorType.IdentitySealingFailed),
       );
 
       await expect(service.processContent(content)).rejects.toThrow(
-        QuorumError,
+        BrightTrustError,
       );
     });
 
-    it('should propagate QuorumError when shard verification fails', async () => {
+    it('should propagate BrightTrustError when shard verification fails', async () => {
       const content = makeContent();
       validator.validateContent.mockResolvedValue(makeValidationResult());
       sealingPipeline.sealIdentity.mockRejectedValue(
-        new QuorumError(QuorumErrorType.ShardVerificationFailed),
+        new BrightTrustError(BrightTrustErrorType.ShardVerificationFailed),
       );
 
       await expect(service.processContent(content)).rejects.toThrow(
-        QuorumError,
+        BrightTrustError,
       );
     });
   });
@@ -306,7 +306,9 @@ describe('ContentIngestionService', () => {
 
   describe('createSealingRejection — sealing error messages', () => {
     it('should produce rejection for IdentitySealingFailed', () => {
-      const error = new QuorumError(QuorumErrorType.IdentitySealingFailed);
+      const error = new BrightTrustError(
+        BrightTrustErrorType.IdentitySealingFailed,
+      );
       const rejection = ContentIngestionService.createSealingRejection(error);
 
       expect(rejection.accepted).toBe(false);
@@ -315,7 +317,9 @@ describe('ContentIngestionService', () => {
     });
 
     it('should produce rejection for ShardVerificationFailed', () => {
-      const error = new QuorumError(QuorumErrorType.ShardVerificationFailed);
+      const error = new BrightTrustError(
+        BrightTrustErrorType.ShardVerificationFailed,
+      );
       const rejection = ContentIngestionService.createSealingRejection(error);
 
       expect(rejection.accepted).toBe(false);
@@ -323,8 +327,10 @@ describe('ContentIngestionService', () => {
       expect(rejection.reason).toContain('do not reconstruct correctly');
     });
 
-    it('should produce generic rejection for other QuorumErrors', () => {
-      const error = new QuorumError(QuorumErrorType.TransactionFailed);
+    it('should produce generic rejection for other BrightTrustErrors', () => {
+      const error = new BrightTrustError(
+        BrightTrustErrorType.TransactionFailed,
+      );
       const rejection = ContentIngestionService.createSealingRejection(error);
 
       expect(rejection.accepted).toBe(false);
@@ -347,15 +353,17 @@ describe('ContentIngestionService', () => {
       );
     });
 
-    it('isQuorumError should return true for QuorumError', () => {
-      const error = new QuorumError(QuorumErrorType.IdentitySealingFailed);
-      expect(ContentIngestionService.isQuorumError(error)).toBe(true);
+    it('isBrightTrustError should return true for BrightTrustError', () => {
+      const error = new BrightTrustError(
+        BrightTrustErrorType.IdentitySealingFailed,
+      );
+      expect(ContentIngestionService.isBrightTrustError(error)).toBe(true);
     });
 
-    it('isQuorumError should return false for other errors', () => {
-      expect(ContentIngestionService.isQuorumError(new Error('nope'))).toBe(
-        false,
-      );
+    it('isBrightTrustError should return false for other errors', () => {
+      expect(
+        ContentIngestionService.isBrightTrustError(new Error('nope')),
+      ).toBe(false);
     });
   });
 });

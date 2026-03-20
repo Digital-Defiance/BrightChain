@@ -272,7 +272,7 @@ describe('MemberCblService Unit Tests', () => {
 
       try {
         await memberCblService.hydrateMember(cbl);
-        fail('Expected MemberError to be thrown');
+        throw new Error('Expected MemberError to be thrown');
       } catch (error) {
         expect(error).toBeInstanceOf(MemberError);
         // When a block is missing, the error is thrown during getHandleTuples

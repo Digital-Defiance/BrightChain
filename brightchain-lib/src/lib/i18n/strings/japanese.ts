@@ -5,6 +5,17 @@ import {
 } from '../../enumerations/brightChainStrings';
 
 export const JapaneseStrings: StringsCollection<BrightChainStringKey> = {
+  // BrightChain
+  [BrightChainStrings.Common_Bright]: 'ブライト',
+  [BrightChainStrings.Common_Chain]: 'チェーン',
+
+  [BrightChainStrings.Common_Privacy]: 'プライバシー',
+  [BrightChainStrings.Common_Participation]: '参加',
+  [BrightChainStrings.Common_Power]: '力',
+  [BrightChainStrings.Common_PrivacyParticipationPower]:
+    'プライバシー。参加。力。',
+
+  // UI Strings
   [BrightChainStrings.Common_BlockSize]: 'ブロックサイズ',
   [BrightChainStrings.Common_AtIndexTemplate]:
     'インデックス{INDEX}で{OPERATION}',
@@ -195,87 +206,89 @@ export const JapaneseStrings: StringsCollection<BrightChainStringKey> = {
     '無効なブロックデータ',
   [BrightChainStrings.Error_BlockServiceError_InvalidBlockType]:
     '無効なブロックタイプ',
-  [BrightChainStrings.Error_QuorumError_InvalidQuorumId]: '無効なクォーラムID',
-  [BrightChainStrings.Error_QuorumError_DocumentNotFound]:
+  [BrightChainStrings.Error_BrightTrustError_InvalidBrightTrustId]:
+    '無効なクォーラムID',
+  [BrightChainStrings.Error_BrightTrustError_DocumentNotFound]:
     'ドキュメントが見つかりません',
-  [BrightChainStrings.Error_QuorumError_UnableToRestoreDocument]:
+  [BrightChainStrings.Error_BrightTrustError_UnableToRestoreDocument]:
     'ドキュメントを復元できません',
-  [BrightChainStrings.Error_QuorumError_NotImplemented]: '未実装',
-  [BrightChainStrings.Error_QuorumError_Uninitialized]:
+  [BrightChainStrings.Error_BrightTrustError_NotImplemented]: '未実装',
+  [BrightChainStrings.Error_BrightTrustError_Uninitialized]:
     'クォーラムサブシステムが初期化されていません',
-  [BrightChainStrings.Error_QuorumError_MemberNotFound]:
+  [BrightChainStrings.Error_BrightTrustError_MemberNotFound]:
     'メンバーが見つかりません',
-  [BrightChainStrings.Error_QuorumError_NotEnoughMembers]:
+  [BrightChainStrings.Error_BrightTrustError_NotEnoughMembers]:
     'クォーラム操作に十分なメンバーがいません',
-  [BrightChainStrings.Error_QuorumError_TransitionInProgress]:
+  [BrightChainStrings.Error_BrightTrustError_TransitionInProgress]:
     '操作がブロックされています：移行式が進行中です',
-  [BrightChainStrings.Error_QuorumError_InvalidModeTransition]:
+  [BrightChainStrings.Error_BrightTrustError_InvalidModeTransition]:
     '無効な動作モード遷移',
-  [BrightChainStrings.Error_QuorumError_InsufficientMembersForTransition]:
+  [BrightChainStrings.Error_BrightTrustError_InsufficientMembersForTransition]:
     '移行式を開始するにはメンバーが不足しています',
-  [BrightChainStrings.Error_QuorumError_MemberAlreadyExists]:
+  [BrightChainStrings.Error_BrightTrustError_MemberAlreadyExists]:
     'メンバーはすでにクォーラムに存在します',
-  [BrightChainStrings.Error_QuorumError_InsufficientRemainingMembers]:
+  [BrightChainStrings.Error_BrightTrustError_InsufficientRemainingMembers]:
     'メンバーを削除できません：残りのメンバーがしきい値を下回ります',
-  [BrightChainStrings.Error_QuorumError_MemberBanned]:
+  [BrightChainStrings.Error_BrightTrustError_MemberBanned]:
     'メンバーはネットワークから禁止されています',
-  [BrightChainStrings.Error_QuorumError_MemberSuspended]:
+  [BrightChainStrings.Error_BrightTrustError_MemberSuspended]:
     'メンバーはネットワークで一時停止されています',
-  [BrightChainStrings.Error_QuorumError_DuplicateProposal]: '重複した提案ID',
-  [BrightChainStrings.Error_QuorumError_ProposalExpired]:
+  [BrightChainStrings.Error_BrightTrustError_DuplicateProposal]:
+    '重複した提案ID',
+  [BrightChainStrings.Error_BrightTrustError_ProposalExpired]:
     '提案の有効期限が切れました',
-  [BrightChainStrings.Error_QuorumError_DuplicateVote]:
+  [BrightChainStrings.Error_BrightTrustError_DuplicateVote]:
     'このメンバーからの重複投票',
-  [BrightChainStrings.Error_QuorumError_VoterNotOnProposal]:
+  [BrightChainStrings.Error_BrightTrustError_VoterNotOnProposal]:
     '投票者はこの提案のアクティブメンバーではありません',
-  [BrightChainStrings.Error_QuorumError_AuthenticationFailed]:
+  [BrightChainStrings.Error_BrightTrustError_AuthenticationFailed]:
     '認証に失敗しました',
-  [BrightChainStrings.Error_QuorumError_VotingLocked]:
+  [BrightChainStrings.Error_BrightTrustError_VotingLocked]:
     '認証の繰り返し失敗により投票がロックされています',
-  [BrightChainStrings.Error_QuorumError_MissingAttachment]:
+  [BrightChainStrings.Error_BrightTrustError_MissingAttachment]:
     '提案には添付ファイルが必要ですが、提供されていません',
-  [BrightChainStrings.Error_QuorumError_AttachmentNotRetrievable]:
+  [BrightChainStrings.Error_BrightTrustError_AttachmentNotRetrievable]:
     '参照された添付ファイルCBLは取得できません',
-  [BrightChainStrings.Error_QuorumError_RedistributionFailed]:
+  [BrightChainStrings.Error_BrightTrustError_RedistributionFailed]:
     'シェアの再配布に失敗しました',
-  [BrightChainStrings.Error_QuorumError_InsufficientSharesForReconstruction]:
+  [BrightChainStrings.Error_BrightTrustError_InsufficientSharesForReconstruction]:
     '鍵の再構築に十分なシェアがありません',
-  [BrightChainStrings.Error_QuorumError_KeyReconstructionValidationFailed]:
+  [BrightChainStrings.Error_BrightTrustError_KeyReconstructionValidationFailed]:
     '再構築された鍵の検証に失敗しました',
-  [BrightChainStrings.Error_QuorumError_IdentityPermanentlyUnrecoverable]:
+  [BrightChainStrings.Error_BrightTrustError_IdentityPermanentlyUnrecoverable]:
     '時効の満了により、アイデンティティは永久に回復不能です',
-  [BrightChainStrings.Error_QuorumError_InvalidMembershipProof]:
+  [BrightChainStrings.Error_BrightTrustError_InvalidMembershipProof]:
     '無効なメンバーシップ証明',
-  [BrightChainStrings.Error_QuorumError_MissingMembershipProof]:
+  [BrightChainStrings.Error_BrightTrustError_MissingMembershipProof]:
     '匿名コンテンツのメンバーシップ証明がありません',
-  [BrightChainStrings.Error_QuorumError_AliasAlreadyTaken]:
+  [BrightChainStrings.Error_BrightTrustError_AliasAlreadyTaken]:
     'エイリアスはすでに登録されています',
-  [BrightChainStrings.Error_QuorumError_AliasNotFound]:
+  [BrightChainStrings.Error_BrightTrustError_AliasNotFound]:
     'エイリアスが見つかりません',
-  [BrightChainStrings.Error_QuorumError_AliasInactive]:
+  [BrightChainStrings.Error_BrightTrustError_AliasInactive]:
     'エイリアスは無効化されています',
-  [BrightChainStrings.Error_QuorumError_IdentitySealingFailed]:
+  [BrightChainStrings.Error_BrightTrustError_IdentitySealingFailed]:
     'アイデンティティシーリングパイプラインが失敗しました',
-  [BrightChainStrings.Error_QuorumError_ShardVerificationFailed]:
+  [BrightChainStrings.Error_BrightTrustError_ShardVerificationFailed]:
     'アイデンティティシャードの検証に失敗しました',
-  [BrightChainStrings.Error_QuorumError_QuorumDatabaseUnavailable]:
+  [BrightChainStrings.Error_BrightTrustError_BrightTrustDatabaseUnavailable]:
     'クォーラムデータベースが利用できません',
-  [BrightChainStrings.Error_QuorumError_TransactionFailed]:
+  [BrightChainStrings.Error_BrightTrustError_TransactionFailed]:
     'データベーストランザクションが失敗しました',
-  [BrightChainStrings.Error_QuorumError_AuditChainCorrupted]:
+  [BrightChainStrings.Error_BrightTrustError_AuditChainCorrupted]:
     '監査チェーンの整合性が損なわれています',
-  // Quorum Ban Mechanism Errors
-  [BrightChainStrings.Error_QuorumError_CannotBanSelf]:
+  // BrightTrust Ban Mechanism Errors
+  [BrightChainStrings.Error_BrightTrustError_CannotBanSelf]:
     'メンバーは自分自身の追放を提案できません',
-  [BrightChainStrings.Error_QuorumError_MemberAlreadyBanned]:
+  [BrightChainStrings.Error_BrightTrustError_MemberAlreadyBanned]:
     'メンバーは既に追放されています',
-  [BrightChainStrings.Error_QuorumError_MemberNotBanned]:
+  [BrightChainStrings.Error_BrightTrustError_MemberNotBanned]:
     'メンバーは現在追放されていません',
-  [BrightChainStrings.Error_QuorumError_NewMemberCannotProposeBan]:
+  [BrightChainStrings.Error_BrightTrustError_NewMemberCannotProposeBan]:
     '現在のエポックで承認されたメンバーは追放を提案できません',
-  [BrightChainStrings.Error_QuorumError_BanCoolingPeriodNotElapsed]:
+  [BrightChainStrings.Error_BrightTrustError_BanCoolingPeriodNotElapsed]:
     '追放のクーリング期間がまだ経過していません',
-  [BrightChainStrings.Error_QuorumError_InvalidBanRecordSignatures]:
+  [BrightChainStrings.Error_BrightTrustError_InvalidBanRecordSignatures]:
     '追放記録に十分な有効なクォーラム署名がありません',
   [BrightChainStrings.Error_IdentityValidationError_InvalidSignature]:
     'コンテンツの署名が主張されたアイデンティティと一致しません',
@@ -884,22 +897,22 @@ export const JapaneseStrings: StringsCollection<BrightChainStringKey> = {
   [BrightChainStrings.Error_MemberProfileDocument_Hint]:
     'new MemberProfileDocument() の代わりに MemberProfileDocument.create() を使用してください',
 
-  // Quorum Document Errors
-  [BrightChainStrings.Error_QuorumDocument_CreatorMustBeSetBeforeSaving]:
+  // BrightTrust Document Errors
+  [BrightChainStrings.Error_BrightTrustDocument_CreatorMustBeSetBeforeSaving]:
     '保存前に作成者を設定する必要があります',
-  [BrightChainStrings.Error_QuorumDocument_CreatorMustBeSetBeforeEncrypting]:
+  [BrightChainStrings.Error_BrightTrustDocument_CreatorMustBeSetBeforeEncrypting]:
     '暗号化前に作成者を設定する必要があります',
-  [BrightChainStrings.Error_QuorumDocument_DocumentHasNoEncryptedData]:
+  [BrightChainStrings.Error_BrightTrustDocument_DocumentHasNoEncryptedData]:
     'ドキュメントに暗号化されたデータがありません',
-  [BrightChainStrings.Error_QuorumDocument_InvalidEncryptedDataFormat]:
+  [BrightChainStrings.Error_BrightTrustDocument_InvalidEncryptedDataFormat]:
     '無効な暗号化データ形式',
-  [BrightChainStrings.Error_QuorumDocument_InvalidMemberIdsFormat]:
+  [BrightChainStrings.Error_BrightTrustDocument_InvalidMemberIdsFormat]:
     '無効なメンバーID形式',
-  [BrightChainStrings.Error_QuorumDocument_InvalidSignatureFormat]:
+  [BrightChainStrings.Error_BrightTrustDocument_InvalidSignatureFormat]:
     '無効な署名形式',
-  [BrightChainStrings.Error_QuorumDocument_InvalidCreatorIdFormat]:
+  [BrightChainStrings.Error_BrightTrustDocument_InvalidCreatorIdFormat]:
     '無効な作成者ID形式',
-  [BrightChainStrings.Error_QuorumDocument_InvalidChecksumFormat]:
+  [BrightChainStrings.Error_BrightTrustDocument_InvalidChecksumFormat]:
     '無効なチェックサム形式',
 
   // Block Logger
@@ -1146,13 +1159,14 @@ export const JapaneseStrings: StringsCollection<BrightChainStringKey> = {
     'makeTuple で不明なエラーが発生しました',
   [BrightChainStrings.PrimeTupleGeneratorStream_UnknownErrorInFlush]:
     'flush で不明なエラーが発生しました',
-  [BrightChainStrings.QuorumDataRecord_MustShareWithAtLeastTwoMembers]:
+  [BrightChainStrings.BrightTrustDataRecord_MustShareWithAtLeastTwoMembers]:
     '少なくとも2人のメンバーと共有する必要があります',
-  [BrightChainStrings.QuorumDataRecord_SharesRequiredExceedsMembers]:
+  [BrightChainStrings.BrightTrustDataRecord_SharesRequiredExceedsMembers]:
     '必要なシェア数がメンバー数を超えています',
-  [BrightChainStrings.QuorumDataRecord_SharesRequiredMustBeAtLeastTwo]:
+  [BrightChainStrings.BrightTrustDataRecord_SharesRequiredMustBeAtLeastTwo]:
     '必要なシェア数は2以上である必要があります',
-  [BrightChainStrings.QuorumDataRecord_InvalidChecksum]: '無効なチェックサム',
+  [BrightChainStrings.BrightTrustDataRecord_InvalidChecksum]:
+    '無効なチェックサム',
   [BrightChainStrings.SimpleBrowserStore_BlockNotFoundTemplate]:
     'ブロックが見つかりません: {ID}',
   [BrightChainStrings.EncryptedBlockCreator_NoCreatorRegisteredTemplate]:
@@ -1289,4 +1303,186 @@ export const JapaneseStrings: StringsCollection<BrightChainStringKey> = {
     'レピュテーションの読み込みに失敗しました',
   [BrightChainStrings.Dashboard_FailedToLoadData]:
     'データの読み込みに失敗しました',
+
+  // Admin Dashboard
+  [BrightChainStrings.Admin_Dashboard_Title]: '管理ダッシュボード',
+  [BrightChainStrings.Admin_Dashboard_AccessDenied]: 'アクセス拒否',
+  [BrightChainStrings.Admin_Dashboard_AccessDeniedDescription]:
+    '管理ダッシュボードを表示する権限がありません。',
+  [BrightChainStrings.Admin_Dashboard_Loading]: 'ダッシュボードを読み込み中…',
+  [BrightChainStrings.Admin_Dashboard_NoData]: 'データがありません。',
+  [BrightChainStrings.Admin_Dashboard_RefreshNow]: '今すぐ更新',
+  [BrightChainStrings.Admin_Dashboard_ErrorLastSuccessTemplate]:
+    'エラー — 最終成功：{TIME}',
+  [BrightChainStrings.Admin_Dashboard_ErrorLastSuccessNever]: 'なし',
+  [BrightChainStrings.Admin_Dashboard_ServerIdentity]: 'サーバー識別情報',
+  [BrightChainStrings.Admin_Dashboard_Hostname]: 'ホスト名',
+  [BrightChainStrings.Admin_Dashboard_LocalNodeId]: 'ローカルノード ID',
+  [BrightChainStrings.Admin_Dashboard_Timestamp]: 'タイムスタンプ',
+  [BrightChainStrings.Admin_Dashboard_NA]: '該当なし',
+  [BrightChainStrings.Admin_Dashboard_Nodes]: 'ノード',
+  [BrightChainStrings.Admin_Dashboard_NoNodesRegistered]:
+    '登録されたノードはありません。',
+  [BrightChainStrings.Admin_Dashboard_DisconnectedPeers]: '切断されたピア',
+  [BrightChainStrings.Admin_Dashboard_LumenClients]: 'Lumen クライアント',
+  [BrightChainStrings.Admin_Dashboard_ConnectedClients]: '接続中のクライアント',
+  [BrightChainStrings.Admin_Dashboard_RoomsTemplate]: '{COUNT} ルーム',
+  [BrightChainStrings.Admin_Dashboard_NodeConnections]: 'ノード接続',
+  [BrightChainStrings.Admin_Dashboard_NodeToNodeConnections]: 'ノード間接続',
+  [BrightChainStrings.Admin_Dashboard_SystemMetrics]: 'システムメトリクス',
+  [BrightChainStrings.Admin_Dashboard_HeapUsed]: 'ヒープ使用量',
+  [BrightChainStrings.Admin_Dashboard_HeapTotal]: 'ヒープ合計',
+  [BrightChainStrings.Admin_Dashboard_RSS]: 'RSS',
+  [BrightChainStrings.Admin_Dashboard_External]: '外部',
+  [BrightChainStrings.Admin_Dashboard_UptimeTemplate]: '稼働時間：{SECONDS}秒',
+  [BrightChainStrings.Admin_Dashboard_NodeVersionTemplate]:
+    'Node {NODE_VERSION} — App v{APP_VERSION}',
+  [BrightChainStrings.Admin_Dashboard_DBStats]: 'DB 統計',
+  [BrightChainStrings.Admin_Dashboard_Users]: 'ユーザー',
+  [BrightChainStrings.Admin_Dashboard_Roles]: 'ロール',
+  [BrightChainStrings.Admin_Dashboard_Active]: 'アクティブ',
+  [BrightChainStrings.Admin_Dashboard_Locked]: 'ロック済み',
+  [BrightChainStrings.Admin_Dashboard_Pending]: '保留中',
+  [BrightChainStrings.Admin_Dashboard_Members]: 'メンバー',
+  [BrightChainStrings.Admin_Dashboard_Threshold]: 'しきい値',
+  [BrightChainStrings.Admin_Dashboard_Pools]: 'プール',
+  [BrightChainStrings.Admin_Dashboard_NoPools]: 'プールはありません。',
+  [BrightChainStrings.Admin_Dashboard_Dependencies]: '依存関係',
+  [BrightChainStrings.Admin_Dashboard_BlockStore]: 'BrightStore',
+  [BrightChainStrings.Admin_Dashboard_TotalBlocks]: 'ブロック合計',
+  [BrightChainStrings.Admin_Dashboard_TotalSize]: '合計サイズ',
+  [BrightChainStrings.Admin_Dashboard_TotalPosts]: '投稿合計',
+  [BrightChainStrings.Admin_Dashboard_ActiveUsersLast30Days]:
+    'アクティブユーザー（30日）',
+  [BrightChainStrings.Admin_Dashboard_Conversations]: '会話',
+  [BrightChainStrings.Admin_Dashboard_Messages]: 'メッセージ',
+  [BrightChainStrings.Admin_Dashboard_TotalVaults]: 'ボールト合計',
+  [BrightChainStrings.Admin_Dashboard_SharedVaults]: '共有ボールト',
+  [BrightChainStrings.Admin_Dashboard_TotalEmails]: 'メール合計',
+  [BrightChainStrings.Admin_Dashboard_DeliveryFailures]: '配信失敗',
+  [BrightChainStrings.Admin_Dashboard_Last24Hours]: '過去24時間',
+  [BrightChainStrings.Admin_Menu_Dashboard]: '管理ダッシュボード',
+  [BrightChainStrings.Admin_Common_Loading]: '読み込み中…',
+  [BrightChainStrings.Admin_Common_Previous]: '前へ',
+  [BrightChainStrings.Admin_Common_Next]: '次へ',
+  [BrightChainStrings.Admin_Common_PageTemplate]: '{TOTAL}ページ中{PAGE}ページ',
+  [BrightChainStrings.Admin_Common_Cancel]: 'キャンセル',
+  [BrightChainStrings.Admin_Common_Delete]: '削除',
+  [BrightChainStrings.Admin_Common_Yes]: 'はい',
+  [BrightChainStrings.Admin_Common_No]: 'いいえ',
+  [BrightChainStrings.Admin_Common_Never]: 'なし',
+  [BrightChainStrings.Admin_Common_Close]: '閉じる',
+  [BrightChainStrings.Admin_Users_Title]: 'ユーザー管理',
+  [BrightChainStrings.Admin_Users_FilterAll]: 'すべて',
+  [BrightChainStrings.Admin_Users_FilterActive]: 'アクティブ',
+  [BrightChainStrings.Admin_Users_FilterLocked]: 'ロック済み',
+  [BrightChainStrings.Admin_Users_FilterPending]: '保留中',
+  [BrightChainStrings.Admin_Users_ColUsername]: 'ユーザー名',
+  [BrightChainStrings.Admin_Users_ColEmail]: 'メールアドレス',
+  [BrightChainStrings.Admin_Users_ColStatus]: 'ステータス',
+  [BrightChainStrings.Admin_Users_ColEmailVerified]: 'メール認証済み',
+  [BrightChainStrings.Admin_Users_ColLastLogin]: '最終ログイン',
+  [BrightChainStrings.Admin_Users_ColActions]: 'アクション',
+  [BrightChainStrings.Admin_Users_NoUsersFound]: 'ユーザーが見つかりません。',
+  [BrightChainStrings.Admin_Users_UnlockUser]: 'ユーザーのロック解除',
+  [BrightChainStrings.Admin_Users_LockUser]: 'ユーザーをロック',
+  [BrightChainStrings.Admin_Users_LockUserTitle]: 'ユーザーをロック',
+  [BrightChainStrings.Admin_Users_UnlockUserTitle]: 'ユーザーのロック解除',
+  [BrightChainStrings.Admin_Users_LockConfirmTemplate]:
+    '{USERNAME} をロックしてもよろしいですか？',
+  [BrightChainStrings.Admin_Users_UnlockConfirmTemplate]:
+    '{USERNAME} のロックを解除してもよろしいですか？',
+  [BrightChainStrings.Admin_Users_LockWarning]:
+    ' これにより、ユーザーはログインできなくなります。',
+  [BrightChainStrings.Admin_Blocks_Title]: 'ブロックエクスプローラー',
+  [BrightChainStrings.Admin_Blocks_SearchPlaceholder]: 'ブロック ID で検索',
+  [BrightChainStrings.Admin_Blocks_FilterAllDurability]: 'すべての耐久性',
+  [BrightChainStrings.Admin_Blocks_FilterStandard]: '標準',
+  [BrightChainStrings.Admin_Blocks_FilterHighDurability]: '高耐久性',
+  [BrightChainStrings.Admin_Blocks_FilterEphemeral]: '一時的',
+  [BrightChainStrings.Admin_Blocks_SortByDate]: '日付順',
+  [BrightChainStrings.Admin_Blocks_SortBySize]: 'サイズ順',
+  [BrightChainStrings.Admin_Blocks_Detail]: 'ブロック詳細',
+  [BrightChainStrings.Admin_Blocks_ColBlockId]: 'ブロック ID',
+  [BrightChainStrings.Admin_Blocks_ColSize]: 'サイズ',
+  [BrightChainStrings.Admin_Blocks_ColDurability]: '耐久性',
+  [BrightChainStrings.Admin_Blocks_ColCreated]: '作成日',
+  [BrightChainStrings.Admin_Blocks_ColAccessCount]: 'アクセス回数',
+  [BrightChainStrings.Admin_Blocks_ColReplication]: 'レプリケーション',
+  [BrightChainStrings.Admin_Blocks_ColActions]: 'アクション',
+  [BrightChainStrings.Admin_Blocks_NoBlocksFound]: 'ブロックが見つかりません。',
+  [BrightChainStrings.Admin_Blocks_DiscoverNodes]: 'ノードを検出',
+  [BrightChainStrings.Admin_Blocks_NodesHoldingBlockTemplate]:
+    'ブロック {BLOCK_ID} を保持するノード：',
+  [BrightChainStrings.Admin_Blocks_NoNodesFound]: 'ノードが見つかりません。',
+  [BrightChainStrings.Admin_Blocks_Checksum]: 'チェックサム',
+  [BrightChainStrings.Admin_Blocks_DeleteTitle]: 'ブロックを削除',
+  [BrightChainStrings.Admin_Blocks_DeleteConfirmTemplate]:
+    'ブロック {BLOCK_ID} を削除してもよろしいですか？関連するパリティブロックもローカルストレージから削除されます。',
+  [BrightChainStrings.Admin_Blocks_SizeBytesTemplate]: '{SIZE} バイト',
+  [BrightChainStrings.Admin_Pass_Title]: 'BrightPass 管理',
+  [BrightChainStrings.Admin_Pass_EncryptedNotice]:
+    'ボールトの内容は暗号化されており、閲覧できません。ボールトのメタデータのみが表示されます。',
+  [BrightChainStrings.Admin_Pass_ColOwner]: '所有者',
+  [BrightChainStrings.Admin_Pass_ColShared]: '共有',
+  [BrightChainStrings.Admin_Pass_ColCreated]: '作成日',
+  [BrightChainStrings.Admin_Pass_ColLastAccessed]: '最終アクセス',
+  [BrightChainStrings.Admin_Pass_ColActions]: 'アクション',
+  [BrightChainStrings.Admin_Pass_NoVaultsFound]: 'ボールトが見つかりません。',
+  [BrightChainStrings.Admin_Pass_DeleteVault]: 'ボールトを削除',
+  [BrightChainStrings.Admin_Pass_DeleteVaultTitle]: 'ボールトを削除',
+  [BrightChainStrings.Admin_Pass_DeleteVaultConfirm]:
+    'このボールトを削除してもよろしいですか？ボールトと関連するブロックが削除されます。この操作は元に戻せません。',
+  [BrightChainStrings.Admin_Chat_Title]: 'BrightChat 管理',
+  [BrightChainStrings.Admin_Chat_ColId]: 'ID',
+  [BrightChainStrings.Admin_Chat_ColParticipants]: '参加者',
+  [BrightChainStrings.Admin_Chat_ColMessages]: 'メッセージ',
+  [BrightChainStrings.Admin_Chat_ColLastActivity]: '最終アクティビティ',
+  [BrightChainStrings.Admin_Chat_NoConversationsFound]:
+    '会話が見つかりません。',
+  [BrightChainStrings.Admin_Chat_MessagesForTemplate]:
+    '会話 {CONVERSATION_ID} のメッセージ',
+  [BrightChainStrings.Admin_Chat_LoadingMessages]: 'メッセージを読み込み中…',
+  [BrightChainStrings.Admin_Chat_NoMessages]: 'メッセージはありません。',
+  [BrightChainStrings.Admin_Chat_ColSender]: '送信者',
+  [BrightChainStrings.Admin_Chat_ColContent]: '内容',
+  [BrightChainStrings.Admin_Chat_ColCreated]: '作成日',
+  [BrightChainStrings.Admin_Chat_ColStatus]: 'ステータス',
+  [BrightChainStrings.Admin_Chat_StatusDeleted]: '削除済み',
+  [BrightChainStrings.Admin_Chat_StatusActive]: 'アクティブ',
+  [BrightChainStrings.Admin_Chat_DeleteMessage]: 'メッセージを削除',
+  [BrightChainStrings.Admin_Chat_DeleteMessageTitle]: 'メッセージを削除',
+  [BrightChainStrings.Admin_Chat_DeleteMessageConfirm]:
+    'このメッセージを削除してもよろしいですか？ソフトデリートされます。',
+  [BrightChainStrings.Admin_Hub_Title]: 'BrightHub 管理',
+  [BrightChainStrings.Admin_Hub_FilterByAuthorId]: '著者 ID でフィルター',
+  [BrightChainStrings.Admin_Hub_FilterAllPosts]: 'すべての投稿',
+  [BrightChainStrings.Admin_Hub_FilterActive]: 'アクティブ',
+  [BrightChainStrings.Admin_Hub_FilterDeleted]: '削除済み',
+  [BrightChainStrings.Admin_Hub_ColAuthor]: '著者',
+  [BrightChainStrings.Admin_Hub_ColContentPreview]: 'コンテンツプレビュー',
+  [BrightChainStrings.Admin_Hub_ColCreated]: '作成日',
+  [BrightChainStrings.Admin_Hub_ColStatus]: 'ステータス',
+  [BrightChainStrings.Admin_Hub_ColLikes]: 'いいね',
+  [BrightChainStrings.Admin_Hub_ColReposts]: 'リポスト',
+  [BrightChainStrings.Admin_Hub_ColActions]: 'アクション',
+  [BrightChainStrings.Admin_Hub_StatusDeleted]: '削除済み',
+  [BrightChainStrings.Admin_Hub_StatusActive]: 'アクティブ',
+  [BrightChainStrings.Admin_Hub_NoPostsFound]: '投稿が見つかりません。',
+  [BrightChainStrings.Admin_Hub_SoftDeletePost]: '投稿を削除',
+  [BrightChainStrings.Admin_Hub_DeletePostTitle]: '投稿を削除',
+  [BrightChainStrings.Admin_Hub_DeletePostConfirm]:
+    'この投稿を削除してもよろしいですか？削除済みとしてマークされますが、完全には削除されません。',
+  [BrightChainStrings.Admin_Mail_Title]: 'BrightMail 管理',
+  [BrightChainStrings.Admin_Mail_ColSender]: '送信者',
+  [BrightChainStrings.Admin_Mail_ColRecipients]: '受信者',
+  [BrightChainStrings.Admin_Mail_ColSubject]: '件名',
+  [BrightChainStrings.Admin_Mail_ColCreated]: '作成日',
+  [BrightChainStrings.Admin_Mail_ColDeliveryStatus]: '配信ステータス',
+  [BrightChainStrings.Admin_Mail_ColActions]: 'アクション',
+  [BrightChainStrings.Admin_Mail_NoEmailsFound]: 'メールが見つかりません。',
+  [BrightChainStrings.Admin_Mail_DeleteEmail]: 'メールを削除',
+  [BrightChainStrings.Admin_Mail_DeleteEmailTitle]: 'メールを削除',
+  [BrightChainStrings.Admin_Mail_DeleteEmailConfirm]:
+    'このメールを削除してもよろしいですか？この操作は元に戻せません。',
 };

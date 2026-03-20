@@ -396,6 +396,7 @@ export class TupleService<TID extends PlatformID = Uint8Array> {
     return new ConstituentBlockListBlock<TID>(
       ownedBlock.data,
       creator,
+      primeWhitened.blockSize,
     ) as ConstituentBlockListBlock<Uint8Array>;
   }
 
@@ -429,7 +430,11 @@ export class TupleService<TID extends PlatformID = Uint8Array> {
         encryptedBlock,
         BlockType.EphemeralOwnedDataBlock,
       );
-    return new ConstituentBlockListBlock(decryptedBlock.data, creator);
+    return new ConstituentBlockListBlock(
+      decryptedBlock.data,
+      creator,
+      primeWhitened.blockSize,
+    );
   }
 
   /**
@@ -559,7 +564,7 @@ export class TupleService<TID extends PlatformID = Uint8Array> {
       data.set(blockIDs, headerData.length);
       const checksum = this.checksumService.calculateChecksum(data);
       // Create CBL
-      const cbl = new ConstituentBlockListBlock(data, creator);
+      const cbl = new ConstituentBlockListBlock(data, creator, blockSize);
 
       // Convert CBL to OwnedDataBlock for tuple creation
       const ownedBlock = await EphemeralBlock.from(
@@ -744,7 +749,7 @@ export class TupleService<TID extends PlatformID = Uint8Array> {
       const checksum = this.checksumService.calculateChecksum(data);
 
       // Create and encrypt CBL
-      const cbl = new ConstituentBlockListBlock(data, creator);
+      const cbl = new ConstituentBlockListBlock(data, creator, blockSize);
 
       const ownedBlock = await EphemeralBlock.from<TID>(
         BlockType.EphemeralOwnedDataBlock,

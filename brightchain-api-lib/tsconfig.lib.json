@@ -11,6 +11,7 @@
     "moduleResolution": "NodeNext",
     "types": ["node"]
   },
+  "files": ["../types/global.d.ts"],
   "include": [
     "src/**/*.ts",
     "src/**/*.d.ts",

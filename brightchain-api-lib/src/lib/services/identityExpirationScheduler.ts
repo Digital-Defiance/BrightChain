@@ -11,12 +11,12 @@
 import {
   AuditEventType,
   AuditLogService,
+  BrightTrustAuditLogEntry,
   DEFAULT_STATUTE_FALLBACK_DURATION_MS,
   ExpirationResult,
   ExpirationSchedulerConfig,
+  IBrightTrustDatabase,
   IExpirationScheduler,
-  IQuorumDatabase,
-  QuorumAuditLogEntry,
   ServiceProvider,
   StatuteOfLimitationsConfig,
 } from '@brightchain/brightchain-lib';
@@ -30,7 +30,7 @@ const DEFAULT_BATCH_SIZE = 100;
 
 /**
  * IdentityExpirationScheduler periodically purges expired IdentityRecoveryRecord
- * entries from the quorum database.
+ * entries from the BrightTrust database.
  *
  * For each expired record:
  * 1. Deletes the identity recovery shards from the database
@@ -50,7 +50,7 @@ export class IdentityExpirationScheduler<TID extends PlatformID = Uint8Array>
   private readonly idProvider: IIdProvider<TID>;
 
   constructor(
-    private readonly db: IQuorumDatabase<TID>,
+    private readonly db: IBrightTrustDatabase<TID>,
     private readonly auditLogService?: AuditLogService<TID>,
     config?: Partial<ExpirationSchedulerConfig>,
     idProvider?: IIdProvider<TID>,
@@ -186,7 +186,7 @@ export class IdentityExpirationScheduler<TID extends PlatformID = Uint8Array>
     eventType: AuditEventType,
     details: Record<string, unknown>,
   ): Promise<void> {
-    const entry: QuorumAuditLogEntry<TID> = {
+    const entry: BrightTrustAuditLogEntry<TID> = {
       id: this.idProvider.fromBytes(this.idProvider.generate()),
       eventType,
       details,

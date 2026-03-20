@@ -5,6 +5,15 @@ import {
 } from '../../enumerations/brightChainStrings';
 
 export const MandarinStrings: StringsCollection<BrightChainStringKey> = {
+  // BrightChain
+  [BrightChainStrings.Common_Bright]: '明亮',
+  [BrightChainStrings.Common_Chain]: '链',
+
+  [BrightChainStrings.Common_Privacy]: '隐私',
+  [BrightChainStrings.Common_Participation]: '参与',
+  [BrightChainStrings.Common_Power]: '力量',
+  [BrightChainStrings.Common_PrivacyParticipationPower]: '隐私。参与。力量。',
+
   // UI Strings
   [BrightChainStrings.Common_BlockSize]: '区块大小',
   [BrightChainStrings.Common_AtIndexTemplate]: '在索引{INDEX}处{OPERATION}',
@@ -198,74 +207,79 @@ export const MandarinStrings: StringsCollection<BrightChainStringKey> = {
   [BrightChainStrings.Error_BlockServiceError_InvalidBlockData]: '无效的块数据',
   [BrightChainStrings.Error_BlockServiceError_InvalidBlockType]: '无效的块类型',
 
-  // Quorum Errors
-  [BrightChainStrings.Error_QuorumError_InvalidQuorumId]: '无效的法定人数ID',
-  [BrightChainStrings.Error_QuorumError_DocumentNotFound]: '未找到文档',
-  [BrightChainStrings.Error_QuorumError_UnableToRestoreDocument]:
+  // BrightTrust Errors
+  [BrightChainStrings.Error_BrightTrustError_InvalidBrightTrustId]:
+    '无效的法定人数ID',
+  [BrightChainStrings.Error_BrightTrustError_DocumentNotFound]: '未找到文档',
+  [BrightChainStrings.Error_BrightTrustError_UnableToRestoreDocument]:
     '无法恢复文档',
-  [BrightChainStrings.Error_QuorumError_NotImplemented]: '未实现',
-  [BrightChainStrings.Error_QuorumError_Uninitialized]:
+  [BrightChainStrings.Error_BrightTrustError_NotImplemented]: '未实现',
+  [BrightChainStrings.Error_BrightTrustError_Uninitialized]:
     '法定人数子系统未初始化',
-  [BrightChainStrings.Error_QuorumError_MemberNotFound]: '未找到成员',
-  [BrightChainStrings.Error_QuorumError_NotEnoughMembers]:
+  [BrightChainStrings.Error_BrightTrustError_MemberNotFound]: '未找到成员',
+  [BrightChainStrings.Error_BrightTrustError_NotEnoughMembers]:
     '法定人数操作没有足够的成员',
-  [BrightChainStrings.Error_QuorumError_TransitionInProgress]:
+  [BrightChainStrings.Error_BrightTrustError_TransitionInProgress]:
     '操作被阻止：过渡仪式正在进行中',
-  [BrightChainStrings.Error_QuorumError_InvalidModeTransition]:
+  [BrightChainStrings.Error_BrightTrustError_InvalidModeTransition]:
     '无效的操作模式转换',
-  [BrightChainStrings.Error_QuorumError_InsufficientMembersForTransition]:
+  [BrightChainStrings.Error_BrightTrustError_InsufficientMembersForTransition]:
     '成员不足，无法启动过渡仪式',
-  [BrightChainStrings.Error_QuorumError_MemberAlreadyExists]:
+  [BrightChainStrings.Error_BrightTrustError_MemberAlreadyExists]:
     '成员已存在于法定人数中',
-  [BrightChainStrings.Error_QuorumError_InsufficientRemainingMembers]:
+  [BrightChainStrings.Error_BrightTrustError_InsufficientRemainingMembers]:
     '无法移除成员：剩余成员将低于阈值',
-  [BrightChainStrings.Error_QuorumError_MemberBanned]: '成员已被禁止',
-  [BrightChainStrings.Error_QuorumError_MemberSuspended]: '成员已被暂停',
-  [BrightChainStrings.Error_QuorumError_DuplicateProposal]: '重复的提案ID',
-  [BrightChainStrings.Error_QuorumError_ProposalExpired]: '提案已过期',
-  [BrightChainStrings.Error_QuorumError_DuplicateVote]: '该成员的重复投票',
-  [BrightChainStrings.Error_QuorumError_VoterNotOnProposal]:
+  [BrightChainStrings.Error_BrightTrustError_MemberBanned]: '成员已被禁止',
+  [BrightChainStrings.Error_BrightTrustError_MemberSuspended]: '成员已被暂停',
+  [BrightChainStrings.Error_BrightTrustError_DuplicateProposal]: '重复的提案ID',
+  [BrightChainStrings.Error_BrightTrustError_ProposalExpired]: '提案已过期',
+  [BrightChainStrings.Error_BrightTrustError_DuplicateVote]: '该成员的重复投票',
+  [BrightChainStrings.Error_BrightTrustError_VoterNotOnProposal]:
     '投票者不是该提案的活跃成员',
-  [BrightChainStrings.Error_QuorumError_AuthenticationFailed]: '认证失败',
-  [BrightChainStrings.Error_QuorumError_VotingLocked]:
+  [BrightChainStrings.Error_BrightTrustError_AuthenticationFailed]: '认证失败',
+  [BrightChainStrings.Error_BrightTrustError_VotingLocked]:
     '由于多次认证失败，投票已被锁定',
-  [BrightChainStrings.Error_QuorumError_MissingAttachment]:
+  [BrightChainStrings.Error_BrightTrustError_MissingAttachment]:
     '提案需要附件但未提供',
-  [BrightChainStrings.Error_QuorumError_AttachmentNotRetrievable]:
+  [BrightChainStrings.Error_BrightTrustError_AttachmentNotRetrievable]:
     '引用的附件CBL无法检索',
-  [BrightChainStrings.Error_QuorumError_RedistributionFailed]:
+  [BrightChainStrings.Error_BrightTrustError_RedistributionFailed]:
     '份额重新分配失败',
-  [BrightChainStrings.Error_QuorumError_InsufficientSharesForReconstruction]:
+  [BrightChainStrings.Error_BrightTrustError_InsufficientSharesForReconstruction]:
     '提供的份额不足以重建密钥',
-  [BrightChainStrings.Error_QuorumError_KeyReconstructionValidationFailed]:
+  [BrightChainStrings.Error_BrightTrustError_KeyReconstructionValidationFailed]:
     '重建的密钥验证失败',
-  [BrightChainStrings.Error_QuorumError_IdentityPermanentlyUnrecoverable]:
+  [BrightChainStrings.Error_BrightTrustError_IdentityPermanentlyUnrecoverable]:
     '由于诉讼时效已过，身份永久不可恢复',
-  [BrightChainStrings.Error_QuorumError_InvalidMembershipProof]:
+  [BrightChainStrings.Error_BrightTrustError_InvalidMembershipProof]:
     '无效的成员资格证明',
-  [BrightChainStrings.Error_QuorumError_MissingMembershipProof]:
+  [BrightChainStrings.Error_BrightTrustError_MissingMembershipProof]:
     '匿名内容缺少成员资格证明',
-  [BrightChainStrings.Error_QuorumError_AliasAlreadyTaken]: '别名已被注册',
-  [BrightChainStrings.Error_QuorumError_AliasNotFound]: '未找到别名',
-  [BrightChainStrings.Error_QuorumError_AliasInactive]: '别名已被停用',
-  [BrightChainStrings.Error_QuorumError_IdentitySealingFailed]:
+  [BrightChainStrings.Error_BrightTrustError_AliasAlreadyTaken]: '别名已被注册',
+  [BrightChainStrings.Error_BrightTrustError_AliasNotFound]: '未找到别名',
+  [BrightChainStrings.Error_BrightTrustError_AliasInactive]: '别名已被停用',
+  [BrightChainStrings.Error_BrightTrustError_IdentitySealingFailed]:
     '身份封存管道失败',
-  [BrightChainStrings.Error_QuorumError_ShardVerificationFailed]:
+  [BrightChainStrings.Error_BrightTrustError_ShardVerificationFailed]:
     '身份分片验证失败',
-  [BrightChainStrings.Error_QuorumError_QuorumDatabaseUnavailable]:
+  [BrightChainStrings.Error_BrightTrustError_BrightTrustDatabaseUnavailable]:
     '法定人数数据库不可用',
-  [BrightChainStrings.Error_QuorumError_TransactionFailed]: '数据库事务失败',
-  [BrightChainStrings.Error_QuorumError_AuditChainCorrupted]:
+  [BrightChainStrings.Error_BrightTrustError_TransactionFailed]:
+    '数据库事务失败',
+  [BrightChainStrings.Error_BrightTrustError_AuditChainCorrupted]:
     '审计链完整性受损',
-  // Quorum Ban Mechanism Errors
-  [BrightChainStrings.Error_QuorumError_CannotBanSelf]: '成员不能提议封禁自己',
-  [BrightChainStrings.Error_QuorumError_MemberAlreadyBanned]: '成员已被封禁',
-  [BrightChainStrings.Error_QuorumError_MemberNotBanned]: '成员当前未被封禁',
-  [BrightChainStrings.Error_QuorumError_NewMemberCannotProposeBan]:
+  // BrightTrust Ban Mechanism Errors
+  [BrightChainStrings.Error_BrightTrustError_CannotBanSelf]:
+    '成员不能提议封禁自己',
+  [BrightChainStrings.Error_BrightTrustError_MemberAlreadyBanned]:
+    '成员已被封禁',
+  [BrightChainStrings.Error_BrightTrustError_MemberNotBanned]:
+    '成员当前未被封禁',
+  [BrightChainStrings.Error_BrightTrustError_NewMemberCannotProposeBan]:
     '在当前纪元中加入的成员不能提议封禁',
-  [BrightChainStrings.Error_QuorumError_BanCoolingPeriodNotElapsed]:
+  [BrightChainStrings.Error_BrightTrustError_BanCoolingPeriodNotElapsed]:
     '封禁冷却期尚未结束',
-  [BrightChainStrings.Error_QuorumError_InvalidBanRecordSignatures]:
+  [BrightChainStrings.Error_BrightTrustError_InvalidBanRecordSignatures]:
     '封禁记录没有足够的有效法定人数签名',
   [BrightChainStrings.Error_IdentityValidationError_InvalidSignature]:
     '内容签名与声明的身份不匹配',
@@ -872,22 +886,22 @@ export const MandarinStrings: StringsCollection<BrightChainStringKey> = {
   [BrightChainStrings.Error_MemberProfileDocument_Hint]:
     '请使用 MemberProfileDocument.create() 而不是 new MemberProfileDocument()',
 
-  // Quorum Document Errors
-  [BrightChainStrings.Error_QuorumDocument_CreatorMustBeSetBeforeSaving]:
+  // BrightTrust Document Errors
+  [BrightChainStrings.Error_BrightTrustDocument_CreatorMustBeSetBeforeSaving]:
     '保存前必须设置创建者',
-  [BrightChainStrings.Error_QuorumDocument_CreatorMustBeSetBeforeEncrypting]:
+  [BrightChainStrings.Error_BrightTrustDocument_CreatorMustBeSetBeforeEncrypting]:
     '加密前必须设置创建者',
-  [BrightChainStrings.Error_QuorumDocument_DocumentHasNoEncryptedData]:
+  [BrightChainStrings.Error_BrightTrustDocument_DocumentHasNoEncryptedData]:
     '文档没有加密数据',
-  [BrightChainStrings.Error_QuorumDocument_InvalidEncryptedDataFormat]:
+  [BrightChainStrings.Error_BrightTrustDocument_InvalidEncryptedDataFormat]:
     '无效的加密数据格式',
-  [BrightChainStrings.Error_QuorumDocument_InvalidMemberIdsFormat]:
+  [BrightChainStrings.Error_BrightTrustDocument_InvalidMemberIdsFormat]:
     '无效的成员ID格式',
-  [BrightChainStrings.Error_QuorumDocument_InvalidSignatureFormat]:
+  [BrightChainStrings.Error_BrightTrustDocument_InvalidSignatureFormat]:
     '无效的签名格式',
-  [BrightChainStrings.Error_QuorumDocument_InvalidCreatorIdFormat]:
+  [BrightChainStrings.Error_BrightTrustDocument_InvalidCreatorIdFormat]:
     '无效的创建者ID格式',
-  [BrightChainStrings.Error_QuorumDocument_InvalidChecksumFormat]:
+  [BrightChainStrings.Error_BrightTrustDocument_InvalidChecksumFormat]:
     '无效的校验和格式',
 
   // Block Logger
@@ -1117,13 +1131,13 @@ export const MandarinStrings: StringsCollection<BrightChainStringKey> = {
     'makeTuple 中发生未知错误',
   [BrightChainStrings.PrimeTupleGeneratorStream_UnknownErrorInFlush]:
     'flush 中发生未知错误',
-  [BrightChainStrings.QuorumDataRecord_MustShareWithAtLeastTwoMembers]:
+  [BrightChainStrings.BrightTrustDataRecord_MustShareWithAtLeastTwoMembers]:
     '必须与至少2名成员共享',
-  [BrightChainStrings.QuorumDataRecord_SharesRequiredExceedsMembers]:
+  [BrightChainStrings.BrightTrustDataRecord_SharesRequiredExceedsMembers]:
     '所需份额超过成员数量',
-  [BrightChainStrings.QuorumDataRecord_SharesRequiredMustBeAtLeastTwo]:
+  [BrightChainStrings.BrightTrustDataRecord_SharesRequiredMustBeAtLeastTwo]:
     '所需份额必须至少为2',
-  [BrightChainStrings.QuorumDataRecord_InvalidChecksum]: '无效的校验和',
+  [BrightChainStrings.BrightTrustDataRecord_InvalidChecksum]: '无效的校验和',
   [BrightChainStrings.SimpleBrowserStore_BlockNotFoundTemplate]:
     '未找到区块: {ID}',
   [BrightChainStrings.EncryptedBlockCreator_NoCreatorRegisteredTemplate]:
@@ -1246,4 +1260,183 @@ export const MandarinStrings: StringsCollection<BrightChainStringKey> = {
   [BrightChainStrings.Dashboard_FailedToLoadBalance]: '加载余额失败',
   [BrightChainStrings.Dashboard_FailedToLoadReputation]: '加载声誉失败',
   [BrightChainStrings.Dashboard_FailedToLoadData]: '加载数据失败',
+
+  // Admin Dashboard
+  [BrightChainStrings.Admin_Dashboard_Title]: '管理面板',
+  [BrightChainStrings.Admin_Dashboard_AccessDenied]: '访问被拒绝',
+  [BrightChainStrings.Admin_Dashboard_AccessDeniedDescription]:
+    '您没有权限查看管理面板。',
+  [BrightChainStrings.Admin_Dashboard_Loading]: '正在加载面板…',
+  [BrightChainStrings.Admin_Dashboard_NoData]: '没有可用数据。',
+  [BrightChainStrings.Admin_Dashboard_RefreshNow]: '立即刷新',
+  [BrightChainStrings.Admin_Dashboard_ErrorLastSuccessTemplate]:
+    '错误 — 上次成功：{TIME}',
+  [BrightChainStrings.Admin_Dashboard_ErrorLastSuccessNever]: '从未',
+  [BrightChainStrings.Admin_Dashboard_ServerIdentity]: '服务器身份',
+  [BrightChainStrings.Admin_Dashboard_Hostname]: '主机名',
+  [BrightChainStrings.Admin_Dashboard_LocalNodeId]: '本地节点 ID',
+  [BrightChainStrings.Admin_Dashboard_Timestamp]: '时间戳',
+  [BrightChainStrings.Admin_Dashboard_NA]: '不适用',
+  [BrightChainStrings.Admin_Dashboard_Nodes]: '节点',
+  [BrightChainStrings.Admin_Dashboard_NoNodesRegistered]: '没有已注册的节点。',
+  [BrightChainStrings.Admin_Dashboard_DisconnectedPeers]: '已断开的对等节点',
+  [BrightChainStrings.Admin_Dashboard_LumenClients]: 'Lumen 客户端',
+  [BrightChainStrings.Admin_Dashboard_ConnectedClients]: '已连接的客户端',
+  [BrightChainStrings.Admin_Dashboard_RoomsTemplate]: '{COUNT} 个房间',
+  [BrightChainStrings.Admin_Dashboard_NodeConnections]: '节点连接',
+  [BrightChainStrings.Admin_Dashboard_NodeToNodeConnections]: '节点间连接',
+  [BrightChainStrings.Admin_Dashboard_SystemMetrics]: '系统指标',
+  [BrightChainStrings.Admin_Dashboard_HeapUsed]: '已用堆内存',
+  [BrightChainStrings.Admin_Dashboard_HeapTotal]: '堆内存总量',
+  [BrightChainStrings.Admin_Dashboard_RSS]: 'RSS',
+  [BrightChainStrings.Admin_Dashboard_External]: '外部',
+  [BrightChainStrings.Admin_Dashboard_UptimeTemplate]: '运行时间：{SECONDS}秒',
+  [BrightChainStrings.Admin_Dashboard_NodeVersionTemplate]:
+    'Node {NODE_VERSION} — App v{APP_VERSION}',
+  [BrightChainStrings.Admin_Dashboard_DBStats]: '数据库统计',
+  [BrightChainStrings.Admin_Dashboard_Users]: '用户',
+  [BrightChainStrings.Admin_Dashboard_Roles]: '角色',
+  [BrightChainStrings.Admin_Dashboard_Active]: '活跃',
+  [BrightChainStrings.Admin_Dashboard_Locked]: '已锁定',
+  [BrightChainStrings.Admin_Dashboard_Pending]: '待处理',
+  [BrightChainStrings.Admin_Dashboard_Members]: '成员',
+  [BrightChainStrings.Admin_Dashboard_Threshold]: '阈值',
+  [BrightChainStrings.Admin_Dashboard_Pools]: '池',
+  [BrightChainStrings.Admin_Dashboard_NoPools]: '没有池。',
+  [BrightChainStrings.Admin_Dashboard_Dependencies]: '依赖项',
+  [BrightChainStrings.Admin_Dashboard_BlockStore]: 'BrightStore',
+  [BrightChainStrings.Admin_Dashboard_TotalBlocks]: '区块总数',
+  [BrightChainStrings.Admin_Dashboard_TotalSize]: '总大小',
+  [BrightChainStrings.Admin_Dashboard_TotalPosts]: '帖子总数',
+  [BrightChainStrings.Admin_Dashboard_ActiveUsersLast30Days]:
+    '活跃用户（30天）',
+  [BrightChainStrings.Admin_Dashboard_Conversations]: '对话',
+  [BrightChainStrings.Admin_Dashboard_Messages]: '消息',
+  [BrightChainStrings.Admin_Dashboard_TotalVaults]: '保险库总数',
+  [BrightChainStrings.Admin_Dashboard_SharedVaults]: '共享保险库',
+  [BrightChainStrings.Admin_Dashboard_TotalEmails]: '邮件总数',
+  [BrightChainStrings.Admin_Dashboard_DeliveryFailures]: '投递失败',
+  [BrightChainStrings.Admin_Dashboard_Last24Hours]: '最近24小时',
+  [BrightChainStrings.Admin_Menu_Dashboard]: '管理面板',
+  [BrightChainStrings.Admin_Common_Loading]: '加载中…',
+  [BrightChainStrings.Admin_Common_Previous]: '上一页',
+  [BrightChainStrings.Admin_Common_Next]: '下一页',
+  [BrightChainStrings.Admin_Common_PageTemplate]: '第 {PAGE} 页，共 {TOTAL} 页',
+  [BrightChainStrings.Admin_Common_Cancel]: '取消',
+  [BrightChainStrings.Admin_Common_Delete]: '删除',
+  [BrightChainStrings.Admin_Common_Yes]: '是',
+  [BrightChainStrings.Admin_Common_No]: '否',
+  [BrightChainStrings.Admin_Common_Never]: '从未',
+  [BrightChainStrings.Admin_Common_Close]: '关闭',
+  [BrightChainStrings.Admin_Users_Title]: '用户管理',
+  [BrightChainStrings.Admin_Users_FilterAll]: '全部',
+  [BrightChainStrings.Admin_Users_FilterActive]: '活跃',
+  [BrightChainStrings.Admin_Users_FilterLocked]: '已锁定',
+  [BrightChainStrings.Admin_Users_FilterPending]: '待处理',
+  [BrightChainStrings.Admin_Users_ColUsername]: '用户名',
+  [BrightChainStrings.Admin_Users_ColEmail]: '电子邮件',
+  [BrightChainStrings.Admin_Users_ColStatus]: '状态',
+  [BrightChainStrings.Admin_Users_ColEmailVerified]: '邮箱已验证',
+  [BrightChainStrings.Admin_Users_ColLastLogin]: '上次登录',
+  [BrightChainStrings.Admin_Users_ColActions]: '操作',
+  [BrightChainStrings.Admin_Users_NoUsersFound]: '未找到用户。',
+  [BrightChainStrings.Admin_Users_UnlockUser]: '解锁用户',
+  [BrightChainStrings.Admin_Users_LockUser]: '锁定用户',
+  [BrightChainStrings.Admin_Users_LockUserTitle]: '锁定用户',
+  [BrightChainStrings.Admin_Users_UnlockUserTitle]: '解锁用户',
+  [BrightChainStrings.Admin_Users_LockConfirmTemplate]:
+    '您确定要锁定 {USERNAME} 吗？',
+  [BrightChainStrings.Admin_Users_UnlockConfirmTemplate]:
+    '您确定要解锁 {USERNAME} 吗？',
+  [BrightChainStrings.Admin_Users_LockWarning]: ' 这将阻止该用户登录。',
+  [BrightChainStrings.Admin_Blocks_Title]: '区块浏览器',
+  [BrightChainStrings.Admin_Blocks_SearchPlaceholder]: '按区块 ID 搜索',
+  [BrightChainStrings.Admin_Blocks_FilterAllDurability]: '所有持久性',
+  [BrightChainStrings.Admin_Blocks_FilterStandard]: '标准',
+  [BrightChainStrings.Admin_Blocks_FilterHighDurability]: '高持久性',
+  [BrightChainStrings.Admin_Blocks_FilterEphemeral]: '临时',
+  [BrightChainStrings.Admin_Blocks_SortByDate]: '按日期排序',
+  [BrightChainStrings.Admin_Blocks_SortBySize]: '按大小排序',
+  [BrightChainStrings.Admin_Blocks_Detail]: '区块详情',
+  [BrightChainStrings.Admin_Blocks_ColBlockId]: '区块 ID',
+  [BrightChainStrings.Admin_Blocks_ColSize]: '大小',
+  [BrightChainStrings.Admin_Blocks_ColDurability]: '持久性',
+  [BrightChainStrings.Admin_Blocks_ColCreated]: '创建时间',
+  [BrightChainStrings.Admin_Blocks_ColAccessCount]: '访问次数',
+  [BrightChainStrings.Admin_Blocks_ColReplication]: '复制',
+  [BrightChainStrings.Admin_Blocks_ColActions]: '操作',
+  [BrightChainStrings.Admin_Blocks_NoBlocksFound]: '未找到区块。',
+  [BrightChainStrings.Admin_Blocks_DiscoverNodes]: '发现节点',
+  [BrightChainStrings.Admin_Blocks_NodesHoldingBlockTemplate]:
+    '持有区块 {BLOCK_ID} 的节点：',
+  [BrightChainStrings.Admin_Blocks_NoNodesFound]: '未找到节点。',
+  [BrightChainStrings.Admin_Blocks_Checksum]: '校验和',
+  [BrightChainStrings.Admin_Blocks_DeleteTitle]: '删除区块',
+  [BrightChainStrings.Admin_Blocks_DeleteConfirmTemplate]:
+    '您确定要删除区块 {BLOCK_ID} 吗？这也将从本地存储中删除关联的奇偶校验块。',
+  [BrightChainStrings.Admin_Blocks_SizeBytesTemplate]: '{SIZE} 字节',
+  [BrightChainStrings.Admin_Pass_Title]: 'BrightPass 管理',
+  [BrightChainStrings.Admin_Pass_EncryptedNotice]:
+    '保险库内容已加密，无法查看。仅显示保险库元数据。',
+  [BrightChainStrings.Admin_Pass_ColOwner]: '所有者',
+  [BrightChainStrings.Admin_Pass_ColShared]: '已共享',
+  [BrightChainStrings.Admin_Pass_ColCreated]: '创建时间',
+  [BrightChainStrings.Admin_Pass_ColLastAccessed]: '上次访问',
+  [BrightChainStrings.Admin_Pass_ColActions]: '操作',
+  [BrightChainStrings.Admin_Pass_NoVaultsFound]: '未找到保险库。',
+  [BrightChainStrings.Admin_Pass_DeleteVault]: '删除保险库',
+  [BrightChainStrings.Admin_Pass_DeleteVaultTitle]: '删除保险库',
+  [BrightChainStrings.Admin_Pass_DeleteVaultConfirm]:
+    '您确定要删除此保险库吗？这将删除保险库及其关联的区块。此操作无法撤销。',
+  [BrightChainStrings.Admin_Chat_Title]: 'BrightChat 管理',
+  [BrightChainStrings.Admin_Chat_ColId]: 'ID',
+  [BrightChainStrings.Admin_Chat_ColParticipants]: '参与者',
+  [BrightChainStrings.Admin_Chat_ColMessages]: '消息',
+  [BrightChainStrings.Admin_Chat_ColLastActivity]: '最近活动',
+  [BrightChainStrings.Admin_Chat_NoConversationsFound]: '未找到对话。',
+  [BrightChainStrings.Admin_Chat_MessagesForTemplate]:
+    '对话 {CONVERSATION_ID} 的消息',
+  [BrightChainStrings.Admin_Chat_LoadingMessages]: '正在加载消息…',
+  [BrightChainStrings.Admin_Chat_NoMessages]: '没有消息。',
+  [BrightChainStrings.Admin_Chat_ColSender]: '发送者',
+  [BrightChainStrings.Admin_Chat_ColContent]: '内容',
+  [BrightChainStrings.Admin_Chat_ColCreated]: '创建时间',
+  [BrightChainStrings.Admin_Chat_ColStatus]: '状态',
+  [BrightChainStrings.Admin_Chat_StatusDeleted]: '已删除',
+  [BrightChainStrings.Admin_Chat_StatusActive]: '活跃',
+  [BrightChainStrings.Admin_Chat_DeleteMessage]: '删除消息',
+  [BrightChainStrings.Admin_Chat_DeleteMessageTitle]: '删除消息',
+  [BrightChainStrings.Admin_Chat_DeleteMessageConfirm]:
+    '您确定要删除此消息吗？该消息将被软删除。',
+  [BrightChainStrings.Admin_Hub_Title]: 'BrightHub 管理',
+  [BrightChainStrings.Admin_Hub_FilterByAuthorId]: '按作者 ID 筛选',
+  [BrightChainStrings.Admin_Hub_FilterAllPosts]: '所有帖子',
+  [BrightChainStrings.Admin_Hub_FilterActive]: '活跃',
+  [BrightChainStrings.Admin_Hub_FilterDeleted]: '已删除',
+  [BrightChainStrings.Admin_Hub_ColAuthor]: '作者',
+  [BrightChainStrings.Admin_Hub_ColContentPreview]: '内容预览',
+  [BrightChainStrings.Admin_Hub_ColCreated]: '创建时间',
+  [BrightChainStrings.Admin_Hub_ColStatus]: '状态',
+  [BrightChainStrings.Admin_Hub_ColLikes]: '点赞',
+  [BrightChainStrings.Admin_Hub_ColReposts]: '转发',
+  [BrightChainStrings.Admin_Hub_ColActions]: '操作',
+  [BrightChainStrings.Admin_Hub_StatusDeleted]: '已删除',
+  [BrightChainStrings.Admin_Hub_StatusActive]: '活跃',
+  [BrightChainStrings.Admin_Hub_NoPostsFound]: '未找到帖子。',
+  [BrightChainStrings.Admin_Hub_SoftDeletePost]: '删除帖子',
+  [BrightChainStrings.Admin_Hub_DeletePostTitle]: '删除帖子',
+  [BrightChainStrings.Admin_Hub_DeletePostConfirm]:
+    '您确定要删除此帖子吗？它将被标记为已删除，但不会被永久移除。',
+  [BrightChainStrings.Admin_Mail_Title]: 'BrightMail 管理',
+  [BrightChainStrings.Admin_Mail_ColSender]: '发送者',
+  [BrightChainStrings.Admin_Mail_ColRecipients]: '收件人',
+  [BrightChainStrings.Admin_Mail_ColSubject]: '主题',
+  [BrightChainStrings.Admin_Mail_ColCreated]: '创建时间',
+  [BrightChainStrings.Admin_Mail_ColDeliveryStatus]: '投递状态',
+  [BrightChainStrings.Admin_Mail_ColActions]: '操作',
+  [BrightChainStrings.Admin_Mail_NoEmailsFound]: '未找到邮件。',
+  [BrightChainStrings.Admin_Mail_DeleteEmail]: '删除邮件',
+  [BrightChainStrings.Admin_Mail_DeleteEmailTitle]: '删除邮件',
+  [BrightChainStrings.Admin_Mail_DeleteEmailConfirm]:
+    '您确定要删除此邮件吗？此操作无法撤销。',
 };

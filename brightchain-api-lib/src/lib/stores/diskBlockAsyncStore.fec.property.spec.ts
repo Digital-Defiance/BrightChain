@@ -1,7 +1,7 @@
 /**
  * @fileoverview Property-based tests for DiskBlockAsyncStore FEC operations
  *
- * **Feature: backend-blockstore-quorum, Property: Disk Block FEC Round-Trip**
+ * **Feature: backend-blockstore-brightTrust, Property: Disk Block FEC Round-Trip**
  * **Validates: Requirements 4.1, 4.5, 4.6**
  *
  * This test suite verifies that:

@@ -8,12 +8,12 @@
  */
 
 import * as fc from 'fast-check';
+import type { IConsistencyProof } from '../../interfaces/ledger/consistencyProof';
+import type { IMerkleProof } from '../../interfaces/ledger/merkleProof';
+import { MerkleDirection } from '../../interfaces/ledger/merkleProof';
 import { ChecksumService } from '../../services/checksum.service';
 import { Checksum } from '../../types/checksum';
 import { IncrementalMerkleTree } from '../incrementalMerkleTree';
-import { MerkleDirection } from '../../interfaces/ledger/merkleProof';
-import type { IMerkleProof } from '../../interfaces/ledger/merkleProof';
-import type { IConsistencyProof } from '../../interfaces/ledger/consistencyProof';
 
 // ── Shared ChecksumService instance ──────────────────────────────────
 
@@ -141,7 +141,9 @@ function verifyConsistencyProof(
   if (hashIdx !== hashes.length) return false;
 
   const [computedOldRoot, computedNewRoot] = result;
-  return computedOldRoot.equals(earlierRoot) && computedNewRoot.equals(laterRoot);
+  return (
+    computedOldRoot.equals(earlierRoot) && computedNewRoot.equals(laterRoot)
+  );
 }
 
 /**
@@ -375,7 +377,11 @@ describe('IncrementalMerkleTree PBT', () => {
           const earlierRoot = computeSubtreeRoot(leaves.slice(0, earlierSize));
 
           if (!wrongRoot.equals(tree.root)) {
-            const result = verifyConsistencyProof(proof, earlierRoot, wrongRoot);
+            const result = verifyConsistencyProof(
+              proof,
+              earlierRoot,
+              wrongRoot,
+            );
             expect(result).toBe(false);
           }
         },

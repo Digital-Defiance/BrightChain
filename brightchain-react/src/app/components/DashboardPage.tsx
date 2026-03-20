@@ -1,7 +1,4 @@
-import {
-  BrightChainComponentId,
-  BrightChainStrings,
-} from '@brightchain/brightchain-lib';
+import { BrightChainStrings } from '@brightchain/brightchain-lib';
 import { useI18n } from '@digitaldefiance/express-suite-react-components';
 import {
   Box,

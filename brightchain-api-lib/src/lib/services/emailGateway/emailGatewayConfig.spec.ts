@@ -61,9 +61,7 @@ describe('loadGatewayConfig', () => {
     expect(config.postfixAuth).toBeUndefined();
     expect(config.dkimKeyPath).toBe('/etc/dkim/private.key');
     expect(config.dkimSelector).toBe('default');
-    expect(config.mailDropDirectory).toBe(
-      '/var/spool/brightchain/incoming/',
-    );
+    expect(config.mailDropDirectory).toBe('/var/spool/brightchain/incoming/');
     expect(config.errorDirectory).toBe('/var/spool/brightchain/errors/');
     expect(config.maxMessageSizeBytes).toBe(25 * 1024 * 1024);
     expect(config.recipientLookupPort).toBe(2526);
@@ -223,7 +221,8 @@ describe('loadGatewayConfig', () => {
     });
 
     it('should filter empty entries from test recipients', () => {
-      process.env['GATEWAY_TEST_RECIPIENTS'] = 'alice@test.local,,bob@test.local,';
+      process.env['GATEWAY_TEST_RECIPIENTS'] =
+        'alice@test.local,,bob@test.local,';
       const config = loadGatewayConfig();
       expect(config.testMode.testRecipients).toEqual([
         'alice@test.local',

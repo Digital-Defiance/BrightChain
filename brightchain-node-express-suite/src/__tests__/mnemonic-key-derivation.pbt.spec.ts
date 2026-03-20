@@ -10,15 +10,15 @@
  * **Validates: Requirements 4.1**
  */
 
-import * as fc from 'fast-check';
+import { ServiceProvider } from '@brightchain/brightchain-lib';
 import {
   EmailString,
   MemberType,
   SecureString,
 } from '@digitaldefiance/ecies-lib';
 import { Member } from '@digitaldefiance/node-ecies-lib';
-import { ServiceProvider } from '@brightchain/brightchain-lib';
 import * as bip39 from 'bip39';
+import * as fc from 'fast-check';
 
 jest.setTimeout(120_000);
 

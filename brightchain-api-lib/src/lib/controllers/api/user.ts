@@ -1,9 +1,11 @@
-import {
-  MemberStore,
-  ServiceProvider,
-} from '@brightchain/brightchain-lib';
+import { ServiceProvider } from '@brightchain/brightchain-lib';
 import { IUserProfileService } from '@brightchain/brighthub-lib';
-import { SecureString } from '@digitaldefiance/ecies-lib';
+import {
+  BrightDbUserController,
+  IApiBackupCodesResponse,
+  IApiCodeCountResponse,
+  IApiLoginResponse,
+} from '@brightchain/node-express-suite';
 import { HandleableError } from '@digitaldefiance/i18n-lib';
 import { PlatformID } from '@digitaldefiance/node-ecies-lib';
 import {
@@ -16,23 +18,13 @@ import {
   Put,
 } from '@digitaldefiance/node-express-suite';
 import {
-  BrightDbUserController,
-  IApiBackupCodesResponse,
-  IApiCodeCountResponse,
-  IApiLoginResponse,
-} from '@brightchain/node-express-suite';
-import {
   getSuiteCoreTranslation,
   InvalidBackupCodeError,
-  IRequestUserDTO,
   SuiteCoreStringKey,
 } from '@digitaldefiance/suite-core-lib';
 import type { NextFunction, Request, Response } from 'express';
 import { IBrightChainApplication } from '../../interfaces/application';
-import {
-  AuthService,
-  BrightChainBackupCodeService,
-} from '../../services';
+import { AuthService, BrightChainBackupCodeService } from '../../services';
 import { DefaultBackendIdType } from '../../shared-types';
 
 /**
@@ -77,6 +69,7 @@ export class UserController<
   protected override async onPostRegister(
     memberId: string,
     username: string,
+    displayName?: string,
   ): Promise<void> {
     try {
       const userProfileService =
@@ -87,6 +80,7 @@ export class UserController<
         await userProfileService.createProfileForUser(
           memberId,
           username,
+          displayName,
         );
       }
     } catch {
@@ -117,14 +111,30 @@ export class UserController<
           email ? String(email) : undefined,
         );
 
-      const token = authService.signToken(memberId, member.name, member.type);
+      const token = authService.signToken(
+        memberId,
+        member.name,
+        member.type,
+        userDTO?.rolePrivileges?.admin ? ['admin'] : [],
+      );
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const env = this.application.environment as any;
       const serverPublicKey: string = env.systemPublicKeyHex ?? '';
 
+      // Strip the internal `member` property from the DTO before serialization —
+      // it may contain BigInt fields (storageQuota, storageUsed) that cannot be
+      // serialized by JSON.stringify.
+      let cleanUserDTO = userDTO;
+      if (userDTO && 'member' in userDTO) {
+        const { member: _m, ...rest } = userDTO as typeof userDTO & {
+          member: unknown;
+        };
+        cleanUserDTO = rest;
+      }
+
       const response: IApiLoginResponse = {
         message: getSuiteCoreTranslation(SuiteCoreStringKey.LoggedIn_Success),
-        user: userDTO ?? {
+        user: cleanUserDTO ?? {
           id: memberId,
           username: member.name,
           email: member.email.toString(),

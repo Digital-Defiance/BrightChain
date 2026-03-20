@@ -260,7 +260,7 @@ describe('ACLEnforcedBlockStore', () => {
 
       try {
         await store.putInPool(POOL, new Uint8Array([1]));
-        fail('Expected PermissionDeniedError');
+        throw new Error('Expected PermissionDeniedError');
       } catch (err) {
         expect(err).toBeInstanceOf(PermissionDeniedError);
         const pde = err as PermissionDeniedError;
@@ -295,7 +295,7 @@ describe('ACLEnforcedBlockStore', () => {
 
       try {
         await store.getFromPool(POOL, 'hash');
-        fail('Expected PermissionDeniedError');
+        throw new Error('Expected PermissionDeniedError');
       } catch (err) {
         const pde = err as PermissionDeniedError;
         expect(pde.actualPermissions).toEqual([]);

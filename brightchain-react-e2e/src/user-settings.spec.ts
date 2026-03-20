@@ -126,16 +126,35 @@ test.describe('User Settings Page', () => {
         .filter({ hasText: /saved successfully/i }),
     ).toBeVisible({ timeout: 10000 });
 
+    // Wait for the save to fully persist on the server before reloading
+    await authenticatedPage.waitForTimeout(2000);
+
     // Reload the page
     await authenticatedPage.reload();
     await expect(
       authenticatedPage.getByRole('heading', { name: /settings/i }),
     ).toBeVisible({ timeout: 15000 });
 
-    // Verify timezone persisted — the MUI Select renders the selected value as text
-    await expect(authenticatedPage.locator('#timezone')).toHaveText(
-      'Pacific/Auckland',
-    );
+    // Wait for the settings to load from the server after reload.
+    // The MUI Select may briefly show the default value before the API response arrives.
+    // Poll until the timezone value matches what we saved.
+    await authenticatedPage
+      .waitForFunction(
+        () => {
+          const el = document.querySelector('#timezone');
+          return el && el.textContent?.includes('Pacific/Auckland');
+        },
+        { timeout: 30_000 },
+      )
+      .catch(() => {
+        // If polling timed out, the settings API may return the value in a
+        // different element structure. Fall through to the assertion below.
+      });
+
+    const timezoneText = await authenticatedPage
+      .locator('#timezone')
+      .textContent({ timeout: 5_000 });
+    expect(timezoneText).toContain('Pacific/Auckland');
 
     // Verify dark mode toggle persisted
     if (darkModeAfter) {

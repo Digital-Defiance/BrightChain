@@ -39,6 +39,9 @@ export interface IRequestUser {
   /** User's chosen username */
   username: string;
 
+  /** Optional display name for the user */
+  displayName?: string;
+
   /** User's preferred language for the site */
   siteLanguage: LanguageCode;
 

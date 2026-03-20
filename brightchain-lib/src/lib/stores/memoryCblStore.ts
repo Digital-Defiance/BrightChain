@@ -71,6 +71,7 @@ export class MemoryCBLStore<TID extends PlatformID = Uint8Array>
       ServiceLocator.getServiceProvider<TID>().cblService.validateSignature(
         value.data,
         userForvalidation,
+        this._blockSize,
       );
     }
 
@@ -130,8 +131,13 @@ export class MemoryCBLStore<TID extends PlatformID = Uint8Array>
           ? new TarballConstituentBlockListBlock<TID>(
               decryptedData,
               this._activeUser,
+              this._blockSize,
             )
-          : new ConstituentBlockListBlock<TID>(decryptedData, this._activeUser);
+          : new ConstituentBlockListBlock<TID>(
+              decryptedData,
+              this._activeUser,
+              this._blockSize,
+            );
 
         if (!decryptedCbl.validateSignature()) {
           throw new CblError(CblErrorType.InvalidSignature);
@@ -169,8 +175,13 @@ export class MemoryCBLStore<TID extends PlatformID = Uint8Array>
           ? new TarballConstituentBlockListBlock<TID>(
               decryptedData,
               this._activeUser,
+              this._blockSize,
             )
-          : new ConstituentBlockListBlock<TID>(decryptedData, this._activeUser);
+          : new ConstituentBlockListBlock<TID>(
+              decryptedData,
+              this._activeUser,
+              this._blockSize,
+            );
 
         if (!decryptedCbl.validateSignature()) {
           throw new CblError(CblErrorType.InvalidSignature);
@@ -195,8 +206,12 @@ export class MemoryCBLStore<TID extends PlatformID = Uint8Array>
 
     // Detect TCBL by inspecting the structured block header (Req 6.2)
     const cbl = isTarballCblData(cblData)
-      ? new TarballConstituentBlockListBlock<TID>(cblData, creator)
-      : new ConstituentBlockListBlock<TID>(cblData, creator);
+      ? new TarballConstituentBlockListBlock<TID>(
+          cblData,
+          creator,
+          this._blockSize,
+        )
+      : new ConstituentBlockListBlock<TID>(cblData, creator, this._blockSize);
     if (!cbl.validateSignature()) {
       throw new CblError(CblErrorType.InvalidSignature);
     }

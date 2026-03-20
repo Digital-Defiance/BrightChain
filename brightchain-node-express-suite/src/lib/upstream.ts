@@ -4,17 +4,17 @@
  * instead of depending on the upstream package directly.
  */
 export {
-  Application,
-  createExpressConstants,
-  AppRouter,
   AbstractJwtService,
   AbstractRoleService,
+  AppRouter,
+  Application,
+  createExpressConstants,
 } from '@digitaldefiance/node-express-suite';
 
 export type {
   IApplication,
-  IConstants,
   IAuthenticationProvider,
+  IConstants,
   IDatabasePlugin,
   IEnvironment,
   IJwtService,

@@ -1,4 +1,3 @@
-/* eslint-disable @nx/enforce-module-boundaries */
 import {
   BlockSize,
   CBLService,
@@ -16,6 +15,8 @@ import {
   MemberType,
 } from '@digitaldefiance/ecies-lib';
 import React, { useCallback, useEffect, useState } from 'react';
+import { useShowcaseI18n } from '../i18n/ShowcaseI18nContext';
+import { ShowcaseStrings } from '../i18n/showcaseStrings';
 
 interface Message {
   id: string;
@@ -26,6 +27,7 @@ interface Message {
 }
 
 export const MessagePassingDemo: React.FC = () => {
+  const { t } = useShowcaseI18n();
   const [messages, setMessages] = useState<Message[]>([]);
   const [messageContent, setMessageContent] = useState('');
   const [senderId, setSenderId] = useState('user1');
@@ -90,9 +92,10 @@ export const MessagePassingDemo: React.FC = () => {
     } catch (error) {
       console.error('Failed to send message:', error);
       alert(
-        `Failed to send message: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        `${t(ShowcaseStrings.Msg_SendFailed)} ${error instanceof Error ? error.message : 'Unknown error'}`,
       );
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [messageContent, senderId, recipientId, messageCBL, creator]);
 
   const handleRetrieveMessage = useCallback(
@@ -100,24 +103,25 @@ export const MessagePassingDemo: React.FC = () => {
       try {
         const content = await messageCBL.getMessageContent(messageId);
         const text = new TextDecoder().decode(content);
-        alert(`Message content: ${text}`);
+        alert(t(ShowcaseStrings.Msg_ContentTemplate, { CONTENT: text }));
       } catch (error) {
         console.error('Failed to retrieve message:', error);
         alert(
-          `Failed to retrieve message: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          `${t(ShowcaseStrings.Msg_RetrieveFailed)} ${error instanceof Error ? error.message : 'Unknown error'}`,
         );
       }
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [messageCBL],
   );
 
   return (
     <div style={{ padding: '20px', maxWidth: '800px', margin: '0 auto' }}>
-      <h1>💬 BrightChain Message Passing Demo</h1>
-      <p>Send messages stored as CBL blocks in the soup!</p>
+      <h1>{t(ShowcaseStrings.Msg_Title)}</h1>
+      <p>{t(ShowcaseStrings.Msg_Subtitle)}</p>
 
       {!messageCBL || !creator ? (
-        <p>Initializing...</p>
+        <p>{t(ShowcaseStrings.Msg_Initializing)}</p>
       ) : (
         <>
           <div
@@ -128,9 +132,9 @@ export const MessagePassingDemo: React.FC = () => {
               borderRadius: '8px',
             }}
           >
-            <h3>Send Message</h3>
+            <h3>{t(ShowcaseStrings.Msg_SendTitle)}</h3>
             <div style={{ marginBottom: '10px' }}>
-              <label>From: </label>
+              <label>{t(ShowcaseStrings.Msg_FromLabel)} </label>
               <input
                 type="text"
                 value={senderId}
@@ -139,7 +143,7 @@ export const MessagePassingDemo: React.FC = () => {
               />
             </div>
             <div style={{ marginBottom: '10px' }}>
-              <label>To: </label>
+              <label>{t(ShowcaseStrings.Msg_ToLabel)} </label>
               <input
                 type="text"
                 value={recipientId}
@@ -151,7 +155,7 @@ export const MessagePassingDemo: React.FC = () => {
               <textarea
                 value={messageContent}
                 onChange={(e) => setMessageContent(e.target.value)}
-                placeholder="Type your message..."
+                placeholder={t(ShowcaseStrings.Msg_Placeholder)}
                 style={{ width: '100%', minHeight: '80px', padding: '10px' }}
               />
             </div>
@@ -167,14 +171,18 @@ export const MessagePassingDemo: React.FC = () => {
                 cursor: messageContent.trim() ? 'pointer' : 'not-allowed',
               }}
             >
-              📤 Send Message
+              {t(ShowcaseStrings.Msg_SendBtn)}
             </button>
           </div>
 
           <div>
-            <h3>📬 Messages ({messages.length})</h3>
+            <h3>
+              {t(ShowcaseStrings.Msg_ListTitleTemplate, {
+                COUNT: String(messages.length),
+              })}
+            </h3>
             {messages.length === 0 ? (
-              <p>No messages yet. Send your first message! ✨</p>
+              <p>{t(ShowcaseStrings.Msg_NoMessages)}</p>
             ) : (
               messages.map((msg) => (
                 <div
@@ -188,11 +196,14 @@ export const MessagePassingDemo: React.FC = () => {
                   }}
                 >
                   <div style={{ marginBottom: '8px' }}>
-                    <strong>From:</strong> {msg.senderId} → <strong>To:</strong>{' '}
+                    <strong>{t(ShowcaseStrings.Msg_From)}</strong>{' '}
+                    {msg.senderId} →{' '}
+                    <strong>{t(ShowcaseStrings.Msg_To)}</strong>{' '}
                     {msg.recipients.join(', ')}
                   </div>
                   <div style={{ marginBottom: '8px' }}>
-                    <strong>Message:</strong> {msg.content}
+                    <strong>{t(ShowcaseStrings.Msg_Message)}</strong>{' '}
+                    {msg.content}
                   </div>
                   <div
                     style={{
@@ -214,7 +225,7 @@ export const MessagePassingDemo: React.FC = () => {
                       cursor: 'pointer',
                     }}
                   >
-                    📥 Retrieve from Soup
+                    {t(ShowcaseStrings.Msg_RetrieveBtn)}
                   </button>
                 </div>
               ))

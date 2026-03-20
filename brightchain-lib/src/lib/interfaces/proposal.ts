@@ -1,7 +1,7 @@
 /**
  * @fileoverview Proposal and ProposalInput interfaces.
  *
- * Defines the structure of quorum proposals and their input format.
+ * Defines the structure of BrightTrust proposals and their input format.
  *
  * @see Requirements 5, 7, 11, 13
  */
@@ -11,7 +11,7 @@ import { ProposalActionType } from '../enumerations/proposalActionType';
 import { ProposalStatus } from '../enumerations/proposalStatus';
 
 /**
- * A structured request submitted to quorum members for deliberation and voting.
+ * A structured request submitted to BrightTrust members for deliberation and voting.
  * @template TID - Platform ID type for frontend/backend DTO compatibility
  */
 export interface Proposal<TID extends PlatformID = Uint8Array> {

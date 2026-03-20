@@ -225,12 +225,12 @@ export * from './storeError';
 export * from './secureStorage';
 
 // ============================================================================
-// Quorum Errors
+// BrightTrust Errors
 // ============================================================================
 /**
- * Quorum-related errors.
+ * BrightTrust-related errors.
  */
-export * from './quorumError';
+export * from './brightTrustError';
 
 // ============================================================================
 // Identity Validation Errors

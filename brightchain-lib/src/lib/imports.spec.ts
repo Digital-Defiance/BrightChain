@@ -12,8 +12,29 @@
  */
 
 import * as fs from 'fs';
-import { glob } from 'glob';
 import * as path from 'path';
+
+/**
+ * Recursively find files matching a pattern, similar to glob.
+ */
+function findFiles(
+  dir: string,
+  pattern: RegExp,
+  ignore: RegExp[],
+): string[] {
+  const results: string[] = [];
+  const entries = fs.readdirSync(dir, { withFileTypes: true });
+  for (const entry of entries) {
+    const fullPath = path.join(dir, entry.name);
+    if (ignore.some((re) => re.test(fullPath))) continue;
+    if (entry.isDirectory()) {
+      results.push(...findFiles(fullPath, pattern, ignore));
+    } else if (pattern.test(entry.name)) {
+      results.push(fullPath);
+    }
+  }
+  return results;
+}
 
 describe('Import Statements Property Tests', () => {
   describe('Property 4: Import Statements Updated', () => {
@@ -21,17 +42,13 @@ describe('Import Statements Property Tests', () => {
 
     beforeAll(async () => {
       // Get all TypeScript files in the brightchain-lib/src directory
-      const srcDir = path.join(__dirname);
-      allTsFiles = await glob('**/*.ts', {
-        cwd: path.dirname(srcDir),
-        absolute: true,
-        ignore: [
-          '**/node_modules/**',
-          '**/dist/**',
-          '**/*.spec.ts',
-          '**/*.test.ts',
-        ],
-      });
+      const srcDir = path.dirname(__dirname);
+      allTsFiles = findFiles(srcDir, /\.ts$/, [
+        /node_modules/,
+        /dist/,
+        /\.spec\.ts$/,
+        /\.test\.ts$/,
+      ]);
     });
 
     it('should not import from deleted interface files', () => {

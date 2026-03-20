@@ -74,11 +74,11 @@ export function useSafeAnimationFrame() {
 export function useSafePerformanceNow(): () => number {
   const compat = BrowserCompatibility.getInstance();
   const hasPerformanceNow = compat.isFeatureSupported('performanceNow');
+  const [startTime] = useState(() => Date.now());
 
   if (hasPerformanceNow) {
     return () => performance.now();
   }
 
-  const [startTime] = useState(() => Date.now());
   return () => Date.now() - startTime;
 }

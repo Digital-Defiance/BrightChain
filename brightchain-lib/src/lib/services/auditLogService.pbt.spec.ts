@@ -19,10 +19,10 @@ import * as fc from 'fast-check';
 import { initializeBrightChain } from '../init';
 import {
   AuditEventType,
-  QuorumAuditLogEntry,
+  BrightTrustAuditLogEntry,
 } from '../interfaces/auditLogEntry';
 import { ChainedAuditLogEntry } from '../interfaces/chainedAuditLogEntry';
-import { IQuorumDatabase } from '../interfaces/services/quorumDatabase';
+import { IBrightTrustDatabase } from '../interfaces/services/brightTrustDatabase';
 import {
   AuditLogService,
   computeContentHash,
@@ -73,7 +73,7 @@ const arbAuditEntry = fc
       eventType,
       detailKey,
       detailValue,
-    }): QuorumAuditLogEntry<GuidV4Uint8Array> => ({
+    }): BrightTrustAuditLogEntry<GuidV4Uint8Array> => ({
       id: ServiceProvider.getInstance<GuidV4Uint8Array>().idProvider.generateTyped(),
       eventType,
       details: { [detailKey]: detailValue },
@@ -82,9 +82,9 @@ const arbAuditEntry = fc
   );
 
 /**
- * Creates a mock IQuorumDatabase that tracks chained audit entries in memory.
+ * Creates a mock IBrightTrustDatabase that tracks chained audit entries in memory.
  */
-function createAuditMockDatabase(): IQuorumDatabase<GuidV4Uint8Array> & {
+function createAuditMockDatabase(): IBrightTrustDatabase<GuidV4Uint8Array> & {
   chainedEntries: ChainedAuditLogEntry<GuidV4Uint8Array>[];
 } {
   const chainedEntries: ChainedAuditLogEntry<GuidV4Uint8Array>[] = [];
@@ -94,7 +94,7 @@ function createAuditMockDatabase(): IQuorumDatabase<GuidV4Uint8Array> & {
 
   return {
     chainedEntries,
-    appendAuditEntry: jest.fn(async (entry: QuorumAuditLogEntry) => {
+    appendAuditEntry: jest.fn(async (entry: BrightTrustAuditLogEntry) => {
       const chained = entry as ChainedAuditLogEntry<GuidV4Uint8Array>;
       if (chained.contentHash !== undefined) {
         chainedEntries.push(chained);
@@ -106,7 +106,7 @@ function createAuditMockDatabase(): IQuorumDatabase<GuidV4Uint8Array> & {
         return chainedEntries[chainedEntries.length - 1];
       },
     ),
-    // Stubs for the rest of IQuorumDatabase
+    // Stubs for the rest of IBrightTrustDatabase
     saveEpoch: jest.fn(noop),
     getEpoch: jest.fn(nullAsync),
     getCurrentEpoch: jest.fn(async () => {

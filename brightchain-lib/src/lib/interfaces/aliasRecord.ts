@@ -2,7 +2,7 @@
  * @fileoverview AliasRecord interface.
  *
  * Represents a registered pseudonymous alias that maps back to a member's
- * real identity through the quorum.
+ * real identity through the BrightTrust.
  *
  * @see Requirements 15
  */
