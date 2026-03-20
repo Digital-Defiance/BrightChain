@@ -33,12 +33,14 @@ jobs:
       - name: Enable Yarn Berry
         run: |
           corepack enable
+          yarn set version 4.10.3
 
       - name: Clear Yarn cache
         run: yarn cache clean
 
       - name: Install dependencies
-        run: yarn install --immutable
+        run: |
+          ./do-yarn.sh --immutable
 
       - uses: nrwl/nx-set-shas@v4
 

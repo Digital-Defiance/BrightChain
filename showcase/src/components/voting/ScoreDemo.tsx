@@ -9,10 +9,13 @@ import {
 } from '@digitaldefiance/ecies-lib';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState } from 'react';
+import { useShowcaseI18n } from '../../i18n/ShowcaseI18nContext';
+import { ShowcaseStrings } from '../../i18n/showcaseStrings';
 import { LoadingSpinner } from './LoadingSpinner';
 import { useVotingDemo } from './useVotingDemo';
 
 export const ScoreDemo = () => {
+  const { t } = useShowcaseI18n();
   const {
     isInitializing,
     setIsInitializing,
@@ -37,9 +40,21 @@ export const ScoreDemo = () => {
   const [showIntro, setShowIntro] = useState(true);
 
   const movies = [
-    { name: 'Stellar Odyssey', emoji: '🚀', genre: 'Sci-Fi Epic' },
-    { name: 'Midnight in Paris', emoji: '🎭', genre: 'Romance Drama' },
-    { name: 'Code Warriors', emoji: '💻', genre: 'Tech Thriller' },
+    {
+      name: 'Stellar Odyssey',
+      emoji: '🚀',
+      genre: t(ShowcaseStrings.Score_Genre_SciFi),
+    },
+    {
+      name: 'Midnight in Paris',
+      emoji: '🎭',
+      genre: t(ShowcaseStrings.Score_Genre_Romance),
+    },
+    {
+      name: 'Code Warriors',
+      emoji: '💻',
+      genre: t(ShowcaseStrings.Score_Genre_Thriller),
+    },
   ];
 
   useEffect(() => {
@@ -113,14 +128,18 @@ export const ScoreDemo = () => {
 
   if (isInitializing)
     return (
-      <LoadingSpinner message="Initializing cryptographic voting system..." />
+      <LoadingSpinner message={t(ShowcaseStrings.Vote_InitializingCrypto)} />
     );
 
   return (
     <>
       {(isTallying || isSubmitting) && (
         <LoadingSpinner
-          message={isTallying ? 'Decrypting votes...' : 'Encrypting vote...'}
+          message={
+            isTallying
+              ? t(ShowcaseStrings.Vote_DecryptingVotes)
+              : t(ShowcaseStrings.Score_EncryptingVote)
+          }
         />
       )}
       <div className="voting-demo">
@@ -128,42 +147,39 @@ export const ScoreDemo = () => {
           <div className="election-intro">
             <div className="intro-header">
               <span className="intro-emoji">⭐</span>
-              <h3>Film Critics Awards Night!</h3>
+              <h3>{t(ShowcaseStrings.Score_IntroTitle)}</h3>
             </div>
             <div className="intro-story">
               <p>
-                🎬 <strong>The Academy:</strong> Three films are nominated for
-                Best Picture. Critics must rate each one independently.
+                🎬 <strong>{t(ShowcaseStrings.Score_IntroStoryAcademy)}</strong>
               </p>
               <p>
-                ⭐ <strong>Score Voting:</strong> Rate each film 0-10. Love one,
-                hate another? Score them honestly! The highest average wins.
+                ⭐ <strong>{t(ShowcaseStrings.Score_IntroStoryScoring)}</strong>
               </p>
               <p className="intro-challenge">
-                🎯 Unlike ranking, you can give multiple films high scores if
-                they're all great!
+                🎯 {t(ShowcaseStrings.Score_IntroChallenge)}
               </p>
             </div>
             <button
               onClick={() => setShowIntro(false)}
               className="start-election-btn"
             >
-              🎬 Start Rating!
+              {t(ShowcaseStrings.Score_StartBtn)}
             </button>
           </div>
         ) : (
           <>
             <div className="demo-header">
-              <h3>⭐ Score Voting - Best Picture</h3>
+              <h3>{t(ShowcaseStrings.Score_DemoTitle)}</h3>
               <p className="election-tagline">
-                🎬 Rate each film 0-10. Highest average wins!
+                {t(ShowcaseStrings.Score_DemoTagline)}
               </p>
             </div>
 
             {!results ? (
               <>
                 <div className="candidates-section">
-                  <h4>Nominated Films</h4>
+                  <h4>{t(ShowcaseStrings.Score_NominatedFilms)}</h4>
                   <div className="candidates-grid">
                     {movies.map((m, idx) => (
                       <div key={idx} className="candidate-card">
@@ -177,7 +193,12 @@ export const ScoreDemo = () => {
 
                 {!hasVoted && (
                   <div className="score-voting-section">
-                    <h4>🎭 {voters[currentVoter]}'s Ratings</h4>
+                    <h4>
+                      {t(ShowcaseStrings.Score_VoterRatingsTemplate).replace(
+                        '{VOTER}',
+                        voters[currentVoter],
+                      )}
+                    </h4>
                     {movies.map((movie, idx) => (
                       <div key={idx} className="score-slider">
                         <div className="score-header">
@@ -204,9 +225,11 @@ export const ScoreDemo = () => {
                           className="score-range"
                         />
                         <div className="score-labels">
-                          <span>0 - Terrible</span>
-                          <span>5 - Average</span>
-                          <span>10 - Masterpiece</span>
+                          <span>{t(ShowcaseStrings.Score_Label_Terrible)}</span>
+                          <span>{t(ShowcaseStrings.Score_Label_Average)}</span>
+                          <span>
+                            {t(ShowcaseStrings.Score_Label_Masterpiece)}
+                          </span>
                         </div>
                       </div>
                     ))}
@@ -216,8 +239,10 @@ export const ScoreDemo = () => {
                       disabled={isSubmitting}
                     >
                       {isSubmitting
-                        ? '🔐 Encrypting...'
-                        : `Submit Ratings (${currentVoter + 1}/${voters.length})`}
+                        ? t(ShowcaseStrings.Score_Encrypting)
+                        : t(ShowcaseStrings.Score_SubmitTemplate)
+                            .replace('{CURRENT}', String(currentVoter + 1))
+                            .replace('{TOTAL}', String(voters.length))}
                     </button>
                   </div>
                 )}
@@ -225,7 +250,9 @@ export const ScoreDemo = () => {
                 {votes.size > 0 && (
                   <div className="votes-cast-summary">
                     <h5>
-                      📋 Critics Who Rated: {votes.size}/{voters.length}
+                      {t(ShowcaseStrings.Score_CriticsRatedTemplate)
+                        .replace('{COUNT}', String(votes.size))
+                        .replace('{TOTAL}', String(voters.length))}
                     </h5>
                     {Array.from(votes.entries()).map(([voter, scores]) => (
                       <div key={voter} className="vote-summary">
@@ -245,20 +272,22 @@ export const ScoreDemo = () => {
                     disabled={isTallying}
                   >
                     {isTallying
-                      ? '🔓 Decrypting votes...'
-                      : '🏆 Calculate Averages!'}
+                      ? t(ShowcaseStrings.Vote_DecryptingVotes)
+                      : t(ShowcaseStrings.Score_TallyBtn)}
                   </button>
                 )}
               </>
             ) : (
               <div className="results-section">
-                <h4>🎉 And the Winner Is...</h4>
+                <h4>{t(ShowcaseStrings.Score_ResultsTitle)}</h4>
 
                 <div className="tally-visualization">
-                  <h5>📊 Score Averaging Process</h5>
+                  <h5>{t(ShowcaseStrings.Score_TallyTitle)}</h5>
                   <p className="tally-explain">
-                    Each film's scores were added and divided by {voters.length}{' '}
-                    critics:
+                    {t(ShowcaseStrings.Score_TallyExplain).replace(
+                      '{COUNT}',
+                      String(voters.length),
+                    )}
                   </p>
                 </div>
 
@@ -279,7 +308,12 @@ export const ScoreDemo = () => {
                         <span>
                           {movie.emoji} {movie.name}
                         </span>
-                        <span>{avgScore.toFixed(2)}/10 average</span>
+                        <span>
+                          {t(ShowcaseStrings.Score_AverageTemplate).replace(
+                            '{AVG}',
+                            avgScore.toFixed(2),
+                          )}
+                        </span>
                       </div>
                       <div className="score-breakdown">
                         {Array.from(votes.entries()).map(([voter, scores]) => (
@@ -298,7 +332,7 @@ export const ScoreDemo = () => {
                   );
                 })}
                 <button onClick={reset} className="reset-btn">
-                  New Awards
+                  {t(ShowcaseStrings.Score_ResetBtn)}
                 </button>
               </div>
             )}

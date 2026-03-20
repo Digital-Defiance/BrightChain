@@ -5,7 +5,9 @@ Thank you for your interest in contributing to BrightChain! This guide will help
 ## Table of Contents
 
 - [Getting Started](#getting-started)
+- [Repository Structure](#repository-structure)
 - [Development Workflow](#development-workflow)
+- [Where Does My Code Go?](#where-does-my-code-go)
 - [Constants Architecture](#constants-architecture)
 - [Code Style](#code-style)
 - [Testing](#testing)
@@ -18,21 +20,127 @@ Thank you for your interest in contributing to BrightChain! This guide will help
 - Docker Desktop (optional)
 - NodeJS 20+ (if not using Docker)
 - Git
+- Yarn 4.x (package manager)
 
 ### Setup
 
-1. Fork and clone the repository
+1. Fork and clone the repository (including submodules):
+   ```bash
+   git clone --recurse-submodules https://github.com/Digital-Defiance/BrightChain.git
+   ```
 2. Open in VSCode
 3. For Docker users:
    - Install Dev Container extension
    - Select "Remote-Containers: Reopen in Container"
-4. Run `yarn` in repository root
-5. Run `yarn` in brightchain-lib
-6. Execute tests: `npx nx test brightchain-lib`
+4. Run `yarn` in the repository root
+5. Execute tests: `npx nx test brightchain-lib`
+
+## Repository Structure
+
+BrightChain is an Nx monorepo containing multiple projects organized by domain. Some projects live directly in this repo, while others are included as Git submodules.
+
+### Core Libraries
+
+| Project | Package | Description |
+|---------|---------|-------------|
+| `brightchain-lib` | `@brightchain/brightchain-lib` | Core library: TUPLE storage, Owner-Free Filesystem, identity management, encryption, quorum governance, voting. Shared across all platforms (browser + Node.js). |
+| `brightchain-api-lib` | `@brightchain/brightchain-api-lib` | API library extending Express with blockchain-specific functionality. Node.js-only (depends on Node types). |
+| `brightchain-db` | `@brightchain/db` | MongoDB-like document database driver backed by the BrightChain block store. |
+| `brightchain-node-express-suite` | `@brightchain/node-express-suite` | Node.js/Express integration layer for BrightChain. |
+| `brightchain-test-utils` | `@brightchain/test-utils` | Shared testing utilities and helpers for BrightChain projects. |
+
+### Applications
+
+| Project | Description |
+|---------|-------------|
+| `brightchain-api` | Express-based REST API server for the BrightChain platform. |
+| `brightchain-react` | Main React web application frontend. |
+| `brightchain-inituserdb` | Database initialization utility for setting up user data and system keys. |
+| `showcase` | Demo/showcase application demonstrating BrightChain capabilities. |
+
+### Storage Providers
+
+| Project | Package | Description |
+|---------|---------|-------------|
+| `brightchain-azure-store` | `@brightchain/azure-store` | Azure Blob Storage integration for block storage. |
+| `brightchain-s3-store` | `@brightchain/s3-store` | AWS S3 integration for block storage. |
+
+### React Component Libraries
+
+| Project | Package | Description |
+|---------|---------|-------------|
+| `brightchain-react-components` | `@brightchain/brightchain-react-components` | Shared React UI components for the core platform. |
+
+### BrightChat (Encrypted Messaging)
+
+| Project | Package | Description |
+|---------|---------|-------------|
+| `brightchat-lib` | `@brightchain/brightchat-lib` | Shared library with request interfaces and types for encrypted messaging. |
+| `brightchat-react-components` | `@brightchain/brightchat-react-components` | React UI components for real-time chat with Signal-grade encryption. |
+
+### BrightHub (Social Network)
+
+| Project | Package | Description |
+|---------|---------|-------------|
+| `brighthub-lib` | `@brightchain/brighthub-lib` | Social network library with markdown support, sanitization, and content utilities. |
+| `brighthub-react-components` | `@brightchain/brighthub-react-components` | React components for social network features. |
+
+### BrightMail (Email)
+
+| Project | Package | Description |
+|---------|---------|-------------|
+| `brightmail-lib` | `@brightchain/brightmail-lib` | Shared library with RFC 5322/2045 compliant email types and interfaces. |
+| `brightmail-react-components` | `@brightchain/brightmail-react-components` | React UI components for the email interface. |
+
+### BrightPass (Password Manager)
+
+| Project | Package | Description |
+|---------|---------|-------------|
+| `brightpass-lib` | `@brightchain/brightpass-lib` | Shared library for password manager types and interfaces. |
+| `brightpass-react-components` | `@brightchain/brightpass-react-components` | React UI components for the password manager. |
+
+### End-to-End Tests
+
+| Project | Description |
+|---------|-------------|
+| `brightchain-api-e2e` | E2E tests for the API server. |
+| `brightchain-react-e2e` | E2E tests for the React frontend. |
+
+### Git Submodules
+
+The following projects are included as Git submodules from separate repositories under the [Digital-Defiance](https://github.com/Digital-Defiance) organization:
+
+| Submodule | Repository |
+|-----------|------------|
+| `brightchat-lib` | [Digital-Defiance/brightchat-lib](https://github.com/Digital-Defiance/brightchat-lib) |
+| `brightchat-react-components` | [Digital-Defiance/brightchat-react-components](https://github.com/Digital-Defiance/brightchat-react-components) |
+| `brightmail-lib` | [Digital-Defiance/brightmail-lib](https://github.com/Digital-Defiance/brightmail-lib) |
+| `brightmail-react-components` | [Digital-Defiance/brightmail-react-components](https://github.com/Digital-Defiance/brightmail-react-components) |
+| `brighthub-lib` | [Digital-Defiance/brighthub-lib](https://github.com/Digital-Defiance/brighthub-lib) |
+| `brighthub-react-components` | [Digital-Defiance/brighthub-react-components](https://github.com/Digital-Defiance/brighthub-react-components) |
+| `brightpass-lib` | [Digital-Defiance/brightpass-lib](https://github.com/Digital-Defiance/brightpass-lib) |
+| `brightpass-react-components` | [Digital-Defiance/brightpass-react-components](https://github.com/Digital-Defiance/brightpass-react-components) |
+| `reed-solomon-erasure.wasm` | [Digital-Defiance/reed-solomon-erasure.wasm](https://github.com/Digital-Defiance/reed-solomon-erasure.wasm) |
+
+When cloning, use `--recurse-submodules` to pull all submodules. To update submodules later:
+
+```bash
+git submodule update --init --recursive
+```
+
+### Development Utilities
+
+| Directory | Description |
+|-----------|-------------|
+| `tools/` | Build scripts and development tooling. |
+| `tests/` | Shared test infrastructure. |
+| `docs/` | Project documentation (Jekyll-based, published via GitHub Pages). |
+| `.devcontainer/` | Docker Dev Container configuration for consistent development environments. |
+
 
 ## Development Workflow
 
-BrightChain uses Nx for monorepo management. Key commands:
+BrightChain uses Nx for monorepo management. Always run tasks through Nx rather than the underlying tooling directly.
 
 ```bash
 # Run tests for a specific project
@@ -46,9 +154,57 @@ npx nx build brightchain-api-lib
 # Run all tests
 npx nx run-many -t test
 
+# Build everything
+npx nx run-many -t build
+
 # Lint code
 npx nx lint brightchain-lib
+
+# Run E2E tests
+npx nx e2e brightchain-api-e2e
+
+# Initialize the user database
+yarn inituserdb
+
+# Serve the API (development)
+yarn serve:api:dev
+
+# Serve the React frontend (development)
+yarn serve:dev:stream
 ```
+
+## Where Does My Code Go?
+
+BrightChain follows a strict separation of concerns across its libraries:
+
+- **`brightchain-lib`** — Shared across everything (client, server, libraries). Interfaces, enums, types, core logic. Even API request/response base interfaces go here so frontend clients can consume them.
+- **`brightchain-api-lib`** — Node.js-specific code that depends on Node types or Express. API response types that extend Express `Response` live here, wrapping base interfaces from `brightchain-lib`.
+- **`brightchain-react`** / `*-react-components` — Frontend-specific code.
+- **`@digitaldefiance/*` libraries** — When functionality is generic enough to be shared across the Digital Defiance ecosystem, consider breaking it out into its own `@digitaldefiance` package.
+
+### Interface Pattern
+
+Use a generic base interface in `brightchain-lib` so both frontend and backend can work with the same data shape:
+
+```typescript
+// brightchain-lib: base interface, platform-agnostic
+interface IBaseData<TData> {
+  something: TData;
+}
+
+// brightchain-api-lib: API response extending Express Response
+interface IBaseDataAPIResponse extends Response {
+  body: IBaseData<GuidV4Buffer>;
+}
+
+// Frontend: uses the same interface with string types
+type ClientData = IBaseData<string>;
+```
+
+Each feature module (BrightChat, BrightMail, BrightPass, BrightHub, BrightDB) follows the same pattern:
+- `*-lib` — Shared types, interfaces, and platform-agnostic logic
+- `*-react-components` — React UI components
+- `*-api-lib` (where applicable) — Server-side API extensions
 
 ## Constants Architecture
 
@@ -197,6 +353,7 @@ export const CBL: ICBLConsts = {
 - Write meaningful variable and function names
 - Add JSDoc comments for public APIs
 - Keep functions small and focused
+- Prefer creating `.ts` or `.js` files over executing raw Node statements on the console
 
 ### TypeScript Guidelines
 
@@ -267,11 +424,24 @@ npx nx test brightchain-lib --coverage
 
 ### Before Submitting
 
-1. Ensure all tests pass
-2. Run linting: `npx nx lint brightchain-lib`
+1. Ensure all tests pass: `npx nx run-many -t test`
+2. Run linting: `npx nx run-many -t lint`
 3. Update documentation if needed
 4. Add tests for new functionality
 5. Follow the constants architecture guidelines
+6. Ensure submodule changes are committed in the submodule repo first
+
+### Working with Submodules
+
+If your changes touch a submodule (e.g., `brightchat-lib`):
+
+1. Make changes inside the submodule directory
+2. Commit and push in the submodule's own repository
+3. Update the submodule reference in the parent repo:
+   ```bash
+   git add <submodule-path>
+   git commit -m "chore: update <submodule> reference"
+   ```
 
 ### PR Guidelines
 
@@ -309,7 +479,7 @@ Brief description of changes
 
 If you have questions about contributing, please:
 
-1. Check existing documentation
+1. Check existing [documentation](./docs/)
 2. Search closed issues
 3. Open a new issue with the "question" label
 

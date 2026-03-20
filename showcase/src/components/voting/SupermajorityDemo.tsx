@@ -10,10 +10,14 @@ import {
 } from '@digitaldefiance/ecies-lib';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState } from 'react';
+import { useShowcaseI18n } from '../../i18n/ShowcaseI18nContext';
+import { ShowcaseStrings } from '../../i18n/showcaseStrings';
 import { LoadingSpinner } from './LoadingSpinner';
 import { useVotingDemo } from './useVotingDemo';
 
 export const SupermajorityDemo = () => {
+  const { t } = useShowcaseI18n();
+
   const [poll, setPoll] = useState<Poll<Uint8Array> | null>(null);
   const [authority, setAuthority] = useState<Member | null>(null);
   const [voters] = useState([
@@ -105,7 +109,7 @@ export const SupermajorityDemo = () => {
 
   if (isInitializing)
     return (
-      <LoadingSpinner message="Initializing cryptographic voting system..." />
+      <LoadingSpinner message={t(ShowcaseStrings.Vote_InitializingCrypto)} />
     );
 
   if (showIntro) {
@@ -114,37 +118,24 @@ export const SupermajorityDemo = () => {
         <div className="election-intro">
           <div className="intro-header">
             <span className="intro-emoji">🎯</span>
-            <h3>Constitutional Amendment Vote!</h3>
+            <h3>{t(ShowcaseStrings.Super_IntroTitle)}</h3>
           </div>
           <div className="intro-story">
-            <p>
-              🏛️ <strong>The Stakes:</strong> Amending the Constitution requires
-              more than a simple majority. We need a SUPERMAJORITY!
-            </p>
-            <p>
-              🎯 <strong>2/3 Threshold:</strong> At least 66.67% must vote YES
-              for the amendment to pass. This protects against hasty changes.
-            </p>
+            <p>{t(ShowcaseStrings.Super_IntroStakes)}</p>
+            <p>{t(ShowcaseStrings.Super_IntroThreshold)}</p>
             <div className="intro-stakes">
-              <p>
-                📜 <strong>The Amendment:</strong> "Add term limits for all
-                federal judges"
-              </p>
-              <p>
-                ⚠️ <strong>High Bar:</strong> 6 out of 9 states must ratify
-                (simple majority isn't enough!)
-              </p>
+              <p>{t(ShowcaseStrings.Super_IntroAmendment)}</p>
+              <p>{t(ShowcaseStrings.Super_IntroHighBar)}</p>
             </div>
             <p className="intro-challenge">
-              🌎 Used for constitutional changes, treaty ratifications, and
-              impeachment trials.
+              {t(ShowcaseStrings.Super_IntroChallenge)}
             </p>
           </div>
           <button
             onClick={() => setShowIntro(false)}
             className="start-election-btn"
           >
-            🗳️ Start Ratification!
+            {t(ShowcaseStrings.Super_StartBtn)}
           </button>
         </div>
       </div>
@@ -158,43 +149,64 @@ export const SupermajorityDemo = () => {
   return (
     <div className="voting-demo">
       <div className="demo-header">
-        <h3>🎯 Supermajority - Constitutional Amendment</h3>
+        <h3>{t(ShowcaseStrings.Super_DemoTitle)}</h3>
         <p className="election-tagline">
-          📊 Requires {(threshold * 100).toFixed(0)}% to pass ({requiredVotes}/
-          {voters.length} states)
+          {t(ShowcaseStrings.Super_DemoTaglineTemplate)
+            .replace('{PERCENT}', (threshold * 100).toFixed(0))
+            .replace('{REQUIRED}', String(requiredVotes))
+            .replace('{TOTAL}', String(voters.length))}
         </p>
       </div>
 
       {!results ? (
         <>
           <div className="supermajority-tracker">
-            <h4>📊 Live Threshold Tracker</h4>
+            <h4>{t(ShowcaseStrings.Super_TrackerTitle)}</h4>
             <div className="threshold-bar">
               <div
                 className="threshold-progress"
                 style={{ width: `${yesPercent}%` }}
               >
-                {yesVotes > 0 && <span>{yesVotes} YES</span>}
+                {yesVotes > 0 && (
+                  <span>
+                    {t(ShowcaseStrings.Super_YesCountTemplate).replace(
+                      '{COUNT}',
+                      String(yesVotes),
+                    )}
+                  </span>
+                )}
               </div>
               <div
                 className="threshold-line"
                 style={{ left: `${threshold * 100}%` }}
               >
                 <span className="threshold-label">
-                  {(threshold * 100).toFixed(0)}% Required
+                  {t(ShowcaseStrings.Super_RequiredTemplate).replace(
+                    '{PERCENT}',
+                    (threshold * 100).toFixed(0),
+                  )}
                 </span>
               </div>
             </div>
             <p className="threshold-status">
               {yesPercent >= threshold * 100
-                ? `✅ Currently PASSING (${yesVotes}/${votes.size} = ${yesPercent.toFixed(1)}%)`
-                : `❌ Currently FAILING (${yesVotes}/${votes.size} = ${yesPercent.toFixed(1)}%) - Need ${requiredVotes - yesVotes} more YES`}
+                ? t(ShowcaseStrings.Super_StatusPassingTemplate)
+                    .replace('{YES}', String(yesVotes))
+                    .replace('{TOTAL}', String(votes.size))
+                    .replace('{PERCENT}', yesPercent.toFixed(1))
+                : t(ShowcaseStrings.Super_StatusFailingTemplate)
+                    .replace('{YES}', String(yesVotes))
+                    .replace('{TOTAL}', String(votes.size))
+                    .replace('{PERCENT}', yesPercent.toFixed(1))
+                    .replace('{NEED}', String(requiredVotes - yesVotes))}
             </p>
           </div>
 
           <div className="voters-section">
             <h4>
-              State Legislatures ({votes.size}/{voters.length} voted)
+              {t(ShowcaseStrings.Super_LegislaturesTemplate)
+                .replace('{VOTED}', String(votes.size))
+                .replace('{TOTAL}', String(voters.length))}
             </h4>
             <div className="voters-grid">
               {voters.map((voter) => (
@@ -202,7 +214,9 @@ export const SupermajorityDemo = () => {
                   <strong>{voter}</strong>
                   {votes.has(voter) ? (
                     <div className="vote-cast">
-                      ✓ {votes.get(voter) === 0 ? '✅ RATIFY' : '❌ REJECT'}
+                      {votes.get(voter) === 0
+                        ? t(ShowcaseStrings.Super_VotedRatify)
+                        : t(ShowcaseStrings.Super_VotedReject)}
                     </div>
                   ) : (
                     <div className="yesno-buttons">
@@ -210,13 +224,13 @@ export const SupermajorityDemo = () => {
                         onClick={() => castVote(voter, 0)}
                         className="vote-btn yes-btn"
                       >
-                        ✅ RATIFY
+                        {t(ShowcaseStrings.Super_BtnRatify)}
                       </button>
                       <button
                         onClick={() => castVote(voter, 1)}
                         className="vote-btn no-btn"
                       >
-                        ❌ REJECT
+                        {t(ShowcaseStrings.Super_BtnReject)}
                       </button>
                     </div>
                   )}
@@ -231,22 +245,31 @@ export const SupermajorityDemo = () => {
               className="tally-btn"
               disabled={isTallying}
             >
-              {isTallying ? '🔓 Decrypting votes...' : '📜 Final Count!'}
+              {isTallying
+                ? t(ShowcaseStrings.Vote_DecryptingVotes)
+                : t(ShowcaseStrings.Super_TallyBtn)}
             </button>
           )}
         </>
       ) : (
         <div className="results-section">
-          <h4>🏛️ Amendment Results!</h4>
+          <h4>{t(ShowcaseStrings.Super_ResultsTitle)}</h4>
 
           <div className="tally-visualization">
-            <h5>📊 Supermajority Calculation</h5>
+            <h5>{t(ShowcaseStrings.Super_CalcTitle)}</h5>
             <p className="tally-explain">
-              Required: {requiredVotes}/{voters.length} states (
-              {(threshold * 100).toFixed(0)}%)
+              {t(ShowcaseStrings.Super_CalcRequiredTemplate)
+                .replace('{REQUIRED}', String(requiredVotes))
+                .replace('{TOTAL}', String(voters.length))
+                .replace('{PERCENT}', (threshold * 100).toFixed(0))}
               <br />
-              Actual: {Number(results.tallies[0])}/{votes.size} states (
-              {((Number(results.tallies[0]) / votes.size) * 100).toFixed(1)}%)
+              {t(ShowcaseStrings.Super_CalcActualTemplate)
+                .replace('{ACTUAL}', String(Number(results.tallies[0])))
+                .replace('{VOTED}', String(votes.size))
+                .replace(
+                  '{PERCENT}',
+                  ((Number(results.tallies[0]) / votes.size) * 100).toFixed(1),
+                )}
             </p>
           </div>
 
@@ -258,7 +281,10 @@ export const SupermajorityDemo = () => {
                   width: `${(Number(results.tallies[0]) / votes.size) * 100}%`,
                 }}
               >
-                ✅ {Number(results.tallies[0])} RATIFY
+                {t(ShowcaseStrings.Super_RatifyCountTemplate).replace(
+                  '{COUNT}',
+                  String(Number(results.tallies[0])),
+                )}
               </div>
               <div
                 className="final-no"
@@ -266,31 +292,47 @@ export const SupermajorityDemo = () => {
                   width: `${(Number(results.tallies[1]) / votes.size) * 100}%`,
                 }}
               >
-                ❌ {Number(results.tallies[1])} REJECT
+                {t(ShowcaseStrings.Super_RejectCountTemplate).replace(
+                  '{COUNT}',
+                  String(Number(results.tallies[1])),
+                )}
               </div>
             </div>
             <div
               className="threshold-marker"
               style={{ left: `${threshold * 100}%` }}
             >
-              ⬆️ {(threshold * 100).toFixed(0)}% Threshold
+              {t(ShowcaseStrings.Super_ThresholdTemplate).replace(
+                '{PERCENT}',
+                (threshold * 100).toFixed(0),
+              )}
             </div>
           </div>
 
           <div className="referendum-outcome">
             <h3>
               {Number(results.tallies[0]) >= requiredVotes
-                ? '✅ AMENDMENT RATIFIED!'
-                : '❌ AMENDMENT FAILS!'}
+                ? t(ShowcaseStrings.Super_AmendmentRatified)
+                : t(ShowcaseStrings.Super_AmendmentFails)}
             </h3>
             <p>
               {Number(results.tallies[0]) >= requiredVotes
-                ? `The amendment passes with ${Number(results.tallies[0])} states (${((Number(results.tallies[0]) / votes.size) * 100).toFixed(1)}%)`
-                : `Failed to reach ${(threshold * 100).toFixed(0)}% threshold. Only ${Number(results.tallies[0])} of ${requiredVotes} required states ratified.`}
+                ? t(ShowcaseStrings.Super_OutcomePassTemplate)
+                    .replace('{COUNT}', String(Number(results.tallies[0])))
+                    .replace(
+                      '{PERCENT}',
+                      ((Number(results.tallies[0]) / votes.size) * 100).toFixed(
+                        1,
+                      ),
+                    )
+                : t(ShowcaseStrings.Super_OutcomeFailTemplate)
+                    .replace('{THRESHOLD}', (threshold * 100).toFixed(0))
+                    .replace('{ACTUAL}', String(Number(results.tallies[0])))
+                    .replace('{REQUIRED}', String(requiredVotes))}
             </p>
           </div>
           <button onClick={reset} className="reset-btn">
-            New Amendment
+            {t(ShowcaseStrings.Super_ResetBtn)}
           </button>
         </div>
       )}

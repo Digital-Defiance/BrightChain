@@ -1,9 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState } from 'react';
+import { useShowcaseI18n } from '../../i18n/ShowcaseI18nContext';
+import { ShowcaseStrings } from '../../i18n/showcaseStrings';
 import { LoadingSpinner } from './LoadingSpinner';
 import { useVotingDemo } from './useVotingDemo';
 
 export const ConsentBasedDemo = () => {
+  const { t } = useShowcaseI18n();
   const { isInitializing, setIsInitializing, isTallying, withTallying } =
     useVotingDemo();
   const [showIntro, setShowIntro] = useState(true);
@@ -44,7 +47,7 @@ export const ConsentBasedDemo = () => {
 
   if (isInitializing)
     return (
-      <LoadingSpinner message="Initializing cryptographic voting system..." />
+      <LoadingSpinner message={t(ShowcaseStrings.Vote_InitializingCrypto)} />
     );
 
   if (showIntro) {
@@ -53,37 +56,24 @@ export const ConsentBasedDemo = () => {
         <div className="election-intro">
           <div className="intro-header">
             <span className="intro-emoji">🙋</span>
-            <h3>Consent-Based Decision Making!</h3>
+            <h3>{t(ShowcaseStrings.Consent_IntroTitle)}</h3>
           </div>
           <div className="intro-story">
-            <p>
-              🏢 <strong>Sociocracy:</strong> A worker cooperative needs to make
-              decisions that everyone can live with.
-            </p>
-            <p>
-              🙋 <strong>Consent-Based:</strong> Not about agreement - it's
-              about "no strong objections". Can you live with this?
-            </p>
+            <p>{t(ShowcaseStrings.Consent_IntroSociocracy)}</p>
+            <p>{t(ShowcaseStrings.Consent_IntroConsentBased)}</p>
             <div className="intro-stakes security-warning">
-              <p>
-                ⚠️ <strong>INSECURE METHOD:</strong> No privacy - objections
-                must be heard and addressed!
-              </p>
-              <p>
-                🎯 <strong>The Question:</strong> "Do you have a principled
-                objection that would harm the organization?"
-              </p>
+              <p>{t(ShowcaseStrings.Consent_IntroInsecure)}</p>
+              <p>{t(ShowcaseStrings.Consent_IntroQuestion)}</p>
             </div>
             <p className="intro-challenge">
-              🌍 Used in sociocratic organizations, holacracy, and collaborative
-              workplaces!
+              {t(ShowcaseStrings.Consent_IntroUsedIn)}
             </p>
           </div>
           <button
             onClick={() => setShowIntro(false)}
             className="start-election-btn"
           >
-            🙋 Start Process!
+            {t(ShowcaseStrings.Consent_StartBtn)}
           </button>
         </div>
       </div>
@@ -100,27 +90,25 @@ export const ConsentBasedDemo = () => {
   return (
     <div className="voting-demo">
       <div className="demo-header">
-        <h3>🙋 Consent-Based - Worker Co-op</h3>
+        <h3>{t(ShowcaseStrings.Consent_DemoTitle)}</h3>
         <p className="election-tagline">
-          🤝 No strong objections = consent achieved
+          {t(ShowcaseStrings.Consent_DemoTagline)}
         </p>
       </div>
 
       <div className="security-warning-banner">
-        ⚠️ INSECURE: No privacy - objections are shared openly for discussion!
+        {t(ShowcaseStrings.Consent_InsecureBanner)}
       </div>
 
       {!results && (
         <>
           <div className="consent-question">
-            <h4>Proposal: Implement 4-day work week starting next month</h4>
+            <h4>{t(ShowcaseStrings.Consent_ProposalTitle)}</h4>
             <p>
-              <strong>The Question:</strong> Do you have a{' '}
-              <em>principled objection</em> that would harm our organization?
+              <strong>{t(ShowcaseStrings.Consent_ProposalQuestion)}</strong>
             </p>
             <p className="consent-note">
-              Note: "I prefer 5 days" is not a principled objection. "This would
-              bankrupt us" is.
+              {t(ShowcaseStrings.Consent_ProposalNote)}
             </p>
           </div>
 
@@ -128,24 +116,32 @@ export const ConsentBasedDemo = () => {
             <div className="consent-summary">
               <div className="consent-stat">
                 <span className="stat-number">{consentCount}</span>
-                <span className="stat-label">✅ Consent</span>
+                <span className="stat-label">
+                  {t(ShowcaseStrings.Consent_ConsentCount)}
+                </span>
               </div>
               <div className="consent-stat objection">
                 <span className="stat-number">{objectionCount}</span>
-                <span className="stat-label">🚫 Objections</span>
+                <span className="stat-label">
+                  {t(ShowcaseStrings.Consent_ObjectionCount)}
+                </span>
               </div>
             </div>
             {objectionCount > 0 && (
               <p className="objection-warning">
-                ⚠️ {objectionCount} principled objection(s) raised - proposal
-                must be modified or withdrawn
+                {t(ShowcaseStrings.Consent_ObjectionWarningTemplate, {
+                  COUNT: String(objectionCount),
+                })}
               </p>
             )}
           </div>
 
           <div className="voters-section">
             <h4>
-              Circle Members ({votes.size}/{voters.length} responded)
+              {t(ShowcaseStrings.Consent_MembersTemplate, {
+                RESPONDED: String(votes.size),
+                TOTAL: String(voters.length),
+              })}
             </h4>
             <div className="consent-votes">
               {voters.map((voter) => {
@@ -161,11 +157,13 @@ export const ConsentBasedDemo = () => {
                     {hasVoted ? (
                       <div className="vote-display">
                         {vote?.consent ? (
-                          <span className="consent-badge">✅ No Objection</span>
+                          <span className="consent-badge">
+                            {t(ShowcaseStrings.Consent_NoObjection)}
+                          </span>
                         ) : (
                           <div className="objection-display">
                             <span className="objection-badge">
-                              🚫 Principled Objection
+                              {t(ShowcaseStrings.Consent_PrincipledObjection)}
                             </span>
                             {vote?.objection && (
                               <p className="objection-text">
@@ -181,18 +179,21 @@ export const ConsentBasedDemo = () => {
                           onClick={() => castVote(voter, true)}
                           className="vote-btn consent-btn"
                         >
-                          ✅ No Objection
+                          {t(ShowcaseStrings.Consent_BtnNoObjection)}
                         </button>
                         <button
                           onClick={() => {
                             const objection = prompt(
-                              `${voter}, what is your principled objection?`,
+                              t(
+                                ShowcaseStrings.Consent_ObjectionPromptTemplate,
+                                { VOTER: voter },
+                              ),
                             );
                             if (objection) castVote(voter, false, objection);
                           }}
                           className="vote-btn objection-btn"
                         >
-                          🚫 Object
+                          {t(ShowcaseStrings.Consent_BtnObject)}
                         </button>
                       </div>
                     )}
@@ -208,7 +209,9 @@ export const ConsentBasedDemo = () => {
               className="tally-btn"
               disabled={isTallying}
             >
-              {isTallying ? '🔓 Decrypting votes...' : '🙋 Check for Consent!'}
+              {isTallying
+                ? t(ShowcaseStrings.Vote_DecryptingVotes)
+                : t(ShowcaseStrings.Consent_CheckConsent)}
             </button>
           )}
         </>
@@ -216,34 +219,45 @@ export const ConsentBasedDemo = () => {
 
       {results && (
         <div className="results-section">
-          <h4>🙋 Consent Process Result!</h4>
+          <h4>{t(ShowcaseStrings.Consent_ResultsTitle)}</h4>
 
           <div className="tally-visualization">
-            <h5>📊 Consent Check</h5>
+            <h5>{t(ShowcaseStrings.Consent_ConsentCheckTitle)}</h5>
             <p className="tally-explain">
-              Consent achieved if zero principled objections
-              <br />
-              Objections raised: {results.objections.length}
+              {t(ShowcaseStrings.Consent_ConsentCheckExplainTemplate, {
+                COUNT: String(results.objections.length),
+              })}
             </p>
           </div>
 
           <div className="consent-final">
             <div className="consent-breakdown">
               <div className="consent-group">
-                <h5>✅ No Objections ({consentCount})</h5>
-                <p>These members can live with the proposal</p>
+                <h5>
+                  {t(ShowcaseStrings.Consent_NoObjectionsGroup, {
+                    COUNT: String(consentCount),
+                  })}
+                </h5>
+                <p>{t(ShowcaseStrings.Consent_NoObjectionsDesc)}</p>
               </div>
               {results.objections.length > 0 && (
                 <div className="objection-group">
                   <h5>
-                    🚫 Principled Objections ({results.objections.length})
+                    {t(ShowcaseStrings.Consent_ObjectionsGroupTemplate, {
+                      COUNT: String(results.objections.length),
+                    })}
                   </h5>
                   {Array.from(votes.entries())
                     .filter(([_, v]) => !v.consent)
                     .map(([voter, v]) => (
                       <div key={voter} className="objection-item">
                         <strong>{voter}:</strong>
-                        <p>"{v.objection || 'Objection raised'}"</p>
+                        <p>
+                          "
+                          {v.objection ||
+                            t(ShowcaseStrings.Consent_ObjectionRaised)}
+                          "
+                        </p>
                       </div>
                     ))}
                 </div>
@@ -253,28 +267,34 @@ export const ConsentBasedDemo = () => {
 
           <div className="referendum-outcome">
             <h3>
-              {results.passes ? '✅ CONSENT ACHIEVED!' : '🚫 CONSENT BLOCKED!'}
+              {results.passes
+                ? t(ShowcaseStrings.Consent_ConsentAchieved)
+                : t(ShowcaseStrings.Consent_ConsentBlocked)}
             </h3>
             <p>
               {results.passes
-                ? `All ${votes.size} members gave consent (no principled objections). The proposal moves forward.`
-                : `${results.objections.length} principled objection(s) raised. The circle must address concerns before proceeding.`}
+                ? t(ShowcaseStrings.Consent_OutcomePassTemplate, {
+                    COUNT: String(votes.size),
+                  })
+                : t(ShowcaseStrings.Consent_OutcomeFailTemplate, {
+                    COUNT: String(results.objections.length),
+                  })}
             </p>
             {!results.passes && (
               <div className="consent-note">
-                <h5>💡 Next Steps in Sociocracy:</h5>
+                <h5>{t(ShowcaseStrings.Consent_NextStepsTitle)}</h5>
                 <ul>
-                  <li>Listen to objections fully</li>
-                  <li>Modify proposal to address concerns</li>
-                  <li>Re-test for consent with updated proposal</li>
-                  <li>If objections persist, proposal is withdrawn</li>
+                  <li>{t(ShowcaseStrings.Consent_NextStep1)}</li>
+                  <li>{t(ShowcaseStrings.Consent_NextStep2)}</li>
+                  <li>{t(ShowcaseStrings.Consent_NextStep3)}</li>
+                  <li>{t(ShowcaseStrings.Consent_NextStep4)}</li>
                 </ul>
               </div>
             )}
           </div>
 
           <button onClick={reset} className="reset-btn">
-            New Proposal
+            {t(ShowcaseStrings.Consent_ResetBtn)}
           </button>
         </div>
       )}

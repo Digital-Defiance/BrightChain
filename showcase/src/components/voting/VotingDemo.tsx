@@ -1,5 +1,7 @@
 import { VotingMethod } from '@digitaldefiance/ecies-lib';
 import { useEffect, useState } from 'react';
+import { useShowcaseI18n } from '../../i18n/ShowcaseI18nContext';
+import { ShowcaseStrings } from '../../i18n/showcaseStrings';
 import { ApprovalDemo } from './ApprovalDemo';
 import { BordaDemo } from './BordaDemo';
 import { ConsensusDemo } from './ConsensusDemo';
@@ -19,6 +21,7 @@ import { YesNoAbstainDemo } from './YesNoAbstainDemo';
 import { YesNoDemo } from './YesNoDemo';
 
 export const VotingDemo = () => {
+  const { t } = useShowcaseI18n();
   const [selectedMethod, setSelectedMethod] = useState<VotingMethod>(
     VotingMethod.Plurality,
   );
@@ -71,8 +74,10 @@ export const VotingDemo = () => {
       default:
         return (
           <div className="coming-soon">
-            <h3>🚧 {selectedMethod} Demo</h3>
-            <p>This voting method is fully implemented in the library.</p>
+            <h3>
+              {t(ShowcaseStrings.Vote_ComingSoon, { METHOD: selectedMethod })}
+            </h3>
+            <p>{t(ShowcaseStrings.Vote_ComingSoonDesc)}</p>
           </div>
         );
     }
@@ -81,17 +86,21 @@ export const VotingDemo = () => {
   return (
     <div className="voting-demo-container">
       <div className="voting-intro">
-        <h2>🗳️ Government-Grade Voting System</h2>
-        <p>
-          Explore our comprehensive cryptographic voting library with 15
-          different voting methods. Each demo shows real-world use cases with
-          homomorphic encryption ensuring vote privacy.
-        </p>
+        <h2>{t(ShowcaseStrings.Vote_Title)}</h2>
+        <p>{t(ShowcaseStrings.Vote_TitleDesc)}</p>
         <div className="security-badges">
-          <span className="badge secure">✅ Homomorphic Encryption</span>
-          <span className="badge secure">🔐 Verifiable Receipts</span>
-          <span className="badge secure">🛡️ Role Separation</span>
-          <span className="badge secure">🧪 900+ Tests</span>
+          <span className="badge secure">
+            {t(ShowcaseStrings.Vote_BadgeHomomorphic)}
+          </span>
+          <span className="badge secure">
+            {t(ShowcaseStrings.Vote_BadgeReceipts)}
+          </span>
+          <span className="badge secure">
+            {t(ShowcaseStrings.Vote_BadgeRoleSeparation)}
+          </span>
+          <span className="badge secure">
+            {t(ShowcaseStrings.Vote_BadgeTests)}
+          </span>
         </div>
       </div>
 
@@ -103,7 +112,7 @@ export const VotingDemo = () => {
       {isLoading ? (
         <div className="loading-container">
           <div className="loading-spinner"></div>
-          <p>Loading voting demo...</p>
+          <p>{t(ShowcaseStrings.Vote_LoadingDemo)}</p>
         </div>
       ) : (
         renderDemo()

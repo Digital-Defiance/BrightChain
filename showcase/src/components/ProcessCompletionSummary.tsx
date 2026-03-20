@@ -1,4 +1,6 @@
 import React, { useEffect, useState } from 'react';
+import { useShowcaseI18n } from '../i18n/ShowcaseI18nContext';
+import { ShowcaseStrings } from '../i18n/showcaseStrings';
 import { useEducationalModeContext } from './EducationalModeProvider';
 import './ProcessCompletionSummary.css';
 
@@ -17,6 +19,7 @@ interface ProcessCompletionSummaryProps {
 export const ProcessCompletionSummary: React.FC<
   ProcessCompletionSummaryProps
 > = ({ processType, isVisible, onClose }) => {
+  const { t } = useShowcaseI18n();
   const { content, config } = useEducationalModeContext();
   const [currentSection, setCurrentSection] = useState<
     'overview' | 'achievements' | 'technical' | 'next'
@@ -35,10 +38,14 @@ export const ProcessCompletionSummary: React.FC<
   }
 
   const sections = [
-    { id: 'overview', label: 'Overview', icon: '📋' },
-    { id: 'achievements', label: 'Achievements', icon: '🎯' },
-    { id: 'technical', label: 'Technical', icon: '⚙️' },
-    { id: 'next', label: 'Next Steps', icon: '🚀' },
+    { id: 'overview', label: t(ShowcaseStrings.Edu_Overview), icon: '📋' },
+    {
+      id: 'achievements',
+      label: t(ShowcaseStrings.Edu_Achievements),
+      icon: '🎯',
+    },
+    { id: 'technical', label: t(ShowcaseStrings.Edu_Technical), icon: '⚙️' },
+    { id: 'next', label: t(ShowcaseStrings.Edu_NextSteps), icon: '🚀' },
   ] as const;
 
   const renderSectionContent = () => {
@@ -46,10 +53,10 @@ export const ProcessCompletionSummary: React.FC<
       case 'overview':
         return (
           <div className="summary-section">
-            <h3>Process Overview</h3>
+            <h3>{t(ShowcaseStrings.Edu_ProcessOverview)}</h3>
             <p className="summary-description">{summary.description}</p>
             <div className="learning-points">
-              <h4>🧠 Key Learning Points</h4>
+              <h4>{t(ShowcaseStrings.Edu_KeyLearningPoints)}</h4>
               <ul>
                 {summary.learningPoints.map((point, index) => (
                   <li key={index}>{point}</li>
@@ -62,7 +69,7 @@ export const ProcessCompletionSummary: React.FC<
       case 'achievements':
         return (
           <div className="summary-section">
-            <h3>What We Accomplished</h3>
+            <h3>{t(ShowcaseStrings.Edu_WhatWeAccomplished)}</h3>
             <div className="achievements-grid">
               {summary.keyAchievements.map((achievement, index) => (
                 <div key={index} className="achievement-card">
@@ -77,7 +84,7 @@ export const ProcessCompletionSummary: React.FC<
       case 'technical':
         return (
           <div className="summary-section">
-            <h3>Technical Outcomes</h3>
+            <h3>{t(ShowcaseStrings.Edu_TechnicalOutcomes)}</h3>
             <div className="technical-outcomes">
               {summary.technicalOutcomes.map((outcome, index) => (
                 <div key={index} className="outcome-item">
@@ -92,7 +99,7 @@ export const ProcessCompletionSummary: React.FC<
       case 'next':
         return (
           <div className="summary-section">
-            <h3>What's Next?</h3>
+            <h3>{t(ShowcaseStrings.Edu_WhatsNext)}</h3>
             <div className="next-steps">
               {summary.nextSteps.map((step, index) => (
                 <div key={index} className="next-step-item">
@@ -117,7 +124,7 @@ export const ProcessCompletionSummary: React.FC<
           <button
             className="summary-close"
             onClick={onClose}
-            aria-label="Close summary"
+            aria-label={t(ShowcaseStrings.Edu_CloseSummary)}
           >
             ×
           </button>
@@ -162,7 +169,7 @@ export const ProcessCompletionSummary: React.FC<
               }}
               disabled={currentSection === 'overview'}
             >
-              ← Previous
+              {t(ShowcaseStrings.Edu_Previous)}
             </button>
 
             <button
@@ -178,7 +185,9 @@ export const ProcessCompletionSummary: React.FC<
                 }
               }}
             >
-              {currentSection === 'next' ? 'Finish' : 'Next →'}
+              {currentSection === 'next'
+                ? t(ShowcaseStrings.Edu_Finish)
+                : t(ShowcaseStrings.Edu_Next)}
             </button>
           </div>
         </div>
@@ -191,6 +200,7 @@ export const ProcessCompletionSummary: React.FC<
  * Educational Mode Controls Component
  */
 export const EducationalModeControls: React.FC = () => {
+  const { t } = useShowcaseI18n();
   const {
     config,
     enableEducationalMode,
@@ -200,12 +210,12 @@ export const EducationalModeControls: React.FC = () => {
   } = useEducationalModeContext();
 
   const speedOptions = [
-    { value: 0.25, label: '0.25x (Very Slow)' },
-    { value: 0.5, label: '0.5x (Slow)' },
-    { value: 0.75, label: '0.75x (Moderate)' },
-    { value: 1.0, label: '1x (Normal)' },
-    { value: 1.5, label: '1.5x (Fast)' },
-    { value: 2.0, label: '2x (Very Fast)' },
+    { value: 0.25, label: t(ShowcaseStrings.Edu_SpeedVerySlow) },
+    { value: 0.5, label: t(ShowcaseStrings.Edu_SpeedSlow) },
+    { value: 0.75, label: t(ShowcaseStrings.Edu_SpeedModerate) },
+    { value: 1.0, label: t(ShowcaseStrings.Edu_SpeedNormal) },
+    { value: 1.5, label: t(ShowcaseStrings.Edu_SpeedFast) },
+    { value: 2.0, label: t(ShowcaseStrings.Edu_SpeedVeryFast) },
   ];
 
   return (
@@ -225,7 +235,7 @@ export const EducationalModeControls: React.FC = () => {
             className="control-checkbox"
           />
           <span className="checkbox-custom"></span>
-          🎓 Educational Mode
+          🎓 {t(ShowcaseStrings.Edu_EducationalMode)}
         </label>
       </div>
 
@@ -233,7 +243,7 @@ export const EducationalModeControls: React.FC = () => {
         <>
           <div className="control-group">
             <label className="control-label">
-              Animation Speed:
+              {t(ShowcaseStrings.Edu_AnimationSpeed)}
               <select
                 value={config.speedMultiplier}
                 onChange={(e) => setSpeedMultiplier(parseFloat(e.target.value))}
@@ -259,7 +269,7 @@ export const EducationalModeControls: React.FC = () => {
                 className="control-checkbox"
               />
               <span className="checkbox-custom"></span>
-              Step-by-Step Mode
+              {t(ShowcaseStrings.Edu_StepByStep)}
             </label>
           </div>
 
@@ -274,7 +284,7 @@ export const EducationalModeControls: React.FC = () => {
                 className="control-checkbox"
               />
               <span className="checkbox-custom"></span>
-              Show Tooltips
+              {t(ShowcaseStrings.Edu_ShowTooltips)}
             </label>
           </div>
 
@@ -289,7 +299,7 @@ export const EducationalModeControls: React.FC = () => {
                 className="control-checkbox"
               />
               <span className="checkbox-custom"></span>
-              Show Explanations
+              {t(ShowcaseStrings.Edu_ShowExplanations)}
             </label>
           </div>
 
@@ -304,7 +314,7 @@ export const EducationalModeControls: React.FC = () => {
                 className="control-checkbox"
               />
               <span className="checkbox-custom"></span>
-              Auto Advance Steps
+              {t(ShowcaseStrings.Edu_AutoAdvance)}
             </label>
           </div>
         </>
@@ -317,6 +327,7 @@ export const EducationalModeControls: React.FC = () => {
  * Educational Progress Indicator Component
  */
 export const EducationalProgressIndicator: React.FC = () => {
+  const { t } = useShowcaseI18n();
   const { currentStep, completedSteps, config } = useEducationalModeContext();
 
   if (!config.enabled || !currentStep) {
@@ -340,9 +351,12 @@ export const EducationalProgressIndicator: React.FC = () => {
   return (
     <div className="educational-progress">
       <div className="progress-header">
-        <h4>Learning Progress</h4>
+        <h4>{t(ShowcaseStrings.Edu_LearningProgress)}</h4>
         <span className="progress-text">
-          {completedSteps.size} of {allSteps.length} steps completed
+          {t(ShowcaseStrings.Edu_StepsCompleted, {
+            COMPLETED: String(completedSteps.size),
+            TOTAL: String(allSteps.length),
+          })}
         </span>
       </div>
 

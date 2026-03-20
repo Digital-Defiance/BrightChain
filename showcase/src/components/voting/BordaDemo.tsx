@@ -9,10 +9,13 @@ import {
   VoteEncoder,
 } from '@digitaldefiance/ecies-lib';
 import { useEffect, useState } from 'react';
+import { useShowcaseI18n } from '../../i18n/ShowcaseI18nContext';
+import { ShowcaseStrings } from '../../i18n/showcaseStrings';
 import { LoadingSpinner } from './LoadingSpinner';
 import { useVotingDemo } from './useVotingDemo';
 
 export const BordaDemo = () => {
+  const { t } = useShowcaseI18n();
   const [poll, setPoll] = useState<Poll<Uint8Array> | null>(null);
   const [authority, setAuthority] = useState<Member | null>(null);
   const [voters] = useState(['USA', 'France', 'Japan', 'Brazil', 'Kenya']);
@@ -23,9 +26,21 @@ export const BordaDemo = () => {
   const [showIntro, setShowIntro] = useState(true);
 
   const candidates = [
-    { name: 'Paris', emoji: '🗼', description: 'City of Light' },
-    { name: 'Tokyo', emoji: '🗾', description: 'Rising Sun' },
-    { name: 'Los Angeles', emoji: '🌴', description: 'City of Angels' },
+    {
+      name: 'Paris',
+      emoji: '🗼',
+      description: t(ShowcaseStrings.Borda_Cand1_Desc),
+    },
+    {
+      name: 'Tokyo',
+      emoji: '🗾',
+      description: t(ShowcaseStrings.Borda_Cand2_Desc),
+    },
+    {
+      name: 'Los Angeles',
+      emoji: '🌴',
+      description: t(ShowcaseStrings.Borda_Cand3_Desc),
+    },
   ];
 
   useEffect(() => {
@@ -96,7 +111,7 @@ export const BordaDemo = () => {
 
   if (isInitializing)
     return (
-      <LoadingSpinner message="Initializing cryptographic voting system..." />
+      <LoadingSpinner message={t(ShowcaseStrings.Vote_InitializingCrypto)} />
     );
 
   if (showIntro) {
@@ -105,27 +120,22 @@ export const BordaDemo = () => {
         <div className="election-intro">
           <div className="intro-header">
             <span className="intro-emoji">🏆</span>
-            <h3>Olympic Host City Selection!</h3>
+            <h3>{t(ShowcaseStrings.Borda_IntroTitle)}</h3>
           </div>
           <div className="intro-story">
             <p>
-              🌍 <strong>IOC Committee Room:</strong> Five nations must choose
-              the next Olympic host city. But everyone has preferences!
+              <strong>{t(ShowcaseStrings.Borda_IntroStory)}</strong>
             </p>
-            <p>
-              🎯 <strong>Borda Count</strong> gives points based on ranking: 1st
-              place = 3 points, 2nd = 2 points, 3rd = 1 point.
-            </p>
+            <p>{t(ShowcaseStrings.Borda_IntroPoints)}</p>
             <p className="intro-challenge">
-              💡 This rewards consensus picks over polarizing choices. The city
-              with the most total points wins!
+              {t(ShowcaseStrings.Borda_IntroChallenge)}
             </p>
           </div>
           <button
             onClick={() => setShowIntro(false)}
             className="start-election-btn"
           >
-            🏅 Start Voting!
+            {t(ShowcaseStrings.Borda_StartBtn)}
           </button>
         </div>
       </div>
@@ -134,19 +144,21 @@ export const BordaDemo = () => {
 
   return (
     <>
-      {isTallying && <LoadingSpinner message="Decrypting votes..." />}
+      {isTallying && (
+        <LoadingSpinner message={t(ShowcaseStrings.Vote_DecryptingVotes)} />
+      )}
       <div className="voting-demo">
         <div className="demo-header">
-          <h3>🏆 Borda Count - Olympic Host Selection</h3>
+          <h3>{t(ShowcaseStrings.Borda_DemoTitle)}</h3>
           <p className="election-tagline">
-            📊 Rank all cities. Points = consensus!
+            {t(ShowcaseStrings.Borda_DemoTagline)}
           </p>
         </div>
 
         {!results ? (
           <>
             <div className="candidates-section">
-              <h4>Candidate Cities</h4>
+              <h4>{t(ShowcaseStrings.Borda_CandidatesTitle)}</h4>
               <div className="candidates-grid">
                 {candidates.map((c, idx) => (
                   <div key={idx} className="candidate-card">
@@ -160,7 +172,9 @@ export const BordaDemo = () => {
 
             <div className="voters-section">
               <h4>
-                IOC Members ({votes.size}/{voters.length} voted)
+                {t(ShowcaseStrings.Borda_VotersTitle)
+                  .replace('{VOTED}', String(votes.size))
+                  .replace('{TOTAL}', String(voters.length))}
               </h4>
               {voters.map((voter) => {
                 const hasVoted = votes.has(voter);
@@ -192,7 +206,11 @@ export const BordaDemo = () => {
                         </button>
                       </div>
                     )}
-                    {hasVoted && <div className="vote-cast">✓ Ranked!</div>}
+                    {hasVoted && (
+                      <div className="vote-cast">
+                        {t(ShowcaseStrings.Borda_RankedBadge)}
+                      </div>
+                    )}
                   </div>
                 );
               })}
@@ -204,13 +222,15 @@ export const BordaDemo = () => {
                 className="tally-btn"
                 disabled={isTallying}
               >
-                {isTallying ? '🔓 Decrypting votes...' : '🏅 Count Points!'}
+                {isTallying
+                  ? t(ShowcaseStrings.Vote_DecryptingVotes)
+                  : t(ShowcaseStrings.Borda_TallyBtn)}
               </button>
             )}
           </>
         ) : (
           <div className="results-section">
-            <h4>🎉 Olympic Host Announced!</h4>
+            <h4>{t(ShowcaseStrings.Borda_ResultsTitle)}</h4>
             {candidates.map((c, idx) => {
               const points = Number(results.tallies[idx]);
               const isWinner = idx === results.winner;
@@ -223,7 +243,12 @@ export const BordaDemo = () => {
                     <span>
                       {c.emoji} {c.name}
                     </span>
-                    <span>{points} points</span>
+                    <span>
+                      {t(ShowcaseStrings.Borda_PointsTemplate).replace(
+                        '{COUNT}',
+                        String(points),
+                      )}
+                    </span>
                   </div>
                   <div className="progress-bar">
                     <div
@@ -235,7 +260,7 @@ export const BordaDemo = () => {
               );
             })}
             <button onClick={reset} className="reset-btn">
-              New Vote
+              {t(ShowcaseStrings.Borda_NewVoteBtn)}
             </button>
           </div>
         )}

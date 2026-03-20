@@ -1,6 +1,6 @@
 {
   "name": "brightchain",
-  "version": "0.29.23",
+  "version": "0.29.24",
   "license": "MIT",
   "workspaces": [
     "brightchain-lib",
@@ -69,7 +69,7 @@
     "test:all:e2e:dev": "NODE_ENV=development npx nx run-many --target=e2e --all --configuration=development",
     "test:all:e2e:dev:logged": "NODE_ENV=development npx nx run-many --target=e2e --all --configuration=development --outputStyle=stream 2>&1 | ansifilter -o e2e.log",
     "test:all:dev": "NODE_ENV=development npx nx run-many --target=test --all --configuration=development",
-    "test:all:dev:16": "NODE_ENV=development npx nx run-many --target=test --all --configuration=development --maxWorkers=16 --runInBand=false --parallel=16",
+    "test:all:dev:16": "NODE_ENV=development npx nx run-many --target=test --all --configuration=development --maxWorkers=16 --runInBand=false --parallel=16 --exclude=brightchain-showcase && NODE_ENV=development npx nx run brightchain-showcase:test",
     "test:all:dev:logged": "NODE_ENV=development npx nx run-many --skip-nx-cache --target=test --all --configuration=development --outputStyle=stream 2>&1 | ansifilter -o test-dev.log",
     "test:enclave:required": "REQUIRE_SECURE_ENCLAVE=true NODE_ENV=development npx nx test brightchain-api-lib --configuration=development",
     "test:ci": "NODE_ENV=test npx nx test brightchain-lib --parallel=16 --skip-nx-cache --configuration=ci",

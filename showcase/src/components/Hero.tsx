@@ -2,6 +2,8 @@ import { motion } from 'framer-motion';
 import { FaGithub, FaNewspaper } from 'react-icons/fa';
 import { GiCookingPot } from 'react-icons/gi';
 import { Link } from 'react-router-dom';
+import { useShowcaseI18n } from '../i18n/ShowcaseI18nContext';
+import { ShowcaseStrings } from '../i18n/showcaseStrings';
 import { AnimatedParticles } from './AnimatedParticles';
 import './Hero.css';
 import { ScrollIndicator } from './ScrollIndicator';
@@ -11,6 +13,7 @@ interface HeroProps {
 }
 
 const Hero = ({ scrollY }: HeroProps) => {
+  const { t } = useShowcaseI18n();
   const parallaxOffset = scrollY * 0.5;
 
   return (
@@ -34,7 +37,7 @@ const Hero = ({ scrollY }: HeroProps) => {
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.1, duration: 0.6 }}
         >
-          <span className="badge-text">🌟 The Decentralized App Platform</span>
+          <span className="badge-text">{t(ShowcaseStrings.Hero_Badge)}</span>
         </motion.div>
 
         <motion.h1
@@ -55,24 +58,14 @@ const Hero = ({ scrollY }: HeroProps) => {
           animate={{ opacity: 1 }}
           transition={{ delay: 0.6, duration: 0.8 }}
         >
-          BrightChain revolutionizes data storage using the &ldquo;
-          <a href="https://github.brightchain.org/docs/overview/brightchain-writeup.html">
-            Bright Block Soup
-          </a>
-          &rdquo; concept. Your files are broken into blocks and mixed with
-          random data using XOR operations, making them appear completely random
-          while maintaining perfect security.
+          {t(ShowcaseStrings.Hero_Description_P1)}
           <br />
           <br />
-          <strong>Not a cryptocurrency.</strong> No coins, no mining, no proof
-          of work. BrightChain values real contributions of storage and compute,
-          tracked in Joules &mdash; a unit tied to real-world energy costs, not
-          market speculation.
+          <strong>{t(ShowcaseStrings.Hero_Description_NotCrypto)}</strong>{' '}
+          {t(ShowcaseStrings.Hero_Description_P2)}
           <br />
           <span className="hero-highlight">
-            🔒 Owner-Free Storage • ⚡ Energy Efficient • 🌐 Decentralized • 🎭
-            Anonymous yet Accountable • 🗳️ Homomorphic Voting • 💾 Storage Over
-            Power
+            {t(ShowcaseStrings.Hero_Highlight)}
           </span>
         </motion.p>
 
@@ -84,11 +77,11 @@ const Hero = ({ scrollY }: HeroProps) => {
         >
           <a href="#demo" className="btn btn-primary">
             <GiCookingPot />
-            🧪 Interactive Demo
+            {t(ShowcaseStrings.Hero_CTA_InteractiveDemo)}
           </a>
           <Link to="/demo" className="btn btn-secondary">
             <GiCookingPot />
-            🥫 BrightChain Soup Demo
+            {t(ShowcaseStrings.Hero_CTA_SoupDemo)}
           </Link>
           <a
             href="https://github.com/Digital-Defiance/BrightChain"
@@ -97,7 +90,7 @@ const Hero = ({ scrollY }: HeroProps) => {
             rel="noopener noreferrer"
           >
             <FaGithub />
-            View on GitHub
+            {t(ShowcaseStrings.Hero_CTA_GitHub)}
           </a>
           <a
             href="/blog"
@@ -106,7 +99,7 @@ const Hero = ({ scrollY }: HeroProps) => {
             rel="noopener noreferrer"
           >
             <FaNewspaper />
-            Blog
+            {t(ShowcaseStrings.Hero_CTA_Blog)}
           </a>
         </motion.div>
       </motion.div>

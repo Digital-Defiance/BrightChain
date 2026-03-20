@@ -7,7 +7,7 @@ nav_order: 5
 
 ## Summary
 
-Adapted DigitalBurnbag patterns for BrightChain with Member-based authentication and energy economy integration.
+Adapted DB patterns for BrightChain with Member-based authentication and energy economy integration.
 
 ## What Was Done
 
@@ -33,7 +33,7 @@ Adapted DigitalBurnbag patterns for BrightChain with Member-based authentication
    - PrivateRoute/UnAuthRoute
    - All auth flows
 
-## Key Patterns from DigitalBurnbag
+## Key Patterns from DB
 
 ### React Structure
 - ✅ Uses `@digitaldefiance/express-suite-react-components` for all auth UI
@@ -52,7 +52,7 @@ Adapted DigitalBurnbag patterns for BrightChain with Member-based authentication
 - ✅ Service initialization in application.ts
 - ✅ JWT-based authentication
 
-## Differences from DigitalBurnbag
+## Differences from DB
 
 1. **No MongoDB** - Uses MemberStore with in-memory block storage
 2. **Member System** - BIP39/SECP256k1 instead of username/password only

@@ -1,5 +1,4 @@
 import { ValidatedBody } from '@digitaldefiance/node-express-suite';
-import { IRequestUserDTO } from '@digitaldefiance/suite-core-lib';
 import { ValidationChain } from 'express-validator';
 declare module 'express-serve-static-core' {
   interface Request {
@@ -24,7 +23,6 @@ declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace Express {
     interface Request {
-      user?: IRequestUserDTO;
       validatedBody?: ValidatedBody<string>;
       validate?: {
         body: (field: string) => ValidationChain;

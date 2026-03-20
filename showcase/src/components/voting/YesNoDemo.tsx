@@ -10,10 +10,14 @@ import {
 } from '@digitaldefiance/ecies-lib';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState } from 'react';
+import { useShowcaseI18n } from '../../i18n/ShowcaseI18nContext';
+import { ShowcaseStrings } from '../../i18n/showcaseStrings';
 import { LoadingSpinner } from './LoadingSpinner';
 import { useVotingDemo } from './useVotingDemo';
 
 export const YesNoDemo = () => {
+  const { t } = useShowcaseI18n();
+
   const [poll, setPoll] = useState<Poll<Uint8Array> | null>(null);
   const [authority, setAuthority] = useState<Member | null>(null);
   const [voters] = useState([
@@ -101,7 +105,7 @@ export const YesNoDemo = () => {
 
   if (isInitializing)
     return (
-      <LoadingSpinner message="Initializing cryptographic voting system..." />
+      <LoadingSpinner message={t(ShowcaseStrings.Vote_InitializingCrypto)} />
     );
 
   if (showIntro) {
@@ -110,37 +114,26 @@ export const YesNoDemo = () => {
         <div className="election-intro">
           <div className="intro-header">
             <span className="intro-emoji">👍</span>
-            <h3>National Referendum!</h3>
+            <h3>{t(ShowcaseStrings.YN_IntroTitle)}</h3>
           </div>
           <div className="intro-story">
             <p>
-              🏛️ <strong>The Question:</strong> "Should our country adopt a
-              4-day work week?"
+              <strong>{t(ShowcaseStrings.YN_IntroQuestion)}</strong>
             </p>
-            <p>
-              📊 <strong>Yes/No Referendum:</strong> The simplest form of
-              democracy. One question, two choices, majority rules.
-            </p>
+            <p>{t(ShowcaseStrings.YN_IntroStory)}</p>
             <div className="intro-stakes">
-              <p>
-                ✅ <strong>YES Campaign:</strong> Better work-life balance,
-                increased productivity, happier citizens!
-              </p>
-              <p>
-                ❌ <strong>NO Campaign:</strong> Economic risk, business
-                disruption, untested policy!
-              </p>
+              <p>{t(ShowcaseStrings.YN_IntroYesCampaign)}</p>
+              <p>{t(ShowcaseStrings.YN_IntroNoCampaign)}</p>
             </div>
             <p className="intro-challenge">
-              🗳️ Used for Brexit, Scottish independence, and constitutional
-              changes worldwide.
+              {t(ShowcaseStrings.YN_IntroChallenge)}
             </p>
           </div>
           <button
             onClick={() => setShowIntro(false)}
             className="start-election-btn"
           >
-            🗳️ Vote Now!
+            {t(ShowcaseStrings.YN_StartBtn)}
           </button>
         </div>
       </div>
@@ -150,21 +143,21 @@ export const YesNoDemo = () => {
   return (
     <div className="voting-demo">
       <div className="demo-header">
-        <h3>👍 Yes/No Referendum - 4-Day Work Week</h3>
-        <p className="election-tagline">
-          🗳️ One question. Two choices. Democracy decides.
-        </p>
+        <h3>{t(ShowcaseStrings.YN_DemoTitle)}</h3>
+        <p className="election-tagline">{t(ShowcaseStrings.YN_DemoTagline)}</p>
       </div>
 
       {!results ? (
         <>
           <div className="referendum-question">
-            <h4>Should we adopt a 4-day work week?</h4>
+            <h4>{t(ShowcaseStrings.YN_ReferendumQuestion)}</h4>
           </div>
 
           <div className="voters-section">
             <h4>
-              Citizens Voting ({votes.size}/{voters.length} voted)
+              {t(ShowcaseStrings.YN_CitizensVotingTemplate)
+                .replace('{VOTED}', String(votes.size))
+                .replace('{TOTAL}', String(voters.length))}
             </h4>
             <div className="voters-grid">
               {voters.map((voter) => (
@@ -172,7 +165,9 @@ export const YesNoDemo = () => {
                   <strong>{voter}</strong>
                   {votes.has(voter) ? (
                     <div className="vote-cast">
-                      ✓ Voted {votes.get(voter) === 0 ? '👍 YES' : '👎 NO'}
+                      {votes.get(voter) === 0
+                        ? t(ShowcaseStrings.YN_VotedYes)
+                        : t(ShowcaseStrings.YN_VotedNo)}
                     </div>
                   ) : (
                     <div className="yesno-buttons">
@@ -180,13 +175,13 @@ export const YesNoDemo = () => {
                         onClick={() => castVote(voter, 0)}
                         className="vote-btn yes-btn"
                       >
-                        👍 YES
+                        {t(ShowcaseStrings.YN_BtnYes)}
                       </button>
                       <button
                         onClick={() => castVote(voter, 1)}
                         className="vote-btn no-btn"
                       >
-                        👎 NO
+                        {t(ShowcaseStrings.YN_BtnNo)}
                       </button>
                     </div>
                   )}
@@ -201,48 +196,63 @@ export const YesNoDemo = () => {
               className="tally-btn"
               disabled={isTallying}
             >
-              {isTallying ? '🔓 Decrypting votes...' : '📊 Count the Votes!'}
+              {isTallying
+                ? t(ShowcaseStrings.Vote_DecryptingVotes)
+                : t(ShowcaseStrings.YN_TallyBtn)}
             </button>
           )}
         </>
       ) : (
         <div className="results-section">
-          <h4>🎉 Referendum Results!</h4>
+          <h4>{t(ShowcaseStrings.YN_ResultsTitle)}</h4>
           <div className="yesno-results">
             <div
               className={`yesno-result ${results.winner === 0 ? 'winner' : ''}`}
             >
               <span className="yesno-emoji">👍</span>
-              <h3>YES</h3>
-              <p className="yesno-count">{Number(results.tallies[0])} votes</p>
-              <p className="yesno-percent">
-                {((Number(results.tallies[0]) / votes.size) * 100).toFixed(1)}%
+              <h3>{t(ShowcaseStrings.YN_LabelYes)}</h3>
+              <p className="yesno-count">
+                {t(ShowcaseStrings.Vote_VotesTemplate)
+                  .replace('{COUNT}', String(Number(results.tallies[0])))
+                  .replace(
+                    '{PERCENT}',
+                    ((Number(results.tallies[0]) / votes.size) * 100).toFixed(
+                      1,
+                    ),
+                  )}
               </p>
             </div>
             <div
               className={`yesno-result ${results.winner === 1 ? 'winner' : ''}`}
             >
               <span className="yesno-emoji">👎</span>
-              <h3>NO</h3>
-              <p className="yesno-count">{Number(results.tallies[1])} votes</p>
-              <p className="yesno-percent">
-                {((Number(results.tallies[1]) / votes.size) * 100).toFixed(1)}%
+              <h3>{t(ShowcaseStrings.YN_LabelNo)}</h3>
+              <p className="yesno-count">
+                {t(ShowcaseStrings.Vote_VotesTemplate)
+                  .replace('{COUNT}', String(Number(results.tallies[1])))
+                  .replace(
+                    '{PERCENT}',
+                    ((Number(results.tallies[1]) / votes.size) * 100).toFixed(
+                      1,
+                    ),
+                  )}
               </p>
             </div>
           </div>
           <div className="referendum-outcome">
             <h3>
-              {results.winner === 0 ? '✅ Motion PASSES!' : '❌ Motion FAILS!'}
+              {results.winner === 0
+                ? t(ShowcaseStrings.YN_MotionPasses)
+                : t(ShowcaseStrings.YN_MotionFails)}
             </h3>
             <p>
-              The people have spoken:{' '}
               {results.winner === 0
-                ? 'We adopt the 4-day work week!'
-                : 'We keep the 5-day work week.'}
+                ? t(ShowcaseStrings.YN_OutcomePass)
+                : t(ShowcaseStrings.YN_OutcomeFail)}
             </p>
           </div>
           <button onClick={reset} className="reset-btn">
-            New Referendum
+            {t(ShowcaseStrings.YN_ResetBtn)}
           </button>
         </div>
       )}

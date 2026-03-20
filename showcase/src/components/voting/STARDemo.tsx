@@ -8,10 +8,13 @@ import {
 } from '@digitaldefiance/ecies-lib';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState } from 'react';
+import { useShowcaseI18n } from '../../i18n/ShowcaseI18nContext';
+import { ShowcaseStrings } from '../../i18n/showcaseStrings';
 import { LoadingSpinner } from './LoadingSpinner';
 import { useVotingDemo } from './useVotingDemo';
 
 export const STARDemo = () => {
+  const { t } = useShowcaseI18n();
   const { isInitializing, setIsInitializing, isTallying, withTallying } =
     useVotingDemo();
   const [_poll, setPoll] = useState<Poll<Uint8Array> | null>(null);
@@ -40,10 +43,26 @@ export const STARDemo = () => {
   const [showIntro, setShowIntro] = useState(true);
 
   const candidates = [
-    { name: 'Alex Rivera', emoji: '🎨', platform: 'Arts & Culture' },
-    { name: 'Jordan Lee', emoji: '🌱', platform: 'Environment' },
-    { name: 'Sam Taylor', emoji: '💼', platform: 'Economy' },
-    { name: 'Casey Morgan', emoji: '🏥', platform: 'Healthcare' },
+    {
+      name: 'Alex Rivera',
+      emoji: '🎨',
+      platform: t(ShowcaseStrings.STAR_Cand1_Platform),
+    },
+    {
+      name: 'Jordan Lee',
+      emoji: '🌱',
+      platform: t(ShowcaseStrings.STAR_Cand2_Platform),
+    },
+    {
+      name: 'Sam Taylor',
+      emoji: '💼',
+      platform: t(ShowcaseStrings.STAR_Cand3_Platform),
+    },
+    {
+      name: 'Casey Morgan',
+      emoji: '🏥',
+      platform: t(ShowcaseStrings.STAR_Cand4_Platform),
+    },
   ];
 
   useEffect(() => {
@@ -84,7 +103,6 @@ export const STARDemo = () => {
 
   const runSTAR = () =>
     withTallying(async () => {
-      // Step 1: Score phase - find top 2 by total score
       const scores = candidates.map((_, idx) => {
         const totalScore = Array.from(votes.values()).reduce(
           (sum, voterScores) => sum + voterScores[idx],
@@ -95,7 +113,6 @@ export const STARDemo = () => {
       scores.sort((a, b) => b.totalScore - a.totalScore);
       setScoreResults(scores);
 
-      // Step 2: Automatic Runoff - count head-to-head preferences
       const top1 = scores[0].idx;
       const top2 = scores[1].idx;
       let top1Wins = 0;
@@ -104,7 +121,6 @@ export const STARDemo = () => {
       Array.from(votes.values()).forEach((voterScores) => {
         if (voterScores[top1] > voterScores[top2]) top1Wins++;
         else if (voterScores[top2] > voterScores[top1]) top2Wins++;
-        // Ties don't count for either
       });
 
       setRunoffResults({
@@ -132,7 +148,7 @@ export const STARDemo = () => {
 
   if (isInitializing)
     return (
-      <LoadingSpinner message="Initializing cryptographic voting system..." />
+      <LoadingSpinner message={t(ShowcaseStrings.Vote_InitializingCrypto)} />
     );
 
   if (showIntro) {
@@ -141,40 +157,35 @@ export const STARDemo = () => {
         <div className="election-intro">
           <div className="intro-header">
             <span className="intro-emoji">⭐🔄</span>
-            <h3>STAR Voting - Best of Both Worlds!</h3>
+            <h3>{t(ShowcaseStrings.STAR_IntroTitle)}</h3>
           </div>
           <div className="intro-story">
             <p>
-              🌟 <strong>STAR = Score Then Automatic Runoff</strong>
+              <strong>{t(ShowcaseStrings.STAR_IntroAcronym)}</strong>
             </p>
             <p>
-              ⭐ <strong>Step 1:</strong> Score all candidates 0-5 stars (like
-              rating movies!)
+              <strong>{t(ShowcaseStrings.STAR_IntroStep1)}</strong>
             </p>
             <p>
-              🔄 <strong>Step 2:</strong> Top 2 by total score go to automatic
-              runoff. Your scores determine your preference!
+              <strong>{t(ShowcaseStrings.STAR_IntroStep2)}</strong>
             </p>
             <div className="intro-stakes">
               <p>
-                🎯 <strong>The Magic:</strong> You can give high scores to
-                multiple candidates, but the runoff ensures majority support
+                <strong>{t(ShowcaseStrings.STAR_IntroMagic)}</strong>
               </p>
               <p>
-                💡 <strong>Example:</strong> You rate Alex=5, Jordan=4, Sam=2,
-                Casey=1. If Alex & Jordan are top 2, your vote goes to Alex!
+                <strong>{t(ShowcaseStrings.STAR_IntroExample)}</strong>
               </p>
             </div>
             <p className="intro-challenge">
-              ⚠️ Combines score voting's expressiveness with runoff's majority
-              requirement!
+              {t(ShowcaseStrings.STAR_IntroChallenge)}
             </p>
           </div>
           <button
             onClick={() => setShowIntro(false)}
             className="start-election-btn"
           >
-            ⭐ Start Rating!
+            {t(ShowcaseStrings.STAR_StartBtn)}
           </button>
         </div>
       </div>
@@ -187,14 +198,16 @@ export const STARDemo = () => {
   return (
     <div className="voting-demo">
       <div className="demo-header">
-        <h3>⭐🔄 STAR Voting - City Council</h3>
-        <p className="election-tagline">⭐ Score, then automatic runoff!</p>
+        <h3>{t(ShowcaseStrings.STAR_DemoTitle)}</h3>
+        <p className="election-tagline">
+          {t(ShowcaseStrings.STAR_DemoTagline)}
+        </p>
       </div>
 
       {!scoreResults && (
         <>
           <div className="candidates-section">
-            <h4>Candidates</h4>
+            <h4>{t(ShowcaseStrings.STAR_CandidatesTitle)}</h4>
             <div className="candidates-grid">
               {candidates.map((c, idx) => (
                 <div key={idx} className="candidate-card">
@@ -208,7 +221,12 @@ export const STARDemo = () => {
 
           {!hasVoted && (
             <div className="score-voting-section">
-              <h4>⭐ {voters[currentVoter]}'s Ratings (0-5 stars)</h4>
+              <h4>
+                {t(ShowcaseStrings.STAR_RatingsTemplate).replace(
+                  '{VOTER}',
+                  voters[currentVoter],
+                )}
+              </h4>
               {candidates.map((c, idx) => (
                 <div key={idx} className="score-slider">
                   <div className="score-header">
@@ -234,7 +252,9 @@ export const STARDemo = () => {
                 </div>
               ))}
               <button onClick={submitScores} className="submit-vote-btn">
-                Submit Ratings ({currentVoter + 1}/{voters.length})
+                {t(ShowcaseStrings.STAR_SubmitRatingsTemplate)
+                  .replace('{CURRENT}', String(currentVoter + 1))
+                  .replace('{TOTAL}', String(voters.length))}
               </button>
             </div>
           )}
@@ -246,8 +266,8 @@ export const STARDemo = () => {
               disabled={isTallying}
             >
               {isTallying
-                ? '🔓 Decrypting votes...'
-                : '⭐🔄 Run STAR Algorithm!'}
+                ? t(ShowcaseStrings.Vote_DecryptingVotes)
+                : t(ShowcaseStrings.STAR_RunSTAR)}
             </button>
           )}
         </>
@@ -255,12 +275,12 @@ export const STARDemo = () => {
 
       {scoreResults && !runoffResults && (
         <div className="star-phase">
-          <h4>⭐ Phase 1: Score Totals</h4>
+          <h4>{t(ShowcaseStrings.STAR_Phase1Title)}</h4>
 
           <div className="tally-visualization">
-            <h5>📊 Adding Up All Scores</h5>
+            <h5>{t(ShowcaseStrings.STAR_Phase1TallyTitle)}</h5>
             <p className="tally-explain">
-              Finding top 2 candidates by total score...
+              {t(ShowcaseStrings.STAR_Phase1TallyExplain)}
             </p>
           </div>
 
@@ -276,8 +296,9 @@ export const STARDemo = () => {
                     {candidates[result.idx].emoji} {candidates[result.idx].name}
                   </span>
                   <span>
-                    {result.totalScore} points ({result.avgScore.toFixed(2)}{' '}
-                    avg)
+                    {t(ShowcaseStrings.STAR_PointsTemplate)
+                      .replace('{TOTAL}', String(result.totalScore))
+                      .replace('{AVG}', result.avgScore.toFixed(2))}
                   </span>
                 </div>
                 <div className="progress-bar">
@@ -288,17 +309,20 @@ export const STARDemo = () => {
                     }}
                   />
                 </div>
-                {isTopTwo && <span className="badge">→ Runoff</span>}
+                {isTopTwo && (
+                  <span className="badge">
+                    {t(ShowcaseStrings.STAR_RunoffBadge)}
+                  </span>
+                )}
               </div>
             );
           })}
 
           <div className="star-transition">
-            <h3>🔄 Automatic Runoff Phase</h3>
-            <p>Top 2 advance! Now checking head-to-head preferences...</p>
+            <h3>{t(ShowcaseStrings.STAR_AutoRunoffPhase)}</h3>
+            <p>{t(ShowcaseStrings.STAR_TopTwoAdvance)}</p>
             <button
               onClick={() => {
-                // Trigger runoff calculation
                 const top1 = scoreResults[0].idx;
                 const top2 = scoreResults[1].idx;
                 let top1Wins = 0;
@@ -318,7 +342,7 @@ export const STARDemo = () => {
               }}
               className="tally-btn"
             >
-              ▶️ Run Automatic Runoff!
+              {t(ShowcaseStrings.STAR_RunAutoRunoff)}
             </button>
           </div>
         </div>
@@ -326,13 +350,14 @@ export const STARDemo = () => {
 
       {runoffResults && scoreResults && (
         <div className="results-section">
-          <h4>🎉 STAR Winner!</h4>
+          <h4>{t(ShowcaseStrings.STAR_WinnerTitle)}</h4>
 
           <div className="tally-visualization">
-            <h5>🔄 Phase 2: Automatic Runoff</h5>
+            <h5>{t(ShowcaseStrings.STAR_Phase2Title)}</h5>
             <p className="tally-explain">
-              Comparing {candidates[scoreResults[0].idx].name} vs{' '}
-              {candidates[scoreResults[1].idx].name} using voter preferences:
+              {t(ShowcaseStrings.STAR_Phase2ExplainTemplate)
+                .replace('{NAME1}', candidates[scoreResults[0].idx].name)
+                .replace('{NAME2}', candidates[scoreResults[1].idx].name)}
             </p>
           </div>
 
@@ -348,10 +373,10 @@ export const STARDemo = () => {
                 {runoffResults.winner === scoreResults[0].idx
                   ? runoffResults.winnerVotes
                   : runoffResults.loserVotes}{' '}
-                voters preferred
+                {t(ShowcaseStrings.STAR_VotersPreferred)}
               </p>
             </div>
-            <div className="vs-divider">VS</div>
+            <div className="vs-divider">{t(ShowcaseStrings.STAR_VS)}</div>
             <div
               className={`runoff-candidate ${runoffResults.winner === scoreResults[1].idx ? 'winner' : ''}`}
             >
@@ -363,21 +388,27 @@ export const STARDemo = () => {
                 {runoffResults.winner === scoreResults[1].idx
                   ? runoffResults.winnerVotes
                   : runoffResults.loserVotes}{' '}
-                voters preferred
+                {t(ShowcaseStrings.STAR_VotersPreferred)}
               </p>
             </div>
           </div>
 
           <div className="winner-announcement">
-            <h2>🏆 {candidates[runoffResults.winner].name} Wins!</h2>
+            <h2>
+              {t(ShowcaseStrings.STAR_WinnerAnnouncementTemplate).replace(
+                '{NAME}',
+                candidates[runoffResults.winner].name,
+              )}
+            </h2>
             <p>
-              Won the automatic runoff {runoffResults.winnerVotes} to{' '}
-              {runoffResults.loserVotes}
+              {t(ShowcaseStrings.STAR_WonRunoffTemplate)
+                .replace('{WINNER}', String(runoffResults.winnerVotes))
+                .replace('{LOSER}', String(runoffResults.loserVotes))}
             </p>
           </div>
 
           <button onClick={reset} className="reset-btn">
-            New Election
+            {t(ShowcaseStrings.STAR_NewElection)}
           </button>
         </div>
       )}
