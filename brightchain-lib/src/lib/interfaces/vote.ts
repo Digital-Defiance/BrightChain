@@ -1,7 +1,7 @@
 /**
  * @fileoverview Vote and VoteInput interfaces.
  *
- * Defines the structure of quorum votes and their input format.
+ * Defines the structure of BrightTrust votes and their input format.
  *
  * @see Requirements 6, 7
  */
@@ -9,7 +9,7 @@
 import { PlatformID } from '@digitaldefiance/ecies-lib';
 
 /**
- * A quorum member's response to a Proposal.
+ * A BrightTrust member's response to a Proposal.
  * @template TID - Platform ID type for frontend/backend DTO compatibility
  */
 export interface Vote<TID extends PlatformID = Uint8Array> {

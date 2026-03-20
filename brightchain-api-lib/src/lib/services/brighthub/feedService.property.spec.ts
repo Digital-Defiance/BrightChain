@@ -151,7 +151,9 @@ function postRecordArb(
     quoteCount: 0,
     isEdited: false,
     hubIds: options?.hubIds,
-    isBlogPost: (options?.postType ?? PostType.Original) !== PostType.Reply && (options?.postType ?? PostType.Original) !== PostType.Repost,
+    isBlogPost:
+      (options?.postType ?? PostType.Original) !== PostType.Reply &&
+      (options?.postType ?? PostType.Original) !== PostType.Repost,
     isDeleted: options?.isDeleted ?? false,
     createdAt,
     updatedAt: createdAt,
@@ -225,7 +227,7 @@ function hubMemberRecord(hubId: string, userId: string): HubMemberRecord {
   };
 }
 
-function temporaryMuteRecord(
+function _temporaryMuteRecord(
   userId: string,
   connectionId: string,
   expiresInMs = 3600000,
@@ -269,7 +271,7 @@ describe('Feature: brighthub-social-network, Feed_Service Property Tests', () =>
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let hubMembersCollection: MockCollection<any>;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let temporaryMutesCollection: MockCollection<any>;
+  let _temporaryMutesCollection: MockCollection<any>;
 
   beforeEach(() => {
     mockApp = createMockApplication();
@@ -284,7 +286,7 @@ describe('Feature: brighthub-social-network, Feed_Service Property Tests', () =>
       'brighthub_connection_metadata',
     );
     hubMembersCollection = mockApp.getModel('brighthub_hub_members');
-    temporaryMutesCollection = mockApp.getModel('brighthub_temporary_mutes');
+    _temporaryMutesCollection = mockApp.getModel('brighthub_temporary_mutes');
     service = createFeedService(mockApp);
     postCounter = 0;
   });

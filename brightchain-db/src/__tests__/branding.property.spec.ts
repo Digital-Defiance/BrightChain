@@ -85,7 +85,7 @@ describe('Property 1: No prose deprecated DB symbol in documentation files', () 
         // The prose must NOT contain the deprecated symbol
         if (prose.includes(_deprecatedDbSymbol)) {
           // Provide a helpful failure message showing where it was found
-          const lines = content.split('\n');
+          const _lines = content.split('\n');
           const proseLines = extractProse(content).split('\n');
           const offendingLines: string[] = [];
           for (let i = 0; i < proseLines.length; i++) {

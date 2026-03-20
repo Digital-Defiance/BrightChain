@@ -4,6 +4,7 @@ import {
   Application,
   json,
   NextFunction,
+  raw,
   Request,
   Response,
   urlencoded,
@@ -81,14 +82,20 @@ export class Middlewares {
               'https://*.brightchain.org',
               'https://ka-p.fontawesome.com',
             ],
+            // Nonce-based CSP without 'strict-dynamic'.
+            // Vite emits type="module" scripts whose static imports are
+            // blocked by 'strict-dynamic' in Chromium (it only propagates
+            // trust via document.createElement, not the ES module graph).
+            // Using nonce + 'self' allows the nonce-bearing entry script
+            // AND its same-origin module imports to execute correctly.
             scriptSrc: [
               "'self'",
-              //"'unsafe-inline'",
-              "'strict-dynamic'",
+              "'unsafe-inline'",
               'https://kit.fontawesome.com',
               (req: IncomingMessage, res: ServerResponse) =>
                 `'nonce-${(res as Response).locals['cspNonce']}'`,
               `'sha256-6PKsc2tce3h07DOGUTGAjjPqKvoXMqTLynuHAwpWTL4='`, // fontawesome
+              "'wasm-unsafe-eval'", // required for bzip2 WASM module
             ],
             styleSrc: [
               "'self'",
@@ -108,6 +115,8 @@ export class Middlewares {
     );
     // Enable CORS
     app.use(cors(Middlewares.corsOptionsDelegate));
+    // Parse incoming requests with raw binary payloads (e.g. file upload chunks)
+    app.use(raw({ type: 'application/octet-stream', limit: '50mb' }));
     // Parse incoming requests with JSON payloads
     app.use(json());
     // Parse incoming requests with urlencoded payloads

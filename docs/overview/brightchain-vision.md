@@ -36,7 +36,7 @@ Identity should not be a permission granted by a state or a social media giant.
 Pure anonymity leads to a "Wild West" of bad actors; pure identity leads to state surveillance.
 
 - **The Vision:** A social contract enforced by code, not kings.
-- **The Reality:** BrightChain implements **Brokered Anonymity**. Users are anonymous by default, but through **Shamir’s Secret Sharing**, a community Quorum can reconstruct an identity if—and only if—a fundamental social contract is breached.
+- **The Reality:** BrightChain implements **Brokered Anonymity**. Users are anonymous by default, but through **Shamir’s Secret Sharing**, a community BrightTrust can reconstruct an identity if—and only if—a fundamental social contract is breached.
 - **The Benefit:** Privacy for the individual, accountability for the community.
 
 ### 4. The BrightStack (The Developer’s Exit Ramp)

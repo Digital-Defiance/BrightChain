@@ -128,7 +128,7 @@ describe('PooledStoreAdapter CBL Whitening Delegation', () => {
 
       try {
         await adapterA.retrieveCBL(fakeBlockId, result.blockId2);
-        fail('Expected StoreError to be thrown');
+        throw new Error('Expected StoreError to be thrown');
       } catch (error) {
         expect(error).toBeInstanceOf(StoreError);
         const storeErr = error as InstanceType<typeof StoreError>;
@@ -145,7 +145,7 @@ describe('PooledStoreAdapter CBL Whitening Delegation', () => {
 
       try {
         await adapterA.retrieveCBL(result.blockId1, fakeBlockId);
-        fail('Expected StoreError to be thrown');
+        throw new Error('Expected StoreError to be thrown');
       } catch (error) {
         expect(error).toBeInstanceOf(StoreError);
         const storeErr = error as InstanceType<typeof StoreError>;
@@ -161,7 +161,7 @@ describe('PooledStoreAdapter CBL Whitening Delegation', () => {
 
       try {
         await adapterA.retrieveCBL(fakeId1, fakeId2);
-        fail('Expected StoreError to be thrown');
+        throw new Error('Expected StoreError to be thrown');
       } catch (error) {
         expect(error).toBeInstanceOf(StoreError);
         const storeErr = error as InstanceType<typeof StoreError>;
@@ -179,7 +179,7 @@ describe('PooledStoreAdapter CBL Whitening Delegation', () => {
       try {
         // Blocks exist in poolA but adapterB looks in poolB
         await adapterB.retrieveCBL(result.blockId1, result.blockId2);
-        fail('Expected StoreError to be thrown');
+        throw new Error('Expected StoreError to be thrown');
       } catch (error) {
         expect(error).toBeInstanceOf(StoreError);
         const storeErr = error as InstanceType<typeof StoreError>;

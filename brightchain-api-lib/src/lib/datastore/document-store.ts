@@ -1,10 +1,10 @@
 // Re-export all document-store types from @brightchain/node-express-suite
 export type {
+  DocumentCollection,
   DocumentId,
   DocumentRecord,
-  QueryResultType,
-  QueryResult,
-  QueryBuilder,
-  DocumentCollection,
   DocumentStore,
+  QueryBuilder,
+  QueryResult,
+  QueryResultType,
 } from '@brightchain/node-express-suite';

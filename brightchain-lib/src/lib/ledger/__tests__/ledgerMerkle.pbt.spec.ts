@@ -7,8 +7,8 @@
  * @see Design: Merkle Tree Commitment Layer — Correctness Properties
  */
 
-import * as fc from 'fast-check';
 import { SignatureUint8Array } from '@digitaldefiance/ecies-lib';
+import * as fc from 'fast-check';
 import { BlockSize } from '../../enumerations/blockSize';
 import { ILedgerSigner } from '../../interfaces/ledger/ledgerSigner';
 import { ChecksumService } from '../../services/checksum.service';

@@ -1,7 +1,7 @@
 /**
  * @fileoverview AuditLogEntry interface.
  *
- * Defines the structure of audit log entries for all auditable quorum events.
+ * Defines the structure of audit log entries for all auditable BrightTrust events.
  *
  * @see Requirements 13.6, 13.7
  */
@@ -9,7 +9,7 @@
 import { PlatformID } from '@digitaldefiance/ecies-lib';
 
 /**
- * Union of all auditable event types in the quorum system.
+ * Union of all auditable event types in the BrightTrust system.
  */
 export type AuditEventType =
   | 'identity_disclosure_proposed'
@@ -37,10 +37,10 @@ export type AuditEventType =
   | 'share_redistribution_failed';
 
 /**
- * An entry in the quorum audit log.
+ * An entry in the BrightTrust audit log.
  * @template TID - Platform ID type for frontend/backend DTO compatibility
  */
-export interface QuorumAuditLogEntry<TID extends PlatformID = Uint8Array> {
+export interface BrightTrustAuditLogEntry<TID extends PlatformID = Uint8Array> {
   /** Unique entry identifier */
   id: TID;
   /** The type of auditable event */

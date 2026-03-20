@@ -21,14 +21,14 @@ const walkthroughsDir = '/Volumes/Code/BrightChain/docs/walkthroughs';
 // ...existing code from original file, but with updated walkthroughsDir path...
 
 /** All .md files on disk (excluding _template.md) */
-function getWalkthroughFiles(): string[] {
+function _getWalkthroughFiles(): string[] {
   return fs
     .readdirSync(walkthroughsDir)
     .filter((f) => f.endsWith('.md') && f !== '_template.md');
 }
 
 /** Parse index.md and extract every referenced .md filename */
-function getIndexReferencedFiles(): string[] {
+function _getIndexReferencedFiles(): string[] {
   const indexContent = fs.readFileSync(
     path.join(walkthroughsDir, 'index.md'),
     'utf-8',
@@ -44,7 +44,7 @@ function getIndexReferencedFiles(): string[] {
 }
 
 /** Read a walkthrough file */
-function readGuide(filename: string): string {
+function _readGuide(filename: string): string {
   return fs.readFileSync(path.join(walkthroughsDir, filename), 'utf-8');
 }
 
@@ -53,12 +53,12 @@ function readGuide(filename: string): string {
  * Handles ``` and ~~~ fences.
  */
 
-function stripCodeBlocks(md: string): string {
+function _stripCodeBlocks(md: string): string {
   // ...original code...
   return md.replace(/^(```|~~~)[\s\S]*?^\1/gm, '');
 }
 
-function extractCodeBlocks(md: string): string[] {
+function _extractCodeBlocks(md: string): string[] {
   const blocks: string[] = [];
   const pattern = /^(```|~~~).*?\n([\s\S]*?)^\1/gm;
   for (const match of md.matchAll(pattern)) {

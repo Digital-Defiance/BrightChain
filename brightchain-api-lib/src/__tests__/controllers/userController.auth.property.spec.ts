@@ -243,7 +243,11 @@ describe('UserController Auth Property-Based Tests', () => {
               // because the request never reaches protected logic.
               expect([400, 401]).toContain(result.statusCode);
             } catch (err) {
-              expect(err).toBeInstanceOf(HandleableError);
+              // Use name check instead of instanceof to avoid duplicate-module issues
+              expect(err).toBeDefined();
+              expect((err as HandleableError).constructor.name).toBe(
+                'HandleableError',
+              );
               expect((err as HandleableError).statusCode).toBe(401);
             }
           }),
@@ -291,7 +295,11 @@ describe('UserController Auth Property-Based Tests', () => {
               // changePassword may return 400 for validation before auth
               expect([400, 401]).toContain(result.statusCode);
             } catch (err) {
-              expect(err).toBeInstanceOf(HandleableError);
+              // Use name check instead of instanceof to avoid duplicate-module issues
+              expect(err).toBeDefined();
+              expect((err as HandleableError).constructor.name).toBe(
+                'HandleableError',
+              );
               expect((err as HandleableError).statusCode).toBe(401);
             }
           },

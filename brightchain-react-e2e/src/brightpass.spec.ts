@@ -238,6 +238,10 @@ test.describe('BrightPass Password Generation', () => {
 // ─── Property-Based Tests ───────────────────────────────────────────────────
 
 test.describe('BrightPass Property Tests', () => {
+  // Run property tests serially to avoid concurrent in-memory state corruption
+  // in the BrightPass service (uses in-memory Map stores).
+  test.describe.configure({ mode: 'serial' });
+
   // Property tests make many HTTP round-trips per iteration; use generous timeouts
   // and a reasonable number of runs for e2e context.
 

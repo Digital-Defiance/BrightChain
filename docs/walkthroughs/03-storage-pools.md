@@ -168,7 +168,7 @@ Key management features:
 
 - **Key rotation** — the pool maintains a version history of keys so older blocks remain decryptable after rotation
 - **Per-member key distribution** — when a new member joins, the pool key is encrypted specifically for their public key
-- **Quorum approval** — ACL changes require signatures from a majority of admin members
+- **BrightTrust approval** — ACL changes require signatures from a majority of admin members
 
 ### Step 4: Connect to an Encrypted Pool on Another Node
 
@@ -229,7 +229,7 @@ const updatedAcl = {
   updatedAt: new Date(),
 };
 
-// Multi-admin pools require quorum approval (>50% of admins must sign)
+// Multi-admin pools require BrightTrust approval (>50% of admins must sign)
 ```
 
 #### Receive the Pool Key

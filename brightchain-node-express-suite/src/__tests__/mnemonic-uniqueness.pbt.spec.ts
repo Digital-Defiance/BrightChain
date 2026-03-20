@@ -10,15 +10,18 @@
  * **Validates: Requirements 3.2**
  */
 
-import * as fc from 'fast-check';
-import { createHmac } from 'crypto';
+import type {
+  EnergyAccountStore,
+  MemberStore,
+} from '@brightchain/brightchain-lib';
 import {
-  SecureString,
   Constants as BaseConstants,
+  SecureString,
 } from '@digitaldefiance/ecies-lib';
-import { BrightDbAuthService } from '../lib/services/auth';
+import { createHmac } from 'crypto';
+import * as fc from 'fast-check';
 import type { IBrightDbApplication } from '../lib/interfaces/bright-db-application';
-import type { MemberStore, EnergyAccountStore } from '@brightchain/brightchain-lib';
+import { BrightDbAuthService } from '../lib/services/auth';
 
 // ─── Constants ──────────────────────────────────────────────────────────────
 
@@ -45,7 +48,6 @@ const validMnemonicArb = fc
 
 // ─── Mock Helpers ───────────────────────────────────────────────────────────
 
-
 /**
  * Build a mock QueryBuilder that resolves to the given value.
  * Matches the DocumentCollection.findOne return type (thenable + exec).
@@ -60,8 +62,16 @@ function mockQueryBuilder<T>(resolvedValue: T | null) {
   ) => Promise.resolve(resolvedValue).then(onFulfilled, onRejected);
   // Chain methods return self
   for (const method of [
-    'select', 'populate', 'sort', 'limit', 'skip',
-    'lean', 'collation', 'session', 'where', 'distinct',
+    'select',
+    'populate',
+    'sort',
+    'limit',
+    'skip',
+    'lean',
+    'collation',
+    'session',
+    'where',
+    'distinct',
   ]) {
     builder[method] = jest.fn().mockReturnValue(builder);
   }
@@ -86,9 +96,15 @@ function buildMockApplication(
     findByIdAndUpdate: jest.fn().mockReturnValue(mockQueryBuilder(null)),
     findByIdAndDelete: jest.fn().mockReturnValue(mockQueryBuilder(null)),
     insertMany: jest.fn().mockResolvedValue([]),
-    updateOne: jest.fn().mockResolvedValue({ modifiedCount: 0, matchedCount: 0 }),
-    updateMany: jest.fn().mockResolvedValue({ modifiedCount: 0, matchedCount: 0 }),
-    replaceOne: jest.fn().mockResolvedValue({ modifiedCount: 0, matchedCount: 0 }),
+    updateOne: jest
+      .fn()
+      .mockResolvedValue({ modifiedCount: 0, matchedCount: 0 }),
+    updateMany: jest
+      .fn()
+      .mockResolvedValue({ modifiedCount: 0, matchedCount: 0 }),
+    replaceOne: jest
+      .fn()
+      .mockResolvedValue({ modifiedCount: 0, matchedCount: 0 }),
     deleteOne: jest.fn().mockResolvedValue({ deletedCount: 0 }),
     deleteMany: jest.fn().mockResolvedValue({ deletedCount: 0 }),
     countDocuments: jest.fn().mockResolvedValue(0),
@@ -185,7 +201,9 @@ describe('Property 5: Uniqueness collision detection', () => {
             new SecureString('Passw0rd!'),
             new SecureString(mnemonic),
           ),
-        ).rejects.toThrow(/validation_mnemonicInUse|mnemonic is already in use/i);
+        ).rejects.toThrow(
+          /validation_mnemonicInUse|mnemonic is already in use/i,
+        );
       }),
       { numRuns: 100 },
     );

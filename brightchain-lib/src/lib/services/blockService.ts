@@ -704,9 +704,9 @@ export class BlockService<TID extends PlatformID = Uint8Array> {
     data.set(blockIdsArray, header.headerData.length);
 
     if (createECBL) {
-      return new ExtendedCBL(data, creator);
+      return new ExtendedCBL(data, creator, blockSize);
     }
-    return new ConstituentBlockListBlock<TID>(data, creator);
+    return new ConstituentBlockListBlock<TID>(data, creator, blockSize);
   }
 
   /**
@@ -761,7 +761,7 @@ export class BlockService<TID extends PlatformID = Uint8Array> {
     data.set(blockIdsArray, header.headerData.length);
     // Remaining bytes are already zero-filled
 
-    return new ConstituentBlockListBlock<TID>(data, creator);
+    return new ConstituentBlockListBlock<TID>(data, creator, BlockSize.Message);
   }
 
   /**

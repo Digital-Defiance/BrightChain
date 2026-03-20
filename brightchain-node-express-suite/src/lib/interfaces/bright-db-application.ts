@@ -12,9 +12,9 @@
 import type { PlatformID } from '@digitaldefiance/node-ecies-lib';
 import type { IApplication } from '@digitaldefiance/node-express-suite';
 import type {
-  DocumentStore,
   DocumentCollection,
   DocumentRecord,
+  DocumentStore,
 } from '../datastore/document-store';
 import type { BrightDbEnvironment } from '../environment';
 
@@ -29,9 +29,8 @@ import type { BrightDbEnvironment } from '../environment';
  *
  * Non-BrightDB applications should use the base IApplication.
  */
-export interface IBrightDbApplication<
-  TID extends PlatformID = Buffer,
-> extends IApplication<TID> {
+export interface IBrightDbApplication<TID extends PlatformID = Buffer>
+  extends IApplication<TID> {
   /** The BrightDB-backed document store */
   readonly db: DocumentStore;
   /** Retrieve a BrightDB collection by name */

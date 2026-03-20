@@ -169,7 +169,7 @@ describe('ACLEnforcedReconciliation', () => {
 
     try {
       await recon.verifyReconciliationPermission(POOL, PEER_NODE);
-      fail('Expected PermissionDeniedError');
+      throw new Error('Expected PermissionDeniedError');
     } catch (err) {
       expect(err).toBeInstanceOf(PermissionDeniedError);
       const pde = err as PermissionDeniedError;
@@ -192,7 +192,7 @@ describe('ACLEnforcedReconciliation', () => {
 
     try {
       await recon.verifyReconciliationPermission(POOL, PEER_NODE);
-      fail('Expected PermissionDeniedError');
+      throw new Error('Expected PermissionDeniedError');
     } catch (err) {
       expect(err).toBeInstanceOf(PermissionDeniedError);
       const pde = err as PermissionDeniedError;
@@ -214,7 +214,7 @@ describe('ACLEnforcedReconciliation', () => {
 
     try {
       await recon.verifyReconciliationPermission(POOL, 'stranger');
-      fail('Expected PermissionDeniedError');
+      throw new Error('Expected PermissionDeniedError');
     } catch (err) {
       expect(err).toBeInstanceOf(PermissionDeniedError);
       const pde = err as PermissionDeniedError;
@@ -282,7 +282,7 @@ describe('ACLEnforcedDiscovery', () => {
 
     try {
       await discovery.verifyDiscoveryPermission(POOL, 'node-q');
-      fail('Expected PermissionDeniedError');
+      throw new Error('Expected PermissionDeniedError');
     } catch (err) {
       expect(err).toBeInstanceOf(PermissionDeniedError);
       const pde = err as PermissionDeniedError;
@@ -304,7 +304,7 @@ describe('ACLEnforcedDiscovery', () => {
 
     try {
       await discovery.verifyDiscoveryPermission(POOL, 'stranger');
-      fail('Expected PermissionDeniedError');
+      throw new Error('Expected PermissionDeniedError');
     } catch (err) {
       expect(err).toBeInstanceOf(PermissionDeniedError);
       const pde = err as PermissionDeniedError;
@@ -324,7 +324,7 @@ describe('ACLEnforcedDiscovery', () => {
 
     try {
       await discovery.verifyDiscoveryPermission(POOL, 'node-q');
-      fail('Expected PermissionDeniedError');
+      throw new Error('Expected PermissionDeniedError');
     } catch (err) {
       const pde = err as PermissionDeniedError;
       expect(pde.message).toContain(POOL);

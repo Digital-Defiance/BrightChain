@@ -122,7 +122,12 @@ export class IncrementalMerkleTree {
   getInclusionProof(leafIndex: number): IMerkleProof {
     const n = this._size;
 
-    if (n === 0 || leafIndex < 0 || leafIndex >= n || leafIndex >= this.leaves.length) {
+    if (
+      n === 0 ||
+      leafIndex < 0 ||
+      leafIndex >= n ||
+      leafIndex >= this.leaves.length
+    ) {
       throw new LedgerError(
         LedgerErrorType.MerkleProofFailed,
         `Leaf index ${leafIndex} is out of range [0, ${n})`,
@@ -305,7 +310,12 @@ export class IncrementalMerkleTree {
 
     if (m <= k) {
       // The old tree fits entirely in the left subtree
-      this.buildConsistencyProof(m, leaves.slice(0, k), startFromOldRoot, hashes);
+      this.buildConsistencyProof(
+        m,
+        leaves.slice(0, k),
+        startFromOldRoot,
+        hashes,
+      );
       // Include the right subtree hash
       hashes.push(this.computeSubtreeHash(leaves.slice(k)));
     } else {

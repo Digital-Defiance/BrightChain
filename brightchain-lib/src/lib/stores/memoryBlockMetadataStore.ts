@@ -161,6 +161,14 @@ export class MemoryBlockMetadataStore implements IBlockMetadataStore {
   }
 
   /**
+   * Get all metadata entries for iteration (e.g., admin dashboard stats).
+   * Returns a read-only iterator over all stored metadata records.
+   */
+  public values(): IterableIterator<IBlockMetadata> {
+    return this.metadata.values();
+  }
+
+  /**
    * Check if metadata exists for a block.
    * @param blockId - The unique identifier of the block
    * @returns True if metadata exists

@@ -97,7 +97,7 @@ export class BrightHubTimelineController<
     this.routeDefinitions = [
       routeConfig('get', '/timeline/home', {
         handlerKey: 'getHomeTimeline',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Get home timeline',
@@ -114,7 +114,7 @@ export class BrightHubTimelineController<
       }),
       routeConfig('get', '/timeline/public', {
         handlerKey: 'getPublicTimeline',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Get public timeline',
@@ -129,7 +129,7 @@ export class BrightHubTimelineController<
       }),
       routeConfig('get', '/users/:id', {
         handlerKey: 'getUserProfile',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Get user profile',
@@ -145,7 +145,7 @@ export class BrightHubTimelineController<
       }),
       routeConfig('put', '/users/:id', {
         handlerKey: 'updateUserProfile',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Update user profile',
@@ -160,7 +160,7 @@ export class BrightHubTimelineController<
       }),
       routeConfig('get', '/users/:id/feed', {
         handlerKey: 'getUserFeed',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: "Get a user's post feed",
@@ -175,7 +175,7 @@ export class BrightHubTimelineController<
       }),
       routeConfig('post', '/users/:id/follow', {
         handlerKey: 'followUser',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Follow a user',
@@ -190,7 +190,7 @@ export class BrightHubTimelineController<
       }),
       routeConfig('delete', '/users/:id/follow', {
         handlerKey: 'unfollowUser',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Unfollow a user',
@@ -202,7 +202,7 @@ export class BrightHubTimelineController<
       }),
       routeConfig('post', '/users/:id/block', {
         handlerKey: 'blockUser',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Block a user',
@@ -214,7 +214,7 @@ export class BrightHubTimelineController<
       }),
       routeConfig('delete', '/users/:id/block', {
         handlerKey: 'unblockUser',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Unblock a user',
@@ -226,7 +226,7 @@ export class BrightHubTimelineController<
       }),
       routeConfig('get', '/search', {
         handlerKey: 'search',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Search posts and users',
@@ -238,7 +238,7 @@ export class BrightHubTimelineController<
       }),
       routeConfig('get', '/hashtag/:tag', {
         handlerKey: 'getHashtagFeed',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Get posts by hashtag',
@@ -375,12 +375,21 @@ export class BrightHubTimelineController<
       const typedReq = req as {
         query: Record<string, string | undefined>;
         params: { id: string };
+        user?: { id?: string; username?: string };
       };
       const requesterId = typedReq.query['requesterId'];
+
+      // Only pass usernameHint when the authenticated user is viewing
+      // their own profile, so auto-created profiles get the correct username.
+      const isSelf = typedReq.user?.id === id;
+      const usernameHint = isSelf
+        ? (typedReq.user?.username ?? typedReq.query['usernameHint'])
+        : undefined;
 
       const profile = await this.getUserProfileService().getProfile(
         id,
         requesterId,
+        usernameHint,
       );
 
       return {
@@ -460,9 +469,12 @@ export class BrightHubTimelineController<
   ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> {
     try {
       const { id } = (req as { params: { id: string } }).params;
-      const { userId } = (
-        req as { body: { userId: string }; params: { id: string } }
-      ).body;
+      const typedReq = req as {
+        body: { userId?: string };
+        params: { id: string };
+        user?: { id?: string };
+      };
+      const userId = typedReq.body.userId ?? typedReq.user?.id;
       if (!id) return validationError('Missing required parameter: id');
       if (!userId) return validationError('Missing required field: userId');
 
@@ -486,9 +498,12 @@ export class BrightHubTimelineController<
   ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> {
     try {
       const { id } = (req as { params: { id: string } }).params;
-      const { userId } = (
-        req as { body: { userId: string }; params: { id: string } }
-      ).body;
+      const typedReq = req as {
+        body: { userId?: string };
+        params: { id: string };
+        user?: { id?: string };
+      };
+      const userId = typedReq.body.userId ?? typedReq.user?.id;
       if (!id) return validationError('Missing required parameter: id');
       if (!userId) return validationError('Missing required field: userId');
 
@@ -557,12 +572,13 @@ export class BrightHubTimelineController<
   ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> {
     try {
       const { id } = (req as { params: { id: string } }).params;
-      const { followerId, message } = (
-        req as {
-          body: { followerId: string; message?: string };
-          params: { id: string };
-        }
-      ).body;
+      const typedReq = req as {
+        body: { followerId?: string; message?: string };
+        params: { id: string };
+        user?: { id?: string };
+      };
+      const followerId = typedReq.body.followerId;
+      const message = typedReq.body.message;
 
       if (!id) return validationError('Missing required parameter: id');
       if (!followerId)
@@ -600,9 +616,12 @@ export class BrightHubTimelineController<
   ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> {
     try {
       const { id } = (req as { params: { id: string } }).params;
-      const { followerId } = (
-        req as { body: { followerId: string }; params: { id: string } }
-      ).body;
+      const typedReq = req as {
+        body: { followerId?: string };
+        params: { id: string };
+        user?: { id?: string };
+      };
+      const followerId = typedReq.body.followerId;
 
       if (!id) return validationError('Missing required parameter: id');
       if (!followerId)
@@ -633,8 +652,28 @@ export class BrightHubTimelineController<
       const query = typedReq.query['q'];
       if (!query) return validationError('Missing required query parameter: q');
 
-      const options = this.parseTimelineOptions(typedReq.query);
+      const searchType = typedReq.query['type'];
       const requestingUserId = typedReq.query['userId'];
+
+      // User search
+      if (searchType === 'users') {
+        const result = await this.getUserProfileService().searchUsers(query, {
+          limit: 20,
+        });
+        return {
+          statusCode: 200,
+          response: {
+            message: 'OK',
+            data: {
+              users: result.items,
+              posts: [],
+              hasMore: result.hasMore,
+            },
+          } as ITimelineApiResponse & { data: { users: unknown[] } },
+        };
+      }
+
+      const options = this.parseTimelineOptions(typedReq.query);
 
       // Search by hashtag if query starts with #
       const result = query.startsWith('#')

@@ -1,5 +1,6 @@
 // db barrel – types & utilities first, building blocks, then higher-level components
 export * from './aggregation';
+export * from './brightdb';
 export * from './collection';
 export * from './cursor';
 export * from './errors';

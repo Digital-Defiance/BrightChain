@@ -19,15 +19,15 @@ import {
   uint8ArrayToHex,
 } from '@digitaldefiance/ecies-lib';
 import * as fc from 'fast-check';
-import { QuorumErrorType } from '../enumerations/quorumErrorType';
-import { QuorumOperationalMode } from '../enumerations/quorumOperationalMode';
-import { QuorumError } from '../errors/quorumError';
+import { BrightTrustErrorType } from '../enumerations/brightTrustErrorType';
+import { BrightTrustOperationalMode } from '../enumerations/brightTrustOperationalMode';
+import { BrightTrustError } from '../errors/brightTrustError';
 import { initializeBrightChain } from '../init';
 import { AliasRecord } from '../interfaces/aliasRecord';
+import { BrightTrustEpoch } from '../interfaces/brightTrustEpoch';
 import { IdentityRecoveryRecord } from '../interfaces/identityRecoveryRecord';
-import { QuorumEpoch } from '../interfaces/quorumEpoch';
-import { IQuorumDatabase } from '../interfaces/services/quorumDatabase';
-import { IQuorumMember } from '../interfaces/services/quorumService';
+import { IBrightTrustDatabase } from '../interfaces/services/brightTrustDatabase';
+import { IBrightTrustMember } from '../interfaces/services/brightTrustService';
 import { AliasRegistry } from './aliasRegistry';
 import { IdentitySealingPipeline } from './identitySealingPipeline';
 import { SealingService } from './sealing.service';
@@ -36,7 +36,7 @@ import { ServiceProvider } from './service.provider';
 jest.setTimeout(120000);
 
 /**
- * Creates a mock IQuorumDatabase that tracks aliases and identity records
+ * Creates a mock IBrightTrustDatabase that tracks aliases and identity records
  * in memory, with proper uniqueness checking for alias names.
  */
 function createMockDatabase(
@@ -44,14 +44,17 @@ function createMockDatabase(
   enhancedProvider: ReturnType<
     typeof ServiceProvider.getInstance<GuidV4Uint8Array>
   >['idProvider'],
-): IQuorumDatabase<GuidV4Uint8Array> {
+): IBrightTrustDatabase<GuidV4Uint8Array> {
   const aliases = new Map<string, AliasRecord<GuidV4Uint8Array>>();
   const identityRecords = new Map<
     HexString,
     IdentityRecoveryRecord<GuidV4Uint8Array>
   >();
 
-  const memberLookup = new Map<HexString, IQuorumMember<GuidV4Uint8Array>>();
+  const memberLookup = new Map<
+    HexString,
+    IBrightTrustMember<GuidV4Uint8Array>
+  >();
   for (const m of memberPool) {
     const memberId = uint8ArrayToHex(
       enhancedProvider.toBytes(m.member.id),
@@ -176,19 +179,19 @@ describe('AliasRegistry Property-Based Tests', () => {
   function createEpoch(
     memberCount: number,
     threshold: number,
-  ): QuorumEpoch<GuidV4Uint8Array> {
+  ): BrightTrustEpoch<GuidV4Uint8Array> {
     return {
       epochNumber: 1,
       memberIds: memberPool.slice(0, memberCount).map((m) => m.member.id),
       threshold,
-      mode: QuorumOperationalMode.Quorum,
+      mode: BrightTrustOperationalMode.BrightTrust,
       createdAt: new Date(),
     };
   }
 
   function createRegistry(
-    db: IQuorumDatabase<GuidV4Uint8Array>,
-    epoch: QuorumEpoch<GuidV4Uint8Array>,
+    db: IBrightTrustDatabase<GuidV4Uint8Array>,
+    epoch: BrightTrustEpoch<GuidV4Uint8Array>,
   ): AliasRegistry<GuidV4Uint8Array> {
     const pipeline = new IdentitySealingPipeline<GuidV4Uint8Array>(
       db,
@@ -260,9 +263,9 @@ describe('AliasRegistry Property-Based Tests', () => {
               // If we reach here, the test should fail
               expect(true).toBe(false);
             } catch (error) {
-              expect(error).toBeInstanceOf(QuorumError);
-              expect((error as QuorumError).type).toBe(
-                QuorumErrorType.AliasAlreadyTaken,
+              expect(error).toBeInstanceOf(BrightTrustError);
+              expect((error as BrightTrustError).type).toBe(
+                BrightTrustErrorType.AliasAlreadyTaken,
               );
             }
           },

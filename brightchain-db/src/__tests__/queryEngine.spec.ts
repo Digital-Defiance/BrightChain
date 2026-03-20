@@ -39,6 +39,41 @@ describe('queryEngine', () => {
       expect(deepEquals(d, new Date('2024-01-01'))).toBe(true);
       expect(deepEquals(d, new Date('2024-01-02'))).toBe(false);
     });
+
+    it('should handle Uint8Array with identical bytes', () => {
+      const a = new Uint8Array([1, 2, 3, 4]);
+      const b = new Uint8Array([1, 2, 3, 4]);
+      expect(deepEquals(a, b)).toBe(true);
+    });
+
+    it('should handle Uint8Array with different bytes', () => {
+      const a = new Uint8Array([1, 2, 3, 4]);
+      const b = new Uint8Array([1, 2, 3, 5]);
+      expect(deepEquals(a, b)).toBe(false);
+    });
+
+    it('should handle Uint8Array with different lengths', () => {
+      const a = new Uint8Array([1, 2, 3]);
+      const b = new Uint8Array([1, 2, 3, 4]);
+      expect(deepEquals(a, b)).toBe(false);
+    });
+
+    it('should handle Buffer with identical bytes', () => {
+      const a = Buffer.from([0xde, 0xad, 0xbe, 0xef]);
+      const b = Buffer.from([0xde, 0xad, 0xbe, 0xef]);
+      expect(deepEquals(a, b)).toBe(true);
+    });
+
+    it('should handle Buffer with different bytes', () => {
+      const a = Buffer.from([0xde, 0xad, 0xbe, 0xef]);
+      const b = Buffer.from([0xca, 0xfe, 0xba, 0xbe]);
+      expect(deepEquals(a, b)).toBe(false);
+    });
+
+    it('should handle same Uint8Array instance', () => {
+      const a = new Uint8Array([1, 2, 3]);
+      expect(deepEquals(a, a)).toBe(true);
+    });
   });
 
   // ── compareValues ──
@@ -187,6 +222,53 @@ describe('queryEngine', () => {
     it('should match $not operator', () => {
       expect(matchesFilter(doc, { age: { $not: { $gt: 40 } } })).toBe(true);
       expect(matchesFilter(doc, { age: { $not: { $lt: 40 } } })).toBe(false);
+    });
+
+    it('should match Uint8Array _id fields', () => {
+      const id = new Uint8Array([0xde, 0xad, 0xbe, 0xef]);
+      const docWithBinaryId = {
+        _id: id,
+        name: 'Test',
+      } as unknown as BsonDocument;
+
+      // Same instance
+      expect(
+        matchesFilter(docWithBinaryId, {
+          _id: id,
+        } as FilterQuery<BsonDocument>),
+      ).toBe(true);
+
+      // Different instance, same bytes
+      const idCopy = new Uint8Array([0xde, 0xad, 0xbe, 0xef]);
+      expect(
+        matchesFilter(docWithBinaryId, {
+          _id: idCopy,
+        } as FilterQuery<BsonDocument>),
+      ).toBe(true);
+
+      // Different bytes
+      const differentId = new Uint8Array([0xca, 0xfe, 0xba, 0xbe]);
+      expect(
+        matchesFilter(docWithBinaryId, {
+          _id: differentId,
+        } as FilterQuery<BsonDocument>),
+      ).toBe(false);
+    });
+
+    it('should match Buffer _id fields', () => {
+      const id = Buffer.from([0x01, 0x02, 0x03, 0x04]);
+      const docWithBufferId = {
+        _id: id,
+        name: 'Test',
+      } as unknown as BsonDocument;
+
+      // Different instance, same bytes
+      const idCopy = Buffer.from([0x01, 0x02, 0x03, 0x04]);
+      expect(
+        matchesFilter(docWithBufferId, {
+          _id: idCopy,
+        } as FilterQuery<BsonDocument>),
+      ).toBe(true);
     });
   });
 

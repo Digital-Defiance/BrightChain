@@ -8,7 +8,7 @@ describe('BrightDbDatabasePlugin', () => {
     blockStoreType: 'disk',
     memberPoolName: 'test',
     getObject: () => ({}),
-  } as any;
+  } as unknown as ConstructorParameters<typeof BrightDbDatabasePlugin>[0];
 
   it('isConnected() returns false before connect', () => {
     const plugin = new BrightDbDatabasePlugin(mockEnv);
@@ -38,7 +38,9 @@ describe('BrightDbDatabasePlugin', () => {
 
 describe('BrightDbAuthenticationProvider', () => {
   it('verifyToken returns null for invalid token', async () => {
-    const mockDb = {} as any;
+    const mockDb = {} as unknown as ConstructorParameters<
+      typeof BrightDbAuthenticationProvider
+    >[0];
     const provider = new BrightDbAuthenticationProvider(mockDb, 'test-secret');
     const result = await provider.verifyToken('invalid-token');
     expect(result).toBeNull();

@@ -7,7 +7,7 @@ nav_order: 3
 
 ## 1. Abstract
 
-BrightChain is a decentralized application platform and the foundation of BrightStack — a full-stack paradigm for building decentralized applications using BrightChain, Express, React, and Node.js. At its heart is a concept introduced by The Owner Free File System which breaks a file up into source blocks and merges them with blocks of random data using an "exclusive or" operation and discards the source blocks. Added on top of that, we introduce identity/anonymity, voting, reputation, block revocation and expiration, and a confidential quorum. What the Owner Free Filesystem called "whitening", we call "Brightening" and where BrightChain gets its name.
+BrightChain is a decentralized application platform and the foundation of BrightStack — a full-stack paradigm for building decentralized applications using BrightChain, Express, React, and Node.js. At its heart is a concept introduced by The Owner Free File System which breaks a file up into source blocks and merges them with blocks of random data using an "exclusive or" operation and discards the source blocks. Added on top of that, we introduce identity/anonymity, voting, reputation, block revocation and expiration, and a confidential BrightTrust. What the Owner Free Filesystem called "whitening", we call "Brightening" and where BrightChain gets its name.
 
 What sets BrightChain apart from other decentralized platforms is BrightDB — a MongoDB-like document database built on top of the Owner-Free Filesystem. BrightDB gives developers a familiar API (`db.collection('users').findOne(...)`) while storing every document as privacy-preserving whitened blocks. This means any developer who has built a MERN-stack app can build a decentralized app with BrightStack, swapping MongoDB for BrightDB and gaining decentralization, privacy, and censorship resistance with minimal code changes.
 
@@ -49,9 +49,9 @@ It is not the goal of BrightChain to store every block forever, but to allow it 
 
 Proof of Work is used as a transaction validating throttle and good actors in the network have near-zero requirement while bad actors have their values temporarily or permanently bumped high by algorithms and essentially force them to work too hard to participate in the network.
 
-The last piece is the identity aspect of BrightChain. Forward Error Correction is used in a unique manner to generate enough error correction data to require a fixed percentage majority reassembling of the shards in order to be able to recover the meaningful data containing the identity of the original poster before the blocks with the data expire out- a digital statute of limitations. Shamir's Secret Sharing is a form of Forward Error Correction and is employed in the Quorum aspect of BrightChain.
+The last piece is the identity aspect of BrightChain. Forward Error Correction is used in a unique manner to generate enough error correction data to require a fixed percentage majority reassembling of the shards in order to be able to recover the meaningful data containing the identity of the original poster before the blocks with the data expire out- a digital statute of limitations. Shamir's Secret Sharing is a form of Forward Error Correction and is employed in the BrightTrust aspect of BrightChain.
 
-FEC is generated against the true identity, and either a registered alias ID or anonymous ID (all zeroes) is selected and replaces the original ID. The receiving node validates the FEC recovers the original ID and that the user is allowed to store the given block or perform anonymous actions before splitting the shards and giving them to a quorum that is the non-profit, multi-entity governing body of BrightChain. The FEC data is stored in the BrightChain and the corresponding handle-blocks are stored in the private vaults of the Shard-Holders. The original identity data expires out of the network normally if nothing happens. Otherwise the quorum must be requested to assemble the shards and agree to do so according to the bylaws, to be determined.
+FEC is generated against the true identity, and either a registered alias ID or anonymous ID (all zeroes) is selected and replaces the original ID. The receiving node validates the FEC recovers the original ID and that the user is allowed to store the given block or perform anonymous actions before splitting the shards and giving them to a BrightTrust that is the non-profit, multi-entity governing body of BrightChain. The FEC data is stored in the BrightChain and the corresponding handle-blocks are stored in the private vaults of the Shard-Holders. The original identity data expires out of the network normally if nothing happens. Otherwise the BrightTrust must be requested to assemble the shards and agree to do so according to the bylaws, to be determined.
 
 ## 4. Current State
 
@@ -65,7 +65,7 @@ BrightChain has evolved from a storage-layer project into a full dApp platform. 
 
 - **Identity Management**: Full member system with BIP39/32 mnemonic key derivation, SECP256k1 elliptic curve cryptography, public/private key pairs, and member document storage in CBLs.
 
-- **Quorum Governance**: Complete implementation using Shamir's Secret Sharing for document sealing/unsealing. Supports 2 to 1,048,575 members with configurable threshold requirements for secret reconstruction. Features bootstrap mode for single-node startup with automatic transition ceremony to full quorum mode, gossip-based proposal/voting with physical operator authentication, share redistribution on membership changes (new Shamir polynomial invalidates old shares), brokered anonymity pipeline (identity sealing, alias registry, ring signature membership proofs), immutable chained audit log (SHA-3 hash chain with ECIES signatures stored via CBL whitening), hierarchical quorum support (inner quorum for routine operations when members exceed 20), epoch-based state machine with versioned membership snapshots, pool-isolated quorum database via BrightDB, expiration scheduler for statute of limitations with per-content-type durations, and identity validator for content ingestion across real, alias, and anonymous modes. Validated by 18 property-based correctness tests (P1-P18).
+- **BrightTrust Governance**: Complete implementation using Shamir's Secret Sharing for document sealing/unsealing. Supports 2 to 1,048,575 members with configurable threshold requirements for secret reconstruction. Features bootstrap mode for single-node startup with automatic transition ceremony to full BrightTrust mode, gossip-based proposal/voting with physical operator authentication, share redistribution on membership changes (new Shamir polynomial invalidates old shares), brokered anonymity pipeline (identity sealing, alias registry, ring signature membership proofs), immutable chained audit log (SHA-3 hash chain with ECIES signatures stored via CBL whitening), hierarchical BrightTrust support (inner BrightTrust for routine operations when members exceed 20), epoch-based state machine with versioned membership snapshots, pool-isolated BrightTrust database via BrightDB, expiration scheduler for statute of limitations with per-content-type durations, and identity validator for content ingestion across real, alias, and anonymous modes. Validated by 18 property-based correctness tests (P1-P18).
 
 - **Homomorphic Voting System**: Paillier homomorphic encryption with novel ECDH-to-Paillier key bridge enabling privacy-preserving vote tallying. Features 128-bit security, Miller-Rabin primality testing (256 rounds), cross-platform determinism, and 15+ voting methods (Plurality, Approval, Weighted, Borda, Score, Ranked Choice, IRV, STAR, STV, Quadratic, Consensus, etc.). Includes government compliance features: immutable audit logs, public bulletin board, verifiable receipts, and hierarchical aggregation.
 
@@ -83,7 +83,7 @@ BrightChain has evolved from a storage-layer project into a full dApp platform. 
 
 - **Block Store**: Content-addressed storage using SHA3-512 checksums, automatic deduplication, block metadata tracking, and replication status management.
 
-- **Storage Pools**: Lightweight namespace-based pool isolation for block storage, with pool-scoped whitening ensuring XOR components stay within the same pool. Pools support ECDSA node authentication, signed ACLs with quorum-based updates, three encryption modes (none, node-specific, pool-shared), and cross-node coordination via gossip, reconciliation, and discovery protocols with configurable read concerns (Local, Available, Consistent).
+- **Storage Pools**: Lightweight namespace-based pool isolation for block storage, with pool-scoped whitening ensuring XOR components stay within the same pool. Pools support ECDSA node authentication, signed ACLs with BrightTrust-based updates, three encryption modes (none, node-specific, pool-shared), and cross-node coordination via gossip, reconciliation, and discovery protocols with configurable read concerns (Local, Available, Consistent).
 
 - **Comprehensive Testing**: Extensive unit tests, integration tests, property-based tests (3,700+ iterations across 37 test files), and error handling tests across all components.
 
@@ -102,7 +102,7 @@ BrightChain has evolved from a storage-layer project into a full dApp platform. 
 - **Completion of the Owner Free Filesystem**: The core concept of breaking files into source blocks and merging them with random data has been successfully implemented with "Brightening" (whitening) operations.
 - **Super CBL System**: Hierarchical storage architecture supporting unlimited file sizes through recursive sub-CBLs, exceeding the original OFF System capabilities.
 - **Complete Identity System**: Member management with BIP39/32 key derivation, SECP256k1 cryptography, and document storage.
-- **Quorum Governance**: Full Shamir's Secret Sharing implementation enabling "Brokered Anonymity" - anonymous operations with accountability through quorum consensus. Now includes bootstrap mode, gossip-based proposal/voting, share redistribution, identity sealing pipeline, alias registry, ring signature membership proofs, immutable chained audit log, and hierarchical quorum support.
+- **BrightTrust Governance**: Full Shamir's Secret Sharing implementation enabling "Brokered Anonymity" - anonymous operations with accountability through BrightTrust consensus. Now includes bootstrap mode, gossip-based proposal/voting, share redistribution, identity sealing pipeline, alias registry, ring signature membership proofs, immutable chained audit log, and hierarchical BrightTrust support.
 - **Homomorphic Voting**: Novel ECDH-to-Paillier bridge enabling privacy-preserving elections with 128-bit security.
 - **Messaging Infrastructure**: Complete encrypted messaging system with routing, delivery tracking, and WebSocket transport.
 - **Complete Cryptosystem**: ECIES + AES-256-GCM + Paillier homomorphic encryption with unified key derivation.
@@ -126,10 +126,10 @@ BrightChain successfully achieves its "government in a box" vision with:
 
 ✅ **Identity System** - Secure, decentralized identity management  
 ✅ **Voting System** - Privacy-preserving democratic elections  
-✅ **Governance Framework** - Quorum-based decision making  
+✅ **Governance Framework** - BrightTrust-based decision making  
 ✅ **File Sharing** - Secure, decentralized storage  
 ✅ **Communication** - Encrypted messaging infrastructure  
-✅ **Accountability with Privacy** - Brokered Anonymity via quorum  
+✅ **Accountability with Privacy** - Brokered Anonymity via BrightTrust  
 ✅ **Legal Compliance** - Temporal identity recovery mechanism
 
 See [OFF System Comparison Analysis](./off-system-comparison) for detailed comparison.
@@ -150,7 +150,7 @@ The system currently supports:
 - Secure file storage and sharing with privacy guarantees
 - Decentralized identity management
 - Privacy-preserving democratic voting
-- Quorum-based governance with configurable thresholds
+- BrightTrust-based governance with configurable thresholds
 - Encrypted messaging and communication
 - Accountability mechanisms with temporal privacy protection
 - A MongoDB-like document database for rapid dApp development
@@ -211,7 +211,7 @@ BrightChain has evolved into a comprehensive platform for building decentralized
 - Owner-Free Filesystem with plausible deniability
 - Super CBL for unlimited file sizes
 - BIP39/32 identity with SECP256k1 cryptography
-- Brokered anonymity via quorum consensus
+- Brokered anonymity via BrightTrust consensus
 - Storage pools for namespace-isolated block storage
 - Pool-scoped whitening (XOR components confined to the same pool)
 - Cross-node pool coordination via gossip, reconciliation, and discovery
@@ -248,8 +248,8 @@ BrightChain has evolved into a comprehensive platform for building decentralized
   - Government compliance: Audit logs, bulletin board, receipts
   - Hierarchical aggregation for large-scale elections
 
-- **Quorum Governance**: Shamir's Secret Sharing for collective decisions
-  - Bootstrap mode for single-node startup with transition ceremony to full quorum
+- **BrightTrust Governance**: Shamir's Secret Sharing for collective decisions
+  - Bootstrap mode for single-node startup with transition ceremony to full BrightTrust
   - Gossip-based proposal/voting with physical operator authentication
   - Share redistribution on membership changes (old shares cryptographically invalidated)
   - Configurable thresholds (2 to 1,048,575 members)
@@ -257,7 +257,7 @@ BrightChain has evolved into a comprehensive platform for building decentralized
   - Temporal expiration for statute of limitations
   - Brokered anonymity pipeline with identity sealing, alias registry, and ring signature membership proofs
   - Immutable chained audit log with tamper detection
-  - Hierarchical quorum for scalability (inner quorum for routine ops)
+  - Hierarchical BrightTrust for scalability (inner BrightTrust for routine ops)
   - Epoch-based state machine with versioned membership snapshots
 
 ### Unified Integration
@@ -284,7 +284,7 @@ All systems share:
 - Anonymous posting (brokered anonymity)
 - End-to-end encryption (all communications)
 - Plausibly deniable storage (Owner-Free FS)
-- Quorum-based moderation
+- BrightTrust-based moderation
 
 **Democratic Governance**:
 
@@ -311,7 +311,7 @@ All systems share:
 
 BrightChain powers The Revolution Network—an incentive-driven ecosystem designed to bring out the best in collaborators. The platform provides:
 
-- **True Anonymity with Accountability**: Brokered anonymity via quorum
+- **True Anonymity with Accountability**: Brokered anonymity via BrightTrust
 - **Democratic Moderation**: Community governance with configurable thresholds
 - **Privacy by Design**: Owner-Free Filesystem with plausible deniability
 - **Secure Communication**: Signal-grade encryption everywhere

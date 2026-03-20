@@ -30,6 +30,7 @@ import { BlockSize } from '../enumerations/blockSize';
 import { BlockType } from '../enumerations/blockType';
 import { LedgerError, LedgerErrorType } from '../errors/ledgerError';
 import { IAuthorizedSigner } from '../interfaces/ledger/authorizedSigner';
+import { IBrightTrustPolicy } from '../interfaces/ledger/brightTrustPolicy';
 import { IConsistencyProof } from '../interfaces/ledger/consistencyProof';
 import { IGovernanceAction } from '../interfaces/ledger/governanceAction';
 import { ILedgerEntry } from '../interfaces/ledger/ledgerEntry';
@@ -39,7 +40,6 @@ import {
   MerkleDirection,
 } from '../interfaces/ledger/merkleProof';
 import { IProofVerificationResult } from '../interfaces/ledger/proofVerificationResult';
-import { IQuorumPolicy } from '../interfaces/ledger/quorumPolicy';
 import { IBlockStore } from '../interfaces/storage/blockStore';
 import { ChecksumService } from '../services/checksum.service';
 import { Checksum } from '../types/checksum';
@@ -136,8 +136,8 @@ export class Ledger {
   }
 
   /** Current quorum policy, or undefined if governance not initialized. */
-  get quorumPolicy(): IQuorumPolicy | undefined {
-    return this._authorizedSignerSet?.quorumPolicy;
+  get brightTrustPolicy(): IBrightTrustPolicy | undefined {
+    return this._authorizedSignerSet?.brightTrustPolicy;
   }
 
   /**
@@ -425,7 +425,7 @@ export class Ledger {
     // Initialize the authorized signer set
     this._authorizedSignerSet = new AuthorizedSignerSet(
       parsed.genesis.signers as IAuthorizedSigner[],
-      parsed.genesis.quorumPolicy,
+      parsed.genesis.brightTrustPolicy,
     );
 
     // Verify the signer is in the initial set and authorized
@@ -977,7 +977,7 @@ export class Ledger {
           if (parsed.genesis) {
             this._authorizedSignerSet = new AuthorizedSignerSet(
               parsed.genesis.signers as IAuthorizedSigner[],
-              parsed.genesis.quorumPolicy,
+              parsed.genesis.brightTrustPolicy,
             );
           }
         }

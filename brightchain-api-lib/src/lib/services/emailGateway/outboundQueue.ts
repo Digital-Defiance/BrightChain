@@ -228,7 +228,10 @@ export class OutboundQueue implements IOutboundQueue {
     } catch {
       // Handler failed — check if the item is eligible for retry.
       const nextRetryCount = item.retryCount + 1;
-      const retryCandidate = { retryCount: nextRetryCount, enqueuedAt: item.enqueuedAt };
+      const retryCandidate = {
+        retryCount: nextRetryCount,
+        enqueuedAt: item.enqueuedAt,
+      };
 
       if (shouldRetry(retryCandidate, this.config)) {
         // Eligible for retry — requeue with back-off delay.

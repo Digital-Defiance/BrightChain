@@ -21,7 +21,7 @@ BrightChain uses a two-tier identity model. Understanding which tier you're oper
 | BrightPass / BrightMail | No | Yes |
 | Energy account (Joules) | No | Yes |
 | Content authorship with identity | No | Yes |
-| Quorum eligibility | No | Yes |
+| BrightTrust eligibility | No | Yes |
 
 Most of this guide applies equally to both tiers. Sections that are member-only are marked.
 
@@ -205,7 +205,7 @@ console.log('Replication factor:', stats.replicationFactor);
 Your node automatically participates in gossip:
 - Receives and forwards block announcements
 - Receives and forwards pool announcements
-- Receives ban list updates (signed by the quorum)
+- Receives ban list updates (signed by the BrightTrust)
 - Propagates peer discovery information
 
 You don't need to configure anything — gossip participation is automatic.
@@ -244,7 +244,7 @@ After registration:
 - Your `PeerRecord.isMember` flag becomes `true`
 - A `Member` record is created in the BrightChain member DB
 - You gain access to BrightPass, BrightMail, energy account, and content authorship
-- You become eligible for quorum membership proposals
+- You become eligible for BrightTrust membership proposals
 - Your peer ID and member ID are the same — no identity change
 
 ## Graceful Shutdown
@@ -318,6 +318,6 @@ The network will prioritize replicating all your blocks before your node goes of
 ## Next Steps
 
 - [How to Join BrightChain](./01-how-to-join-brightchain.md) — Overview of all participation levels
-- [Quorum Member/Operator Guide](./03-quorum-member-guide.md) — If you're interested in governance
+- [BrightTrust Member/Operator Guide](./03-BrightTrust-member-guide.md) — If you're interested in governance
 - [Storage Pools](../walkthroughs/03-storage-pools) — Deep dive into pool management
 - [Building a dApp](../walkthroughs/05-building-a-dapp) — Build applications on BrightStack

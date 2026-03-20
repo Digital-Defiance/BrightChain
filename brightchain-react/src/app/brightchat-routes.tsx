@@ -42,9 +42,18 @@ export const BrightChatRoutes: React.FC = () => {
             <Route index element={<ConversationListView />} />
             <Route path="groups" element={<GroupListView />} />
             <Route path="channels" element={<ChannelListView />} />
-            <Route path="conversation/:conversationId" element={<MessageThreadView contextType="conversation" />} />
-            <Route path="group/:groupId" element={<MessageThreadView contextType="group" />} />
-            <Route path="channel/:channelId" element={<MessageThreadView contextType="channel" />} />
+            <Route
+              path="conversation/:conversationId"
+              element={<MessageThreadView contextType="conversation" />}
+            />
+            <Route
+              path="group/:groupId"
+              element={<MessageThreadView contextType="group" />}
+            />
+            <Route
+              path="channel/:channelId"
+              element={<MessageThreadView contextType="channel" />}
+            />
           </Route>
         </Routes>
       </Suspense>

@@ -104,14 +104,14 @@ export class WalletController<
   // ─── Route definitions ──────────────────────────────────────────────────
 
   protected initRouteDefinitions(): void {
-    const noAuth = {
-      useAuthentication: false,
+    const auth = {
+      useAuthentication: true,
       useCryptoAuthentication: false,
     };
 
     this.routeDefinitions = [
       routeConfig('post', '/derive-address', {
-        ...noAuth,
+        ...auth,
         handlerKey: 'deriveAddress',
         openapi: {
           summary: 'Derive an Ethereum address',
@@ -131,7 +131,7 @@ export class WalletController<
         },
       }),
       routeConfig('post', '/sign-message', {
-        ...noAuth,
+        ...auth,
         handlerKey: 'signMessage',
         openapi: {
           summary: 'Sign a message',
@@ -151,7 +151,7 @@ export class WalletController<
         },
       }),
       routeConfig('post', '/verify-signature', {
-        ...noAuth,
+        ...auth,
         handlerKey: 'verifySignature',
         openapi: {
           summary: 'Verify a message signature',
@@ -171,7 +171,7 @@ export class WalletController<
         },
       }),
       routeConfig('get', '/address', {
-        ...noAuth,
+        ...auth,
         handlerKey: 'getWallet',
         openapi: {
           summary: 'Get wallet address',

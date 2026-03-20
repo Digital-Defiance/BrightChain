@@ -28,8 +28,8 @@ import {
   IdentityMode,
 } from '../interfaces/contentWithIdentity';
 import { IdentityRecoveryRecord } from '../interfaces/identityRecoveryRecord';
-import { IQuorumDatabase } from '../interfaces/services/quorumDatabase';
-import { IQuorumMember } from '../interfaces/services/quorumService';
+import { IBrightTrustDatabase } from '../interfaces/services/brightTrustDatabase';
+import { IBrightTrustMember } from '../interfaces/services/brightTrustService';
 import { ANONYMOUS_ID } from './identitySealingPipeline';
 import { IdentityValidator } from './identityValidator';
 import { MembershipProofService } from './membershipProofService';
@@ -53,10 +53,10 @@ function computeContentDigest(
  * Create a mock database with configurable member lookup, aliases, and identity records.
  */
 function createMockDatabase(opts: {
-  members?: Map<HexString, IQuorumMember<GuidV4Uint8Array>>;
+  members?: Map<HexString, IBrightTrustMember<GuidV4Uint8Array>>;
   aliases?: Map<string, AliasRecord<GuidV4Uint8Array>>;
   identityRecords?: Map<HexString, IdentityRecoveryRecord<GuidV4Uint8Array>>;
-}): IQuorumDatabase<GuidV4Uint8Array> {
+}): IBrightTrustDatabase<GuidV4Uint8Array> {
   const members = opts.members ?? new Map();
   const aliases = opts.aliases ?? new Map();
   const identityRecords = opts.identityRecords ?? new Map();
@@ -142,9 +142,9 @@ describe('IdentityValidator Unit Tests', () => {
   /** Helper: create a member lookup map from pool indices */
   function buildMemberLookup(
     indices: number[],
-    overrides?: Partial<IQuorumMember<GuidV4Uint8Array>>,
-  ): Map<HexString, IQuorumMember<GuidV4Uint8Array>> {
-    const map = new Map<HexString, IQuorumMember<GuidV4Uint8Array>>();
+    overrides?: Partial<IBrightTrustMember<GuidV4Uint8Array>>,
+  ): Map<HexString, IBrightTrustMember<GuidV4Uint8Array>> {
+    const map = new Map<HexString, IBrightTrustMember<GuidV4Uint8Array>>();
     for (const idx of indices) {
       const m = memberPool[idx].member;
       const hex = uint8ArrayToHex(idProvider.toBytes(m.id)) as HexString;

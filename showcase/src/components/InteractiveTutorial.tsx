@@ -186,6 +186,7 @@ export const InteractiveTutorial: React.FC<InteractiveTutorialProps> = ({
 
     const interval = setInterval(checkCompletion, 500);
     return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visible, currentStep]);
 
   const handleNext = useCallback(() => {

@@ -48,13 +48,13 @@ flowchart TB
 BrightChain introduces Brokered Anonymity to balance transparency with privacy. Key features include:
 
 - **Forward Error Correction (FEC) Dataset:** Identities are replaced with FEC datasets capable of recovery.
-- **Quorum-Based Recovery:** Identity shards are distributed among trusted agents, requiring majority agreement for reconstitution.
+- **BrightTrust-Based Recovery:** Identity shards are distributed among trusted agents, requiring majority agreement for reconstitution.
 - **Digital Statute of Limitations:** After a predefined period, FEC data is permanently deleted, ensuring true anonymity.
 
 ```mermaid
 graph LR
     A[Known Identity] -->|FEC Process| B[FEC Dataset]
-    B -->|Shard| C[Quorum Agents]
+    B -->|Shard| C[BrightTrust Agents]
     C -->|Majority| D[Recovered Identity]
     C -->|Timeout| E[Anonymity Ensured]
 ```
@@ -64,14 +64,14 @@ sequenceDiagram
     participant User
     participant System
     participant FEC as Forward Error Correction
-    participant Quorum as Keyholders
+    participant BrightTrust as Keyholders
     
     User->>System: Perform Action
     System->>FEC: Generate Recovery Data
-    FEC->>Quorum: Distribute Shards
+    FEC->>BrightTrust: Distribute Shards
     System->>System: Erase Original Identity
-    Note over Quorum: Time Passes
-    Quorum->>Quorum: Delete Shards
+    Note over BrightTrust: Time Passes
+    BrightTrust->>BrightTrust: Delete Shards
 ```
 
 ### 2.3 Owner-Free Filesystem (OFF)

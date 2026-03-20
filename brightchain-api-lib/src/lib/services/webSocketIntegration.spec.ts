@@ -13,18 +13,20 @@ describe('WebSocket Server Integration', () => {
   let wsServer: WebSocketMessageServer;
   const TEST_PORT = 8765 + Math.floor(Math.random() * 1000);
 
-  beforeEach((done) => {
+  beforeEach(async () => {
     httpServer = createServer();
     wsServer = new WebSocketMessageServer(httpServer, false);
-    httpServer.listen(TEST_PORT, () => {
-      done();
+    await new Promise<void>((resolve) => {
+      httpServer.listen(TEST_PORT, () => resolve());
     });
   });
 
-  afterEach((done) => {
-    wsServer.close(() => {
-      httpServer.close(() => {
-        setTimeout(done, 100);
+  afterEach(async () => {
+    await new Promise<void>((resolve) => {
+      wsServer.close(() => {
+        httpServer.close(() => {
+          setTimeout(resolve, 100);
+        });
       });
     });
   });

@@ -112,10 +112,7 @@ async function main() {
     process.env.MNEMONIC_ENCRYPTION_KEY = randomBytes(32).toString('hex');
   }
 
-  const envFilePath = join(
-    __dirname,
-    '.env',
-  );
+  const envFilePath = join(__dirname, '.env');
 
   // Configure GuidV4Provider on BrightChainConstants BEFORE constructing
   // Environment so the upstream BaseEnvironment constructor uses the correct
@@ -249,6 +246,10 @@ async function main() {
   appendEnvVar(envFilePath, 'ADMIN_ID', adminIdFull);
   appendEnvVar(envFilePath, 'MEMBER_ID', memberIdFull);
 
+  // Persist NODE_ID from the system user's identity so the node has a stable,
+  // cryptographically-linked identity across restarts.
+  appendEnvVar(envFilePath, 'NODE_ID', systemIdFull);
+
   // Role IDs and user-role IDs: use existing values from .env or generate new ones.
   // BrightChain doesn't have Mongoose role documents, but we generate these for
   // parity with the Mongoose init flow and .env template.
@@ -350,7 +351,7 @@ async function main() {
       admin: {
         id: bcEnv.adminId,
         fullId: bcEnv.adminId,
-        type: MemberType.User,
+        type: MemberType.Admin,
         username: bcEnv.get('ADMIN_USERNAME') ?? 'admin',
         email: bcEnv.get('ADMIN_EMAIL') ?? bcEnv.emailSender,
         roleId: adminRoleId,

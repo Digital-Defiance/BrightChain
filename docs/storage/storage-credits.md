@@ -104,7 +104,7 @@ interface CostCalculation {
 1. Must be requested before expiration
 2. Requires available credits
 3. Cannot exceed maximum duration
-4. May require quorum approval for sensitive data
+4. May require BrightTrust approval for sensitive data
 
 ### Extension Process
 

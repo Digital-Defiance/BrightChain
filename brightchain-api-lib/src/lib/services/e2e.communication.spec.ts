@@ -201,8 +201,12 @@ async function buildMultiNodeEnv(count: number): Promise<{
     // while populating req.user from body/query memberId/senderId so getMemberId() works.
     const bypassAuth = async (
       _route: unknown,
-      req: any,
-      _res: any,
+      req: {
+        body?: Record<string, unknown>;
+        query?: Record<string, unknown>;
+        user?: { id: string; email: string };
+      },
+      _res: unknown,
       next: () => void,
     ) => {
       const id =
@@ -215,9 +219,12 @@ async function buildMultiNodeEnv(count: number): Promise<{
       }
       next();
     };
-    (convController as any).authenticateRequest = bypassAuth;
-    (grpController as any).authenticateRequest = bypassAuth;
-    (chController as any).authenticateRequest = bypassAuth;
+    (convController as unknown as Record<string, unknown>).authenticateRequest =
+      bypassAuth;
+    (grpController as unknown as Record<string, unknown>).authenticateRequest =
+      bypassAuth;
+    (chController as unknown as Record<string, unknown>).authenticateRequest =
+      bypassAuth;
 
     app.use('/api/brightchat/conversations', convController.router);
     app.use('/api/brightchat/groups', grpController.router);
@@ -381,7 +388,9 @@ describe('Communication API – Multi-Node E2E Integration', () => {
 
       // Delete via node-1
       await request(node1.app)
-        .delete(`/api/brightchat/conversations/${contextId}/messages/${messageId}`)
+        .delete(
+          `/api/brightchat/conversations/${contextId}/messages/${messageId}`,
+        )
         .query({ memberId: 'alice' })
         .expect(200);
 
@@ -763,7 +772,9 @@ describe('Communication API – Multi-Node E2E Integration', () => {
 
       // Unpin via node-1
       await request(node1.app)
-        .delete(`/api/brightchat/groups/${gid}/messages/${msg.body.data.id}/pin`)
+        .delete(
+          `/api/brightchat/groups/${gid}/messages/${msg.body.data.id}/pin`,
+        )
         .send({ memberId: 'alice' })
         .expect(200);
 
@@ -802,7 +813,9 @@ describe('Communication API – Multi-Node E2E Integration', () => {
 
       // Add reaction via node-1
       const reactRes = await request(node1.app)
-        .post(`/api/brightchat/channels/${chId}/messages/${msg.body.data.id}/reactions`)
+        .post(
+          `/api/brightchat/channels/${chId}/messages/${msg.body.data.id}/reactions`,
+        )
         .send({ memberId: 'bob', emoji: '🎉' })
         .expect(201);
 
@@ -1182,13 +1195,17 @@ describe('Communication API – Multi-Node E2E Integration', () => {
         .expect(201);
 
       await request(node0.app)
-        .put(`/api/brightchat/groups/${group.id}/messages/${editMsg.body.data.id}`)
+        .put(
+          `/api/brightchat/groups/${group.id}/messages/${editMsg.body.data.id}`,
+        )
         .send({ memberId: 'alice', content: 'fixed typo' })
         .expect(200);
 
       // 6. Pin via node-1
       await request(node1.app)
-        .post(`/api/brightchat/groups/${group.id}/messages/${editMsg.body.data.id}/pin`)
+        .post(
+          `/api/brightchat/groups/${group.id}/messages/${editMsg.body.data.id}/pin`,
+        )
         .send({ memberId: 'alice' })
         .expect(200);
 

@@ -134,6 +134,14 @@ export class BrightDb {
   }
 
   /**
+   * Expose the underlying block store.
+   * Used by the admin dashboard to gather block statistics.
+   */
+  getBlockStore(): IBlockStore {
+    return this.store;
+  }
+
+  /**
    * Expose the head registry for components that need to read head block IDs
    * (e.g. CBLIndex for FEC parity generation on metadata blocks).
    */

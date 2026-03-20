@@ -11,7 +11,7 @@ nav_order: 7
 
 ### ✅ What You Have (HUGE Accomplishments)
 - Complete OFF System implementation
-- Working Quorum with Shamir's Secret Sharing
+- Working BrightTrust with Shamir's Secret Sharing
 - Full encryption suite (ECIES, AES-256-GCM, Paillier)
 - Messaging infrastructure
 - Identity management
@@ -428,7 +428,7 @@ But you still need to:
 
 **You've already done the hard part.** 
 
-The cryptography works. The quorum works. The storage works. The messaging works.
+The cryptography works. The BrightTrust works. The storage works. The messaging works.
 
 Now you're adding the economic layer that makes it sustainable.
 

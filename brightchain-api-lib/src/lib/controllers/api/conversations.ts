@@ -50,7 +50,6 @@ import {
   validationError,
 } from '../../utils/errorResponse';
 import { BaseController } from '../base';
-import { SessionsController } from './sessions';
 
 type ConversationApiResponse =
   | ISendDirectMessageResponse
@@ -136,34 +135,8 @@ export class DirectMessageController<
    * Falls back to body/query senderId/memberId for testing when auth is disabled.
    */
   private getMemberId(req: unknown): string {
-    // Try JWT session first
-    const typedReq = req as { headers?: { authorization?: string } };
-    if (typedReq.headers?.authorization) {
-      try {
-        const sessionsController =
-          this.application.getController<SessionsController>('sessions');
-        const member = sessionsController.getMemberFromSession(
-          typedReq.headers.authorization,
-        );
-        if (member) {
-          return member.id.toString();
-        }
-      } catch {
-        // Fall through to body/query fallback
-      }
-    }
-
-    // Fallback: body.senderId / body.memberId (testing)
-    const body = (req as SendDMRequestBody).body;
-    if (body && typeof body === 'object') {
-      if (body.senderId) return body.senderId;
-      const bodyRecord = body as Record<string, string>;
-      if (bodyRecord['memberId']) return bodyRecord['memberId'];
-    }
-    // Fallback: query.memberId (testing)
-    const query = (req as ListConversationsQuery).query;
-    if (query && query.memberId) return query.memberId;
-
+    const user = (req as { user?: { id?: string } }).user;
+    if (user && typeof user.id === 'string') return user.id;
     throw new Error('No authenticated user');
   }
 

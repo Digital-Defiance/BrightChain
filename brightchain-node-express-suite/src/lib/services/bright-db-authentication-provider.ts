@@ -35,7 +35,7 @@ export class BrightDbAuthenticationProvider<
    */
   async findUserById(
     userId: string,
-  ): Promise<IAuthenticatedUser<TLanguage> | null> {
+  ): Promise<IAuthenticatedUser<TLanguage, TID> | null> {
     try {
       const usersCol = this.db.collection<{
         _id?: string;
@@ -72,6 +72,7 @@ export class BrightDbAuthenticationProvider<
         _id?: string;
         username?: string;
         email?: string;
+        displayName?: string;
         accountStatus?: string;
         emailVerified?: boolean;
         timezone?: string;
@@ -93,8 +94,14 @@ export class BrightDbAuthenticationProvider<
         id: userId,
         email: userDoc.email ?? '',
         username: userDoc.username ?? '',
+        ...(userDoc.displayName && { displayName: userDoc.displayName }),
         roles: [],
-        rolePrivileges: { admin: false, member: true, child: false, system: false },
+        rolePrivileges: {
+          admin: false,
+          member: true,
+          child: false,
+          system: false,
+        },
         emailVerified: userDoc.emailVerified ?? true,
         timezone: userDoc.timezone ?? 'UTC',
         siteLanguage: userDoc.siteLanguage ?? 'en',
@@ -117,7 +124,9 @@ export class BrightDbAuthenticationProvider<
     try {
       const decoded = verify(token, this.jwtSecret) as Record<string, unknown>;
       return {
-        userId: (decoded['memberId'] ?? decoded['userId'] ?? decoded['sub']) as string,
+        userId: (decoded['memberId'] ??
+          decoded['userId'] ??
+          decoded['sub']) as string,
         roles: (decoded['roles'] ?? []) as ITokenUser['roles'],
       } as ITokenUser as TTokenUser;
     } catch {

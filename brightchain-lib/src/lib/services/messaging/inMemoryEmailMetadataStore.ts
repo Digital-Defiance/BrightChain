@@ -26,6 +26,26 @@ export class InMemoryEmailMetadataStore implements IEmailMetadataStore {
   private readonly readSet = new Set<string>();
   /** Attachment content keyed by checksum */
   private readonly attachmentContents = new Map<string, Uint8Array>();
+  /** Maps userId (memberId GUID) → email address for inbox lookups */
+  private readonly userEmailMap = new Map<string, string>();
+
+  /**
+   * Register a mapping from userId (memberId GUID) to email address.
+   * This allows inbox queries by memberId to resolve to the correct email.
+   */
+  registerUserEmail(userId: string, email: string): void {
+    this.userEmailMap.set(userId.toLowerCase(), email.toLowerCase());
+  }
+
+  /**
+   * Resolve a userId to an email address.
+   * If the userId is already an email (contains @), returns it as-is.
+   * Otherwise looks up the userEmailMap for a memberId → email mapping.
+   */
+  private resolveUserEmail(userId: string): string {
+    if (userId.includes('@')) return userId.toLowerCase();
+    return this.userEmailMap.get(userId.toLowerCase()) ?? userId.toLowerCase();
+  }
 
   async store(metadata: IEmailMetadata): Promise<void> {
     this.emails.set(metadata.messageId, metadata);
@@ -63,12 +83,15 @@ export class InMemoryEmailMetadataStore implements IEmailMetadataStore {
     const sortBy = query.sortBy ?? 'date';
     const sortDirection = query.sortDirection ?? 'desc';
 
+    // Resolve memberId → email address for recipient matching
+    const resolvedEmail = this.resolveUserEmail(userId);
+
     // 1. Filter: only emails where userId is a recipient
     let results = Array.from(this.emails.values()).filter((email) =>
-      this.isRecipient(email, userId),
+      this.isRecipient(email, resolvedEmail),
     );
 
-    // 2. Apply filters
+    // 2. Apply filters (use original userId for read-tracking keys)
     results = this.applyFilters(results, query, userId);
 
     // Count unread among filtered results
@@ -96,10 +119,11 @@ export class InMemoryEmailMetadataStore implements IEmailMetadataStore {
   }
 
   async getUnreadCount(userId: string): Promise<number> {
+    const resolvedEmail = this.resolveUserEmail(userId);
     let count = 0;
     for (const email of this.emails.values()) {
       if (
-        this.isRecipient(email, userId) &&
+        this.isRecipient(email, resolvedEmail) &&
         !this.readSet.has(this.readKey(email.messageId, userId))
       ) {
         count++;
@@ -110,6 +134,11 @@ export class InMemoryEmailMetadataStore implements IEmailMetadataStore {
 
   async markAsRead(messageId: string, userId: string): Promise<void> {
     this.readSet.add(this.readKey(messageId, userId));
+    // Also update the email's readReceipts Map so it reflects in API responses
+    const email = this.emails.get(messageId);
+    if (email) {
+      email.readReceipts.set(userId, new Date());
+    }
   }
 
   async getThread(messageId: string): Promise<IEmailMetadata[]> {

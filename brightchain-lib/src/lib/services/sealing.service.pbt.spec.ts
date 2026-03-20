@@ -100,7 +100,7 @@ describe('SealingService Property-Based Tests', () => {
               .map((m) => m.member);
 
             // Seal the data
-            const sealed = await sealingService.quorumSeal(
+            const sealed = await sealingService.brightTrustSeal(
               members[0],
               data,
               members,
@@ -109,24 +109,22 @@ describe('SealingService Property-Based Tests', () => {
 
             // Unseal with exactly threshold members should succeed
             const thresholdMembers = members.slice(0, threshold);
-            const unsealed = await sealingService.quorumUnseal<typeof data>(
-              sealed,
-              thresholdMembers,
-            );
+            const unsealed = await sealingService.brightTrustUnseal<
+              typeof data
+            >(sealed, thresholdMembers);
             expect(unsealed).toEqual(data);
 
             // Unseal with all members should also succeed
-            const unsealedAll = await sealingService.quorumUnseal<typeof data>(
-              sealed,
-              members,
-            );
+            const unsealedAll = await sealingService.brightTrustUnseal<
+              typeof data
+            >(sealed, members);
             expect(unsealedAll).toEqual(data);
 
             // Unseal with fewer than threshold members should fail
             if (threshold > 1) {
               const tooFewMembers = members.slice(0, threshold - 1);
               await expect(
-                sealingService.quorumUnseal(sealed, tooFewMembers),
+                sealingService.brightTrustUnseal(sealed, tooFewMembers),
               ).rejects.toThrow(SealingError);
             }
           },
@@ -158,7 +156,7 @@ describe('SealingService Property-Based Tests', () => {
             const originalThreshold = 2;
 
             // Seal the data
-            const sealed = await sealingService.quorumSeal(
+            const sealed = await sealingService.brightTrustSeal(
               originalMembers[0],
               data,
               originalMembers,
@@ -261,13 +259,13 @@ describe('SealingService Property-Based Tests', () => {
             const threshold = 2;
 
             // Seal the same data twice with the same members
-            const sealed1 = await sealingService.quorumSeal(
+            const sealed1 = await sealingService.brightTrustSeal(
               members[0],
               data,
               members,
               threshold,
             );
-            const sealed2 = await sealingService.quorumSeal(
+            const sealed2 = await sealingService.brightTrustSeal(
               members[0],
               data,
               members,
@@ -280,14 +278,12 @@ describe('SealingService Property-Based Tests', () => {
             );
 
             // But both should unseal to the same original data
-            const unsealed1 = await sealingService.quorumUnseal<typeof data>(
-              sealed1,
-              members,
-            );
-            const unsealed2 = await sealingService.quorumUnseal<typeof data>(
-              sealed2,
-              members,
-            );
+            const unsealed1 = await sealingService.brightTrustUnseal<
+              typeof data
+            >(sealed1, members);
+            const unsealed2 = await sealingService.brightTrustUnseal<
+              typeof data
+            >(sealed2, members);
             expect(unsealed1).toEqual(data);
             expect(unsealed2).toEqual(data);
           },

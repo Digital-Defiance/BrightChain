@@ -16,9 +16,9 @@ import {
   MemberType,
 } from '@digitaldefiance/ecies-lib';
 import { initializeBrightChain } from '../init';
-import { QuorumAuditLogEntry } from '../interfaces/auditLogEntry';
+import { BrightTrustAuditLogEntry } from '../interfaces/auditLogEntry';
 import { ChainedAuditLogEntry } from '../interfaces/chainedAuditLogEntry';
-import { IQuorumDatabase } from '../interfaces/services/quorumDatabase';
+import { IBrightTrustDatabase } from '../interfaces/services/brightTrustDatabase';
 import {
   AuditLogService,
   computeContentHash,
@@ -30,9 +30,9 @@ import { ServiceProvider } from './service.provider';
 jest.setTimeout(30000);
 
 /**
- * Creates a mock IQuorumDatabase that tracks chained audit entries in memory.
+ * Creates a mock IBrightTrustDatabase that tracks chained audit entries in memory.
  */
-function createAuditMockDatabase(): IQuorumDatabase<GuidV4Uint8Array> & {
+function createAuditMockDatabase(): IBrightTrustDatabase<GuidV4Uint8Array> & {
   chainedEntries: ChainedAuditLogEntry<GuidV4Uint8Array>[];
 } {
   const chainedEntries: ChainedAuditLogEntry<GuidV4Uint8Array>[] = [];
@@ -42,7 +42,7 @@ function createAuditMockDatabase(): IQuorumDatabase<GuidV4Uint8Array> & {
 
   return {
     chainedEntries,
-    appendAuditEntry: jest.fn(async (entry: QuorumAuditLogEntry) => {
+    appendAuditEntry: jest.fn(async (entry: BrightTrustAuditLogEntry) => {
       const chained = entry as ChainedAuditLogEntry<GuidV4Uint8Array>;
       if (chained.contentHash !== undefined) {
         chainedEntries.push(chained);
@@ -94,8 +94,8 @@ function createAuditMockDatabase(): IQuorumDatabase<GuidV4Uint8Array> & {
 }
 
 function makeEntry(
-  eventType: QuorumAuditLogEntry<GuidV4Uint8Array>['eventType'] = 'epoch_created',
-): QuorumAuditLogEntry<GuidV4Uint8Array> {
+  eventType: BrightTrustAuditLogEntry<GuidV4Uint8Array>['eventType'] = 'epoch_created',
+): BrightTrustAuditLogEntry<GuidV4Uint8Array> {
   return {
     id: ServiceProvider.getInstance<GuidV4Uint8Array>().idProvider.generateTyped(),
     eventType,
@@ -240,7 +240,7 @@ describe('AuditLogService', () => {
       );
 
       const entries: ChainedAuditLogEntry<GuidV4Uint8Array>[] = [];
-      const eventTypes: QuorumAuditLogEntry['eventType'][] = [
+      const eventTypes: BrightTrustAuditLogEntry['eventType'][] = [
         'epoch_created',
         'member_added',
         'proposal_created',
@@ -398,7 +398,7 @@ describe('AuditLogService', () => {
 
   describe('serializeEntryForHashing', () => {
     it('should produce deterministic output for the same input', () => {
-      const entry: QuorumAuditLogEntry<GuidV4Uint8Array> & {
+      const entry: BrightTrustAuditLogEntry<GuidV4Uint8Array> & {
         previousEntryHash: null;
       } = {
         id: ServiceProvider.getInstance<GuidV4Uint8Array>().idProvider.generateTyped(),
@@ -414,7 +414,7 @@ describe('AuditLogService', () => {
     });
 
     it('should exclude signature and blockIds from serialization', () => {
-      const entry: QuorumAuditLogEntry<GuidV4Uint8Array> & {
+      const entry: BrightTrustAuditLogEntry<GuidV4Uint8Array> & {
         previousEntryHash: null;
       } = {
         id: ServiceProvider.getInstance<GuidV4Uint8Array>().idProvider.generateTyped(),
@@ -432,7 +432,7 @@ describe('AuditLogService', () => {
 
     it('should include optional fields when present', () => {
       const sp = ServiceProvider.getInstance<GuidV4Uint8Array>();
-      const entry: QuorumAuditLogEntry<GuidV4Uint8Array> & {
+      const entry: BrightTrustAuditLogEntry<GuidV4Uint8Array> & {
         previousEntryHash: null;
       } = {
         id: sp.idProvider.generateTyped(),

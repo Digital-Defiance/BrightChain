@@ -6,11 +6,11 @@ import {
   MemberType,
   uint8ArrayToHex,
 } from '@digitaldefiance/ecies-lib';
+import { BrightTrustDataRecord } from '../brightTrustDataRecord';
 import { SEALING } from '../constants';
 import { SealingErrorType } from '../enumerations/sealingErrorType';
 import { SealingError } from '../errors/sealingError';
 import { initializeBrightChain } from '../init';
-import { QuorumDataRecord } from '../quorumDataRecord';
 import { SealingService } from './sealing.service';
 import { ServiceProvider } from './service.provider';
 
@@ -79,11 +79,11 @@ describe('SealingService', () => {
   });
 
   describe('document sealing and unsealing', () => {
-    let sealedDocument: QuorumDataRecord<GuidV4Uint8Array>;
+    let sealedDocument: BrightTrustDataRecord<GuidV4Uint8Array>;
 
     beforeAll(async () => {
       // Create sealed document once for reuse
-      sealedDocument = await sealingService.quorumSeal(
+      sealedDocument = await sealingService.brightTrustSeal(
         alice.member,
         testDocument,
         members,
@@ -91,7 +91,7 @@ describe('SealingService', () => {
     });
 
     it('should seal and unlock a document', async () => {
-      const unlockedDocument = await sealingService.quorumUnseal<{
+      const unlockedDocument = await sealingService.brightTrustUnseal<{
         hello: string;
       }>(sealedDocument, members);
       expect(unlockedDocument).toEqual(testDocument);
@@ -111,7 +111,7 @@ describe('SealingService', () => {
         memberMap.set(idHex, m);
       });
 
-      const rebuiltDocument = QuorumDataRecord.fromJson<GuidV4Uint8Array>(
+      const rebuiltDocument = BrightTrustDataRecord.fromJson<GuidV4Uint8Array>(
         sealedJson,
         (memberId: GuidV4Uint8Array) => {
           const idHex = uint8ArrayToHex(idProvider.toBytes(memberId));
@@ -125,7 +125,7 @@ describe('SealingService', () => {
         idProvider,
         eciesService,
       );
-      const unlockedDocument = await sealingService.quorumUnseal<{
+      const unlockedDocument = await sealingService.brightTrustUnseal<{
         hello: string;
       }>(rebuiltDocument, members);
       expect(unlockedDocument).toEqual(testDocument);
@@ -135,7 +135,7 @@ describe('SealingService', () => {
       // The test expects a SealingError to be thrown, but the current implementation
       // may not be throwing the expected error. Let's check what actually happens.
       try {
-        await sealingService.quorumUnseal(sealedDocument, [alice.member]);
+        await sealingService.brightTrustUnseal(sealedDocument, [alice.member]);
         // If we get here, no error was thrown - this is the actual issue
         throw new Error('Expected SealingError but no error was thrown');
       } catch (error) {
@@ -154,7 +154,12 @@ describe('SealingService', () => {
     it('should throw error for invalid members', () => {
       expect(
         async () =>
-          await sealingService.quorumSeal(alice.member, { data: 123 }, [], 1),
+          await sealingService.brightTrustSeal(
+            alice.member,
+            { data: 123 },
+            [],
+            1,
+          ),
       ).toThrowType(SealingError, (error: SealingError) => {
         expect(error.type).toEqual(SealingErrorType.NotEnoughMembersToUnlock);
       });
@@ -180,17 +185,17 @@ describe('SealingService', () => {
       });
     });
 
-    describe('validateQuorumSealInputs', () => {
+    describe('validateBrightTrustSealInputs', () => {
       it('should throw error for invalid member count', () => {
         expect(() =>
-          SealingService.validateQuorumSealInputs([], 2),
+          SealingService.validateBrightTrustSealInputs([], 2),
         ).toThrowType(SealingError, (error: SealingError) => {
           expect(error.type).toEqual(SealingErrorType.NotEnoughMembersToUnlock);
         });
 
         const tooManyMembers = Array(SEALING.MAX_SHARES + 1).fill(alice);
         expect(() =>
-          SealingService.validateQuorumSealInputs(tooManyMembers, 2),
+          SealingService.validateBrightTrustSealInputs(tooManyMembers, 2),
         ).toThrowType(SealingError, (error: SealingError) => {
           expect(error.type).toEqual(SealingErrorType.TooManyMembersToUnlock);
         });
@@ -198,7 +203,7 @@ describe('SealingService', () => {
 
       it('should throw error for invalid sharesRequired', () => {
         expect(() =>
-          SealingService.validateQuorumSealInputs(
+          SealingService.validateBrightTrustSealInputs(
             [alice.member, bob.member],
             0,
           ),
@@ -206,7 +211,7 @@ describe('SealingService', () => {
           expect(error.type).toEqual(SealingErrorType.NotEnoughMembersToUnlock);
         });
         expect(() =>
-          SealingService.validateQuorumSealInputs(
+          SealingService.validateBrightTrustSealInputs(
             [alice.member, bob.member],
             3,
           ),

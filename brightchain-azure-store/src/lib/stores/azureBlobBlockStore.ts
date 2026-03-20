@@ -6,13 +6,13 @@
  *
  * @see CloudBlockStoreBase for shared cloud store logic
  */
+import { DefaultAzureCredential } from '@azure/identity';
 import {
   BlobServiceClient,
   ContainerClient,
   RestError,
   StorageSharedKeyCredential,
 } from '@azure/storage-blob';
-import { DefaultAzureCredential } from '@azure/identity';
 import { CloudBlockStoreBase } from '@brightchain/brightchain-api-lib';
 import {
   ICloudBlockStoreConfig,

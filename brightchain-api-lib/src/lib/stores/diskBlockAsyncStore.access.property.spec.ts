@@ -1,7 +1,7 @@
 /**
  * @fileoverview Property-based tests for DiskBlockAsyncStore access tracking
  *
- * **Feature: backend-blockstore-quorum, Property 2: Block Access Tracking**
+ * **Feature: backend-blockstore-brightTrust, Property 2: Block Access Tracking**
  * **Validates: Requirements 2.2**
  *
  * This test suite verifies that:

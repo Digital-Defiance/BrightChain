@@ -14,11 +14,11 @@ permalink: /walkthroughs/08-joining-the-network/
 
 ## Introduction
 
-This guide is for prospective node operators who want to run a BrightChain node and participate in the network. It covers what you need before you start, how to spin up a node and connect to existing peers, what happens once you're connected, how to optionally register as a full member, and — if you're interested — how Quorum membership works and why it's a separate, invitation-based process.
+This guide is for prospective node operators who want to run a BrightChain node and participate in the network. It covers what you need before you start, how to spin up a node and connect to existing peers, what happens once you're connected, how to optionally register as a full member, and — if you're interested — how BrightTrust membership works and why it's a separate, invitation-based process.
 
 BrightChain uses a two-tier identity model:
 - **Peer identity** (network layer): Automatic on startup. Store and serve blocks, participate in gossip, join pools.
-- **Member identity** (application layer): Optional, explicit registration. BrightPass, BrightMail, energy account, content authorship, quorum eligibility.
+- **Member identity** (application layer): Optional, explicit registration. BrightPass, BrightMail, energy account, content authorship, BrightTrust eligibility.
 
 By the end you'll have a running node that is discoverable by other peers, contributing storage to the network, and ready to join storage pools — all without needing to register as a member.
 
@@ -26,7 +26,7 @@ By the end you'll have a running node that is discoverable by other peers, contr
 
 - Completed the [Quickstart](./01-quickstart) guide (repository cloned, dependencies installed, tests passing)
 - Read the [Architecture Overview](./00-architecture-overview) to understand the layered design, TUPLE storage model, and node roles
-- Read the [Node Setup](./02-node-setup) guide to understand the two node types (Regular Storage Node vs. Quorum Node), configuration options, and lifecycle states
+- Read the [Node Setup](./02-node-setup) guide to understand the two node types (Regular Storage Node vs. BrightTrust Node), configuration options, and lifecycle states
 - A machine with:
   - Node.js 20+
   - Yarn
@@ -48,10 +48,10 @@ That said, "joining" involves several distinct layers of participation, each wit
 | Main pool (`BrightChain`) | Peer | Yes | Automatic — any active, non-banned peer has implicit access |
 | BrightPass / BrightMail / Energy | Member | Yes (self-register) | Explicit member registration |
 | Private storage pools | Peer or Member | No — per-pool ACL | An existing pool admin adds your peer or member ID |
-| Quorum membership | Member | No — by invitation | Existing quorum members vote to admit you |
-| Network enforcement (bans) | N/A | N/A — quorum-governed | 75% supermajority vote with cooling period (see Step 10) |
+| BrightTrust membership | Member | No — by invitation | Existing BrightTrust members vote to admit you |
+| Network enforcement (bans) | N/A | N/A — BrightTrust-governed | 75% supermajority vote with cooling period (see Step 10) |
 
-You can be a fully productive network participant — storing blocks, joining pools, building dApps — without ever registering as a member or joining a Quorum. Most node operators are peer-only nodes that store and replicate blocks in the main pool.
+You can be a fully productive network participant — storing blocks, joining pools, building dApps — without ever registering as a member or joining a BrightTrust. Most node operators are peer-only nodes that store and replicate blocks in the main pool.
 
 ### Step 2: Generate Your Node Identity
 
@@ -229,7 +229,7 @@ Everything up to this point works with just a peer identity. If you want applica
 | BrightPass (decentralized identity) | No | Yes |
 | BrightMail (encrypted messaging) | No | Yes |
 | Content authorship with identity | No | Yes |
-| Quorum eligibility | No | Yes |
+| BrightTrust eligibility | No | Yes |
 
 #### How to Register
 
@@ -270,7 +270,7 @@ Once connected, your node participates in the network through the main `BrightCh
 
 **Requires additional authorization:**
 - Reading/writing blocks in a private storage pool — requires an admin of that pool to add your peer ID or member ID to the pool's ACL (see [Storage Pools](./03-storage-pools), Step 4)
-- Participating in quorum governance — requires member registration first, then existing quorum members to vote you in (see Step 9 below)
+- Participating in BrightTrust governance — requires member registration first, then existing BrightTrust members to vote you in (see Step 9 below)
 
 ### Step 8: Join a Private Storage Pool
 
@@ -297,15 +297,15 @@ After authentication, your node can read, write, and replicate blocks within the
 
 For full details on pool creation, encryption modes, and cross-node coordination, see the [Storage Pools](./03-storage-pools) guide.
 
-### Step 9: Understand Quorum Membership (Invitation Only)
+### Step 9: Understand BrightTrust Membership (Invitation Only)
 
-Quorum membership is fundamentally different from network participation. The Quorum is BrightChain's governance layer — it handles sealed identity recovery, document reconstruction, and network policy decisions using Shamir's Secret Sharing.
+BrightTrust membership is fundamentally different from network participation. The BrightTrust is BrightChain's governance layer — it handles sealed identity recovery, document reconstruction, and network policy decisions using Shamir's Secret Sharing.
 
-**Quorum membership is not open.** You cannot join the Quorum by simply running a node. You must first be a registered member (Step 6) — peer-only nodes are not eligible for quorum admission. Here's why and how it works:
+**BrightTrust membership is not open.** You cannot join the BrightTrust by simply running a node. You must first be a registered member (Step 6) — peer-only nodes are not eligible for BrightTrust admission. Here's why and how it works:
 
-#### Why Quorum Membership Is Restricted
+#### Why BrightTrust Membership Is Restricted
 
-When a document is sealed by the Quorum, it is split into cryptographic shares using Shamir's Secret Sharing. Each quorum member receives a share. Reconstructing the document requires a threshold number of members to contribute their shares. Adding or removing a member means every sealed document must have its shares redistributed — this is an expensive, security-critical operation called a "transition ceremony."
+When a document is sealed by the BrightTrust, it is split into cryptographic shares using Shamir's Secret Sharing. Each BrightTrust member receives a share. Reconstructing the document requires a threshold number of members to contribute their shares. Adding or removing a member means every sealed document must have its shares redistributed — this is an expensive, security-critical operation called a "transition ceremony."
 
 Because of this:
 - Adding a member triggers a full share redistribution across all sealed documents
@@ -316,10 +316,10 @@ Admitting an untrustworthy member could compromise sealed documents. Removing a 
 
 #### How Admission Works
 
-1. **An existing quorum member submits a proposal** to add you, via the proposal/vote system:
+1. **An existing BrightTrust member submits a proposal** to add you, via the proposal/vote system:
 
 ```typescript
-const proposal = await quorumStateMachine.submitProposal({
+const proposal = await BrightTrustStateMachine.submitProposal({
   action: ProposalActionType.ADD_MEMBER,
   proposerId: existingMember.id,
   targetMemberId: yourMember.id,
@@ -327,10 +327,10 @@ const proposal = await quorumStateMachine.submitProposal({
 });
 ```
 
-2. **Active quorum members vote** on the proposal. The proposal must reach the configured vote threshold (typically 51–75% of active members):
+2. **Active BrightTrust members vote** on the proposal. The proposal must reach the configured vote threshold (typically 51–75% of active members):
 
 ```typescript
-await quorumStateMachine.submitVote({
+await BrightTrustStateMachine.submitVote({
   proposalId: proposal.id,
   voterId: votingMember.id,
   approve: true,
@@ -341,43 +341,43 @@ await quorumStateMachine.submitVote({
 
 ```typescript
 // This happens automatically when the vote threshold is reached
-// A new QuorumEpoch is created with the updated member set
+// A new BrightTrustEpoch is created with the updated member set
 // All documents are re-sealed with shares distributed to the new member set
 ```
 
 4. **The transition is atomic.** If redistribution fails partway through, the system rolls back using journal entries — no documents are left in a partially-redistributed state.
 
-#### What Quorum Members Do
+#### What BrightTrust Members Do
 
 - Participate in governance votes (add/remove members, policy changes)
 - Hold shares of sealed documents (identity recovery records, sensitive data)
 - Participate in document reconstruction when the threshold is met
-- Run Quorum Nodes with the `QUORUM` capability enabled
+- Run BrightTrust Nodes with the `BRIGHT_TRUST` capability enabled
 
 #### How to Express Interest
 
-If you want to become a quorum member:
+If you want to become a BrightTrust member:
 
-1. Register as a BrightChain member (Step 6) — peer-only nodes cannot be proposed for quorum admission
+1. Register as a BrightChain member (Step 6) — peer-only nodes cannot be proposed for BrightTrust admission
 2. Run a storage node reliably for a sustained period — demonstrate uptime and good behavior
 3. Participate actively in storage pools
-4. Contact existing quorum members or the BrightChain community
+4. Contact existing BrightTrust members or the BrightChain community
 5. An existing member can then propose your admission
 
 There is no automated application process. Trust is built through participation.
 
 ### Step 10: Trust Model and Network Safety
 
-BrightChain includes a quorum-governed ban mechanism to protect the network from bad actors. The ban mechanism covers both peer-only nodes and full members. Understanding how it works should give you confidence that the network is safe to join — and that no single member can abuse the system.
+BrightChain includes a BrightTrust-governed ban mechanism to protect the network from bad actors. The ban mechanism covers both peer-only nodes and full members. Understanding how it works should give you confidence that the network is safe to join — and that no single member can abuse the system.
 
 #### How Bans Work
 
-If a node operator behaves maliciously (corrupting blocks, spamming gossip, attempting unauthorized access), any established quorum member can propose a ban. Bans can target either a peer ID (for peer-only nodes) or a member ID (which also bans the associated peer identity):
+If a node operator behaves maliciously (corrupting blocks, spamming gossip, attempting unauthorized access), any established BrightTrust member can propose a ban. Bans can target either a peer ID (for peer-only nodes) or a member ID (which also bans the associated peer identity):
 
-1. A quorum member submits a `BAN_MEMBER` proposal identifying the target, specifying `targetType: 'peer'` or `'member'`, and providing a reason
-2. A **75% supermajority** of quorum members must vote to approve (not a simple majority)
+1. A BrightTrust member submits a `BAN_MEMBER` proposal identifying the target, specifying `targetType: 'peer'` or `'member'`, and providing a reason
+2. A **75% supermajority** of BrightTrust members must vote to approve (not a simple majority)
 3. Even after the vote threshold is reached, a **72-hour cooling period** must elapse before the ban takes effect — giving the community time to reconsider
-4. Once enacted, the ban record is signed by the approving quorum members and propagated to all nodes via gossip
+4. Once enacted, the ban record is signed by the approving BrightTrust members and propagated to all nodes via gossip
 
 Unbanning follows the same process: a proposal, a 75% supermajority vote, and a 48-hour cooling period.
 
@@ -391,17 +391,17 @@ A banned node is cut off from network participation:
 - Block store writes from the banned node are rejected
 - Active connections are torn down within 60 seconds
 
-The ban is enforced locally by every node using a verified ban list cache. Each node independently verifies the quorum signatures on the ban record before enforcing it.
+The ban is enforced locally by every node using a verified ban list cache. Each node independently verifies the BrightTrust signatures on the ban record before enforcing it.
 
 #### Sybil Attack Protections
 
-A natural concern: what if someone joins the quorum and immediately tries to ban the founding members? BrightChain has two protections against this:
+A natural concern: what if someone joins the BrightTrust and immediately tries to ban the founding members? BrightChain has two protections against this:
 
 1. **Epoch restriction**: Members admitted in the current epoch cannot propose bans. You must have been a member for at least one full epoch transition before you can propose banning anyone. This prevents a new member from immediately weaponizing the ban system.
 
 2. **Proposer-ally vote filtering**: When tallying votes on a ban proposal, votes from members who were admitted by the ban proposer are excluded. This prevents a single member from admitting a group of allies and using their votes to ban others.
 
-Combined with the 75% supermajority requirement, these protections mean that a small group of colluding members cannot successfully ban established nodes. The math simply doesn't work — you'd need to control three-quarters of the quorum, and your allies' votes wouldn't even count on your proposals.
+Combined with the 75% supermajority requirement, these protections mean that a small group of colluding members cannot successfully ban established nodes. The math simply doesn't work — you'd need to control three-quarters of the BrightTrust, and your allies' votes wouldn't even count on your proposals.
 
 #### Your Data After a Ban
 
@@ -422,11 +422,11 @@ Blocks already stored on the network are not deleted when a node is banned. The 
 - Verify your node's private key matches the public key registered in the ACL
 - If you regenerated your node identity, the admin needs to update the ACL with your new public key
 
-### "Insufficient members" error on quorum operations
+### "Insufficient members" error on BrightTrust operations
 
-- The quorum requires a minimum number of active members to operate
+- The BrightTrust requires a minimum number of active members to operate
 - If members have gone offline, the system may be in Bootstrap mode with reduced thresholds
-- This is not something a new member can fix — existing quorum members need to address it
+- This is not something a new member can fix — existing BrightTrust members need to address it
 
 ### Node is connected but can't access any data
 

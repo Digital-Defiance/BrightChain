@@ -10,10 +10,14 @@ import {
   VoteEncoder,
 } from '@digitaldefiance/ecies-lib';
 import { useEffect, useState } from 'react';
+import { useShowcaseI18n } from '../../i18n/ShowcaseI18nContext';
+import { ShowcaseStrings } from '../../i18n/showcaseStrings';
 import { LoadingSpinner } from './LoadingSpinner';
 import { useVotingDemo } from './useVotingDemo';
 
 export const PluralityDemo = () => {
+  const { t } = useShowcaseI18n();
+
   const [poll, setPoll] = useState<Poll<Uint8Array> | null>(null);
   const [authority, setAuthority] = useState<Member | null>(null);
   const [auditLog, setAuditLog] =
@@ -28,19 +32,19 @@ export const PluralityDemo = () => {
 
   const candidates = [
     {
-      name: 'Green Energy Initiative',
+      name: t(ShowcaseStrings.Plur_Cand1_Name),
       emoji: '🌱',
-      description: 'Invest in renewable energy infrastructure',
+      description: t(ShowcaseStrings.Plur_Cand1_Desc),
     },
     {
-      name: 'Public Transit Expansion',
+      name: t(ShowcaseStrings.Plur_Cand2_Name),
       emoji: '🚇',
-      description: 'Build new subway lines and bus routes',
+      description: t(ShowcaseStrings.Plur_Cand2_Desc),
     },
     {
-      name: 'Affordable Housing Program',
+      name: t(ShowcaseStrings.Plur_Cand3_Name),
       emoji: '🏘️',
-      description: 'Subsidize housing for low-income families',
+      description: t(ShowcaseStrings.Plur_Cand3_Desc),
     },
   ];
 
@@ -78,6 +82,7 @@ export const PluralityDemo = () => {
       }
     };
     init();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const castVote = async (voterName: string, candidateIndex: number) => {
@@ -150,7 +155,7 @@ export const PluralityDemo = () => {
 
   if (isInitializing)
     return (
-      <LoadingSpinner message="Initializing cryptographic voting system..." />
+      <LoadingSpinner message={t(ShowcaseStrings.Vote_InitializingCrypto)} />
     );
 
   if (showIntro) {
@@ -159,72 +164,57 @@ export const PluralityDemo = () => {
         <div className="election-intro">
           <div className="intro-header">
             <span className="intro-emoji">🗳️</span>
-            <h3>Welcome to Riverside City Budget Election!</h3>
+            <h3>{t(ShowcaseStrings.Plur_IntroTitle)}</h3>
           </div>
           <div className="intro-story">
+            <p>{t(ShowcaseStrings.Plur_IntroStory)}</p>
             <p>
-              The city council has allocated $50 million for a major initiative,
-              but they can't decide which project to fund. That's where YOU come
-              in!
-            </p>
-            <p>
-              <strong>The situation:</strong> Three proposals are on the ballot.
-              Each has passionate supporters, but only ONE can win.
+              <strong>{t(ShowcaseStrings.Plur_IntroSituation)}</strong>
             </p>
             <div className="intro-stakes">
               <div className="stake-item">
                 <span>🌱</span>
-                <p>
-                  <strong>Team Green</strong> wants solar panels on every public
-                  building
-                </p>
+                <p>{t(ShowcaseStrings.Plur_IntroTeamGreen)}</p>
               </div>
               <div className="stake-item">
                 <span>🚇</span>
-                <p>
-                  <strong>Transit Advocates</strong> are pushing for a new
-                  subway line
-                </p>
+                <p>{t(ShowcaseStrings.Plur_IntroTransit)}</p>
               </div>
               <div className="stake-item">
                 <span>🏘️</span>
-                <p>
-                  <strong>Housing Coalition</strong> demands affordable homes
-                  for 500 families
-                </p>
+                <p>{t(ShowcaseStrings.Plur_IntroHousing)}</p>
               </div>
             </div>
             <p className="intro-challenge">
-              You'll cast votes for 5 citizens. Each vote is{' '}
-              <strong>encrypted</strong> - not even the election officials can
-              see individual ballots until the final tally. This is how real
-              democracies should work!
+              {t(ShowcaseStrings.Plur_IntroChallenge)}
             </p>
           </div>
           <button
             onClick={() => setShowIntro(false)}
             className="start-election-btn"
           >
-            🎯 Start the Election!
+            {t(ShowcaseStrings.Vote_StartElection)}
           </button>
         </div>
       </div>
     );
   }
 
+  const votedVoters = voters.filter((v) => votes.has(v));
+
   return (
     <div className="voting-demo">
       <div className="demo-header">
-        <h3>🗳️ Plurality Voting - Riverside City Budget</h3>
+        <h3>{t(ShowcaseStrings.Plur_DemoTitle)}</h3>
         <p className="election-tagline">
-          🏛️ One vote per person. Highest votes wins. Democracy in action!
+          {t(ShowcaseStrings.Plur_DemoTagline)}
         </p>
       </div>
 
       {!results ? (
         <>
           <div className="candidates-section">
-            <h4>City Budget Priorities</h4>
+            <h4>{t(ShowcaseStrings.Plur_CandidatesTitle)}</h4>
             <div className="candidates-grid">
               {candidates.map((candidate, idx) => (
                 <div key={idx} className="candidate-card">
@@ -238,11 +228,12 @@ export const PluralityDemo = () => {
 
           <div className="voters-section">
             <h4>
-              👥 Citizens Voting ({votes.size}/{voters.length} have voted)
+              {t(ShowcaseStrings.Vote_CitizensVotingTemplate)
+                .replace('{VOTED}', String(votedVoters.length))
+                .replace('{TOTAL}', String(voters.length))}
             </h4>
             <p className="voter-instruction">
-              Click a proposal to cast each citizen's vote. Remember: their
-              choice is encrypted and private!
+              {t(ShowcaseStrings.Plur_VoterInstruction)}
             </p>
             <div className="voters-grid">
               {voters.map((voter) => (
@@ -250,7 +241,10 @@ export const PluralityDemo = () => {
                   <strong>{voter}</strong>
                   {votes.has(voter) ? (
                     <div className="vote-cast">
-                      ✓ Voted for {candidates[votes.get(voter)!].emoji}
+                      {t(ShowcaseStrings.Vote_VotedTemplate).replace(
+                        '{CHOICE}',
+                        candidates[votes.get(voter)!].name,
+                      )}
                     </div>
                   ) : (
                     <div className="vote-buttons">
@@ -278,15 +272,17 @@ export const PluralityDemo = () => {
                 disabled={isTallying}
               >
                 {isTallying
-                  ? '🔓 Decrypting votes...'
-                  : '📦 Close Polls & Count Votes!'}
+                  ? t(ShowcaseStrings.Vote_DecryptingVotes)
+                  : t(ShowcaseStrings.Plur_ClosePollsBtn)}
               </button>
               <button
                 onClick={() => setShowAuditLog(!showAuditLog)}
                 className="audit-btn"
                 style={{ marginLeft: '10px' }}
               >
-                🔍 {showAuditLog ? 'Hide' : 'Show'} Audit Log
+                {showAuditLog
+                  ? t(ShowcaseStrings.Vote_HideAuditLog)
+                  : t(ShowcaseStrings.Vote_ShowAuditLog)}
               </button>
             </>
           )}
@@ -301,9 +297,9 @@ export const PluralityDemo = () => {
                 borderRadius: '8px',
               }}
             >
-              <h4>🔒 Immutable Audit Log (Requirement 1.1)</h4>
+              <h4>{t(ShowcaseStrings.Vote_AuditLogTitle)}</h4>
               <p style={{ fontSize: '0.9em', color: '#666' }}>
-                Cryptographically signed, hash-chained audit trail
+                {t(ShowcaseStrings.Vote_AuditLogDesc)}
               </p>
               <div style={{ maxHeight: '300px', overflow: 'auto' }}>
                 {auditLog.getEntries().map((entry, idx) => (
@@ -340,24 +336,25 @@ export const PluralityDemo = () => {
                   borderRadius: '4px',
                 }}
               >
-                <strong>Chain Integrity:</strong>{' '}
-                {auditLog.verifyChain() ? '✅ Valid' : '❌ Compromised'}
+                <strong>{t(ShowcaseStrings.Vote_ChainIntegrity)}</strong>{' '}
+                {auditLog.verifyChain()
+                  ? t(ShowcaseStrings.Vote_ChainValid)
+                  : t(ShowcaseStrings.Vote_ChainCompromised)}
               </div>
             </div>
           )}
         </>
       ) : (
         <div className="results-section">
-          <h4>🎉 The People Have Spoken!</h4>
+          <h4>{t(ShowcaseStrings.Plur_ResultsTitle)}</h4>
           <p className="results-intro">
-            After decrypting all votes, here's what Riverside chose:
+            {t(ShowcaseStrings.Plur_ResultsIntro)}
           </p>
 
           <div className="tally-visualization">
-            <h5>📊 Vote Tally Process</h5>
+            <h5>{t(ShowcaseStrings.Plur_TallyTitle)}</h5>
             <p className="tally-explain">
-              Each encrypted vote was homomorphically added together, then
-              decrypted to reveal the totals:
+              {t(ShowcaseStrings.Plur_TallyExplain)}
             </p>
           </div>
           {candidates.map((candidate, idx) => {
@@ -375,7 +372,9 @@ export const PluralityDemo = () => {
                     {candidate.emoji} {candidate.name}
                   </span>
                   <span>
-                    {tally} votes ({percentage.toFixed(0)}%)
+                    {t(ShowcaseStrings.Vote_VotesTemplate)
+                      .replace('{COUNT}', String(tally))
+                      .replace('{PERCENT}', percentage.toFixed(0))}
                   </span>
                 </div>
                 <div className="progress-bar">
@@ -388,7 +387,7 @@ export const PluralityDemo = () => {
             );
           })}
           <button onClick={reset} className="reset-btn">
-            Run Another Election
+            {t(ShowcaseStrings.Vote_RunAnotherElection)}
           </button>
         </div>
       )}

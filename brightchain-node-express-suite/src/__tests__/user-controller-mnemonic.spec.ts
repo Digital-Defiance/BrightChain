@@ -9,9 +9,9 @@
  */
 
 import { SecureString } from '@digitaldefiance/ecies-lib';
+import type { NextFunction, Request, Response } from 'express';
 import { BrightDbUserController } from '../lib/controllers/user';
 import type { IBrightDbApplication } from '../lib/interfaces/bright-db-application';
-import type { Request, Response, NextFunction } from 'express';
 
 // ─── Mock Helpers ───────────────────────────────────────────────────────────
 
@@ -62,7 +62,8 @@ describe('BrightDbUserController.register — mnemonic passthrough', () => {
       username: 'testuser',
       email: 'test@example.com',
       password: 'Passw0rd!',
-      mnemonic: 'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about',
+      mnemonic:
+        'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about',
     });
 
     await controller.register(req, mockRes, mockNext);
@@ -100,7 +101,8 @@ describe('BrightDbUserController.register — mnemonic passthrough', () => {
       username: 'testuser',
       email: 'test@example.com',
       password: 'Passw0rd!',
-      mnemonic: 'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about',
+      mnemonic:
+        'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about',
     });
 
     const result = await controller.register(req, mockRes, mockNext);

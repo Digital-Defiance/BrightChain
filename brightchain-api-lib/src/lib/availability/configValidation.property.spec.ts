@@ -241,7 +241,7 @@ describe('Configuration Validation Property Tests', () => {
             // Error message should be descriptive (not empty)
             try {
               validateDiscoveryConfig(config);
-              fail('Expected ConfigValidationError to be thrown');
+              throw new Error('Expected ConfigValidationError to be thrown');
             } catch (error) {
               expect(error).toBeInstanceOf(ConfigValidationError);
               expect((error as ConfigValidationError).message).toBeTruthy();
@@ -348,7 +348,7 @@ describe('Configuration Validation Property Tests', () => {
             // Error message should be descriptive (not empty)
             try {
               validateGossipConfig(config);
-              fail('Expected ConfigValidationError to be thrown');
+              throw new Error('Expected ConfigValidationError to be thrown');
             } catch (error) {
               expect(error).toBeInstanceOf(ConfigValidationError);
               expect((error as ConfigValidationError).message).toBeTruthy();
@@ -438,7 +438,7 @@ describe('Configuration Validation Property Tests', () => {
             // Error message should be descriptive (not empty)
             try {
               validateHeartbeatConfig(config);
-              fail('Expected ConfigValidationError to be thrown');
+              throw new Error('Expected ConfigValidationError to be thrown');
             } catch (error) {
               expect(error).toBeInstanceOf(ConfigValidationError);
               expect((error as ConfigValidationError).message).toBeTruthy();

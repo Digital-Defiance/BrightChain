@@ -61,7 +61,7 @@ Joules are earned through a **Work-for-Work** model. Users obtain Joules by cont
 BrightChain employs **Brokered Anonymity**.
 
 - **On-Chain:** All actions are anonymous to the general network.
-- **The Quorum:** Identity is cryptographically tied to a **Governance Quorum**. This ensures that while a user's data and actions are private, the community maintains a "Social Layer" of accountability via Shamir’s Secret Sharing and Homomorphic Voting.
+- **The BrightTrust:** Identity is cryptographically tied to a **Governance BrightTrust**. This ensures that while a user's data and actions are private, the community maintains a "Social Layer" of accountability via Shamir’s Secret Sharing and Homomorphic Voting.
 
 ## 9. What is BrightDB and how does it work?
 
@@ -72,7 +72,7 @@ BrightChain employs **Brokered Anonymity**.
 - **Document-Oriented Storage:** Similar to NoSQL databases, BrightDB stores data as "Documents" (typically JSON/BSON-like structures). These documents are sharded into encrypted blocks and distributed across the BrightChain network.
 - **Immutable Versioning:** Because it sits on a Merkle-tree-backed ledger, every change to a document is recorded as a new entry. You don't just have the current state; you have a cryptographically verifiable history of every "Upsert" and "Delete" that has ever occurred.
 - **Decentralized Indexing:** BrightDB uses a distributed indexing system. This allows nodes to find and reconstruct specific documents across the DHT (Distributed Hash Table) without needing a central "Master" node to tell them where the data lives.
-- **Quorum-Based Access:** Access to specific databases or collections within BrightDB can be governed by a **Quorum**. This means sensitive data can be "locked" so that it can only be read or modified if a specific number of authorized signers provide their cryptographic approval.
+- **BrightTrust-Based Access:** Access to specific databases or collections within BrightDB can be governed by a **BrightTrust**. This means sensitive data can be "locked" so that it can only be read or modified if a specific number of authorized signers provide their cryptographic approval.
 
 ### Why it Matters:
 
@@ -91,7 +91,7 @@ BrightChain launched with a core suite of "Bright-Apps" designed to replace cent
 
 - **The Concept:** A decentralized, censorship-resistant social networking platform that mirrors the fluidity of legacy "Feeds" without the central surveillance or algorithmic manipulation.
 - **The Difference:** Every post, "Like," and relationship is stored as an immutable, sharded document within **BrightDB**. Because it leverages the **Joule Economy**, there are no ads—users contribute a micro-fraction of computation or storage to "boost" their voice or sustain their community’s history.
-- **The Power of Quorums:** Moderation isn't handled by a corporate "Safety Team." Instead, communities are governed by **Governance Quorums**. Rules are cryptographically enforced, and community standards are voted on via **Homomorphic Voting**, ensuring that a group's digital space remains truly "Owner-Free" and self-determined.
+- **The Power of BrightTrusts:** Moderation isn't handled by a corporate "Safety Team." Instead, communities are governed by **Governance BrightTrusts**. Rules are cryptographically enforced, and community standards are voted on via **Homomorphic Voting**, ensuring that a group's digital space remains truly "Owner-Free" and self-determined.
 
 ### **BrightPass: Zero-Knowledge Vault**
 
@@ -101,4 +101,4 @@ BrightChain launched with a core suite of "Bright-Apps" designed to replace cent
 ### **BrightChat: Resilient Community**
 
 - **The Concept:** A real-time communications platform offering persistent channels, voice, and media sharing, similar to Discord.
-- **The Difference:** There are no "Server Owners" in the traditional sense. Community governance is managed via **Quorums**. Channels are high-performance data streams that utilize BrightChain's GPU-accelerated recovery to ensure that chat history is never lost, even if a large portion of the community's nodes go offline.
+- **The Difference:** There are no "Server Owners" in the traditional sense. Community governance is managed via **BrightTrusts**. Channels are high-performance data streams that utilize BrightChain's GPU-accelerated recovery to ensure that chat history is never lost, even if a large portion of the community's nodes go offline.

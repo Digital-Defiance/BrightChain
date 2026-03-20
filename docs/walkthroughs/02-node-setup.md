@@ -14,7 +14,7 @@ permalink: /walkthroughs/02-node-setup/
 
 ## Introduction
 
-This guide walks you through configuring and starting a BrightChain node. You will learn the difference between the two node types — Regular Storage Nodes and Quorum Nodes — configure each one, understand the node lifecycle states, set up network accessibility via UPnP, and perform a graceful shutdown. By the end you will have a running node ready to participate in the BrightChain network.
+This guide walks you through configuring and starting a BrightChain node. You will learn the difference between the two node types — Regular Storage Nodes and BrightTrust Nodes — configure each one, understand the node lifecycle states, set up network accessibility via UPnP, and perform a graceful shutdown. By the end you will have a running node ready to participate in the BrightChain network.
 
 ## Prerequisites
 
@@ -38,14 +38,14 @@ BrightChain has two node types, each with a distinct role in the network.
 
 Regular Storage Nodes form the backbone of the network. Every node operator starts here.
 
-#### Quorum Node
+#### BrightTrust Node
 
 - Operates at a higher trust level than regular nodes
 - Stores sensitive data (e.g., sealed identity shards)
 - Participates in governance decisions and voting
 - Handles identity management operations
 
-Quorum Nodes require additional configuration (threshold settings) and are typically run by established, trusted operators. You can upgrade a Regular Storage Node to a Quorum Node later.
+BrightTrust Nodes require additional configuration (threshold settings) and are typically run by established, trusted operators. You can upgrade a Regular Storage Node to a BrightTrust Node later.
 
 ### Step 2: Configure and Start a Regular Storage Node
 
@@ -118,31 +118,31 @@ You should see log output confirming the node is online:
 [BrightChain] Node state: ONLINE
 ```
 
-### Step 3: Configure and Start a Quorum Node
+### Step 3: Configure and Start a BrightTrust Node
 
-A Quorum Node extends a Regular Storage Node with governance capabilities. Start with the regular node configuration from Step 2, then add quorum-specific settings.
+A BrightTrust Node extends a Regular Storage Node with governance capabilities. Start with the regular node configuration from Step 2, then add BrightTrust-specific settings.
 
-#### Configure the Quorum Threshold
+#### Configure the BrightTrust Threshold
 
-The threshold determines how many quorum members must agree for a governance action to pass:
+The threshold determines how many BrightTrust members must agree for a governance action to pass:
 
 ```typescript
 import { BlockSize } from '@brightchain/brightchain-lib';
 
-const quorumNodeConfig = {
+const BrightTrustNodeConfig = {
   // Base node settings (same as Regular Storage Node)
   blockSize: BlockSize.Small,
   storage: {
-    totalSpace: 50 * 1024 * 1024 * 1024, // 50 GB — quorum nodes typically need more
-    dataDirectory: './brightchain-quorum-data',
+    totalSpace: 50 * 1024 * 1024 * 1024, // 50 GB — BrightTrust nodes typically need more
+    dataDirectory: './brightchain-BrightTrust-data',
   },
   httpPort: 3000,
   websocketPort: 3000,
 
-  // Quorum-specific settings
-  quorum: {
+  // BrightTrust-specific settings
+  BrightTrust: {
     enabled: true,
-    threshold: 0.67, // 67% of quorum members must agree
+    threshold: 0.67, // 67% of BrightTrust members must agree
     votingTypes: [
       'DOCUMENT_RECONSTRUCTION',
       'MEMBER_ADDITION',
@@ -151,27 +151,27 @@ const quorumNodeConfig = {
   },
 };
 
-export default quorumNodeConfig;
+export default BrightTrustNodeConfig;
 ```
 
-#### Key Quorum Parameters
+#### Key BrightTrust Parameters
 
 | Parameter | Description | Typical Value |
 |-----------|-------------|---------------|
 | `threshold` | Fraction of members that must approve a vote | 0.51 – 0.75 |
 | `votingTypes` | Governance actions this node participates in | All three types for full participation |
 
-#### Start the Quorum Node
+#### Start the BrightTrust Node
 
 ```bash
 npx nx serve brightchain-api
 ```
 
-The log output will include quorum-specific information:
+The log output will include BrightTrust-specific information:
 
 ```
 [BrightChain] Node state: ONLINE
-[BrightChain] Quorum: enabled (threshold 67%)
+[BrightChain] BrightTrust: enabled (threshold 67%)
 [BrightChain] Voting types: DOCUMENT_RECONSTRUCTION, MEMBER_ADDITION, MEMBER_REMOVAL
 ```
 

@@ -20,7 +20,7 @@ export default {
   ],
   transformIgnorePatterns: [
     // Tell Jest to transform these ES modules
-    '/node_modules/(?!file-type|strtok3|token-types|@tokenizer|uint8array-extras|@noble|@scure|@digitaldefiance).+\\.js$',
+    '/node_modules/(?!file-type|strtok3|token-types|@tokenizer|uint8array-extras|@noble|@scure|@digitaldefiance|@ethereumjs).+\\.js$',
   ],
   extensionsToTreatAsEsm: ['.ts'],
 };

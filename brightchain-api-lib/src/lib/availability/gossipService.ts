@@ -12,6 +12,8 @@ import type { BlockId } from '@brightchain/brightchain-lib';
 import {
   AnnouncementHandler,
   BlockAnnouncement,
+  BrightTrustProposalMetadata,
+  BrightTrustVoteMetadata,
   DeliveryAckMetadata,
   GossipConfig,
   ICBLIndexEntry,
@@ -19,8 +21,6 @@ import {
   MessageDeliveryMetadata,
   PoolAnnouncementMetadata,
   PoolId,
-  QuorumProposalMetadata,
-  QuorumVoteMetadata,
   validateGossipConfig,
 } from '@brightchain/brightchain-lib';
 import { ECIESService } from '@digitaldefiance/node-ecies-lib';
@@ -139,23 +139,24 @@ export class GossipService implements IGossipService {
     new Set();
 
   /**
-   * Registered quorum proposal handlers.
-   * Called when a BlockAnnouncement of type 'quorum_proposal' is received.
+   * Registered BrightTrust proposal handlers.
+   * Called when a BlockAnnouncement of type 'brightTrust_proposal' is received.
    *
    * @see Requirements 5.5
    */
-  private quorumProposalHandlers: Set<
+  private brightTrustProposalHandlers: Set<
     (announcement: BlockAnnouncement) => void
   > = new Set();
 
   /**
-   * Registered quorum vote handlers.
-   * Called when a BlockAnnouncement of type 'quorum_vote' is received.
+   * Registered BrightTrust vote handlers.
+   * Called when a BlockAnnouncement of type 'brightTrust_vote' is received.
    *
    * @see Requirements 7.3
    */
-  private quorumVoteHandlers: Set<(announcement: BlockAnnouncement) => void> =
-    new Set();
+  private brightTrustVoteHandlers: Set<
+    (announcement: BlockAnnouncement) => void
+  > = new Set();
 
   /**
    * Set of local user IDs on this node.
@@ -527,11 +528,11 @@ export class GossipService implements IGossipService {
       return;
     }
 
-    // Case 0e: Quorum proposal announcements — dispatch to quorum proposal handlers and forward (Req 5.5)
-    if (announcement.type === 'quorum_proposal') {
-      if (!announcement.quorumProposal) return;
+    // Case 0e: BrightTrust proposal announcements — dispatch to BrightTrust proposal handlers and forward (Req 5.5)
+    if (announcement.type === 'brightTrust_proposal') {
+      if (!announcement.brightTrustProposal) return;
 
-      for (const handler of this.quorumProposalHandlers) {
+      for (const handler of this.brightTrustProposalHandlers) {
         try {
           handler(announcement);
         } catch {
@@ -546,11 +547,11 @@ export class GossipService implements IGossipService {
       return;
     }
 
-    // Case 0f: Quorum vote announcements — dispatch to quorum vote handlers and forward (Req 7.3)
-    if (announcement.type === 'quorum_vote') {
-      if (!announcement.quorumVote) return;
+    // Case 0f: BrightTrust vote announcements — dispatch to BrightTrust vote handlers and forward (Req 7.3)
+    if (announcement.type === 'brightTrust_vote') {
+      if (!announcement.brightTrustVote) return;
 
-      for (const handler of this.quorumVoteHandlers) {
+      for (const handler of this.brightTrustVoteHandlers) {
         try {
           handler(announcement);
         } catch {
@@ -869,7 +870,7 @@ export class GossipService implements IGossipService {
       (a) =>
         a.messageDelivery !== undefined ||
         a.deliveryAck !== undefined ||
-        a.quorumVote !== undefined,
+        a.brightTrustVote !== undefined,
     );
   }
 
@@ -1052,82 +1053,88 @@ export class GossipService implements IGossipService {
   }
 
   /**
-   * Announce a quorum proposal to the network via priority gossip.
-   * Creates a BlockAnnouncement of type 'quorum_proposal' with the proposal metadata
+   * Announce a BrightTrust proposal to the network via priority gossip.
+   * Creates a BlockAnnouncement of type 'brightTrust_proposal' with the proposal metadata
    * and queues it for propagation using high-priority fanout/TTL.
    *
-   * @param metadata - The quorum proposal metadata to announce
+   * @param metadata - The BrightTrust proposal metadata to announce
    * @see Requirements 5.2, 5.3
    */
-  async announceQuorumProposal(
-    metadata: QuorumProposalMetadata,
+  async announceBrightTrustProposal(
+    metadata: BrightTrustProposalMetadata,
   ): Promise<void> {
     const announcement: BlockAnnouncement = {
-      type: 'quorum_proposal',
+      type: 'brightTrust_proposal',
       blockId: metadata.proposalId as unknown as BlockId,
       nodeId: this.peerProvider.getLocalNodeId(),
       timestamp: new Date(),
       ttl: this.config.messagePriority.high.ttl,
-      quorumProposal: metadata,
+      brightTrustProposal: metadata,
     };
     this.queueAnnouncement(announcement);
   }
 
   /**
-   * Announce a quorum vote to the network via priority gossip.
-   * Creates a BlockAnnouncement of type 'quorum_vote' with the vote metadata
+   * Announce a BrightTrust vote to the network via priority gossip.
+   * Creates a BlockAnnouncement of type 'brightTrust_vote' with the vote metadata
    * and queues it for propagation using high-priority fanout/TTL.
    *
-   * @param metadata - The quorum vote metadata to announce
+   * @param metadata - The BrightTrust vote metadata to announce
    * @see Requirements 7.1, 7.2
    */
-  async announceQuorumVote(metadata: QuorumVoteMetadata): Promise<void> {
+  async announceBrightTrustVote(
+    metadata: BrightTrustVoteMetadata,
+  ): Promise<void> {
     const announcement: BlockAnnouncement = {
-      type: 'quorum_vote',
+      type: 'brightTrust_vote',
       blockId: metadata.proposalId as unknown as BlockId,
       nodeId: this.peerProvider.getLocalNodeId(),
       timestamp: new Date(),
       ttl: this.config.messagePriority.high.ttl,
-      quorumVote: metadata,
+      brightTrustVote: metadata,
     };
     this.queueAnnouncement(announcement);
   }
 
   /**
-   * Register a handler for quorum proposal events.
+   * Register a handler for BrightTrust proposal events.
    *
-   * @param handler - Function to call when a quorum proposal announcement is received
+   * @param handler - Function to call when a BrightTrust proposal announcement is received
    * @see Requirements 5.5
    */
-  onQuorumProposal(handler: (announcement: BlockAnnouncement) => void): void {
-    this.quorumProposalHandlers.add(handler);
+  onBrightTrustProposal(
+    handler: (announcement: BlockAnnouncement) => void,
+  ): void {
+    this.brightTrustProposalHandlers.add(handler);
   }
 
   /**
-   * Remove a quorum proposal event handler.
+   * Remove a BrightTrust proposal event handler.
    *
    * @param handler - The handler to remove
    */
-  offQuorumProposal(handler: (announcement: BlockAnnouncement) => void): void {
-    this.quorumProposalHandlers.delete(handler);
+  offBrightTrustProposal(
+    handler: (announcement: BlockAnnouncement) => void,
+  ): void {
+    this.brightTrustProposalHandlers.delete(handler);
   }
 
   /**
-   * Register a handler for quorum vote events.
+   * Register a handler for BrightTrust vote events.
    *
-   * @param handler - Function to call when a quorum vote announcement is received
+   * @param handler - Function to call when a BrightTrust vote announcement is received
    * @see Requirements 7.3
    */
-  onQuorumVote(handler: (announcement: BlockAnnouncement) => void): void {
-    this.quorumVoteHandlers.add(handler);
+  onBrightTrustVote(handler: (announcement: BlockAnnouncement) => void): void {
+    this.brightTrustVoteHandlers.add(handler);
   }
 
   /**
-   * Remove a quorum vote event handler.
+   * Remove a BrightTrust vote event handler.
    *
    * @param handler - The handler to remove
    */
-  offQuorumVote(handler: (announcement: BlockAnnouncement) => void): void {
-    this.quorumVoteHandlers.delete(handler);
+  offBrightTrustVote(handler: (announcement: BlockAnnouncement) => void): void {
+    this.brightTrustVoteHandlers.delete(handler);
   }
 }

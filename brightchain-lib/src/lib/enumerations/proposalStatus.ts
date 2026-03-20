@@ -1,7 +1,7 @@
 /**
  * @fileoverview Proposal status enumeration.
  *
- * Defines the lifecycle states of a quorum proposal.
+ * Defines the lifecycle states of a BrightTrust proposal.
  *
  * @see Requirements 5, 7
  */

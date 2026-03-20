@@ -112,7 +112,7 @@ export class BrightHubNotificationController<
     this.routeDefinitions = [
       routeConfig('get', '/', {
         handlerKey: 'getNotifications',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Get notifications',
@@ -127,7 +127,7 @@ export class BrightHubNotificationController<
       }),
       routeConfig('get', '/unread-count', {
         handlerKey: 'getUnreadCount',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Get unread notification count',
@@ -142,7 +142,7 @@ export class BrightHubNotificationController<
       }),
       routeConfig('post', '/:id/read', {
         handlerKey: 'markAsRead',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Mark notification as read',
@@ -157,7 +157,7 @@ export class BrightHubNotificationController<
       }),
       routeConfig('post', '/read-all', {
         handlerKey: 'markAllAsRead',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Mark all notifications as read',
@@ -172,7 +172,7 @@ export class BrightHubNotificationController<
       }),
       routeConfig('delete', '/:id', {
         handlerKey: 'deleteNotification',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Delete a notification',
@@ -187,7 +187,7 @@ export class BrightHubNotificationController<
       }),
       routeConfig('delete', '/', {
         handlerKey: 'deleteAllNotifications',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Delete all notifications',
@@ -202,7 +202,7 @@ export class BrightHubNotificationController<
       }),
       routeConfig('get', '/preferences', {
         handlerKey: 'getPreferences',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Get notification preferences',
@@ -217,7 +217,7 @@ export class BrightHubNotificationController<
       }),
       routeConfig('put', '/preferences', {
         handlerKey: 'updatePreferences',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Update notification preferences',
@@ -232,7 +232,7 @@ export class BrightHubNotificationController<
       }),
       routeConfig('post', '/preferences/quiet-hours', {
         handlerKey: 'setQuietHours',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Set quiet hours',
@@ -244,7 +244,7 @@ export class BrightHubNotificationController<
       }),
       routeConfig('post', '/preferences/dnd', {
         handlerKey: 'setDoNotDisturb',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Set Do Not Disturb',

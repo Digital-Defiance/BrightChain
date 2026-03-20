@@ -10,7 +10,7 @@
 ### 🔐 Unified Cryptographic Architecture
 - **ECIES Integration**: Elliptic Curve Integrated Encryption Scheme for secure messaging and file storage
 - **Homomorphic Encryption**: Paillier keys derived from ECDH keypairs for secure voting and computation
-- **Brokered Anonymity**: Forward Error Correction with quorum-based identity recovery
+- **Brokered Anonymity**: Forward Error Correction with BrightTrust-based identity recovery
 
 ### 📦 Owner-Free File System (OFFS)
 - **TUPLE Storage**: All data stored as 3-block TUPLEs (data + 2 randomizers) for complete plausible deniability
@@ -291,7 +291,7 @@ const originalData = await tupleService.retrieveTuple(
 - **Plausible Deniability**: No single block contains identifiable data
 - **Legal Protection**: Node operators cannot be compelled to produce meaningful data
 - **Complete OFF Compliance**: All data stored as 3 blocks (not just 2)
-- **Brokered Anonymity**: Supports quorum-based identity recovery
+- **Brokered Anonymity**: Supports BrightTrust-based identity recovery
 
 See [TUPLE Storage Architecture](../../docs/TUPLE_Storage_Architecture.md) for complete details.
 
@@ -481,8 +481,8 @@ graph TD
 BrightChain provides privacy through Forward Error Correction:
 
 1. **Identity Replacement**: Real identities replaced with FEC datasets
-2. **Quorum Distribution**: Identity shards distributed among trusted agents
-3. **Majority Recovery**: Requires quorum majority to recover identity
+2. **BrightTrust Distribution**: Identity shards distributed among trusted agents
+3. **Majority Recovery**: Requires BrightTrust majority to recover identity
 4. **Digital Statute of Limitations**: FEC data expires after predetermined time
 
 ### Cryptographic Guarantees

@@ -65,19 +65,19 @@ export class BanListCache<TID extends PlatformID = Uint8Array>
   }
 
   /**
-   * Verify a ban record's quorum signatures.
+   * Verify a ban record's BrightTrust signatures.
    *
    * Checks that at least `record.requiredSignatures` of the attached
-   * signatures are valid against the provided quorum public keys.
+   * signatures are valid against the provided BrightTrust public keys.
    * Uses ECDSA signature verification (secp256k1).
    *
    * @param record - The ban record to verify
-   * @param quorumPublicKeys - Map of hex member ID → public key bytes
+   * @param brightTrustPublicKeys - Map of hex member ID → public key bytes
    * @returns true if enough valid signatures are present
    */
   async verifySignatures(
     record: IBanRecord<TID>,
-    quorumPublicKeys: Map<HexString, Uint8Array>,
+    brightTrustPublicKeys: Map<HexString, Uint8Array>,
   ): Promise<boolean> {
     if (record.approvalSignatures.length < record.requiredSignatures) {
       return false;
@@ -94,7 +94,7 @@ export class BanListCache<TID extends PlatformID = Uint8Array>
       const signerHex = uint8ArrayToHex(
         this.idProvider.toBytes(sig.memberId),
       ) as HexString;
-      const publicKey = quorumPublicKeys.get(signerHex);
+      const publicKey = brightTrustPublicKeys.get(signerHex);
       if (!publicKey) {
         // Unknown signer — skip
         continue;
@@ -151,7 +151,7 @@ export class BanListCache<TID extends PlatformID = Uint8Array>
     // Fallback: assume Node.js crypto is available via dynamic import
     // This path is used in Node.js environments where SubtleCrypto
     // may not support secp256k1 directly.
-    // In practice, the QuorumStateMachine will use the existing
+    // In practice, the BrightTrustStateMachine will use the existing
     // ECIESService for signature verification rather than this fallback.
     return false;
   }

@@ -35,13 +35,13 @@ describe('Feature: brighthub-social-network, Post_Service Property Tests', () =>
   let mockApp: ReturnType<typeof createMockApplication>;
   let postsCollection: MockCollection;
   let likesCollection: MockCollection;
-  let repostsCollection: MockCollection;
+  let _repostsCollection: MockCollection;
 
   beforeEach(() => {
     mockApp = createMockApplication();
     postsCollection = mockApp.collections.get('brighthub_posts')!;
     likesCollection = mockApp.collections.get('brighthub_likes')!;
-    repostsCollection = mockApp.collections.get('brighthub_reposts')!;
+    _repostsCollection = mockApp.collections.get('brighthub_reposts')!;
     service = createPostService(mockApp);
   });
 

@@ -130,7 +130,8 @@ function createIsolatedAuthServiceAndStore(): {
   } as unknown as SESEmailService;
 
   // Pre-populate the SystemUserService singleton
-  (SystemUserService as any)['systemUser'] = null;
+  (SystemUserService as unknown as Record<string, unknown>)['systemUser'] =
+    null;
   const ecies = ServiceProvider.getInstance()
     .eciesService as unknown as ECIESService;
   const { member: sysUser } = Member.newMember(

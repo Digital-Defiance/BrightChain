@@ -55,7 +55,7 @@ If Interface A extends Interface B, then B cannot reference A.
 ## Fixes Applied
 
 1. Replaced `ServiceProvider.getInstance()` with `ServiceLocator.getServiceProvider()` in all blocks
-2. Used `import type` for type-only imports (Document, IQuorumDocument)
+2. Used `import type` for type-only imports (Document, IBrightTrustDocument)
 3. Removed self-referencing export in metadata/index.ts
 4. Established one-way dependency: Services → Blocks
 

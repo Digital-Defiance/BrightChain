@@ -1,7 +1,7 @@
 import {
   BlockSize,
   IBlockStore,
-  IQuorumService,
+  IBrightTrustService,
   MemoryBlockStore,
 } from '@brightchain/brightchain-lib';
 import { PlatformID } from '@digitaldefiance/ecies-lib';
@@ -14,9 +14,9 @@ export type BlockDocumentStoreOptions = {
   blockSize?: BlockSize;
   useMemory?: boolean;
   /**
-   * Optional QuorumService for encryption support
+   * Optional BrightTrustService for encryption support
    */
-  quorumService?: IQuorumService<PlatformID>;
+  brightTrustService?: IBrightTrustService<PlatformID>;
   /**
    * Optional factory function to create a disk-backed block store.
    * This replaces the direct DiskBlockAsyncStore import, allowing
@@ -30,7 +30,7 @@ export type BlockDocumentStoreOptions = {
 
 /**
  * Create a BlockDocumentStore backed by either a provided BlockStore, a disk store, or an in-memory store.
- * Optionally supports encryption via QuorumService.
+ * Optionally supports encryption via BrightTrustService.
  *
  * For disk-backed stores, provide a `diskBlockStoreFactory` callback that creates the appropriate
  * IBlockStore implementation (e.g., DiskBlockAsyncStore from api-lib).
@@ -41,12 +41,15 @@ export function createBlockDocumentStore(
   const blockSize = options.blockSize ?? BlockSize.Small;
 
   if (options.blockStore) {
-    return new BlockDocumentStore(options.blockStore, options.quorumService);
+    return new BlockDocumentStore(
+      options.blockStore,
+      options.brightTrustService,
+    );
   }
 
   if (options.useMemory) {
     const memoryStore = new MemoryBlockStore(blockSize);
-    return new BlockDocumentStore(memoryStore, options.quorumService);
+    return new BlockDocumentStore(memoryStore, options.brightTrustService);
   }
 
   if (options.storePath) {
@@ -60,7 +63,7 @@ export function createBlockDocumentStore(
       storePath: options.storePath,
       blockSize,
     });
-    return new BlockDocumentStore(diskStore, options.quorumService);
+    return new BlockDocumentStore(diskStore, options.brightTrustService);
   }
 
   throw new Error(

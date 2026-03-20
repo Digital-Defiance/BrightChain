@@ -3,16 +3,11 @@
   "$schema": "../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "brightchain-node-express-suite/src",
   "projectType": "library",
-  "tags": [
-    "type:lib",
-    "scope:api"
-  ],
+  "tags": ["type:lib", "scope:api"],
   "targets": {
     "build": {
       "executor": "@nx/js:tsc",
-      "outputs": [
-        "{options.outputPath}"
-      ],
+      "outputs": ["{options.outputPath}"],
       "options": {
         "outputPath": "dist/brightchain-node-express-suite",
         "main": "brightchain-node-express-suite/src/index.ts",
@@ -30,9 +25,7 @@
           }
         ]
       },
-      "dependsOn": [
-        "^build"
-      ],
+      "dependsOn": ["^build"],
       "configurations": {
         "development": {},
         "production": {}
@@ -43,14 +36,19 @@
     },
     "test": {
       "executor": "@nx/jest:jest",
-      "outputs": [
-        "{workspaceRoot}/coverage/{projectRoot}"
-      ],
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
       "options": {
         "jestConfig": "brightchain-node-express-suite/jest.config.cts",
         "passWithNoTests": true
       },
       "cache": true
+    },
+    "publish": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npm publish --access public",
+        "cwd": "dist/brightchain-node-express-suite"
+      }
     }
   }
 }

@@ -251,7 +251,7 @@ describe('BrightHub Messaging API — Message Send, Edit, Delete', () => {
         { content: 'Unauthorized edit' },
         authHeader(userB.token),
       );
-      fail('Expected error for unauthorized edit');
+      throw new Error('Expected error for unauthorized edit');
     } catch (err) {
       const error = err as AxiosError;
       expect(error.response?.status).toBeGreaterThanOrEqual(400);
@@ -288,7 +288,7 @@ describe('BrightHub Messaging API — Message Send, Edit, Delete', () => {
         { content: longContent },
         authHeader(userA.token),
       );
-      fail('Expected 400 for message exceeding 2000 characters');
+      throw new Error('Expected 400 for message exceeding 2000 characters');
     } catch (err) {
       const error = err as AxiosError;
       expect(error.response?.status).toBe(400);
@@ -600,7 +600,7 @@ describe('BrightHub Messaging API — Group Participant Management', () => {
         { userIds: [newMember.memberId] },
         authHeader(memberA.token),
       );
-      fail('Expected error for non-admin adding participants');
+      throw new Error('Expected error for non-admin adding participants');
     } catch (err) {
       const error = err as AxiosError;
       expect(error.response?.status).toBeGreaterThanOrEqual(400);
@@ -626,7 +626,7 @@ describe('BrightHub Messaging API — Group Participant Management', () => {
         { name: 'Unauthorized Rename' },
         authHeader(memberA.token),
       );
-      fail('Expected error for non-admin updating settings');
+      throw new Error('Expected error for non-admin updating settings');
     } catch (err) {
       const error = err as AxiosError;
       expect(error.response?.status).toBeGreaterThanOrEqual(400);
@@ -709,7 +709,7 @@ describe('BrightHub Messaging API — Conversation Pin, Archive, Mute', () => {
         {},
         authHeader(userA.token),
       );
-      fail('Expected error for exceeding 10 pinned conversations');
+      throw new Error('Expected error for exceeding 10 pinned conversations');
     } catch (err) {
       const error = err as AxiosError;
       expect(error.response?.status).toBe(400);
@@ -959,7 +959,7 @@ describe('BrightHub Messaging API — Block Integration', () => {
         },
         authHeader(blocked.token),
       );
-      fail('Expected error when blocked user tries to message');
+      throw new Error('Expected error when blocked user tries to message');
     } catch (err) {
       const error = err as AxiosError;
       expect(error.response?.status).toBeGreaterThanOrEqual(400);
@@ -977,7 +977,9 @@ describe('BrightHub Messaging API — Block Integration', () => {
         },
         authHeader(blocked.token),
       );
-      fail('Expected error when blocked user tries to send message request');
+      throw new Error(
+        'Expected error when blocked user tries to send message request',
+      );
     } catch (err) {
       const error = err as AxiosError;
       expect(error.response?.status).toBeGreaterThanOrEqual(400);
@@ -1075,7 +1077,7 @@ describe('BrightHub Messaging API — Message Reporting', () => {
         {},
         authHeader(reporter.token),
       );
-      fail('Expected 400 for report without reason');
+      throw new Error('Expected 400 for report without reason');
     } catch (err) {
       const error = err as AxiosError;
       expect(error.response?.status).toBe(400);

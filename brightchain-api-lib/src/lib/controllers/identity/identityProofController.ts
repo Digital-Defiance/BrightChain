@@ -208,14 +208,14 @@ export class IdentityProofController<
   // ─── Route definitions ──────────────────────────────────────────────────
 
   protected initRouteDefinitions(): void {
-    const noAuth = {
-      useAuthentication: false,
+    const auth = {
+      useAuthentication: true,
       useCryptoAuthentication: false,
     };
 
     this.routeDefinitions = [
       routeConfig('post', '/create', {
-        ...noAuth,
+        ...auth,
         handlerKey: 'createProof',
         openapi: {
           summary: 'Create a new identity proof',
@@ -235,7 +235,7 @@ export class IdentityProofController<
         },
       }),
       routeConfig('post', '/verify', {
-        ...noAuth,
+        ...auth,
         handlerKey: 'verifyProof',
         openapi: {
           summary: 'Verify an identity proof signature',
@@ -255,7 +255,7 @@ export class IdentityProofController<
         },
       }),
       routeConfig('post', '/check-url', {
-        ...noAuth,
+        ...auth,
         handlerKey: 'checkProofUrl',
         openapi: {
           summary: 'Check a proof URL for the signed statement',
@@ -275,7 +275,7 @@ export class IdentityProofController<
         },
       }),
       routeConfig('post', '/:id/revoke', {
-        ...noAuth,
+        ...auth,
         handlerKey: 'revokeProof',
         openapi: {
           summary: 'Revoke an identity proof',
@@ -295,7 +295,7 @@ export class IdentityProofController<
         },
       }),
       routeConfig('get', '/instructions/:platform', {
-        ...noAuth,
+        ...auth,
         handlerKey: 'getInstructions',
         openapi: {
           summary: 'Get platform-specific posting instructions',
@@ -311,7 +311,7 @@ export class IdentityProofController<
         },
       }),
       routeConfig('get', '/list', {
-        ...noAuth,
+        ...auth,
         handlerKey: 'listProofs',
         openapi: {
           summary: 'List identity proofs for a member',

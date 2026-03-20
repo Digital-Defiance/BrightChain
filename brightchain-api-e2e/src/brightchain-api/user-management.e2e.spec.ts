@@ -131,7 +131,7 @@ describe('User Management E2E', () => {
           username: creds.username,
           password: creds.password,
         });
-        fail('Expected old password login to fail');
+        throw new Error('Expected old password login to fail');
       } catch (err) {
         const error = err as AxiosError<{ message: string }>;
         expect(error.response?.status).toBe(401);
@@ -287,7 +287,7 @@ describe('User Management E2E', () => {
             mnemonic: fakeMnemonic,
             newPassword: 'FallbackPass!99',
           });
-          fail('Expected recovery with invalid mnemonic to fail');
+          throw new Error('Expected recovery with invalid mnemonic to fail');
         } catch (err) {
           const error = err as AxiosError<{ message: string }>;
           expect(error.response?.status).toBe(401);

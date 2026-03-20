@@ -7,7 +7,7 @@ describe('BrightDbDatabasePlugin smoke test', () => {
       blockStoreType: 'disk',
       memberPoolName: 'test',
       getObject: () => ({}),
-    } as any;
+    } as unknown as ConstructorParameters<typeof BrightDbDatabasePlugin>[0];
 
     const plugin = new BrightDbDatabasePlugin(mockEnv);
     expect(plugin).toBeDefined();

@@ -1,31 +1,41 @@
 import { CONSTANTS } from '@brightchain/brightchain-lib';
 import { IconProp } from '@fortawesome/fontawesome-svg-core';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import React from 'react';
+import React, { ReactNode } from 'react';
 import './BrightChainLogo.scss';
 
 export interface BrightChainSubLogoProps {
+  leadText?: string;
   subText: string;
   icon?: IconProp;
+  iconColor?: string;
+  customIcon?: ReactNode;
   iconHeight?: number | string;
-  brightColor?: string;
+  leadColor?: string;
   subColor?: string;
   className?: string;
   style?: React.CSSProperties;
   width?: number | string;
   height?: number | string;
+  additionalText?: string;
+  additionalColor?: string;
 }
 
 export const BrightChainSubLogo: React.FC<BrightChainSubLogoProps> = ({
+  leadText,
   subText,
   icon,
-  brightColor = CONSTANTS.THEME_COLORS.CHAIN_BLUE_DARK,
+  iconColor: iconColor = CONSTANTS.THEME_COLORS.CHAIN_BLUE_DARK,
+  customIcon,
+  leadColor: leadColor = CONSTANTS.THEME_COLORS.CHAIN_BLUE_DARK,
   subColor: subColor = CONSTANTS.THEME_COLORS.CHAIN_BLUE_LIGHT,
   className,
   style,
-  width = 200,
+  width: _width = 200,
   height = 40,
   iconHeight = 32,
+  additionalText,
+  additionalColor,
 }) => (
   <div
     className={className}
@@ -36,12 +46,14 @@ export const BrightChainSubLogo: React.FC<BrightChainSubLogoProps> = ({
       height,
       ...style,
     }}
-  > 
+  >
     {icon !== undefined && (
-    <FontAwesomeIcon
-      icon={icon}
-      style={{ fontSize: iconHeight, color: brightColor }}
-    />)}
+      <FontAwesomeIcon
+        icon={icon}
+        style={{ fontSize: iconHeight, color: iconColor }}
+      />
+    )}
+    {customIcon !== undefined && customIcon}
     <span
       style={{
         fontFamily: "'Inter', sans-serif",
@@ -50,8 +62,14 @@ export const BrightChainSubLogo: React.FC<BrightChainSubLogoProps> = ({
         whiteSpace: 'nowrap',
       }}
     >
-      <span style={{ color: brightColor }}>Bright</span>
+      <span style={{ color: leadColor }}>{leadText ?? 'Bright'}</span>
       <span style={{ color: subColor }}>{subText}</span>
+      {additionalText !== undefined && (
+        <span style={{ color: additionalColor ?? subColor }}>
+          {' '}
+          {additionalText}
+        </span>
+      )}
     </span>
   </div>
 );

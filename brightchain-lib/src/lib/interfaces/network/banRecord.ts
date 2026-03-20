@@ -1,8 +1,8 @@
 /**
  * @fileoverview Ban record interfaces for the network trust system.
  *
- * A BanRecord is created when a BAN_MEMBER proposal is approved by the quorum.
- * It carries the quorum's threshold signatures so any node can independently
+ * A BanRecord is created when a BAN_MEMBER proposal is approved by the BrightTrust.
+ * It carries the BrightTrust's threshold signatures so any node can independently
  * verify the ban is legitimate.
  *
  * @see Network Trust and Ban Mechanism spec
@@ -34,7 +34,7 @@ export interface IBanRecord<TID extends PlatformID = Uint8Array> {
   /** Optional block IDs referencing evidence (offending content, logs, etc.) */
   evidenceBlockIds?: string[];
 
-  /** Quorum signatures approving this ban */
+  /** BrightTrust signatures approving this ban */
   approvalSignatures: Array<{
     memberId: TID;
     signature: Uint8Array;

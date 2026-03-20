@@ -42,7 +42,10 @@ const BrightPassRoutes: React.FC = () => {
               <Route index element={<VaultListView />} />
               <Route path="vault/:vaultId" element={<VaultDetailView />} />
               <Route path="vault/:vaultId/audit" element={<AuditLogView />} />
-              <Route path="tools/generator" element={<PasswordGeneratorPage />} />
+              <Route
+                path="tools/generator"
+                element={<PasswordGeneratorPage />}
+              />
             </Route>
           </Routes>
         </Suspense>

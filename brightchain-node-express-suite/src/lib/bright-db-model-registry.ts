@@ -26,7 +26,9 @@ export class BrightDbModelRegistry {
   private static _instance: BrightDbModelRegistry;
   private readonly _models = new Map<string, BrightDbModelRegistration>();
 
-  private constructor() {}
+  private constructor() {
+    // noop
+  }
 
   /**
    * Gets the singleton instance of BrightDbModelRegistry.

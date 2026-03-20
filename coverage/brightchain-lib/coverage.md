@@ -26,8 +26,8 @@
 | brightchain-lib/src/lib/memoryWriteableStream.ts | 100.00% | 100.00% | 0.00% |
 | brightchain-lib/src/lib/operationCost.ts | 0.00% | 0.00% | 0.00% |
 | brightchain-lib/src/lib/primeTupleGeneratorStream.ts | 0.00% | 0.00% | 0.00% |
-| brightchain-lib/src/lib/quorum.ts | 47.37% | 28.57% | 16.67% |
-| brightchain-lib/src/lib/quorumDataRecord.ts | 88.37% | 100.00% | 77.27% |
+| brightchain-lib/src/lib/BrightTrust.ts | 47.37% | 28.57% | 16.67% |
+| brightchain-lib/src/lib/BrightTrustDataRecord.ts | 88.37% | 100.00% | 77.27% |
 | brightchain-lib/src/lib/sealResults.ts | 0.00% | 0.00% | 0.00% |
 | brightchain-lib/src/lib/secureBuffer.ts | 87.27% | 82.35% | 100.00% |
 | brightchain-lib/src/lib/secureHeapStorage.ts | 0.00% | 0.00% | 0.00% |
@@ -73,7 +73,7 @@
 | brightchain-lib/src/lib/enumeration-translations/blockSize.ts | 100.00% | 0.00% | 0.00% |
 | brightchain-lib/src/lib/enumeration-translations/blockType.ts | 100.00% | 0.00% | 0.00% |
 | brightchain-lib/src/lib/enumeration-translations/memberType.ts | 100.00% | 0.00% | 0.00% |
-| brightchain-lib/src/lib/enumeration-translations/quorumDataRecordAction.ts | 100.00% | 0.00% | 0.00% |
+| brightchain-lib/src/lib/enumeration-translations/BrightTrustDataRecordAction.ts | 100.00% | 0.00% | 0.00% |
 | brightchain-lib/src/lib/enumerations/actionEvent.ts | 0.00% | 0.00% | 0.00% |
 | brightchain-lib/src/lib/enumerations/actionType.ts | 100.00% | 100.00% | 100.00% |
 | brightchain-lib/src/lib/enumerations/blockAccessErrorType.ts | 100.00% | 100.00% | 100.00% |
@@ -107,7 +107,7 @@
 | brightchain-lib/src/lib/enumerations/operationType.ts | 0.00% | 0.00% | 0.00% |
 | brightchain-lib/src/lib/enumerations/ownedDataErrorType.ts | 100.00% | 100.00% | 100.00% |
 | brightchain-lib/src/lib/enumerations/pbkdf2ErrorType.ts | 100.00% | 100.00% | 100.00% |
-| brightchain-lib/src/lib/enumerations/quorumErrorType.ts | 100.00% | 100.00% | 100.00% |
+| brightchain-lib/src/lib/enumerations/BrightTrustErrorType.ts | 100.00% | 100.00% | 100.00% |
 | brightchain-lib/src/lib/enumerations/sealingErrorType.ts | 100.00% | 100.00% | 100.00% |
 | brightchain-lib/src/lib/enumerations/secureStorageErrorType.ts | 100.00% | 100.00% | 100.00% |
 | brightchain-lib/src/lib/enumerations/storeErrorType.ts | 100.00% | 100.00% | 100.00% |
@@ -145,7 +145,7 @@
 | brightchain-lib/src/lib/errors/multiEncryptedError.ts | 57.14% | 0.00% | 0.00% |
 | brightchain-lib/src/lib/errors/ownedDataError.ts | 57.14% | 0.00% | 0.00% |
 | brightchain-lib/src/lib/errors/pbkdf2Error.ts | 100.00% | 100.00% | 0.00% |
-| brightchain-lib/src/lib/errors/quorumError.ts | 57.14% | 0.00% | 0.00% |
+| brightchain-lib/src/lib/errors/BrightTrustError.ts | 57.14% | 0.00% | 0.00% |
 | brightchain-lib/src/lib/errors/sealingError.ts | 100.00% | 100.00% | 0.00% |
 | brightchain-lib/src/lib/errors/secureStorageError.ts | 100.00% | 100.00% | 0.00% |
 | brightchain-lib/src/lib/errors/storeError.ts | 100.00% | 100.00% | 0.00% |

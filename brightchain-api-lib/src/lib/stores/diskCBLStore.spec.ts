@@ -363,7 +363,7 @@ describe('DiskCBLStore', () => {
       // Attempt to store the CBL without a creator or active user
       try {
         await newStore.set(cblWithoutCreator.idChecksum, cblWithoutCreator);
-        fail('Expected CblError to be thrown');
+        throw new Error('Expected CblError to be thrown');
       } catch (error) {
         expect(error).toBeInstanceOf(CblError);
         expect((error as CblError).type).toBe(

@@ -6,8 +6,8 @@
  *
  * Validates: Requirements 8.1, 8.2, 8.4, 9.1, 9.2, 9.3
  */
-import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { MnemonicRegistrationInput } from '../lib/identity/MnemonicRegistrationInput';
 
 const MnemonicRegex =

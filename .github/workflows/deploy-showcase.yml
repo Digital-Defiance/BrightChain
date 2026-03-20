@@ -32,21 +32,42 @@ jobs:
         with:
           node-version: '22'
 
-      - name: Enable Corepack
-        run: corepack enable
+      - name: Enable Yarn Berry
+        run: |
+          corepack enable
+          yarn set version 4.10.3
+
+      - name: Restore Yarn cache
+        id: yarn-cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            .yarn/cache
+            .yarn/global
+          key: yarn-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+
+      - name: Configure registries for CI
+        run: |
+          yarn config set 'npmScopes["awesome.me"].npmRegistryServer' "https://npm.fontawesome.com/"
+          yarn config set 'npmScopes["awesome.me"].npmAlwaysAuth' true
+          yarn config set 'npmScopes["awesome.me"].npmAuthToken' "${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}"
 
       - name: Install dependencies
         run: yarn install --immutable
 
-      - name: Install showcase dependencies
-        run: |
-          cd showcase
-          yarn install --immutable
+      # - name: Install showcase dependencies
+      #   run: |
+      #     cd showcase
+      #     yarn install --immutable
 
       - name: Build showcase (React)
         run: |
           cd showcase
           yarn build
+        env:
+          NODE_OPTIONS: '--max-old-space-size=6144'
+          GENERATE_SOURCEMAP: 'false'
+          NODE_ENV: production
 
       - name: Setup Ruby for Jekyll
         uses: ruby/setup-ruby@v1

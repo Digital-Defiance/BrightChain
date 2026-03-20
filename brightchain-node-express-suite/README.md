@@ -48,7 +48,7 @@ This means code written against the upstream's service patterns, plugin architec
 Beyond the 1:1 Mongoose replacements, this library adds capabilities unique to BrightChain:
 
 - Content-addressable storage where document identity is derived from content (SHA3-512)
-- Quorum-based document encryption via `QuorumService` - documents are sealed so that multiple members must cooperate to decrypt
+- BrightTrust-based document encryption via `BrightTrustService` - documents are sealed so that multiple members must cooperate to decrypt
 - Per-document access control with `hasAccess()`, `findAccessibleBy()`, and `findByIdDecrypted()`
 - Multiple storage backends: local disk, in-memory (dev/test), Azure Blob Storage, and Amazon S3
 - Block-level deduplication - identical documents are stored once
@@ -80,10 +80,10 @@ yarn add @brightchain/node-express-suite
 ```json
 {
   "@digitaldefiance/branded-interface": "^0.0.5",
-  "@digitaldefiance/node-ecies-lib": "^4.20.0",
-  "@digitaldefiance/node-express-suite": "^4.23.4",
-  "@brightchain/brightchain-lib": "^0.25.0",
-  "@brightchain/db": "^0.25.0"
+  "@digitaldefiance/node-ecies-lib": "^5.1.1",
+  "@digitaldefiance/node-express-suite": "^4.26.2",
+  "@brightchain/brightchain-lib": "*",
+  "@brightchain/db": "^0.29.24"
 }
 ```
 
@@ -167,12 +167,12 @@ await users.updateOne({ name: 'Alice' }, { email: 'alice@new.com' });
 await users.deleteOne({ name: 'Alice' });
 ```
 
-### Encrypted Documents (Quorum Sealing)
+### Encrypted Documents (BrightTrust Sealing)
 
-Documents can be encrypted using BrightChain's quorum-based sealing, where multiple members must cooperate to decrypt:
+Documents can be encrypted using BrightChain's BrightTrust-based sealing, where multiple members must cooperate to decrypt:
 
 ```typescript
-const store = new BlockDocumentStore(blockStore, quorumService);
+const store = new BlockDocumentStore(blockStore, BrightTrustService);
 const secrets = store.encryptedCollection('secrets');
 
 // Create an encrypted document

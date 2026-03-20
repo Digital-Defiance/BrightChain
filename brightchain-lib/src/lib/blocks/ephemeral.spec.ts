@@ -293,7 +293,7 @@ describe('EphemeralBlock', () => {
       let error: Error | undefined;
       try {
         await createTestBlock({ dateCreated: futureDate });
-        fail('Expected createTestBlock to throw');
+        throw new Error('Expected createTestBlock to throw');
       } catch (e) {
         error = e as Error;
       }

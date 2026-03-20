@@ -6,7 +6,7 @@ nav_order: 1
 # BrightChain Auth + Energy System Implementation Plan
 
 ## Goal
-Build minimal auth system with energy accounts following DigitalBurnbag patterns
+Build minimal auth system with energy accounts following DB patterns
 
 ## What We Need
 

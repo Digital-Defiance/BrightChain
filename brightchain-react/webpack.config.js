@@ -12,7 +12,7 @@ module.exports = composePlugins(
   (config) => {
     // Update the webpack config as needed here.
     // e.g. `config.plugins.push(new MyPlugin())`
-    
+
     // Ignore source map warnings and module not found errors for node_modules packages
     config.ignoreWarnings = [
       ...(config.ignoreWarnings || []),
@@ -21,11 +21,11 @@ module.exports = composePlugins(
         return (
           warning.message &&
           (warning.message.includes('file-type') ||
-           warning.message.includes('pg-hstore'))
+            warning.message.includes('pg-hstore'))
         );
       },
     ];
-    
+
     // Configure node polyfills for browser
     config.resolve = config.resolve || {};
 
@@ -37,9 +37,9 @@ module.exports = composePlugins(
       // Heavy Node.js-only deps from brightchain-lib's dependency tree
       'nat-pmp': false,
       'nat-upnp': false,
-      'express': false,
+      express: false,
     };
-    
+
     config.resolve.fallback = {
       ...config.resolve.fallback,
       crypto: false,
@@ -59,12 +59,16 @@ module.exports = composePlugins(
       child_process: false,
       async_hooks: false,
     };
-    
+
     // Exclude problematic Node.js-only dependencies
     config.externals = [
-      ...(Array.isArray(config.externals) ? config.externals : config.externals ? [config.externals] : []),
+      ...(Array.isArray(config.externals)
+        ? config.externals
+        : config.externals
+          ? [config.externals]
+          : []),
       // Function to externalize heavy server-only packages that webpack shouldn't resolve
-      function({ request }, callback) {
+      function ({ request }, callback) {
         const serverOnlyPackages = [
           'express',
           'nat-pmp',
@@ -88,13 +92,17 @@ module.exports = composePlugins(
           'mongodb-client-encryption',
           'bcrypt',
         ];
-        if (serverOnlyPackages.some(pkg => request === pkg || request.startsWith(pkg + '/'))) {
+        if (
+          serverOnlyPackages.some(
+            (pkg) => request === pkg || request.startsWith(pkg + '/'),
+          )
+        ) {
           return callback(null, `commonjs ${request}`);
         }
         callback();
       },
     ];
-    
+
     // Add module rules to ignore HTML files and problematic dependencies
     config.module = config.module || {};
     config.module.rules = config.module.rules || [];
@@ -119,9 +127,9 @@ module.exports = composePlugins(
       {
         test: /node_modules\/@root\/greenlock/,
         use: 'null-loader',
-      }
+      },
     );
-    
+
     return config;
-  }
+  },
 );

@@ -118,7 +118,7 @@ describe('BrightHub Posts API — CRUD Operations', () => {
   it('should return 404 for deleted post', async () => {
     try {
       await axios.get(`${BASE}/${postId}`, authHeader(token));
-      fail('Expected 404 for deleted post');
+      throw new Error('Expected 404 for deleted post');
     } catch (err) {
       const error = err as AxiosError;
       expect(error.response?.status).toBeGreaterThanOrEqual(400);
@@ -146,7 +146,7 @@ describe('BrightHub Posts API — Validation', () => {
         { authorId: memberId, content: longContent },
         authHeader(token),
       );
-      fail('Expected 400 for content exceeding 280 characters');
+      throw new Error('Expected 400 for content exceeding 280 characters');
     } catch (err) {
       const error = err as AxiosError;
       expect(error.response?.status).toBe(400);
@@ -160,7 +160,7 @@ describe('BrightHub Posts API — Validation', () => {
         { authorId: memberId, content: '' },
         authHeader(token),
       );
-      fail('Expected 400 for empty content');
+      throw new Error('Expected 400 for empty content');
     } catch (err) {
       const error = err as AxiosError;
       expect(error.response?.status).toBe(400);
@@ -170,7 +170,7 @@ describe('BrightHub Posts API — Validation', () => {
   it('should reject post creation without authorId', async () => {
     try {
       await axios.post(BASE, { content: 'Missing author' }, authHeader(token));
-      fail('Expected 400 for missing authorId');
+      throw new Error('Expected 400 for missing authorId');
     } catch (err) {
       const error = err as AxiosError;
       expect(error.response?.status).toBe(400);
@@ -181,7 +181,7 @@ describe('BrightHub Posts API — Validation', () => {
     const fakeId = '00000000-0000-0000-0000-000000000000';
     try {
       await axios.get(`${BASE}/${fakeId}`, authHeader(token));
-      fail('Expected 404 for non-existent post');
+      throw new Error('Expected 404 for non-existent post');
     } catch (err) {
       const error = err as AxiosError;
       expect(error.response?.status).toBeGreaterThanOrEqual(400);
@@ -223,7 +223,7 @@ describe('BrightHub Posts API — Authorization', () => {
         { userId: otherMemberId, content: 'Unauthorized edit' },
         authHeader(otherToken),
       );
-      fail("Expected 403 for editing another user's post");
+      throw new Error("Expected 403 for editing another user's post");
     } catch (err) {
       const error = err as AxiosError;
       expect(error.response?.status).toBe(403);
@@ -236,7 +236,7 @@ describe('BrightHub Posts API — Authorization', () => {
         ...authHeader(otherToken),
         data: { userId: otherMemberId },
       });
-      fail("Expected 403 for deleting another user's post");
+      throw new Error("Expected 403 for deleting another user's post");
     } catch (err) {
       const error = err as AxiosError;
       expect(error.response?.status).toBe(403);
@@ -328,7 +328,7 @@ describe('BrightHub Posts API — Like / Unlike', () => {
         { userId: memberId },
         authHeader(token),
       );
-      fail('Expected 404 for liking non-existent post');
+      throw new Error('Expected 404 for liking non-existent post');
     } catch (err) {
       const error = err as AxiosError;
       expect(error.response?.status).toBeGreaterThanOrEqual(400);
@@ -380,7 +380,7 @@ describe('BrightHub Posts API — Repost', () => {
         { userId: reposterMemberId },
         authHeader(reposterToken),
       );
-      fail('Expected error for duplicate repost');
+      throw new Error('Expected error for duplicate repost');
     } catch (err) {
       const error = err as AxiosError;
       expect(error.response?.status).toBe(400);
@@ -434,7 +434,7 @@ describe('BrightHub Posts API — Quote Post', () => {
         { userId: quoterMemberId },
         authHeader(quoterToken),
       );
-      fail('Expected 400 for missing commentary');
+      throw new Error('Expected 400 for missing commentary');
     } catch (err) {
       const error = err as AxiosError;
       expect(error.response?.status).toBe(400);
@@ -449,7 +449,7 @@ describe('BrightHub Posts API — Quote Post', () => {
         { userId: quoterMemberId, commentary: 'Quoting nothing' },
         authHeader(quoterToken),
       );
-      fail('Expected 404 for quoting non-existent post');
+      throw new Error('Expected 404 for quoting non-existent post');
     } catch (err) {
       const error = err as AxiosError;
       expect(error.response?.status).toBeGreaterThanOrEqual(400);
@@ -541,7 +541,7 @@ describe('BrightHub Posts API — Threads and Replies', () => {
         },
         authHeader(token),
       );
-      fail('Expected error for non-existent parent post');
+      throw new Error('Expected error for non-existent parent post');
     } catch (err) {
       const error = err as AxiosError;
       expect(error.response?.status).toBeGreaterThanOrEqual(400);

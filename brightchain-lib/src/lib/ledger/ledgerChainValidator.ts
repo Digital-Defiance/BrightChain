@@ -68,7 +68,10 @@ export class LedgerChainValidator {
    *
    * @see Requirements 11.1, 11.3, 11.4
    */
-  validateAll(entries: ILedgerEntry[], merkleRoot?: Checksum): IValidationResult {
+  validateAll(
+    entries: ILedgerEntry[],
+    merkleRoot?: Checksum,
+  ): IValidationResult {
     if (entries.length === 0) {
       return { isValid: true, entriesChecked: 0, errors: [] };
     }
@@ -135,14 +138,18 @@ export class LedgerChainValidator {
     if (merkleRoot !== undefined) {
       const checksumService = new ChecksumService();
       const entryHashes = entries.map((e) => e.entryHash);
-      const computedTree = IncrementalMerkleTree.fromLeaves(entryHashes, checksumService);
+      const computedTree = IncrementalMerkleTree.fromLeaves(
+        entryHashes,
+        checksumService,
+      );
       const computedRoot = computedTree.root;
 
       if (!computedRoot.equals(merkleRoot)) {
         errors.push({
           sequenceNumber: entries[entries.length - 1].sequenceNumber,
           errorType: 'merkle_root_mismatch',
-          message: 'Reconstructed Merkle root does not match the stored Merkle root',
+          message:
+            'Reconstructed Merkle root does not match the stored Merkle root',
         });
       }
     }
@@ -261,7 +268,10 @@ export class LedgerChainValidator {
     if (merkleRoot !== undefined && merkleProofs !== undefined) {
       for (let i = 0; i < entries.length; i++) {
         if (i < merkleProofs.length) {
-          const result = Ledger.verifyInclusionProof(merkleProofs[i], merkleRoot);
+          const result = Ledger.verifyInclusionProof(
+            merkleProofs[i],
+            merkleRoot,
+          );
           if (!result.isValid) {
             errors.push({
               sequenceNumber: entries[i].sequenceNumber,
@@ -310,7 +320,9 @@ export class LedgerChainValidator {
     // Determine chunk count: 2-4 chunks based on entry count
     const chunkCount = Math.min(
       entries.length,
-      entries.length <= 4 ? entries.length : Math.min(4, Math.max(2, Math.ceil(entries.length / 4))),
+      entries.length <= 4
+        ? entries.length
+        : Math.min(4, Math.max(2, Math.ceil(entries.length / 4))),
     );
     const chunkSize = Math.ceil(entries.length / chunkCount);
 
@@ -389,9 +401,9 @@ export class LedgerChainValidator {
    * This is separated from the parallel chunk validation because governance
    * requires tracking the AuthorizedSignerSet state across entries.
    */
-  private validateGovernanceSequential(
-    entries: ILedgerEntry[],
-  ): { errors: ILedgerValidationError[] } {
+  private validateGovernanceSequential(entries: ILedgerEntry[]): {
+    errors: ILedgerValidationError[];
+  } {
     const errors: ILedgerValidationError[] = [];
     let signerSet: AuthorizedSignerSet | null = null;
 
@@ -444,7 +456,7 @@ export class LedgerChainValidator {
 
       const signerSet = new AuthorizedSignerSet(
         parsed.genesis.signers as IAuthorizedSigner[],
-        parsed.genesis.quorumPolicy,
+        parsed.genesis.brightTrustPolicy,
       );
 
       // Verify genesis signer is authorized

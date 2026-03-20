@@ -23,7 +23,7 @@ The OFF System provides legal protection through plausible deniability. If any p
 
 ### Brokered Anonymity
 
-BrightChain's "Brokered Anonymity" feature requires complete OFF compliance. Identity information is sealed using Shamir's Secret Sharing and stored as TUPLEs, ensuring it can only be reconstructed through majority quorum consensus (e.g., in response to legal warrants).
+BrightChain's "Brokered Anonymity" feature requires complete OFF compliance. Identity information is sealed using Shamir's Secret Sharing and stored as TUPLEs, ensuring it can only be reconstructed through majority BrightTrust consensus (e.g., in response to legal warrants).
 
 ### Consistency
 
@@ -255,7 +255,7 @@ const originalData = await tupleService.retrieveTuple(
 
 ✅ Identity information sealed with Shamir's Secret Sharing
 ✅ Stored as TUPLEs for additional protection
-✅ Requires quorum consensus for reconstruction
+✅ Requires BrightTrust consensus for reconstruction
 
 ## Conclusion
 

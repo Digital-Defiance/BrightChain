@@ -86,6 +86,16 @@ function createStoreForErrorTests(): AzureBlobBlockStore {
   });
 }
 
+/** Helper to capture a thrown error without conditional expects */
+function getThrown(fn: () => unknown): unknown {
+  try {
+    fn();
+  } catch (e) {
+    return e;
+  }
+  return undefined;
+}
+
 // ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
@@ -149,14 +159,11 @@ describe('AzureBlobBlockStore', () => {
         StoreError,
       );
 
-      try {
-        new AzureBlobBlockStore({ ...baseConfig });
-      } catch (e) {
-        expect(e).toBeInstanceOf(StoreError);
-        expect((e as StoreError).type).toBe(
-          StoreErrorType.CloudAuthenticationFailed,
-        );
-      }
+      const error = getThrown(() => new AzureBlobBlockStore({ ...baseConfig }));
+      expect(error).toBeInstanceOf(StoreError);
+      expect((error as StoreError).type).toBe(
+        StoreErrorType.CloudAuthenticationFailed,
+      );
     });
 
     it('throws CloudAuthenticationFailed with only accountName (no key, no managed identity)', () => {
@@ -168,17 +175,17 @@ describe('AzureBlobBlockStore', () => {
           }),
       ).toThrow(StoreError);
 
-      try {
-        new AzureBlobBlockStore({
-          ...baseConfig,
-          accountName: 'myaccount',
-        });
-      } catch (e) {
-        expect(e).toBeInstanceOf(StoreError);
-        expect((e as StoreError).type).toBe(
-          StoreErrorType.CloudAuthenticationFailed,
-        );
-      }
+      const error = getThrown(
+        () =>
+          new AzureBlobBlockStore({
+            ...baseConfig,
+            accountName: 'myaccount',
+          }),
+      );
+      expect(error).toBeInstanceOf(StoreError);
+      expect((error as StoreError).type).toBe(
+        StoreErrorType.CloudAuthenticationFailed,
+      );
     });
   });
 
@@ -299,19 +306,17 @@ describe('AzureBlobBlockStore', () => {
     it('createAzureStore throws FactoryNotRegistered when no factory is registered', () => {
       BlockStoreFactory.clearAzureStoreFactory();
 
-      try {
+      const error = getThrown(() =>
         BlockStoreFactory.createAzureStore({
           region: 'eastus',
           containerOrBucketName: 'test',
           blockSize: BlockSize.Small,
-        });
-        fail('Expected StoreError to be thrown');
-      } catch (e) {
-        expect(e).toBeInstanceOf(StoreError);
-        expect((e as StoreError).type).toBe(
-          StoreErrorType.FactoryNotRegistered,
-        );
-      }
+        }),
+      );
+      expect(error).toBeInstanceOf(StoreError);
+      expect((error as StoreError).type).toBe(
+        StoreErrorType.FactoryNotRegistered,
+      );
     });
   });
 });

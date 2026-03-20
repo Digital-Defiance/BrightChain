@@ -1,20 +1,20 @@
 /**
  * @fileoverview Property-based tests for BlockDocumentStore encrypted document operations
  *
- * **Feature: backend-blockstore-quorum, Property 21: Encrypted Document Store Round-Trip**
+ * **Feature: backend-blockstore-brightTrust, Property 21: Encrypted Document Store Round-Trip**
  * **Validates: Requirements 13.1, 13.2**
  *
  * This test suite verifies that:
- * - Creating an encrypted document and retrieving it with valid quorum shares returns the original
+ * - Creating an encrypted document and retrieving it with valid BrightTrust shares returns the original
  * - Encrypted documents require proper member shares for decryption
  */
 
 import {
   BlockSize,
+  BrightTrustMemberMetadata,
+  BrightTrustService,
   initializeBrightChain,
   MemoryBlockStore,
-  QuorumMemberMetadata,
-  QuorumService,
   ServiceLocator,
   ServiceProvider,
 } from '@brightchain/brightchain-lib';
@@ -79,16 +79,16 @@ describe('BlockDocumentStore Encrypted Document Property Tests', () => {
   }
 
   /**
-   * Helper to create a properly configured QuorumService
+   * Helper to create a properly configured BrightTrustService
    */
-  function createQuorumService(): QuorumService<GuidV4Buffer> {
-    return new QuorumService<GuidV4Buffer>();
+  function createBrightTrustService(): BrightTrustService<GuidV4Buffer> {
+    return new BrightTrustService<GuidV4Buffer>();
   }
 
   describe('Property 21: Encrypted Document Store Round-Trip', () => {
     /**
      * Property: For any valid document created with encryption enabled,
-     * storing and then retrieving with valid quorum shares SHALL return
+     * storing and then retrieving with valid BrightTrust shares SHALL return
      * the original document.
      *
      * **Validates: Requirements 13.1, 13.2**
@@ -107,11 +107,11 @@ describe('BlockDocumentStore Encrypted Document Property Tests', () => {
             content: string;
             value: number;
           }) => {
-            const quorumService = createQuorumService();
+            const brightTrustService = createBrightTrustService();
             const blockStore = new MemoryBlockStore(BlockSize.Small);
             const documentStore = new BlockDocumentStore(
               blockStore,
-              quorumService,
+              brightTrustService,
             );
             const collection =
               documentStore.encryptedCollection<TestDocument>('test-docs');
@@ -119,7 +119,7 @@ describe('BlockDocumentStore Encrypted Document Property Tests', () => {
             const timestamp = Date.now();
             const random = Math.floor(Math.random() * 1000000);
 
-            // Create 3 members (minimum for meaningful quorum)
+            // Create 3 members (minimum for meaningful BrightTrust)
             const memberData: IMemberWithMnemonic<GuidV4Buffer>[] = [];
             const memberIds: HexString[] = [];
 
@@ -131,12 +131,12 @@ describe('BlockDocumentStore Encrypted Document Property Tests', () => {
               );
               memberData.push(memberWithMnemonic);
 
-              const metadata: QuorumMemberMetadata = {
+              const metadata: BrightTrustMemberMetadata = {
                 name: `Member${i}`,
                 email: `member${uniqueSuffix}@example.com`,
               };
 
-              const addedMember = await quorumService.addMember(
+              const addedMember = await brightTrustService.addMember(
                 memberWithMnemonic.member,
                 metadata,
               );
@@ -201,11 +201,11 @@ describe('BlockDocumentStore Encrypted Document Property Tests', () => {
             content: string;
             value: number;
           }) => {
-            const quorumService = createQuorumService();
+            const brightTrustService = createBrightTrustService();
             const blockStore = new MemoryBlockStore(BlockSize.Small);
             const documentStore = new BlockDocumentStore(
               blockStore,
-              quorumService,
+              brightTrustService,
             );
             const collection =
               documentStore.encryptedCollection<TestDocument>('test-docs-fail');
@@ -225,12 +225,12 @@ describe('BlockDocumentStore Encrypted Document Property Tests', () => {
               );
               memberData.push(memberWithMnemonic);
 
-              const metadata: QuorumMemberMetadata = {
+              const metadata: BrightTrustMemberMetadata = {
                 name: `Member${i}`,
                 email: `member${uniqueSuffix}@example.com`,
               };
 
-              const addedMember = await quorumService.addMember(
+              const addedMember = await brightTrustService.addMember(
                 memberWithMnemonic.member,
                 metadata,
               );
@@ -270,7 +270,7 @@ describe('BlockDocumentStore Encrypted Document Property Tests', () => {
     });
 
     /**
-     * Property: Unencrypted documents should be retrievable without quorum shares.
+     * Property: Unencrypted documents should be retrievable without BrightTrust shares.
      *
      * **Validates: Requirements 13.3**
      */

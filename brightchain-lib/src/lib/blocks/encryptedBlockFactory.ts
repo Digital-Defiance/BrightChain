@@ -14,10 +14,7 @@ import { getGlobalServiceProvider } from '../services/globalServiceProvider';
 import { Checksum } from '../types/checksum';
 import { EncryptedBlock } from './encrypted';
 
-import { createECIESService } from '../browserConfig';
-
 export class EncryptedBlockFactory {
-  private static readonly eciesService = createECIESService();
   private static readonly checksumService = new ChecksumService();
 
   private static blockConstructors: {

@@ -79,7 +79,6 @@ import {
   validationError,
 } from '../../utils/errorResponse';
 import { BaseController } from '../base';
-import { SessionsController } from './sessions';
 
 type GroupApiResponse =
   | ICreateGroupResponse
@@ -234,35 +233,8 @@ export class GroupController<
    * Falls back to body/query memberId for testing.
    */
   private getMemberId(req: unknown): string {
-    // Try JWT session first
-    const typedReq = req as { headers?: { authorization?: string } };
-    if (typedReq.headers?.authorization) {
-      try {
-        const sessionsController =
-          this.application.getController<SessionsController>('sessions');
-        const member = sessionsController.getMemberFromSession(
-          typedReq.headers.authorization,
-        );
-        if (member) {
-          return member.id.toString();
-        }
-      } catch {
-        // Fall through to body/query fallback
-      }
-    }
-
-    // Fallback: body.memberId / body.requesterId (testing)
-    const body = (req as CreateGroupBody).body;
-    if (body && typeof body === 'object') {
-      const bodyRecord = body as Record<string, unknown>;
-      if (typeof bodyRecord['memberId'] === 'string')
-        return bodyRecord['memberId'];
-      if (typeof bodyRecord['requesterId'] === 'string')
-        return bodyRecord['requesterId'];
-    }
-    const query = (req as GroupIdParams).query;
-    if (query && typeof query.memberId === 'string') return query.memberId;
-
+    const user = (req as { user?: { id?: string } }).user;
+    if (user && typeof user.id === 'string') return user.id;
     throw new Error('No authenticated user');
   }
 

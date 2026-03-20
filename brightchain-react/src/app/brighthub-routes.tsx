@@ -7,7 +7,6 @@
  *
  * @requirements 38.15-38.19, 45.1-45.28
  */
-import { BrightHubStrings } from '@brightchain/brighthub-lib';
 import type {
   IBaseNotification,
   IBaseNotificationPreferences,
@@ -18,24 +17,25 @@ import type {
 } from '@brightchain/brighthub-lib';
 import {
   ApproveFollowersMode,
+  BrightHubStrings,
   NotificationCategory,
   NotificationChannel,
   PostType,
 } from '@brightchain/brighthub-lib';
 import {
-  type InboxConversation,
-  BrightHubLayout as OuterLayout,
   ConnectionListManager,
   ConnectionPrivacySettings,
   ConnectionSuggestions,
   ConversationView,
   FollowRequestList,
   HubManager,
+  type InboxConversation,
   MessageRequestsList,
   MessagingInbox,
   NewConversationDialog,
   NotificationList,
   NotificationPreferences,
+  BrightHubLayout as OuterLayout,
   PostComposer,
   ThreadView,
   Timeline,
@@ -48,7 +48,13 @@ import {
 } from '@digitaldefiance/express-suite-react-components';
 import { Box, Button, CircularProgress } from '@mui/material';
 import { FC, useCallback, useEffect, useState } from 'react';
-import { Outlet, Route, Routes, useNavigate, useParams } from 'react-router-dom';
+import {
+  Outlet,
+  Route,
+  Routes,
+  useNavigate,
+  useParams,
+} from 'react-router-dom';
 
 /* ── Stub / default data ───────────────────────────────────── */
 
@@ -171,13 +177,20 @@ const MessagingInboxPage: FC = () => {
   >([]);
 
   useEffect(() => {
-    if (!userId) return;
+    if (!userId) {
+      setLoading(false);
+      return;
+    }
     let cancelled = false;
     api
       .get(`/brighthub/messages/conversations?userId=${userId}`)
       .then((res) => {
         if (!cancelled && res.data?.data) {
-          const convs = (res.data.data as unknown[]).map((c: unknown) => {
+          // API returns { conversations: [...] } or a raw array
+          const raw = Array.isArray(res.data.data)
+            ? res.data.data
+            : (res.data.data.conversations ?? []);
+          const convs = (raw as unknown[]).map((c: unknown) => {
             const conv = c as Record<string, unknown>;
             return {
               ...conv,
@@ -196,7 +209,7 @@ const MessagingInboxPage: FC = () => {
     return () => {
       cancelled = true;
     };
-  }, [api]);
+  }, [api, userId]);
 
   const handleNewConversation = useCallback(() => setDialogOpen(true), []);
 
@@ -207,7 +220,9 @@ const MessagingInboxPage: FC = () => {
         return;
       }
       api
-        .get(`/brighthub/search?q=${encodeURIComponent(query)}&type=users&userId=${userId}`)
+        .get(
+          `/brighthub/search?q=${encodeURIComponent(query)}&type=users&userId=${userId}`,
+        )
         .then((res) => {
           const users = (res.data?.data?.users ?? []) as {
             _id: string;
@@ -224,7 +239,7 @@ const MessagingInboxPage: FC = () => {
         })
         .catch(() => setSearchResults([]));
     },
-    [api],
+    [api, userId],
   );
 
   const handleStartConversation = useCallback(
@@ -240,7 +255,7 @@ const MessagingInboxPage: FC = () => {
         .catch(() => {});
       setDialogOpen(false);
     },
-    [api, navigate],
+    [api, navigate, userId],
   );
 
   return (
@@ -267,18 +282,28 @@ const MessageRequestsPage: FC = () => {
   const { userData } = useAuth();
   const userId = userData?.id;
   const [requests, setRequests] = useState<never[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!userId) return;
+    if (!userId) {
+      setLoading(false);
+      return;
+    }
     api
       .get(`/brighthub/messages/requests?userId=${userId}`)
       .then((res) => {
-        if (res.data?.data) setRequests(res.data.data as never[]);
+        if (res.data?.data) {
+          // API returns { requests: [...] } or a raw array
+          const raw = res.data.data;
+          const items = Array.isArray(raw) ? raw : (raw.requests ?? []);
+          setRequests(items as never[]);
+        }
       })
-      .catch(() => {});
-  }, [api]);
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [api, userId]);
 
-  return <MessageRequestsList requests={requests} />;
+  return <MessageRequestsList requests={requests} loading={loading} />;
 };
 
 const ConversationPage: FC = () => {
@@ -295,7 +320,7 @@ const ConversationPage: FC = () => {
         if (res.data?.data?.messages) setMessages(res.data.data.messages);
       })
       .catch(() => {});
-  }, [api, id]);
+  }, [api, id, userData?.id]);
 
   return (
     <ConversationView
@@ -327,7 +352,10 @@ const NotificationsPage: FC = () => {
   const [hasMore, setHasMore] = useState(false);
 
   useEffect(() => {
-    if (!userId) return;
+    if (!userId) {
+      setLoading(false);
+      return;
+    }
     let cancelled = false;
     api
       .get(`/brighthub/notifications?userId=${userId}`)
@@ -357,10 +385,14 @@ const NotificationsPage: FC = () => {
       loading={loading}
       hasMore={hasMore}
       onMarkRead={(id) => {
-        api.post(`/brighthub/notifications/${id}/read`, { userId }).catch(() => {});
+        api
+          .post(`/brighthub/notifications/${id}/read`, { userId })
+          .catch(() => {});
       }}
       onDelete={(id) => {
-        api.delete(`/brighthub/notifications/${id}?userId=${userId}`).catch(() => {});
+        api
+          .delete(`/brighthub/notifications/${id}?userId=${userId}`)
+          .catch(() => {});
         setNotifications((prev) => prev.filter((n) => n._id !== id));
       }}
     />
@@ -403,17 +435,38 @@ const TimelinePage: FC = () => {
   const { userData } = useAuth();
   const userId = userData?.id;
   const [posts, setPosts] = useState<IBasePostData<string>[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!userId) return;
+    if (!userId) {
+      setLoading(false);
+      return;
+    }
+    let cancelled = false;
     api
       .get(`/brighthub/timeline/home?userId=${userId}`)
       .then((res) => {
-        if (res.data?.data?.posts) setPosts(res.data.data.posts);
-        else if (Array.isArray(res.data?.data)) setPosts(res.data.data);
+        if (!cancelled) {
+          if (res.data?.data?.posts) setPosts(res.data.data.posts);
+          else if (Array.isArray(res.data?.data)) setPosts(res.data.data);
+        }
       })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [api, userId]);
+
+  if (loading) {
+    return (
+      <Box display="flex" justifyContent="center" py={4}>
+        <CircularProgress />
+      </Box>
+    );
+  }
 
   return (
     <Box>
@@ -432,7 +485,10 @@ const ThreadPage: FC = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!id) return;
+    if (!id) {
+      setLoading(false);
+      return;
+    }
     let cancelled = false;
     api
       .get(`/brighthub/posts/${id}/thread`)
@@ -475,10 +531,17 @@ const ProfilePage: FC = () => {
   const isSelf = userData?.id === id;
 
   useEffect(() => {
-    if (!id) return;
+    if (!id) {
+      setLoading(false);
+      return;
+    }
     let cancelled = false;
     api
-      .get(`/brighthub/users/${id}?userId=${userData?.id}`)
+      .get(
+        userData?.id
+          ? `/brighthub/users/${id}?requesterId=${userData.id}`
+          : `/brighthub/users/${id}`,
+      )
       .then((res) => {
         if (!cancelled && res.data?.data) {
           setUser(res.data.data);
@@ -487,14 +550,26 @@ const ProfilePage: FC = () => {
           }
         }
       })
-      .catch(() => {})
+      .catch(() => {
+        // Populate fallback from auth context only when viewing own profile
+        if (!cancelled && userData && isSelf) {
+          setUser((prev) => ({
+            ...prev,
+            _id: id ?? prev._id,
+            username: userData.username ?? prev.username,
+            displayName:
+              userData.displayName ?? userData.username ?? prev.displayName,
+          }));
+        }
+      })
       .finally(() => {
         if (!cancelled) setLoading(false);
       });
     return () => {
       cancelled = true;
     };
-  }, [api, id]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [api, id, userData?.id]);
 
   if (loading) {
     return (
@@ -508,12 +583,14 @@ const ProfilePage: FC = () => {
     if (!id) return;
     if (isFollowing) {
       api
-        .delete(`/brighthub/users/${id}/follow?userId=${userData?.id}`)
+        .delete(`/brighthub/users/${id}/follow`, {
+          data: { followerId: userData?.id },
+        })
         .then(() => setIsFollowing(false))
         .catch(() => {});
     } else {
       api
-        .post(`/brighthub/users/${id}/follow`, { userId: userData?.id })
+        .post(`/brighthub/users/${id}/follow`, { followerId: userData?.id })
         .then(() => setIsFollowing(true))
         .catch(() => {});
     }

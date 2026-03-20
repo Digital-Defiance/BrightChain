@@ -37,5 +37,12 @@ export function sendApiMessageResponse(
   statusCode: number,
   data: any,
 ): void {
-  res.status(statusCode).json(data);
+  // Use a custom replacer to convert BigInt values to strings so
+  // JSON.stringify does not throw "Do not know how to serialize a BigInt".
+  const body = JSON.parse(
+    JSON.stringify(data, (_key: string, value: unknown) =>
+      typeof value === 'bigint' ? value.toString() : value,
+    ),
+  );
+  res.status(statusCode).json(body);
 }

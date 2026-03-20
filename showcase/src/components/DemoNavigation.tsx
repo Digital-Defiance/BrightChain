@@ -1,62 +1,81 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import React, { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { useShowcaseI18n } from '../i18n/ShowcaseI18nContext';
+import { ShowcaseStringKey, ShowcaseStrings } from '../i18n/showcaseStrings';
 import './DemoNavigation.css';
+import { LanguageSelector } from './LanguageSelector';
 
-export type DemoMode = 'home' | 'interactive' | 'soup' | 'minimal' | 'blog' | 'ledger' | 'faq';
+import brightchainTxImg from '../assets/images/brightchain-tx-white.png';
+
+export type DemoMode =
+  | 'home'
+  | 'interactive'
+  | 'soup'
+  | 'minimal'
+  | 'blog'
+  | 'ledger'
+  | 'faq';
 
 interface NavigationItem {
   id: DemoMode;
-  label: string;
+  label: ShowcaseStringKey;
+  description: ShowcaseStringKey;
   icon: string;
   path: string;
-  description: string;
 }
 
 const navigationItems: NavigationItem[] = [
   {
     id: 'home',
-    label: 'Home',
+    label: ShowcaseStrings.Nav_Home,
+    description: ShowcaseStrings.Nav_Home_Description,
     icon: '🏠',
     path: '/',
-    description: 'Main showcase page',
   },
   {
     id: 'soup',
-    label: 'Soup Demo',
+    label: ShowcaseStrings.Nav_SoupDemo,
+    description: ShowcaseStrings.Nav_SoupDemo_Description,
     icon: '🥫',
     path: '/demo',
-    description: 'Interactive block soup visualization',
   },
   {
     id: 'ledger',
-    label: 'Ledger',
+    label: ShowcaseStrings.Nav_Ledger,
+    description: ShowcaseStrings.Nav_Ledger_Description,
     icon: '⛓️',
     path: '/ledger',
-    description: 'Blockchain ledger with governance',
   },
   {
     id: 'blog',
-    label: 'Blog',
+    label: ShowcaseStrings.Nav_Blog,
+    description: ShowcaseStrings.Nav_Blog_Description,
     icon: '📝',
     path: '/blog',
-    description: 'BrightChain blog and updates',
   },
   {
     id: 'faq',
-    label: 'FAQ',
+    label: ShowcaseStrings.Nav_FAQ,
+    description: ShowcaseStrings.Nav_FAQ_Description,
     icon: '❓',
     path: '/faq',
-    description: 'Frequently asked questions',
   },
 ];
 
-const externalLinks = [
+interface ExternalLink {
+  label: ShowcaseStringKey;
+  description: ShowcaseStringKey;
+  icon: string;
+  href: string;
+}
+
+const externalLinks: ExternalLink[] = [
   {
-    label: 'Docs',
+    label: ShowcaseStrings.Nav_Docs,
+    description: ShowcaseStrings.Nav_Docs_Description,
     icon: '📚',
     href: '/docs/',
-    description: 'Project documentation',
   },
 ];
 
@@ -69,6 +88,7 @@ export const DemoNavigation: React.FC<DemoNavigationProps> = ({
   currentMode: _currentMode = 'home',
   onModeChange,
 }) => {
+  const { t } = useShowcaseI18n();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
@@ -103,7 +123,8 @@ export const DemoNavigation: React.FC<DemoNavigationProps> = ({
       <div className="nav-container">
         <Link to="/" className="nav-logo">
           <img
-            src="https://raw.githubusercontent.com/Digital-Defiance/BrightChain/main/brightchain-react/src/assets/images/brightchain-tx-white.png"
+            src={brightchainTxImg}
+            alt="BrightChain"
             style={{ height: '36px' }}
           />
         </Link>
@@ -116,10 +137,10 @@ export const DemoNavigation: React.FC<DemoNavigationProps> = ({
               to={item.path}
               className={`nav-item ${isActive(item.path) ? 'active' : ''}`}
               onClick={() => handleNavClick(item)}
-              title={item.description}
+              title={t(item.description)}
             >
               <span className="nav-icon">{item.icon}</span>
-              <span className="nav-label">{item.label}</span>
+              <span className="nav-label">{t(item.label)}</span>
               {isActive(item.path) && (
                 <motion.div
                   className="nav-indicator"
@@ -134,19 +155,20 @@ export const DemoNavigation: React.FC<DemoNavigationProps> = ({
               key={link.label}
               href={link.href}
               className="nav-item"
-              title={link.description}
+              title={t(link.description)}
             >
               <span className="nav-icon">{link.icon}</span>
-              <span className="nav-label">{link.label}</span>
+              <span className="nav-label">{t(link.label)}</span>
             </a>
           ))}
+          <LanguageSelector />
         </div>
 
         {/* Mobile Menu Button */}
         <button
           className="mobile-menu-button"
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          aria-label="Toggle menu"
+          aria-label={t(ShowcaseStrings.Nav_ToggleMenu)}
         >
           <span className={`hamburger ${isMobileMenuOpen ? 'open' : ''}`}>
             <span></span>
@@ -175,8 +197,8 @@ export const DemoNavigation: React.FC<DemoNavigationProps> = ({
               >
                 <span className="nav-icon">{item.icon}</span>
                 <div className="nav-content">
-                  <span className="nav-label">{item.label}</span>
-                  <span className="nav-description">{item.description}</span>
+                  <span className="nav-label">{t(item.label)}</span>
+                  <span className="nav-description">{t(item.description)}</span>
                 </div>
               </Link>
             ))}
@@ -189,11 +211,14 @@ export const DemoNavigation: React.FC<DemoNavigationProps> = ({
               >
                 <span className="nav-icon">{link.icon}</span>
                 <div className="nav-content">
-                  <span className="nav-label">{link.label}</span>
-                  <span className="nav-description">{link.description}</span>
+                  <span className="nav-label">{t(link.label)}</span>
+                  <span className="nav-description">{t(link.description)}</span>
                 </div>
               </a>
             ))}
+            <div className="mobile-language-selector">
+              <LanguageSelector />
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

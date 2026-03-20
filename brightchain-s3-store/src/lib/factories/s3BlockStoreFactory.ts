@@ -12,10 +12,7 @@ import {
   BlockStoreFactory,
   ICloudBlockStoreConfig,
 } from '@brightchain/brightchain-lib';
-import {
-  IS3BlockStoreConfig,
-  S3BlockStore,
-} from '../stores/s3BlockStore';
+import { IS3BlockStoreConfig, S3BlockStore } from '../stores/s3BlockStore';
 
 BlockStoreFactory.registerS3StoreFactory(
   (config: ICloudBlockStoreConfig) =>

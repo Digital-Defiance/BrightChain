@@ -34,7 +34,11 @@ import { useNavigate } from 'react-router-dom';
 
 const SOURCE_CONFIG: Record<
   UnifiedNotificationSource,
-  { label: string; color: 'primary' | 'secondary' | 'success' | 'warning'; icon: ReactElement }
+  {
+    label: string;
+    color: 'primary' | 'secondary' | 'success' | 'warning';
+    icon: ReactElement;
+  }
 > = {
   hub: { label: 'Hub', color: 'primary', icon: <NotificationsIcon /> },
   mail: { label: 'Mail', color: 'secondary', icon: <EmailIcon /> },
@@ -65,7 +69,9 @@ export const UnifiedNotificationsPage: FC = () => {
         .then((res) => {
           const data = res.data?.data;
           if (data) {
-            setItems((prev) => (append ? [...prev, ...data.items] : data.items));
+            setItems((prev) =>
+              append ? [...prev, ...data.items] : data.items,
+            );
             setHasMore(data.hasMore ?? false);
             setCursor(data.cursor);
           }

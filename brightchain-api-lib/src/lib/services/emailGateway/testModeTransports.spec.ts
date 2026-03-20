@@ -8,7 +8,10 @@ import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
 
-import { createTestModeConfig, type IEmailGatewayConfig } from './emailGatewayConfig';
+import {
+  createTestModeConfig,
+  type IEmailGatewayConfig,
+} from './emailGatewayConfig';
 import {
   CatchallTransport,
   createDkimSigner,
@@ -67,7 +70,11 @@ describe('CatchallTransport', () => {
   it('should track captured emails in memory', async () => {
     const rawMessage = new TextEncoder().encode('Test message');
 
-    await transport.send('sender@test.local', ['recipient@test.local'], rawMessage);
+    await transport.send(
+      'sender@test.local',
+      ['recipient@test.local'],
+      rawMessage,
+    );
 
     const captured = transport.getCapturedEmails();
     expect(captured).toHaveLength(1);

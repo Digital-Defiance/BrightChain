@@ -31,7 +31,7 @@ const expressConsts = createExpressConstants({
   Site: 'BrightChain',
   SiteTagline: 'Privacy. Participation. Power.',
   SiteDescription:
-    'Your files are broken into blocks and mixed with random data using XOR operations, making them appear completely random while maintaining perfect security. From homomorphic voting to brokered anonymity, from distributed file storage to quorum-based governance, BrightChain offers everything needed for the next generation of decentralized applications.',
+    'Your files are broken into blocks and mixed with random data using XOR operations, making them appear completely random while maintaining perfect security. From homomorphic voting to brokered anonymity, from distributed file storage to BrightTrust-based governance, BrightChain offers everything needed for the next generation of decentralized applications.',
 });
 
 /**

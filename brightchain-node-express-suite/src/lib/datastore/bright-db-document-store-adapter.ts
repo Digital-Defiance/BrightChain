@@ -157,7 +157,6 @@ class BrightDbCollectionAdapter<T extends DocumentRecord>
     return this._col.estimatedDocumentCount();
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   aggregate<U = unknown>(pipeline: unknown[]): QueryBuilder<U[]> {
     return toQueryBuilder<U[]>(async () => {
       return (await this._col.aggregate(pipeline)) as U[];

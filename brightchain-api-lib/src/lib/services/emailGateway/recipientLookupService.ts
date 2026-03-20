@@ -118,7 +118,6 @@ export class RecipientLookupCache {
   }
 }
 
-
 // ─── Constants ──────────────────────────────────────────────────────────────
 
 /** Maximum time (ms) to wait for a registry lookup before returning TEMP. */
@@ -138,7 +137,9 @@ const DEFAULT_CACHE_MAX_SIZE = 10_000;
  *
  * @see Requirements 13.1, 13.2, 13.3, 13.4, 13.5, 13.6, 13.7
  */
-export class RecipientLookupService implements IRecipientLookupService, IDomainAwareComponent {
+export class RecipientLookupService
+  implements IRecipientLookupService, IDomainAwareComponent
+{
   private server: net.Server | null = null;
   private readonly cache: RecipientLookupCache;
   private readonly port: number;
@@ -234,9 +235,7 @@ export class RecipientLookupService implements IRecipientLookupService, IDomainA
         return;
       }
 
-      this.server = net.createServer((socket) =>
-        this.handleConnection(socket),
-      );
+      this.server = net.createServer((socket) => this.handleConnection(socket));
 
       this.server.on('error', (err) => {
         reject(err);

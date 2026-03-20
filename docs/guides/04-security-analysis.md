@@ -15,8 +15,8 @@ We consider the following adversary types:
 | Adversary | Goal | Capabilities |
 |-----------|------|-------------|
 | Rogue Node | Disrupt storage, corrupt data | Runs one or more nodes, follows or violates protocol |
-| Sybil Attacker | Gain disproportionate influence | Creates many identities to flood the network or quorum |
-| Quorum Infiltrator | Compromise sealed documents or weaponize bans | Gets admitted to quorum, possibly with allies |
+| Sybil Attacker | Gain disproportionate influence | Creates many identities to flood the network or BrightTrust |
+| BrightTrust Infiltrator | Compromise sealed documents or weaponize bans | Gets admitted to BrightTrust, possibly with allies |
 | Passive Eavesdropper | Deanonymize users or learn stored content | Observes network traffic and block metadata |
 | Malicious Pool Admin | Abuse access control | Controls a private pool's ACL |
 
@@ -24,17 +24,17 @@ We consider the following adversary types:
 
 ### How It Works
 
-BrightChain decouples network-layer identity (peer) from application-layer identity (member). Every node gets a `PeerRecord` automatically on startup. Full `Member` registration in the BrightChain member database is optional and unlocks application-layer features (BrightPass, BrightMail, energy account, content authorship, quorum eligibility).
+BrightChain decouples network-layer identity (peer) from application-layer identity (member). Every node gets a `PeerRecord` automatically on startup. Full `Member` registration in the BrightChain member database is optional and unlocks application-layer features (BrightPass, BrightMail, energy account, content authorship, BrightTrust eligibility).
 
 The `IdentityValidator` uses two-tier validation:
 - Network-layer operations (raw block storage, replication, gossip relay) validate against the `PeerRegistry`
-- Application-layer operations (content with identity, BrightMail, BrightPass, quorum actions) validate against the member DB
+- Application-layer operations (content with identity, BrightMail, BrightPass, BrightTrust actions) validate against the member DB
 
 The main `BrightChain` pool grants implicit Read/Write/Replicate access to any active, non-banned peer for raw block operations. Private pools require explicit ACL entries that can reference either peer IDs or member IDs.
 
 ### Strengths
 
-- **Reduced attack surface for storage-only nodes**: A peer-only node can't author content with identity, can't use BrightMail, can't participate in quorum governance. Compromising a peer-only node gives the attacker storage access but no application-layer capabilities.
+- **Reduced attack surface for storage-only nodes**: A peer-only node can't author content with identity, can't use BrightMail, can't participate in BrightTrust governance. Compromising a peer-only node gives the attacker storage access but no application-layer capabilities.
 - **Lower barrier to entry without governance risk**: The network can grow its storage capacity freely without expanding the set of nodes that can influence governance or access application-layer features.
 - **Clean separation of concerns**: The peer registry is a lightweight, O(1)-lookup data structure separate from the member database. Network-layer validation doesn't touch the member DB, reducing coupling and potential for cross-layer attacks.
 - **Backward compatibility**: Existing members automatically get a `PeerRecord` (with `isMember: true`). No migration disruption.
@@ -51,7 +51,7 @@ The main `BrightChain` pool grants implicit Read/Write/Replicate access to any a
   - *Recommendation*: Pool admin tooling should clearly display the identity type of each ACL entry. Warn when adding a peer-only node to a pool that contains sensitive application-layer data.
 
 **Upgrade path (peer → member) could be exploited.** A peer-only node that has been operating for a long time could upgrade to member and immediately have a "trusted" peer identity while being a brand-new member.
-  - *Mitigation*: Member registration goes through the existing admission process (self-registration or quorum-admitted, depending on network configuration). The peer's history doesn't automatically confer member-level trust.
+  - *Mitigation*: Member registration goes through the existing admission process (self-registration or BrightTrust-admitted, depending on network configuration). The peer's history doesn't automatically confer member-level trust.
   - *Assessment*: This is acceptable. The peer identity's reputation is about storage reliability, not application-layer trustworthiness. The two are orthogonal.
 
 **Ban evasion is slightly easier.** A banned member could rejoin as a peer-only node (new mnemonic, new identity) and contribute storage without needing to re-register as a member. The barrier to re-entry is lower because peer registration is automatic.
@@ -96,13 +96,13 @@ Any node can join the network by contacting bootstrap nodes and announcing itsel
 
 ### Assessment
 
-The open joining model is a deliberate design choice that prioritizes network growth and decentralization. The risks are real but manageable with the recommended mitigations. The key insight is that storage-layer Sybil attacks are annoying but not catastrophic — they can waste resources but can't compromise data integrity (TUPLE XOR ensures no single node holds meaningful data) or governance (quorum membership requires full `Member` registration and is separate from peer identity).
+The open joining model is a deliberate design choice that prioritizes network growth and decentralization. The risks are real but manageable with the recommended mitigations. The key insight is that storage-layer Sybil attacks are annoying but not catastrophic — they can waste resources but can't compromise data integrity (TUPLE XOR ensures no single node holds meaningful data) or governance (BrightTrust membership requires full `Member` registration and is separate from peer identity).
 
-## 3. Quorum Admission: Strong but Not Bulletproof
+## 3. BrightTrust Admission: Strong but Not Bulletproof
 
 ### How It Works
 
-Quorum admission requires an existing member to propose and a threshold vote (51–75%) to approve. A new epoch is created and all sealed documents have their shares redistributed.
+BrightTrust admission requires an existing member to propose and a threshold vote (51–75%) to approve. A new epoch is created and all sealed documents have their shares redistributed.
 
 ### Strengths
 
@@ -113,19 +113,19 @@ Quorum admission requires an existing member to propose and a threshold vote (51
 
 ### Weaknesses and Attack Vectors
 
-**Long-game social engineering.** An adversary runs a reliable node for months, builds trust, gets admitted to the quorum, then acts maliciously. The Sybil protections (epoch restriction, proposer-ally filtering) only prevent rapid exploitation — they don't prevent a patient attacker.
-  - *Mitigation*: The 75% supermajority for bans means even a single compromised quorum member can't do much alone. They hold one share of sealed documents, but can't reconstruct anything without threshold cooperation.
-  - *Recommendation*: Consider requiring a minimum tenure (e.g., 3 epochs) before a new quorum member can propose high-impact actions like `IDENTITY_DISCLOSURE` or `CHANGE_THRESHOLD`, not just `BAN_MEMBER`.
+**Long-game social engineering.** An adversary runs a reliable node for months, builds trust, gets admitted to the BrightTrust, then acts maliciously. The Sybil protections (epoch restriction, proposer-ally filtering) only prevent rapid exploitation — they don't prevent a patient attacker.
+  - *Mitigation*: The 75% supermajority for bans means even a single compromised BrightTrust member can't do much alone. They hold one share of sealed documents, but can't reconstruct anything without threshold cooperation.
+  - *Recommendation*: Consider requiring a minimum tenure (e.g., 3 epochs) before a new BrightTrust member can propose high-impact actions like `IDENTITY_DISCLOSURE` or `CHANGE_THRESHOLD`, not just `BAN_MEMBER`.
 
 **Proposer-ally filtering is heuristic-based.** The current implementation checks who proposed the admission of each voter. But what if the adversary's allies were admitted by different proposers across multiple epochs? The filtering only catches direct proposer→admittee relationships.
-  - *Recommendation*: Track admission chains deeper than one level. If member A proposed B, and B proposed C, then C's vote on A's ban proposals should also be flagged. This is a graph analysis problem — computationally feasible for quorum sizes of ~24.
+  - *Recommendation*: Track admission chains deeper than one level. If member A proposed B, and B proposed C, then C's vote on A's ban proposals should also be flagged. This is a graph analysis problem — computationally feasible for BrightTrust sizes of ~24.
 
-**Threshold configuration is critical.** If the threshold is set too low (e.g., 51% for a 5-member quorum = 3 members), an adversary who gets 3 allies admitted controls the quorum. The 75% supermajority for bans helps, but `ADD_MEMBER` uses the standard threshold.
-  - *Recommendation*: Enforce a minimum threshold of 67% for `ADD_MEMBER` proposals, not just for bans. This makes it harder to pack the quorum.
+**Threshold configuration is critical.** If the threshold is set too low (e.g., 51% for a 5-member BrightTrust = 3 members), an adversary who gets 3 allies admitted controls the BrightTrust. The 75% supermajority for bans helps, but `ADD_MEMBER` uses the standard threshold.
+  - *Recommendation*: Enforce a minimum threshold of 67% for `ADD_MEMBER` proposals, not just for bans. This makes it harder to pack the BrightTrust.
 
 ### Assessment
 
-The quorum admission model is fundamentally sound for its intended scale (~24 members, charitable organizations with board oversight). The social trust requirement is the strongest defense — it's much harder to social-engineer 18 organizations than to spin up 18 nodes. The weaknesses are edge cases that matter more at smaller quorum sizes or with less rigorous vetting.
+The BrightTrust admission model is fundamentally sound for its intended scale (~24 members, charitable organizations with board oversight). The social trust requirement is the strongest defense — it's much harder to social-engineer 18 organizations than to spin up 18 nodes. The weaknesses are edge cases that matter more at smaller BrightTrust sizes or with less rigorous vetting.
 
 ## 4. Ban Mechanism: Well-Designed, Some Gaps
 
@@ -148,9 +148,9 @@ The quorum admission model is fundamentally sound for its intended scale (~24 me
   - *Mitigation*: Ban list sync on reconnect handles this. The node requests the full ban list from peers and verifies signatures before enforcing.
   - *Assessment*: This is acceptable. The window of vulnerability is bounded by the partition duration, and the banned node can't do much damage to a single partitioned peer.
 
-**Cooling period can delay response to active attacks.** If a node is actively corrupting data right now, the 72-hour cooling period means the ban won't take effect for 3 days even with unanimous quorum support.
-  - *Mitigation*: Individual nodes can use their `blockedPeers` list to immediately block a specific peer locally, without waiting for the quorum ban.
-  - *Recommendation*: Document the `blockedPeers` mechanism as the immediate response tool, with quorum bans as the network-wide enforcement that follows.
+**Cooling period can delay response to active attacks.** If a node is actively corrupting data right now, the 72-hour cooling period means the ban won't take effect for 3 days even with unanimous BrightTrust support.
+  - *Mitigation*: Individual nodes can use their `blockedPeers` list to immediately block a specific peer locally, without waiting for the BrightTrust ban.
+  - *Recommendation*: Document the `blockedPeers` mechanism as the immediate response tool, with BrightTrust bans as the network-wide enforcement that follows.
 
 ### Assessment
 
@@ -214,7 +214,7 @@ Every piece of data is XOR'd into a TUPLE: the data block plus randomizer blocks
   - *Mitigation*: Shamir's Secret Sharing can be used to split the mnemonic for backup (paper keys with split custody).
   - *Recommendation*: The documentation should strongly recommend mnemonic splitting for production nodes, not just offline storage.
 
-**No key rotation for node identity.** Once your mnemonic generates your key pair, that's your identity. If you suspect compromise, you must generate a new identity entirely — losing your reputation, pool memberships, and quorum membership.
+**No key rotation for node identity.** Once your mnemonic generates your key pair, that's your identity. If you suspect compromise, you must generate a new identity entirely — losing your reputation, pool memberships, and BrightTrust membership.
   - *Recommendation*: Consider implementing a key rotation mechanism where a node can prove ownership of the old key while transitioning to a new one, preserving identity continuity.
 
 ## 8. Summary of Recommendations
@@ -227,7 +227,7 @@ Every piece of data is XOR'd into a TUPLE: the data block plus randomizer blocks
 | Medium | Clear identity type display in pool admin tooling | ACL identity type confusion |
 | Medium | Proof-of-storage challenge for replication trust (more important with implicit peer access) | Zero-contribution Sybil peers |
 | Medium | Maintain persistent bootstrap node connections | Eclipse attacks |
-| Medium | Minimum 67% threshold for `ADD_MEMBER` proposals | Quorum packing |
+| Medium | Minimum 67% threshold for `ADD_MEMBER` proposals | BrightTrust packing |
 | Medium | Tenure requirement for high-impact proposals beyond `BAN_MEMBER` | Long-game social engineering |
 | Medium | Deeper admission chain tracking for vote filtering | Indirect Sybil allies |
 | Medium | Key rotation mechanism preserving identity continuity | Key compromise recovery |
@@ -238,12 +238,12 @@ Every piece of data is XOR'd into a TUPLE: the data block plus randomizer blocks
 
 BrightChain's security model is well-thought-out for its design goals. The two-tier identity model (peer vs. member) is a net security improvement — it reduces the attack surface for storage-only nodes, cleanly separates network-layer and application-layer concerns, and lowers the barrier to entry without expanding governance risk.
 
-The separation between open storage participation (peer identity) and restricted application-layer features (member identity) and quorum governance is the right architectural choice — it lets the network grow freely while keeping high-stakes operations under strong controls.
+The separation between open storage participation (peer identity) and restricted application-layer features (member identity) and BrightTrust governance is the right architectural choice — it lets the network grow freely while keeping high-stakes operations under strong controls.
 
 The strongest aspects:
 - Two-tier identity model reduces attack surface for storage-only nodes
 - TUPLE storage provides genuine plausible deniability
-- The quorum governance model with Shamir's Secret Sharing is cryptographically sound
+- The BrightTrust governance model with Shamir's Secret Sharing is cryptographically sound
 - The ban mechanism's combination of supermajority + cooling period + Sybil protections is thorough, and covers both peer and member identities
 - Signed ban records with independent verification prevent trust-the-messenger attacks
 - Clean separation between peer registry (network layer) and member DB (application layer) limits cross-layer attack vectors
@@ -252,7 +252,7 @@ The areas needing the most attention:
 - Gossip-layer DoS mitigation (rate limiting, reputation)
 - Ban evasion via identity rotation (inherent to open-joining systems, slightly easier with automatic peer registration)
 - Pool admin tooling for clear identity type display in ACLs
-- Quorum admission threshold hardening for smaller quorum sizes
+- BrightTrust admission threshold hardening for smaller BrightTrust sizes
 - Key rotation for identity continuity after suspected compromise
 
 None of the identified weaknesses are fundamental design flaws. They are implementation gaps that can be addressed incrementally without architectural changes.

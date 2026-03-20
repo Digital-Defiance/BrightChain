@@ -101,13 +101,13 @@ const EXPECTED_ENDPOINTS = [
   // Energy endpoints
   { path: '/energy/balance', methods: ['get'] },
   { path: '/energy/transactions', methods: ['get'] },
-  // Quorum endpoints
-  { path: '/quorum/members', methods: ['post', 'get'] },
-  { path: '/quorum/members/{memberId}', methods: ['delete'] },
-  { path: '/quorum/documents/seal', methods: ['post'] },
-  { path: '/quorum/documents/{documentId}', methods: ['get'] },
-  { path: '/quorum/documents/{documentId}/unseal', methods: ['post'] },
-  { path: '/quorum/documents/{documentId}/can-unlock', methods: ['get'] },
+  // BrightTrust endpoints
+  { path: '/brightTrust/members', methods: ['post', 'get'] },
+  { path: '/brightTrust/members/{memberId}', methods: ['delete'] },
+  { path: '/brightTrust/documents/seal', methods: ['post'] },
+  { path: '/brightTrust/documents/{documentId}', methods: ['get'] },
+  { path: '/brightTrust/documents/{documentId}/unseal', methods: ['post'] },
+  { path: '/brightTrust/documents/{documentId}/can-unlock', methods: ['get'] },
   // Docs endpoint
   { path: '/docs', methods: ['get'] },
 ];
@@ -121,12 +121,12 @@ const AUTHENTICATED_ENDPOINTS = [
   '/user/profile',
   '/energy/balance',
   '/energy/transactions',
-  '/quorum/members',
-  '/quorum/members/{memberId}',
-  '/quorum/documents/seal',
-  '/quorum/documents/{documentId}',
-  '/quorum/documents/{documentId}/unseal',
-  '/quorum/documents/{documentId}/can-unlock',
+  '/brightTrust/members',
+  '/brightTrust/members/{memberId}',
+  '/brightTrust/documents/seal',
+  '/brightTrust/documents/{documentId}',
+  '/brightTrust/documents/{documentId}/unseal',
+  '/brightTrust/documents/{documentId}/can-unlock',
 ];
 
 /**

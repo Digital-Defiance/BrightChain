@@ -2,7 +2,11 @@
 import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import react from '@vitejs/plugin-react';
+import { createRequire } from 'node:module';
+import { resolve } from 'node:path';
 import { defineConfig } from 'vite';
+
+const require = createRequire(import.meta.url);
 
 export default defineConfig(({ mode }) => ({
   root: import.meta.dirname,
@@ -58,15 +62,44 @@ export default defineConfig(({ mode }) => ({
   },
 
   resolve: {
+    // Force Vite to resolve these packages from a single physical copy.
+    // Each workspace component library (brightchain-react-components,
+    // brighthub-react-components, etc.) has its own node_modules with a
+    // separate copy of express-suite-react-components. Without dedup,
+    // each copy creates its own React context, so the I18nProvider from
+    // the app doesn't satisfy useI18n() in the component libraries.
+    dedupe: [
+      'react',
+      'react-dom',
+      'react-router-dom',
+      '@digitaldefiance/express-suite-react-components',
+      '@digitaldefiance/i18n-lib',
+      '@digitaldefiance/ecies-lib',
+      '@digitaldefiance/suite-core-lib',
+      '@emotion/react',
+      '@emotion/styled',
+      '@mui/material',
+    ],
     alias: {
       // Stub out server-only modules
       'file-type': '/dev/null',
       'pg-hstore': '/dev/null',
+      // Provide Buffer polyfill for browser (used by bloom-filters).
+      // Must resolve to the actual package path so Vite doesn't use
+      // its built-in browser-external stub.
+      buffer: require.resolve('buffer/'),
+      // Provide EventEmitter polyfill for browser.
+      // @ethereumjs/util's AsyncEventEmitter extends Node's EventEmitter;
+      // without this alias Vite replaces it with a throwing proxy stub,
+      // causing "Class extends value undefined" at runtime.
+      events: resolve(import.meta.dirname, 'src/shims/events.ts'),
     },
   },
 
   define: {
     'process.env': {},
+    // Some CJS packages reference `global` instead of `globalThis`
+    global: 'globalThis',
   },
 
   server: {

@@ -7,6 +7,27 @@
   "implicitDependencies": ["brightchain-lib", "brightchain-api", "brightmail-react-components", "brightpass-react-components"],
   "targets": {
     "build": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/dist/brightchain-react"],
+      "defaultConfiguration": "production",
+      "dependsOn": ["^build"],
+      "options": {
+        "command": "node ../node_modules/vite/bin/vite.js build --mode production",
+        "cwd": "brightchain-react",
+        "env": {
+          "NODE_OPTIONS": "--max-old-space-size=16384"
+        }
+      },
+      "configurations": {
+        "development": {
+          "command": "node ../node_modules/vite/bin/vite.js build --mode development"
+        },
+        "production": {
+          "command": "node ../node_modules/vite/bin/vite.js build --mode production"
+        }
+      }
+    },
+    "_vite-build": {
       "executor": "@nx/vite:build",
       "outputs": ["{options.outputPath}"],
       "defaultConfiguration": "production",
@@ -26,15 +47,15 @@
       "executor": "@nx/vite:dev-server",
       "defaultConfiguration": "development",
       "options": {
-        "buildTarget": "brightchain-react:build"
+        "buildTarget": "brightchain-react:_vite-build"
       },
       "configurations": {
         "development": {
-          "buildTarget": "brightchain-react:build:development",
+          "buildTarget": "brightchain-react:_vite-build:development",
           "hmr": true
         },
         "production": {
-          "buildTarget": "brightchain-react:build:production",
+          "buildTarget": "brightchain-react:_vite-build:production",
           "hmr": false
         }
       }

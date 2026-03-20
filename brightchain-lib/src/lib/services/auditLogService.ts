@@ -16,11 +16,11 @@ import {
   SignatureUint8Array,
 } from '@digitaldefiance/ecies-lib';
 import { sha3_512 } from '@noble/hashes/sha3';
-import { QuorumErrorType } from '../enumerations/quorumErrorType';
-import { QuorumError } from '../errors/quorumError';
-import { QuorumAuditLogEntry } from '../interfaces/auditLogEntry';
+import { BrightTrustErrorType } from '../enumerations/brightTrustErrorType';
+import { BrightTrustError } from '../errors/brightTrustError';
+import { BrightTrustAuditLogEntry } from '../interfaces/auditLogEntry';
 import { ChainedAuditLogEntry } from '../interfaces/chainedAuditLogEntry';
-import { IQuorumDatabase } from '../interfaces/services/quorumDatabase';
+import { IBrightTrustDatabase } from '../interfaces/services/brightTrustDatabase';
 import { CBLStorageResult } from '../interfaces/storage/cblWhitening';
 
 /**
@@ -53,7 +53,7 @@ export interface IAuditBlockStorePersistence {
  * since they are computed after the content hash.
  */
 export function serializeEntryForHashing(
-  entry: QuorumAuditLogEntry<PlatformID> & {
+  entry: BrightTrustAuditLogEntry<PlatformID> & {
     previousEntryHash?: string | null;
   },
 ): string {
@@ -119,7 +119,7 @@ export function computeContentHash(serialized: string): string {
  */
 export class AuditLogService<TID extends PlatformID = Uint8Array> {
   constructor(
-    private readonly db: IQuorumDatabase<TID>,
+    private readonly db: IBrightTrustDatabase<TID>,
     private readonly signingMember: Member<TID>,
     private readonly eciesService: ECIESService,
     private readonly blockStore?: IAuditBlockStorePersistence,
@@ -138,7 +138,7 @@ export class AuditLogService<TID extends PlatformID = Uint8Array> {
    * @returns The fully chained audit log entry
    */
   async appendEntry(
-    entry: QuorumAuditLogEntry<TID>,
+    entry: BrightTrustAuditLogEntry<TID>,
   ): Promise<ChainedAuditLogEntry<TID>> {
     // 1. Get the latest entry for chain linking
     const latestEntry = await this.db.getLatestAuditEntry();
@@ -204,7 +204,7 @@ export class AuditLogService<TID extends PlatformID = Uint8Array> {
    * @param signerPublicKey - The public key of the node that signed the entries
    * @param entries - The full chain of entries to verify (ordered newest-first or oldest-first)
    * @returns True if the chain is valid
-   * @throws QuorumError with AuditChainCorrupted if tampering is detected
+   * @throws BrightTrustError with AuditChainCorrupted if tampering is detected
    */
   async verifyChain(
     signerPublicKey: Uint8Array,
@@ -227,12 +227,12 @@ export class AuditLogService<TID extends PlatformID = Uint8Array> {
       if (i === 0) {
         // Genesis entry must have null previousEntryHash
         if (entry.previousEntryHash !== null) {
-          throw new QuorumError(QuorumErrorType.AuditChainCorrupted);
+          throw new BrightTrustError(BrightTrustErrorType.AuditChainCorrupted);
         }
       } else {
         const previousEntry = sorted[i - 1];
         if (entry.previousEntryHash !== previousEntry.contentHash) {
-          throw new QuorumError(QuorumErrorType.AuditChainCorrupted);
+          throw new BrightTrustError(BrightTrustErrorType.AuditChainCorrupted);
         }
       }
 
@@ -251,7 +251,7 @@ export class AuditLogService<TID extends PlatformID = Uint8Array> {
       const recomputedHash = computeContentHash(serialized);
 
       if (recomputedHash !== entry.contentHash) {
-        throw new QuorumError(QuorumErrorType.AuditChainCorrupted);
+        throw new BrightTrustError(BrightTrustErrorType.AuditChainCorrupted);
       }
 
       // 3. Verify signature
@@ -263,7 +263,7 @@ export class AuditLogService<TID extends PlatformID = Uint8Array> {
       );
 
       if (!signatureValid) {
-        throw new QuorumError(QuorumErrorType.AuditChainCorrupted);
+        throw new BrightTrustError(BrightTrustErrorType.AuditChainCorrupted);
       }
 
       // 4. Optionally verify against block store
@@ -278,13 +278,15 @@ export class AuditLogService<TID extends PlatformID = Uint8Array> {
 
           // Verify the stored entry's contentHash matches
           if (storedEntry['contentHash'] !== entry.contentHash) {
-            throw new QuorumError(QuorumErrorType.AuditChainCorrupted);
+            throw new BrightTrustError(
+              BrightTrustErrorType.AuditChainCorrupted,
+            );
           }
         } catch (err) {
-          if (err instanceof QuorumError) {
+          if (err instanceof BrightTrustError) {
             throw err;
           }
-          throw new QuorumError(QuorumErrorType.AuditChainCorrupted);
+          throw new BrightTrustError(BrightTrustErrorType.AuditChainCorrupted);
         }
       }
     }

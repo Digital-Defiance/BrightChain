@@ -1,8 +1,8 @@
-export enum QuorumDataRecordActionType {
+export enum BrightTrustDataRecordActionType {
   Seal = 'Seal',
   Unseal = 'Unseal',
   Reseal = 'Reseal',
   ValidateHeldKeys = 'ValidateHeldKeys',
   ValidateRecordIntegrity = 'ValidateRecordIntegrity',
 }
-export default QuorumDataRecordActionType;
+export default BrightTrustDataRecordActionType;

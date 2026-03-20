@@ -8,7 +8,4 @@ export {
   validBlockSizes,
 } from '@brightchain/brightchain-lib';
 
-export type {
-  IBlockStore,
-  IInitResult,
-} from '@brightchain/brightchain-lib';
+export type { IBlockStore, IInitResult } from '@brightchain/brightchain-lib';
