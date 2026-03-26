@@ -331,7 +331,25 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@digitaldefiance/ecies-lib@npm:4.23.1, @digitaldefiance/ecies-lib@npm:^4.20.2, @digitaldefiance/ecies-lib@npm:^4.23.1":
+"@digitaldefiance/ecies-lib@npm:*":
+  version: 5.0.2
+  resolution: "@digitaldefiance/ecies-lib@npm:5.0.2"
+  dependencies:
+    "@digitaldefiance/i18n-lib": "npm:4.7.0"
+    "@ethereumjs/wallet": "npm:^2.0.4"
+    "@noble/curves": "npm:^1.4.2"
+    "@noble/hashes": "npm:^1.4.0"
+    "@scure/bip32": "npm:^1.4.0"
+    bson: "npm:^6.10.4"
+    crc-32: "npm:^1.2.2"
+    js-sha3: "npm:^0.9.3"
+    paillier-bigint: "npm:^3.4.1"
+    ts-brand: "npm:^0.2.0"
+  checksum: 10c0/8cfe3c11ca3eaf4a003a3d2e6a78e96ef5ef75cf3089a6b71f8423047af06f26f6d7754ac2d8ba2433d7f9c50a491273aa4a4b91accb1d4d25fdd45d7e46fc10
+  languageName: node
+  linkType: hard
+
+"@digitaldefiance/ecies-lib@npm:4.23.1, @digitaldefiance/ecies-lib@npm:^4.20.2":
   version: 4.23.1
   resolution: "@digitaldefiance/ecies-lib@npm:4.23.1"
   dependencies:
@@ -346,6 +364,22 @@ __metadata:
     paillier-bigint: "npm:^3.4.1"
     ts-brand: "npm:^0.2.0"
   checksum: 10c0/c00cd0f820bc85177f127b6c22d1a5eb21aaf92b8a1fb96c1db701ee737989d3b5ffb82dbd827de5cefe7021f3cfd36755531127fbab1bf0ef23a807c9b4aba3
+  languageName: node
+  linkType: hard
+
+"@digitaldefiance/i18n-lib@npm:*, @digitaldefiance/i18n-lib@npm:4.7.0":
+  version: 4.7.0
+  resolution: "@digitaldefiance/i18n-lib@npm:4.7.0"
+  dependencies:
+    "@digitaldefiance/branded-enum": "npm:0.0.7"
+    currency-codes: "npm:^2.2.0"
+    lru-cache: "npm:^5.1.1"
+    moment: "npm:^2.30.1"
+    moment-timezone: "npm:^0.6.0"
+    tslib: "npm:^2.3.0"
+  peerDependencies:
+    "@digitaldefiance/branded-interface": ^0.0.5
+  checksum: 10c0/afe12b8c0e53a249f68c14d5ccf3308baebf2c129f61bd419ab4812ba4e0cbf82ed317a3b5d58ecdc088a6841853005906cbc2051450cc01f8364c3f67c8c3d6
   languageName: node
   linkType: hard
 
@@ -2607,8 +2641,8 @@ __metadata:
   resolution: "brightchain-showcase@workspace:."
   dependencies:
     "@brightchain/brightchain-lib": "npm:^0.29.23"
-    "@digitaldefiance/ecies-lib": "npm:^4.23.1"
-    "@digitaldefiance/i18n-lib": "npm:^4.6.4"
+    "@digitaldefiance/ecies-lib": "npm:*"
+    "@digitaldefiance/i18n-lib": "npm:*"
     "@esbuild-plugins/node-globals-polyfill": "npm:^0.2.3"
     "@esbuild-plugins/node-modules-polyfill": "npm:^0.2.2"
     "@eslint/js": "npm:^9.39.1"
@@ -6132,9 +6166,9 @@ __metadata:
   linkType: hard
 
 "picomatch@npm:^4.0.2, picomatch@npm:^4.0.3":
-  version: 4.0.3
-  resolution: "picomatch@npm:4.0.3"
-  checksum: 10c0/9582c951e95eebee5434f59e426cddd228a7b97a0161a375aed4be244bd3fe8e3a31b846808ea14ef2c8a2527a6eeab7b3946a67d5979e81694654f939473ae2
+  version: 4.0.4
+  resolution: "picomatch@npm:4.0.4"
+  checksum: 10c0/e2c6023372cc7b5764719a5ffb9da0f8e781212fa7ca4bd0562db929df8e117460f00dff3cb7509dacfc06b86de924b247f504d0ce1806a37fac4633081466b0
   languageName: node
   linkType: hard
 
