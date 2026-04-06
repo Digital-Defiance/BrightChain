@@ -163,7 +163,7 @@
     "email-addresses": "^5.0.0",
     "express": "^5.1.0",
     "express-validator": "^7.2.1",
-    "file-type": "^20.1.0",
+    "file-type": "^21.3.2",
     "helmet": "^8.0.0",
     "helmet-csp": "^4.0.0",
     "i18next": "^24.2.1",
@@ -193,7 +193,7 @@
     "tslib": "^2.3.0",
     "uuid": "11.0.5",
     "validator": "^13.11.0",
-    "webpack": "5.101.3",
+    "webpack": "5.104.1",
     "ws": "^8.19.0"
   },
   "devDependencies": {
