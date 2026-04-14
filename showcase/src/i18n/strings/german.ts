@@ -21,11 +21,13 @@ export const ShowcaseGermanStrings: Partial<
   [ShowcaseStrings.Nav_FAQ_Description]: 'Häufig gestellte Fragen',
   [ShowcaseStrings.Nav_Docs_Description]: 'Projektdokumentation',
   [ShowcaseStrings.Nav_ToggleMenu]: 'Menü umschalten',
+  [ShowcaseStrings.FAQ_BrightDB_Logo_Alt]: 'BrightDB-Logo',
   [ShowcaseStrings.FAQ_TopSecret_Logo_Alt]: 'Top Secret dApp',
   [ShowcaseStrings.FAQ_BrightChat_Logo_Alt]: 'BrightChat-Logo',
   [ShowcaseStrings.FAQ_BrightHub_Logo_Alt]: 'BrightHub-Logo',
   [ShowcaseStrings.FAQ_BrightID_Logo_Alt]: 'BrightID-Logo',
   [ShowcaseStrings.FAQ_BrightMail_Logo_Alt]: 'BrightMail-Logo',
+  [ShowcaseStrings.FAQ_BrightVote_Logo_Alt]: 'BrightVote-Logo',
   [ShowcaseStrings.FAQ_BrightPass_Logo_Alt]: 'BrightPass-Logo',
   [ShowcaseStrings.FAQ_CanaryProtocol_Logo_Alt]: 'Kanarienvogel-Protokoll-Logo',
   [ShowcaseStrings.FAQ_DigitalBurnbag_Logo_Alt]: 'Digitaler Burnbag-Logo',
@@ -199,6 +201,11 @@ export const ShowcaseGermanStrings: Partial<
     '11. Welche dApps wurden mit BrightChain gestartet?',
   [ShowcaseStrings.FAQ_Tech_Q11_Intro]:
     'BrightChain wurde mit einer Kernsuite von „Bright-Apps" gestartet, die darauf ausgelegt sind, zentralisierte, datensammelnde Dienste durch sichere, souveräne Alternativen zu ersetzen.',
+  [ShowcaseStrings.FAQ_BrightChart_Logo_Alt]: 'BrightChart-Logo',
+  [ShowcaseStrings.FAQ_Tech_Q11_BrightChart_Title]:
+    'Patienteneigene Krankenakten',
+  [ShowcaseStrings.FAQ_Tech_Q11_BrightChart_Text]:
+    'Eine elektronische Krankenakte, bei der der Patient die Schlüssel hält. BrightChart speichert FHIR R4-konforme medizinische Daten als verschlüsselte Blöcke auf BrightChain — keine zentrale Datenbank zum Hacken. Patienten gewähren Anbietern granularen Zugang über BrightTrust-Delegation, und jedes Zugriffsereignis wird in einem unveränderlichen Prüfpfad aufgezeichnet. Unterstützt Arzt-, Zahnarzt- und Tierarztpraxen aus einer einzigen Codebasis.',
   [ShowcaseStrings.FAQ_Tech_Q11_BrightMail_Title]: 'Souveräne Kommunikation',
   [ShowcaseStrings.FAQ_Tech_Q11_BrightMail_Text]:
     'Ein vollständig RFC-konformes E-Mail-System, das traditionelles SMTP und dezentralisierten Speicher verbindet. Im Gegensatz zu Standard-E-Mail-Anbietern teilt BrightMail jede Nachricht in den „eigentümerfreien" Block-Store mit Unterstützung für Ende-zu-Ende-verschlüsselte „Dark Mode"-Nachrichten.',
@@ -1994,6 +2001,38 @@ export const ShowcaseGermanStrings: Partial<
     'Mehrsprachige Unterstützung: Englisch, Französisch, Spanisch, Ukrainisch und Mandarin-Chinesisch',
   [ShowcaseStrings.Feat_Burnbag_HL12]:
     'ECIES-Verschlüsselung mit secp256k1-Schlüsseln und AES-256-GCM für Dateisicherheit',
+
+  // BrightChart (EMR) Feature
+  [ShowcaseStrings.Feat_BrightChart_Desc]:
+    'Eine patienteneigene elektronische Krankenakte, aufgebaut auf BrightChain-Kryptographie. Ihre Gesundheitsdaten bleiben Ihre — verschlüsselt, dezentralisiert und nur mit Ihren Schlüsseln zugänglich.',
+  [ShowcaseStrings.Feat_BrightChart_Cat]: 'Identität',
+  [ShowcaseStrings.Feat_BrightChart_Tech1]: 'Eigentümerfreie EKA',
+  [ShowcaseStrings.Feat_BrightChart_Tech2]: 'Ende-zu-Ende-Verschlüsselung',
+  [ShowcaseStrings.Feat_BrightChart_Tech3]: 'Patientenkontrollierter Zugang',
+  [ShowcaseStrings.Feat_BrightChart_HL1]:
+    'Der Patient besitzt und kontrolliert alle Krankenakten über kryptographische Schlüssel',
+  [ShowcaseStrings.Feat_BrightChart_HL2]:
+    'Ende-zu-Ende verschlüsselte Gesundheitsdaten auf BrightChain gespeichert — kein zentraler Server zum Hacken',
+  [ShowcaseStrings.Feat_BrightChart_HL3]:
+    'Granulare Einwilligung: Teilen Sie bestimmte Akten mit Anbietern über BrightTrust-Delegation',
+  [ShowcaseStrings.Feat_BrightChart_HL4]:
+    'Unveränderlicher Prüfpfad für jeden Zugriff, jede Bearbeitung und jedes Freigabeereignis',
+  [ShowcaseStrings.Feat_BrightChart_HL5]:
+    'Portabel zwischen Anbietern — keine Herstellerbindung, keine Daten als Geisel',
+  [ShowcaseStrings.Feat_BrightChart_HL6]:
+    'Notfallzugang über Shamir-Geheimnisteilung mit konfigurierbarem Quorum',
+  [ShowcaseStrings.Feat_BrightChart_HL7]:
+    'Versionierte Krankengeschichte mit kryptographischer Integritätsverifizierung',
+  [ShowcaseStrings.Feat_BrightChart_HL8]:
+    'Vom Anbieter signierte Einträge gewährleisten die Authentizität von Diagnosen und Verschreibungen',
+  [ShowcaseStrings.Feat_BrightChart_HL9]:
+    'Offline-fähig: verschlüsselte Akten lokal zwischengespeichert, bei Verbindung synchronisiert',
+  [ShowcaseStrings.Feat_BrightChart_HL10]:
+    'Integrierter Digital Burnbag für sensible Akten, die garantierte Vernichtung erfordern',
+  [ShowcaseStrings.Feat_BrightChart_HL11]:
+    'Interoperable Datenschicht für FHIR-kompatiblen Austausch von Gesundheitsakten',
+  [ShowcaseStrings.Feat_BrightChart_HL12]:
+    'Zero-Knowledge-Beweise ermöglichen Versicherungsverifizierung ohne Offenlegung der vollständigen Krankengeschichte',
 
   // Remaining (TODO: translate)
   [ShowcaseStrings.Soup_Time]: 'Time',

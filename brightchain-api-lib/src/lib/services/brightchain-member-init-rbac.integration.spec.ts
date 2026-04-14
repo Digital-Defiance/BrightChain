@@ -5,7 +5,7 @@
  *  1. Creates member_index entries (same as initialize())
  *  2. Creates role documents in the 'roles' collection
  *  3. Creates user documents in the 'users' collection
- *  4. Creates user-role junction documents in the 'user-roles' collection
+ *  4. Creates user-role junction documents in the 'user_roles' collection
  *  5. Creates mnemonic documents in the 'mnemonics' collection
  *  6. All documents can be queried back by _id and by field values
  *  7. Idempotency — second call does not duplicate documents

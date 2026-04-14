@@ -66,6 +66,7 @@ export function extractWriteProof(
       dbName: (parsed['dbName'] as string) ?? '',
       collectionName: (parsed['collectionName'] as string) ?? '',
       blockId: (parsed['blockId'] as string) ?? '',
+      nonce: (parsed['nonce'] as number) ?? 0,
     };
 
     req.writeProof = proof;

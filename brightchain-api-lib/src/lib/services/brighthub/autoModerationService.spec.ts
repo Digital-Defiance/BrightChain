@@ -5,13 +5,17 @@ import { moderateContent } from './autoModerationService';
 
 describe('Auto-Moderation Service', () => {
   it('should allow normal content', () => {
-    const result = moderateContent('This is a perfectly normal post about programming.');
+    const result = moderateContent(
+      'This is a perfectly normal post about programming.',
+    );
     expect(result.decision).toBe('allow');
     expect(result.reasons).toHaveLength(0);
   });
 
   it('should flag excessive caps', () => {
-    const result = moderateContent('THIS IS ALL CAPS AND IT IS VERY LOUD AND ANNOYING TO READ');
+    const result = moderateContent(
+      'THIS IS ALL CAPS AND IT IS VERY LOUD AND ANNOYING TO READ',
+    );
     expect(result.decision).toBe('flag');
     expect(result.reasons).toContain('Excessive use of capital letters');
   });
@@ -28,14 +32,19 @@ describe('Auto-Moderation Service', () => {
   });
 
   it('should flag URL spam', () => {
-    const urls = Array.from({ length: 6 }, (_, i) => `https://spam${i}.com`).join(' ');
+    const urls = Array.from(
+      { length: 6 },
+      (_, i) => `https://spam${i}.com`,
+    ).join(' ');
     const result = moderateContent(`Check out these links: ${urls}`);
     expect(result.decision).toBe('flag');
     expect(result.reasons[0]).toContain('Too many URLs');
   });
 
   it('should allow content with few URLs', () => {
-    const result = moderateContent('Check out https://example.com and https://test.com');
+    const result = moderateContent(
+      'Check out https://example.com and https://test.com',
+    );
     expect(result.decision).toBe('allow');
   });
 

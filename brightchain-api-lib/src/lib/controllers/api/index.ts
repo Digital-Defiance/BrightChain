@@ -20,6 +20,7 @@ export * from './groups';
 export * from './health';
 export * from './i18n';
 export * from './introspection';
+export * from './keyStore';
 export * from './members';
 export * from './messages';
 export * from './nodes';

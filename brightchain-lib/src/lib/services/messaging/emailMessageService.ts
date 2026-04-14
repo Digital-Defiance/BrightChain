@@ -38,6 +38,7 @@ import type {
   IResentHeaderBlock,
 } from '../../interfaces/messaging/emailMetadata';
 import {
+  ContentTransferEncoding,
   createContentType,
   type IContentType,
   type IMimePart,
@@ -257,6 +258,61 @@ export interface IEmailInput {
    * @see Requirement 16.5
    */
   senderPublicKey?: Uint8Array;
+
+  // ─── GPG Encryption Options (Requirements 3.3, 3.4, 4.4) ────────────
+
+  /**
+   * GPG public keys for recipients (armored).
+   * Maps recipient address to their ASCII-armored GPG public key.
+   * Required when encryptionScheme is GPG.
+   *
+   * @see Requirement 3.3
+   */
+  recipientGpgKeys?: Map<string, string>;
+
+  /**
+   * S/MIME certificates for recipients (PEM).
+   * Maps recipient address to their PEM-encoded S/MIME certificate.
+   * Required when encryptionScheme is S_MIME.
+   *
+   * @see Requirement 7.3
+   */
+  recipientSmimeCerts?: Map<string, string>;
+
+  /**
+   * Sender's GPG private key (armored) for signing.
+   *
+   * @see Requirement 4.4
+   */
+  senderGpgPrivateKey?: string;
+
+  /**
+   * Passphrase for the sender's GPG private key.
+   *
+   * @see Requirement 4.4
+   */
+  senderGpgPassphrase?: string;
+
+  /**
+   * Sender's S/MIME certificate (PEM) for signing.
+   *
+   * @see Requirement 8.4
+   */
+  senderSmimeCert?: string;
+
+  /**
+   * Sender's S/MIME private key (PEM) for signing.
+   *
+   * @see Requirement 8.4
+   */
+  senderSmimePrivateKey?: string;
+
+  /**
+   * Whether to sign the message (GPG or S/MIME depending on scheme).
+   *
+   * @see Requirement 4.4, 8.4
+   */
+  signMessage?: boolean;
 }
 
 /**
@@ -776,36 +832,144 @@ export class EmailMessageService {
             metadata.signerPublicKey = sig.signerPublicKey;
           }
         } else if (email.encryptionScheme === MessageEncryptionScheme.S_MIME) {
-          // S/MIME encryption: requires both recipient keys and sender keys
+          // Real S/MIME CMS encryption (RFC 5751)
+          // Sign before encrypt per Requirement 8.2
           if (
-            !email.recipientPublicKeys ||
-            email.recipientPublicKeys.size === 0
+            email.signMessage &&
+            email.senderSmimeCert &&
+            email.senderSmimePrivateKey
           ) {
-            throw new EmailError(
-              EmailErrorType.ENCRYPTION_FAILED,
-              'Recipient public keys are required for S/MIME encryption',
+            const signResult = await encryptionService.signSmime(
+              bodyContent,
+              email.senderSmimeCert,
+              email.senderSmimePrivateKey,
             );
-          }
-          if (!email.senderPrivateKey || !email.senderPublicKey) {
-            throw new EmailError(
-              EmailErrorType.ENCRYPTION_FAILED,
-              'Sender private and public keys are required for S/MIME encryption',
+
+            // Build a body MIME part for the multipart/signed assembly
+            const bodyMimePart: IMimePart = {
+              contentType: contentType,
+              body: bodyContent,
+              size: bodyContent.length,
+            };
+
+            const signedPart = this.assembleMultipartSigned(
+              bodyMimePart,
+              signResult.signature,
+              MessageEncryptionScheme.S_MIME,
             );
+            metadata.parts = [signedPart];
+            metadata.isSigned = true;
+            metadata.contentSignature = signResult.signature;
+            metadata.signerPublicKey = signResult.signerPublicKey;
           }
 
-          const result = await encryptionService.encryptSmime(
-            bodyContent,
-            email.recipientPublicKeys,
-            email.senderPrivateKey,
-            email.senderPublicKey,
-          );
+          // Encrypt if recipient S/MIME certs are provided
+          if (email.recipientSmimeCerts && email.recipientSmimeCerts.size > 0) {
+            const result = await encryptionService.encryptSmimeReal(
+              bodyContent,
+              email.recipientSmimeCerts,
+              email.senderSmimeCert,
+              email.senderSmimePrivateKey,
+            );
 
-          metadata.encryptedKeys = result.encryptionMetadata.encryptedKeys;
-          metadata.encryptionIv = result.encryptionMetadata.iv;
-          metadata.encryptionAuthTag = result.encryptionMetadata.authTag;
-          metadata.isSigned = result.encryptionMetadata.isSigned;
-          metadata.contentSignature = result.encryptionMetadata.signature;
-          metadata.signerPublicKey = result.encryptionMetadata.signerPublicKey;
+            metadata.encryptedKeys = result.encryptionMetadata.encryptedKeys;
+            metadata.encryptionIv = result.encryptionMetadata.iv;
+            metadata.encryptionAuthTag = result.encryptionMetadata.authTag;
+            if (result.encryptionMetadata.isSigned) {
+              metadata.isSigned = result.encryptionMetadata.isSigned;
+              metadata.contentSignature = result.encryptionMetadata.signature;
+              metadata.signerPublicKey =
+                result.encryptionMetadata.signerPublicKey;
+            }
+          } else if (!email.signMessage) {
+            // Fallback to legacy S/MIME stub if no real certs provided
+            if (
+              !email.recipientPublicKeys ||
+              email.recipientPublicKeys.size === 0
+            ) {
+              throw new EmailError(
+                EmailErrorType.ENCRYPTION_FAILED,
+                'Recipient public keys or S/MIME certificates are required for S/MIME encryption',
+              );
+            }
+            if (!email.senderPrivateKey || !email.senderPublicKey) {
+              throw new EmailError(
+                EmailErrorType.ENCRYPTION_FAILED,
+                'Sender private and public keys are required for S/MIME encryption',
+              );
+            }
+
+            const result = await encryptionService.encryptSmime(
+              bodyContent,
+              email.recipientPublicKeys,
+              email.senderPrivateKey,
+              email.senderPublicKey,
+            );
+
+            metadata.encryptedKeys = result.encryptionMetadata.encryptedKeys;
+            metadata.encryptionIv = result.encryptionMetadata.iv;
+            metadata.encryptionAuthTag = result.encryptionMetadata.authTag;
+            metadata.isSigned = result.encryptionMetadata.isSigned;
+            metadata.contentSignature = result.encryptionMetadata.signature;
+            metadata.signerPublicKey =
+              result.encryptionMetadata.signerPublicKey;
+          }
+        } else if (email.encryptionScheme === MessageEncryptionScheme.GPG) {
+          // GPG encryption (RFC 4880) with optional signing (RFC 3156)
+          // Sign before encrypt per Requirement 4.2
+          if (
+            email.signMessage &&
+            email.senderGpgPrivateKey &&
+            email.senderGpgPassphrase
+          ) {
+            const signResult = await encryptionService.signGpg(
+              bodyContent,
+              email.senderGpgPrivateKey,
+              email.senderGpgPassphrase,
+            );
+
+            // Build a body MIME part for the multipart/signed assembly
+            const bodyMimePart: IMimePart = {
+              contentType: contentType,
+              body: bodyContent,
+              size: bodyContent.length,
+            };
+
+            const signedPart = this.assembleMultipartSigned(
+              bodyMimePart,
+              signResult.signature,
+              MessageEncryptionScheme.GPG,
+            );
+            metadata.parts = [signedPart];
+            metadata.isSigned = true;
+            metadata.contentSignature = signResult.signature;
+            metadata.signerPublicKey = signResult.signerPublicKey;
+          }
+
+          // Encrypt if recipient GPG keys are provided
+          if (email.recipientGpgKeys && email.recipientGpgKeys.size > 0) {
+            const result = await encryptionService.encryptGpg(
+              bodyContent,
+              email.recipientGpgKeys,
+              email.senderGpgPrivateKey,
+              email.senderGpgPassphrase,
+            );
+
+            metadata.encryptedKeys = result.encryptionMetadata.encryptedKeys;
+            metadata.encryptionIv = result.encryptionMetadata.iv;
+            metadata.encryptionAuthTag = result.encryptionMetadata.authTag;
+            if (result.encryptionMetadata.isSigned) {
+              metadata.isSigned = result.encryptionMetadata.isSigned;
+              metadata.contentSignature = result.encryptionMetadata.signature;
+              metadata.signerPublicKey =
+                result.encryptionMetadata.signerPublicKey;
+            }
+          } else {
+            throw new EmailError(
+              EmailErrorType.ENCRYPTION_FAILED,
+              'Recipient GPG public keys are required for GPG encryption',
+            );
+          }
         }
       } catch (err) {
         if (err instanceof EmailError) throw err;
@@ -1782,6 +1946,85 @@ export class EmailMessageService {
     const idLeft = `${timestamp}.${random}`;
     const idRight = this.config.nodeId;
     return `<${idLeft}@${idRight}>`;
+  }
+
+  // ─── Multipart/Signed Assembly (RFC 3156, RFC 5751) ─────────────────
+
+  /**
+   * Wraps message content and a detached signature into a multipart/signed
+   * MIME structure per RFC 3156 (GPG) or RFC 5751 (S/MIME).
+   *
+   * The resulting IMimePart has:
+   * - Content-Type: multipart/signed with protocol, micalg, and boundary params
+   * - Two child parts: the original body part and the signature part
+   *
+   * @param bodyPart - The original message body MIME part
+   * @param signature - The detached signature (ASCII-armored string for GPG, Uint8Array for S/MIME)
+   * @param scheme - GPG or S_MIME to determine protocol and micalg values
+   * @returns An IMimePart representing the multipart/signed structure
+   *
+   * @see RFC 3156 - MIME Security with OpenPGP (GPG)
+   * @see RFC 5751 - S/MIME 3.2 Message Specification
+   * @see Requirements 4.4, 8.4
+   */
+  private assembleMultipartSigned(
+    bodyPart: IMimePart,
+    signature: Uint8Array | string,
+    scheme: MessageEncryptionScheme.GPG | MessageEncryptionScheme.S_MIME,
+  ): IMimePart {
+    // Generate a unique boundary string
+    const randomBytes = getRandomBytes(16);
+    const boundaryId = Array.from(randomBytes)
+      .map((b) => b.toString(16).padStart(2, '0'))
+      .join('');
+    const boundary = `----=_SignatureBoundary_${boundaryId}`;
+
+    // Determine protocol and micalg based on scheme
+    const isGpg = scheme === MessageEncryptionScheme.GPG;
+    const protocol = isGpg
+      ? 'application/pgp-signature'
+      : 'application/pkcs7-signature';
+    const micalg = isGpg ? 'pgp-sha256' : 'sha-256';
+
+    // Build the signature part
+    const signatureBytes =
+      typeof signature === 'string'
+        ? new TextEncoder().encode(signature)
+        : signature;
+
+    const signaturePart: IMimePart = {
+      contentType: createContentType(
+        'application',
+        isGpg ? 'pgp-signature' : 'pkcs7-signature',
+        new Map([['name', isGpg ? 'signature.asc' : 'smime.p7s']]),
+      ),
+      contentDisposition: {
+        type: 'attachment',
+        filename: isGpg ? 'signature.asc' : 'smime.p7s',
+      },
+      contentTransferEncoding: isGpg
+        ? ContentTransferEncoding.SevenBit
+        : ContentTransferEncoding.Base64,
+      body: signatureBytes,
+      size: signatureBytes.length,
+    };
+
+    // Build the multipart/signed container
+    const multipartSigned: IMimePart = {
+      contentType: createContentType(
+        'multipart',
+        'signed',
+        new Map([
+          ['protocol', protocol],
+          ['micalg', micalg],
+          ['boundary', boundary],
+        ]),
+      ),
+      parts: [bodyPart, signaturePart],
+      size: bodyPart.size + signaturePart.size,
+    };
+
+    return multipartSigned;
   }
 
   // ─── Configuration Access ───────────────────────────────────────────

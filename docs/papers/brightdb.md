@@ -321,7 +321,7 @@ Deferred updates can be queued via `deferHeadUpdate` and applied later via `appl
 
 ### A. Authorization Model
 
-BrightDB supports configurable write access control through the `WriteAclManager` class. When ACL configuration is provided, the head registry is wrapped with an `AuthorizedHeadRegistry` that enforces write authorization before any head update.
+BrightDB supports configurable write access control through the `WriteAclManager` class. When ACL configuration is provided, the head registry is wrapped with an `AuthorizedHeadRegistry` that enforces write authorization before any head update. The `AuthorizedHeadRegistry` supports auto-signing for local writes via a configurable `ILocalSigner`, eliminating the need to thread write proofs through every Collection method. Remote writes (received via gossip head updates) must include an explicit `IWriteProof` with a valid ECDSA signature.
 
 The ACL model supports:
 

@@ -81,6 +81,7 @@ describe('i18n integration: SuiteCore constants override', () => {
         'count',
         'username',
         'email',
+        'domain',
         'role',
         'model',
         'key',

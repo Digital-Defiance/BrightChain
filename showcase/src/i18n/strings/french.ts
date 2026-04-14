@@ -51,10 +51,12 @@ export const ShowcaseFrenchStrings: Partial<
   [ShowcaseStrings.FAQ_BackToHome]: "← Retour à l'Accueil",
   [ShowcaseStrings.FAQ_TopSecret_Logo_Alt]:
     'Application décentralisée Top Secret',
+  [ShowcaseStrings.FAQ_BrightDB_Logo_Alt]: 'Logo de BrightDB',
   [ShowcaseStrings.FAQ_BrightChat_Logo_Alt]: 'Logo de BrightChat',
   [ShowcaseStrings.FAQ_BrightHub_Logo_Alt]: 'Logo de BrightHub',
   [ShowcaseStrings.FAQ_BrightID_Logo_Alt]: 'Logo de BrightID',
   [ShowcaseStrings.FAQ_BrightMail_Logo_Alt]: 'Logo de BrightMail',
+  [ShowcaseStrings.FAQ_BrightVote_Logo_Alt]: 'Logo de BrightVote',
   [ShowcaseStrings.FAQ_BrightPass_Logo_Alt]: 'Logo de BrightPass',
   [ShowcaseStrings.FAQ_CanaryProtocol_Logo_Alt]: 'Logo du Protocole Canari',
   [ShowcaseStrings.FAQ_DigitalBurnbag_Logo_Alt]: 'Logo du Burnbag Numérique',
@@ -198,6 +200,11 @@ export const ShowcaseFrenchStrings: Partial<
     '11. Quelles dApps ont été lancées avec BrightChain ?',
   [ShowcaseStrings.FAQ_Tech_Q11_Intro]:
     'BrightChain a été lancé avec une suite principale de « Bright-Apps » conçues pour remplacer les services centralisés de collecte de données par des alternatives sécurisées et souveraines.',
+  [ShowcaseStrings.FAQ_BrightChart_Logo_Alt]: 'Logo BrightChart',
+  [ShowcaseStrings.FAQ_Tech_Q11_BrightChart_Title]:
+    'Dossiers médicaux appartenant au patient',
+  [ShowcaseStrings.FAQ_Tech_Q11_BrightChart_Text]:
+    "Un dossier médical électronique où le patient détient les clés. BrightChart stocke les données médicales conformes FHIR R4 sous forme de blocs chiffrés sur BrightChain — aucune base de données centrale à pirater. Les patients accordent un accès granulaire aux prestataires via la délégation BrightTrust, et chaque événement d'accès est enregistré dans une piste d'audit immuable. Compatible avec les cabinets médicaux, dentaires et vétérinaires à partir d'une seule base de code.",
   [ShowcaseStrings.FAQ_Tech_Q11_BrightMail_Title]: 'Communication souveraine',
   [ShowcaseStrings.FAQ_Tech_Q11_BrightMail_Text]:
     'Un système de messagerie entièrement conforme RFC reliant le SMTP traditionnel et le stockage décentralisé. Contrairement aux fournisseurs de messagerie standard, BrightMail partitionne chaque message dans le magasin de blocs « Sans Propriétaire » avec prise en charge de la messagerie chiffrée de bout en bout en « Mode Sombre ».',
@@ -2005,6 +2012,38 @@ export const ShowcaseFrenchStrings: Partial<
     'Support multilingue : anglais, français, espagnol, ukrainien et chinois mandarin',
   [ShowcaseStrings.Feat_Burnbag_HL12]:
     'Chiffrement ECIES avec clés secp256k1 et AES-256-GCM pour la sécurité des fichiers',
+
+  // BrightChart (EMR) Feature
+  [ShowcaseStrings.Feat_BrightChart_Desc]:
+    'Un dossier médical électronique appartenant au patient, construit sur la cryptographie BrightChain. Vos données de santé restent les vôtres — chiffrées, décentralisées et accessibles uniquement avec vos clés.',
+  [ShowcaseStrings.Feat_BrightChart_Cat]: 'Identité',
+  [ShowcaseStrings.Feat_BrightChart_Tech1]: 'DME sans propriétaire',
+  [ShowcaseStrings.Feat_BrightChart_Tech2]: 'Chiffrement de bout en bout',
+  [ShowcaseStrings.Feat_BrightChart_Tech3]: 'Accès contrôlé par le patient',
+  [ShowcaseStrings.Feat_BrightChart_HL1]:
+    'Le patient possède et contrôle tous les dossiers médicaux via des clés cryptographiques',
+  [ShowcaseStrings.Feat_BrightChart_HL2]:
+    'Données de santé chiffrées de bout en bout stockées sur BrightChain — aucun serveur central à pirater',
+  [ShowcaseStrings.Feat_BrightChart_HL3]:
+    'Consentement granulaire : partagez des dossiers spécifiques avec les prestataires via la délégation BrightTrust',
+  [ShowcaseStrings.Feat_BrightChart_HL4]:
+    "Piste d'audit immuable pour chaque accès, modification et événement de partage",
+  [ShowcaseStrings.Feat_BrightChart_HL5]:
+    'Portable entre prestataires — pas de verrouillage fournisseur, pas de données en otage',
+  [ShowcaseStrings.Feat_BrightChart_HL6]:
+    "Accès d'urgence via le partage de secret de Shamir avec quorum configurable",
+  [ShowcaseStrings.Feat_BrightChart_HL7]:
+    "Historique médical versionné avec vérification d'intégrité cryptographique",
+  [ShowcaseStrings.Feat_BrightChart_HL8]:
+    "Les entrées signées par le prestataire garantissent l'authenticité des diagnostics et prescriptions",
+  [ShowcaseStrings.Feat_BrightChart_HL9]:
+    'Fonctionne hors ligne : dossiers chiffrés en cache local, synchronisés à la reconnexion',
+  [ShowcaseStrings.Feat_BrightChart_HL10]:
+    'Burnbag Digital intégré pour les dossiers sensibles nécessitant une destruction garantie',
+  [ShowcaseStrings.Feat_BrightChart_HL11]:
+    "Couche de données interopérable conçue pour l'échange de dossiers de santé compatible FHIR",
+  [ShowcaseStrings.Feat_BrightChart_HL12]:
+    "Les preuves à connaissance nulle permettent la vérification d'assurance sans exposer l'historique médical complet",
 
   // Remaining (TODO: translate)
   [ShowcaseStrings.Soup_Time]: 'Time',

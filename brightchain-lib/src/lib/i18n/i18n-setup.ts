@@ -19,7 +19,6 @@ import {
   EciesStringKeyValue,
 } from '@digitaldefiance/ecies-lib';
 import {
-  BrandedMasterStringsCollection,
   ComponentConfig,
   ContextManager,
   CoreLanguageCode,
@@ -29,6 +28,7 @@ import {
   IActiveContext,
   LanguageCodes,
   LanguageContextSpace,
+  RequiredBrandedMasterStringsCollection,
   type I18nComponentPackage,
   type I18nSetupResult,
 } from '@digitaldefiance/i18n-lib';
@@ -64,7 +64,7 @@ export { BrightChainComponentId };
  * Master strings collection for the BrightChain component.
  * These are the translations specific to brightchain-lib.
  */
-export const BrightChainComponentStrings: BrandedMasterStringsCollection<
+export const BrightChainComponentStrings: RequiredBrandedMasterStringsCollection<
   typeof BrightChainStrings,
   CoreLanguageCode
 > = {

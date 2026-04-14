@@ -125,10 +125,7 @@ describe('E2E: Digital Burnbag Folder Operations', () => {
     it('should return breadcrumb path with valid hex IDs', async () => {
       // Skip if we don't have a root folder ID from previous test
       if (!rootFolderId) {
-        const rootRes = await axios.get(
-          rootUrl(),
-          authedRequest(),
-        );
+        const rootRes = await axios.get(rootUrl(), authedRequest());
         rootFolderId = rootRes.data.folder.id;
       }
 
@@ -168,10 +165,7 @@ describe('E2E: Digital Burnbag Folder Operations', () => {
   describe('GET /api/burnbag/folders/:id', () => {
     it('should return folder contents with valid hex IDs', async () => {
       if (!rootFolderId) {
-        const rootRes = await axios.get(
-          rootUrl(),
-          authedRequest(),
-        );
+        const rootRes = await axios.get(rootUrl(), authedRequest());
         rootFolderId = rootRes.data.folder.id;
       }
 
@@ -206,10 +200,7 @@ describe('E2E: Digital Burnbag Folder Operations', () => {
   describe('POST /api/burnbag/folders', () => {
     it('should create folder and return valid hex ID', async () => {
       if (!rootFolderId) {
-        const rootRes = await axios.get(
-          rootUrl(),
-          authedRequest(),
-        );
+        const rootRes = await axios.get(rootUrl(), authedRequest());
         rootFolderId = rootRes.data.folder.id;
       }
 

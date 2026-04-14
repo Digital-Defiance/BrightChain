@@ -1,4 +1,4 @@
-import { StringsCollection } from '@digitaldefiance/i18n-lib';
+import { ComponentStrings } from '@digitaldefiance/i18n-lib';
 import {
   BrightChainStringKey,
   BrightChainStrings,
@@ -6,7 +6,7 @@ import {
 
 const site = 'BrightChain';
 
-export const AmericanEnglishStrings: StringsCollection<BrightChainStringKey> = {
+export const AmericanEnglishStrings: ComponentStrings<BrightChainStringKey> = {
   // NOTE: Admin, i18n, common UI, and many error strings have been moved to external libraries
   // Use SuiteCoreStringKey from @digitaldefiance/suite-core-lib for common errors
   // Use EciesStringKey from @digitaldefiance/ecies-lib for ECIES/Member errors
@@ -1465,6 +1465,7 @@ export const AmericanEnglishStrings: StringsCollection<BrightChainStringKey> = {
   [BrightChainStrings.Admin_Menu_Hub]: 'Hub Admin',
   [BrightChainStrings.Admin_Menu_Mail]: 'Mail Admin',
   [BrightChainStrings.Admin_Menu_Pass]: 'Pass Admin',
+  [BrightChainStrings.Admin_Menu_About]: 'About',
 
   // Admin Common
   [BrightChainStrings.Admin_Common_Loading]: 'Loading…',
@@ -1626,6 +1627,18 @@ export const AmericanEnglishStrings: StringsCollection<BrightChainStringKey> = {
   [BrightChainStrings.Admin_Mail_DeleteEmailTitle]: 'Delete Email',
   [BrightChainStrings.Admin_Mail_DeleteEmailConfirm]:
     'Are you sure you want to delete this email? This action cannot be undone.',
+
+  // About Page
+  [BrightChainStrings.About_Title]: 'About BrightChain',
+  [BrightChainStrings.About_AccessDenied]: 'Access Denied',
+  [BrightChainStrings.About_AccessDeniedDescription]:
+    'You must be an administrator to view this page.',
+  [BrightChainStrings.About_MasterVersion]: 'BrightChain Version',
+  [BrightChainStrings.About_BrightChainPackages]: 'BrightChain Packages',
+  [BrightChainStrings.About_DigitalDefiancePackages]:
+    'Digital Defiance Packages',
+  [BrightChainStrings.About_PackageName]: 'Package',
+  [BrightChainStrings.About_Version]: 'Version',
 };
 
 export default AmericanEnglishStrings;

@@ -147,10 +147,16 @@ describe('BrowserKeyring', () => {
     });
 
     it('should handle corrupted localStorage data', async () => {
+      const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
       localStorageMock.setItem('brightchain-api-keyring', 'invalid-json{{{');
 
       // Should not throw, just log a warning
       await expect(keyring.initialize()).resolves.not.toThrow();
+      expect(warnSpy).toHaveBeenCalledWith(
+        'Failed to load keyring from storage:',
+        expect.any(SyntaxError),
+      );
+      warnSpy.mockRestore();
     });
   });
 

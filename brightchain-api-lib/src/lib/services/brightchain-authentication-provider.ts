@@ -35,6 +35,7 @@ import type {
 } from '@digitaldefiance/suite-core-lib';
 import * as bcrypt from 'bcrypt';
 import { verify } from 'jsonwebtoken';
+import { SchemaCollection } from '../enumerations/schema-collection';
 import { IBrightChainApplication } from '../interfaces';
 import type { ITokenPayload } from '../interfaces/token-payload';
 
@@ -42,6 +43,7 @@ import type { ITokenPayload } from '../interfaces/token-payload';
 
 /**
  * Map MemberStatusType → AccountStatus-compatible string.
+ * Uses i18n engine for the display value, with English fallbacks.
  */
 function memberStatusToAccountStatus(status: MemberStatusType): string {
   switch (status) {
@@ -124,7 +126,7 @@ export class BrightChainAuthenticationProvider<
       const usersCol = db.collection<{
         _id?: string;
         accountStatus?: string;
-      }>('users');
+      }>(SchemaCollection.User);
 
       let userDoc = await usersCol.findOne({ _id: idHex } as never);
       if (!userDoc) {
@@ -207,7 +209,7 @@ export class BrightChainAuthenticationProvider<
         timezone?: string;
         siteLanguage?: string;
         lastLogin?: string;
-      }>('users');
+      }>(SchemaCollection.User);
 
       let userDoc = await usersCol.findOne({ _id: idHex } as never);
       if (!userDoc) {
@@ -244,7 +246,12 @@ export class BrightChainAuthenticationProvider<
         await memberStore.getMemberProfile(id);
 
       if (publicProfile && publicProfile.status !== MemberStatusType.Active) {
-        return null;
+        // Allow PendingEmailVerification (Inactive) users to use authenticated
+        // endpoints — they have a valid JWT from registration. Only Suspended
+        // (AdminLock) blocks access entirely.
+        if (publicProfile.status === MemberStatusType.Suspended) {
+          return null;
+        }
       }
 
       const memberId = userId;
@@ -267,7 +274,7 @@ export class BrightChainAuthenticationProvider<
           const userRolesCol = db.collection<{
             userId?: unknown;
             roleId?: unknown;
-          }>('user-roles');
+          }>(SchemaCollection.UserRole);
           const rolesCol = db.collection<{
             _id?: string;
             name?: string;
@@ -275,7 +282,7 @@ export class BrightChainAuthenticationProvider<
             member?: boolean;
             system?: boolean;
             child?: boolean;
-          }>('roles');
+          }>(SchemaCollection.Role);
 
           let userRoleDoc = await userRolesCol.findOne({
             userId: id,
@@ -337,8 +344,9 @@ export class BrightChainAuthenticationProvider<
           const idHex = sp.idProvider.toString(id, 'hex');
 
           // Check user_settings first
-          const settingsCol =
-            db.collection<Record<string, unknown>>('user_settings');
+          const settingsCol = db.collection<Record<string, unknown>>(
+            SchemaCollection.UserSettings,
+          );
           let userDoc = await settingsCol.findOne({ _id: idHex } as never);
           if (!userDoc) {
             const dashed = idHex.replace(
@@ -353,7 +361,9 @@ export class BrightChainAuthenticationProvider<
 
           // Also check the main users collection for displayName
           if (!dbSettings['displayName']) {
-            const usersCol = db.collection<Record<string, unknown>>('users');
+            const usersCol = db.collection<Record<string, unknown>>(
+              SchemaCollection.User,
+            );
             let mainDoc = await usersCol.findOne({ _id: idHex } as never);
             if (!mainDoc) {
               const dashed = idHex.replace(
@@ -444,7 +454,7 @@ export class BrightChainAuthenticationProvider<
         darkMode?: boolean;
         currency?: string;
         lastLogin?: string;
-      }>('users');
+      }>(SchemaCollection.User);
 
       // Try short hex (no dashes) first, then dashed UUID form
       let userDoc = await usersCol.findOne({ _id: idHex } as never);
@@ -458,7 +468,11 @@ export class BrightChainAuthenticationProvider<
       if (!userDoc) return null;
 
       if (userDoc.accountStatus && userDoc.accountStatus !== 'Active') {
-        return null;
+        // Allow PendingEmailVerification users to use authenticated endpoints.
+        // Only AdminLock blocks access entirely.
+        if (userDoc.accountStatus !== 'PendingEmailVerification') {
+          return null;
+        }
       }
 
       // Determine MemberType from the member_index entry
@@ -477,7 +491,7 @@ export class BrightChainAuthenticationProvider<
         const userRolesCol = db.collection<{
           userId?: unknown;
           roleId?: unknown;
-        }>('user-roles');
+        }>(SchemaCollection.UserRole);
         const rolesCol = db.collection<{
           _id?: string;
           name?: string;
@@ -485,7 +499,7 @@ export class BrightChainAuthenticationProvider<
           member?: boolean;
           system?: boolean;
           child?: boolean;
-        }>('roles');
+        }>(SchemaCollection.Role);
 
         // Try both hex formats for the user ID lookup
         let userRoleDoc = await userRolesCol.findOne({ userId: id } as never);

@@ -1,10 +1,10 @@
-import { StringsCollection } from '@digitaldefiance/i18n-lib';
+import { ComponentStrings } from '@digitaldefiance/i18n-lib';
 import {
   BrightChainStringKey,
   BrightChainStrings,
 } from '../../enumerations/brightChainStrings';
 
-export const FrenchStrings: StringsCollection<BrightChainStringKey> = {
+export const FrenchStrings: ComponentStrings<BrightChainStringKey> = {
   // BrightChain
   [BrightChainStrings.Common_Bright]: 'Brillant',
   [BrightChainStrings.Common_Chain]: 'Chaîne',
@@ -1480,6 +1480,7 @@ export const FrenchStrings: StringsCollection<BrightChainStringKey> = {
   [BrightChainStrings.Admin_Menu_Hub]: 'Hub Admin',
   [BrightChainStrings.Admin_Menu_Mail]: 'Mail Admin',
   [BrightChainStrings.Admin_Menu_Pass]: 'Pass Admin',
+  [BrightChainStrings.Admin_Menu_About]: 'À propos',
   [BrightChainStrings.Admin_Common_Loading]: 'Chargement…',
   [BrightChainStrings.Admin_Common_Previous]: 'Précédent',
   [BrightChainStrings.Admin_Common_Next]: 'Suivant',
@@ -1520,7 +1521,7 @@ export const FrenchStrings: StringsCollection<BrightChainStringKey> = {
   [BrightChainStrings.Admin_Users_ChangeRoleConfirmTemplate]:
     'Êtes-vous sûr de vouloir changer {USERNAME} de {OLD_ROLE} à {NEW_ROLE} ?',
   [BrightChainStrings.Admin_Users_ChangeRoleWarning]:
-    " Changer un utilisateur en Admin accorde un accès administratif complet.",
+    ' Changer un utilisateur en Admin accorde un accès administratif complet.',
   [BrightChainStrings.Admin_Users_RoleAdmin]: 'Admin',
   [BrightChainStrings.Admin_Users_RoleMember]: 'Membre',
   [BrightChainStrings.Admin_Users_RoleSystem]: 'Système',
@@ -1630,4 +1631,16 @@ export const FrenchStrings: StringsCollection<BrightChainStringKey> = {
   [BrightChainStrings.Admin_Mail_DeleteEmailTitle]: 'Supprimer le courriel',
   [BrightChainStrings.Admin_Mail_DeleteEmailConfirm]:
     'Êtes-vous sûr de vouloir supprimer ce courriel ? Cette action est irréversible.',
+
+  // About Page
+  [BrightChainStrings.About_Title]: 'À propos de BrightChain',
+  [BrightChainStrings.About_AccessDenied]: 'Accès refusé',
+  [BrightChainStrings.About_AccessDeniedDescription]:
+    'Vous devez être administrateur pour voir cette page.',
+  [BrightChainStrings.About_MasterVersion]: 'Version de BrightChain',
+  [BrightChainStrings.About_BrightChainPackages]: 'Paquets BrightChain',
+  [BrightChainStrings.About_DigitalDefiancePackages]:
+    'Paquets Digital Defiance',
+  [BrightChainStrings.About_PackageName]: 'Paquet',
+  [BrightChainStrings.About_Version]: 'Version',
 };

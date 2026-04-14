@@ -11,6 +11,7 @@ import {
   TypedHandlers,
 } from '@digitaldefiance/node-express-suite';
 import { AccountStatus } from '@digitaldefiance/suite-core-lib';
+import { SchemaCollection } from '../../enumerations/schema-collection';
 import { IBrightChainApplication } from '../../interfaces/application';
 import { DefaultBackendIdType } from '../../shared-types';
 import {
@@ -125,7 +126,7 @@ export class AdminUserController<
         };
       }
 
-      const usersCollection = brightDb.collection('users');
+      const usersCollection = brightDb.collection(SchemaCollection.User);
 
       // Build filter
       const filter: Record<string, unknown> = {};
@@ -157,8 +158,10 @@ export class AdminUserController<
       // Enrich with role info from user-roles + roles collections
       let roleMap: Map<string, string> = new Map();
       try {
-        const userRolesCollection = brightDb.collection('user-roles');
-        const rolesCollection = brightDb.collection('roles');
+        const userRolesCollection = brightDb.collection(
+          SchemaCollection.UserRole,
+        );
+        const rolesCollection = brightDb.collection(SchemaCollection.Role);
 
         const userIds = users.map((u) => u._id).filter(Boolean);
         if (userIds.length > 0) {
@@ -264,7 +267,7 @@ export class AdminUserController<
         };
       }
 
-      const usersCollection = brightDb.collection('users');
+      const usersCollection = brightDb.collection(SchemaCollection.User);
       let user = await usersCollection.findOne({ _id: userId });
 
       // If user not in users collection, check member index and create
@@ -402,7 +405,7 @@ export class AdminUserController<
       }
 
       // Verify user exists
-      const usersCollection = brightDb.collection('users');
+      const usersCollection = brightDb.collection(SchemaCollection.User);
       const user = await usersCollection.findOne({ _id: userId });
       if (!user) {
         return notFoundError('User', userId);
@@ -412,8 +415,8 @@ export class AdminUserController<
       let rolesCollection;
       let userRolesCollection;
       try {
-        rolesCollection = brightDb.collection('roles');
-        userRolesCollection = brightDb.collection('user-roles');
+        rolesCollection = brightDb.collection(SchemaCollection.Role);
+        userRolesCollection = brightDb.collection(SchemaCollection.UserRole);
       } catch {
         return {
           statusCode: 503,
@@ -428,9 +431,9 @@ export class AdminUserController<
         .find({ userId } as never)
         .toArray();
       if (existingUserRole.length > 0) {
-        const existingRoleId = (
-          existingUserRole[0] as Record<string, unknown>
-        )['roleId'] as string;
+        const existingRoleId = (existingUserRole[0] as Record<string, unknown>)[
+          'roleId'
+        ] as string;
         const existingRole = await rolesCollection.findOne({
           _id: existingRoleId,
         });
@@ -460,9 +463,9 @@ export class AdminUserController<
 
       // When demoting from Admin → Member, ensure this isn't the last admin
       if (newRoleName === 'Member' && existingUserRole.length > 0) {
-        const existingRoleId = (
-          existingUserRole[0] as Record<string, unknown>
-        )['roleId'] as string;
+        const existingRoleId = (existingUserRole[0] as Record<string, unknown>)[
+          'roleId'
+        ] as string;
         const existingRoleDoc = await rolesCollection.findOne({
           _id: existingRoleId,
         });
@@ -587,8 +590,10 @@ export class AdminUserController<
 
       // Check if the target user is the system user (cannot delete)
       try {
-        const userRolesCollection = brightDb.collection('user-roles');
-        const rolesCollection = brightDb.collection('roles');
+        const userRolesCollection = brightDb.collection(
+          SchemaCollection.UserRole,
+        );
+        const rolesCollection = brightDb.collection(SchemaCollection.Role);
         const existingUserRole = await userRolesCollection
           .find({ userId } as never)
           .toArray();
@@ -611,7 +616,7 @@ export class AdminUserController<
       }
 
       // Verify user exists in DB
-      const usersCollection = brightDb.collection('users');
+      const usersCollection = brightDb.collection(SchemaCollection.User);
       const user = await usersCollection.findOne({ _id: userId });
       if (!user) {
         return notFoundError('User', userId);
@@ -645,7 +650,9 @@ export class AdminUserController<
 
       // 3. Delete user-roles junction entries
       try {
-        const userRolesCollection = brightDb.collection('user-roles');
+        const userRolesCollection = brightDb.collection(
+          SchemaCollection.UserRole,
+        );
         await userRolesCollection.deleteMany({ userId } as never);
       } catch {
         // user-roles collection may not exist
@@ -653,7 +660,9 @@ export class AdminUserController<
 
       // 4. Delete user_settings
       try {
-        const settingsCollection = brightDb.collection('user_settings');
+        const settingsCollection = brightDb.collection(
+          SchemaCollection.UserSettings,
+        );
         await settingsCollection.deleteOne({ _id: userId });
       } catch {
         // user_settings collection may not exist

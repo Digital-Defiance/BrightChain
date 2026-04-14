@@ -1,4 +1,5 @@
 import { randomBytes } from 'crypto';
+import 'reflect-metadata';
 import { EmailErrorType } from '../../enumerations/messaging/emailErrorType';
 import { MessageEncryptionScheme } from '../../enumerations/messaging/messageEncryptionScheme';
 import { EmailError } from '../../errors/messaging/emailError';

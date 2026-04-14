@@ -1,4 +1,5 @@
 import { faComment } from '@awesome.me/kit-a20d532681/icons/chisel/regular';
+import { faBookMedical } from '@awesome.me/kit-a20d532681/icons/classic/regular';
 import {
   faBird,
   faEnvelope,
@@ -24,6 +25,7 @@ import {
   MessagingDemo,
   StoragePoolsDemo,
 } from '@brightchain/brightchain-react-components';
+import { createBrightChartComponentPackage } from '@brightchain/brightchart-lib';
 import {
   BrightChatStrings,
   createBrightChatComponentPackage,
@@ -84,11 +86,14 @@ import {
 } from '@digitaldefiance/suite-core-lib';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import BarChartIcon from '@mui/icons-material/BarChart';
+import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import DeleteIcon from '@mui/icons-material/Delete';
 import DraftsIcon from '@mui/icons-material/Drafts';
+import FavoriteIcon from '@mui/icons-material/Favorite';
 import ForumIcon from '@mui/icons-material/Forum';
 import GroupIcon from '@mui/icons-material/Group';
 import LabelIcon from '@mui/icons-material/Label';
+import LocalHospitalIcon from '@mui/icons-material/LocalHospital';
 import SendIcon from '@mui/icons-material/Send';
 import TimelineIcon from '@mui/icons-material/Timeline';
 import { Box, CircularProgress, CssBaseline } from '@mui/material';
@@ -107,6 +112,7 @@ import { Route, Routes, useNavigate } from 'react-router-dom';
 import { IncludeOnMenu } from '../enumerations/includeOnMenu';
 import { environment } from '../environments/environment';
 import '../styles.scss';
+import AboutPage from './components/AboutPage';
 import AdminDashboardPage from './components/AdminDashboardPage';
 import { AdminMenuRegistration } from './components/AdminMenuRegistration';
 import DashboardPage from './components/DashboardPage';
@@ -163,6 +169,7 @@ const getEnabledFeatures = (): BrightChainFeatures[] => {
   return (
     environment.enabledFeatures.map((f) => f as BrightChainFeatures) || [
       BrightChainFeatures.BrightChat,
+      BrightChainFeatures.BrightChart,
       BrightChainFeatures.BrightHub,
       BrightChainFeatures.BrightMail,
       BrightChainFeatures.BrightPass,
@@ -186,6 +193,9 @@ const brightPassEnabled = enabledFeatures.includes(
 const burnbagEnabled = enabledFeatures.includes(
   BrightChainFeatures.DigitalBurnbag,
 );
+const brightChartEnabled = enabledFeatures.includes(
+  BrightChainFeatures.BrightChart,
+);
 
 // Register sub-component i18n packages with the BrightChain engine.
 // Must run after i18nEngine import above triggers engine creation.
@@ -194,6 +204,15 @@ if (brightChatEnabled) {
   registerI18nComponentPackage(createBrightChatComponentPackage());
   BrightChatRoutes = lazy(() =>
     import('./brightchat-routes').then((m) => ({
+      default: m.default,
+    })),
+  );
+}
+let BrightChartRoutes: LazyExoticComponent<FC<object>>;
+if (brightChartEnabled) {
+  registerI18nComponentPackage(createBrightChartComponentPackage());
+  BrightChartRoutes = lazy(() =>
+    import('./brightchart-routes').then((m) => ({
       default: m.default,
     })),
   );
@@ -351,6 +370,7 @@ const InnerApp: FC = () => {
     String(IncludeOnMenu.DigitalBurnbagMenu),
   );
   const chatMenu = createMenuType(String(IncludeOnMenu.BrightChatMenu));
+  const chartMenu = createMenuType(String(IncludeOnMenu.BrightChartMenu));
   const hubMenu = createMenuType(String(IncludeOnMenu.BrightHubMenu));
   const mailMenu = createMenuType(String(IncludeOnMenu.BrightMailMenu));
   const passMenu = createMenuType(String(IncludeOnMenu.BrightPassMenu));
@@ -605,12 +625,77 @@ const InnerApp: FC = () => {
   };
   indexPriority += 100;
 
+  const brightChartMenuConfig: IMenuConfig = {
+    menuType: chartMenu,
+    menuIcon: <FontAwesomeIcon icon={faBookMedical} />,
+    priority: indexPriority,
+    options: [
+      {
+        id: 'brightchart',
+        label: <BrightChainSubLogo subText="Chart" height={24} />,
+        includeOnMenus: [chartMenu, MenuTypes.SideMenu],
+        index: indexPriority,
+        icon: (
+          <FontAwesomeIcon
+            icon={faBookMedical}
+            style={{ color: CONSTANTS.THEME_COLORS.CHAIN_BLUE_DARK }}
+          />
+        ),
+        link: '/brightchart',
+        requiresAuth: true,
+        additionalSx: {
+          '& > svg': {
+            marginRight: '3px',
+          },
+        },
+      },
+      {
+        id: 'brightchart-clinician',
+        label: 'Clinician',
+        includeOnMenus: [chartMenu, MenuTypes.SideMenu],
+        index: indexPriority + 5,
+        icon: <LocalHospitalIcon />,
+        link: '/brightchart/clinician',
+        requiresAuth: true,
+      },
+      {
+        id: 'brightchart-portal',
+        label: 'Patient Portal',
+        includeOnMenus: [chartMenu, MenuTypes.SideMenu],
+        index: indexPriority + 10,
+        icon: <FavoriteIcon />,
+        link: '/brightchart/portal',
+        requiresAuth: true,
+      },
+      {
+        id: 'brightchart-schedule',
+        label: 'Schedule',
+        includeOnMenus: [chartMenu, MenuTypes.SideMenu],
+        index: indexPriority + 15,
+        icon: <CalendarMonthIcon />,
+        link: '/brightchart/front-desk',
+        requiresAuth: true,
+      },
+      {
+        id: 'brightchart-billing',
+        label: 'Billing',
+        includeOnMenus: [chartMenu, MenuTypes.SideMenu],
+        index: indexPriority + 20,
+        icon: <BarChartIcon />,
+        link: '/brightchart/billing',
+        requiresAuth: true,
+      },
+    ],
+  };
+  indexPriority += 100;
+
   const featureMenuMap: [BrightChainFeatures, IMenuConfig][] = [
     [BrightChainFeatures.DigitalBurnbag, digitalBurnbagMenuConfig],
     [BrightChainFeatures.BrightMail, brightMailMenuConfig],
     [BrightChainFeatures.BrightPass, brightPassMenuConfig],
     [BrightChainFeatures.BrightHub, brightHubMenuConfig],
     [BrightChainFeatures.BrightChat, brightChatMenuConfig],
+    [BrightChainFeatures.BrightChart, brightChartMenuConfig],
   ];
 
   const enabledFeatures = new Set(getEnabledFeatures());
@@ -667,6 +752,14 @@ const InnerApp: FC = () => {
               element={
                 <PrivateRoute>
                   <AdminDashboardPage />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/admin/about"
+              element={
+                <PrivateRoute>
+                  <AboutPage />
                 </PrivateRoute>
               }
             />
@@ -814,6 +907,9 @@ const InnerApp: FC = () => {
             )}
             {BrightChatRoutes && (
               <Route path="/brightchat/*" element={<BrightChatRoutes />} />
+            )}
+            {BrightChartRoutes && (
+              <Route path="/brightchart/*" element={<BrightChartRoutes />} />
             )}
             {BurnbagRoutes && (
               <Route path="/burnbag/*" element={<BurnbagRoutes />} />

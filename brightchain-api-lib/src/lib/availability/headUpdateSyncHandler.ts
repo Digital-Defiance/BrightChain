@@ -38,6 +38,7 @@ export function extractWriteProofFromAnnouncement(
     dbName,
     collectionName,
     blockId,
+    nonce: announcement.writeProof.nonce,
   };
 }
 

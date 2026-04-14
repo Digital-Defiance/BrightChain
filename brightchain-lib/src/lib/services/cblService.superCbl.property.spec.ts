@@ -406,12 +406,19 @@ describe('Binary SuperCBL Format - Property Tests', () => {
             fullData[actualCorruptIndex] =
               (fullData[actualCorruptIndex] + 1) % 256;
 
-            // Signature verification should fail
-            const isValid = cblService.validateSuperCblSignature(
-              fullData,
-              member,
-              BlockSize.Medium,
-            );
+            // Signature verification should fail (or throw due to corrupted data)
+            let isValid: boolean;
+            try {
+              isValid = cblService.validateSuperCblSignature(
+                fullData,
+                member,
+                BlockSize.Medium,
+              );
+            } catch {
+              // Corruption may land on structural bytes (e.g. creator ID),
+              // causing parse errors — this is also a verification failure.
+              isValid = false;
+            }
             expect(isValid).toBe(false);
           },
         ),
@@ -525,12 +532,17 @@ describe('Binary SuperCBL Format - Property Tests', () => {
             const corruptIndex = addressDataOffset + byteIndex;
             fullData[corruptIndex] = (fullData[corruptIndex] + 1) % 256;
 
-            // Signature verification should fail
-            const isValid = cblService.validateSuperCblSignature(
-              fullData,
-              member,
-              BlockSize.Medium,
-            );
+            // Signature verification should fail (or throw due to corrupted data)
+            let isValid: boolean;
+            try {
+              isValid = cblService.validateSuperCblSignature(
+                fullData,
+                member,
+                BlockSize.Medium,
+              );
+            } catch {
+              isValid = false;
+            }
             expect(isValid).toBe(false);
           },
         ),

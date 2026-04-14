@@ -1,10 +1,10 @@
-import { StringsCollection } from '@digitaldefiance/i18n-lib';
+import { ComponentStrings } from '@digitaldefiance/i18n-lib';
 import {
   BrightChainStringKey,
   BrightChainStrings,
 } from '../../enumerations/brightChainStrings';
 
-export const UkrainianStrings: StringsCollection<BrightChainStringKey> = {
+export const UkrainianStrings: ComponentStrings<BrightChainStringKey> = {
   // BrightChain
   [BrightChainStrings.Common_Bright]: 'Яскравий',
   [BrightChainStrings.Common_Chain]: 'Ланцюг',
@@ -1471,6 +1471,7 @@ export const UkrainianStrings: StringsCollection<BrightChainStringKey> = {
   [BrightChainStrings.Admin_Menu_Hub]: 'Hub Admin',
   [BrightChainStrings.Admin_Menu_Mail]: 'Mail Admin',
   [BrightChainStrings.Admin_Menu_Pass]: 'Pass Admin',
+  [BrightChainStrings.Admin_Menu_About]: 'Про',
   [BrightChainStrings.Admin_Common_Loading]: 'Завантаження…',
   [BrightChainStrings.Admin_Common_Previous]: 'Попередня',
   [BrightChainStrings.Admin_Common_Next]: 'Наступна',
@@ -1619,4 +1620,15 @@ export const UkrainianStrings: StringsCollection<BrightChainStringKey> = {
   [BrightChainStrings.Admin_Mail_DeleteEmailTitle]: 'Видалити лист',
   [BrightChainStrings.Admin_Mail_DeleteEmailConfirm]:
     'Ви впевнені, що хочете видалити цей лист? Цю дію неможливо скасувати.',
+
+  // About Page
+  [BrightChainStrings.About_Title]: 'Про BrightChain',
+  [BrightChainStrings.About_AccessDenied]: 'Доступ заборонено',
+  [BrightChainStrings.About_AccessDeniedDescription]:
+    'Ви повинні бути адміністратором, щоб переглянути цю сторінку.',
+  [BrightChainStrings.About_MasterVersion]: 'Версія BrightChain',
+  [BrightChainStrings.About_BrightChainPackages]: 'Пакети BrightChain',
+  [BrightChainStrings.About_DigitalDefiancePackages]: 'Пакети Digital Defiance',
+  [BrightChainStrings.About_PackageName]: 'Пакет',
+  [BrightChainStrings.About_Version]: 'Версія',
 };

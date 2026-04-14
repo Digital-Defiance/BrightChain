@@ -40,12 +40,14 @@ Most participants will be Level 1 or Level 3. That's by design. The network's va
 - 10 GB disk minimum (500 GB+ recommended for production)
 - A network connection (UPnP-capable router or manual port forwarding)
 
+> **Prefer Docker?** For production deployments, the [Docker Node Setup](./docker-node-setup.md) guide packages everything (Node.js, Postfix, DKIM) into a single `docker compose up` command.
+
 ### What Happens When You Start
 
 1. Your node generates a cryptographic identity (BIP39 mnemonic → ECDSA key pair on secp256k1)
 2. A `PeerRecord` is created automatically — this is your network-layer identity
 3. It contacts bootstrap nodes and announces itself via a `NodeAdvertisement`
-4. It joins the main pool (`BrightChain`) automatically — any active, non-banned peer has implicit Read/Write/Replicate access for raw block operations
+4. It joins the main pool (`BrightChain`) automatically — any active, non-banned peer can read and replicate raw block operations. Write access to the member registry requires node admission (admin approval).
 5. It begins exchanging Bloom filters with peers for block discovery
 6. It starts storing, serving, and replicating whitened TUPLE blocks
 

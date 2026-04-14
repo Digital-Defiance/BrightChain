@@ -45,14 +45,14 @@ interface PostRecord {
   updatedBy: string;
 }
 
-interface BlockRecord {
+interface _BlockRecord {
   _id: string;
   blockerId: string;
   blockedId: string;
   createdAt: string;
 }
 
-interface HubMemberRecord {
+interface _HubMemberRecord {
   _id: string;
   hubId: string;
   userId: string;
@@ -163,7 +163,11 @@ describe('Feed_Service — Hub Feed and Sort Property Tests', () => {
       const hubId = 'hub-del';
       seed(postsCollection, [
         makePost('u1', { hubIds: [hubId], timeOffsetMs: -1000 }),
-        makePost('u1', { hubIds: [hubId], timeOffsetMs: -2000, isDeleted: true }),
+        makePost('u1', {
+          hubIds: [hubId],
+          timeOffsetMs: -2000,
+          isDeleted: true,
+        }),
       ]);
 
       const result = await service.getHubFeed(hubId);
@@ -187,7 +191,12 @@ describe('Feed_Service — Hub Feed and Sort Property Tests', () => {
         makePost(normalUser, { hubIds: [hubId], timeOffsetMs: -2000 }),
       ]);
       seed(blocksCollection, [
-        { _id: 'b1', blockerId: viewer, blockedId: blockedUser, createdAt: new Date().toISOString() },
+        {
+          _id: 'b1',
+          blockerId: viewer,
+          blockedId: blockedUser,
+          createdAt: new Date().toISOString(),
+        },
       ]);
 
       const result = await service.getHubFeed(hubId, {}, viewer);
@@ -204,35 +213,32 @@ describe('Feed_Service — Hub Feed and Sort Property Tests', () => {
   describe('Property S1: new sort order', () => {
     it('should return posts newest first', async () => {
       await fc.assert(
-        fc.asyncProperty(
-          fc.integer({ min: 3, max: 10 }),
-          async (postCount) => {
-            // Reset
-            postsCollection.data = [];
-            counter = 0;
+        fc.asyncProperty(fc.integer({ min: 3, max: 10 }), async (postCount) => {
+          // Reset
+          postsCollection.data = [];
+          counter = 0;
 
-            const hubId = 'hub-new';
-            const posts: PostRecord[] = [];
-            for (let i = 0; i < postCount; i++) {
-              posts.push(
-                makePost('author', {
-                  hubIds: [hubId],
-                  timeOffsetMs: -(i * 60000), // each 1 min apart
-                }),
-              );
-            }
-            seed(postsCollection, posts);
+          const hubId = 'hub-new';
+          const posts: PostRecord[] = [];
+          for (let i = 0; i < postCount; i++) {
+            posts.push(
+              makePost('author', {
+                hubIds: [hubId],
+                timeOffsetMs: -(i * 60000), // each 1 min apart
+              }),
+            );
+          }
+          seed(postsCollection, posts);
 
-            const result = await service.getHubFeed(hubId, { sort: 'new' });
+          const result = await service.getHubFeed(hubId, { sort: 'new' });
 
-            // Verify descending chronological order
-            for (let i = 1; i < result.posts.length; i++) {
-              const prev = new Date(result.posts[i - 1].createdAt).getTime();
-              const curr = new Date(result.posts[i].createdAt).getTime();
-              expect(prev).toBeGreaterThanOrEqual(curr);
-            }
-          },
-        ),
+          // Verify descending chronological order
+          for (let i = 1; i < result.posts.length; i++) {
+            const prev = new Date(result.posts[i - 1].createdAt).getTime();
+            const curr = new Date(result.posts[i].createdAt).getTime();
+            expect(prev).toBeGreaterThanOrEqual(curr);
+          }
+        }),
         { numRuns: 10 },
       );
     });
@@ -308,14 +314,41 @@ describe('Feed_Service — Hub Feed and Sort Property Tests', () => {
       const hubId = 'hub-top';
 
       const posts = [
-        makePost('a', { hubIds: [hubId], likeCount: 10, replyCount: 5, repostCount: 2, timeOffsetMs: -1000 }),
-        makePost('b', { hubIds: [hubId], likeCount: 100, replyCount: 50, repostCount: 20, timeOffsetMs: -2000 }),
-        makePost('c', { hubIds: [hubId], likeCount: 1, replyCount: 0, repostCount: 0, timeOffsetMs: -3000 }),
-        makePost('d', { hubIds: [hubId], likeCount: 50, replyCount: 10, repostCount: 5, timeOffsetMs: -4000 }),
+        makePost('a', {
+          hubIds: [hubId],
+          likeCount: 10,
+          replyCount: 5,
+          repostCount: 2,
+          timeOffsetMs: -1000,
+        }),
+        makePost('b', {
+          hubIds: [hubId],
+          likeCount: 100,
+          replyCount: 50,
+          repostCount: 20,
+          timeOffsetMs: -2000,
+        }),
+        makePost('c', {
+          hubIds: [hubId],
+          likeCount: 1,
+          replyCount: 0,
+          repostCount: 0,
+          timeOffsetMs: -3000,
+        }),
+        makePost('d', {
+          hubIds: [hubId],
+          likeCount: 50,
+          replyCount: 10,
+          repostCount: 5,
+          timeOffsetMs: -4000,
+        }),
       ];
       seed(postsCollection, posts);
 
-      const result = await service.getHubFeed(hubId, { sort: 'top', topWindow: 'all' });
+      const result = await service.getHubFeed(hubId, {
+        sort: 'top',
+        topWindow: 'all',
+      });
 
       // Verify descending engagement order
       for (let i = 1; i < result.posts.length; i++) {
@@ -365,8 +398,16 @@ describe('Feed_Service — Hub Feed and Sort Property Tests', () => {
       const hubId = 'hub-topall';
 
       seed(postsCollection, [
-        makePost('a', { hubIds: [hubId], likeCount: 5, timeOffsetMs: -3600000 }),
-        makePost('b', { hubIds: [hubId], likeCount: 100, timeOffsetMs: -86400000 * 30 }),
+        makePost('a', {
+          hubIds: [hubId],
+          likeCount: 5,
+          timeOffsetMs: -3600000,
+        }),
+        makePost('b', {
+          hubIds: [hubId],
+          likeCount: 100,
+          timeOffsetMs: -86400000 * 30,
+        }),
       ]);
 
       const result = await service.getHubFeed(hubId, {
@@ -378,7 +419,6 @@ describe('Feed_Service — Hub Feed and Sort Property Tests', () => {
     });
   });
 });
-
 
 describe('Feed_Service — Controversial Sort', () => {
   let service: ReturnType<typeof createFeedService>;

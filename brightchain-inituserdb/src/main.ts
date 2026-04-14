@@ -72,7 +72,34 @@ async function main() {
     symmetricKeyMode: AppConstants.ECIES.SYMMETRIC.MODE,
   };
   const eciesService = new ECIESService<DefaultBackendIdType>(config);
+
+  // Pre-load .env so that --gen flags and auto-generate logic can see
+  // existing values. The Environment constructor will also load it later,
+  // but we need the values available now for the conditional checks.
+  const envFilePath = join(__dirname, '.env');
+  if (existsSync(envFilePath)) {
+    const envContents = readFileSync(envFilePath, 'utf-8');
+    for (const line of envContents.split('\n')) {
+      const match = line.match(/^\s*([A-Z_][A-Z0-9_]*)\s*=\s*"?([^"]*)"?\s*$/);
+      if (match && !process.env[match[1]]) {
+        process.env[match[1]] = match[2];
+      }
+    }
+  }
+
+  // --gen-* flags: force-generate new values, overwriting any existing
+  // .env values. Used by inituserdb:full:drop for a clean start.
+  // These run AFTER the .env pre-load so that process.env has the .env
+  // values, but --gen flags intentionally overwrite them.
   if (process.argv.includes('--gen-system-user-mnemonic')) {
+    const mnemonic = eciesService.generateNewMnemonic();
+    process.env.SYSTEM_MNEMONIC = mnemonic.value ?? undefined;
+    console.log(
+      `SYSTEM_MNEMONIC="${mnemonic.value}"\n`,
+      getSuiteCoreTranslation(SuiteCoreStringKey.Admin_MakeSureToSetItInEnv),
+    );
+  }
+  if (process.argv.includes('--gen-admin-user-mnemonic')) {
     const mnemonic = eciesService.generateNewMnemonic();
     process.env.ADMIN_MNEMONIC = mnemonic.value ?? undefined;
     console.log(
@@ -105,18 +132,23 @@ async function main() {
     );
   }
 
-  // Auto-generate MNEMONIC_HMAC_SECRET if not already in the environment.
-  // The Environment constructor validates this as a 64-char hex string,
-  // so it must exist before construction.
+  // Auto-generate if still not set (no .env, no --gen flag)
   if (!process.env.MNEMONIC_HMAC_SECRET) {
-    process.env.MNEMONIC_HMAC_SECRET = randomBytes(32).toString('hex');
+    const generated = randomBytes(32).toString('hex');
+    process.env.MNEMONIC_HMAC_SECRET = generated;
+    console.log(
+      `Auto-generated MNEMONIC_HMAC_SECRET="${generated}"\n`,
+      getSuiteCoreTranslation(SuiteCoreStringKey.Admin_MakeSureToSetItInEnv),
+    );
   }
-  // Auto-generate MNEMONIC_ENCRYPTION_KEY if not already in the environment.
   if (!process.env.MNEMONIC_ENCRYPTION_KEY) {
-    process.env.MNEMONIC_ENCRYPTION_KEY = randomBytes(32).toString('hex');
+    const generated = randomBytes(32).toString('hex');
+    process.env.MNEMONIC_ENCRYPTION_KEY = generated;
+    console.log(
+      `Auto-generated MNEMONIC_ENCRYPTION_KEY="${generated}"\n`,
+      getSuiteCoreTranslation(SuiteCoreStringKey.Admin_MakeSureToSetItInEnv),
+    );
   }
-
-  const envFilePath = join(__dirname, '.env');
 
   // Configure GuidV4Provider on BrightChainConstants BEFORE constructing
   // Environment so the upstream BaseEnvironment constructor uses the correct
@@ -315,7 +347,8 @@ async function main() {
       blockStorePath: bcEnv.blockStorePath,
       useMemoryStore: bcEnv.useMemoryDocumentStore,
       blockSize: bcEnv.blockStoreBlockSize,
-      blockStoreLabel: bcEnv.blockStoreType !== 'disk' ? bcEnv.blockStoreType : undefined,
+      blockStoreLabel:
+        bcEnv.blockStoreType !== 'disk' ? bcEnv.blockStoreType : undefined,
     };
 
     // HMAC secret for mnemonic uniqueness checks
@@ -400,7 +433,36 @@ async function main() {
     });
     const buildResult = await builder.buildAll(userInputs);
 
+    // Persist all generated credentials back to .env so subsequent runs
+    // produce the same deterministic output (same hash).
+    const creds = buildResult.credentials;
+    appendEnvVar(envFilePath, 'SYSTEM_MNEMONIC', creds.system.mnemonic);
+    appendEnvVar(envFilePath, 'SYSTEM_PASSWORD', creds.system.password);
+    appendEnvVar(
+      envFilePath,
+      'SYSTEM_PUBLIC_KEY',
+      creds.system.publicKeyHex ?? '',
+    );
+    appendEnvVar(envFilePath, 'ADMIN_MNEMONIC', creds.admin.mnemonic);
+    appendEnvVar(envFilePath, 'ADMIN_PASSWORD', creds.admin.password);
+    appendEnvVar(envFilePath, 'MEMBER_MNEMONIC', creds.member.mnemonic);
+    appendEnvVar(envFilePath, 'MEMBER_PASSWORD', creds.member.password);
+
     try {
+      // Configure pool security using the system user's key material.
+      // Skip for DEV_DATABASE (in-memory ephemeral) mode.
+      if (!bcEnv.useMemoryDocumentStore && buildResult.members.system.wallet) {
+        const systemWallet = buildResult.members.system.wallet;
+        const systemPublicKey = new Uint8Array(systemWallet.getPublicKey());
+        const systemPrivateKey = new Uint8Array(systemWallet.getPrivateKey());
+        initConfig.poolEncryption = {
+          enabled: true,
+          systemUserPublicKey: systemPublicKey,
+          systemUserPrivateKey: systemPrivateKey,
+          systemUserId: systemIdFull,
+        };
+      }
+
       const brightChainMemberInitService =
         new BrightChainMemberInitService<GuidV4Buffer>();
       const brightChainInitResult =
@@ -455,6 +517,11 @@ async function main() {
         ),
       );
       debugLog(bcEnv.debug, 'log', '=== End .env format ===');
+      debugLog(
+        bcEnv.debug,
+        'log',
+        `Hash: ${BrightChainMemberInitService.serverInitResultHash(serverInitResult)}`,
+      );
     } finally {
       // Dispose ECIES members to clean up secure memory
       RbacInputBuilder.disposeMembers(buildResult.members);

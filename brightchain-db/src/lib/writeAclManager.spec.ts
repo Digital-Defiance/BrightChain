@@ -112,8 +112,16 @@ const mockBlockStore = {} as IBlockStore;
  * Used to create valid admin signatures for mutation tests.
  */
 function computeAclMutationPayload(aclDoc: IAclDocument): Uint8Array {
+  const writersHex = aclDoc.authorizedWriters
+    .map((w) => Buffer.from(w).toString('hex'))
+    .sort()
+    .join(',');
+  const adminsHex = aclDoc.aclAdministrators
+    .map((a) => Buffer.from(a).toString('hex'))
+    .sort()
+    .join(',');
   const collName = aclDoc.scope.collectionName ?? '';
-  const message = `acl:${aclDoc.scope.dbName}:${collName}:${aclDoc.version}:${aclDoc.writeMode}`;
+  const message = `acl:${aclDoc.scope.dbName}:${collName}:${aclDoc.version}:${aclDoc.writeMode}:writers=${writersHex}:admins=${adminsHex}`;
   const encoded = new TextEncoder().encode(message);
   return sha256(encoded);
 }
@@ -352,13 +360,14 @@ describe('WriteAclManager', () => {
       manager.setCachedAcl(acl);
 
       // Create a proof with a signature whose first byte matches the payload hash
-      const payload = createWriteProofPayload('mydb', 'users', 'block123');
+      const payload = createWriteProofPayload('mydb', 'users', 'block123', 1);
       const proof: IWriteProof = {
         signerPublicKey: writerKey,
         signature: new Uint8Array([payload[0], ...new Array(63).fill(0)]),
         dbName: 'mydb',
         collectionName: 'users',
         blockId: 'block123',
+        nonce: 1,
       };
 
       const result = await manager.verifyWriteProof(
@@ -380,7 +389,7 @@ describe('WriteAclManager', () => {
       manager.setCachedAcl(acl);
 
       // Create a proof with a bad signature (first byte won't match payload hash)
-      const payload = createWriteProofPayload('mydb', 'users', 'block123');
+      const payload = createWriteProofPayload('mydb', 'users', 'block123', 1);
       const badFirstByte = (payload[0] + 1) % 256;
       const proof: IWriteProof = {
         signerPublicKey: writerKey,
@@ -388,6 +397,7 @@ describe('WriteAclManager', () => {
         dbName: 'mydb',
         collectionName: 'users',
         blockId: 'block123',
+        nonce: 1,
       };
 
       const result = await manager.verifyWriteProof(
@@ -409,13 +419,14 @@ describe('WriteAclManager', () => {
       });
       manager.setCachedAcl(acl);
 
-      const payload = createWriteProofPayload('mydb', 'users', 'block123');
+      const payload = createWriteProofPayload('mydb', 'users', 'block123', 1);
       const proof: IWriteProof = {
         signerPublicKey: unauthorizedKey,
         signature: new Uint8Array([payload[0], ...new Array(63).fill(0)]),
         dbName: 'mydb',
         collectionName: 'users',
         blockId: 'block123',
+        nonce: 1,
       };
 
       const result = await manager.verifyWriteProof(
@@ -430,13 +441,14 @@ describe('WriteAclManager', () => {
     it('should return true in Open_Mode for any valid signature', async () => {
       // No ACL set → Open_Mode
       const anyKey = makePublicKey(0x42);
-      const payload = createWriteProofPayload('mydb', 'users', 'block123');
+      const payload = createWriteProofPayload('mydb', 'users', 'block123', 1);
       const proof: IWriteProof = {
         signerPublicKey: anyKey,
         signature: new Uint8Array([payload[0], ...new Array(63).fill(0)]),
         dbName: 'mydb',
         collectionName: 'users',
         blockId: 'block123',
+        nonce: 1,
       };
 
       const result = await manager.verifyWriteProof(

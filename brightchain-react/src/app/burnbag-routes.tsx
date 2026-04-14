@@ -17,11 +17,11 @@
  *   /burnbag/canary                 → BurnbagPage with canary config panel
  */
 
+import type { IBreadcrumbSegment } from '@brightchain/digitalburnbag-react-components';
 import {
   BurnbagPage,
   type ActiveSection,
 } from '@brightchain/digitalburnbag-react-components';
-import type { IBreadcrumbSegment } from '@brightchain/digitalburnbag-react-components';
 import {
   PrivateRoute,
   useAuth,
@@ -80,10 +80,7 @@ const BurnbagFilesRoute: React.FC = () => {
 
   // Parse virtual path segments from the URL splat
   const initialPath = useMemo(
-    () =>
-      splat
-        ? splat.split('/').filter((s) => s.length > 0)
-        : [],
+    () => (splat ? splat.split('/').filter((s) => s.length > 0) : []),
     [splat],
   );
 

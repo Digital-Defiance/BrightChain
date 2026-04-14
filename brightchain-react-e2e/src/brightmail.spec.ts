@@ -14,6 +14,13 @@ import { expect, generateCredentials, test, waitForSuspense } from './fixtures';
 
 const BASE_URL = process.env['BASE_URL'] || 'http://localhost:3000';
 
+/**
+ * The canonical email domain used by BrightMail.
+ * Inbox queries resolve users to username@BRIGHTMAIL_DOMAIN, so test emails
+ * must be addressed to this domain for them to appear in the inbox.
+ */
+const BRIGHTMAIL_DOMAIN = 'brightchain.org';
+
 /** Create an axios config with Bearer auth header. */
 function authHeader(token: string) {
   return { headers: { Authorization: `Bearer ${token}` } };
@@ -179,14 +186,12 @@ test.describe('BrightMail Inbox Columns', () => {
     const creds = generateCredentials();
     const senderLocal = creds.email.split('@')[0];
     const senderDomain = creds.email.split('@')[1];
-    const recipientLocal = authResult.email.split('@')[0];
-    const recipientDomain = authResult.email.split('@')[1];
 
     await sendEmailViaApi(authResult.token, {
       fromLocal: senderLocal,
       fromDomain: senderDomain,
-      toLocal: recipientLocal,
-      toDomain: recipientDomain,
+      toLocal: authResult.username,
+      toDomain: BRIGHTMAIL_DOMAIN,
       subject: `E2E Column Test ${Date.now()}`,
       textBody: 'Testing inbox columns display.',
     });
@@ -227,9 +232,7 @@ test.describe('BrightMail Compose Flow', () => {
     test.setTimeout(120_000);
 
     const uniqueSubject = `E2E Compose ${Date.now()}`;
-    const recipientLocal = authResult.email.split('@')[0];
-    const recipientDomain = authResult.email.split('@')[1];
-    const recipientAddress = `${recipientLocal}@${recipientDomain}`;
+    const recipientAddress = `${authResult.username}@${BRIGHTMAIL_DOMAIN}`;
 
     // Navigate to inbox first
     await authenticatedPage.goto('/brightmail');
@@ -297,15 +300,13 @@ test.describe('BrightMail Thread View', () => {
     authResult,
   }) => {
     const uniqueSubject = `E2E Thread ${Date.now()}`;
-    const recipientLocal = authResult.email.split('@')[0];
-    const recipientDomain = authResult.email.split('@')[1];
 
     // Send a test email
     await sendEmailViaApi(authResult.token, {
-      fromLocal: recipientLocal,
-      fromDomain: recipientDomain,
-      toLocal: recipientLocal,
-      toDomain: recipientDomain,
+      fromLocal: authResult.username,
+      fromDomain: BRIGHTMAIL_DOMAIN,
+      toLocal: authResult.username,
+      toDomain: BRIGHTMAIL_DOMAIN,
       subject: uniqueSubject,
       textBody: 'Thread view test body.',
     });
@@ -366,15 +367,13 @@ test.describe('BrightMail Reply Flow', () => {
     authResult,
   }) => {
     const uniqueSubject = `E2E Reply ${Date.now()}`;
-    const recipientLocal = authResult.email.split('@')[0];
-    const recipientDomain = authResult.email.split('@')[1];
 
     // Send a test email
     await sendEmailViaApi(authResult.token, {
-      fromLocal: recipientLocal,
-      fromDomain: recipientDomain,
-      toLocal: recipientLocal,
-      toDomain: recipientDomain,
+      fromLocal: authResult.username,
+      fromDomain: BRIGHTMAIL_DOMAIN,
+      toLocal: authResult.username,
+      toDomain: BRIGHTMAIL_DOMAIN,
       subject: uniqueSubject,
       textBody: 'Original message for reply test.',
     });
@@ -430,15 +429,13 @@ test.describe('BrightMail Delete Flow', () => {
     authResult,
   }) => {
     const uniqueSubject = `E2E Delete ${Date.now()}`;
-    const recipientLocal = authResult.email.split('@')[0];
-    const recipientDomain = authResult.email.split('@')[1];
 
     // Send a test email
     await sendEmailViaApi(authResult.token, {
-      fromLocal: recipientLocal,
-      fromDomain: recipientDomain,
-      toLocal: recipientLocal,
-      toDomain: recipientDomain,
+      fromLocal: authResult.username,
+      fromDomain: BRIGHTMAIL_DOMAIN,
+      toLocal: authResult.username,
+      toDomain: BRIGHTMAIL_DOMAIN,
       subject: uniqueSubject,
       textBody: 'Email to be deleted.',
     });
@@ -495,15 +492,13 @@ test.describe('BrightMail Mark as Read', () => {
     test.setTimeout(120_000);
 
     const uniqueSubject = `E2E MarkRead ${Date.now()}`;
-    const recipientLocal = authResult.email.split('@')[0];
-    const recipientDomain = authResult.email.split('@')[1];
 
     // Send a test email (will be unread initially)
     await sendEmailViaApi(authResult.token, {
-      fromLocal: recipientLocal,
-      fromDomain: recipientDomain,
-      toLocal: recipientLocal,
-      toDomain: recipientDomain,
+      fromLocal: authResult.username,
+      fromDomain: BRIGHTMAIL_DOMAIN,
+      toLocal: authResult.username,
+      toDomain: BRIGHTMAIL_DOMAIN,
       subject: uniqueSubject,
       textBody: 'Unread email for mark-as-read test.',
     });

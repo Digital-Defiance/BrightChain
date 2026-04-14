@@ -12,6 +12,7 @@
 
 import {
   BlockSize,
+  initializeBrightChain,
   PooledMemoryBlockStore,
 } from '@brightchain/brightchain-lib';
 import { promises as fs } from 'fs';
@@ -34,6 +35,9 @@ async function cleanupDir(dir: string): Promise<void> {
 }
 
 describe('HeadRegistry integration with BrightDb', () => {
+  beforeAll(() => {
+    initializeBrightChain();
+  });
   // ══════════════════════════════════════════════════════════════
   // Test 1: dataDir → PersistentHeadRegistry (data survives restart)
   // ══════════════════════════════════════════════════════════════

@@ -1,7 +1,7 @@
 import type { CollectionSchema } from '@digitaldefiance/suite-core-lib';
 
 /** Well-known collection name for user-role junction documents. */
-export const USER_ROLES_COLLECTION = 'user-roles';
+export const USER_ROLES_COLLECTION = 'user_roles';
 
 /**
  * Schema for the user-roles collection.

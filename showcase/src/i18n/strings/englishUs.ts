@@ -193,6 +193,13 @@ export const ShowcaseAmericanEnglishStrings: ComponentStrings<ShowcaseStringKey>
       '11. What dApps launched with BrightChain?',
     [ShowcaseStrings.FAQ_Tech_Q11_Intro]:
       'BrightChain launched with a core suite of "Bright-Apps" designed to replace centralized, data-harvesting services with secure, sovereign alternatives.',
+    [ShowcaseStrings.FAQ_BrightDB_Logo_Alt]: 'BrightDB Logo',
+    [ShowcaseStrings.FAQ_BrightChart_Logo_Alt]: 'BrightChart Logo',
+    [ShowcaseStrings.FAQ_BrightVote_Logo_Alt]: 'BrightVote Logo',
+    [ShowcaseStrings.FAQ_Tech_Q11_BrightChart_Title]:
+      'Patient-Owned Medical Records',
+    [ShowcaseStrings.FAQ_Tech_Q11_BrightChart_Text]:
+      'An electronic health record where the patient holds the keys. BrightChart stores FHIR R4-compliant medical data as encrypted blocks on BrightChain — no central database to breach. Patients grant granular access to providers via BrightTrust delegation, and every access event is recorded in an immutable audit trail. Supports medical, dental, and veterinary practices from a single codebase.',
     [ShowcaseStrings.FAQ_Tech_Q11_BrightMail_Title]: 'Sovereign Communication',
     [ShowcaseStrings.FAQ_Tech_Q11_BrightMail_Text]:
       'A fully RFC-compliant email system bridging traditional SMTP and decentralized storage. Unlike standard email providers, BrightMail shards every message into the "Owner-Free" block-store with support for end-to-end encrypted "Dark Mode" messaging.',
@@ -1967,6 +1974,38 @@ export const ShowcaseAmericanEnglishStrings: ComponentStrings<ShowcaseStringKey>
       'Multi-language support: English, French, Spanish, Ukrainian, and Mandarin Chinese',
     [ShowcaseStrings.Feat_Burnbag_HL12]:
       'ECIES encryption with secp256k1 keys and AES-256-GCM for file security',
+
+    // BrightChart (EMR) Feature
+    [ShowcaseStrings.Feat_BrightChart_Desc]:
+      'A patient-owned electronic medical record built on BrightChain cryptography. Your health data stays yours — encrypted, decentralized, and accessible only with your keys.',
+    [ShowcaseStrings.Feat_BrightChart_Cat]: 'Identity',
+    [ShowcaseStrings.Feat_BrightChart_Tech1]: 'Owner-Free EMR',
+    [ShowcaseStrings.Feat_BrightChart_Tech2]: 'End-to-End Encryption',
+    [ShowcaseStrings.Feat_BrightChart_Tech3]: 'Patient-Controlled Access',
+    [ShowcaseStrings.Feat_BrightChart_HL1]:
+      'Patient owns and controls all medical records via cryptographic keys',
+    [ShowcaseStrings.Feat_BrightChart_HL2]:
+      'End-to-end encrypted health data stored on BrightChain — no central server to breach',
+    [ShowcaseStrings.Feat_BrightChart_HL3]:
+      'Granular consent: share specific records with providers using BrightTrust delegation',
+    [ShowcaseStrings.Feat_BrightChart_HL4]:
+      'Immutable audit trail for every access, edit, and share event',
+    [ShowcaseStrings.Feat_BrightChart_HL5]:
+      'Portable across providers — no vendor lock-in, no data hostage',
+    [ShowcaseStrings.Feat_BrightChart_HL6]:
+      'Emergency access via Shamir secret sharing with configurable quorum',
+    [ShowcaseStrings.Feat_BrightChart_HL7]:
+      'Versioned medical history with cryptographic integrity verification',
+    [ShowcaseStrings.Feat_BrightChart_HL8]:
+      'Provider-signed entries ensure authenticity of diagnoses and prescriptions',
+    [ShowcaseStrings.Feat_BrightChart_HL9]:
+      'Offline-capable: encrypted records cached locally, synced when connected',
+    [ShowcaseStrings.Feat_BrightChart_HL10]:
+      'Built-in Digital Burnbag for sensitive records requiring guaranteed destruction',
+    [ShowcaseStrings.Feat_BrightChart_HL11]:
+      'Interoperable data layer designed for FHIR-compatible health record exchange',
+    [ShowcaseStrings.Feat_BrightChart_HL12]:
+      'Zero-knowledge proofs enable insurance verification without exposing full medical history',
 
     // Remaining alert/sub-component strings
     [ShowcaseStrings.Soup_Time]: 'Time',

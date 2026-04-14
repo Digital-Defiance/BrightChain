@@ -403,14 +403,10 @@ export class FeedService implements IFeedService {
       // Uses post.score (upvotes - downvotes) when available, falls back to likes
       const now = Date.now();
       filtered.sort((a, b) => {
-        const scoreA =
-          (a.score ?? a.likeCount) + a.replyCount + a.repostCount;
-        const scoreB =
-          (b.score ?? b.likeCount) + b.replyCount + b.repostCount;
-        const ageHoursA =
-          (now - new Date(a.createdAt).getTime()) / 3600000 + 2;
-        const ageHoursB =
-          (now - new Date(b.createdAt).getTime()) / 3600000 + 2;
+        const scoreA = (a.score ?? a.likeCount) + a.replyCount + a.repostCount;
+        const scoreB = (b.score ?? b.likeCount) + b.replyCount + b.repostCount;
+        const ageHoursA = (now - new Date(a.createdAt).getTime()) / 3600000 + 2;
+        const ageHoursB = (now - new Date(b.createdAt).getTime()) / 3600000 + 2;
         const hotA = scoreA / Math.pow(ageHoursA, 1.5);
         const hotB = scoreB / Math.pow(ageHoursB, 1.5);
         return hotB - hotA;
@@ -418,10 +414,8 @@ export class FeedService implements IFeedService {
     } else if (sortMode === 'top') {
       // Top: most engagement (score + reposts + replies)
       filtered.sort((a, b) => {
-        const scoreA =
-          (a.score ?? a.likeCount) + a.repostCount + a.replyCount;
-        const scoreB =
-          (b.score ?? b.likeCount) + b.repostCount + b.replyCount;
+        const scoreA = (a.score ?? a.likeCount) + a.repostCount + a.replyCount;
+        const scoreB = (b.score ?? b.likeCount) + b.repostCount + b.replyCount;
         if (scoreA !== scoreB) return scoreB - scoreA;
         // Tie-break by recency
         return (
@@ -432,8 +426,10 @@ export class FeedService implements IFeedService {
       // Controversial: high total votes but score near zero
       // Formula: totalVotes / (1 + |score|) — rewards high engagement with balanced voting
       filtered.sort((a, b) => {
-        const totalA = (a.upvoteCount ?? 0) + (a.downvoteCount ?? 0) + a.likeCount;
-        const totalB = (b.upvoteCount ?? 0) + (b.downvoteCount ?? 0) + b.likeCount;
+        const totalA =
+          (a.upvoteCount ?? 0) + (a.downvoteCount ?? 0) + a.likeCount;
+        const totalB =
+          (b.upvoteCount ?? 0) + (b.downvoteCount ?? 0) + b.likeCount;
         const absScoreA = Math.abs(a.score ?? a.likeCount);
         const absScoreB = Math.abs(b.score ?? b.likeCount);
         const controversyA = totalA / (1 + absScoreA);

@@ -1,5 +1,6 @@
 import { blockLogger, SecurityAuditLogger } from '@brightchain/brightchain-lib';
 import { webcrypto } from 'crypto';
+import 'reflect-metadata';
 import './lib/testUtils';
 
 // Polyfill Web Crypto API for Node.js test environment

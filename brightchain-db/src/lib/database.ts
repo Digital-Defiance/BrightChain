@@ -60,6 +60,21 @@ export interface BrightDbOptions {
     authenticator: INodeAuthenticator;
     auditLogger?: IWriteAclAuditLogger;
   };
+  /**
+   * Optional callback invoked after each successful write operation.
+   * Used by the audit ledger to record writes without modifying Collection internals.
+   *
+   * @param operation - 'insert' | 'update' | 'delete'
+   * @param collectionName - The collection that was written to
+   * @param documentId - The document ID that was affected
+   * @param headBlockId - The new head block ID after the write (if available)
+   */
+  onWrite?: (
+    operation: 'insert' | 'update' | 'delete',
+    collectionName: string,
+    documentId: string,
+    headBlockId?: string,
+  ) => void | Promise<void>;
 }
 
 /**

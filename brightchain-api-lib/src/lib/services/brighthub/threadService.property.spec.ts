@@ -378,50 +378,46 @@ describe('Feature: brighthub-social-network, Thread_Service Property Tests', () 
 
     it('should allow long replies in hub threads (>280 chars)', async () => {
       await fc.assert(
-        fc.asyncProperty(
-          userIdArb,
-          userIdArb,
-          async (authorId, replierId) => {
-            // Create a hub root post with hubIds
-            const rootContent = 'Hub discussion root';
-            const rootPostId = `hub-root-${Date.now()}-${Math.random()}`;
-            postsCollection.data.push({
-              _id: rootPostId,
-              authorId,
-              content: rootContent,
-              formattedContent: rootContent,
-              postType: 'original',
-              mediaAttachments: [],
-              mentions: [],
-              hashtags: [],
-              likeCount: 0,
-              repostCount: 0,
-              replyCount: 0,
-              quoteCount: 0,
-              isEdited: false,
-              hubIds: ['hub-1'],
-              isBlogPost: true,
-              isDeleted: false,
-              createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString(),
-              createdBy: authorId,
-              updatedBy: authorId,
-            });
+        fc.asyncProperty(userIdArb, userIdArb, async (authorId, replierId) => {
+          // Create a hub root post with hubIds
+          const rootContent = 'Hub discussion root';
+          const rootPostId = `hub-root-${Date.now()}-${Math.random()}`;
+          postsCollection.data.push({
+            _id: rootPostId,
+            authorId,
+            content: rootContent,
+            formattedContent: rootContent,
+            postType: 'original',
+            mediaAttachments: [],
+            mentions: [],
+            hashtags: [],
+            likeCount: 0,
+            repostCount: 0,
+            replyCount: 0,
+            quoteCount: 0,
+            isEdited: false,
+            hubIds: ['hub-1'],
+            isBlogPost: true,
+            isDeleted: false,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            createdBy: authorId,
+            updatedBy: authorId,
+          });
 
-            // Reply with >280 chars should succeed because parent is a hub post
-            const longReply = 'a'.repeat(500);
-            const reply = await service.createReply(
-              rootPostId,
-              replierId,
-              longReply,
-            );
+          // Reply with >280 chars should succeed because parent is a hub post
+          const longReply = 'a'.repeat(500);
+          const reply = await service.createReply(
+            rootPostId,
+            replierId,
+            longReply,
+          );
 
-            expect(reply._id).toBeDefined();
-            expect(reply.content).toBe(longReply);
+          expect(reply._id).toBeDefined();
+          expect(reply.content).toBe(longReply);
 
-            return true;
-          },
-        ),
+          return true;
+        }),
         { numRuns: 5 },
       );
     });

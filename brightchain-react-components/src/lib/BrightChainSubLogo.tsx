@@ -19,6 +19,7 @@ export interface BrightChainSubLogoProps {
   height?: number | string;
   additionalText?: string;
   additionalColor?: string;
+  altText?: string;
 }
 
 export const BrightChainSubLogo: React.FC<BrightChainSubLogoProps> = ({
@@ -36,8 +37,11 @@ export const BrightChainSubLogo: React.FC<BrightChainSubLogoProps> = ({
   iconHeight = 32,
   additionalText,
   additionalColor,
+  altText,
 }) => (
   <div
+    role="img"
+    aria-label={altText}
     className={className}
     style={{
       display: 'flex',

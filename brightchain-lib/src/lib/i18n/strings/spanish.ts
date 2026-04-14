@@ -1,10 +1,10 @@
-import { StringsCollection } from '@digitaldefiance/i18n-lib';
+import { ComponentStrings } from '@digitaldefiance/i18n-lib';
 import {
   BrightChainStringKey,
   BrightChainStrings,
 } from '../../enumerations/brightChainStrings';
 
-export const SpanishStrings: StringsCollection<BrightChainStringKey> = {
+export const SpanishStrings: ComponentStrings<BrightChainStringKey> = {
   // BrightChain
   [BrightChainStrings.Common_Bright]: 'Brillante',
   [BrightChainStrings.Common_Chain]: 'Cadena',
@@ -1278,8 +1278,7 @@ export const SpanishStrings: StringsCollection<BrightChainStringKey> = {
     'Las partes requeridas deben ser al menos 2',
   [BrightChainStrings.BrightTrustDataRecord_InvalidChecksum]:
     'Suma de verificación inválida',
-  [BrightChainStrings.BrightTrustDataRecord_InvalidSignature]:
-    'Firma inválida',
+  [BrightChainStrings.BrightTrustDataRecord_InvalidSignature]: 'Firma inválida',
   [BrightChainStrings.SimpleBrowserStore_BlockNotFoundTemplate]:
     'Bloque no encontrado: {ID}',
   [BrightChainStrings.EncryptedBlockCreator_NoCreatorRegisteredTemplate]:
@@ -1483,6 +1482,7 @@ export const SpanishStrings: StringsCollection<BrightChainStringKey> = {
   [BrightChainStrings.Admin_Menu_Hub]: 'Hub Admin',
   [BrightChainStrings.Admin_Menu_Mail]: 'Mail Admin',
   [BrightChainStrings.Admin_Menu_Pass]: 'Pass Admin',
+  [BrightChainStrings.Admin_Menu_About]: 'Acerca de',
   [BrightChainStrings.Admin_Common_Loading]: 'Cargando…',
   [BrightChainStrings.Admin_Common_Previous]: 'Anterior',
   [BrightChainStrings.Admin_Common_Next]: 'Siguiente',
@@ -1634,4 +1634,16 @@ export const SpanishStrings: StringsCollection<BrightChainStringKey> = {
   [BrightChainStrings.Admin_Mail_DeleteEmailTitle]: 'Eliminar correo',
   [BrightChainStrings.Admin_Mail_DeleteEmailConfirm]:
     '¿Está seguro de que desea eliminar este correo? Esta acción no se puede deshacer.',
+
+  // About Page
+  [BrightChainStrings.About_Title]: 'Acerca de BrightChain',
+  [BrightChainStrings.About_AccessDenied]: 'Acceso denegado',
+  [BrightChainStrings.About_AccessDeniedDescription]:
+    'Debe ser administrador para ver esta página.',
+  [BrightChainStrings.About_MasterVersion]: 'Versión de BrightChain',
+  [BrightChainStrings.About_BrightChainPackages]: 'Paquetes BrightChain',
+  [BrightChainStrings.About_DigitalDefiancePackages]:
+    'Paquetes Digital Defiance',
+  [BrightChainStrings.About_PackageName]: 'Paquete',
+  [BrightChainStrings.About_Version]: 'Versión',
 };

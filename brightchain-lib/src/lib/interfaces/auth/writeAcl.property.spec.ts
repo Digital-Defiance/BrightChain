@@ -369,6 +369,7 @@ describe('Feature: brightdb-write-acls, Property 16: Write Proof Signature Corre
           target.dbName,
           target.collectionName,
           target.blockId,
+          1,
         );
         const signature = secp256k1
           .sign(payload, keyPair.privateKey)
@@ -401,6 +402,7 @@ describe('Feature: brightdb-write-acls, Property 16: Write Proof Signature Corre
             target.dbName,
             target.collectionName,
             target.blockId,
+            1,
           );
           const signature = secp256k1
             .sign(payload, signerKeyPair.privateKey)

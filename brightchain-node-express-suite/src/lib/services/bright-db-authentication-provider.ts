@@ -87,7 +87,11 @@ export class BrightDbAuthenticationProvider<
       if (!userDoc) return null;
 
       if (userDoc.accountStatus && userDoc.accountStatus !== 'Active') {
-        return null;
+        // Allow PendingEmailVerification users to use authenticated endpoints
+        // (they have a valid JWT from registration). Only AdminLock blocks access.
+        if (userDoc.accountStatus !== 'PendingEmailVerification') {
+          return null;
+        }
       }
 
       return {

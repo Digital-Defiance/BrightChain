@@ -2,11 +2,52 @@
 import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import react from '@vitejs/plugin-react';
+import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { resolve } from 'node:path';
 import { defineConfig } from 'vite';
 
 const require = createRequire(import.meta.url);
+
+/**
+ * Collect version info from workspace package.json files for the About page.
+ * Runs once at config-resolution time (build or dev-server start).
+ */
+function collectVersionInfo(): Record<string, string> {
+  const rootPkg = JSON.parse(
+    readFileSync(resolve(import.meta.dirname, '../package.json'), 'utf-8'),
+  );
+
+  const versions: Record<string, string> = {
+    brightchain: rootPkg.version,
+  };
+
+  // Workspace packages (@brightchain/*)
+  for (const ws of rootPkg.workspaces ?? []) {
+    try {
+      const pkg = JSON.parse(
+        readFileSync(
+          resolve(import.meta.dirname, '..', ws, 'package.json'),
+          'utf-8',
+        ),
+      );
+      if (pkg.name) versions[pkg.name] = pkg.version;
+    } catch {
+      // workspace entry may not have a package.json (e.g. tools)
+    }
+  }
+
+  // @digitaldefiance/* pinned versions from resolutions
+  for (const [name, version] of Object.entries(rootPkg.resolutions ?? {})) {
+    if (name.startsWith('@digitaldefiance/')) {
+      versions[name] = version as string;
+    }
+  }
+
+  return versions;
+}
+
+const packageVersions = collectVersionInfo();
 
 export default defineConfig(({ mode }) => ({
   root: import.meta.dirname,
@@ -83,6 +124,8 @@ export default defineConfig(({ mode }) => ({
     'process.env': {},
     // Some CJS packages reference `global` instead of `globalThis`
     global: 'globalThis',
+    // Package version info for the About page (baked in at build time)
+    __PACKAGE_VERSIONS__: JSON.stringify(packageVersions),
   },
 
   server: {

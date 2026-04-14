@@ -544,7 +544,7 @@ export enum SchemaCollection {
   UserToken = 'user-tokens',
   User = 'users',
   Mnemonic = 'mnemonics',
-  UserRole = 'user-roles',
+  UserRole = 'user_roles',
   UsedDirectLoginToken = 'used-direct-login-tokens'
 }
 ```

@@ -45,8 +45,9 @@ export default defineConfig({
       UPNP_ENABLED: 'false',
       USE_TRANSACTIONS: 'false',
       DISABLE_EMAIL_SEND: 'true',
+      EMAIL_DOMAIN: 'brightchain.org',
       ENABLED_FEATURES:
-        'BrightChat,BrightHub,BrightMail,BrightPass,DigitalBurnbag',
+        'BrightChat,BrightHub,BrightMail,BrightPass,DigitalBurnbag,BrightChart',
       JWT_SECRET:
         'a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2',
       MNEMONIC_HMAC_SECRET:
@@ -61,8 +62,12 @@ export default defineConfig({
     url: 'http://localhost:3000/api/health',
     reuseExistingServer: !process.env.CI,
     cwd: workspaceRoot,
-    /* Server init includes crypto setup, DB seeding, and FEC initialization */
-    timeout: 300_000,
+    /* Server init includes crypto setup, DB seeding, and FEC initialization.
+       When running after other e2e suites, the machine may be under heavy load
+       so we allow up to 10 minutes for startup. */
+    timeout: 600_000,
+    stdout: 'pipe',
+    stderr: 'pipe',
   },
   projects: [
     {

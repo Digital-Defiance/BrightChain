@@ -36,10 +36,14 @@ import {
   SystemUserService,
 } from '@digitaldefiance/node-express-suite';
 import type { SuiteCoreStringKeyValue } from '@digitaldefiance/suite-core-lib';
-import { TranslatableSuiteError } from '@digitaldefiance/suite-core-lib';
+import {
+  EmailTokenType,
+  TranslatableSuiteError,
+} from '@digitaldefiance/suite-core-lib';
 import * as bcrypt from 'bcrypt';
-import { createHmac, randomUUID } from 'crypto';
+import { createHmac, randomBytes, randomUUID } from 'crypto';
 import * as jwt from 'jsonwebtoken';
+import { SchemaCollection } from '../enumerations/schema-collection';
 import type { IAuthCredentials } from '../interfaces/auth-credentials';
 import type { IAuthToken } from '../interfaces/auth-token';
 import type { IBrightDbApplication } from '../interfaces/bright-db-application';
@@ -128,7 +132,7 @@ export class BrightDbAuthService<TID extends PlatformID = Buffer> {
       // Check if the HMAC already exists in the mnemonic collection
       const mnemonicsCollection = this.application.db.collection<
         Record<string, unknown> & { _id?: string }
-      >('mnemonics');
+      >(SchemaCollection.Mnemonic);
       const existingHmac = await mnemonicsCollection.findOne({
         hmac,
       } as never);
@@ -252,7 +256,7 @@ export class BrightDbAuthService<TID extends PlatformID = Buffer> {
       if (mnemonicHmac) {
         const mnemonicsCollection = this.application.db.collection<
           Record<string, unknown> & { _id?: string }
-        >('mnemonics');
+        >(SchemaCollection.Mnemonic);
         await mnemonicsCollection.create({
           _id: randomUUID(),
           hmac: mnemonicHmac,
@@ -262,7 +266,7 @@ export class BrightDbAuthService<TID extends PlatformID = Buffer> {
       // 4. Upsert user document for admin visibility
       const usersCol = this.application.db.collection<
         Record<string, unknown> & { _id?: string }
-      >('users');
+      >(SchemaCollection.User);
       const now = new Date().toISOString();
       const publicKeyHex = liveMember.publicKey
         ? Buffer.from(liveMember.publicKey).toString('hex')
@@ -274,7 +278,7 @@ export class BrightDbAuthService<TID extends PlatformID = Buffer> {
         publicKey: publicKeyHex,
         mnemonicRecovery: mnemonicRecovery,
         backupCodes: [],
-        accountStatus: 'Active',
+        accountStatus: 'PendingEmailVerification',
         emailVerified: false,
         directChallenge: false,
         timezone: 'UTC',
@@ -324,7 +328,7 @@ export class BrightDbAuthService<TID extends PlatformID = Buffer> {
       throw txError;
     }
 
-    await this.sendWelcomeEmail(email, username);
+    await this.sendWelcomeEmail(email, username, memberId);
 
     const token = this.signToken(memberId, username, MemberType.User);
 
@@ -379,7 +383,7 @@ export class BrightDbAuthService<TID extends PlatformID = Buffer> {
       const usersCol = this.application.db.collection<{
         _id?: string;
         accountStatus?: string;
-      }>('users');
+      }>(SchemaCollection.User);
       const idHex = sp.idProvider.toString(reference.id, 'hex');
       let userDoc = await usersCol.findOne({ _id: idHex } as never);
       if (!userDoc) {
@@ -390,11 +394,18 @@ export class BrightDbAuthService<TID extends PlatformID = Buffer> {
         userDoc = await usersCol.findOne({ _id: dashed } as never);
       }
       if (userDoc?.accountStatus && userDoc.accountStatus !== 'Active') {
+        if (userDoc.accountStatus === 'PendingEmailVerification') {
+          throw new Error('Email not verified');
+        }
         throw new Error('Account is locked');
       }
     } catch (err) {
-      // Re-throw account-locked errors; swallow DB lookup failures
-      if (err instanceof Error && err.message === 'Account is locked') {
+      // Re-throw account-locked and email-not-verified errors; swallow DB lookup failures
+      if (
+        err instanceof Error &&
+        (err.message === 'Account is locked' ||
+          err.message === 'Email not verified')
+      ) {
         throw err;
       }
       // DB unavailable — allow login (fail-open for DB-less setups)
@@ -414,11 +425,11 @@ export class BrightDbAuthService<TID extends PlatformID = Buffer> {
         _id?: string;
         userId?: string;
         roleId?: string;
-      }>('user-roles');
+      }>(SchemaCollection.UserRole);
       const rolesCol = this.application.db.collection<{
         _id?: string;
         name?: string;
-      }>('roles');
+      }>(SchemaCollection.Role);
 
       const idHex = sp.idProvider.toString(reference.id, 'hex');
       const dashed = idHex.replace(
@@ -453,10 +464,7 @@ export class BrightDbAuthService<TID extends PlatformID = Buffer> {
               .exec();
             if (roleDoc?.name) {
               // Map role names to the 'admin' role string the middleware expects
-              if (
-                roleDoc.name === 'Admin' ||
-                roleDoc.name === 'System'
-              ) {
+              if (roleDoc.name === 'Admin' || roleDoc.name === 'System') {
                 resolvedRoles.push('admin');
               }
             }
@@ -707,7 +715,7 @@ export class BrightDbAuthService<TID extends PlatformID = Buffer> {
       _id?: string;
       userId: string;
       token: string;
-    }>('used_direct_login_tokens');
+    }>(SchemaCollection.UsedDirectLoginToken);
     const existing = await tokenCollection
       .findOne({
         userId: memberId,
@@ -732,12 +740,121 @@ export class BrightDbAuthService<TID extends PlatformID = Buffer> {
   }
 
   /**
-   * Override in subclasses to send a welcome email via your preferred service.
-   * Default implementation logs to console.
+   * Generate a cryptographically random email verification token, store it
+   * in the email_tokens collection, and return the token string.
+   */
+  async generateEmailVerificationToken(
+    memberId: string,
+    email: string,
+  ): Promise<string> {
+    const token = randomBytes(32).toString('hex');
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(); // 24 hours
+
+    const emailTokensCol = this.application.db.collection<{
+      _id?: string;
+      userId: string;
+      type: string;
+      token: string;
+      email: string;
+      lastSent: string;
+      expiresAt: string;
+    }>(SchemaCollection.EmailToken);
+
+    await emailTokensCol.create({
+      _id: randomUUID(),
+      userId: memberId,
+      type: EmailTokenType.AccountVerification,
+      token,
+      email,
+      lastSent: new Date().toISOString(),
+      expiresAt,
+    } as never);
+
+    return token;
+  }
+
+  /**
+   * Resend the verification email for a user who hasn't verified yet.
+   * Generates a new token and calls sendWelcomeEmail.
+   */
+  async resendVerificationEmail(
+    memberId: string,
+    email: string,
+    username: string,
+  ): Promise<void> {
+    await this.sendWelcomeEmail(email, username, memberId);
+  }
+
+  /**
+   * Verify an email verification token: validate it exists, is not expired,
+   * then flip emailVerified → true and accountStatus → Active.
+   *
+   * @returns The user ID associated with the verified token.
+   * @throws Error('Invalid or expired verification token') on bad/expired tokens.
+   */
+  async verifyEmailToken(token: string): Promise<string> {
+    const emailTokensCol = this.application.db.collection<{
+      _id?: string;
+      userId: string;
+      type: string;
+      token: string;
+      email: string;
+      expiresAt: string;
+    }>(SchemaCollection.EmailToken);
+
+    const tokenDoc = await emailTokensCol.findOne({
+      token,
+      type: EmailTokenType.AccountVerification,
+    } as never);
+
+    if (!tokenDoc) {
+      throw new Error('Invalid or expired verification token');
+    }
+
+    // Check expiration
+    if (new Date(tokenDoc.expiresAt) < new Date()) {
+      throw new Error('Invalid or expired verification token');
+    }
+
+    const userId = tokenDoc.userId;
+
+    // Update user: emailVerified → true, accountStatus → Active
+    const usersCol = this.application.db.collection<
+      Record<string, unknown> & { _id?: string }
+    >(SchemaCollection.User);
+
+    await usersCol.updateOne(
+      { _id: userId } as never,
+      {
+        emailVerified: true,
+        accountStatus: 'Active',
+        updatedAt: new Date().toISOString(),
+      } as never,
+    );
+
+    // Delete the used token
+    try {
+      await emailTokensCol.deleteOne({ _id: tokenDoc._id } as never);
+    } catch {
+      // Best-effort cleanup — token is single-use by virtue of the
+      // emailVerified + accountStatus flip above.
+    }
+
+    return userId;
+  }
+
+  /**
+   * Override in subclasses to send a welcome/verification email via your
+   * preferred service. Default implementation logs to console.
+   *
+   * @param email    - Recipient email address
+   * @param username - Display name / username
+   * @param memberId - The new user's member ID (used to generate verification token)
    */
   protected async sendWelcomeEmail(
     email: string,
     username: string,
+    _memberId?: string,
   ): Promise<void> {
     console.log(
       `[BrightDbAuthService] Would send welcome email to ${email} for ${username}`,

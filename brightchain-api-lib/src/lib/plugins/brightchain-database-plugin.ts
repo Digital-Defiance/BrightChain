@@ -270,7 +270,8 @@ export class BrightChainDatabasePlugin<
       blockStorePath: env.blockStorePath,
       useMemoryStore,
       blockSize: env.blockStoreBlockSize,
-      blockStoreLabel: env.blockStoreType !== 'disk' ? env.blockStoreType : undefined,
+      blockStoreLabel:
+        env.blockStoreType !== 'disk' ? env.blockStoreType : undefined,
     };
   }
 

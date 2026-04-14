@@ -17,8 +17,8 @@ import {
   publicMemberProfileHydrationSchema,
 } from '../documents/member/memberProfileHydration';
 import { BlockDataType } from '../enumerations/blockDataType';
+import { BlockSize } from '../enumerations/blockSize';
 import { BlockType } from '../enumerations/blockType';
-import { BlockSize, lengthToClosestBlockSize } from '../enumerations/blockSize';
 import { BrightChainStrings } from '../enumerations/brightChainStrings';
 import { MemberErrorType } from '../enumerations/memberErrorType';
 import { MemberStatusType } from '../enumerations/memberStatusType';
@@ -99,6 +99,27 @@ export class MemberStore<TID extends PlatformID = Uint8Array>
   }
 
   /**
+   * Pick the smallest supported block size that can hold `dataLength` bytes.
+   *
+   * Delegates to `BlockService.getBlockSizeForData` with the block store's
+   * supported sizes so that only sizes the store actually accepts are
+   * considered.
+   *
+   * @throws MemberError if no supported block size is large enough.
+   */
+  private blockSizeForData(dataLength: number): BlockSize {
+    const blockService = ServiceProvider.getInstance<TID>().blockService;
+    const size = blockService.getBlockSizeForData(
+      dataLength,
+      this.blockStore.supportedBlockSizes,
+    );
+    if (size === BlockSize.Unknown) {
+      throw new MemberError(MemberErrorType.FailedToCreateMemberBlocks);
+    }
+    return size;
+  }
+
+  /**
    * Attach (or replace) the DB reference after construction.
    * Called by the plugin after connect() so MemberStore can query
    * the persisted member_index and users collections directly.
@@ -128,7 +149,7 @@ export class MemberStore<TID extends PlatformID = Uint8Array>
       for (const tuple of tuples) {
         // Create metadata for XORed block
         const metadata = new BlockMetadata(
-          this.blockStore.blockSize,
+          this.blockSizeForData(Number(cbl.originalDataLength)),
           BlockType.RawData,
           BlockDataType.PublicMemberData,
           Number(cbl.originalDataLength),
@@ -210,10 +231,13 @@ export class MemberStore<TID extends PlatformID = Uint8Array>
     let privateProfileBlock: RawDataBlock | undefined;
 
     try {
-      // Step 1: Create member document using factory method with block store's block size
-      // Use the original 'member' which has the private key for signing CBLs
+      // Step 1: Create member document using factory method.
+      // The document creates an internal MemoryBlockStore for CBL operations.
+      // Measure the serialized member size so we pick a block size that fits.
+      const memberJsonLength = new TextEncoder().encode(member.toJson()).length;
+      const docBlockSize = this.blockSizeForData(memberJsonLength);
       doc = MemberDocument.create<TID>(member, member, undefined, undefined, {
-        blockSize: this.blockStore.blockSize,
+        blockSize: docBlockSize,
       });
       rollbackOperations.push(async () => {
         // No cleanup needed for document creation
@@ -245,11 +269,23 @@ export class MemberStore<TID extends PlatformID = Uint8Array>
         dateUpdated: new Date(),
       };
 
+      // Estimate profile data size to pick an appropriate block size.
+      // Use a JSON-serializable snapshot (BigInt → string for measurement).
+      const profileSizeEstimate = Math.max(
+        JSON.stringify(publicProfileData, (_k, v) =>
+          typeof v === 'bigint' ? v.toString() : v,
+        ).length,
+        JSON.stringify(privateProfileData, (_k, v) =>
+          typeof v === 'bigint' ? v.toString() : v,
+        ).length,
+      );
+      const profileBlockSize = this.blockSizeForData(profileSizeEstimate);
+
       profileDoc = MemberProfileDocument.create<TID>(
         member,
         publicProfileData,
         privateProfileData,
-        { blockSize: this.blockStore.blockSize },
+        { blockSize: profileBlockSize },
       );
       rollbackOperations.push(async () => {
         // No cleanup needed for document creation
@@ -287,7 +323,11 @@ export class MemberStore<TID extends PlatformID = Uint8Array>
             const block = await docBlockStore.getData(address);
             await this.blockStore.setData(block);
             rollbackOperations.push(async () => {
-              await this.blockStore.deleteData(address);
+              try {
+                await this.blockStore.deleteData(address);
+              } catch {
+                // Ignore if block doesn't exist during rollback
+              }
             });
           } catch {
             // Block might already exist, which is fine
@@ -306,7 +346,11 @@ export class MemberStore<TID extends PlatformID = Uint8Array>
             const block = await docBlockStore.getData(address);
             await this.blockStore.setData(block);
             rollbackOperations.push(async () => {
-              await this.blockStore.deleteData(address);
+              try {
+                await this.blockStore.deleteData(address);
+              } catch {
+                // Ignore if block doesn't exist during rollback
+              }
             });
           } catch {
             // Block might already exist, which is fine
@@ -325,7 +369,11 @@ export class MemberStore<TID extends PlatformID = Uint8Array>
             const block = await profileDocBlockStore.getData(address);
             await this.blockStore.setData(block);
             rollbackOperations.push(async () => {
-              await this.blockStore.deleteData(address);
+              try {
+                await this.blockStore.deleteData(address);
+              } catch {
+                // Ignore if block doesn't exist during rollback
+              }
             });
           } catch {
             // Block might already exist, which is fine
@@ -344,7 +392,11 @@ export class MemberStore<TID extends PlatformID = Uint8Array>
             const block = await profileDocBlockStore.getData(address);
             await this.blockStore.setData(block);
             rollbackOperations.push(async () => {
-              await this.blockStore.deleteData(address);
+              try {
+                await this.blockStore.deleteData(address);
+              } catch {
+                // Ignore if block doesn't exist during rollback
+              }
             });
           } catch {
             // Block might already exist, which is fine
@@ -356,7 +408,7 @@ export class MemberStore<TID extends PlatformID = Uint8Array>
 
       // Step 6: Create blocks for identity CBL data
       publicBlock = new RawDataBlock(
-        lengthToClosestBlockSize(publicCBLData.length),
+        this.blockSizeForData(publicCBLData.length),
         publicCBLData,
         doc!.dateCreated,
         undefined, // Let RawDataBlock calculate the checksum
@@ -365,7 +417,7 @@ export class MemberStore<TID extends PlatformID = Uint8Array>
       );
 
       privateBlock = new RawDataBlock(
-        lengthToClosestBlockSize(privateCBLData.length),
+        this.blockSizeForData(privateCBLData.length),
         privateCBLData,
         doc!.dateCreated,
         undefined, // Let RawDataBlock calculate the checksum
@@ -375,7 +427,7 @@ export class MemberStore<TID extends PlatformID = Uint8Array>
 
       // Step 7: Create blocks for profile CBL data
       publicProfileBlock = new RawDataBlock(
-        lengthToClosestBlockSize(publicProfileCBLData.length),
+        this.blockSizeForData(publicProfileCBLData.length),
         publicProfileCBLData,
         profileDoc!.dateCreated,
         undefined, // Let RawDataBlock calculate the checksum
@@ -384,7 +436,7 @@ export class MemberStore<TID extends PlatformID = Uint8Array>
       );
 
       privateProfileBlock = new RawDataBlock(
-        lengthToClosestBlockSize(privateProfileCBLData.length),
+        this.blockSizeForData(privateProfileCBLData.length),
         privateProfileCBLData,
         profileDoc!.dateCreated,
         undefined, // Let RawDataBlock calculate the checksum
@@ -396,14 +448,22 @@ export class MemberStore<TID extends PlatformID = Uint8Array>
       await this.blockStore.setData(publicBlock);
       rollbackOperations.push(async () => {
         if (publicBlock) {
-          await this.blockStore.deleteData(publicBlock.idChecksum);
+          try {
+            await this.blockStore.deleteData(publicBlock.idChecksum);
+          } catch {
+            // Ignore if block doesn't exist during rollback
+          }
         }
       });
 
       await this.blockStore.setData(privateBlock);
       rollbackOperations.push(async () => {
         if (privateBlock) {
-          await this.blockStore.deleteData(privateBlock.idChecksum);
+          try {
+            await this.blockStore.deleteData(privateBlock.idChecksum);
+          } catch {
+            // Ignore if block doesn't exist during rollback
+          }
         }
       });
 
@@ -411,14 +471,22 @@ export class MemberStore<TID extends PlatformID = Uint8Array>
       await this.blockStore.setData(publicProfileBlock);
       rollbackOperations.push(async () => {
         if (publicProfileBlock) {
-          await this.blockStore.deleteData(publicProfileBlock.idChecksum);
+          try {
+            await this.blockStore.deleteData(publicProfileBlock.idChecksum);
+          } catch {
+            // Ignore if block doesn't exist during rollback
+          }
         }
       });
 
       await this.blockStore.setData(privateProfileBlock);
       rollbackOperations.push(async () => {
         if (privateProfileBlock) {
-          await this.blockStore.deleteData(privateProfileBlock.idChecksum);
+          try {
+            await this.blockStore.deleteData(privateProfileBlock.idChecksum);
+          } catch {
+            // Ignore if block doesn't exist during rollback
+          }
         }
       });
 
@@ -541,7 +609,7 @@ export class MemberStore<TID extends PlatformID = Uint8Array>
         cbl = new ConstituentBlockListBlock<TID>(
           publicBlock.data,
           memberWithCorrectId,
-          this.blockStore.blockSize,
+          this.blockSizeForData(publicBlock.data.length),
         );
       } catch {
         // If CBL creation fails, the data might be corrupted
@@ -686,7 +754,7 @@ export class MemberStore<TID extends PlatformID = Uint8Array>
             const cbl = new ConstituentBlockListBlock<TID>(
               blockData,
               member,
-              this.blockStore.blockSize,
+              this.blockSizeForData(blockData.length),
             );
 
             const storageData =
@@ -768,7 +836,7 @@ export class MemberStore<TID extends PlatformID = Uint8Array>
             const cbl = new ConstituentBlockListBlock<TID>(
               blockData,
               member,
-              this.blockStore.blockSize,
+              this.blockSizeForData(blockData.length),
             );
 
             const storageData =
@@ -915,16 +983,9 @@ export class MemberStore<TID extends PlatformID = Uint8Array>
         );
 
         // Create new blocks for profile data — pick the smallest supported
-        // block size that can hold the data.
-        const publicBlockSize = lengthToClosestBlockSize(
-          publicProfileBytes.length,
-        );
-        const privateBlockSize = lengthToClosestBlockSize(
-          privateProfileBytes.length,
-        );
-
+        // block size that fits each payload.
         const newPublicProfileBlock = new RawDataBlock(
-          publicBlockSize,
+          this.blockSizeForData(publicProfileBytes.length),
           publicProfileBytes,
           new Date(),
           undefined, // Let RawDataBlock calculate the checksum
@@ -933,7 +994,7 @@ export class MemberStore<TID extends PlatformID = Uint8Array>
         );
 
         const newPrivateProfileBlock = new RawDataBlock(
-          privateBlockSize,
+          this.blockSizeForData(privateProfileBytes.length),
           privateProfileBytes,
           new Date(),
           undefined, // Let RawDataBlock calculate the checksum
@@ -944,12 +1005,20 @@ export class MemberStore<TID extends PlatformID = Uint8Array>
         // Store new blocks in block store
         await this.blockStore.setData(newPublicProfileBlock);
         rollbackOperations.push(async () => {
-          await this.blockStore.deleteData(newPublicProfileBlock.idChecksum);
+          try {
+            await this.blockStore.deleteData(newPublicProfileBlock.idChecksum);
+          } catch {
+            // Ignore if block doesn't exist during rollback
+          }
         });
 
         await this.blockStore.setData(newPrivateProfileBlock);
         rollbackOperations.push(async () => {
-          await this.blockStore.deleteData(newPrivateProfileBlock.idChecksum);
+          try {
+            await this.blockStore.deleteData(newPrivateProfileBlock.idChecksum);
+          } catch {
+            // Ignore if block doesn't exist during rollback
+          }
         });
 
         // Update member index with new profile block checksums

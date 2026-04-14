@@ -1335,6 +1335,7 @@ const _brightChainKeys = {
   Admin_Menu_Hub: 'Admin_Menu_Hub',
   Admin_Menu_Mail: 'Admin_Menu_Mail',
   Admin_Menu_Pass: 'Admin_Menu_Pass',
+  Admin_Menu_About: 'Admin_Menu_About',
 
   // Admin Common (shared across panels)
   Admin_Common_Loading: 'Admin_Common_Loading',
@@ -1371,7 +1372,8 @@ const _brightChainKeys = {
   Admin_Users_ColRole: 'Admin_Users_ColRole',
   Admin_Users_ChangeRole: 'Admin_Users_ChangeRole',
   Admin_Users_ChangeRoleTitle: 'Admin_Users_ChangeRoleTitle',
-  Admin_Users_ChangeRoleConfirmTemplate: 'Admin_Users_ChangeRoleConfirmTemplate',
+  Admin_Users_ChangeRoleConfirmTemplate:
+    'Admin_Users_ChangeRoleConfirmTemplate',
   Admin_Users_ChangeRoleWarning: 'Admin_Users_ChangeRoleWarning',
   Admin_Users_RoleAdmin: 'Admin_Users_RoleAdmin',
   Admin_Users_RoleMember: 'Admin_Users_RoleMember',
@@ -1477,6 +1479,16 @@ const _brightChainKeys = {
   Admin_Mail_DeleteEmail: 'Admin_Mail_DeleteEmail',
   Admin_Mail_DeleteEmailTitle: 'Admin_Mail_DeleteEmailTitle',
   Admin_Mail_DeleteEmailConfirm: 'Admin_Mail_DeleteEmailConfirm',
+
+  // About Page
+  About_Title: 'About_Title',
+  About_AccessDenied: 'About_AccessDenied',
+  About_AccessDeniedDescription: 'About_AccessDeniedDescription',
+  About_MasterVersion: 'About_MasterVersion',
+  About_BrightChainPackages: 'About_BrightChainPackages',
+  About_DigitalDefiancePackages: 'About_DigitalDefiancePackages',
+  About_PackageName: 'About_PackageName',
+  About_Version: 'About_Version',
 } as const;
 
 export const BrightChainStrings: BrandedStringKeys<typeof _brightChainKeys> =

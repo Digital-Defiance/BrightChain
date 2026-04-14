@@ -19,7 +19,6 @@ import {
   IPaginatedResult,
   IPaginationOptions,
   MAX_CATEGORIES_PER_USER,
-  MAX_HUBS_PER_USER,
   MAX_LISTS_PER_USER,
   MAX_MEMBERS_PER_HUB,
   MAX_MEMBERS_PER_LIST,
@@ -320,10 +319,9 @@ export class ConnectionService implements IConnectionService {
     this.hubMembersCollection = application.getModel<HubMemberRecord>(
       'brighthub_hub_members',
     );
-    this.hubBannedUsersCollection =
-      application.getModel<HubBannedUserRecord>(
-        'brighthub_hub_banned_users',
-      );
+    this.hubBannedUsersCollection = application.getModel<HubBannedUserRecord>(
+      'brighthub_hub_banned_users',
+    );
     this.blocksCollection =
       application.getModel<BlockRecord>('brighthub_blocks');
     this.listFollowersCollection = application.getModel<ListFollowerRecord>(
@@ -2702,9 +2700,7 @@ export class ConnectionService implements IConnectionService {
   /**
    * Get all hubs a user is a member of (not just owned)
    */
-  async getUserSubscribedHubs(
-    userId: string,
-  ): Promise<IBaseHub<string>[]> {
+  async getUserSubscribedHubs(userId: string): Promise<IBaseHub<string>[]> {
     const memberships = await this.hubMembersCollection
       .find({ userId } as Partial<HubMemberRecord>)
       .exec();

@@ -19,11 +19,13 @@ export const ShowcaseMandarinStrings: Partial<
   [ShowcaseStrings.Nav_FAQ_Description]: '常见问题解答',
   [ShowcaseStrings.Nav_Docs_Description]: '项目文档',
   [ShowcaseStrings.Nav_ToggleMenu]: '切换菜单',
+  [ShowcaseStrings.FAQ_BrightDB_Logo_Alt]: 'BrightDB标志',
   [ShowcaseStrings.FAQ_TopSecret_Logo_Alt]: '绝密 dApp',
   [ShowcaseStrings.FAQ_BrightChat_Logo_Alt]: 'BrightChat标志',
   [ShowcaseStrings.FAQ_BrightHub_Logo_Alt]: 'BrightHub标志',
   [ShowcaseStrings.FAQ_BrightID_Logo_Alt]: 'BrightID标志',
   [ShowcaseStrings.FAQ_BrightMail_Logo_Alt]: 'BrightMail标志',
+  [ShowcaseStrings.FAQ_BrightVote_Logo_Alt]: 'BrightVote标志',
   [ShowcaseStrings.FAQ_BrightPass_Logo_Alt]: 'BrightPass标志',
   [ShowcaseStrings.FAQ_CanaryProtocol_Logo_Alt]: '金丝雀协议标志',
   [ShowcaseStrings.FAQ_DigitalBurnbag_Logo_Alt]: '数字焚烧袋标志',
@@ -178,6 +180,10 @@ export const ShowcaseMandarinStrings: Partial<
   [ShowcaseStrings.FAQ_Tech_Q11_Title]: '11. BrightChain推出了哪些dApp？',
   [ShowcaseStrings.FAQ_Tech_Q11_Intro]:
     'BrightChain推出了一套核心"Bright-Apps"，旨在用安全、主权的替代方案取代中心化的数据收集服务。',
+  [ShowcaseStrings.FAQ_BrightChart_Logo_Alt]: 'BrightChart标志',
+  [ShowcaseStrings.FAQ_Tech_Q11_BrightChart_Title]: '患者自有医疗记录',
+  [ShowcaseStrings.FAQ_Tech_Q11_BrightChart_Text]:
+    '一个由患者持有密钥的电子病历。BrightChart将符合FHIR R4标准的医疗数据作为加密块存储在BrightChain上——没有可被攻破的中央数据库。患者通过BrightTrust委托向医疗提供者授予细粒度访问权限，每次访问事件都记录在不可变的审计追踪中。从单一代码库支持医疗、牙科和兽医诊所。',
   [ShowcaseStrings.FAQ_Tech_Q11_BrightMail_Title]: '主权通信',
   [ShowcaseStrings.FAQ_Tech_Q11_BrightMail_Text]:
     '一个完全符合RFC标准的电子邮件系统，连接传统SMTP和去中心化存储。与标准电子邮件提供商不同，BrightMail将每条消息分片到"无主"区块存储中，支持端到端加密的"暗模式"消息。',
@@ -1850,6 +1856,37 @@ export const ShowcaseMandarinStrings: Partial<
     '多语言支持：英语、法语、西班牙语、乌克兰语和普通话',
   [ShowcaseStrings.Feat_Burnbag_HL12]:
     '使用secp256k1密钥和AES-256-GCM的ECIES加密确保文件安全',
+
+  // BrightChart (EMR) Feature
+  [ShowcaseStrings.Feat_BrightChart_Desc]:
+    '基于BrightChain密码学构建的患者自有电子病历。您的健康数据归您所有——加密、去中心化，仅凭您的密钥可访问。',
+  [ShowcaseStrings.Feat_BrightChart_Cat]: '身份',
+  [ShowcaseStrings.Feat_BrightChart_Tech1]: '无主EMR',
+  [ShowcaseStrings.Feat_BrightChart_Tech2]: '端到端加密',
+  [ShowcaseStrings.Feat_BrightChart_Tech3]: '患者控制访问',
+  [ShowcaseStrings.Feat_BrightChart_HL1]:
+    '患者通过密码学密钥拥有和控制所有医疗记录',
+  [ShowcaseStrings.Feat_BrightChart_HL2]:
+    '端到端加密的健康数据存储在BrightChain上——没有可被攻破的中央服务器',
+  [ShowcaseStrings.Feat_BrightChart_HL3]:
+    '细粒度同意：通过BrightTrust委托与医疗提供者共享特定记录',
+  [ShowcaseStrings.Feat_BrightChart_HL4]:
+    '每次访问、编辑和共享事件的不可变审计追踪',
+  [ShowcaseStrings.Feat_BrightChart_HL5]:
+    '跨提供者可移植——无供应商锁定，无数据绑架',
+  [ShowcaseStrings.Feat_BrightChart_HL6]:
+    '通过Shamir秘密共享实现紧急访问，支持可配置法定人数',
+  [ShowcaseStrings.Feat_BrightChart_HL7]: '带密码学完整性验证的版本化病历',
+  [ShowcaseStrings.Feat_BrightChart_HL8]:
+    '提供者签名的条目确保诊断和处方的真实性',
+  [ShowcaseStrings.Feat_BrightChart_HL9]:
+    '支持离线：加密记录本地缓存，连接时同步',
+  [ShowcaseStrings.Feat_BrightChart_HL10]:
+    '内置数字焚烧袋，用于需要保证销毁的敏感记录',
+  [ShowcaseStrings.Feat_BrightChart_HL11]:
+    '可互操作的数据层，专为FHIR兼容的健康记录交换设计',
+  [ShowcaseStrings.Feat_BrightChart_HL12]:
+    '零知识证明实现保险验证，无需暴露完整病历',
 
   // Remaining (TODO: translate)
   [ShowcaseStrings.Soup_Time]: 'Time',

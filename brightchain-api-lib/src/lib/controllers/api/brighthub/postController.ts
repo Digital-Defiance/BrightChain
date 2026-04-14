@@ -754,9 +754,7 @@ export class BrightHubPostController<
       const filter: Record<string, string> = { status };
       if (hubId) filter['hubId'] = hubId;
 
-      const reports = await reportCollection
-        .find(filter as never)
-        .exec();
+      const reports = await reportCollection.find(filter as never).exec();
 
       return {
         statusCode: 200,
@@ -777,9 +775,7 @@ export class BrightHubPostController<
     req: unknown,
   ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> {
     try {
-      const { reportId } = (
-        req as { params: { reportId: string } }
-      ).params;
+      const { reportId } = (req as { params: { reportId: string } }).params;
       const { reviewerId, action } = (
         req as {
           body: { reviewerId: string; action: 'dismiss' | 'action' };

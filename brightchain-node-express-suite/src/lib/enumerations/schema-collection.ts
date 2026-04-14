@@ -8,4 +8,8 @@ export enum SchemaCollection {
   Mnemonic = 'mnemonics',
   EmailToken = 'email_tokens',
   UsedDirectLoginToken = 'used_direct_login_tokens',
+  UserSettings = 'user_settings',
+  Organization = 'organizations',
+  HealthcareRole = 'healthcare_roles',
+  Invitation = 'invitations',
 }

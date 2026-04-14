@@ -30,7 +30,7 @@ The `IdentityValidator` uses two-tier validation:
 - Network-layer operations (raw block storage, replication, gossip relay) validate against the `PeerRegistry`
 - Application-layer operations (content with identity, BrightMail, BrightPass, BrightTrust actions) validate against the member DB
 
-The main `BrightChain` pool grants implicit Read/Write/Replicate access to any active, non-banned peer for raw block operations. Private pools require explicit ACL entries that can reference either peer IDs or member IDs.
+The main `BrightChain` pool grants read access to any active, non-banned peer for raw block operations. Write access to the member registry requires node admission — the node's system user must be added to the pool ACL by an existing admin. Private pools require explicit ACL entries that can reference either peer IDs or member IDs. See [Member Pool Security](../architecture/member-pool-security.md) for the full security model.
 
 ### Strengths
 
@@ -42,9 +42,9 @@ The main `BrightChain` pool grants implicit Read/Write/Replicate access to any a
 
 ### Weaknesses and Attack Vectors
 
-**Peer-only nodes have implicit main pool access.** Any active, non-banned peer can read and write raw blocks in the main pool. This is by design (TUPLE blocks are whitened, so a peer can't determine what data they contribute to), but it means a Sybil attacker's peer-only nodes get storage access without any application-layer commitment.
-  - *Mitigation*: The TUPLE XOR model ensures no single node holds meaningful data. Peer-only nodes can only store and serve whitened blocks — they can't reconstruct content without the CBL.
-  - *Recommendation*: The proof-of-storage challenge recommendation (Section 2) becomes more important in the decoupled model. Gate replication trust, not joining.
+**Peer-only nodes have implicit main pool read access.** Any active, non-banned peer can read and replicate raw blocks in the main pool. Write access to the member registry requires node admission (admin approval). This is enforced by the `AuthorizedHeadRegistry` with signed write proofs — see [Member Pool Security](../architecture/member-pool-security.md).
+  - *Mitigation*: The TUPLE XOR model ensures no single node holds meaningful data. Peer-only nodes can only store and serve whitened blocks — they can't reconstruct content without the CBL. Write access is cryptographically enforced.
+  - *Assessment*: The public-read/private-write model is a significant improvement over the previous implicit write access.
 
 **Identity type confusion in ACLs.** Pool ACL entries now specify `identityType: 'peer' | 'member'`. A misconfigured ACL could grant a peer-only node access that was intended for a member, or vice versa.
   - *Mitigation*: The `identityType` field defaults to `'member'` for backward compatibility. Existing ACLs continue to work correctly.
@@ -256,3 +256,10 @@ The areas needing the most attention:
 - Key rotation for identity continuity after suspected compromise
 
 None of the identified weaknesses are fundamental design flaws. They are implementation gaps that can be addressed incrementally without architectural changes.
+
+## Related Documentation
+
+- [Member Pool Security Architecture](../architecture/member-pool-security.md) — Public-read/private-write model, ACL enforcement, audit ledger
+- [Pool Admin API](../api-reference/pool-admin-api.md) — REST endpoints for node admission
+- [Block Chain Ledger](../architecture/blockchain-ledger.md) — Audit ledger architecture and Merkle proofs
+- [Docker Node Setup](./docker-node-setup.md) — Production deployment with security configuration

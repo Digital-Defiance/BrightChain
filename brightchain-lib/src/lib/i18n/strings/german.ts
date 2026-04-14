@@ -1,10 +1,10 @@
-import { StringsCollection } from '@digitaldefiance/i18n-lib';
+import { ComponentStrings } from '@digitaldefiance/i18n-lib';
 import {
   BrightChainStringKey,
   BrightChainStrings,
 } from '../../enumerations/brightChainStrings';
 
-export const GermanStrings: StringsCollection<BrightChainStringKey> = {
+export const GermanStrings: ComponentStrings<BrightChainStringKey> = {
   // BrightChain
   [BrightChainStrings.Common_Bright]: 'Hell',
   [BrightChainStrings.Common_Chain]: 'Kette',
@@ -1477,6 +1477,7 @@ export const GermanStrings: StringsCollection<BrightChainStringKey> = {
   [BrightChainStrings.Admin_Menu_Hub]: 'Hub Admin',
   [BrightChainStrings.Admin_Menu_Mail]: 'Mail Admin',
   [BrightChainStrings.Admin_Menu_Pass]: 'Pass Admin',
+  [BrightChainStrings.Admin_Menu_About]: 'Über',
   [BrightChainStrings.Admin_Common_Loading]: 'Laden…',
   [BrightChainStrings.Admin_Common_Previous]: 'Zurück',
   [BrightChainStrings.Admin_Common_Next]: 'Weiter',
@@ -1625,4 +1626,15 @@ export const GermanStrings: StringsCollection<BrightChainStringKey> = {
   [BrightChainStrings.Admin_Mail_DeleteEmailTitle]: 'E-Mail löschen',
   [BrightChainStrings.Admin_Mail_DeleteEmailConfirm]:
     'Sind Sie sicher, dass Sie diese E-Mail löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.',
+
+  // About Page
+  [BrightChainStrings.About_Title]: 'Über BrightChain',
+  [BrightChainStrings.About_AccessDenied]: 'Zugriff verweigert',
+  [BrightChainStrings.About_AccessDeniedDescription]:
+    'Sie müssen Administrator sein, um diese Seite anzuzeigen.',
+  [BrightChainStrings.About_MasterVersion]: 'BrightChain-Version',
+  [BrightChainStrings.About_BrightChainPackages]: 'BrightChain-Pakete',
+  [BrightChainStrings.About_DigitalDefiancePackages]: 'Digital Defiance-Pakete',
+  [BrightChainStrings.About_PackageName]: 'Paket',
+  [BrightChainStrings.About_Version]: 'Version',
 };

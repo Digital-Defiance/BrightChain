@@ -29,7 +29,9 @@ import {
   ConnectionPrivacySettings,
   ConnectionSuggestions,
   ConversationView,
+  EditPostDialog,
   FollowRequestList,
+  HUB_POST_MAX_CHAR_COUNT,
   HubManager,
   type InboxConversation,
   MessageRequestsList,
@@ -40,12 +42,10 @@ import {
   BrightHubLayout as OuterLayout,
   PostComposer,
   type PostComposerSubmitData,
-  EditPostDialog,
   ThreadView,
   Timeline,
   UserProfileCard,
   useDetailPanel,
-  HUB_POST_MAX_CHAR_COUNT,
 } from '@brightchain/brighthub-react-components';
 import {
   useAuth,
@@ -469,7 +469,9 @@ const TimelinePage: FC = () => {
   const [repostedPostIds, setRepostedPostIds] = useState<Set<string>>(
     new Set(),
   );
-  const [editingPost, setEditingPost] = useState<IBasePostData<string> | null>(null);
+  const [editingPost, setEditingPost] = useState<IBasePostData<string> | null>(
+    null,
+  );
 
   const currentUser: IBaseUserProfile<string> | undefined = useMemo(() => {
     if (!userData) return undefined;
@@ -536,11 +538,9 @@ const TimelinePage: FC = () => {
       })
       .catch(() => {});
 
-    Promise.all([feedReq, trendingReq, myHubsReq, suggestedReq]).finally(
-      () => {
-        if (!cancelled) setLoading(false);
-      },
-    );
+    Promise.all([feedReq, trendingReq, myHubsReq, suggestedReq]).finally(() => {
+      if (!cancelled) setLoading(false);
+    });
 
     return () => {
       cancelled = true;
@@ -564,7 +564,9 @@ const TimelinePage: FC = () => {
         if (newPost) {
           setPosts((prev) => [newPost, ...prev]);
           if (currentUser && userId) {
-            setAuthors((prev) => (prev[userId] ? prev : { ...prev, [userId]: currentUser }));
+            setAuthors((prev) =>
+              prev[userId] ? prev : { ...prev, [userId]: currentUser },
+            );
           }
         }
       } catch {
@@ -612,9 +614,7 @@ const TimelinePage: FC = () => {
   const handleRepost = useCallback(
     (postId: string) => {
       if (!userId) return;
-      api
-        .post(`/brighthub/posts/${postId}/repost`, { userId })
-        .catch(() => {});
+      api.post(`/brighthub/posts/${postId}/repost`, { userId }).catch(() => {});
       setRepostedPostIds((prev) => new Set(prev).add(postId));
       setPosts((prev) =>
         prev.map((p) =>
@@ -689,10 +689,7 @@ const TimelinePage: FC = () => {
             <Typography variant="subtitle2" color="text.secondary">
               {t(BrightHubStrings.Home_TrendingHubs)}
             </Typography>
-            <Button
-              size="small"
-              onClick={() => navigate('/brighthub/explore')}
-            >
+            <Button size="small" onClick={() => navigate('/brighthub/explore')}>
               {t(BrightHubStrings.Home_ViewAll)}
             </Button>
           </Box>
@@ -711,9 +708,7 @@ const TimelinePage: FC = () => {
               <Chip
                 key={hub._id}
                 label={hub.name}
-                onClick={() =>
-                  navigate(`/brighthub/h/${hub.slug ?? hub._id}`)
-                }
+                onClick={() => navigate(`/brighthub/h/${hub.slug ?? hub._id}`)}
                 clickable
                 color="primary"
                 variant="outlined"
@@ -736,13 +731,9 @@ const TimelinePage: FC = () => {
                 key={hub._id}
                 variant="outlined"
                 sx={{ cursor: 'pointer' }}
-                onClick={() =>
-                  navigate(`/brighthub/h/${hub.slug ?? hub._id}`)
-                }
+                onClick={() => navigate(`/brighthub/h/${hub.slug ?? hub._id}`)}
               >
-                <CardContent
-                  sx={{ py: 1, '&:last-child': { pb: 1 } }}
-                >
+                <CardContent sx={{ py: 1, '&:last-child': { pb: 1 } }}>
                   <Box
                     display="flex"
                     justifyContent="space-between"
@@ -801,13 +792,17 @@ const TimelinePage: FC = () => {
             onRepost={handleRepost}
             onReply={(postId) => navigate(`/brighthub/thread/${postId}`)}
             onPostClick={(postId) => navigate(`/brighthub/thread/${postId}`)}
-            onAuthorClick={(authorId) => navigate(`/brighthub/profile/${authorId}`)}
+            onAuthorClick={(authorId) =>
+              navigate(`/brighthub/profile/${authorId}`)
+            }
             onDelete={(postId) => {
               if (!userId) return;
               if (!window.confirm('Delete this post?')) return;
               api
                 .delete(`/brighthub/posts/${postId}`, { data: { userId } })
-                .then(() => setPosts((prev) => prev.filter((p) => p._id !== postId)))
+                .then(() =>
+                  setPosts((prev) => prev.filter((p) => p._id !== postId)),
+                )
                 .catch(() => {});
             }}
             onReport={(postId) => {
@@ -1037,7 +1032,8 @@ const ProfilePage: FC = () => {
             Hub Activity
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            {user.postCount} posts · {user.followerCount} followers · {user.followingCount} following
+            {user.postCount} posts · {user.followerCount} followers ·{' '}
+            {user.followingCount} following
           </Typography>
         </CardContent>
       </Card>
@@ -1066,7 +1062,9 @@ const HubDetailPage: FC = () => {
   const [isMember, setIsMember] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [sortTab, setSortTab] = useState(0);
-  const [editingPost, setEditingPost] = useState<IBasePostData<string> | null>(null);
+  const [editingPost, setEditingPost] = useState<IBasePostData<string> | null>(
+    null,
+  );
 
   const currentUser: IBaseUserProfile<string> | undefined = useMemo(() => {
     if (!userData) return undefined;
@@ -1078,7 +1076,14 @@ const HubDetailPage: FC = () => {
     };
   }, [userData]);
 
-  const sortParam = sortTab === 0 ? 'hot' : sortTab === 1 ? 'new' : sortTab === 2 ? 'top' : 'controversial';
+  const sortParam =
+    sortTab === 0
+      ? 'hot'
+      : sortTab === 1
+        ? 'new'
+        : sortTab === 2
+          ? 'top'
+          : 'controversial';
 
   // Fetch hub metadata
   useEffect(() => {
@@ -1202,7 +1207,9 @@ const HubDetailPage: FC = () => {
     if (!effectiveSlug || !userId) return;
     if (isMember) {
       api
-        .delete(`/brighthub/hubs/${effectiveSlug}/members`, { data: { userId } })
+        .delete(`/brighthub/hubs/${effectiveSlug}/members`, {
+          data: { userId },
+        })
         .then(() => setIsMember(false))
         .catch(() => {});
     } else {
@@ -1229,7 +1236,9 @@ const HubDetailPage: FC = () => {
         if (newPost) {
           setPosts((prev) => [newPost, ...prev]);
           if (currentUser && userId) {
-            setAuthors((prev) => (prev[userId] ? prev : { ...prev, [userId]: currentUser }));
+            setAuthors((prev) =>
+              prev[userId] ? prev : { ...prev, [userId]: currentUser },
+            );
           }
         }
       } catch {
@@ -1279,7 +1288,11 @@ const HubDetailPage: FC = () => {
                 {hub.name}
               </Typography>
               {hub.description && (
-                <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ mt: 0.5 }}
+                >
                   {hub.description}
                 </Typography>
               )}
@@ -1289,7 +1302,9 @@ const HubDetailPage: FC = () => {
                   label={t(BrightHubStrings.HubDetail_MembersTemplate, {
                     COUNT: String(hub.memberCount),
                   })}
-                  onClick={() => navigate(`/brighthub/h/${effectiveSlug}/members`)}
+                  onClick={() =>
+                    navigate(`/brighthub/h/${effectiveSlug}/members`)
+                  }
                   clickable
                 />
                 {hub.postCount !== undefined && (
@@ -1305,7 +1320,9 @@ const HubDetailPage: FC = () => {
                   size="small"
                   variant="outlined"
                   label="Leaderboard"
-                  onClick={() => navigate(`/brighthub/h/${effectiveSlug}/leaderboard`)}
+                  onClick={() =>
+                    navigate(`/brighthub/h/${effectiveSlug}/leaderboard`)
+                  }
                   clickable
                 />
               </Box>
@@ -1318,9 +1335,7 @@ const HubDetailPage: FC = () => {
                     variant="text"
                     size="small"
                     onClick={() =>
-                      navigate(
-                        `/brighthub/h/${effectiveSlug}/settings`,
-                      )
+                      navigate(`/brighthub/h/${effectiveSlug}/settings`)
                     }
                   >
                     {t(BrightHubStrings.Nav_Settings)}
@@ -1329,9 +1344,7 @@ const HubDetailPage: FC = () => {
                     variant="text"
                     size="small"
                     onClick={() =>
-                      navigate(
-                        `/brighthub/h/${effectiveSlug}/moderation`,
-                      )
+                      navigate(`/brighthub/h/${effectiveSlug}/moderation`)
                     }
                   >
                     Moderation
@@ -1353,11 +1366,7 @@ const HubDetailPage: FC = () => {
       </Card>
 
       {/* Sort tabs */}
-      <Tabs
-        value={sortTab}
-        onChange={(_, v) => setSortTab(v)}
-        sx={{ mb: 2 }}
-      >
+      <Tabs value={sortTab} onChange={(_, v) => setSortTab(v)} sx={{ mb: 2 }}>
         <Tab label={t(BrightHubStrings.HubDetail_SortHot)} />
         <Tab label={t(BrightHubStrings.HubDetail_SortNew)} />
         <Tab label={t(BrightHubStrings.HubDetail_SortTop)} />
@@ -1385,26 +1394,42 @@ const HubDetailPage: FC = () => {
         <Timeline
           posts={posts}
           authors={authors}
-          onPostClick={(postId) => navigate(`/brighthub/h/${effectiveSlug}/post/${postId}`)}
-          onReply={(postId) => navigate(`/brighthub/h/${effectiveSlug}/post/${postId}`)}
+          onPostClick={(postId) =>
+            navigate(`/brighthub/h/${effectiveSlug}/post/${postId}`)
+          }
+          onReply={(postId) =>
+            navigate(`/brighthub/h/${effectiveSlug}/post/${postId}`)
+          }
           onUpvote={(postId) => {
             if (!userId) return;
-            api.post(`/brighthub/posts/${postId}/upvote`, { userId }).catch(() => {});
+            api
+              .post(`/brighthub/posts/${postId}/upvote`, { userId })
+              .catch(() => {});
             setPosts((prev) =>
               prev.map((p) =>
                 p._id === postId
-                  ? { ...p, upvoteCount: (p.upvoteCount ?? 0) + 1, score: (p.score ?? 0) + 1 }
+                  ? {
+                      ...p,
+                      upvoteCount: (p.upvoteCount ?? 0) + 1,
+                      score: (p.score ?? 0) + 1,
+                    }
                   : p,
               ),
             );
           }}
           onDownvote={(postId) => {
             if (!userId) return;
-            api.post(`/brighthub/posts/${postId}/downvote`, { userId }).catch(() => {});
+            api
+              .post(`/brighthub/posts/${postId}/downvote`, { userId })
+              .catch(() => {});
             setPosts((prev) =>
               prev.map((p) =>
                 p._id === postId
-                  ? { ...p, downvoteCount: (p.downvoteCount ?? 0) + 1, score: (p.score ?? 0) - 1 }
+                  ? {
+                      ...p,
+                      downvoteCount: (p.downvoteCount ?? 0) + 1,
+                      score: (p.score ?? 0) - 1,
+                    }
                   : p,
               ),
             );
@@ -1424,11 +1449,15 @@ const HubDetailPage: FC = () => {
             if (!window.confirm('Delete this post?')) return;
             api
               .delete(`/brighthub/posts/${postId}`, { data: { userId } })
-              .then(() => setPosts((prev) => prev.filter((p) => p._id !== postId)))
+              .then(() =>
+                setPosts((prev) => prev.filter((p) => p._id !== postId)),
+              )
               .catch(() => {});
           }}
           currentUserId={userId}
-          onAuthorClick={(authorId) => navigate(`/brighthub/profile/${authorId}`)}
+          onAuthorClick={(authorId) =>
+            navigate(`/brighthub/profile/${authorId}`)
+          }
           onEdit={(postId) => {
             const post = posts.find((p) => p._id === postId);
             if (post) setEditingPost(post);
@@ -1557,11 +1586,7 @@ const ExploreHubsPage: FC = () => {
                       {hub.name}
                     </Typography>
                     {hub.description && (
-                      <Typography
-                        variant="body2"
-                        color="text.secondary"
-                        noWrap
-                      >
+                      <Typography variant="body2" color="text.secondary" noWrap>
                         {hub.description}
                       </Typography>
                     )}
@@ -1612,7 +1637,9 @@ const CreateHubPage: FC = () => {
   // Fetch existing hubs for parent selection
   useEffect(() => {
     api
-      .get(`/brighthub/hubs/explore?sort=trending&limit=50${userId ? `&userId=${userId}` : ''}`)
+      .get(
+        `/brighthub/hubs/explore?sort=trending&limit=50${userId ? `&userId=${userId}` : ''}`,
+      )
       .then((res) => {
         const data = res.data?.data;
         if (Array.isArray(data)) setExistingHubs(data);
@@ -1883,7 +1910,11 @@ const HubSettingsPage: FC = () => {
           onClick={handleSave}
           disabled={!name.trim() || saving}
         >
-          {saving ? <CircularProgress size={20} /> : t(BrightHubStrings.HubManager_Save)}
+          {saving ? (
+            <CircularProgress size={20} />
+          ) : (
+            t(BrightHubStrings.HubManager_Save)
+          )}
         </Button>
         <Button
           variant="outlined"
@@ -1896,7 +1927,12 @@ const HubSettingsPage: FC = () => {
             variant="outlined"
             color="error"
             onClick={async () => {
-              if (!window.confirm('Are you sure you want to delete this hub? This cannot be undone.')) return;
+              if (
+                !window.confirm(
+                  'Are you sure you want to delete this hub? This cannot be undone.',
+                )
+              )
+                return;
               try {
                 await api.delete(`/brighthub/hubs/${hub._id}`, {
                   data: { ownerId: userId },
@@ -1955,9 +1991,7 @@ const HubModerationPage: FC = () => {
   useEffect(() => {
     if (!hub) return;
     api
-      .get(
-        `/brighthub/posts/reports?status=${statusFilter}&hubId=${hub._id}`,
-      )
+      .get(`/brighthub/posts/reports?status=${statusFilter}&hubId=${hub._id}`)
       .then((res) => {
         const data = res.data?.data;
         if (data?.reports) setReports(data.reports);
@@ -2148,7 +2182,9 @@ const SearchPage: FC = () => {
         <Timeline
           posts={results}
           onPostClick={(postId) => navigate(`/brighthub/thread/${postId}`)}
-          onAuthorClick={(authorId) => navigate(`/brighthub/profile/${authorId}`)}
+          onAuthorClick={(authorId) =>
+            navigate(`/brighthub/profile/${authorId}`)
+          }
           currentUserId={userId}
         />
       ) : query.trim() ? (
@@ -2224,7 +2260,12 @@ const HubLeaderboardPage: FC = () => {
 
   return (
     <Box sx={{ maxWidth: 600 }}>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+      <Box
+        display="flex"
+        justifyContent="space-between"
+        alignItems="center"
+        mb={2}
+      >
         <Typography variant="h5" fontWeight="bold">
           {hub.name} — Leaderboard
         </Typography>
@@ -2273,7 +2314,8 @@ const HubLeaderboardPage: FC = () => {
                     {entry.userId.slice(0, 12)}…
                   </Typography>
                   <Typography variant="caption" color="text.secondary">
-                    {entry.postCount} posts · {entry.upvotesReceived} upvotes received
+                    {entry.postCount} posts · {entry.upvotesReceived} upvotes
+                    received
                   </Typography>
                 </Box>
                 <Chip
@@ -2353,7 +2395,12 @@ const HubMembersPage: FC = () => {
 
   return (
     <Box sx={{ maxWidth: 600 }}>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+      <Box
+        display="flex"
+        justifyContent="space-between"
+        alignItems="center"
+        mb={2}
+      >
         <Typography variant="h5" fontWeight="bold">
           {hub.name} — Members ({hub.memberCount})
         </Typography>
@@ -2379,7 +2426,15 @@ const HubMembersPage: FC = () => {
               sx={{ cursor: 'pointer' }}
               onClick={() => navigate(`/brighthub/profile/${member._id}`)}
             >
-              <CardContent sx={{ py: 1, '&:last-child': { pb: 1 }, display: 'flex', alignItems: 'center', gap: 1.5 }}>
+              <CardContent
+                sx={{
+                  py: 1,
+                  '&:last-child': { pb: 1 },
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1.5,
+                }}
+              >
                 <Box
                   sx={{
                     width: 36,
@@ -2394,7 +2449,9 @@ const HubMembersPage: FC = () => {
                     fontWeight: 'bold',
                   }}
                 >
-                  {(member.displayName || member.username || '?').charAt(0).toUpperCase()}
+                  {(member.displayName || member.username || '?')
+                    .charAt(0)
+                    .toUpperCase()}
                 </Box>
                 <Box>
                   <Typography variant="subtitle2" fontWeight="bold">

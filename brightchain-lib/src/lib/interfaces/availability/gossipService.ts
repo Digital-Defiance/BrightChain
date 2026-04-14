@@ -165,6 +165,76 @@ export interface BrightTrustVoteMetadata {
 }
 
 /**
+ * Metadata for a pool join request via gossip protocol.
+ * Sent by a new node requesting write access to a pool.
+ *
+ * @see Member Pool Security spec, Phase 2
+ */
+export interface PoolJoinRequestMetadata {
+  /** The pool ID being requested */
+  poolId: string;
+  /** The requesting node's system user ID */
+  requestingNodeId: string;
+  /** The requesting node's ECDSA public key (hex-encoded, compressed secp256k1) */
+  requestingPublicKey: string;
+  /** Optional message from the operator */
+  message?: string;
+}
+
+/**
+ * Metadata for a pool join approval via gossip protocol.
+ * Sent by a pool admin after approving a join request.
+ *
+ * @see Member Pool Security spec, Phase 2
+ */
+export interface PoolJoinApprovalMetadata {
+  /** The pool ID being granted access to */
+  poolId: string;
+  /** The approved node's system user ID */
+  approvedNodeId: string;
+  /** The approved node's ECDSA public key (hex-encoded) */
+  approvedPublicKey: string;
+  /** The admin who approved the request (hex-encoded public key) */
+  approverPublicKey: string;
+  /** Signature of the updated ACL by the approving admin (hex-encoded) */
+  aclSignature: string;
+  /** The new ACL version number */
+  aclVersion: number;
+}
+
+/**
+ * Metadata for a pool join denial via gossip protocol.
+ * Sent by a pool admin after denying a join request.
+ *
+ * @see Member Pool Security spec, Phase 2
+ */
+export interface PoolJoinDenialMetadata {
+  /** The pool ID that was requested */
+  poolId: string;
+  /** The denied node's system user ID */
+  deniedNodeId: string;
+  /** Optional reason for denial */
+  reason?: string;
+}
+
+/**
+ * Metadata for a ledger entry announcement via gossip protocol.
+ * Sent when a new entry is appended to the audit ledger.
+ *
+ * @see Member Pool Security spec, Phase 6
+ */
+export interface LedgerEntryMetadata {
+  /** The ledger ID this entry belongs to */
+  ledgerId: string;
+  /** The entry's sequence number in the chain */
+  sequenceNumber: number;
+  /** The entry's hash (hex-encoded SHA3-512) */
+  entryHash: string;
+  /** The signer's public key (hex-encoded) */
+  signerPublicKey: string;
+}
+
+/**
  * Block announcement message sent via gossip protocol.
  * Contains information about a block being added, removed, or acknowledged.
  *
@@ -186,6 +256,9 @@ export interface BlockAnnouncement {
    * - 'pool_remove' for pool removal announcements (requires poolId)
    * - 'brightTrust_proposal' for BrightTrust proposal announcements (requires brightTrustProposal metadata)
    * - 'brightTrust_vote' for BrightTrust vote announcements (requires brightTrustVote metadata)
+   * - 'pool_join_request' for requesting write access to a pool (requires poolJoinRequest metadata)
+   * - 'pool_join_approved' for approving a pool join request (requires poolJoinApproval metadata)
+   * - 'pool_join_denied' for denying a pool join request (requires poolJoinDenial metadata)
    *
    * @see Requirements 1.1, 2.1, 5.2, 7.1, 8.1, 8.6, 13.4
    */
@@ -201,7 +274,11 @@ export interface BlockAnnouncement {
     | 'pool_announce'
     | 'pool_remove'
     | 'brightTrust_proposal'
-    | 'brightTrust_vote';
+    | 'brightTrust_vote'
+    | 'pool_join_request'
+    | 'pool_join_approved'
+    | 'pool_join_denied'
+    | 'ledger_entry';
 
   /**
    * The block ID being announced (hex string)
@@ -304,6 +381,38 @@ export interface BlockAnnouncement {
   brightTrustVote?: BrightTrustVoteMetadata;
 
   /**
+   * Optional pool join request metadata.
+   * Required for 'pool_join_request' type announcements.
+   *
+   * @see Member Pool Security spec, Phase 2
+   */
+  poolJoinRequest?: PoolJoinRequestMetadata;
+
+  /**
+   * Optional pool join approval metadata.
+   * Required for 'pool_join_approved' type announcements.
+   *
+   * @see Member Pool Security spec, Phase 2
+   */
+  poolJoinApproval?: PoolJoinApprovalMetadata;
+
+  /**
+   * Optional pool join denial metadata.
+   * Required for 'pool_join_denied' type announcements.
+   *
+   * @see Member Pool Security spec, Phase 2
+   */
+  poolJoinDenial?: PoolJoinDenialMetadata;
+
+  /**
+   * Optional ledger entry metadata for audit ledger synchronization.
+   * Required for 'ledger_entry' type announcements.
+   *
+   * @see Member Pool Security spec, Phase 6
+   */
+  ledgerEntry?: LedgerEntryMetadata;
+
+  /**
    * Optional write proof for head_update announcements in Restricted_Mode.
    * Contains the original writer's signature for cross-node verification.
    * When propagating head updates for collections with Write ACLs, the
@@ -318,6 +427,7 @@ export interface BlockAnnouncement {
     dbName: string;
     collectionName: string;
     blockId: string;
+    nonce: number;
   };
 }
 
@@ -706,6 +816,10 @@ const VALID_ANNOUNCEMENT_TYPES = [
   'pool_remove',
   'brightTrust_proposal',
   'brightTrust_vote',
+  'pool_join_request',
+  'pool_join_approved',
+  'pool_join_denied',
+  'ledger_entry',
 ] as const;
 
 /**

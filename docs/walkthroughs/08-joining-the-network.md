@@ -33,6 +33,8 @@ By the end you'll have a running node that is discoverable by other peers, contr
   - Sufficient disk space (10 GB minimum for development, 500 GB+ recommended for production)
   - A network connection reachable by other nodes (or UPnP-capable router)
 
+> **Production shortcut:** If you want to skip building from source, the [Docker Node Setup](../guides/docker-node-setup.md) guide packages everything into a single `docker compose up` command — including Postfix and DKIM for email.
+
 ## Steps
 
 ### Step 1: Understand What Joining Means
@@ -45,7 +47,7 @@ That said, "joining" involves several distinct layers of participation, each wit
 |-------|-------------------|------------------|--------------------|
 | Network connectivity | Peer | Yes | Configure bootstrap nodes, start your node |
 | Peer discovery and gossip | Peer | Yes | Automatic once connected |
-| Main pool (`BrightChain`) | Peer | Yes | Automatic — any active, non-banned peer has implicit access |
+| Main pool (`BrightChain`) | Peer | Yes (read) / ACL'd nodes (write) | Read: automatic. Write: requires node admission (admin approval) |
 | BrightPass / BrightMail / Energy | Member | Yes (self-register) | Explicit member registration |
 | Private storage pools | Peer or Member | No — per-pool ACL | An existing pool admin adds your peer or member ID |
 | BrightTrust membership | Member | No — by invitation | Existing BrightTrust members vote to admit you |
@@ -65,6 +67,8 @@ On first startup, the system automatically generates:
 - A `PeerRecord` in the peer registry — your network-layer identity
 
 No `Member` record is created at this point. You are a peer-only node. This is all you need to start contributing storage.
+
+> **Important:** Every node also needs a **system user** identity (`SYSTEM_MNEMONIC` in your `.env`). This is your node's signing identity on the network — distinct from the peer identity above. The admin and member users are optional (used for local testing/administration), but the system user is required on all nodes.
 
 ```typescript
 // On first startup, the node generates its identity automatically:
@@ -120,7 +124,7 @@ Once online, your node will:
 3. Receive a list of known peers
 4. Begin exchanging Bloom filters with peers for efficient block discovery
 5. Start participating in the gossip protocol (block announcements, pool announcements)
-6. Join the main `BrightChain` pool automatically (any active, non-banned peer has implicit Read/Write/Replicate access)
+6. Join the main `BrightChain` pool automatically — any active, non-banned peer can read pool data. Write access requires node admission (see the [Member Pool Security](../architecture/member-pool-security.md) architecture).
 
 Verify your node is connected and discovering peers:
 
@@ -147,7 +151,7 @@ One of BrightChain's core goals is making it easy to contribute storage — and 
 
 #### You're Already in the Main Pool
 
-Every BrightChain node initializes into the main network pool (named `BrightChain` by default, configured via the `MEMBER_POOL_NAME` environment variable). This isn't an optional pool you discover and join — it's the shared namespace that makes the Owner-Free Filesystem work. When your node starts, it's already part of it.
+Every BrightChain node initializes into the main network pool (named `BrightChain` by default, configured via the `MEMBER_POOL_NAME` environment variable). This is the shared namespace that makes the Owner-Free Filesystem work. When your node starts, it can read data from the pool immediately. To write to the pool (register users, update profiles), your node must be admitted by an existing pool admin — see the [Member Pool Security](../architecture/member-pool-security.md) architecture for details.
 
 ```dotenv
 # In your .env — this is the default, you don't need to change it
@@ -440,5 +444,6 @@ For more detailed troubleshooting, see the [Troubleshooting & FAQ](./06-troubles
 
 - [Storage Pools](./03-storage-pools) — Create your own pool or join an existing one
 - [Node Setup](./02-node-setup) — Detailed node configuration, lifecycle states, and UPnP setup
+- [Docker Node Setup](../guides/docker-node-setup.md) — Run a production node with Docker
 - [Building a dApp](./05-building-a-dapp) — Build a full-stack decentralized application on BrightStack
 - [Architecture Overview](./00-architecture-overview) — Review the full system architecture

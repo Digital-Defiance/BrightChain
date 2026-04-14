@@ -83,7 +83,9 @@ export class CloudHeadRegistry implements IHeadRegistry {
     try {
       const exists = await this.io.objectExists(REGISTRY_KEY);
       if (!exists) {
-        console.log('[CloudHeadRegistry] No registry blob found in cloud, starting empty.');
+        console.log(
+          '[CloudHeadRegistry] No registry blob found in cloud, starting empty.',
+        );
         this.heads.clear();
         this.timestamps.clear();
         return;
@@ -112,7 +114,9 @@ export class CloudHeadRegistry implements IHeadRegistry {
           }
         }
       }
-      console.log(`[CloudHeadRegistry] Loaded ${this.heads.size} head(s) from cloud.`);
+      console.log(
+        `[CloudHeadRegistry] Loaded ${this.heads.size} head(s) from cloud.`,
+      );
     } catch (err: unknown) {
       console.warn(
         '[CloudHeadRegistry] Failed to load from cloud, starting empty:',
@@ -197,7 +201,9 @@ export class CloudHeadRegistry implements IHeadRegistry {
     }
     const json = JSON.stringify(data, null, 2);
     const bytes = new TextEncoder().encode(json);
-    console.log(`[CloudHeadRegistry] Flushing ${this.heads.size} head(s) to cloud.`);
+    console.log(
+      `[CloudHeadRegistry] Flushing ${this.heads.size} head(s) to cloud.`,
+    );
     await this.io.uploadObject(REGISTRY_KEY, bytes);
   }
 }

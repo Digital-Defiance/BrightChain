@@ -368,6 +368,7 @@ export class GossipService implements IGossipService {
     writeProof?: {
       signerPublicKey: string;
       signature: string;
+      nonce: number;
     },
   ): Promise<void> {
     const announcement: BlockAnnouncement = {
@@ -390,6 +391,7 @@ export class GossipService implements IGossipService {
               dbName,
               collectionName,
               blockId,
+              nonce: writeProof.nonce,
             },
           }
         : {}),
@@ -552,6 +554,28 @@ export class GossipService implements IGossipService {
       if (!announcement.brightTrustVote) return;
 
       for (const handler of this.brightTrustVoteHandlers) {
+        try {
+          handler(announcement);
+        } catch {
+          // Ignore handler errors to prevent one handler from affecting others
+        }
+      }
+
+      // Forward with decremented TTL
+      if (announcement.ttl > 0) {
+        this.queueAnnouncement({ ...announcement, ttl: announcement.ttl - 1 });
+      }
+      return;
+    }
+
+    // Case 0g: Pool join announcements — dispatch to handlers and forward
+    if (
+      announcement.type === 'pool_join_request' ||
+      announcement.type === 'pool_join_approved' ||
+      announcement.type === 'pool_join_denied' ||
+      announcement.type === 'ledger_entry'
+    ) {
+      for (const handler of this.handlers) {
         try {
           handler(announcement);
         } catch {

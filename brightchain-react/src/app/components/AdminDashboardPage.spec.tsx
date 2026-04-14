@@ -566,10 +566,13 @@ describe('AdminUserManagementPanel', () => {
     });
 
     // Find the lock button for alice (Active user gets a lock/ban button)
-    const lockButtons = screen.getAllByTestId('IconButton');
-    // Click the first lock button (alice's row)
+    // Each user row has: ChangeRole(0), Lock/Unlock(1), Delete(2)
+    // alice's buttons: [0]=ChangeRole, [1]=Lock, [2]=Delete
+    // bob's buttons:   [3]=ChangeRole, [4]=Unlock, [5]=Delete
+    const iconButtons = screen.getAllByTestId('IconButton');
+    // Click alice's lock button (index 1)
     await act(async () => {
-      fireEvent.click(lockButtons[0]);
+      fireEvent.click(iconButtons[1]);
     });
 
     // Confirmation dialog should appear
@@ -588,10 +591,10 @@ describe('AdminUserManagementPanel', () => {
       expect(screen.getByText('alice')).toBeTruthy();
     });
 
-    // Click lock button for alice
-    const lockButtons = screen.getAllByTestId('IconButton');
+    // Click lock button for alice (index 1)
+    const iconButtons = screen.getAllByTestId('IconButton');
     await act(async () => {
-      fireEvent.click(lockButtons[0]);
+      fireEvent.click(iconButtons[1]);
     });
 
     // Confirm the dialog
@@ -620,10 +623,10 @@ describe('AdminUserManagementPanel', () => {
     });
 
     // Click unlock button for bob (AdminLock user gets unlock button)
-    const unlockButtons = screen.getAllByTestId('IconButton');
-    // bob's unlock button is the second IconButton
+    // bob's unlock button is at index 4 (bob's row: ChangeRole=3, Unlock=4, Delete=5)
+    const iconButtons = screen.getAllByTestId('IconButton');
     await act(async () => {
-      fireEvent.click(unlockButtons[1]);
+      fireEvent.click(iconButtons[4]);
     });
 
     // Confirm the dialog

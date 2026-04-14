@@ -621,7 +621,10 @@ export class BrightHubConnectionController<
           summary: 'Get banned users list for a hub',
           tags: ['BrightHub Hubs'],
           responses: {
-            200: { schema: 'MessageResponse', description: 'Banned users retrieved' },
+            200: {
+              schema: 'MessageResponse',
+              description: 'Banned users retrieved',
+            },
           },
         },
       }),
@@ -633,7 +636,10 @@ export class BrightHubConnectionController<
           summary: 'Get hub members with profiles',
           tags: ['BrightHub Hubs'],
           responses: {
-            200: { schema: 'MessageResponse', description: 'Members retrieved' },
+            200: {
+              schema: 'MessageResponse',
+              description: 'Members retrieved',
+            },
           },
         },
       }),
@@ -645,7 +651,10 @@ export class BrightHubConnectionController<
           summary: 'Get hub reputation leaderboard',
           tags: ['BrightHub Hubs'],
           responses: {
-            200: { schema: 'MessageResponse', description: 'Leaderboard retrieved' },
+            200: {
+              schema: 'MessageResponse',
+              description: 'Leaderboard retrieved',
+            },
           },
         },
       }),
@@ -657,7 +666,10 @@ export class BrightHubConnectionController<
           summary: 'Remove a post from a hub (moderator action)',
           tags: ['BrightHub Hubs'],
           responses: {
-            200: { schema: 'MessageResponse', description: 'Post removed from hub' },
+            200: {
+              schema: 'MessageResponse',
+              description: 'Post removed from hub',
+            },
           },
         },
       }),
@@ -669,7 +681,10 @@ export class BrightHubConnectionController<
           summary: 'Transfer hub ownership',
           tags: ['BrightHub Hubs'],
           responses: {
-            200: { schema: 'HubResponse', description: 'Ownership transferred' },
+            200: {
+              schema: 'HubResponse',
+              description: 'Ownership transferred',
+            },
           },
         },
       }),
@@ -1297,7 +1312,16 @@ export class BrightHubConnectionController<
     req: unknown,
   ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> {
     try {
-      const { ownerId, name, slug, description, rules, trustTier, parentHubId, icon } = (
+      const {
+        ownerId,
+        name,
+        slug,
+        description,
+        rules,
+        trustTier,
+        parentHubId,
+        icon,
+      } = (
         req as {
           body: {
             ownerId: string;
@@ -1423,13 +1447,22 @@ export class BrightHubConnectionController<
   ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> {
     try {
       const typedReq = req as { query: Record<string, string | undefined> };
-      const sort = (typedReq.query['sort'] as 'trending' | 'new' | 'suggested') ?? 'trending';
+      const sort =
+        (typedReq.query['sort'] as 'trending' | 'new' | 'suggested') ??
+        'trending';
       const query = typedReq.query['q'];
-      const limit = typedReq.query['limit'] ? parseInt(typedReq.query['limit'], 10) : undefined;
+      const limit = typedReq.query['limit']
+        ? parseInt(typedReq.query['limit'], 10)
+        : undefined;
       const userId = typedReq.query['userId'];
 
       const service = this.getConnectionService();
-      const hubs = await service.exploreHubs({ sort, query, limit, userId: userId ?? undefined });
+      const hubs = await service.exploreHubs({
+        sort,
+        query,
+        limit,
+        userId: userId ?? undefined,
+      });
       return {
         statusCode: 200,
         response: { message: 'OK', data: { hubs } } as IApiMessageResponse,
@@ -1446,10 +1479,14 @@ export class BrightHubConnectionController<
   ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> {
     try {
       const { idOrSlug } = (req as { params: { idOrSlug: string } }).params;
-      const typedReq = req as { query: Record<string, string | undefined>; params: { idOrSlug: string } };
+      const typedReq = req as {
+        query: Record<string, string | undefined>;
+        params: { idOrSlug: string };
+      };
       const userId = typedReq.query['userId'];
 
-      if (!idOrSlug) return validationError('Missing required parameter: idOrSlug');
+      if (!idOrSlug)
+        return validationError('Missing required parameter: idOrSlug');
 
       const service = this.getConnectionService();
 
@@ -1500,7 +1537,13 @@ export class BrightHubConnectionController<
       if (!userId) return validationError('Missing required field: userId');
 
       const service = this.getConnectionService();
-      const hub = await service.updateHub(id, userId, { name, description, rules, trustTier, icon });
+      const hub = await service.updateHub(id, userId, {
+        name,
+        description,
+        rules,
+        trustTier,
+        icon,
+      });
       return {
         statusCode: 200,
         response: { message: 'Hub updated', data: hub } as IApiMessageResponse,
@@ -1517,9 +1560,12 @@ export class BrightHubConnectionController<
   ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> {
     try {
       const { idOrSlug } = (req as { params: { idOrSlug: string } }).params;
-      const { userId } = (req as { body: { userId: string }; params: { idOrSlug: string } }).body;
+      const { userId } = (
+        req as { body: { userId: string }; params: { idOrSlug: string } }
+      ).body;
 
-      if (!idOrSlug) return validationError('Missing required parameter: idOrSlug');
+      if (!idOrSlug)
+        return validationError('Missing required parameter: idOrSlug');
       if (!userId) return validationError('Missing required field: userId');
 
       const service = this.getConnectionService();
@@ -1541,9 +1587,12 @@ export class BrightHubConnectionController<
   ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> {
     try {
       const { idOrSlug } = (req as { params: { idOrSlug: string } }).params;
-      const { userId } = (req as { body: { userId: string }; params: { idOrSlug: string } }).body;
+      const { userId } = (
+        req as { body: { userId: string }; params: { idOrSlug: string } }
+      ).body;
 
-      if (!idOrSlug) return validationError('Missing required parameter: idOrSlug');
+      if (!idOrSlug)
+        return validationError('Missing required parameter: idOrSlug');
       if (!userId) return validationError('Missing required field: userId');
 
       const service = this.getConnectionService();
@@ -1566,7 +1615,10 @@ export class BrightHubConnectionController<
     try {
       const { id } = (req as { params: { id: string } }).params;
       const { ownerId, userId } = (
-        req as { body: { ownerId: string; userId: string }; params: { id: string } }
+        req as {
+          body: { ownerId: string; userId: string };
+          params: { id: string };
+        }
       ).body;
 
       if (!id) return validationError('Missing required parameter: id');
@@ -1589,7 +1641,10 @@ export class BrightHubConnectionController<
     try {
       const { id } = (req as { params: { id: string } }).params;
       const { ownerId, userId } = (
-        req as { body: { ownerId: string; userId: string }; params: { id: string } }
+        req as {
+          body: { ownerId: string; userId: string };
+          params: { id: string };
+        }
       ).body;
 
       if (!id) return validationError('Missing required parameter: id');
@@ -1617,7 +1672,10 @@ export class BrightHubConnectionController<
       const subHubs = await service.getSubHubs(id);
       return {
         statusCode: 200,
-        response: { message: 'OK', data: { hubs: subHubs } } as IApiMessageResponse,
+        response: {
+          message: 'OK',
+          data: { hubs: subHubs },
+        } as IApiMessageResponse,
       };
     } catch (error) {
       if (error instanceof ConnectionServiceError)
@@ -1632,11 +1690,15 @@ export class BrightHubConnectionController<
     try {
       const { id } = (req as { params: { id: string } }).params;
       const { moderatorId, userId } = (
-        req as { body: { moderatorId: string; userId: string }; params: { id: string } }
+        req as {
+          body: { moderatorId: string; userId: string };
+          params: { id: string };
+        }
       ).body;
 
       if (!id) return validationError('Missing required parameter: id');
-      if (!moderatorId) return validationError('Missing required field: moderatorId');
+      if (!moderatorId)
+        return validationError('Missing required field: moderatorId');
       if (!userId) return validationError('Missing required field: userId');
 
       const service = this.getConnectionService();
@@ -1655,18 +1717,29 @@ export class BrightHubConnectionController<
     try {
       const { id } = (req as { params: { id: string } }).params;
       const { moderatorId, userId } = (
-        req as { body: { moderatorId: string; userId: string }; params: { id: string } }
+        req as {
+          body: { moderatorId: string; userId: string };
+          params: { id: string };
+        }
       ).body;
 
       if (!id) return validationError('Missing required parameter: id');
-      if (!moderatorId) return validationError('Missing required field: moderatorId');
+      if (!moderatorId)
+        return validationError('Missing required field: moderatorId');
       if (!userId) return validationError('Missing required field: userId');
 
       const service = this.getConnectionService() as unknown as {
-        unbanFromHub(hubId: string, userId: string, moderatorId: string): Promise<void>;
+        unbanFromHub(
+          hubId: string,
+          userId: string,
+          moderatorId: string,
+        ): Promise<void>;
       };
       await service.unbanFromHub(id, userId, moderatorId);
-      return { statusCode: 200, response: { message: 'User unbanned from hub' } };
+      return {
+        statusCode: 200,
+        response: { message: 'User unbanned from hub' },
+      };
     } catch (error) {
       if (error instanceof ConnectionServiceError)
         return this.mapConnectionError(error);
@@ -1679,11 +1752,16 @@ export class BrightHubConnectionController<
   ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> {
     try {
       const { id } = (req as { params: { id: string } }).params;
-      const typedReq = req as { query: Record<string, string | undefined>; params: { id: string } };
-      const moderatorId = typedReq.query['userId'] ?? typedReq.query['moderatorId'];
+      const typedReq = req as {
+        query: Record<string, string | undefined>;
+        params: { id: string };
+      };
+      const moderatorId =
+        typedReq.query['userId'] ?? typedReq.query['moderatorId'];
 
       if (!id) return validationError('Missing required parameter: id');
-      if (!moderatorId) return validationError('Missing required query parameter: userId');
+      if (!moderatorId)
+        return validationError('Missing required query parameter: userId');
 
       const service = this.getConnectionService() as unknown as {
         getBannedUsers(hubId: string, moderatorId: string): Promise<unknown[]>;
@@ -1691,7 +1769,10 @@ export class BrightHubConnectionController<
       const banned = await service.getBannedUsers(id, moderatorId);
       return {
         statusCode: 200,
-        response: { message: 'OK', data: { bannedUsers: banned } } as IApiMessageResponse,
+        response: {
+          message: 'OK',
+          data: { bannedUsers: banned },
+        } as IApiMessageResponse,
       };
     } catch (error) {
       if (error instanceof ConnectionServiceError)
@@ -1749,9 +1830,7 @@ export class BrightHubConnectionController<
         .exec();
 
       // Sort by score descending
-      const sorted = records
-        .sort((a, b) => b.score - a.score)
-        .slice(0, limit);
+      const sorted = records.sort((a, b) => b.score - a.score).slice(0, limit);
 
       return {
         statusCode: 200,
@@ -1805,10 +1884,7 @@ export class BrightHubConnectionController<
       if (post && post.hubIds) {
         const newHubIds = post.hubIds.filter((hid) => hid !== id);
         await postsCollection
-          .updateOne(
-            { _id: postId } as never,
-            { hubIds: newHubIds } as never,
-          )
+          .updateOne({ _id: postId } as never, { hubIds: newHubIds } as never)
           .exec();
       }
 
@@ -1829,18 +1905,25 @@ export class BrightHubConnectionController<
     try {
       const { id } = (req as { params: { id: string } }).params;
       const { ownerId, newOwnerId } = (
-        req as { body: { ownerId: string; newOwnerId: string }; params: { id: string } }
+        req as {
+          body: { ownerId: string; newOwnerId: string };
+          params: { id: string };
+        }
       ).body;
 
       if (!id) return validationError('Missing required parameter: id');
       if (!ownerId) return validationError('Missing required field: ownerId');
-      if (!newOwnerId) return validationError('Missing required field: newOwnerId');
+      if (!newOwnerId)
+        return validationError('Missing required field: newOwnerId');
 
       const service = this.getConnectionService();
       const hub = await service.transferHubOwnership(id, ownerId, newOwnerId);
       return {
         statusCode: 200,
-        response: { message: 'Ownership transferred', data: hub } as IApiMessageResponse,
+        response: {
+          message: 'Ownership transferred',
+          data: hub,
+        } as IApiMessageResponse,
       };
     } catch (error) {
       if (error instanceof ConnectionServiceError)
@@ -1859,12 +1942,10 @@ export class BrightHubConnectionController<
         query: Record<string, string | undefined>;
         params: { id: string };
       };
-      const ownerId =
-        typedReq.body?.ownerId ?? typedReq.query['ownerId'];
+      const ownerId = typedReq.body?.ownerId ?? typedReq.query['ownerId'];
 
       if (!id) return validationError('Missing required parameter: id');
-      if (!ownerId)
-        return validationError('Missing required field: ownerId');
+      if (!ownerId) return validationError('Missing required field: ownerId');
 
       const service = this.getConnectionService();
       await service.deleteHub(id, ownerId);

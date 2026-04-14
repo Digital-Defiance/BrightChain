@@ -7,7 +7,11 @@
  * Run via: yarn nx run brightchain-api:test --testFile=user.api.e2e.spec.ts
  */
 
-import { App, Environment } from '@brightchain/brightchain-api-lib';
+import {
+  App,
+  Environment,
+  FakeEmailService,
+} from '@brightchain/brightchain-api-lib';
 import { EmailString } from '@brightchain/brightchain-lib';
 import { MemberType, SecureString } from '@digitaldefiance/ecies-lib';
 import {
@@ -56,6 +60,9 @@ function setTestEnv(port: number) {
   process.env['MEMBER_POOL_NAME'] = 'BrightChain';
   process.env['USE_TRANSACTIONS'] = 'false';
   process.env['DISABLE_EMAIL_SEND'] = 'true';
+  // Set EMAIL_DOMAIN to avoid defaulting to 'example.com' which would block
+  // test registrations using @example.com addresses
+  process.env['EMAIL_DOMAIN'] = 'brightchain.org';
   // Required by base Environment — point at workspace root (doesn't need to exist for tests)
   process.env['API_DIST_DIR'] = join(process.cwd(), 'dist', 'brightchain-api');
   process.env['REACT_DIST_DIR'] = join(
@@ -312,6 +319,21 @@ describe('UserController E2E', () => {
       const data = body['data'] as Record<string, unknown>;
       expect(typeof data['token']).toBe('string');
       expect(typeof data['memberId']).toBe('string');
+
+      // Verify the user's email so subsequent login/auth tests work.
+      // The FakeEmailService captures the welcome email with the verification link.
+      const capturedEmails = FakeEmailService.getInstance().getEmails(
+        testUser.email,
+      );
+      expect(capturedEmails.length).toBeGreaterThan(0);
+      const tokenMatch = capturedEmails[capturedEmails.length - 1].html.match(
+        /verify-email\?token=([A-Fa-f0-9]+)/i,
+      );
+      expect(tokenMatch).not.toBeNull();
+      const verifyRes = await post(server.baseUrl, '/user/verify-email', {
+        token: tokenMatch![1],
+      });
+      expect(verifyRes.status).toBe(200);
     });
 
     it('returns 400 on duplicate email', async () => {
@@ -927,6 +949,7 @@ describe('UserController E2E — disk-backed store', () => {
     process.env['MEMBER_POOL_NAME'] = 'BrightChain';
     process.env['USE_TRANSACTIONS'] = 'false';
     process.env['DISABLE_EMAIL_SEND'] = 'true';
+    process.env['EMAIL_DOMAIN'] = 'brightchain.org';
     process.env['API_DIST_DIR'] = join(
       process.cwd(),
       'dist',
@@ -970,6 +993,21 @@ describe('UserController E2E — disk-backed store', () => {
     const data = body['data'] as Record<string, unknown>;
     expect(typeof data['token']).toBe('string');
     expect(typeof data['memberId']).toBe('string');
+
+    // Verify the user's email so the login test works
+    const capturedEmails = FakeEmailService.getInstance().getEmails(
+      diskTestUser.email,
+    );
+    if (capturedEmails.length > 0) {
+      const tokenMatch = capturedEmails[capturedEmails.length - 1].html.match(
+        /verify-email\?token=([A-Fa-f0-9]+)/i,
+      );
+      if (tokenMatch) {
+        await post(server.baseUrl, '/user/verify-email', {
+          token: tokenMatch[1],
+        });
+      }
+    }
   });
 
   it('logs in the registered user on disk-backed store', async () => {

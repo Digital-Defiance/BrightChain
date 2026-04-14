@@ -2,6 +2,35 @@ import { test as base, expect as baseExpect } from '@playwright/test';
 import axios from 'axios';
 import { expect, generateCredentials, test } from './fixtures';
 
+const BASE_URL = process.env['BASE_URL'] || 'http://localhost:3000';
+
+/**
+ * Verify a user's email by fetching the captured verification email
+ * from the FakeEmailService test router and calling the verify-email endpoint.
+ */
+async function verifyUserEmail(email: string): Promise<void> {
+  const emailRes = await axios.get(
+    `${BASE_URL}/api/test/emails/${encodeURIComponent(email)}`,
+  );
+  const emails = emailRes.data as Array<{
+    to: string;
+    subject: string;
+    text: string;
+    html: string;
+  }>;
+  if (emails.length === 0) return; // No verification email — skip
+
+  const latestEmail = emails[emails.length - 1];
+  const tokenMatch = latestEmail.html?.match(
+    /verify-email\?token=([A-Fa-f0-9]+)/i,
+  );
+  if (!tokenMatch) return; // No token found — skip
+
+  await axios.post(`${BASE_URL}/api/user/verify-email`, {
+    token: tokenMatch[1],
+  });
+}
+
 /**
  * Registration Lifecycle UI E2E Tests.
  *
@@ -115,16 +144,16 @@ base.describe('Registration Form Submission', () => {
         // Verify we have 24 numbered words
         // Each word is in a box with "N." prefix
         for (let i = 1; i <= 24; i++) {
-          await baseExpect(
-            page.locator(`text=/^${i}\\./`),
-          ).toBeVisible({ timeout: 5000 });
+          await baseExpect(page.locator(`text=/^${i}\\./`)).toBeVisible({
+            timeout: 5000,
+          });
         }
 
         // Verify the "Proceed to Login" / confirmation button is visible
         await baseExpect(
-          page.getByRole('link', { name: /proceed|login|saved/i }).or(
-            page.getByRole('button', { name: /proceed|login|saved/i }),
-          ),
+          page
+            .getByRole('link', { name: /proceed|login|saved/i })
+            .or(page.getByRole('button', { name: /proceed|login|saved/i })),
         ).toBeVisible();
 
         // Should NOT still be on the registration form
@@ -181,6 +210,8 @@ test.describe('Password Change Lifecycle', () => {
     freshAuth = await import('./fixtures').then((f) =>
       f.registerViaApi('http://localhost:3000'),
     );
+    // Verify the user's email so login works after password change
+    await verifyUserEmail(freshAuth.email);
   });
 
   test('change password succeeds and new password works for login', async ({
@@ -210,16 +241,12 @@ test.describe('Password Change Lifecycle', () => {
     ).toBeVisible({ timeout: 15000 });
 
     // Fill in the change password form
-    await page
-      .locator('#currentPassword')
-      .fill(freshAuth.password);
+    await page.locator('#currentPassword').fill(freshAuth.password);
     await page.locator('#newPassword').fill(newPassword);
     await page.locator('#confirmPassword').fill(newPassword);
 
     // Submit the form
-    await page
-      .getByRole('button', { name: /change password/i })
-      .click();
+    await page.getByRole('button', { name: /change password/i }).click();
 
     // The AuthProvider's changePassword() checks localStorage for
     // 'encryptedPassword' which is never set by PasswordLoginService

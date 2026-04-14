@@ -20,10 +20,12 @@ export const ShowcaseUkrainianStrings: Partial<
   [ShowcaseStrings.Nav_FAQ_Description]: 'Часті запитання',
   [ShowcaseStrings.Nav_Docs_Description]: 'Документація проекту',
   [ShowcaseStrings.Nav_ToggleMenu]: 'Перемкнути меню',
+  [ShowcaseStrings.FAQ_BrightDB_Logo_Alt]: 'Логотип BrightDB',
   [ShowcaseStrings.FAQ_TopSecret_Logo_Alt]: 'Цілком таємний dApp',
   [ShowcaseStrings.FAQ_BrightChat_Logo_Alt]: 'Логотип BrightChat',
   [ShowcaseStrings.FAQ_BrightID_Logo_Alt]: 'Логотип BrightID',
   [ShowcaseStrings.FAQ_BrightHub_Logo_Alt]: 'Логотип BrightHub',
+  [ShowcaseStrings.FAQ_BrightVote_Logo_Alt]: 'Логотип BrightVote',
   [ShowcaseStrings.FAQ_BrightMail_Logo_Alt]: 'Логотип BrightMail',
   [ShowcaseStrings.FAQ_BrightPass_Logo_Alt]: 'Логотип BrightPass',
   [ShowcaseStrings.FAQ_CanaryProtocol_Logo_Alt]:
@@ -194,6 +196,11 @@ export const ShowcaseUkrainianStrings: Partial<
   [ShowcaseStrings.FAQ_Tech_Q11_Title]: '11. Які dApps запущені з BrightChain?',
   [ShowcaseStrings.FAQ_Tech_Q11_Intro]:
     'BrightChain запущено з основним набором "Bright-Apps", розроблених для заміни централізованих сервісів збору даних безпечними, суверенними альтернативами.',
+  [ShowcaseStrings.FAQ_BrightChart_Logo_Alt]: 'Логотип BrightChart',
+  [ShowcaseStrings.FAQ_Tech_Q11_BrightChart_Title]:
+    'Медичні записи, що належать пацієнту',
+  [ShowcaseStrings.FAQ_Tech_Q11_BrightChart_Text]:
+    'Електронна медична картка, де пацієнт тримає ключі. BrightChart зберігає медичні дані, сумісні з FHIR R4, як зашифровані блоки на BrightChain — немає центральної бази даних для злому. Пацієнти надають гранулярний доступ постачальникам через делегування BrightTrust, і кожна подія доступу записується в незмінному аудиторському сліді. Підтримує медичні, стоматологічні та ветеринарні практики з єдиної кодової бази.',
   [ShowcaseStrings.FAQ_Tech_Q11_BrightMail_Title]: 'Суверенна комунікація',
   [ShowcaseStrings.FAQ_Tech_Q11_BrightMail_Text]:
     'Повністю RFC-сумісна система електронної пошти, що з\'єднує традиційний SMTP та децентралізоване зберігання. На відміну від стандартних провайдерів електронної пошти, BrightMail шардує кожне повідомлення у сховище блоків "без власника" з підтримкою наскрізного зашифрованого обміну повідомленнями "Темного режиму".',
@@ -1972,6 +1979,38 @@ export const ShowcaseUkrainianStrings: Partial<
     'Багатомовна підтримка: англійська, французька, іспанська, українська та китайська мандаринська',
   [ShowcaseStrings.Feat_Burnbag_HL12]:
     'Шифрування ECIES з ключами secp256k1 та AES-256-GCM для безпеки файлів',
+
+  // BrightChart (EMR) Feature
+  [ShowcaseStrings.Feat_BrightChart_Desc]:
+    'Електронна медична картка, що належить пацієнту, побудована на криптографії BrightChain. Ваші медичні дані залишаються вашими — зашифровані, децентралізовані та доступні лише з вашими ключами.',
+  [ShowcaseStrings.Feat_BrightChart_Cat]: 'Ідентичність',
+  [ShowcaseStrings.Feat_BrightChart_Tech1]: 'EMR без власника',
+  [ShowcaseStrings.Feat_BrightChart_Tech2]: 'Наскрізне шифрування',
+  [ShowcaseStrings.Feat_BrightChart_Tech3]: 'Контрольований пацієнтом доступ',
+  [ShowcaseStrings.Feat_BrightChart_HL1]:
+    'Пацієнт володіє та контролює всі медичні записи через криптографічні ключі',
+  [ShowcaseStrings.Feat_BrightChart_HL2]:
+    'Наскрізно зашифровані медичні дані зберігаються на BrightChain — немає центрального сервера для злому',
+  [ShowcaseStrings.Feat_BrightChart_HL3]:
+    'Гранулярна згода: діліться конкретними записами з постачальниками через делегування BrightTrust',
+  [ShowcaseStrings.Feat_BrightChart_HL4]:
+    'Незмінний аудиторський слід для кожного доступу, редагування та події обміну',
+  [ShowcaseStrings.Feat_BrightChart_HL5]:
+    "Портативність між постачальниками — без прив'язки до вендора, без даних у заручниках",
+  [ShowcaseStrings.Feat_BrightChart_HL6]:
+    'Екстрений доступ через розділення секрету Шаміра з налаштовуваним кворумом',
+  [ShowcaseStrings.Feat_BrightChart_HL7]:
+    'Версіонована медична історія з криптографічною перевіркою цілісності',
+  [ShowcaseStrings.Feat_BrightChart_HL8]:
+    'Підписані постачальником записи гарантують автентичність діагнозів та призначень',
+  [ShowcaseStrings.Feat_BrightChart_HL9]:
+    'Працює офлайн: зашифровані записи кешуються локально, синхронізуються при підключенні',
+  [ShowcaseStrings.Feat_BrightChart_HL10]:
+    'Вбудований Digital Burnbag для чутливих записів, що потребують гарантованого знищення',
+  [ShowcaseStrings.Feat_BrightChart_HL11]:
+    'Інтероперабельний рівень даних, розроблений для FHIR-сумісного обміну медичними записами',
+  [ShowcaseStrings.Feat_BrightChart_HL12]:
+    'Докази з нульовим розголошенням дозволяють верифікацію страхування без розкриття повної медичної історії',
 
   // Remaining (TODO: translate)
   [ShowcaseStrings.Soup_Time]: 'Time',

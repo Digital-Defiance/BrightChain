@@ -28,10 +28,21 @@ export class WebSocketMessageServer {
   private eciesService: ECIESService;
   private requireAuth: boolean;
   private gossipBatchHandlers: Set<GossipBatchHandler> = new Set();
+  /** Optional callback to check if a node's public key is banned */
+  private isBannedCallback?: (publicKey: Buffer) => boolean;
 
-  constructor(server: Server, requireAuth = false) {
+  constructor(server: Server, requireAuth = true) {
     this.wss = new WebSocketServer({ server });
+    // SECURITY: Default to requiring authentication in production.
+    // The requireAuth=false path is only for development/testing.
     this.requireAuth = requireAuth;
+
+    if (!requireAuth) {
+      console.warn(
+        '[WebSocketMessageServer] WARNING: Authentication is DISABLED. ' +
+          'Any peer can connect with any nodeId. This is only safe for development.',
+      );
+    }
 
     // Create Node.js-compatible ECIES config with full algorithm name
     const config: IECIESConfig = {
@@ -52,6 +63,14 @@ export class WebSocketMessageServer {
    */
   registerNodeKey(nodeId: string, publicKey: Buffer): void {
     this.publicKeys.set(nodeId, publicKey);
+  }
+
+  /**
+   * Set a callback to check if a node's public key is banned.
+   * When set, banned nodes are refused during authentication.
+   */
+  setBanCheck(callback: (publicKey: Buffer) => boolean): void {
+    this.isBannedCallback = callback;
   }
 
   /**
@@ -106,6 +125,14 @@ export class WebSocketMessageServer {
       if (!this.requireAuth) {
         this.connections.set(nodeId, ws);
         this.authenticatedNodes.set(ws as unknown as string, nodeId);
+      } else {
+        // SECURITY: Close unauthenticated connections after 10 seconds
+        const authTimeout = setTimeout(() => {
+          if (!authenticated) {
+            ws.close();
+          }
+        }, 10_000);
+        ws.on('close', () => clearTimeout(authTimeout));
       }
 
       ws.on('message', async (data: Buffer) => {
@@ -116,6 +143,8 @@ export class WebSocketMessageServer {
             const publicKey = this.publicKeys.get(message.nodeId);
             if (
               publicKey &&
+              // SECURITY: Check ban list before accepting authentication
+              !this.isBannedCallback?.(publicKey) &&
               (await this.verifySignature(
                 message.nodeId,
                 message.timestamp,

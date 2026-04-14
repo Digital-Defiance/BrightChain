@@ -108,6 +108,8 @@ Launch the API server, which acts as the node process:
 npx nx serve brightchain-api
 ```
 
+> **For production deployments**, use Docker instead of running from source. See the [Docker Node Setup](../guides/docker-node-setup.md) guide.
+
 You should see log output confirming the node is online:
 
 ```
@@ -366,3 +368,4 @@ For more detailed troubleshooting, see the [Troubleshooting & FAQ](./06-troubles
 - [Storage Pools](./03-storage-pools) — Create and manage storage pools for data isolation.
 - [BrightDB Usage](./04-brightdb-usage) — Use the MongoDB-like document database API.
 - [Building a dApp](./05-building-a-dapp) — Build a full-stack decentralized application on BrightStack.
+- [Docker Node Setup](../guides/docker-node-setup.md) — Run a production node with Docker.

@@ -207,7 +207,7 @@ Storage Pools provide logical namespace isolation within the block store. A pool
 
 **Pool Encryption.** Pools support three encryption modes: `None` (no encryption), `NodeSpecific` (encrypted with the storing node's ECIES key; only that node can decrypt), and `PoolShared` (encrypted with a shared AES-256-GCM key distributed to members via ECIES key wrapping). Block IDs are computed from ciphertext, so Bloom filters and block lookups work unchanged on encrypted pools.
 
-**Access Control.** Pool ACLs support four permission levels (Read, Write, Replicate, Admin) with ECDSA-authenticated nodes. ACL updates require BrightTrust approval (>50% of Admins must sign). ACLs are stored as signed blocks in the block store itself, making them tamper-evident and auditable.
+**Access Control.** Pool ACLs support four permission levels (Read, Write, Replicate, Admin) with ECDSA-authenticated nodes. ACL updates require BrightTrust approval (>50% of Admins must sign). ACLs are stored as signed blocks in the block store itself, making them tamper-evident and auditable. ACL signatures cover the full document content — including the authorized writers list, administrators list, scope, version, and write mode — using a SHA-256 content hash, preventing an attacker from modifying the writers list without invalidating the signature. The member pool (the shared user registry) operates in a public-read/private-write mode: any node can read the registry, but writes require a valid ECDSA write proof from a node in the pool ACL. An append-only blockchain audit ledger records every write to the member pool, providing a tamper-evident history with O(log N) Merkle inclusion proofs.
 
 ### 4.5 Forward Error Correction
 

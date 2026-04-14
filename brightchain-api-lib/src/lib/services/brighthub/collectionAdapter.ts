@@ -22,9 +22,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 interface FindQuery<T> {
-  sort?(field: Record<string, 1 | -1>): FindQuery<T>;
-  skip?(count: number): FindQuery<T>;
-  limit?(count: number): FindQuery<T>;
+  sort(field: Record<string, 1 | -1>): FindQuery<T>;
+  skip(count: number): FindQuery<T>;
+  limit(count: number): FindQuery<T>;
   exec(): Promise<T[]>;
 }
 

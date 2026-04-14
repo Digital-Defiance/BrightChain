@@ -218,6 +218,18 @@ export class App<TID extends PlatformID> extends BrightDbApplication<
       return server;
     }) as typeof this.expressApp.listen;
 
+    // Mount the test email router BEFORE super.start() so it is registered
+    // ahead of the upstream catch-all `/api` 404 handler that appRouter.init()
+    // installs. FakeEmailService is a singleton — safe to reference early.
+    if (this.environment.disableEmailSend) {
+      this.expressApp.use(createTestEmailRouter());
+      debugLog(
+        this.environment.debug,
+        'log',
+        '[ ready ] TestEmailRouter pre-mounted (DISABLE_EMAIL_SEND=true)',
+      );
+    }
+
     // Delegate to upstream — handles: middleware init, router setup, error handler,
     // HTTP server on :port, greenlock/HTTPS on :443, dev-HTTPS, _ready = true
     // Pass undefined to skip mongoose connection.
@@ -286,11 +298,10 @@ export class App<TID extends PlatformID> extends BrightDbApplication<
     );
 
     if (this.environment.disableEmailSend) {
-      this.expressApp.use(createTestEmailRouter());
       debugLog(
         this.environment.debug,
         'log',
-        '[ ready ] FakeEmailService and TestEmailRouter mounted (DISABLE_EMAIL_SEND=true)',
+        '[ ready ] FakeEmailService configured (DISABLE_EMAIL_SEND=true)',
       );
     }
 
@@ -361,7 +372,10 @@ export class App<TID extends PlatformID> extends BrightDbApplication<
 
     // WebSocket — attach to the captured HTTP server
     if (this._httpServer) {
-      this.wsServer = new WebSocketMessageServer(this._httpServer, false);
+      this.wsServer = new WebSocketMessageServer(
+        this._httpServer,
+        this.environment.production,
+      );
       this.services.register('wsServer', () => this.wsServer);
       debugLog(
         this.environment.debug,
@@ -478,8 +492,17 @@ export class App<TID extends PlatformID> extends BrightDbApplication<
         this.apiRouter.setEmailUserRegistry({
           hasUser: async (email: string): Promise<boolean> => {
             try {
-              const results = await memberStore.queryIndex({ email });
-              return results.length > 0;
+              // Extract the local part (username) from the email address.
+              // The verify-recipient endpoint constructs "username@domain",
+              // but users register with their real email (e.g. jessica@mulein.com),
+              // not username@brightchain.org. Look up by username instead.
+              const username = email.split('@')[0];
+              const byName = await memberStore.queryIndex({ name: username });
+              if (byName.length > 0) return true;
+              // Fallback: also check by exact email in case someone registered
+              // with username@domain as their actual email.
+              const byEmail = await memberStore.queryIndex({ email });
+              return byEmail.length > 0;
             } catch {
               return false;
             }

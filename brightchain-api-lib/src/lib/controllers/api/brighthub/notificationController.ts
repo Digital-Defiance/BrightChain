@@ -606,9 +606,7 @@ export class BrightHubNotificationController<
    */
   private async handleCreateSystemAlert(
     req: unknown,
-  ): Promise<
-    IStatusCodeResponse<INotificationApiResponse | ApiErrorResponse>
-  > {
+  ): Promise<IStatusCodeResponse<INotificationApiResponse | ApiErrorResponse>> {
     try {
       const { recipientId, type, content } = (
         req as {
@@ -653,9 +651,8 @@ export class BrightHubNotificationController<
     req: unknown,
   ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> {
     try {
-      const { inactiveDays } = (
-        req as { body: { inactiveDays?: number } }
-      ).body;
+      const { inactiveDays } = (req as { body: { inactiveDays?: number } })
+        .body;
 
       const service = this.getNotificationService();
       const count = await (

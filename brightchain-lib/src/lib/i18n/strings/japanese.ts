@@ -1,10 +1,10 @@
-import { StringsCollection } from '@digitaldefiance/i18n-lib';
+import { ComponentStrings } from '@digitaldefiance/i18n-lib';
 import {
   BrightChainStringKey,
   BrightChainStrings,
 } from '../../enumerations/brightChainStrings';
 
-export const JapaneseStrings: StringsCollection<BrightChainStringKey> = {
+export const JapaneseStrings: ComponentStrings<BrightChainStringKey> = {
   // BrightChain
   [BrightChainStrings.Common_Bright]: 'ブライト',
   [BrightChainStrings.Common_Chain]: 'チェーン',
@@ -1173,8 +1173,7 @@ export const JapaneseStrings: StringsCollection<BrightChainStringKey> = {
     '必要なシェア数は2以上である必要があります',
   [BrightChainStrings.BrightTrustDataRecord_InvalidChecksum]:
     '無効なチェックサム',
-  [BrightChainStrings.BrightTrustDataRecord_InvalidSignature]:
-    '無効な署名',
+  [BrightChainStrings.BrightTrustDataRecord_InvalidSignature]: '無効な署名',
   [BrightChainStrings.SimpleBrowserStore_BlockNotFoundTemplate]:
     'ブロックが見つかりません: {ID}',
   [BrightChainStrings.EncryptedBlockCreator_NoCreatorRegisteredTemplate]:
@@ -1376,6 +1375,7 @@ export const JapaneseStrings: StringsCollection<BrightChainStringKey> = {
   [BrightChainStrings.Admin_Menu_Hub]: 'Hub Admin',
   [BrightChainStrings.Admin_Menu_Mail]: 'Mail Admin',
   [BrightChainStrings.Admin_Menu_Pass]: 'Pass Admin',
+  [BrightChainStrings.Admin_Menu_About]: '概要',
   [BrightChainStrings.Admin_Common_Loading]: '読み込み中…',
   [BrightChainStrings.Admin_Common_Previous]: '前へ',
   [BrightChainStrings.Admin_Common_Next]: '次へ',
@@ -1523,4 +1523,16 @@ export const JapaneseStrings: StringsCollection<BrightChainStringKey> = {
   [BrightChainStrings.Admin_Mail_DeleteEmailTitle]: 'メールを削除',
   [BrightChainStrings.Admin_Mail_DeleteEmailConfirm]:
     'このメールを削除してもよろしいですか？この操作は元に戻せません。',
+
+  // About Page
+  [BrightChainStrings.About_Title]: 'BrightChain について',
+  [BrightChainStrings.About_AccessDenied]: 'アクセス拒否',
+  [BrightChainStrings.About_AccessDeniedDescription]:
+    'このページを表示するには管理者である必要があります。',
+  [BrightChainStrings.About_MasterVersion]: 'BrightChain バージョン',
+  [BrightChainStrings.About_BrightChainPackages]: 'BrightChain パッケージ',
+  [BrightChainStrings.About_DigitalDefiancePackages]:
+    'Digital Defiance パッケージ',
+  [BrightChainStrings.About_PackageName]: 'パッケージ',
+  [BrightChainStrings.About_Version]: 'バージョン',
 };

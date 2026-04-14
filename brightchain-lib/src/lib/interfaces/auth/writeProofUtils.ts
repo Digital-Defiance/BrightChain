@@ -37,8 +37,9 @@ export function createWriteProofPayload(
   dbName: string,
   collectionName: string,
   blockId: string,
+  nonce: number,
 ): Uint8Array {
-  const message = `${dbName}:${collectionName}:${blockId}`;
+  const message = `${dbName}:${collectionName}:${blockId}:${nonce}`;
   const encoded = new TextEncoder().encode(message);
   return sha256(encoded);
 }

@@ -16,17 +16,21 @@ import type {
   IBrightChainServerInitResult,
   IBrightChainUserCredentials,
   IBrightChainUserInitEntry,
+  INodeAuthenticator,
   ValidationFieldError,
 } from '@brightchain/brightchain-lib';
 import {
   BlockSize,
+  createWriteProofPayload,
   getBrightChainIdProvider,
+  i18nEngine,
   IBrightChainBaseInitResult,
   IBrightChainInitResult,
   IBrightChainMemberInitInput,
   IMemberIndexDocument,
   MemberStatusType,
   MemoryBlockStore,
+  type IWriteProof,
 } from '@brightchain/brightchain-lib';
 import {
   BrightDb,
@@ -34,11 +38,15 @@ import {
   HeadRegistry,
   validateDocument,
   ValidationError,
+  WriteAclManager,
 } from '@brightchain/db';
 import type { IIdProvider } from '@digitaldefiance/ecies-lib';
 import { Member, MemberType } from '@digitaldefiance/ecies-lib';
 import { LanguageCodes } from '@digitaldefiance/i18n-lib';
-import { PlatformID } from '@digitaldefiance/node-ecies-lib';
+import {
+  getEnhancedNodeIdProvider,
+  PlatformID,
+} from '@digitaldefiance/node-ecies-lib';
 import {
   AccountStatus,
   IMnemonicBase,
@@ -46,6 +54,7 @@ import {
   IUserBase,
   IUserRoleBase,
 } from '@digitaldefiance/suite-core-lib';
+import { createHash } from 'crypto';
 import { BrightChainApiStrings } from '../enumerations/brightChainApiStrings';
 import { MemberIndexSchemaValidationError } from '../errors/memberIndexSchemaValidationError';
 import {
@@ -81,6 +90,12 @@ import {
 } from '../interfaces/storage/userSchema';
 import { DiskBlockAsyncStore } from '../stores/diskBlockAsyncStore';
 import { serializeForStorage as serializeForStorageUtil } from '../utils/serialization';
+import {
+  createMemberPoolAcl,
+  loadPoolSecurity,
+  savePoolSecurity,
+  type IPoolSecurityInitOptions,
+} from './poolSecurityService';
 export type { IBrightChainMemberInitConfig } from '../interfaces/member-init-config';
 
 /** Well-known collection name for the member index. */
@@ -161,6 +176,19 @@ export class BrightChainMemberInitService<TID extends PlatformID> {
   private _memberCblIndex: CBLIndex | undefined;
   private readonly _idProvider: IIdProvider<TID>;
 
+  /** Node authenticator for producing write proofs (set when pool security is enabled) */
+  private _authenticator: INodeAuthenticator | undefined;
+  /** System user's ECDSA private key for signing write proofs */
+  private _systemPrivateKey: Uint8Array | undefined;
+  /** System user's ECDSA public key for write proof identification */
+  private _systemPublicKey: Uint8Array | undefined;
+  /** Monotonic nonce counter for write proof replay protection */
+  private _nonceCounter = 0;
+  /** Member pool audit ledger service (set when pool security is enabled) */
+  private _ledgerService:
+    | import('./memberPoolLedgerService').MemberPoolLedgerService
+    | undefined;
+
   constructor(idProvider?: IIdProvider<TID>) {
     this._idProvider = idProvider ?? getBrightChainIdProvider<TID>();
   }
@@ -189,6 +217,89 @@ export class BrightChainMemberInitService<TID extends PlatformID> {
       );
     }
     return this._memberCblIndex;
+  }
+
+  /**
+   * Whether pool security (signed writes) is enabled on this instance.
+   */
+  get isPoolSecurityEnabled(): boolean {
+    return !!(
+      this._authenticator &&
+      this._systemPrivateKey &&
+      this._systemPublicKey
+    );
+  }
+
+  /**
+   * The member pool audit ledger service, if pool security is enabled.
+   */
+  get ledgerService():
+    | import('./memberPoolLedgerService').MemberPoolLedgerService
+    | undefined {
+    return this._ledgerService;
+  }
+
+  /**
+   * Zero out private key material held by this service instance.
+   *
+   * Overwrites `_systemPrivateKey` bytes with zeros so the key does not
+   * linger in memory after the service is no longer needed. Call this
+   * when shutting down or when the service instance is being discarded.
+   *
+   * After disposal the service can no longer produce write proofs
+   * (`isPoolSecurityEnabled` will return `false`).
+   */
+  dispose(): void {
+    if (this._systemPrivateKey) {
+      this._systemPrivateKey.fill(0);
+      this._systemPrivateKey = undefined;
+    }
+    if (this._systemPublicKey) {
+      this._systemPublicKey = undefined;
+    }
+    this._authenticator = undefined;
+  }
+
+  /**
+   * Create a write proof for a given database, collection, and block ID.
+   * Returns undefined if pool security is not enabled (open mode).
+   *
+   * The write proof contains:
+   * - The signer's public key (system user)
+   * - An ECDSA signature over SHA-256(dbName:collectionName:blockId)
+   * - The block ID being written
+   */
+  async createWriteProof(
+    dbName: string,
+    collectionName: string,
+    blockId: string,
+  ): Promise<IWriteProof | undefined> {
+    if (
+      !this._authenticator ||
+      !this._systemPrivateKey ||
+      !this._systemPublicKey
+    ) {
+      return undefined;
+    }
+    const nonce = ++this._nonceCounter;
+    const payload = createWriteProofPayload(
+      dbName,
+      collectionName,
+      blockId,
+      nonce,
+    );
+    const signature = await this._authenticator.signChallenge(
+      payload,
+      this._systemPrivateKey,
+    );
+    return {
+      dbName,
+      collectionName,
+      signerPublicKey: this._systemPublicKey,
+      signature,
+      blockId,
+      nonce,
+    };
   }
 
   /**
@@ -226,18 +337,129 @@ export class BrightChainMemberInitService<TID extends PlatformID> {
           ? buildDiskBlockStore(config.blockStorePath!, config.blockSize)
           : buildMemoryBlockStore(config.blockSize);
 
-        const db = new BrightDb(blockStore, {
+        // Step 2a: Create BrightDb initially in open mode.
+        // If pool security is configured, we'll save the ACL config first,
+        // then recreate with writeAclConfig for enforcement.
+        let db = new BrightDb(blockStore, {
           name: config.memberPoolName,
-          // Use PersistentHeadRegistry for disk stores so data survives across
-          // service instances; use an isolated in-memory registry otherwise.
           ...(useDisk
             ? { dataDir: config.blockStorePath! }
             : { headRegistry: HeadRegistry.createIsolated() }),
         });
         await db.connect();
-        this._db = db;
 
+        // Step 2b: Set up pool security if configured.
+        if (config.poolEncryption?.enabled) {
+          // Create the ECDSANodeAuthenticator BEFORE loading pool security
+          // so that loadPoolSecurity() can verify the ACL signature and
+          // reject tampered ACL documents.
+          const { ECDSANodeAuthenticator } = await import(
+            '../auth/ecdsaNodeAuthenticator.js'
+          );
+          const authenticator = new ECDSANodeAuthenticator();
+
+          const poolOpts: IPoolSecurityInitOptions = {
+            poolName: config.memberPoolName,
+            systemUserId: config.poolEncryption.systemUserId,
+            systemUserPublicKey: config.poolEncryption.systemUserPublicKey,
+            systemUserPrivateKey: config.poolEncryption.systemUserPrivateKey,
+            authenticator,
+          };
+
+          // Check if pool security already exists — pass authenticator
+          // for signature verification to reject tampered ACLs.
+          let existingAcl = await loadPoolSecurity(db, authenticator);
+
+          if (!existingAcl) {
+            // Either new cluster or tampered ACL — create a fresh ACL.
+            // If the ACL was tampered, loadPoolSecurity returns null and
+            // we fall through here to create a clean replacement.
+            existingAcl = await createMemberPoolAcl(poolOpts);
+            await savePoolSecurity(db, existingAcl, poolOpts.systemUserId);
+          }
+
+          // Recreate BrightDb with write enforcement enabled.
+          // The open-mode db wrote the ACL doc; now we lock it down.
+          await db.disconnect();
+
+          const aclManager = new WriteAclManager(blockStore, authenticator);
+          aclManager.setCachedAcl(existingAcl);
+
+          // Store authenticator and private key on the service for producing
+          // write proofs in subsequent operations.
+          this._authenticator = authenticator;
+          this._systemPrivateKey = config.poolEncryption.systemUserPrivateKey;
+          this._systemPublicKey = config.poolEncryption.systemUserPublicKey;
+
+          db = new BrightDb(blockStore, {
+            name: config.memberPoolName,
+            ...(useDisk
+              ? { dataDir: config.blockStorePath! }
+              : { headRegistry: HeadRegistry.createIsolated() }),
+            writeAclConfig: {
+              aclService: aclManager,
+              authenticator,
+            },
+          });
+          await db.connect();
+
+          // Configure auto-signing for local writes so Collection/Model
+          // operations don't need to explicitly pass write proofs.
+          const headReg = db.getHeadRegistry();
+          if ('setLocalSigner' in headReg) {
+            (
+              headReg as import('@brightchain/db').AuthorizedHeadRegistry
+            ).setLocalSigner({
+              publicKey: config.poolEncryption.systemUserPublicKey,
+              privateKey: config.poolEncryption.systemUserPrivateKey,
+            });
+          }
+        }
+
+        this._db = db;
         this._memberCblIndex = new CBLIndex(db, blockStore);
+
+        // Initialize the member pool audit ledger if pool security is enabled
+        if (config.poolEncryption?.enabled) {
+          const { MemberPoolLedgerService } = await import(
+            './memberPoolLedgerService.js'
+          );
+          this._ledgerService = new MemberPoolLedgerService(
+            blockStore,
+            config.blockSize ?? BlockSize.Medium,
+            true, // auditLedger enabled for member pool
+          );
+          await this._ledgerService.initialize(
+            config.poolEncryption.systemUserPublicKey,
+            config.poolEncryption.systemUserPrivateKey,
+          );
+
+          // Wire the ledger into the AuthorizedHeadRegistry's onWrite callback
+          // so every successful write is automatically recorded in the audit ledger.
+          const ledger = this._ledgerService;
+          const headRegForCallback = db.getHeadRegistry();
+          if ('setOnWriteCallback' in headRegForCallback) {
+            const { LedgerOperationType } = await import(
+              './memberPoolLedgerService.js'
+            );
+            (
+              headRegForCallback as import('@brightchain/db').AuthorizedHeadRegistry
+            ).setOnWriteCallback(
+              (operation, collectionName, documentId, headBlockId) => {
+                const opType =
+                  operation === 'delete'
+                    ? LedgerOperationType.Delete
+                    : operation === 'update'
+                      ? LedgerOperationType.Update
+                      : LedgerOperationType.Insert;
+                // Fire and forget — don't block writes on ledger
+                ledger
+                  .recordWrite(opType, collectionName, documentId, headBlockId)
+                  .catch(() => {});
+              },
+            );
+          }
+        }
       }
     }
 
@@ -506,7 +728,11 @@ export class BrightChainMemberInitService<TID extends PlatformID> {
       adminUser: { id: input.adminUser.id, type: input.adminUser.type },
       memberUser: { id: input.memberUser.id, type: input.memberUser.type },
     };
-    const baseResult = await this.initialize(config, memberInitInput, existingDb);
+    const baseResult = await this.initialize(
+      config,
+      memberInitInput,
+      existingDb,
+    );
     const db = this.db;
 
     const now = new Date();
@@ -741,17 +967,13 @@ export class BrightChainMemberInitService<TID extends PlatformID> {
 
   /**
    * Helper to resolve a display label for a MemberType.
+   * Uses the i18n engine for translated labels with English fallback.
    */
   private static memberTypeLabel(type: MemberType): string {
-    switch (type) {
-      case MemberType.System:
-        return 'System';
-      case MemberType.Admin:
-        return 'Admin';
-      case MemberType.User:
-        return 'User';
-      default:
-        return 'Unknown';
+    try {
+      return i18nEngine.translateEnum(MemberType, type);
+    } catch {
+      return type.toString();
     }
   }
 
@@ -970,5 +1192,39 @@ export class BrightChainMemberInitService<TID extends PlatformID> {
       `SYSTEM_USER_ROLE_ID="${idStr(system.userRoleId)}"`,
     ];
     return lines.join('\n');
+  }
+
+  public static serverInitResultHash<TID extends PlatformID = Buffer>(
+    serverInitResult: IBrightChainServerInitResult<TID, BrightDb>,
+  ): string {
+    const h = createHash('sha256');
+    const idProvider = getEnhancedNodeIdProvider<TID>();
+    h.update(idProvider.idToString(serverInitResult.adminUser._id as TID));
+    h.update(idProvider.idToString(serverInitResult.adminRole._id as TID));
+    h.update(idProvider.idToString(serverInitResult.adminUserRole._id as TID));
+    h.update(serverInitResult.adminUsername);
+    h.update(serverInitResult.adminEmail);
+    h.update(serverInitResult.adminMnemonic);
+    h.update(serverInitResult.adminPassword);
+    h.update(serverInitResult.adminUser.publicKey);
+    // Backup codes are excluded — they are randomly generated each run
+    // and would make the hash non-deterministic for the same .env input.
+    h.update(idProvider.idToString(serverInitResult.memberUser._id as TID));
+    h.update(idProvider.idToString(serverInitResult.memberRole._id as TID));
+    h.update(idProvider.idToString(serverInitResult.memberUserRole._id as TID));
+    h.update(serverInitResult.memberUsername);
+    h.update(serverInitResult.memberEmail);
+    h.update(serverInitResult.memberMnemonic);
+    h.update(serverInitResult.memberPassword);
+    h.update(serverInitResult.memberUser.publicKey);
+    h.update(idProvider.idToString(serverInitResult.systemUser._id as TID));
+    h.update(idProvider.idToString(serverInitResult.systemRole._id as TID));
+    h.update(idProvider.idToString(serverInitResult.systemUserRole._id as TID));
+    h.update(serverInitResult.systemUsername);
+    h.update(serverInitResult.systemEmail);
+    h.update(serverInitResult.systemMnemonic);
+    h.update(serverInitResult.systemPassword);
+    h.update(serverInitResult.systemUser.publicKey);
+    return h.digest('hex');
   }
 }

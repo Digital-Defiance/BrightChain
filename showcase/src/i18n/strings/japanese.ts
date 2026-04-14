@@ -21,11 +21,13 @@ export const ShowcaseJapaneseStrings: Partial<
   [ShowcaseStrings.Nav_FAQ_Description]: 'よくある質問',
   [ShowcaseStrings.Nav_Docs_Description]: 'プロジェクトドキュメント',
   [ShowcaseStrings.Nav_ToggleMenu]: 'メニュー切替',
+  [ShowcaseStrings.FAQ_BrightDB_Logo_Alt]: 'BrightDBのロゴ',
   [ShowcaseStrings.FAQ_TopSecret_Logo_Alt]: 'トップシークレット dApp',
   [ShowcaseStrings.FAQ_BrightChat_Logo_Alt]: 'BrightChatのロゴ',
   [ShowcaseStrings.FAQ_BrightHub_Logo_Alt]: 'BrightHubのロゴ',
   [ShowcaseStrings.FAQ_BrightID_Logo_Alt]: 'BrightIDのロゴ',
   [ShowcaseStrings.FAQ_BrightMail_Logo_Alt]: 'BrightMailのロゴ',
+  [ShowcaseStrings.FAQ_BrightVote_Logo_Alt]: 'BrightVoteのロゴ',
   [ShowcaseStrings.FAQ_BrightPass_Logo_Alt]: 'BrightPassのロゴ',
   [ShowcaseStrings.FAQ_CanaryProtocol_Logo_Alt]: 'カナリアプロトコルのロゴ',
   [ShowcaseStrings.FAQ_DigitalBurnbag_Logo_Alt]: 'デジタルバーンバッグのロゴ',
@@ -194,6 +196,10 @@ export const ShowcaseJapaneseStrings: Partial<
     '11. BrightChainと共にローンチしたdAppは何ですか？',
   [ShowcaseStrings.FAQ_Tech_Q11_Intro]:
     'BrightChainは、中央集権的なデータ収集サービスを安全で主権的な代替手段に置き換えるために設計されたコア「Bright-Apps」スイートと共にローンチしました。',
+  [ShowcaseStrings.FAQ_BrightChart_Logo_Alt]: 'BrightChartロゴ',
+  [ShowcaseStrings.FAQ_Tech_Q11_BrightChart_Title]: '患者所有の医療記録',
+  [ShowcaseStrings.FAQ_Tech_Q11_BrightChart_Text]:
+    '患者が鍵を保持する電子カルテ。BrightChartはFHIR R4準拠の医療データをBrightChain上の暗号化ブロックとして保存し、侵害される中央データベースはありません。患者はBrightTrust委任を通じてプロバイダーに細粒度のアクセスを付与し、すべてのアクセスイベントは不変の監査証跡に記録されます。単一のコードベースから医療、歯科、獣医の診療をサポートします。',
   [ShowcaseStrings.FAQ_Tech_Q11_BrightMail_Title]: '主権的コミュニケーション',
   [ShowcaseStrings.FAQ_Tech_Q11_BrightMail_Text]:
     '従来のSMTPと分散型ストレージを橋渡しする完全RFC準拠のメールシステム。標準的なメールプロバイダーとは異なり、BrightMailはすべてのメッセージを「オーナーフリー」ブロックストアにシャーディングし、エンドツーエンド暗号化された「ダークモード」メッセージングをサポートします。',
@@ -1928,6 +1934,38 @@ export const ShowcaseJapaneseStrings: Partial<
     '多言語サポート：英語、フランス語、スペイン語、ウクライナ語、中国語（普通話）',
   [ShowcaseStrings.Feat_Burnbag_HL12]:
     'secp256k1鍵とAES-256-GCMによるECIES暗号化でファイルセキュリティを確保',
+
+  // BrightChart (EMR) Feature
+  [ShowcaseStrings.Feat_BrightChart_Desc]:
+    'BrightChain暗号技術で構築された患者所有の電子カルテ。あなたの健康データはあなたのもの——暗号化、分散化され、あなたの鍵でのみアクセス可能。',
+  [ShowcaseStrings.Feat_BrightChart_Cat]: 'アイデンティティ',
+  [ShowcaseStrings.Feat_BrightChart_Tech1]: 'オーナーフリーEMR',
+  [ShowcaseStrings.Feat_BrightChart_Tech2]: 'エンドツーエンド暗号化',
+  [ShowcaseStrings.Feat_BrightChart_Tech3]: '患者制御アクセス',
+  [ShowcaseStrings.Feat_BrightChart_HL1]:
+    '患者が暗号鍵を通じてすべての医療記録を所有・管理',
+  [ShowcaseStrings.Feat_BrightChart_HL2]:
+    'BrightChainに保存されたエンドツーエンド暗号化健康データ——侵害される中央サーバーなし',
+  [ShowcaseStrings.Feat_BrightChart_HL3]:
+    '細粒度の同意：BrightTrust委任を使用して特定の記録をプロバイダーと共有',
+  [ShowcaseStrings.Feat_BrightChart_HL4]:
+    'すべてのアクセス、編集、共有イベントの不変監査証跡',
+  [ShowcaseStrings.Feat_BrightChart_HL5]:
+    'プロバイダー間で移植可能——ベンダーロックインなし、データの人質なし',
+  [ShowcaseStrings.Feat_BrightChart_HL6]:
+    '設定可能な定足数によるShamir秘密分散を使用した緊急アクセス',
+  [ShowcaseStrings.Feat_BrightChart_HL7]:
+    '暗号学的整合性検証付きのバージョン管理された病歴',
+  [ShowcaseStrings.Feat_BrightChart_HL8]:
+    'プロバイダー署名のエントリが診断と処方の真正性を保証',
+  [ShowcaseStrings.Feat_BrightChart_HL9]:
+    'オフライン対応：暗号化された記録をローカルにキャッシュし、接続時に同期',
+  [ShowcaseStrings.Feat_BrightChart_HL10]:
+    '保証された破壊が必要な機密記録のためのデジタルバーンバッグ内蔵',
+  [ShowcaseStrings.Feat_BrightChart_HL11]:
+    'FHIR互換の健康記録交換のために設計された相互運用可能なデータレイヤー',
+  [ShowcaseStrings.Feat_BrightChart_HL12]:
+    'ゼロ知識証明により、完全な病歴を公開せずに保険検証が可能',
 
   // Remaining (TODO: translate)
   [ShowcaseStrings.Soup_Time]: 'Time',

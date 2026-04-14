@@ -139,9 +139,13 @@ describe('E2E: Digital Burnbag Upload Lifecycle', () => {
 
   it('should reject chunk upload without auth', async () => {
     try {
-      await axios.put('/api/burnbag/upload/fake-session/chunk/0', Buffer.from('data'), {
-        headers: { 'Content-Type': 'application/octet-stream' },
-      });
+      await axios.put(
+        '/api/burnbag/upload/fake-session/chunk/0',
+        Buffer.from('data'),
+        {
+          headers: { 'Content-Type': 'application/octet-stream' },
+        },
+      );
       throw new Error('Expected 401');
     } catch (err) {
       const error = err as AxiosError;
@@ -183,24 +187,16 @@ describe('E2E: Digital Burnbag Upload Lifecycle', () => {
     );
     const { sessionId } = initRes.data;
 
-    await axios.put(
-      `/api/burnbag/upload/${sessionId}/chunk/0`,
-      fileContent,
-      {
-        ...authed(),
-        headers: {
-          ...authed().headers,
-          'Content-Type': 'application/octet-stream',
-          'X-Chunk-Checksum': checksum,
-        },
+    await axios.put(`/api/burnbag/upload/${sessionId}/chunk/0`, fileContent, {
+      ...authed(),
+      headers: {
+        ...authed().headers,
+        'Content-Type': 'application/octet-stream',
+        'X-Chunk-Checksum': checksum,
       },
-    );
+    });
 
-    await axios.post(
-      `/api/burnbag/upload/${sessionId}/finalize`,
-      {},
-      authed(),
-    );
+    await axios.post(`/api/burnbag/upload/${sessionId}/finalize`, {}, authed());
 
     // Verify file appears in folder
     const folderRes = await axios.get(

@@ -83,7 +83,19 @@ function createIsolatedAuthServiceAndStore(): {
     ready: true,
     services,
     plugins: {},
-    db: { connection: { readyState: 1 } },
+    db: {
+      connection: { readyState: 1 },
+      collection: () => ({
+        create: async () => {
+          /* noop */
+        },
+        updateOne: async () => {
+          /* noop */
+        },
+        findOne: async () => null,
+      }),
+      withTransaction: undefined,
+    },
     getModel: () => {
       throw new Error('not implemented');
     },

@@ -6,9 +6,9 @@
  * a new user per test, which dramatically reduces server load and prevents
  * the API server from crashing under heavy concurrent crypto operations.
  */
+import type { FullConfig } from '@playwright/test';
 import fs from 'fs';
 import path from 'path';
-import type { FullConfig } from '@playwright/test';
 
 const STATE_DIR = path.join(__dirname, '.auth');
 export const SHARED_AUTH_PATH = path.join(STATE_DIR, 'shared-auth.json');
@@ -22,8 +22,7 @@ export interface SharedAuth {
 }
 
 async function globalSetup(config: FullConfig) {
-  const baseURL =
-    config.projects[0]?.use?.baseURL || 'http://localhost:3000';
+  const baseURL = config.projects[0]?.use?.baseURL || 'http://localhost:3000';
 
   // Ensure state directory exists
   if (!fs.existsSync(STATE_DIR)) {
@@ -48,8 +47,7 @@ async function globalSetup(config: FullConfig) {
   }
 
   // Register a shared test user
-  const id =
-    Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+  const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
   const creds = {
     username: `e2e_shared_${id}`,
     email: `e2e_shared_${id}@test.brightchain.local`,
@@ -86,9 +84,7 @@ async function globalSetup(config: FullConfig) {
   };
 
   fs.writeFileSync(SHARED_AUTH_PATH, JSON.stringify(shared), 'utf-8');
-  console.log(
-    `[global-setup] Shared user registered: ${creds.username}`,
-  );
+  console.log(`[global-setup] Shared user registered: ${creds.username}`);
 }
 
 export default globalSetup;

@@ -44,3 +44,9 @@
 [submodule "vscode-brightchain-vfs-explorer"]
 	path = vscode-brightchain-vfs-explorer
 	url = https://github.com/Digital-Defiance/vscode-brightchain-vfs-explorer.git
+[submodule "brightchart-react-components"]
+	path = brightchart-react-components
+	url = https://github.com/Digital-Defiance/brightchart-react-components.git
+[submodule "brightchart-lib"]
+	path = brightchart-lib
+	url = https://github.com/Digital-Defiance/brightchart-lib.git

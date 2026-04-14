@@ -6,6 +6,7 @@ import {
 import {
   faComment,
   faEnvelope,
+  faInfoCircle,
   faLock,
 } from '@awesome.me/kit-a20d532681/icons/classic/solid';
 import { faCircleNodes } from '@awesome.me/kit-a20d532681/icons/classic/thin';
@@ -92,6 +93,15 @@ export const AdminMenuRegistration: React.FC = () => {
         requiresAuth: true,
         includeOnMenus: [MenuTypes.UserMenu, MenuTypes.SideMenu],
         index: 7,
+      }),
+      registerMenuOption({
+        id: 'admin-about',
+        label: t(BrightChainStrings.Admin_Menu_About),
+        icon: <FontAwesomeIcon icon={faInfoCircle} />,
+        link: '/admin/about',
+        requiresAuth: true,
+        includeOnMenus: [MenuTypes.UserMenu, MenuTypes.SideMenu],
+        index: 8,
       }),
     ];
 

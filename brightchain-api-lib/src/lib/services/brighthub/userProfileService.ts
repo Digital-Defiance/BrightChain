@@ -108,25 +108,33 @@ interface MuteRecord {
  * Find query interface for chaining
  */
 interface FindQuery<T> {
-  sort?(field: Record<string, 1 | -1>): FindQuery<T>;
-  skip?(count: number): FindQuery<T>;
-  limit?(count: number): FindQuery<T>;
+  sort(field: Record<string, 1 | -1>): FindQuery<T>;
+  skip(count: number): FindQuery<T>;
+  limit(count: number): FindQuery<T>;
   exec(): Promise<T[]>;
 }
+
+/**
+ * MongoDB-style query filter that supports both partial record matching
+ * and query operators like $text, $or, $regex.
+ */
+type QueryFilter<T> = Partial<T> | Record<string, unknown>;
 
 /**
  * Collection interface for database operations
  */
 interface Collection<T> {
   create(record: T): Promise<T>;
-  findOne(filter: Partial<T>): { exec(): Promise<T | null> };
-  find(filter: Partial<T>): FindQuery<T>;
+  findOne(filter: QueryFilter<T>): { exec(): Promise<T | null> };
+  find(filter: QueryFilter<T>): FindQuery<T>;
   updateOne(
-    filter: Partial<T>,
+    filter: QueryFilter<T>,
     update: Partial<T>,
   ): { exec(): Promise<{ modifiedCount: number }> };
-  deleteOne(filter: Partial<T>): { exec(): Promise<{ deletedCount: number }> };
-  countDocuments?(filter: Partial<T>): { exec(): Promise<number> };
+  deleteOne(filter: QueryFilter<T>): {
+    exec(): Promise<{ deletedCount: number }>;
+  };
+  countDocuments?(filter: QueryFilter<T>): { exec(): Promise<number> };
 }
 
 /**
@@ -150,7 +158,10 @@ export class UserProfileService implements IUserProfileService {
   private readonly usersCollection: Collection<MainUserRecord>;
   private notificationService?: INotificationService;
   private connectionService?: IConnectionService;
-  private rawUserSearch?: (query: string, limit: number) => Promise<MainUserRecord[]>;
+  private rawUserSearch?: (
+    query: string,
+    limit: number,
+  ) => Promise<MainUserRecord[]>;
 
   constructor(application: IApplicationWithCollections) {
     this.userProfilesCollection = application.getModel<UserProfileRecord>(
@@ -1473,8 +1484,8 @@ export class UserProfileService implements IUserProfileService {
     const limit = this.getLimit(options);
 
     // Try $text search first (uses the user_search_text index)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let matched: UserProfileRecord[] = await (this.userProfilesCollection as any)
+
+    let matched: UserProfileRecord[] = await this.userProfilesCollection
       .find({ $text: { $search: query } })
       .limit(limit + 1)
       .exec();
@@ -1484,8 +1495,7 @@ export class UserProfileService implements IUserProfileService {
     if (matched.length === 0) {
       const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       const pattern = new RegExp(escaped, 'i');
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      matched = await (this.userProfilesCollection as any)
+      matched = await this.userProfilesCollection
         .find({
           $or: [
             { username: { $regex: pattern } },

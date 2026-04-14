@@ -44,6 +44,36 @@ async function registerUser(prefix = 'au') {
   };
 }
 
+/**
+ * Verify a user's email by fetching the captured verification email
+ * from the FakeEmailService test router and calling the verify-email endpoint.
+ */
+async function verifyUserEmail(email: string): Promise<void> {
+  const emailRes = await axios.get(
+    `/api/test/emails/${encodeURIComponent(email)}`,
+  );
+  const emails = emailRes.data as Array<{
+    to: string;
+    subject: string;
+    text: string;
+    html: string;
+  }>;
+  if (emails.length === 0) return; // No email captured — skip
+  const latestEmail = emails[emails.length - 1];
+  const tokenMatch = latestEmail.html.match(
+    /verify-email\?token=([A-Fa-f0-9]+)/i,
+  );
+  if (!tokenMatch) return; // No token in email — skip
+  await axios.post('/api/user/verify-email', { token: tokenMatch[1] });
+}
+
+/** Register a user and immediately verify their email. */
+async function registerAndVerifyUser(prefix = 'au') {
+  const result = await registerUser(prefix);
+  await verifyUserEmail(result.creds.email);
+  return result;
+}
+
 /** Create an axios config with Bearer auth header. */
 function authHeader(token: string) {
   return { headers: { Authorization: `Bearer ${token}` } };
@@ -153,8 +183,8 @@ describe('Admin User Management E2E', () => {
     let targetCreds: { username: string; email: string; password: string };
 
     beforeAll(async () => {
-      // Register a target user to lock/unlock
-      const target = await registerUser('locktarget');
+      // Register a target user to lock/unlock — verify email so login tests work
+      const target = await registerAndVerifyUser('locktarget');
       targetUserId = target.memberId;
       targetCreds = target.creds;
     });

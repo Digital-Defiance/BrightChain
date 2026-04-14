@@ -59,6 +59,8 @@ export { brightchainDatabaseInit } from './lib/databaseInit';
 export type {
   IDatabaseInitEnvironment,
   IGenericInitData,
+  IPoolSecuritySetupContext,
+  IPoolSecuritySetupResult,
 } from './lib/databaseInit';
 
 // Factories

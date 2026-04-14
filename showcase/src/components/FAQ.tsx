@@ -1,16 +1,19 @@
+import { faComment } from '@awesome.me/kit-a20d532681/icons/chisel/regular';
+import {
+  faEnvelope,
+  faLock,
+} from '@awesome.me/kit-a20d532681/icons/classic/solid';
+import { faCircleNodes } from '@awesome.me/kit-a20d532681/icons/classic/thin';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useShowcaseI18n } from '../i18n/ShowcaseI18nContext';
 import { ShowcaseStrings } from '../i18n/showcaseStrings';
 import './FAQ.css';
 
-import birdbagImg from '../assets/images/birdbag-logo.png';
-import brightchatImg from '../assets/images/brightchat.png';
-import brighthubImg from '../assets/images/brighthub.png';
-import brightmailImg from '../assets/images/brightmail.png';
-import brightpassImg from '../assets/images/brightpass.png';
+import { faBookMedical } from '@awesome.me/kit-a20d532681/icons/classic/regular';
+import { BrightChainSubLogo } from '@brightchain/brightchain-react-components';
+import birdbagImg from '../assets/images/birdbag-logo-blue.png';
 import burnbagImg from '../assets/images/burnbag2_tx.png';
-import digitalBurnbagImg from '../assets/images/digitalburnbag-blue.svg';
 import gildZoomImg from '../assets/images/mascots/Gild.svg';
 import gildImg from '../assets/images/mascots/Gild_tx.svg';
 import ohmZoomImg from '../assets/images/mascots/Ohm.svg';
@@ -317,25 +320,37 @@ function TechnicalFAQ() {
         <p>{t(ShowcaseStrings.FAQ_Tech_Q11_Intro)}</p>
 
         <div className="faq-sub-section">
-          <div>
-            <img
-              src={brightmailImg}
-              alt={t(ShowcaseStrings.FAQ_BrightMail_Logo_Alt)}
-              style={{ height: '40px' }}
-            />
-          </div>
+          <BrightChainSubLogo
+            subText="Chart"
+            height={40}
+            iconHeight={35}
+            icon={faBookMedical}
+            altText={t(ShowcaseStrings.FAQ_BrightChart_Logo_Alt)}
+          />
+          <h3>{t(ShowcaseStrings.FAQ_Tech_Q11_BrightChart_Title)}</h3>
+          <p>{t(ShowcaseStrings.FAQ_Tech_Q11_BrightChart_Text)}</p>
+        </div>
+
+        <div className="faq-sub-section">
+          <BrightChainSubLogo
+            subText="Mail"
+            altText={t(ShowcaseStrings.FAQ_BrightMail_Logo_Alt)}
+            height={40}
+            iconHeight={35}
+            icon={faEnvelope}
+          />
           <h3>{t(ShowcaseStrings.FAQ_Tech_Q11_BrightMail_Title)}</h3>
           <p>{t(ShowcaseStrings.FAQ_Tech_Q11_BrightMail_Text)}</p>
         </div>
 
         <div className="faq-sub-section">
-          <div>
-            <img
-              src={brighthubImg}
-              alt={t(ShowcaseStrings.FAQ_BrightHub_Logo_Alt)}
-              style={{ height: '40px' }}
-            />
-          </div>
+          <BrightChainSubLogo
+            subText="Hub"
+            altText={t(ShowcaseStrings.FAQ_BrightHub_Logo_Alt)}
+            height={40}
+            iconHeight={35}
+            icon={faCircleNodes}
+          />
           <h3>{t(ShowcaseStrings.FAQ_Tech_Q11_BrightHub_Title)}</h3>
           <p>
             <strong>
@@ -358,37 +373,38 @@ function TechnicalFAQ() {
         </div>
 
         <div className="faq-sub-section">
-          <div>
-            <img
-              src={brightpassImg}
-              alt={t(ShowcaseStrings.FAQ_BrightPass_Logo_Alt)}
-              style={{ height: '40px' }}
-            />
-          </div>
+          <BrightChainSubLogo
+            subText="Pass"
+            altText={t(ShowcaseStrings.FAQ_BrightPass_Logo_Alt)}
+            height={40}
+            iconHeight={35}
+            icon={faLock}
+          />
           <h3>{t(ShowcaseStrings.FAQ_Tech_Q11_BrightPass_Title)}</h3>
           <p>{t(ShowcaseStrings.FAQ_Tech_Q11_BrightPass_Text)}</p>
         </div>
 
         <div className="faq-sub-section">
-          <div>
-            <img
-              src={brightchatImg}
-              alt={t(ShowcaseStrings.FAQ_BrightChat_Logo_Alt)}
-              style={{ height: '40px' }}
-            />
-          </div>
+          <BrightChainSubLogo
+            subText="Chat"
+            altText={t(ShowcaseStrings.FAQ_BrightChat_Logo_Alt)}
+            height={40}
+            iconHeight={35}
+            icon={faComment}
+          />
           <h3>{t(ShowcaseStrings.FAQ_Tech_Q11_BrightChat_Title)}</h3>
           <p>{t(ShowcaseStrings.FAQ_Tech_Q11_BrightChat_Text)}</p>
         </div>
 
         <div className="faq-sub-section">
-          <div>
-            <img
-              src={digitalBurnbagImg}
-              alt={t(ShowcaseStrings.FAQ_DigitalBurnbag_Logo_Alt)}
-              style={{ height: '40px' }}
-            />
-          </div>
+          <BrightChainSubLogo
+            leadText="Digital"
+            subText="Burnbag"
+            altText={t(ShowcaseStrings.FAQ_DigitalBurnbag_Logo_Alt)}
+            height={40}
+            iconHeight={35}
+            customIcon={<img src={birdbagImg} height={35} />}
+          />
           <h3>{t(ShowcaseStrings.FAQ_Tech_Q11_DigitalBurnbag_Title)}</h3>
           <p>{t(ShowcaseStrings.FAQ_Tech_Q11_DigitalBurnbag_Text)}</p>
         </div>

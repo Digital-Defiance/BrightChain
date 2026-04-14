@@ -1,3 +1,5 @@
+import 'reflect-metadata';
+
 import { DurabilityLevel } from '../../enumerations/durabilityLevel';
 import { DeliveryStatus } from '../../enumerations/messaging/deliveryStatus';
 import { EmailErrorType } from '../../enumerations/messaging/emailErrorType';

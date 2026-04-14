@@ -4,6 +4,7 @@ import {
   CBLService,
   ChecksumService,
   EncryptedShare,
+  IBlockStore,
   ImportFormat,
   PasswordGenerator,
   ServiceProvider,
@@ -170,13 +171,15 @@ export class BrightPassController<
       const blockService = serviceProvider.blockService;
 
       this.brightPassService = new BrightPassService(
-        undefined, // blockStore — defaults to MemoryBlockStore inside BrightPassService
+        this.application.services.get('blockStore') as IBlockStore | undefined,
         vcblService,
         blockService,
       );
     } catch {
       // ServiceProvider not yet initialized — degrade gracefully
-      this.brightPassService = new BrightPassService<TID>();
+      this.brightPassService = new BrightPassService<TID>(
+        this.application.services.get('blockStore') as IBlockStore | undefined,
+      );
     }
   }
 

@@ -18,7 +18,11 @@ import {
   IEmailService,
   SystemUserService,
 } from '@digitaldefiance/node-express-suite';
-import { IRequestUserDTO } from '@digitaldefiance/suite-core-lib';
+import {
+  getSuiteCoreTranslation,
+  IRequestUserDTO,
+  SuiteCoreStringKey,
+} from '@digitaldefiance/suite-core-lib';
 import { IBrightChainApplication } from '../interfaces/application';
 import { DefaultBackendIdType } from '../shared-types';
 import { BrightChainAuthenticationProvider } from './brightchain-authentication-provider';
@@ -61,11 +65,13 @@ export class AuthService<
   }
 
   /**
-   * Override sendWelcomeEmail to use the SES-based EmailService.
+   * Override sendWelcomeEmail to use the SES-based EmailService
+   * and include an email verification link.
    */
   protected override async sendWelcomeEmail(
     email: string,
     username: string,
+    memberId?: string,
   ): Promise<void> {
     if (!this.emailService) {
       console.log(
@@ -74,13 +80,44 @@ export class AuthService<
       return;
     }
 
-    const subject = 'Welcome to BrightChain';
-    const text = `Welcome ${username}!\n\nYour account has been created successfully. You've been credited with 1000 Joules to get started.\n\nBest regards,\nThe BrightChain Team`;
+    // Generate a verification token if we have a memberId
+    let verificationLink = '';
+    if (memberId) {
+      try {
+        const token = await this.generateEmailVerificationToken(
+          memberId,
+          email,
+        );
+        const serverUrl =
+          this.brightchainApplication.environment.serverUrl || '';
+        verificationLink = `${serverUrl}/verify-email?token=${token}`;
+      } catch (error) {
+        console.error('Failed to generate verification token:', error);
+      }
+    }
+
+    const subject =
+      getSuiteCoreTranslation(
+        SuiteCoreStringKey.Email_ConfirmationSubjectTemplate,
+      ) || 'Welcome to BrightChain — Verify Your Email';
+    const verifySection = verificationLink
+      ? `\n\nPlease verify your email address by clicking the link below:\n${verificationLink}\n\nThis link will expire in 24 hours.`
+      : '';
+    const text = `Welcome ${username}!\n\nYour account has been created successfully. You've been credited with 1000 Joules to get started.${verifySection}\n\nBest regards,\nThe BrightChain Team`;
+    const verifyHtml = verificationLink
+      ? `
+      <p><strong>Please verify your email address to activate your account:</strong></p>
+      <p style="margin: 20px 0;">
+        <a href="${verificationLink}" style="background-color: #4CAF50; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; display: inline-block;">Verify Email Address</a>
+      </p>
+      <p style="color: #666; font-size: 12px;">Or copy and paste this link into your browser:<br/>${verificationLink}</p>
+      <p style="color: #666; font-size: 12px;">This link will expire in 24 hours.</p>`
+      : '';
     const html = `
       <h1>Welcome to BrightChain!</h1>
       <p>Hi ${username},</p>
       <p>Your account has been created successfully.</p>
-      <p><strong>You've been credited with 1000 Joules to get started.</strong></p>
+      <p><strong>You've been credited with 1000 Joules to get started.</strong></p>${verifyHtml}
       <p>Best regards,<br/>The BrightChain Team</p>
     `;
 

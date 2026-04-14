@@ -191,7 +191,14 @@ export class NotificationService implements INotificationService {
   private readonly connectionMetadataCollection: Collection<ConnectionMetadataRecord>;
   private readonly categoryAssignmentsCollection: Collection<ConnectionCategoryAssignmentRecord>;
   private readonly connectionInteractionsCollection: Collection<ConnectionInteractionRecord>;
-  private emailService?: { sendEmail(to: string, subject: string, text: string, html: string): Promise<void> };
+  private emailService?: {
+    sendEmail(
+      to: string,
+      subject: string,
+      text: string,
+      html: string,
+    ): Promise<void>;
+  };
   private userEmailResolver?: (userId: string) => Promise<string | null>;
 
   constructor(application: IApplicationWithCollections) {
@@ -227,7 +234,14 @@ export class NotificationService implements INotificationService {
    * Set the email service for sending email notifications.
    */
   setEmailService(
-    service: { sendEmail(to: string, subject: string, text: string, html: string): Promise<void> },
+    service: {
+      sendEmail(
+        to: string,
+        subject: string,
+        text: string,
+        html: string,
+      ): Promise<void>;
+    },
     userEmailResolver: (userId: string) => Promise<string | null>,
   ): void {
     this.emailService = service;
@@ -248,14 +262,23 @@ export class NotificationService implements INotificationService {
     try {
       // Check if user has email enabled for this category
       const prefs = await this.preferencesCollection
-        .findOne({ userId: recipientId } as Partial<NotificationPreferencesRecord>)
+        .findOne({
+          userId: recipientId,
+        } as Partial<NotificationPreferencesRecord>)
         .exec();
 
       if (prefs) {
-        const channelSettings = prefs.channelSettings as Record<string, boolean> | undefined;
+        const channelSettings = prefs.channelSettings as
+          | Record<string, boolean>
+          | undefined;
         if (channelSettings && channelSettings['email'] === false) return;
 
-        const catSettings = prefs.categorySettings as Record<string, { enabled?: boolean; channels?: Record<string, boolean> }> | undefined;
+        const catSettings = prefs.categorySettings as
+          | Record<
+              string,
+              { enabled?: boolean; channels?: Record<string, boolean> }
+            >
+          | undefined;
         if (catSettings?.[category]) {
           if (catSettings[category].enabled === false) return;
           if (catSettings[category].channels?.['email'] === false) return;
@@ -265,12 +288,7 @@ export class NotificationService implements INotificationService {
       const email = await this.userEmailResolver(recipientId);
       if (!email) return;
 
-      await this.emailService.sendEmail(
-        email,
-        subject,
-        body,
-        `<p>${body}</p>`,
-      );
+      await this.emailService.sendEmail(email, subject, body, `<p>${body}</p>`);
     } catch {
       // Non-fatal — email delivery failure shouldn't break notifications
     }
@@ -1238,17 +1256,13 @@ export class NotificationService implements INotificationService {
    * @param inactiveDays Number of days of inactivity before sending a reminder
    * @returns Number of reminders sent
    */
-  async generateReconnectReminders(
-    inactiveDays = 30,
-  ): Promise<number> {
+  async generateReconnectReminders(inactiveDays = 30): Promise<number> {
     // Get all connection metadata records
     const allMetadata = await this.connectionMetadataCollection
       .find({} as Partial<ConnectionMetadataRecord>)
       .exec();
 
-    const cutoff = new Date(
-      Date.now() - inactiveDays * 86400000,
-    ).toISOString();
+    const cutoff = new Date(Date.now() - inactiveDays * 86400000).toISOString();
     let sentCount = 0;
 
     for (const meta of allMetadata) {

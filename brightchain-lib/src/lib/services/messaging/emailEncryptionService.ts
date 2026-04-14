@@ -25,6 +25,11 @@ import {
   crossPlatformRandomBytes,
   crossPlatformSha256,
 } from '../../utils/crossPlatformCrypto';
+// GpgKeyManager and SmimeCertificateManager are imported dynamically
+// to avoid pulling in @peculiar/x509 and openpgp at module load time,
+// which breaks Jest environments without reflect-metadata polyfill.
+import type { GpgKeyManager as GpgKeyManagerType } from './gpgKeyManager';
+import type { SmimeCertificateManager as SmimeCertificateManagerType } from './smimeCertificateManager';
 
 // ─── Encryption Metadata Interfaces ─────────────────────────────────────────
 
@@ -58,6 +63,52 @@ export interface IEmailEncryptionMetadata {
 
   /** Public key of the signer (for verification) */
   signerPublicKey?: Uint8Array;
+
+  // ─── GPG-specific fields (when scheme=GPG) ─────────────────────────
+
+  /**
+   * ASCII-armored OpenPGP encrypted message (when scheme=GPG).
+   *
+   * @see Requirement 3.4
+   */
+  gpgEncryptedMessage?: string;
+
+  /**
+   * Detached GPG signature (ASCII armor, when GPG signing is used).
+   *
+   * @see Requirement 4.4
+   */
+  gpgSignature?: string;
+
+  /**
+   * Key ID of the GPG signer.
+   *
+   * @see Requirement 3.3
+   */
+  gpgSignerKeyId?: string;
+
+  // ─── S/MIME CMS-specific fields (when scheme=S_MIME, real CMS) ─────
+
+  /**
+   * CMS/PKCS#7 encrypted content (when scheme=S_MIME, real CMS).
+   *
+   * @see Requirement 7.3
+   */
+  cmsEncryptedContent?: Uint8Array;
+
+  /**
+   * CMS detached signature (when S/MIME signing is used).
+   *
+   * @see Requirement 8.4
+   */
+  cmsSignature?: Uint8Array;
+
+  /**
+   * Subject of the S/MIME signer certificate.
+   *
+   * @see Requirement 8.4
+   */
+  smimeSignerSubject?: string;
 }
 
 /**
@@ -115,6 +166,27 @@ export interface ISignatureResult {
  * @see Requirements 16.1, 16.3, 16.4, 16.5, 16.6, 16.7, 16.8
  */
 export class EmailEncryptionService {
+  private _gpgKeyManager?: GpgKeyManagerType;
+  private _smimeCertificateManager?: SmimeCertificateManagerType;
+
+  private async getGpgKeyManager(): Promise<GpgKeyManagerType> {
+    if (!this._gpgKeyManager) {
+      const { GpgKeyManager } = await import('./gpgKeyManager.js');
+      this._gpgKeyManager = new GpgKeyManager();
+    }
+    return this._gpgKeyManager!;
+  }
+
+  private async getSmimeCertificateManager(): Promise<SmimeCertificateManagerType> {
+    if (!this._smimeCertificateManager) {
+      const { SmimeCertificateManager } = await import(
+        './smimeCertificateManager.js'
+      );
+      this._smimeCertificateManager = new SmimeCertificateManager();
+    }
+    return this._smimeCertificateManager!;
+  }
+
   // ─── ECIES Content Encryption (Requirement 16.1, 16.3) ─────────────
 
   /**
@@ -665,5 +737,393 @@ export class EmailEncryptionService {
       recipientPrivateKey,
       signerPrivateKey,
     );
+  }
+
+  // ─── GPG Encryption / Decryption (Requirements 3.1, 3.3, 3.4, 5.1, 5.5, 14.1) ─
+
+  /**
+   * Encrypts email content using OpenPGP for multiple recipients.
+   *
+   * Delegates to GpgKeyManager.encrypt() and wraps the result in
+   * IPerRecipientEncryptionResult with scheme set to GPG.
+   * Optionally signs the content before encryption if sender key is provided.
+   *
+   * @param content - Plaintext email content
+   * @param recipientPublicKeysArmored - Map of recipient email to ASCII-armored GPG public key
+   * @param senderPrivateKeyArmored - Optional sender's GPG private key for signing
+   * @param senderPassphrase - Optional passphrase for the sender's private key
+   * @returns Encrypted content and GPG metadata
+   * @throws {EmailError} PRIVATE_KEY_MISSING if signing requested but key missing
+   * @throws {EmailError} GPG_ENCRYPT_FAILED on encryption failure
+   *
+   * @see Requirements 3.1, 3.3, 3.4, 14.1
+   */
+  async encryptGpg(
+    content: Uint8Array,
+    recipientPublicKeysArmored: Map<string, string>,
+    senderPrivateKeyArmored?: string,
+    senderPassphrase?: string,
+  ): Promise<IPerRecipientEncryptionResult> {
+    try {
+      // If sender key is provided but passphrase is missing, throw
+      if (senderPrivateKeyArmored && !senderPassphrase) {
+        throw new EmailError(
+          EmailErrorType.PRIVATE_KEY_MISSING,
+          'Passphrase is required when sender private key is provided for GPG signing',
+        );
+      }
+
+      // Sign before encrypt if sender key is provided (Requirement 4.2)
+      let gpgSignature: string | undefined;
+      let gpgSignerKeyId: string | undefined;
+      if (senderPrivateKeyArmored && senderPassphrase) {
+        const signResult = await (
+          await this.getGpgKeyManager()
+        ).sign(content, senderPrivateKeyArmored, senderPassphrase);
+        gpgSignature = signResult.signature;
+        gpgSignerKeyId = signResult.signerKeyId;
+      }
+
+      // Convert Map values to array for GpgKeyManager.encrypt()
+      const armoredKeys = Array.from(recipientPublicKeysArmored.values());
+
+      const encryptionResult = await (
+        await this.getGpgKeyManager()
+      ).encrypt(content, armoredKeys);
+
+      // The GPG encrypted message is a string; encode as Uint8Array for the result
+      const encoder = new TextEncoder();
+      const encryptedContent = encoder.encode(
+        encryptionResult.encryptedMessage,
+      );
+
+      return {
+        encryptedContent,
+        encryptionMetadata: {
+          scheme: MessageEncryptionScheme.GPG,
+          isSigned: !!gpgSignature,
+          gpgEncryptedMessage: encryptionResult.encryptedMessage,
+          gpgSignature,
+          gpgSignerKeyId,
+        },
+      };
+    } catch (error) {
+      if (error instanceof EmailError) throw error;
+      throw new EmailError(
+        EmailErrorType.GPG_ENCRYPT_FAILED,
+        `GPG encryption failed: ${error instanceof Error ? error.message : String(error)}`,
+        { recipientCount: recipientPublicKeysArmored.size },
+      );
+    }
+  }
+
+  /**
+   * Decrypts an OpenPGP encrypted message using a GPG private key.
+   *
+   * Delegates to GpgKeyManager.decrypt(). The encryptedContent is expected
+   * to be the UTF-8 encoded ASCII-armored OpenPGP message.
+   *
+   * @param encryptedContent - The encrypted content (UTF-8 encoded armored message)
+   * @param privateKeyArmored - ASCII-armored GPG private key
+   * @param passphrase - Passphrase to unlock the private key
+   * @returns Decrypted plaintext content
+   * @throws {EmailError} PRIVATE_KEY_MISSING if private key is not provided
+   * @throws {EmailError} GPG_DECRYPT_FAILED on decryption failure
+   *
+   * @see Requirements 5.1, 5.5
+   */
+  async decryptGpg(
+    encryptedContent: Uint8Array,
+    privateKeyArmored: string,
+    passphrase: string,
+  ): Promise<Uint8Array> {
+    if (!privateKeyArmored) {
+      throw new EmailError(
+        EmailErrorType.PRIVATE_KEY_MISSING,
+        'GPG private key is required for decryption',
+      );
+    }
+
+    try {
+      // Decode the Uint8Array back to the ASCII-armored string
+      const decoder = new TextDecoder();
+      const armoredMessage = decoder.decode(encryptedContent);
+
+      return await (
+        await this.getGpgKeyManager()
+      ).decrypt(armoredMessage, privateKeyArmored, passphrase);
+    } catch (error) {
+      if (error instanceof EmailError) throw error;
+      throw new EmailError(
+        EmailErrorType.GPG_DECRYPT_FAILED,
+        `GPG decryption failed: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+
+  // ─── GPG Signing / Verification (Requirements 4.1, 4.2, 4.4, 5.2, 5.3, 5.4) ─
+
+  /**
+   * Signs email content with a GPG private key (detached signature).
+   *
+   * Delegates to GpgKeyManager.sign() and adapts the result to ISignatureResult.
+   *
+   * @param content - The email content to sign
+   * @param privateKeyArmored - ASCII-armored GPG private key
+   * @param passphrase - Passphrase to unlock the private key
+   * @returns Signature result with signature bytes and signer public key placeholder
+   * @throws {EmailError} PRIVATE_KEY_MISSING if private key is not provided
+   * @throws {EmailError} GPG_VERIFY_FAILED on signing failure
+   *
+   * @see Requirements 4.1, 4.2
+   */
+  async signGpg(
+    content: Uint8Array,
+    privateKeyArmored: string,
+    passphrase: string,
+  ): Promise<ISignatureResult> {
+    if (!privateKeyArmored) {
+      throw new EmailError(
+        EmailErrorType.PRIVATE_KEY_MISSING,
+        'GPG private key is required for signing',
+      );
+    }
+
+    try {
+      const gpgResult = await (
+        await this.getGpgKeyManager()
+      ).sign(content, privateKeyArmored, passphrase);
+
+      // Adapt IGpgSignatureResult to ISignatureResult
+      const encoder = new TextEncoder();
+      return {
+        signature: encoder.encode(gpgResult.signature),
+        signerPublicKey: encoder.encode(gpgResult.signerKeyId),
+      };
+    } catch (error) {
+      if (error instanceof EmailError) throw error;
+      throw new EmailError(
+        EmailErrorType.GPG_VERIFY_FAILED,
+        `GPG signing failed: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+
+  /**
+   * Verifies a GPG detached signature against the given content.
+   *
+   * Delegates to GpgKeyManager.verify() and returns a boolean.
+   *
+   * @param content - The email content that was signed
+   * @param signature - The detached signature bytes (UTF-8 encoded armored signature)
+   * @param signerPublicKeyArmored - ASCII-armored GPG public key of the expected signer
+   * @returns true if the signature is valid, false otherwise
+   *
+   * @see Requirements 5.2, 5.3, 5.4
+   */
+  async verifyGpg(
+    content: Uint8Array,
+    signature: Uint8Array,
+    signerPublicKeyArmored: string,
+  ): Promise<boolean> {
+    try {
+      // Decode the signature Uint8Array back to the ASCII-armored string
+      const decoder = new TextDecoder();
+      const armoredSignature = decoder.decode(signature);
+
+      const result = await (
+        await this.getGpgKeyManager()
+      ).verify(content, armoredSignature, signerPublicKeyArmored);
+
+      return result.valid;
+    } catch {
+      return false;
+    }
+  }
+
+  // ─── Real S/MIME CMS Encryption / Decryption (Requirements 7.1, 7.3, 7.4, 9.1, 9.5) ─
+
+  /**
+   * Encrypts email content using real CMS/PKCS#7 enveloped-data for multiple recipients.
+   *
+   * Delegates to SmimeCertificateManager.encrypt() for RFC 5751 CMS encryption.
+   * Optionally signs the content before encryption if sender cert+key are provided.
+   *
+   * @param content - Plaintext email content
+   * @param recipientCertificatesPem - Map of recipient email to PEM-encoded X.509 certificate
+   * @param senderCertPem - Optional sender's S/MIME certificate PEM for signing
+   * @param senderPrivateKeyPem - Optional sender's S/MIME private key PEM for signing
+   * @returns Encrypted content and S/MIME metadata
+   * @throws {EmailError} PRIVATE_KEY_MISSING if signing requested but key missing
+   * @throws {EmailError} SMIME_ENCRYPT_FAILED on encryption failure
+   *
+   * @see Requirements 7.1, 7.3, 7.4, 8.2
+   */
+  async encryptSmimeReal(
+    content: Uint8Array,
+    recipientCertificatesPem: Map<string, string>,
+    senderCertPem?: string,
+    senderPrivateKeyPem?: string,
+  ): Promise<IPerRecipientEncryptionResult> {
+    try {
+      // If sender cert is provided but private key is missing, throw
+      if (senderCertPem && !senderPrivateKeyPem) {
+        throw new EmailError(
+          EmailErrorType.PRIVATE_KEY_MISSING,
+          'Private key is required when sender certificate is provided for S/MIME signing',
+        );
+      }
+
+      // Sign before encrypt if sender cert+key are provided (Requirement 8.2)
+      let cmsSignature: Uint8Array | undefined;
+      let smimeSignerSubject: string | undefined;
+      if (senderCertPem && senderPrivateKeyPem) {
+        const signResult = await (
+          await this.getSmimeCertificateManager()
+        ).sign(content, senderCertPem, senderPrivateKeyPem);
+        cmsSignature = signResult.signature;
+        smimeSignerSubject = signResult.signerCertSubject;
+      }
+
+      // Convert Map values to array for SmimeCertificateManager.encrypt()
+      const certPems = Array.from(recipientCertificatesPem.values());
+
+      const encryptionResult = await (
+        await this.getSmimeCertificateManager()
+      ).encrypt(content, certPems);
+
+      return {
+        encryptedContent: encryptionResult.encryptedContent,
+        encryptionMetadata: {
+          scheme: MessageEncryptionScheme.S_MIME,
+          isSigned: !!cmsSignature,
+          cmsEncryptedContent: encryptionResult.encryptedContent,
+          cmsSignature,
+          smimeSignerSubject,
+        },
+      };
+    } catch (error) {
+      if (error instanceof EmailError) throw error;
+      throw new EmailError(
+        EmailErrorType.SMIME_ENCRYPT_FAILED,
+        `S/MIME CMS encryption failed: ${error instanceof Error ? error.message : String(error)}`,
+        { recipientCount: recipientCertificatesPem.size },
+      );
+    }
+  }
+
+  /**
+   * Decrypts CMS/PKCS#7 enveloped-data content using a recipient's certificate and private key.
+   *
+   * Delegates to SmimeCertificateManager.decrypt() for RFC 5751 CMS decryption.
+   *
+   * @param encryptedContent - DER-encoded CMS/PKCS#7 enveloped-data
+   * @param certificatePem - PEM-encoded X.509 certificate of the recipient
+   * @param privateKeyPem - PEM-encoded PKCS#8 private key of the recipient
+   * @returns Decrypted plaintext content
+   * @throws {EmailError} PRIVATE_KEY_MISSING if private key is not provided
+   * @throws {EmailError} SMIME_DECRYPT_FAILED on decryption failure
+   *
+   * @see Requirements 9.1, 9.5
+   */
+  async decryptSmimeReal(
+    encryptedContent: Uint8Array,
+    certificatePem: string,
+    privateKeyPem: string,
+  ): Promise<Uint8Array> {
+    if (!privateKeyPem) {
+      throw new EmailError(
+        EmailErrorType.PRIVATE_KEY_MISSING,
+        'S/MIME private key is required for decryption',
+      );
+    }
+
+    try {
+      return await (
+        await this.getSmimeCertificateManager()
+      ).decrypt(encryptedContent, certificatePem, privateKeyPem);
+    } catch (error) {
+      if (error instanceof EmailError) throw error;
+      throw new EmailError(
+        EmailErrorType.SMIME_DECRYPT_FAILED,
+        `S/MIME CMS decryption failed: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+
+  // ─── S/MIME CMS Signing / Verification (Requirements 8.1, 8.2, 8.4, 9.2, 9.3, 9.4) ─
+
+  /**
+   * Signs email content with an S/MIME certificate and private key (CMS detached signature).
+   *
+   * Delegates to SmimeCertificateManager.sign() and adapts the result to ISignatureResult.
+   *
+   * @param content - The email content to sign
+   * @param certificatePem - PEM-encoded X.509 certificate of the signer
+   * @param privateKeyPem - PEM-encoded PKCS#8 private key of the signer
+   * @returns Signature result with CMS signature bytes and signer public key (encoded subject)
+   * @throws {EmailError} PRIVATE_KEY_MISSING if private key is not provided
+   * @throws {EmailError} SMIME_VERIFY_FAILED on signing failure
+   *
+   * @see Requirements 8.1, 8.4
+   */
+  async signSmime(
+    content: Uint8Array,
+    certificatePem: string,
+    privateKeyPem: string,
+  ): Promise<ISignatureResult> {
+    if (!privateKeyPem) {
+      throw new EmailError(
+        EmailErrorType.PRIVATE_KEY_MISSING,
+        'S/MIME private key is required for signing',
+      );
+    }
+
+    try {
+      const smimeResult = await (
+        await this.getSmimeCertificateManager()
+      ).sign(content, certificatePem, privateKeyPem);
+
+      // Adapt ISmimeSignatureResult to ISignatureResult
+      const encoder = new TextEncoder();
+      return {
+        signature: smimeResult.signature,
+        signerPublicKey: encoder.encode(smimeResult.signerCertSubject),
+      };
+    } catch (error) {
+      if (error instanceof EmailError) throw error;
+      throw new EmailError(
+        EmailErrorType.SMIME_VERIFY_FAILED,
+        `S/MIME CMS signing failed: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+
+  /**
+   * Verifies an S/MIME CMS detached signature against the given content.
+   *
+   * Delegates to SmimeCertificateManager.verify() and returns a boolean.
+   *
+   * @param content - The email content that was signed
+   * @param signature - The DER-encoded CMS detached signature
+   * @param signerCertificatePem - PEM-encoded X.509 certificate of the expected signer
+   * @returns true if the signature is valid, false otherwise
+   *
+   * @see Requirements 9.2, 9.3, 9.4
+   */
+  async verifySmime(
+    content: Uint8Array,
+    signature: Uint8Array,
+    signerCertificatePem: string,
+  ): Promise<boolean> {
+    try {
+      const result = await (
+        await this.getSmimeCertificateManager()
+      ).verify(content, signature, signerCertificatePem);
+
+      return result.valid;
+    } catch {
+      return false;
+    }
   }
 }

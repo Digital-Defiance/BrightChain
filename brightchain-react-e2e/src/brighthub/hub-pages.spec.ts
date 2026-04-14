@@ -18,9 +18,7 @@ test.describe('BrightHub Home Page', () => {
     const welcome = page.getByRole('heading', { name: /welcome/i });
     const feed = page.getByRole('feed');
 
-    await expect(
-      welcome.or(feed),
-    ).toBeVisible({ timeout: 15_000 });
+    await expect(welcome.or(feed)).toBeVisible({ timeout: 15_000 });
   });
 
   test('should show trending hubs section when hubs exist', async ({
@@ -34,9 +32,7 @@ test.describe('BrightHub Home Page', () => {
     const trending = page.getByText(/trending/i);
     const exploreBtn = page.getByRole('button', { name: /explore/i });
 
-    await expect(
-      trending.or(exploreBtn),
-    ).toBeVisible({ timeout: 15_000 });
+    await expect(trending.or(exploreBtn)).toBeVisible({ timeout: 15_000 });
   });
 });
 
@@ -155,9 +151,7 @@ test.describe('BrightHub Post Composer', () => {
     await expect(page.getByText('264')).toBeVisible({ timeout: 5_000 });
   });
 
-  test('should have a submit button', async ({
-    authenticatedPage: page,
-  }) => {
+  test('should have a submit button', async ({ authenticatedPage: page }) => {
     await page.goto('/brighthub');
     await waitForSuspense(page);
     await waitForPageContent(page);

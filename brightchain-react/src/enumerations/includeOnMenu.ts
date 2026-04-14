@@ -1,5 +1,6 @@
 export enum IncludeOnMenu {
   BrightChainMenu,
+  BrightChartMenu,
   BrightChatMenu,
   BrightMailMenu,
   BrightPassMenu,

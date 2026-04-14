@@ -8,6 +8,7 @@
 
 import {
   BlockSize,
+  initializeBrightChain,
   PooledMemoryBlockStore,
 } from '@brightchain/brightchain-lib';
 import { promises as fs } from 'fs';
@@ -117,7 +118,7 @@ describe('Schema-driven unique indexes (in-memory)', () => {
     });
 
     it('should create compound indexes', () => {
-      const { coll } = makeCollection('user-roles');
+      const { coll } = makeCollection('user_roles');
       coll.setSchema(TEST_COMPOUND_SCHEMA);
       const indexes = coll.listIndexes();
       expect(indexes).toContain('userId_1_roleId_1');
@@ -179,7 +180,7 @@ describe('Schema-driven unique indexes (in-memory)', () => {
     });
 
     it('should reject duplicate compound key (userId + roleId)', async () => {
-      const { coll } = makeCollection('user-roles');
+      const { coll } = makeCollection('user_roles');
       coll.setSchema(TEST_COMPOUND_SCHEMA);
 
       await coll.insertOne({ _id: '1', userId: 'u1', roleId: 'r1' });
@@ -189,7 +190,7 @@ describe('Schema-driven unique indexes (in-memory)', () => {
     });
 
     it('should allow same userId with different roleId', async () => {
-      const { coll } = makeCollection('user-roles');
+      const { coll } = makeCollection('user_roles');
       coll.setSchema(TEST_COMPOUND_SCHEMA);
 
       await coll.insertOne({ _id: '1', userId: 'u1', roleId: 'r1' });
@@ -341,6 +342,10 @@ describe('Schema-driven unique indexes (in-memory)', () => {
 describe('Schema-driven unique indexes (disk-backed)', () => {
   let dataDir: string;
 
+  beforeAll(() => {
+    initializeBrightChain();
+  });
+
   beforeEach(async () => {
     dataDir = await makeTempDir();
   });
@@ -394,7 +399,7 @@ describe('Schema-driven unique indexes (disk-backed)', () => {
   it('should enforce compound unique index with disk-backed store', async () => {
     const store = new PooledMemoryBlockStore(BlockSize.Small);
     const db = new BrightDb(store, { name: 'disk-test', dataDir });
-    const coll = db.collection('user-roles');
+    const coll = db.collection('user_roles');
     coll.setSchema(TEST_COMPOUND_SCHEMA);
 
     await coll.insertOne({ _id: '1', userId: 'u1', roleId: 'r1' });

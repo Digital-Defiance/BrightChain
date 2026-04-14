@@ -17,6 +17,8 @@
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
     "paths": {
+      "@brightchain/brightchart-lib": ["brightchart-lib/src/index.ts"],
+      "@brightchain/brightchart-lib/*": ["brightchart-lib/src/*"],
       "@brightchain/brightchain-lib": ["brightchain-lib/src/index.ts"],
       "@brightchain/brightchain-lib/*": ["brightchain-lib/src/*"],
       "@brightchain/brightchain-inituserdb/*": ["brightchain-inituserdb/src/*"],
@@ -48,6 +50,9 @@
       "@brightchain/s3-store": ["brightchain-s3-store/src/index.ts"],
       "@brightchain/brightchain-react-components": [
         "brightchain-react-components/src/index.ts"
+      ],
+      "@brightchain/brightchart-react-components": [
+        "brightchart-react-components/src/index.ts"
       ],
       "@brightchain/node-express-suite": [
         "brightchain-node-express-suite/src/index.ts"

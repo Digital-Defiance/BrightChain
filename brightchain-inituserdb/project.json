@@ -29,7 +29,7 @@
           "outExtension": {
             ".js": ".js"
           },
-          "external": ["node-forge", "ursa-optional", "argon2"]
+          "external": ["node-forge", "ursa-optional", "argon2", "@root/*"]
         }
       },
       "configurations": {
@@ -40,7 +40,7 @@
             "outExtension": {
               ".js": ".js"
             },
-            "external": ["node-forge", "ursa-optional", "argon2"]
+            "external": ["node-forge", "ursa-optional", "argon2", "@root/*"]
           }
         }
       }

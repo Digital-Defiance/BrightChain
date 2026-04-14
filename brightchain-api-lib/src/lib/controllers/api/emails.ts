@@ -330,7 +330,9 @@ export class EmailController<
    * Falls back to memberId if email is not available (e.g. in test mocks).
    */
   private getUserEmail(req: unknown): string {
-    const user = (req as { user?: { id?: string; email?: string } }).user;
+    const user = (
+      req as { user?: { id?: string; email?: string; username?: string } }
+    ).user;
     if (!user) throw new Error('No authenticated user');
 
     // If the id itself is an email address, use it directly (test mock pattern)
@@ -338,7 +340,15 @@ export class EmailController<
       return user.id;
     }
 
-    // In production, use the email from the full IRequestUserDTO
+    // Construct the BrightMail address from username + domain.
+    // The user's registration email (user.email) may differ from their
+    // BrightMail address (username@brightchain.org). Messages are stored
+    // with the BrightMail address, so inbox queries must use it too.
+    if (typeof user.username === 'string' && user.username.length > 0) {
+      return `${user.username}@${this.emailDomain}`;
+    }
+
+    // Fallback to registration email
     if (typeof user.email === 'string' && user.email.length > 0) {
       return user.email;
     }

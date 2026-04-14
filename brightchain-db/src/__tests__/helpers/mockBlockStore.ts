@@ -101,8 +101,13 @@ export class MockBlockStore implements IBlockStore {
   get supportedBlockSizes(): any {
     return [];
   }
-  async getData(): Promise<any> {
-    throw new Error('not implemented');
+  async getData(key: any): Promise<any> {
+    const k = String(key);
+    const data = this.blocks.get(k);
+    if (!data) {
+      throw new Error(`Block not found: ${k}`);
+    }
+    return { data, fullData: data, idChecksum: key };
   }
   async setData(): Promise<void> {
     throw new Error('not implemented');

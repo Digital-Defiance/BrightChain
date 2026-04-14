@@ -29,8 +29,10 @@ import { PlatformID } from '@digitaldefiance/ecies-lib';
  */
 export interface IWriteProof<TID extends PlatformID = Uint8Array> {
   signerPublicKey: TID;
-  signature: Uint8Array; // ECDSA signature over (dbName + ":" + collectionName + ":" + blockId)
+  signature: Uint8Array; // ECDSA signature over (dbName + ":" + collectionName + ":" + blockId + ":" + nonce)
   dbName: string;
   collectionName: string;
   blockId: string;
+  /** Monotonic nonce for replay protection. Included in the signature payload. */
+  nonce: number;
 }

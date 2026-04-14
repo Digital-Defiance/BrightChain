@@ -175,7 +175,11 @@ export class BrightHubWebSocketHandler {
     session: WsSession,
     message: unknown,
   ): Promise<void> {
-    const msg = message as { room?: string; conversationId?: string; hubId?: string };
+    const msg = message as {
+      room?: string;
+      conversationId?: string;
+      hubId?: string;
+    };
     if (msg.conversationId) {
       const ok = await this.deps.isParticipant(
         msg.conversationId,
@@ -279,7 +283,11 @@ export class BrightHubWebSocketHandler {
   /**
    * Broadcast a new post to all subscribers of the hub(s) it belongs to.
    */
-  broadcastNewHubPost(post: { _id: string; hubIds?: string[]; authorId: string }): void {
+  broadcastNewHubPost(post: {
+    _id: string;
+    hubIds?: string[];
+    authorId: string;
+  }): void {
     if (!post.hubIds || post.hubIds.length === 0) return;
     for (const hid of post.hubIds) {
       this.bridge.broadcastToRoom(hubRoom(hid), {

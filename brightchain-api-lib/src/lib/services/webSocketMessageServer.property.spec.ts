@@ -17,7 +17,7 @@ describe('WebSocketMessageServer - Property Tests', () => {
   beforeEach(async () => {
     port = 8766 + Math.floor(Math.random() * 1000);
     httpServer = createServer();
-    wsServer = new WebSocketMessageServer(httpServer);
+    wsServer = new WebSocketMessageServer(httpServer, false);
     await new Promise<void>((resolve) => httpServer.listen(port, resolve));
   });
 

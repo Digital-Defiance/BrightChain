@@ -1,8 +1,15 @@
+import { faComment } from '@awesome.me/kit-a20d532681/icons/chisel/regular';
 import {
-  faComment,
+  faBookMedical,
+  faCheckToSlot,
+} from '@awesome.me/kit-a20d532681/icons/classic/regular';
+import {
   faDatabase,
+  faEnvelope,
   faIdBadge,
+  faLock,
 } from '@awesome.me/kit-a20d532681/icons/classic/solid';
+
 import { faCircleNodes } from '@awesome.me/kit-a20d532681/icons/classic/thin';
 import { BirdbagLogo } from '@brightchain/digitalburnbag-react-components';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -27,21 +34,24 @@ interface Feature {
   projectUrl?: string;
 }
 
-import brightChatImg from '../assets/images/brightchat.svg';
+import { BrightChainSubLogo } from '@brightchain/brightchain-react-components';
+import birdbagImg from '../assets/images/birdbag-logo-blue.png';
 import brightDBPoolsImg from '../assets/images/brightdb-pools-blue.svg';
-import brightDBImg from '../assets/images/brightdb.svg';
-import brightHubImg from '../assets/images/brighthub.svg';
-import brightIdImg from '../assets/images/brightid.svg';
-import brightMailImg from '../assets/images/brightmail.svg';
-import brightPassImg from '../assets/images/brightpass.svg';
-import brgihtVoteImg from '../assets/images/brightvote.svg';
-import digitalBurnbagImg from '../assets/images/digitalburnbag-blue.svg';
 
 const getFeatures = (
   t: (key: ShowcaseStringKey, params?: Record<string, string>) => string,
 ): Feature[] => [
   {
-    logo: <img src={digitalBurnbagImg} height="40" width="240" />,
+    logo: (
+      <BrightChainSubLogo
+        leadText="Digital"
+        subText="Burnbag"
+        altText={t(ShowcaseStrings.FAQ_DigitalBurnbag_Logo_Alt)}
+        height={40}
+        iconHeight={35}
+        customIcon={<img src={birdbagImg} height={35} />}
+      />
+    ),
     icon: <BirdbagLogo height={24} />,
     description: t(ShowcaseStrings.Feat_Burnbag_Desc),
     tech: [
@@ -66,7 +76,15 @@ const getFeatures = (
     ],
   },
   {
-    logo: <img src={brightDBImg} height="40" width="187" />,
+    logo: (
+      <BrightChainSubLogo
+        subText="DB"
+        altText={t(ShowcaseStrings.FAQ_BrightDB_Logo_Alt)}
+        height={40}
+        iconHeight={35}
+        icon={faDatabase}
+      />
+    ),
     icon: <FontAwesomeIcon icon={faDatabase} />,
     description: t(ShowcaseStrings.Feat_BrightDB_Desc),
     tech: [
@@ -113,6 +131,39 @@ const getFeatures = (
     ],
   },
   {
+    logo: (
+      <BrightChainSubLogo
+        subText="Chart"
+        icon={faBookMedical}
+        altText={t(ShowcaseStrings.FAQ_BrightChart_Logo_Alt)}
+        height={40}
+        iconHeight={35}
+      />
+    ),
+    icon: <FontAwesomeIcon icon={faBookMedical} />,
+    description: t(ShowcaseStrings.Feat_BrightChart_Desc),
+    tech: [
+      t(ShowcaseStrings.Feat_BrightChart_Tech1),
+      t(ShowcaseStrings.Feat_BrightChart_Tech2),
+      t(ShowcaseStrings.Feat_BrightChart_Tech3),
+    ],
+    category: t(ShowcaseStrings.Feat_BrightChart_Cat) as Feature['category'],
+    highlights: [
+      t(ShowcaseStrings.Feat_BrightChart_HL1),
+      t(ShowcaseStrings.Feat_BrightChart_HL2),
+      t(ShowcaseStrings.Feat_BrightChart_HL3),
+      t(ShowcaseStrings.Feat_BrightChart_HL4),
+      t(ShowcaseStrings.Feat_BrightChart_HL5),
+      t(ShowcaseStrings.Feat_BrightChart_HL6),
+      t(ShowcaseStrings.Feat_BrightChart_HL7),
+      t(ShowcaseStrings.Feat_BrightChart_HL8),
+      t(ShowcaseStrings.Feat_BrightChart_HL9),
+      t(ShowcaseStrings.Feat_BrightChart_HL10),
+      t(ShowcaseStrings.Feat_BrightChart_HL11),
+      t(ShowcaseStrings.Feat_BrightChart_HL12),
+    ],
+  },
+  {
     title: t(ShowcaseStrings.Feat_OFFS_Title),
     icon: '🗄️',
     description: t(ShowcaseStrings.Feat_OFFS_Desc),
@@ -152,7 +203,15 @@ const getFeatures = (
     ],
   },
   {
-    logo: <img src={brightMailImg} height="40" width="187" />,
+    logo: (
+      <BrightChainSubLogo
+        subText="Mail"
+        icon={faEnvelope}
+        altText={t(ShowcaseStrings.FAQ_BrightMail_Logo_Alt)}
+        height={40}
+        iconHeight={35}
+      />
+    ),
     icon: '📧',
     description: t(ShowcaseStrings.Feat_BrightMail_Desc),
     tech: [
@@ -175,7 +234,15 @@ const getFeatures = (
     ],
   },
   {
-    logo: <img src={brightChatImg} height="40" width="187" />,
+    logo: (
+      <BrightChainSubLogo
+        subText="Chat"
+        icon={faComment}
+        altText={t(ShowcaseStrings.FAQ_BrightChat_Logo_Alt)}
+        height={40}
+        iconHeight={35}
+      />
+    ),
     icon: <FontAwesomeIcon icon={faComment} />,
     description: t(ShowcaseStrings.Feat_BrightChat_Desc),
     tech: [
@@ -198,7 +265,15 @@ const getFeatures = (
     ],
   },
   {
-    logo: <img src={brightPassImg} height="40" width="187" />,
+    logo: (
+      <BrightChainSubLogo
+        subText="Pass"
+        icon={faLock}
+        altText={t(ShowcaseStrings.FAQ_BrightPass_Logo_Alt)}
+        height={40}
+        iconHeight={35}
+      />
+    ),
     icon: '🔑',
     description: t(ShowcaseStrings.Feat_BrightPass_Desc),
     tech: [
@@ -222,7 +297,15 @@ const getFeatures = (
     ],
   },
   {
-    logo: <img src={brgihtVoteImg} height="40" width="187" />,
+    logo: (
+      <BrightChainSubLogo
+        subText="Vote"
+        icon={faCheckToSlot}
+        altText={t(ShowcaseStrings.FAQ_BrightVote_Logo_Alt)}
+        height={40}
+        iconHeight={35}
+      />
+    ),
     icon: '🗳️',
     description: t(ShowcaseStrings.Feat_BrightVote_Desc),
     tech: [
@@ -244,7 +327,15 @@ const getFeatures = (
     ],
   },
   {
-    logo: <img src={brightHubImg} height="40" width="187" />,
+    logo: (
+      <BrightChainSubLogo
+        subText="Hub"
+        icon={faCircleNodes}
+        altText={t(ShowcaseStrings.FAQ_BrightHub_Logo_Alt)}
+        height={40}
+        iconHeight={35}
+      />
+    ),
     icon: <FontAwesomeIcon icon={faCircleNodes} />,
     description: t(ShowcaseStrings.Feat_BrightHub_Desc),
     tech: [
@@ -346,7 +437,15 @@ const getFeatures = (
     ],
   },
   {
-    logo: <img src={brightIdImg} height="40" width="187" />,
+    logo: (
+      <BrightChainSubLogo
+        subText="ID"
+        icon={faIdBadge}
+        altText={t(ShowcaseStrings.FAQ_BrightID_Logo_Alt)}
+        height={40}
+        iconHeight={35}
+      />
+    ),
     icon: <FontAwesomeIcon icon={faIdBadge} />,
     description: t(ShowcaseStrings.Feat_BrightID_Desc),
     tech: [

@@ -15,6 +15,7 @@ export {
   type IEmailInput as IValidatorEmailInput,
 } from './emailValidator';
 export * from './gossipRetryService';
+export * from './gpgKeyManager';
 export * from './inMemoryEmailMetadataStore';
 export * from './messageCBLService';
 export * from './messageEncryptionService';
@@ -27,3 +28,5 @@ export {
 } from './messageLogger';
 export * from './messageMetrics';
 export * from './recipientKeyManager';
+export * from './recipientKeyResolver';
+export * from './smimeCertificateManager';

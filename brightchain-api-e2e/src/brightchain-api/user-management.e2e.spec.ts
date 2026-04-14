@@ -48,6 +48,48 @@ async function registerUser(prefix = 'user') {
   }
 }
 
+/**
+ * Verify a user's email by fetching the captured verification email
+ * from the FakeEmailService test router and calling the verify-email endpoint.
+ */
+async function verifyUserEmail(email: string): Promise<void> {
+  // Fetch captured emails from the test email router
+  const emailRes = await axios.get(
+    `/api/test/emails/${encodeURIComponent(email)}`,
+  );
+  const emails = emailRes.data as Array<{
+    to: string;
+    subject: string;
+    text: string;
+    html: string;
+  }>;
+  expect(emails.length).toBeGreaterThan(0);
+
+  // Extract the verification token from the latest email
+  const latestEmail = emails[emails.length - 1];
+  const tokenMatch = latestEmail.html.match(
+    /verify-email\?token=([A-Fa-f0-9]+)/i,
+  );
+  expect(tokenMatch).not.toBeNull();
+  const verificationToken = tokenMatch![1];
+
+  // Call the verify-email endpoint
+  const verifyRes = await axios.post('/api/user/verify-email', {
+    token: verificationToken,
+  });
+  expect(verifyRes.status).toBe(200);
+}
+
+/**
+ * Register a user and immediately verify their email.
+ * Convenience wrapper for tests that need a fully-active user.
+ */
+async function registerAndVerifyUser(prefix = 'user') {
+  const result = await registerUser(prefix);
+  await verifyUserEmail(result.creds.email);
+  return result;
+}
+
 /** Create an axios config with Bearer auth header. */
 function authHeader(token: string) {
   return { headers: { Authorization: `Bearer ${token}` } };
@@ -106,8 +148,24 @@ describe('User Management E2E', () => {
 
   // 12.3 — Login e2e test
   describe('POST /api/user/login', () => {
-    it('should login with registered credentials and return 200 with token', async () => {
-      const { creds } = await registerUser('login');
+    it('should reject login for unverified email with 403', async () => {
+      const { creds } = await registerUser('loginunverified');
+
+      try {
+        await axios.post('/api/user/login', {
+          username: creds.username,
+          password: creds.password,
+        });
+        throw new Error('Expected login to fail for unverified email');
+      } catch (err) {
+        const error = err as AxiosError<{ message: string; error: string }>;
+        expect(error.response?.status).toBe(403);
+        expect(error.response?.data?.error).toBe('Email not verified');
+      }
+    });
+
+    it('should login with registered credentials after email verification and return 200 with token', async () => {
+      const { creds } = await registerAndVerifyUser('login');
 
       const res = await axios.post('/api/user/login', {
         username: creds.username,
@@ -141,7 +199,7 @@ describe('User Management E2E', () => {
   // 12.5 — Password change e2e test
   describe('POST /api/user/change-password', () => {
     it('should change password, reject old password login, accept new password login', async () => {
-      const { creds, token } = await registerUser('pwchange');
+      const { creds, token } = await registerAndVerifyUser('pwchange');
       const newPassword = 'NewSecure!Pass99';
 
       // Change password
@@ -276,7 +334,7 @@ describe('User Management E2E', () => {
   // 12.8 — Mnemonic recovery e2e test
   describe('POST /api/user/recover', () => {
     it('should recover account with mnemonic and allow login with new password', async () => {
-      const reg = await registerUser('recover');
+      const reg = await registerAndVerifyUser('recover');
 
       // The register response may or may not include a mnemonic.
       // If the mnemonic is not returned in the registration response,

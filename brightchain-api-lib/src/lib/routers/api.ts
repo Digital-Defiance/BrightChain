@@ -64,6 +64,7 @@ import {
   IntrospectionController,
   IntrospectionControllerConfig,
 } from '../controllers/api/introspection';
+import { KeyStoreController } from '../controllers/api/keyStore';
 import { MessagesController } from '../controllers/api/messages';
 import { NodesController } from '../controllers/api/nodes';
 import { SCBLController } from '../controllers/api/scbl';
@@ -76,6 +77,7 @@ import { EventNotificationSystem } from '../services/eventNotificationSystem';
 import { MessagePassingService } from '../services/messagePassingService';
 import { SESEmailService } from '../services/sesEmail';
 import { DefaultBackendIdType } from '../shared-types';
+import { BrightChartRouter } from './brightchart';
 
 /**
  * Router for the API.
@@ -103,6 +105,7 @@ export class ApiRouter<
   private readonly groupController: GroupController<TID>;
   private readonly healthController: HealthController<TID>;
   private readonly i18nController: I18nController<TID>;
+  private readonly keyStoreController: KeyStoreController<TID>;
   private readonly messagesController: MessagesController<TID>;
   private readonly nodesController: NodesController<TID>;
   private readonly brightTrustController: BrightTrustController<TID>;
@@ -122,6 +125,7 @@ export class ApiRouter<
   private readonly adminChatController: AdminChatController<TID>;
   private readonly adminPassController: AdminPassController<TID>;
   private readonly adminMailController: AdminMailController<TID>;
+  private readonly brightchartRouter: BrightChartRouter<TID>;
   private introspectionController: IntrospectionController<TID> | null = null;
   private readonly brightchainApplication: IBrightChainApplication<TID>;
   private readonly emailService: SESEmailService<TID>;
@@ -156,6 +160,7 @@ export class ApiRouter<
     this.groupController = new GroupController(application);
     this.healthController = new HealthController(application);
     this.i18nController = new I18nController(application);
+    this.keyStoreController = new KeyStoreController(application);
     this.messagesController = new MessagesController(application);
     this.nodesController = new NodesController(application);
     this.brightTrustController = new BrightTrustController(application);
@@ -186,6 +191,9 @@ export class ApiRouter<
     this.adminPassController = new AdminPassController(application);
     this.adminMailController = new AdminMailController(application);
 
+    // BrightChart router
+    this.brightchartRouter = new BrightChartRouter(application);
+
     if (
       application.environment.enabledFeatures.some(
         (f) => f === BrightChainFeatures.BrightPass,
@@ -211,6 +219,7 @@ export class ApiRouter<
       )
     ) {
       this.router.use('/emails', this.emailController.router);
+      this.router.use('/keys', this.keyStoreController.router);
     }
     if (
       application.environment.enabledFeatures.some(
@@ -228,6 +237,13 @@ export class ApiRouter<
       );
       this.router.use('/brighthub', this.brightHubConnectionController.router);
       this.router.use('/brighthub', this.brightHubTimelineController.router);
+    }
+    if (
+      application.environment.enabledFeatures.some(
+        (f) => f === BrightChainFeatures.BrightChart,
+      )
+    ) {
+      this.router.use('/brightchart', this.brightchartRouter.router);
     }
 
     this.router.use('/docs', this.docsController.router);

@@ -72,6 +72,8 @@ jest.mock('@brightchain/brightchain-lib', () => ({
     { get: (_target: unknown, prop: string) => `BrightChain:${String(prop)}` },
   ),
   registerI18nComponentPackage: jest.fn(),
+  createTranslations: <T,>(translations: T) => translations,
+  EnumLanguageTranslation: {},
   ISuiteCoreConstants: {},
   BrightChainFeatures: {
     BrightChat: 'BrightChat',
@@ -110,6 +112,10 @@ jest.mock('@brightchain/brightchain-lib', () => ({
     translate: jest.fn((key: string) => key),
     setLanguage: jest.fn(),
     getLanguage: jest.fn(() => 'en'),
+    registerEnum: jest.fn(() => ({})),
+    translateEnum: jest.fn((_enumType: unknown, value: unknown) =>
+      String(value),
+    ),
   },
   ChecksumService: jest.fn().mockImplementation(() => ({
     calculateChecksum: jest.fn(),

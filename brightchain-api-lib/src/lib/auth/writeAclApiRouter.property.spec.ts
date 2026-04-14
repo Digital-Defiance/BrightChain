@@ -71,8 +71,16 @@ const mockBlockStore = {} as IBlockStore;
 
 /** Compute the ACL mutation payload hash matching WriteAclManager's private method. */
 function computeAclMutationPayload(aclDoc: IAclDocument): Uint8Array {
+  const writersHex = aclDoc.authorizedWriters
+    .map((w) => Buffer.from(w).toString('hex'))
+    .sort()
+    .join(',');
+  const adminsHex = aclDoc.aclAdministrators
+    .map((a) => Buffer.from(a).toString('hex'))
+    .sort()
+    .join(',');
   const collName = aclDoc.scope.collectionName ?? '';
-  const message = `acl:${aclDoc.scope.dbName}:${collName}:${aclDoc.version}:${aclDoc.writeMode}`;
+  const message = `acl:${aclDoc.scope.dbName}:${collName}:${aclDoc.version}:${aclDoc.writeMode}:writers=${writersHex}:admins=${adminsHex}`;
   const encoded = new TextEncoder().encode(message);
   return sha256(encoded);
 }

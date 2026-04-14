@@ -11,6 +11,7 @@ import {
   IBaseReadReceipt,
   ICreateGroupOptions,
   IMessagingService,
+  INotificationService,
   IPaginatedResult,
   IPaginationOptions,
   ISendMessageOptions,
@@ -24,9 +25,8 @@ import {
   MessageRequestStatus,
   MessagingErrorCode,
   MessagingServiceError,
-  TYPING_INDICATOR_TIMEOUT_MS,
-  INotificationService,
   NotificationType,
+  TYPING_INDICATOR_TIMEOUT_MS,
 } from '@brightchain/brighthub-lib';
 import { randomUUID } from 'crypto';
 import { getTextFormatter } from './textFormatter';

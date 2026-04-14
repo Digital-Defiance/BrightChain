@@ -156,8 +156,7 @@ export class PostService implements IPostService {
     this.likesCollection = application.getModel<LikeRecord>('brighthub_likes');
     this.repostsCollection =
       application.getModel<RepostRecord>('brighthub_reposts');
-    this.votesCollection =
-      application.getModel<VoteRecord>('brighthub_votes');
+    this.votesCollection = application.getModel<VoteRecord>('brighthub_votes');
   }
 
   /**
@@ -741,10 +740,10 @@ export class PostService implements IPostService {
       }
       // Was a downvote — switch to upvote
       await this.votesCollection
-        .updateOne(
-          { _id: existingVote._id },
-          { voteType: 'up', createdAt: now } as Partial<VoteRecord>,
-        )
+        .updateOne({ _id: existingVote._id }, {
+          voteType: 'up',
+          createdAt: now,
+        } as Partial<VoteRecord>)
         .exec();
 
       // Adjust counts: remove downvote, add upvote
@@ -754,7 +753,10 @@ export class PostService implements IPostService {
           {
             upvoteCount: (post.upvoteCount || 0) + 1,
             downvoteCount: Math.max(0, (post.downvoteCount || 0) - 1),
-            score: (post.upvoteCount || 0) + 1 - Math.max(0, (post.downvoteCount || 0) - 1),
+            score:
+              (post.upvoteCount || 0) +
+              1 -
+              Math.max(0, (post.downvoteCount || 0) - 1),
             updatedAt: now,
           },
         )
@@ -782,7 +784,9 @@ export class PostService implements IPostService {
     }
 
     // Update hub reputation for the post author
-    this.updateHubReputation(post.authorId, post.hubIds, 'upvote').catch(() => {});
+    this.updateHubReputation(post.authorId, post.hubIds, 'upvote').catch(
+      () => {},
+    );
   }
 
   /**
@@ -810,10 +814,10 @@ export class PostService implements IPostService {
       }
       // Was an upvote — switch to downvote
       await this.votesCollection
-        .updateOne(
-          { _id: existingVote._id },
-          { voteType: 'down', createdAt: now } as Partial<VoteRecord>,
-        )
+        .updateOne({ _id: existingVote._id }, {
+          voteType: 'down',
+          createdAt: now,
+        } as Partial<VoteRecord>)
         .exec();
 
       // Adjust counts: remove upvote, add downvote
@@ -823,7 +827,9 @@ export class PostService implements IPostService {
           {
             upvoteCount: Math.max(0, (post.upvoteCount || 0) - 1),
             downvoteCount: (post.downvoteCount || 0) + 1,
-            score: Math.max(0, (post.upvoteCount || 0) - 1) - ((post.downvoteCount || 0) + 1),
+            score:
+              Math.max(0, (post.upvoteCount || 0) - 1) -
+              ((post.downvoteCount || 0) + 1),
             updatedAt: now,
           },
         )

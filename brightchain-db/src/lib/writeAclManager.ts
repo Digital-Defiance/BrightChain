@@ -210,9 +210,23 @@ export class WriteAclManager implements IWriteAclService {
   /**
    * Verify a write proof against the active ACL.
    *
-   * 1. Compute the expected payload: SHA-256(dbName + ":" + collectionName + ":" + blockId)
+   * 1. Compute the expected payload: SHA-256(dbName + ":" + collectionName + ":" + blockId + ":" + nonce)
    * 2. Verify the ECDSA signature using the authenticator
    * 3. Check that the signer's public key is in the authorized writers list
+   *
+   * ## Nonce Replay Protection — Design Decision
+   *
+   * This method does NOT maintain a seen-nonce set. Replay protection is provided
+   * by the content-addressed blockId: each write produces a new block with a unique
+   * blockId (derived from the block's content hash), so replaying a proof from a
+   * previous write against a different block fails because the blockId in the signed
+   * payload won't match the new block's ID.
+   *
+   * The nonce's purpose is **signature uniqueness**, not replay prevention. In the
+   * unlikely case where two writes target the same blockId (e.g., identical content),
+   * the nonce ensures the signed payloads differ, producing distinct ECDSA signatures.
+   * Without the nonce, identical (dbName, collectionName, blockId) tuples would yield
+   * identical signatures, which could be confusing for audit trails and debugging.
    *
    * @see Requirements 3.2, 3.3
    */
@@ -222,8 +236,17 @@ export class WriteAclManager implements IWriteAclService {
     collectionName: string,
     blockId: string,
   ): Promise<boolean> {
-    // Compute the expected payload
-    const payload = createWriteProofPayload(dbName, collectionName, blockId);
+    // Replay protection comes from block-specific binding: blockId is content-addressed,
+    // so each write produces a different blockId. A replayed proof for a previous write
+    // will fail verification because the blockId in the signed payload won't match.
+    // The nonce ensures signature uniqueness when two writes happen to target the same
+    // block (preventing identical ECDSA signatures for identical payloads).
+    const payload = createWriteProofPayload(
+      dbName,
+      collectionName,
+      blockId,
+      proof.nonce,
+    );
 
     // Verify the ECDSA signature
     const signatureValid = await this.authenticator.verifySignature(
@@ -910,11 +933,21 @@ export class WriteAclManager implements IWriteAclService {
 
   /**
    * Create a payload for ACL mutation signature verification.
-   * Uses SHA-256 of the ACL document's scope + version + writeMode.
+   * SECURITY: Uses SHA-256 of the full ACL content including writers and admins lists.
+   * This prevents an attacker from modifying the writers list without invalidating
+   * the admin signature.
    */
   private createAclMutationPayload(aclDoc: IAclDocument): Uint8Array {
+    const writersHex = aclDoc.authorizedWriters
+      .map((w) => Buffer.from(w).toString('hex'))
+      .sort()
+      .join(',');
+    const adminsHex = aclDoc.aclAdministrators
+      .map((a) => Buffer.from(a).toString('hex'))
+      .sort()
+      .join(',');
     const collName = aclDoc.scope.collectionName ?? '';
-    const message = `acl:${aclDoc.scope.dbName}:${collName}:${aclDoc.version}:${aclDoc.writeMode}`;
+    const message = `acl:${aclDoc.scope.dbName}:${collName}:${aclDoc.version}:${aclDoc.writeMode}:writers=${writersHex}:admins=${adminsHex}`;
     const encoded = new TextEncoder().encode(message);
     return sha256(encoded);
   }

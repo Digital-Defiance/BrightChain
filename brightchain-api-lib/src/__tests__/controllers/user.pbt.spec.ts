@@ -50,7 +50,19 @@ function createIsolatedAuthService(): AuthService {
     ready: true,
     services: {},
     plugins: {},
-    db: { connection: { readyState: 1 } },
+    db: {
+      connection: { readyState: 1 },
+      collection: () => ({
+        create: async () => {
+          /* noop */
+        },
+        updateOne: async () => {
+          /* noop */
+        },
+        findOne: async () => null,
+      }),
+      withTransaction: undefined,
+    },
     getModel: () => {
       throw new Error('not implemented');
     },
@@ -356,7 +368,19 @@ describe('Property 8: Profile retrieval completeness', () => {
       ready: true,
       services: {},
       plugins: {},
-      db: { connection: { readyState: 1 } },
+      db: {
+        connection: { readyState: 1 },
+        collection: () => ({
+          create: async () => {
+            /* noop */
+          },
+          updateOne: async () => {
+            /* noop */
+          },
+          findOne: async () => null,
+        }),
+        withTransaction: undefined,
+      },
       getModel: () => {
         throw new Error('not implemented');
       },
@@ -615,7 +639,19 @@ describe('Property 9: Profile settings update persistence round-trip', () => {
       ready: true,
       services: {},
       plugins: {},
-      db: { connection: { readyState: 1 } },
+      db: {
+        connection: { readyState: 1 },
+        collection: () => ({
+          create: async () => {
+            /* noop */
+          },
+          updateOne: async () => {
+            /* noop */
+          },
+          findOne: async () => null,
+        }),
+        withTransaction: undefined,
+      },
       getModel: () => {
         throw new Error('not implemented');
       },

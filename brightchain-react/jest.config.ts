@@ -2,6 +2,9 @@ export default {
   displayName: 'brightchain-react',
   preset: '../jest.preset.js',
   setupFiles: ['<rootDir>/src/test-setup.ts'],
+  globals: {
+    __PACKAGE_VERSIONS__: { brightchain: '0.0.0-test' },
+  },
   transform: {
     '^(?!.*\\.(js|jsx|ts|tsx|css|json)$)': '@nx/react/plugins/jest',
     '^.+\\.[tj]sx?$': ['babel-jest', { presets: ['@nx/react/babel'] }],

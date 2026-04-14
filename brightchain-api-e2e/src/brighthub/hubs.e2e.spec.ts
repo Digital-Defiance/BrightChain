@@ -127,7 +127,7 @@ describe('BrightHub Hubs API — Hub CRUD', () => {
 describe('BrightHub Hubs API — Join/Leave', () => {
   let owner: { token: string; memberId: string };
   let joiner: { token: string; memberId: string };
-  let hubId: string;
+  let _hubId: string;
   let hubSlug: string;
 
   beforeAll(async () => {
@@ -137,10 +137,15 @@ describe('BrightHub Hubs API — Join/Leave', () => {
     const slug = `join-hub-${Date.now()}`;
     const res = await axios.post(
       HUBS_BASE,
-      { ownerId: owner.memberId, name: 'Join Test Hub', slug, trustTier: 'open' },
+      {
+        ownerId: owner.memberId,
+        name: 'Join Test Hub',
+        slug,
+        trustTier: 'open',
+      },
       authHeader(owner.token),
     );
-    hubId = res.data.data._id;
+    _hubId = res.data.data._id;
     hubSlug = slug;
   });
 
@@ -273,7 +278,12 @@ describe('BrightHub Hubs API — Hub Feed', () => {
     const slug = `feed-hub-${Date.now()}`;
     const hubRes = await axios.post(
       HUBS_BASE,
-      { ownerId: owner.memberId, name: 'Feed Test Hub', slug, trustTier: 'open' },
+      {
+        ownerId: owner.memberId,
+        name: 'Feed Test Hub',
+        slug,
+        trustTier: 'open',
+      },
       authHeader(owner.token),
     );
     hubId = hubRes.data.data._id;
@@ -357,7 +367,12 @@ describe('BrightHub Hubs API — Moderators', () => {
     const slug = `mod-hub-${Date.now()}`;
     const res = await axios.post(
       HUBS_BASE,
-      { ownerId: owner.memberId, name: 'Mod Test Hub', slug, trustTier: 'open' },
+      {
+        ownerId: owner.memberId,
+        name: 'Mod Test Hub',
+        slug,
+        trustTier: 'open',
+      },
       authHeader(owner.token),
     );
     hubId = res.data.data._id;
@@ -408,7 +423,12 @@ describe('BrightHub Hubs API — Ban and Transfer', () => {
     const slug = `ban-hub-${Date.now()}`;
     const res = await axios.post(
       HUBS_BASE,
-      { ownerId: owner.memberId, name: 'Ban Test Hub', slug, trustTier: 'open' },
+      {
+        ownerId: owner.memberId,
+        name: 'Ban Test Hub',
+        slug,
+        trustTier: 'open',
+      },
       authHeader(owner.token),
     );
     hubId = res.data.data._id;
@@ -565,7 +585,11 @@ describe('BrightHub Hubs API — Post Voting', () => {
 
     const postRes = await axios.post(
       POSTS_BASE,
-      { authorId: user.memberId, content: 'Vote on this post', hubIds: [hubId] },
+      {
+        authorId: user.memberId,
+        content: 'Vote on this post',
+        hubIds: [hubId],
+      },
       authHeader(user.token),
     );
     postId = postRes.data.data._id;

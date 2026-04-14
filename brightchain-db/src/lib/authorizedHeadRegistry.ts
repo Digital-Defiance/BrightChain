@@ -7,6 +7,10 @@
  * - Restricted_Mode: verifies Write_Proof against active Write_ACL
  * - Owner_Only_Mode: verifies Write_Proof is from the creator
  *
+ * When a localSigner is configured, local writes (those without an explicit
+ * writeProof) are auto-signed. Remote writes (gossip head updates) must
+ * provide their own writeProof which is verified against the ACL.
+ *
  * Read operations pass through unchanged.
  *
  * @see BrightDB Write ACLs design, AuthorizedHeadRegistry section
@@ -27,13 +31,74 @@ import {
   WriteMode,
 } from '@brightchain/brightchain-lib';
 
+/**
+ * Local signer configuration for auto-signing writes.
+ * When provided, the AuthorizedHeadRegistry will automatically produce
+ * write proofs for local writes that don't include an explicit proof.
+ */
+export interface ILocalSigner {
+  /** The local node's ECDSA public key (used as signer identity) */
+  publicKey: Uint8Array;
+  /** The local node's ECDSA private key (used to sign write proofs) */
+  privateKey: Uint8Array;
+}
+
 export class AuthorizedHeadRegistry implements IHeadRegistry {
+  private localSigner?: ILocalSigner;
+  private onWriteCallback?: (
+    operation: string,
+    collectionName: string,
+    documentId: string,
+    headBlockId?: string,
+  ) => void | Promise<void>;
+  /** Monotonic nonce counter for write proof replay protection */
+  private nonceCounter = 0;
+
   constructor(
     private readonly inner: IHeadRegistry,
     private readonly aclService: IWriteAclService,
     private readonly authenticator: INodeAuthenticator,
     private readonly auditLogger?: IWriteAclAuditLogger,
   ) {}
+
+  /**
+   * Configure a local signer for auto-signing writes.
+   * When set, local writes (without an explicit writeProof) are automatically
+   * signed with this key pair. This avoids threading write proofs through
+   * every Collection/Model method.
+   *
+   * Remote writes (gossip head updates) must still provide their own writeProof.
+   */
+  setLocalSigner(signer: ILocalSigner): void {
+    // Copy key bytes so the caller can safely zero their source arrays
+    // without invalidating the signer used for auto-signing local writes.
+    this.localSigner = {
+      publicKey: new Uint8Array(signer.publicKey),
+      privateKey: new Uint8Array(signer.privateKey),
+    };
+  }
+
+  /**
+   * Check if a local signer is configured.
+   */
+  hasLocalSigner(): boolean {
+    return !!this.localSigner;
+  }
+
+  /**
+   * Set a callback to be invoked after each successful write.
+   * Used by the audit ledger to record writes without modifying Collection internals.
+   */
+  setOnWriteCallback(
+    callback: (
+      operation: string,
+      collectionName: string,
+      documentId: string,
+      headBlockId?: string,
+    ) => void | Promise<void>,
+  ): void {
+    this.onWriteCallback = callback;
+  }
 
   // ─── Read operations: pass through ───────────────────────────────
 
@@ -59,6 +124,15 @@ export class AuthorizedHeadRegistry implements IHeadRegistry {
   ): Promise<void> {
     await this.authorizeWrite(dbName, collectionName, blockId, writeProof);
     await this.inner.setHead(dbName, collectionName, blockId);
+
+    // Fire onWrite callback if registered (for audit ledger integration)
+    if (this.onWriteCallback) {
+      try {
+        await this.onWriteCallback('insert', collectionName, blockId, blockId);
+      } catch {
+        // Don't let ledger errors block writes
+      }
+    }
   }
 
   async removeHead(
@@ -124,6 +198,8 @@ export class AuthorizedHeadRegistry implements IHeadRegistry {
 
   /**
    * Check write authorization based on the effective write mode.
+   * If no writeProof is provided but a localSigner is configured,
+   * auto-produces a write proof for the local node.
    * Throws WriteAuthorizationError on failure.
    */
   private async authorizeWrite(
@@ -140,24 +216,54 @@ export class AuthorizedHeadRegistry implements IHeadRegistry {
         this.logAuthorized(writeProof, dbName, collectionName, blockId);
         return;
 
-      case WriteMode.Restricted:
-        await this.authorizeRestricted(
-          dbName,
-          collectionName,
-          blockId,
-          writeProof,
-        );
+      case WriteMode.Restricted: {
+        // Auto-sign if no proof provided and local signer is available
+        const proof =
+          writeProof ?? (await this.autoSign(dbName, collectionName, blockId));
+        await this.authorizeRestricted(dbName, collectionName, blockId, proof);
         return;
+      }
 
-      case WriteMode.OwnerOnly:
-        await this.authorizeOwnerOnly(
-          dbName,
-          collectionName,
-          blockId,
-          writeProof,
-        );
+      case WriteMode.OwnerOnly: {
+        const proof =
+          writeProof ?? (await this.autoSign(dbName, collectionName, blockId));
+        await this.authorizeOwnerOnly(dbName, collectionName, blockId, proof);
         return;
+      }
     }
+  }
+
+  /**
+   * Auto-produce a write proof using the local signer.
+   * Returns undefined if no local signer is configured.
+   */
+  private async autoSign(
+    dbName: string,
+    collectionName: string,
+    blockId: string,
+  ): Promise<IWriteProof | undefined> {
+    if (!this.localSigner) {
+      return undefined;
+    }
+    const nonce = ++this.nonceCounter;
+    const payload = createWriteProofPayload(
+      dbName,
+      collectionName,
+      blockId,
+      nonce,
+    );
+    const signature = await this.authenticator.signChallenge(
+      payload,
+      this.localSigner.privateKey,
+    );
+    return {
+      signerPublicKey: this.localSigner.publicKey,
+      signature,
+      dbName,
+      collectionName,
+      blockId,
+      nonce,
+    };
   }
 
   private async authorizeRestricted(
@@ -235,7 +341,12 @@ export class AuthorizedHeadRegistry implements IHeadRegistry {
     const signerHex = Buffer.from(writeProof.signerPublicKey).toString('hex');
 
     // Verify the signature is valid
-    const payload = createWriteProofPayload(dbName, collectionName, blockId);
+    const payload = createWriteProofPayload(
+      dbName,
+      collectionName,
+      blockId,
+      writeProof.nonce,
+    );
     const signatureValid = await this.authenticator.verifySignature(
       payload,
       writeProof.signature,

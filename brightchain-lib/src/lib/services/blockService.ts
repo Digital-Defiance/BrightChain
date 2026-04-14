@@ -94,13 +94,39 @@ export class BlockService<TID extends PlatformID = Uint8Array> {
   }
 
   /**
-   * Get the appropriate block size for a given data length
+   * Get the appropriate block size for a given data length.
+   *
+   * @param dataLength - The number of bytes that must fit in the block.
+   * @param supportedSizes - Optional list of block sizes to choose from
+   *   (e.g. from a block store's `supportedBlockSizes`). When provided,
+   *   only sizes in this list are considered. When omitted, all standard
+   *   sizes are eligible (original behaviour).
+   * @returns The smallest qualifying BlockSize, or BlockSize.Unknown if
+   *   no size is large enough.
    */
-  public getBlockSizeForData(dataLength: number): BlockSize {
+  public getBlockSizeForData(
+    dataLength: number,
+    supportedSizes?: readonly BlockSize[],
+  ): BlockSize {
     if (dataLength < 0) {
       return BlockSize.Unknown;
     }
 
+    // When a supported-sizes filter is provided, iterate in ascending order
+    // and return the first size that fits.
+    if (supportedSizes && supportedSizes.length > 0) {
+      const sorted = [...supportedSizes].sort(
+        (a, b) => (a as number) - (b as number),
+      );
+      for (const size of sorted) {
+        if (size !== BlockSize.Unknown && (size as number) >= dataLength) {
+          return size;
+        }
+      }
+      return BlockSize.Unknown;
+    }
+
+    // Original hard-coded ladder (no filter)
     if (dataLength >= BlockSize.Huge) {
       return BlockSize.Unknown;
     }

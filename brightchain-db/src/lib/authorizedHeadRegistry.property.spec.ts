@@ -70,8 +70,16 @@ const mockBlockStore = {} as IBlockStore;
 
 /** Compute the ACL mutation payload hash matching WriteAclManager's private method. */
 function computeAclMutationPayload(aclDoc: IAclDocument): Uint8Array {
+  const writersHex = aclDoc.authorizedWriters
+    .map((w) => Buffer.from(w).toString('hex'))
+    .sort()
+    .join(',');
+  const adminsHex = aclDoc.aclAdministrators
+    .map((a) => Buffer.from(a).toString('hex'))
+    .sort()
+    .join(',');
   const collName = aclDoc.scope.collectionName ?? '';
-  const message = `acl:${aclDoc.scope.dbName}:${collName}:${aclDoc.version}:${aclDoc.writeMode}`;
+  const message = `acl:${aclDoc.scope.dbName}:${collName}:${aclDoc.version}:${aclDoc.writeMode}:writers=${writersHex}:admins=${adminsHex}`;
   const encoded = new TextEncoder().encode(message);
   return sha256(encoded);
 }
@@ -113,7 +121,7 @@ function makeValidWriteProof(
   collectionName: string,
   blockId: string,
 ): IWriteProof {
-  const payload = createWriteProofPayload(dbName, collectionName, blockId);
+  const payload = createWriteProofPayload(dbName, collectionName, blockId, 1);
   const sig = new Uint8Array(64);
   sig[0] = payload[0]; // MockAuthenticator accepts when sig[0] === payload[0]
   return {
@@ -122,6 +130,7 @@ function makeValidWriteProof(
     dbName,
     collectionName,
     blockId,
+    nonce: 1,
   };
 }
 
@@ -132,7 +141,7 @@ function makeInvalidWriteProof(
   collectionName: string,
   blockId: string,
 ): IWriteProof {
-  const payload = createWriteProofPayload(dbName, collectionName, blockId);
+  const payload = createWriteProofPayload(dbName, collectionName, blockId, 1);
   const sig = new Uint8Array(64);
   sig[0] = (payload[0] + 1) % 256; // MockAuthenticator rejects
   return {
@@ -141,6 +150,7 @@ function makeInvalidWriteProof(
     dbName,
     collectionName,
     blockId,
+    nonce: 1,
   };
 }
 

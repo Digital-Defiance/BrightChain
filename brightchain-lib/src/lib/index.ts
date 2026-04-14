@@ -233,6 +233,48 @@ export * from './stores/energyAccountStore';
 export * from './stores/energyLedger';
 
 // ============================================================================
+// Blockchain Ledger
+// ============================================================================
+/**
+ * General-purpose append-only blockchain ledger with Merkle proofs,
+ * governance, and role-based access control.
+ */
+export type { IAuthorizedSigner } from './interfaces/ledger/authorizedSigner';
+export { QuorumType } from './interfaces/ledger/brightTrustPolicy';
+export type { IBrightTrustPolicy } from './interfaces/ledger/brightTrustPolicy';
+export type { IConsistencyProof } from './interfaces/ledger/consistencyProof';
+export { GovernanceActionType } from './interfaces/ledger/governanceAction';
+export type { IGovernanceAction } from './interfaces/ledger/governanceAction';
+export type { IGovernancePayload } from './interfaces/ledger/governancePayload';
+export type { ILedgerEntry } from './interfaces/ledger/ledgerEntry';
+export type { ILedgerMetadata } from './interfaces/ledger/ledgerMetadata';
+export type { ILedgerSignatureVerifier } from './interfaces/ledger/ledgerSignatureVerifier';
+export type { ILedgerSigner } from './interfaces/ledger/ledgerSigner';
+export { MerkleDirection } from './interfaces/ledger/merkleProof';
+export type {
+  IMerkleProof,
+  IMerkleProofStep,
+} from './interfaces/ledger/merkleProof';
+export type { IProofVerificationResult } from './interfaces/ledger/proofVerificationResult';
+export { SignerRole } from './interfaces/ledger/signerRole';
+export { SignerStatus } from './interfaces/ledger/signerStatus';
+export type {
+  ILedgerValidationError,
+  IValidationResult,
+  LedgerValidationErrorType,
+} from './interfaces/ledger/validationResult';
+export { AuthorizedSignerSet } from './ledger/authorizedSignerSet';
+export { EciesSignatureVerifier } from './ledger/eciesSignatureVerifier';
+export { GovernancePayloadSerializer } from './ledger/governancePayloadSerializer';
+export type { IGenesisPayloadData } from './ledger/governancePayloadSerializer';
+export { IncrementalMerkleTree } from './ledger/incrementalMerkleTree';
+export { Ledger } from './ledger/ledger';
+export { LedgerChainValidator } from './ledger/ledgerChainValidator';
+export { LedgerEntrySerializer } from './ledger/ledgerEntrySerializer';
+export { MemberSignerAdapter } from './ledger/memberSignerAdapter';
+export { ProofSerializer } from './ledger/proofSerializer';
+
+// ============================================================================
 // Database Engine (platform-agnostic core)
 // ============================================================================
 /**

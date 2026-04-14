@@ -30,7 +30,7 @@ const CAPS_MIN_LENGTH = 20;
 /** Maximum number of URLs allowed in a single post */
 const MAX_URLS = 5;
 /** Threshold for repetitive character detection */
-const REPETITIVE_CHAR_THRESHOLD = 10;
+const _REPETITIVE_CHAR_THRESHOLD = 10;
 
 /**
  * Check content against auto-moderation rules.
@@ -81,9 +81,7 @@ export function moderateContent(
   }
 
   // Banned patterns → reject; other issues → flag for review
-  const hasBannedPattern = reasons.some((r) =>
-    r.includes('banned pattern'),
-  );
+  const hasBannedPattern = reasons.some((r) => r.includes('banned pattern'));
   return {
     decision: hasBannedPattern ? 'reject' : 'flag',
     reasons,

@@ -31,6 +31,7 @@ import {
 import { readFileSync } from 'fs';
 import { hostname } from 'os';
 import { join } from 'path';
+import { SchemaCollection } from '../../enumerations/schema-collection';
 import { IBrightChainApplication } from '../../interfaces/application';
 import { IAdminDashboardApiResponse } from '../../interfaces/responses';
 import { DefaultBackendIdType } from '../../shared-types';
@@ -426,8 +427,8 @@ export class DashboardController<
         };
       }
 
-      const usersCollection = brightDb.collection('users');
-      const rolesCollection = brightDb.collection('roles');
+      const usersCollection = brightDb.collection(SchemaCollection.User);
+      const rolesCollection = brightDb.collection(SchemaCollection.Role);
 
       const [usersCount, rolesCount] = await Promise.all([
         usersCollection.countDocuments(),

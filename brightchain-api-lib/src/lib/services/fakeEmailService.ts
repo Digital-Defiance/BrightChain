@@ -134,4 +134,18 @@ export class FakeEmailService implements IEmailService {
 
     return null;
   }
+
+  /**
+   * Extracts a verification token from an email body.
+   * Looks for the token in verify-email links (e.g. /verify-email?token=XXXX).
+   * @param emailBody - The email HTML or plain text content to parse
+   * @returns The extracted token string, or null if no token found
+   */
+  public extractVerificationToken(emailBody: string): string | null {
+    const tokenMatch = emailBody.match(/verify-email\?token=([A-Fa-f0-9]+)/i);
+    if (tokenMatch) {
+      return tokenMatch[1];
+    }
+    return null;
+  }
 }

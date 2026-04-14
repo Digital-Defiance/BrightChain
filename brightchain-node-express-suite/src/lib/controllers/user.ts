@@ -46,6 +46,7 @@ import {
 } from '@digitaldefiance/suite-core-lib';
 import { randomBytes } from 'crypto';
 import type { NextFunction, Request, Response } from 'express';
+import { SchemaCollection } from '../enumerations/schema-collection';
 import type { IBrightDbApplication } from '../interfaces/bright-db-application';
 import {
   IApiLoginResponse,
@@ -191,6 +192,146 @@ export class BrightDbUserController<
     // No-op in base class
   }
 
+  /**
+   * POST /verify-email — Verify a user's email address using a token
+   * sent during registration.
+   */
+  @Post('/verify-email')
+  async verifyEmail(
+    req: Request,
+    _res: Response,
+    _next: NextFunction,
+  ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> {
+    const { token } = req.body as { token?: string };
+
+    if (!token) {
+      return {
+        statusCode: 400,
+        response: {
+          message: getSuiteCoreTranslation(
+            SuiteCoreStringKey.NoVerificationTokenProvided,
+          ),
+        },
+      };
+    }
+
+    try {
+      const authService =
+        this.application.services.get<BrightDbAuthService<TID>>('auth');
+      await authService.verifyEmailToken(token);
+
+      return {
+        statusCode: 200,
+        response: {
+          message: getSuiteCoreTranslation(
+            SuiteCoreStringKey.EmailVerification_Success,
+          ),
+        },
+      };
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : getSuiteCoreTranslation(
+              SuiteCoreStringKey.EmailVerification_Failed,
+            );
+      return {
+        statusCode: 400,
+        response: {
+          message: errorMessage,
+          error: errorMessage,
+        },
+      };
+    }
+  }
+
+  /**
+   * POST /resend-verification — Resend the email verification link.
+   * Requires the user's email address in the request body.
+   */
+  @Post('/resend-verification')
+  async resendVerification(
+    req: Request,
+    _res: Response,
+    _next: NextFunction,
+  ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> {
+    const { email } = req.body as { email?: string };
+
+    if (!email) {
+      return {
+        statusCode: 400,
+        response: {
+          message: getSuiteCoreTranslation(
+            SuiteCoreStringKey.Validation_InvalidEmail,
+          ),
+        },
+      };
+    }
+
+    try {
+      const authService =
+        this.application.services.get<BrightDbAuthService<TID>>('auth');
+
+      // Look up user by email
+      const usersCol = this.application.db.collection<{
+        _id?: string;
+        email?: string;
+        username?: string;
+        emailVerified?: boolean;
+        accountStatus?: string;
+      }>(SchemaCollection.User);
+
+      const userDoc = await usersCol.findOne({ email } as never);
+      if (!userDoc) {
+        // Don't reveal whether the email exists — always return success
+        return {
+          statusCode: 200,
+          response: {
+            message: getSuiteCoreTranslation(
+              SuiteCoreStringKey.EmailVerification_Resent,
+            ),
+          },
+        };
+      }
+
+      if (userDoc.emailVerified) {
+        return {
+          statusCode: 200,
+          response: {
+            message: getSuiteCoreTranslation(
+              SuiteCoreStringKey.EmailVerification_AlreadyVerified,
+            ),
+          },
+        };
+      }
+
+      // Generate a new token and send the email
+      const memberId = userDoc._id!;
+      const username = userDoc.username ?? 'User';
+      await authService.resendVerificationEmail(memberId, email, username);
+
+      return {
+        statusCode: 200,
+        response: {
+          message: getSuiteCoreTranslation(
+            SuiteCoreStringKey.EmailVerification_Resent,
+          ),
+        },
+      };
+    } catch (error) {
+      console.error('[UserController] resendVerification failed:', error);
+      return {
+        statusCode: 200,
+        response: {
+          // Always return success to avoid email enumeration
+          message: getSuiteCoreTranslation(
+            SuiteCoreStringKey.EmailVerification_Resent,
+          ),
+        },
+      };
+    }
+  }
+
   @Post('/login')
   async login(
     req: Request,
@@ -233,7 +374,19 @@ export class BrightDbUserController<
           data: authResponse,
         } as IAuthApiResponse,
       };
-    } catch {
+    } catch (error) {
+      // Provide a specific message for unverified email addresses
+      if (error instanceof Error && error.message === 'Email not verified') {
+        return {
+          statusCode: 403,
+          response: {
+            message: getSuiteCoreTranslation(
+              SuiteCoreStringKey.Validation_EmailNotVerified,
+            ),
+            error: 'Email not verified',
+          },
+        };
+      }
       return {
         statusCode: 401,
         response: {
@@ -981,14 +1134,14 @@ export class BrightDbUserController<
           if (Object.keys(updateFields).length > 0) {
             // Update the main users collection so buildRequestUserDTO
             // returns the latest settings on subsequent verify calls.
-            const usersCol = db.collection('users');
+            const usersCol = db.collection(SchemaCollection.User);
             await usersCol.updateOne(
               { _id: idHex } as never,
               { $set: updateFields } as never,
             );
 
             // Also persist to user_settings for dedicated settings queries.
-            const settingsCol = db.collection('user_settings');
+            const settingsCol = db.collection(SchemaCollection.UserSettings);
             await settingsCol.updateOne(
               { _id: idHex } as never,
               { $set: updateFields } as never,

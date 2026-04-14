@@ -12,8 +12,8 @@
 
 import { BlockSize, MemoryBlockStore } from '@brightchain/brightchain-lib';
 import { setTextSearchFields } from '@brightchain/db';
-import { DocumentCollection, DocumentRecord } from './document-store';
 import { BlockDocumentStore } from './block-document-store';
+import { DocumentCollection, DocumentRecord } from './document-store';
 import { MemoryDocumentStore } from './memory-document-store';
 
 interface TestUser extends DocumentRecord {
@@ -171,9 +171,7 @@ function queryOperatorTests(
   });
 
   it('$regex with string pattern', async () => {
-    const results = await col
-      .find({ email: { $regex: 'mod@' } } as any)
-      .exec();
+    const results = await col.find({ email: { $regex: 'mod@' } } as any).exec();
     expect(results).toHaveLength(1);
     expect(results[0].username).toBe('moderator');
   });
@@ -189,9 +187,7 @@ function queryOperatorTests(
   // ── $exists ─────────────────────────────────────────────────────
 
   it('$exists: true matches docs where field is present', async () => {
-    const results = await col
-      .find({ score: { $exists: true } } as any)
-      .exec();
+    const results = await col.find({ score: { $exists: true } } as any).exec();
     expect(results).toHaveLength(3);
     expect(results.map((r) => r.username).sort()).toEqual([
       'admin',
@@ -201,9 +197,7 @@ function queryOperatorTests(
   });
 
   it('$exists: false matches docs where field is absent', async () => {
-    const results = await col
-      .find({ score: { $exists: false } } as any)
-      .exec();
+    const results = await col.find({ score: { $exists: false } } as any).exec();
     expect(results).toHaveLength(1);
     expect(results[0].username).toBe('guest');
   });
@@ -273,9 +267,7 @@ function queryOperatorTests(
     // $elemMatch is designed for arrays of sub-documents.
     // For primitive arrays, use $in or direct value matching instead.
     // Here we test that tags array contains 'staff' using $in.
-    const results = await col
-      .find({ tags: { $in: ['staff'] } } as any)
-      .exec();
+    const results = await col.find({ tags: { $in: ['staff'] } } as any).exec();
     expect(results).toHaveLength(2);
     expect(results.map((r) => r.username).sort()).toEqual([
       'admin',
@@ -307,9 +299,7 @@ function queryOperatorTests(
   // ── $type ───────────────────────────────────────────────────────
 
   it('$type matches fields of specified type', async () => {
-    const results = await col
-      .find({ age: { $type: 'number' } } as any)
-      .exec();
+    const results = await col.find({ age: { $type: 'number' } } as any).exec();
     expect(results).toHaveLength(4);
   });
 
@@ -348,11 +338,7 @@ function queryOperatorTests(
   it('$and + comparison operators combined', async () => {
     const results = await col
       .find({
-        $and: [
-          { age: { $gte: 25 } },
-          { age: { $lte: 32 } },
-          { active: true },
-        ],
+        $and: [{ age: { $gte: 25 } }, { age: { $lte: 32 } }, { active: true }],
       } as any)
       .exec();
     expect(results).toHaveLength(2);

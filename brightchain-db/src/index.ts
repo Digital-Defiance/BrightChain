@@ -57,7 +57,10 @@ export {
 export type { HeadRegistryOptions } from './lib/headRegistry';
 
 // Authorized head registry (Write ACL enforcement)
-export { AuthorizedHeadRegistry } from './lib/authorizedHeadRegistry';
+export {
+  AuthorizedHeadRegistry,
+  type ILocalSigner,
+} from './lib/authorizedHeadRegistry';
 
 // Write ACL management
 export { WriteAclManager } from './lib/writeAclManager';

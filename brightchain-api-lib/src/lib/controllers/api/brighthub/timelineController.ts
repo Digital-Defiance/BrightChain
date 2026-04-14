@@ -302,7 +302,12 @@ export class BrightHubTimelineController<
     if (query['listId']) options.listId = query['listId'];
     if (query['categoryId']) options.categoryId = query['categoryId'];
     if (query['excludeMuted'] === 'true') options.excludeMuted = true;
-    if (query['sort'] === 'hot' || query['sort'] === 'top' || query['sort'] === 'new' || query['sort'] === 'controversial')
+    if (
+      query['sort'] === 'hot' ||
+      query['sort'] === 'top' ||
+      query['sort'] === 'new' ||
+      query['sort'] === 'controversial'
+    )
       options.sort = query['sort'];
     if (
       query['topWindow'] === 'day' ||

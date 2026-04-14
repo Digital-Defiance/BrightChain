@@ -1,10 +1,10 @@
-import { StringsCollection } from '@digitaldefiance/i18n-lib';
+import { ComponentStrings } from '@digitaldefiance/i18n-lib';
 import {
   BrightChainStringKey,
   BrightChainStrings,
 } from '../../enumerations/brightChainStrings';
 
-export const MandarinStrings: StringsCollection<BrightChainStringKey> = {
+export const MandarinStrings: ComponentStrings<BrightChainStringKey> = {
   // BrightChain
   [BrightChainStrings.Common_Bright]: '明亮',
   [BrightChainStrings.Common_Chain]: '链',
@@ -1331,6 +1331,7 @@ export const MandarinStrings: StringsCollection<BrightChainStringKey> = {
   [BrightChainStrings.Admin_Menu_Hub]: 'Hub Admin',
   [BrightChainStrings.Admin_Menu_Mail]: 'Mail Admin',
   [BrightChainStrings.Admin_Menu_Pass]: 'Pass Admin',
+  [BrightChainStrings.Admin_Menu_About]: '关于',
   [BrightChainStrings.Admin_Common_Loading]: '加载中…',
   [BrightChainStrings.Admin_Common_Previous]: '上一页',
   [BrightChainStrings.Admin_Common_Next]: '下一页',
@@ -1476,4 +1477,15 @@ export const MandarinStrings: StringsCollection<BrightChainStringKey> = {
   [BrightChainStrings.Admin_Mail_DeleteEmailTitle]: '删除邮件',
   [BrightChainStrings.Admin_Mail_DeleteEmailConfirm]:
     '您确定要删除此邮件吗？此操作无法撤销。',
+
+  // About Page
+  [BrightChainStrings.About_Title]: '关于 BrightChain',
+  [BrightChainStrings.About_AccessDenied]: '访问被拒绝',
+  [BrightChainStrings.About_AccessDeniedDescription]:
+    '您必须是管理员才能查看此页面。',
+  [BrightChainStrings.About_MasterVersion]: 'BrightChain 版本',
+  [BrightChainStrings.About_BrightChainPackages]: 'BrightChain 包',
+  [BrightChainStrings.About_DigitalDefiancePackages]: 'Digital Defiance 包',
+  [BrightChainStrings.About_PackageName]: '包名',
+  [BrightChainStrings.About_Version]: '版本',
 };

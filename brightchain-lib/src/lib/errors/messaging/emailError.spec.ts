@@ -46,9 +46,9 @@ describe('EmailErrorType', () => {
     expect(EmailErrorType.SIGNATURE_INVALID).toBe('SIGNATURE_INVALID');
   });
 
-  it('should have exactly 23 error types', () => {
+  it('should have exactly 36 error types', () => {
     const values = Object.values(EmailErrorType);
-    expect(values).toHaveLength(23);
+    expect(values).toHaveLength(36);
   });
 
   it('should have unique values for all error types', () => {

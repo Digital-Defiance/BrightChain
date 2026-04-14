@@ -160,10 +160,9 @@ const AdminUserManagementPanel: FC = () => {
   const handleRoleConfirm = async () => {
     if (!roleConfirmUser || !roleConfirmTarget) return;
     try {
-      await authenticatedApi.put(
-        `/admin/users/${roleConfirmUser._id}/role`,
-        { role: roleConfirmTarget },
-      );
+      await authenticatedApi.put(`/admin/users/${roleConfirmUser._id}/role`, {
+        role: roleConfirmTarget,
+      });
       setRoleConfirmOpen(false);
       setRoleConfirmUser(null);
       setRoleConfirmTarget('');
@@ -192,16 +191,12 @@ const AdminUserManagementPanel: FC = () => {
   const handleDeleteConfirm = async () => {
     if (!deleteConfirmUser) return;
     try {
-      await authenticatedApi.delete(
-        `/admin/users/${deleteConfirmUser._id}`,
-      );
+      await authenticatedApi.delete(`/admin/users/${deleteConfirmUser._id}`);
       setDeleteConfirmOpen(false);
       setDeleteConfirmUser(null);
       fetchUsers();
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : 'Failed to delete user',
-      );
+      setError(err instanceof Error ? err.message : 'Failed to delete user');
       setDeleteConfirmOpen(false);
     }
   };
@@ -426,10 +421,7 @@ const AdminUserManagementPanel: FC = () => {
         </DialogActions>
       </Dialog>
 
-      <Dialog
-        open={roleConfirmOpen}
-        onClose={() => setRoleConfirmOpen(false)}
-      >
+      <Dialog open={roleConfirmOpen} onClose={() => setRoleConfirmOpen(false)}>
         <DialogTitle>
           {t(BrightChainStrings.Admin_Users_ChangeRoleTitle)}
         </DialogTitle>

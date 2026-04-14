@@ -429,4 +429,51 @@ describe('BrightChainMemberInitService — unit', () => {
       );
     });
   });
+
+  // ── 7.7: dispose() zeros private key material ─────────────────────────────
+
+  describe('dispose()', () => {
+    it('zeros _systemPrivateKey bytes and disables pool security', () => {
+      const service = makeService();
+
+      // Simulate pool security being enabled by setting internal fields
+      // via a controlled initialization path. We access private fields
+      // through bracket notation for testing purposes.
+      const fakePrivateKey = new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8]);
+      const fakePublicKey = new Uint8Array([10, 20, 30, 40]);
+      const fakeAuthenticator = {
+        signChallenge: jest.fn(),
+        verifySignature: jest.fn(),
+      };
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const svc = service as any;
+      svc._systemPrivateKey = fakePrivateKey;
+      svc._systemPublicKey = fakePublicKey;
+      svc._authenticator = fakeAuthenticator;
+
+      expect(service.isPoolSecurityEnabled).toBe(true);
+
+      service.dispose();
+
+      // Private key bytes should be zeroed
+      expect(fakePrivateKey.every((b) => b === 0)).toBe(true);
+      // Pool security should be disabled
+      expect(service.isPoolSecurityEnabled).toBe(false);
+    });
+
+    it('is safe to call dispose() multiple times', () => {
+      const service = makeService();
+      // Should not throw even when no keys are set
+      expect(() => service.dispose()).not.toThrow();
+      expect(() => service.dispose()).not.toThrow();
+    });
+
+    it('is safe to call dispose() when pool security was never enabled', () => {
+      const service = makeService();
+      expect(service.isPoolSecurityEnabled).toBe(false);
+      expect(() => service.dispose()).not.toThrow();
+      expect(service.isPoolSecurityEnabled).toBe(false);
+    });
+  });
 });

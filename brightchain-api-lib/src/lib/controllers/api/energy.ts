@@ -94,11 +94,14 @@ export class EnergyController<
         } as IApiMessageResponse,
       };
     } catch (err: unknown) {
-      const errorMessage =
-        err instanceof Error ? err.message : String(err);
+      const errorMessage = err instanceof Error ? err.message : String(err);
       // StoreError carries a params object with detailed context
       const params = (err as { params?: Record<string, unknown> }).params;
-      console.error('[EnergyController] getBalance failed:', errorMessage, params ?? '');
+      console.error(
+        '[EnergyController] getBalance failed:',
+        errorMessage,
+        params ?? '',
+      );
       if (err instanceof Error && err.stack) {
         console.error(err.stack);
       }
@@ -167,12 +170,8 @@ export class EnergyController<
         } as IApiMessageResponse,
       };
     } catch (err: unknown) {
-      const errorMessage =
-        err instanceof Error ? err.message : String(err);
-      console.error(
-        '[EnergyController] getTransactions failed:',
-        errorMessage,
-      );
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      console.error('[EnergyController] getTransactions failed:', errorMessage);
       if (err instanceof Error && err.stack) {
         console.error(err.stack);
       }

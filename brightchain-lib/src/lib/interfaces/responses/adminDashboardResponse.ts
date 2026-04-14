@@ -141,6 +141,16 @@ export interface IAdminDashboardData {
   // Requirement 17: BrightMail stats
   mail: IAdminMailStats;
 
+  // Audit ledger (optional — present when pool security is enabled)
+  auditLedger?: {
+    /** Number of entries in the audit ledger */
+    length: number;
+    /** Current Merkle root (hex string, first 32 chars) */
+    merkleRoot: string | null;
+    /** Whether the chain was validated successfully on startup */
+    chainValid: boolean | null;
+  };
+
   // Metadata
   timestamp: string;
 }
