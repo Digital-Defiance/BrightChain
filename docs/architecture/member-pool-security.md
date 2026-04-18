@@ -140,7 +140,7 @@ For sensitive data (BrightPass, BrightMail, admin databases), pools use `Encrypt
 
 ## Related Documentation
 
-- [Block Chain Ledger](./blockchain-ledger.md) — Ledger architecture and Merkle proofs
-- [Docker Node Setup](../guides/docker-node-setup.md) — Production deployment
-- [Node Operator Guide](../guides/02-node-operator-guide.md) — Day-to-day operations
-- [Email Gateway Configuration](../messaging/email-gateway-configuration.md) — Email security
+- [Block Chain Ledger](./blockchain-ledger) — Ledger architecture and Merkle proofs
+- [Docker Node Setup](../guides/docker-node-setup) — Production deployment
+- [Node Operator Guide](../guides/02-node-operator-guide) — Day-to-day operations
+- [Email Gateway Configuration](../messaging/email-gateway-configuration) — Email security

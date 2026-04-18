@@ -7,6 +7,9 @@ url: https://github.brightchain.org
 
 remote_theme: just-the-docs/just-the-docs@v0.10.0
 
+# Use pretty permalinks to avoid .md in URLs
+permalink: pretty
+
 ga_tracking: G-N3M6QH8EFY
 
 # Aux links (top-right)

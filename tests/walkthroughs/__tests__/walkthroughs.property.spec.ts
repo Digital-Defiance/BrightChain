@@ -15,8 +15,8 @@ describe('Walkthroughs property-based tests', () => {
 import * as fs from 'fs';
 import * as path from 'path';
 
-// Updated path to walkthroughs markdown files in docs
-const walkthroughsDir = '/Volumes/Code/BrightChain/docs/walkthroughs';
+// Resolve walkthroughs directory relative to workspace root
+const walkthroughsDir = path.resolve(__dirname, '..', '..', '..', 'docs', 'walkthroughs');
 
 // ...existing code from original file, but with updated walkthroughsDir path...
 

@@ -871,6 +871,6 @@ Error responses:
 
 ## Related Documentation
 
-- [BrightPass Password Manager Architecture](../identity/brightpass-password-manager.md)
-- [Authentication API Reference](./authentication-api.md)
-- [Security Analysis](../guides/04-security-analysis.md)
+- [BrightPass Password Manager Architecture](../identity/brightpass-password-manager)
+- [Authentication API Reference](./authentication-api)
+- [Security Analysis](../guides/04-security-analysis)

@@ -1,8 +1,8 @@
 import * as fs from 'fs';
 import * as path from 'path';
 
-// Updated path to walkthroughs markdown files in docs
-const walkthroughsDir = '/Volumes/Code/BrightChain/docs/walkthroughs';
+// Resolve walkthroughs directory relative to workspace root
+const walkthroughsDir = path.resolve(__dirname, '..', '..', '..', 'docs', 'walkthroughs');
 
 function readGuide(filename: string): string {
   return fs.readFileSync(path.join(walkthroughsDir, filename), 'utf-8');

@@ -108,7 +108,7 @@ Launch the API server, which acts as the node process:
 npx nx serve brightchain-api
 ```
 
-> **For production deployments**, use Docker instead of running from source. See the [Docker Node Setup](../guides/docker-node-setup.md) guide.
+> **For production deployments**, use Docker instead of running from source. See the [Docker Node Setup](../guides/docker-node-setup) guide.
 
 You should see log output confirming the node is online:
 
@@ -268,7 +268,7 @@ On startup you will see confirmation of the port mapping:
 | `UPNP_RETRY_ATTEMPTS` | `3` | Retries on failure (1–10) |
 | `UPNP_RETRY_DELAY` | `5000` | Delay between retries in ms |
 
-If UPnP is not available on your network, the node still starts normally — you will need to configure manual port forwarding on your router. See the [UPnP Configuration guide](../UPnP_Configuration.md#manual-port-forwarding) for manual setup instructions.
+If UPnP is not available on your network, the node still starts normally — you will need to configure manual port forwarding on your router. See the [UPnP Configuration guide](../UPnP_Configuration#manual-port-forwarding) for manual setup instructions.
 
 ### Step 6: Perform a Graceful Shutdown
 
@@ -368,4 +368,4 @@ For more detailed troubleshooting, see the [Troubleshooting & FAQ](./06-troubles
 - [Storage Pools](./03-storage-pools) — Create and manage storage pools for data isolation.
 - [BrightDB Usage](./04-brightdb-usage) — Use the MongoDB-like document database API.
 - [Building a dApp](./05-building-a-dapp) — Build a full-stack decentralized application on BrightStack.
-- [Docker Node Setup](../guides/docker-node-setup.md) — Run a production node with Docker.
+- [Docker Node Setup](../guides/docker-node-setup) — Run a production node with Docker.

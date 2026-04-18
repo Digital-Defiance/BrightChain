@@ -177,5 +177,5 @@ For more detailed troubleshooting, see the [Troubleshooting & FAQ](./06-troubles
 
 - [Architecture Overview](./00-architecture-overview) — Understand how BrightChain's layers fit together.
 - [Node Setup](./02-node-setup) — Configure and start a BrightChain node.
-- [Docker Node Setup](../guides/docker-node-setup.md) — Run a production node with Docker.
+- [Docker Node Setup](../guides/docker-node-setup) — Run a production node with Docker.
 - [BrightDB Usage](./04-brightdb-usage) — Deep dive into the document database API.

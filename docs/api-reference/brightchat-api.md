@@ -1345,7 +1345,7 @@ All list endpoints use cursor-based pagination:
 
 ## Related Documentation
 
-- [Communication System Architecture](../messaging/communication-system-architecture.md)
-- [Messaging System Architecture](../messaging/messaging-system-architecture.md)
-- [Authentication API Reference](./authentication-api.md)
-- [Security Analysis](../guides/04-security-analysis.md)
+- [Communication System Architecture](../messaging/communication-system-architecture)
+- [Messaging System Architecture](../messaging/messaging-system-architecture)
+- [Authentication API Reference](./authentication-api)
+- [Security Analysis](../guides/04-security-analysis)

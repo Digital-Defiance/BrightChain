@@ -40,7 +40,7 @@ Most participants will be Level 1 or Level 3. That's by design. The network's va
 - 10 GB disk minimum (500 GB+ recommended for production)
 - A network connection (UPnP-capable router or manual port forwarding)
 
-> **Prefer Docker?** For production deployments, the [Docker Node Setup](./docker-node-setup.md) guide packages everything (Node.js, Postfix, DKIM) into a single `docker compose up` command.
+> **Prefer Docker?** For production deployments, the [Docker Node Setup](./docker-node-setup) guide packages everything (Node.js, Postfix, DKIM) into a single `docker compose up` command.
 
 ### What Happens When You Start
 
@@ -182,7 +182,7 @@ Adding a BrightTrust member triggers a full share redistribution across all seal
 - Participate in document reconstruction when the threshold is met
 - Run BrightTrust Nodes with the `BRIGHT_TRUST` capability enabled
 
-See the [BrightTrust Member/Operator Guide](./03-BrightTrust-member-guide.md) for the full details.
+See the [BrightTrust Member/Operator Guide](./03-BrightTrust-member-guide) for the full details.
 
 ## Quick Reference: Can I Do X Without Member Registration?
 
@@ -207,7 +207,7 @@ See the [BrightTrust Member/Operator Guide](./03-BrightTrust-member-guide.md) fo
 
 ## Next Steps
 
-- [Node Operator Guide](./02-node-operator-guide.md) — Day-to-day operations, monitoring, maintenance
-- [BrightTrust Member/Operator Guide](./03-BrightTrust-member-guide.md) — Governance, voting, sealed documents
+- [Node Operator Guide](./02-node-operator-guide) — Day-to-day operations, monitoring, maintenance
+- [BrightTrust Member/Operator Guide](./03-BrightTrust-member-guide) — Governance, voting, sealed documents
 - [Building a dApp](../walkthroughs/05-building-a-dapp) — Full-stack development on BrightStack
 - [Storage Pools](../walkthroughs/03-storage-pools) — Pool creation, encryption, cross-node coordination

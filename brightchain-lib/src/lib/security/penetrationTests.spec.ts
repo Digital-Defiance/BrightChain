@@ -14,14 +14,11 @@ describe('Security Penetration Tests', () => {
 
       const iterations = 50;
 
-      // Just verify both comparisons complete without error
+      // Verify correctness: equal arrays return true, different arrays return false
       for (let i = 0; i < iterations; i++) {
-        constantTimeEqual(a, bEqual);
-        constantTimeEqual(a, bDifferent);
+        expect(constantTimeEqual(a, bEqual)).toBe(true);
+        expect(constantTimeEqual(a, bDifferent)).toBe(false);
       }
-
-      // If we got here, constant-time operations are working
-      expect(true).toBe(true);
     });
   });
 

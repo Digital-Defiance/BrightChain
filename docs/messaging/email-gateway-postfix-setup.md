@@ -471,6 +471,6 @@ echo "virtual alice@brightchain.org" | nc 127.0.0.1 2526
 
 ## Related Documentation
 
-- [Test Mode Guide](./email-gateway-test-mode.md) — Local development and testing setup
-- [Email Gateway Configuration Guide](./email-gateway-configuration.md) — environment variables, enabling the gateway, tuning, and troubleshooting
-- [Email System Architecture](./email-system-architecture.md) — internal email system overview
+- [Test Mode Guide](./email-gateway-test-mode) — Local development and testing setup
+- [Email Gateway Configuration Guide](./email-gateway-configuration) — environment variables, enabling the gateway, tuning, and troubleshooting
+- [Email System Architecture](./email-system-architecture) — internal email system overview

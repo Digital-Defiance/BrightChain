@@ -3566,7 +3566,7 @@ All list endpoints use cursor-based pagination:
 
 ## Related Documentation
 
-- [Authentication API Reference](./authentication-api.md)
-- [BrightChat API Reference](./brightchat-api.md)
-- [BrightMail API Reference](./brightmail-api.md)
-- [BrightPass API Reference](./brightpass-api.md)
+- [Authentication API Reference](./authentication-api)
+- [BrightChat API Reference](./brightchat-api)
+- [BrightMail API Reference](./brightmail-api)
+- [BrightPass API Reference](./brightpass-api)

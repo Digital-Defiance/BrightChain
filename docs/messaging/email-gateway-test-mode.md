@@ -327,6 +327,6 @@ const config = createTestModeConfig();
 
 ## Related Documentation
 
-- [Email Gateway Configuration](./email-gateway-configuration.md) — Production configuration
-- [Postfix Setup Guide](./email-gateway-postfix-setup.md) — Production Postfix setup
-- [Email System Architecture](./email-system-architecture.md) — Internal email system overview
+- [Email Gateway Configuration](./email-gateway-configuration) — Production configuration
+- [Postfix Setup Guide](./email-gateway-postfix-setup) — Production Postfix setup
+- [Email System Architecture](./email-system-architecture) — Internal email system overview

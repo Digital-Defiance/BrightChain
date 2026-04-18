@@ -237,6 +237,6 @@ Key things to watch:
 
 ## Next Steps
 
-- [How to Join BrightChain](./01-how-to-join-brightchain.md) — Overview of all participation levels
-- [Node Operator Guide](./02-node-operator-guide.md) — Day-to-day node operations
-- [Security Analysis](./04-security-analysis.md) — Adversarial analysis of BrightChain's trust model
+- [How to Join BrightChain](./01-how-to-join-brightchain) — Overview of all participation levels
+- [Node Operator Guide](./02-node-operator-guide) — Day-to-day node operations
+- [Security Analysis](./04-security-analysis) — Adversarial analysis of BrightChain's trust model

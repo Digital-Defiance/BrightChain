@@ -7,7 +7,7 @@ permalink: /identity/authentication-flows/
 
 # Authentication Flows
 
-This document describes the end-to-end authentication flows in BrightChain from both the browser (React) and API (Express) perspectives. For the raw HTTP endpoint reference, see [Authentication API Reference](../api-reference/authentication-api.md).
+This document describes the end-to-end authentication flows in BrightChain from both the browser (React) and API (Express) perspectives. For the raw HTTP endpoint reference, see [Authentication API Reference](../api-reference/authentication-api).
 
 ## System Overview
 
@@ -441,7 +441,7 @@ brightchain-react/src/
 
 ## Related Documentation
 
-- [Authentication API Reference](../api-reference/authentication-api.md)
-- [Security Analysis](../guides/04-security-analysis.md)
-- [Email Gateway Configuration](../messaging/email-gateway-configuration.md)
-- [BrightPass Password Manager](../identity/brightpass-password-manager.md)
+- [Authentication API Reference](../api-reference/authentication-api)
+- [Security Analysis](../guides/04-security-analysis)
+- [Email Gateway Configuration](../messaging/email-gateway-configuration)
+- [BrightPass Password Manager](../identity/brightpass-password-manager)

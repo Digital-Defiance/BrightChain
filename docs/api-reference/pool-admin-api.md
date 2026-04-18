@@ -95,5 +95,5 @@ Node admission uses three gossip announcement types:
 
 ## Related
 
-- [Member Pool Security Architecture](../architecture/member-pool-security.md)
-- [Node Operator Guide](../guides/02-node-operator-guide.md)
+- [Member Pool Security Architecture](../architecture/member-pool-security)
+- [Node Operator Guide](../guides/02-node-operator-guide)

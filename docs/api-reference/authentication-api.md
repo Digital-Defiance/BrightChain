@@ -784,9 +784,9 @@ Block-size vectors (for verifying block hashing at various sizes):
 ### Related Documentation
 
 For deeper coverage of specific cryptographic subsystems:
-- [Keybase-Inspired Features Architecture](../identity/keybase-features-architecture.md) — device provisioning, identity proofs, Ethereum wallet derivation, git signing
-- [Security Analysis](../guides/04-security-analysis.md) — threat model and adversarial review
-- [BrightPass Password Manager](../identity/brightpass-password-manager.md) — vault encryption model, Shamir's Secret Sharing for emergency access
+- [Keybase-Inspired Features Architecture](../identity/keybase-features-architecture) — device provisioning, identity proofs, Ethereum wallet derivation, git signing
+- [Security Analysis](../guides/04-security-analysis) — threat model and adversarial review
+- [BrightPass Password Manager](../identity/brightpass-password-manager) — vault encryption model, Shamir's Secret Sharing for emergency access
 
 ---
 
@@ -852,6 +852,6 @@ Some validation errors include an `errors` array with per-field details. Errors 
 
 ## Related Documentation
 
-- [Authentication Flows (Browser + API)](../identity/authentication-flows.md)
-- [Security Analysis](../guides/04-security-analysis.md)
-- [BrightPass Password Manager](../identity/brightpass-password-manager.md)
+- [Authentication Flows (Browser + API)](../identity/authentication-flows)
+- [Security Analysis](../guides/04-security-analysis)
+- [BrightPass Password Manager](../identity/brightpass-password-manager)

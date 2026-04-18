@@ -81,7 +81,7 @@ const nodeConfig = {
 npx nx serve brightchain-api
 ```
 
-> **Production deployment?** For production nodes, consider using Docker — see the [Docker Node Setup](../guides/docker-node-setup.md) guide.
+> **Production deployment?** For production nodes, consider using Docker — see the [Docker Node Setup](../guides/docker-node-setup) guide.
 
 Your node will:
 1. Contact bootstrap nodes and announce itself
@@ -89,7 +89,7 @@ Your node will:
 3. Receive a list of known peers
 4. Begin exchanging Bloom filters for block discovery
 5. Start participating in gossip (block announcements, pool announcements)
-6. Join the main `BrightChain` pool automatically (read access is immediate; write access requires node admission — see [Member Pool Security](../architecture/member-pool-security.md))
+6. Join the main `BrightChain` pool automatically (read access is immediate; write access requires node admission — see [Member Pool Security](../architecture/member-pool-security))
 
 ### 4. Verify Connectivity
 
@@ -319,8 +319,8 @@ The network will prioritize replicating all your blocks before your node goes of
 
 ## Next Steps
 
-- [How to Join BrightChain](./01-how-to-join-brightchain.md) — Overview of all participation levels
-- [Docker Node Setup](./docker-node-setup.md) — Run a production node with Docker
-- [BrightTrust Member/Operator Guide](./03-BrightTrust-member-guide.md) — If you're interested in governance
+- [How to Join BrightChain](./01-how-to-join-brightchain) — Overview of all participation levels
+- [Docker Node Setup](./docker-node-setup) — Run a production node with Docker
+- [BrightTrust Member/Operator Guide](./03-BrightTrust-member-guide) — If you're interested in governance
 - [Storage Pools](../walkthroughs/03-storage-pools) — Deep dive into pool management
 - [Building a dApp](../walkthroughs/05-building-a-dapp) — Build applications on BrightStack

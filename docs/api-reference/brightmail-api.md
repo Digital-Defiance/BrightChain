@@ -519,6 +519,6 @@ Error responses:
 
 ## Related Documentation
 
-- [Email System Architecture](../messaging/email-system-architecture.md)
-- [Messaging System Architecture](../messaging/messaging-system-architecture.md)
-- [Authentication API Reference](./authentication-api.md)
+- [Email System Architecture](../messaging/email-system-architecture)
+- [Messaging System Architecture](../messaging/messaging-system-architecture)
+- [Authentication API Reference](./authentication-api)

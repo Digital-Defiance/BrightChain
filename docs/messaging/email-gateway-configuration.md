@@ -7,7 +7,7 @@ nav_order: 7
 
 This guide covers how to enable, configure, and operate the BrightChain Email Gateway. The gateway bridges BrightChain's internal gossip-based messaging with external SMTP email via Postfix.
 
-For Postfix installation and OS-level setup, see the [Postfix Setup Guide](./email-gateway-postfix-setup.md). For the internal email system architecture, see [Email System Architecture](./email-system-architecture.md).
+For Postfix installation and OS-level setup, see the [Postfix Setup Guide](./email-gateway-postfix-setup). For the internal email system architecture, see [Email System Architecture](./email-system-architecture).
 
 ## Architecture Overview
 
@@ -131,7 +131,7 @@ export GATEWAY_SPAM_ENGINE=spamassassin
 
 ### 2. Ensure Postfix Is Configured
 
-Follow the [Postfix Setup Guide](./email-gateway-postfix-setup.md) to configure Postfix with:
+Follow the [Postfix Setup Guide](./email-gateway-postfix-setup) to configure Postfix with:
 - Socketmap recipient validation pointing to `127.0.0.1:2526`
 - Mail Drop Directory transport
 - DKIM and anti-spam milters
@@ -262,7 +262,7 @@ Set `GATEWAY_SPAM_ENGINE` to either `spamassassin` or `rspamd`.
 - **SpamAssassin**: Communicates via the spamc TCP protocol (default port 783)
 - **Rspamd**: Communicates via HTTP API (default port 11333)
 
-Both engines run as separate daemons. See the [Postfix Setup Guide](./email-gateway-postfix-setup.md#7-anti-spam-integration) for installation instructions.
+Both engines run as separate daemons. See the [Postfix Setup Guide](./email-gateway-postfix-setup#7-anti-spam-integration) for installation instructions.
 
 ## Outbound Queue Tuning
 
@@ -422,7 +422,7 @@ This propagates the new domain to all registered components:
 
 ## Related Documentation
 
-- [Test Mode Guide](./email-gateway-test-mode.md) — Local development and testing setup
-- [Postfix Setup Guide](./email-gateway-postfix-setup.md) — OS-level Postfix installation and configuration
-- [Email System Architecture](./email-system-architecture.md) — internal email system overview
-- [Communication System Architecture](./communication-system-architecture.md) — direct messages, groups, channels
+- [Test Mode Guide](./email-gateway-test-mode) — Local development and testing setup
+- [Postfix Setup Guide](./email-gateway-postfix-setup) — OS-level Postfix installation and configuration
+- [Email System Architecture](./email-system-architecture) — internal email system overview
+- [Communication System Architecture](./communication-system-architecture) — direct messages, groups, channels

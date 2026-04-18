@@ -4,342 +4,161 @@
  * **Feature: visual-brightchain-demo, Property 14: Authentic BrightChain Integration**
  * **Validates: Requirements 8.1, 8.2, 8.3, 8.4, 8.5**
  *
- * This test suite verifies that for any file processing operation, the animation engine
- * uses the actual BrightChain library for all operations and displays real data
- * (checksums, block data, error messages) from the library.
- *
- * Note: These tests verify integration patterns and data structures without requiring
- * full ECIES initialization, focusing on the correctness of library usage.
+ * Verifies that the showcase demo uses the actual BrightChain library for
+ * block operations, checksums, and magnet URLs — not fake/simulated data.
  */
 
-import { describe, expect, it } from 'vitest';
+import {
+  BlockSize,
+  ChecksumService,
+  MemoryBlockStore,
+  RawDataBlock,
+  ServiceLocator,
+} from '@brightchain/brightchain-lib';
+import fc from 'fast-check';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 describe('AuthenticBrightChainIntegration Property Tests', () => {
+  let checksumService: ChecksumService;
+
+  beforeAll(() => {
+    checksumService = new ChecksumService();
+    // Ensure ServiceLocator has a checksum service for store operations
+    try {
+      ServiceLocator.getServiceProvider();
+    } catch {
+      ServiceLocator.setServiceProvider({
+        checksumService,
+      } as unknown as ReturnType<typeof ServiceLocator.getServiceProvider>);
+    }
+  });
+
+  afterAll(() => {
+    try {
+      ServiceLocator.reset();
+    } catch {
+      // ignore
+    }
+  });
+
   describe('Property 14: Authentic BrightChain Integration', () => {
-    /**
-     * Property: For any file processing operation, the animation engine should use
-     * the actual BrightChain library for all operations and display real data
-     * (checksums, block data, error messages) from the library.
-     *
-     * This property ensures that the demo is not using simulated or fake data,
-     * but rather authentic BrightChain library operations.
-     */
+    it('BlockSize enum contains expected real block sizes', () => {
+      // Verify the library exports real block size constants
+      expect(BlockSize.Small).toBeGreaterThan(0);
+      expect(BlockSize.Medium).toBeGreaterThan(BlockSize.Small);
+      expect(BlockSize.Large).toBeGreaterThan(BlockSize.Medium);
 
-    const generateTestData = (size: number): Uint8Array => {
-      const data = new Uint8Array(size);
-      for (let i = 0; i < size; i++) {
-        data[i] = i % 256;
+      // Verify they are powers of 2 (standard block sizes)
+      for (const size of [BlockSize.Small, BlockSize.Medium, BlockSize.Large]) {
+        const num = size as number;
+        expect(num & (num - 1)).toBe(0); // power of 2 check
       }
-      return data;
-    };
+    });
 
-    it('should verify BlockSize constants are from actual library', () => {
-      // Requirement 8.1: Verify we're using real library constants
+    it('ChecksumService produces unique checksums for different data', () => {
+      fc.assert(
+        fc.property(
+          fc.uint8Array({ minLength: 1, maxLength: 256 }),
+          fc.uint8Array({ minLength: 1, maxLength: 256 }),
+          (data1, data2) => {
+            const cs1 = checksumService.calculateChecksum(data1);
+            const cs2 = checksumService.calculateChecksum(data2);
 
-      // Define expected block sizes (these should match library constants)
-      const expectedBlockSizes = {
-        Small: 8192,
-        Medium: 32768,
-        Large: 131072,
-      };
+            // Same data → same checksum
+            const cs1Again = checksumService.calculateChecksum(data1);
+            expect(cs1.toHex()).toBe(cs1Again.toHex());
 
-      // Verify block sizes are reasonable values
-      expect(typeof expectedBlockSizes.Small).toBe('number');
-      expect(typeof expectedBlockSizes.Medium).toBe('number');
-      expect(typeof expectedBlockSizes.Large).toBe('number');
-
-      expect(expectedBlockSizes.Small).toBeGreaterThan(0);
-      expect(expectedBlockSizes.Medium).toBeGreaterThan(
-        expectedBlockSizes.Small,
-      );
-      expect(expectedBlockSizes.Large).toBeGreaterThan(
-        expectedBlockSizes.Medium,
+            // Different data → (almost certainly) different checksum
+            if (
+              data1.length !== data2.length ||
+              !data1.every((v, i) => v === data2[i])
+            ) {
+              expect(cs1.toHex()).not.toBe(cs2.toHex());
+            }
+          },
+        ),
+        { numRuns: 50 },
       );
     });
 
-    it('should verify library exports real data structures', () => {
-      // Requirement 8.2: Verify library exports are real, not mocked
+    it('RawDataBlock stores and validates real data', () => {
+      const blockSize = BlockSize.Small;
+      const data = new Uint8Array(blockSize as number);
+      crypto.getRandomValues(data);
 
-      // Verify key module paths exist
-      const libraryModules = ['@brightchain/brightchain-lib'];
+      const block = new RawDataBlock(blockSize, data);
 
-      for (const moduleName of libraryModules) {
-        // Verify module can be resolved
-        expect(moduleName).toBeDefined();
-        expect(moduleName.length).toBeGreaterThan(0);
-      }
+      expect(block.blockSize).toBe(blockSize);
+      expect(block.data.length).toBe(blockSize as number);
+      expect(block.data).toEqual(data);
+      expect(block.idChecksum).toBeDefined();
+      expect(block.idChecksum.toHex().length).toBeGreaterThan(0);
     });
 
-    it('should calculate correct block counts for any file size', () => {
-      // Requirement 8.1: Verify block calculation uses real library logic
+    it('MemoryBlockStore round-trips blocks correctly', async () => {
+      const store = new MemoryBlockStore(BlockSize.Small);
+      const data = new Uint8Array(BlockSize.Small as number);
+      crypto.getRandomValues(data);
 
-      const blockSizeSmall = 8192; // BlockSize.Small
+      const block = new RawDataBlock(BlockSize.Small, data);
+      await store.setData(block);
 
-      const testCases = [
-        { fileSize: 100, blockSize: blockSizeSmall, expectedMin: 1 },
-        { fileSize: 1000, blockSize: blockSizeSmall, expectedMin: 1 },
-        { fileSize: 10000, blockSize: blockSizeSmall, expectedMin: 2 },
-        { fileSize: 100000, blockSize: blockSizeSmall, expectedMin: 10 },
-      ];
-
-      for (const { fileSize, blockSize, expectedMin } of testCases) {
-        const blockCount = Math.ceil(fileSize / blockSize);
-        expect(blockCount).toBeGreaterThanOrEqual(expectedMin);
-        expect(blockCount).toBe(Math.ceil(fileSize / blockSize));
-      }
+      const retrieved = await store.getData(block.idChecksum);
+      expect(retrieved.data).toEqual(block.data);
     });
 
-    it('should verify checksum generation produces unique values', () => {
-      // Requirement 8.3: Verify checksums are real, not placeholders
+    it('MemoryBlockStore magnet URL generation and parsing round-trips', () => {
+      const store = new MemoryBlockStore(BlockSize.Small);
+      const blockId1 = 'a'.repeat(128);
+      const blockId2 = 'b'.repeat(128);
+      const blockSize = BlockSize.Small as number;
 
-      const testData = [
-        generateTestData(100),
-        generateTestData(200),
-        generateTestData(300),
-      ];
+      const magnetUrl = store.generateCBLMagnetUrl(
+        blockId1,
+        blockId2,
+        blockSize,
+      );
 
-      const checksums = new Set<string>();
-
-      for (const data of testData) {
-        // Simulate checksum generation (in real code, this uses library)
-        // Use a hash of the entire data to ensure uniqueness
-        let hash = 0;
-        for (let i = 0; i < data.length; i++) {
-          hash = (hash << 5) - hash + data[i];
-          hash = hash & hash; // Convert to 32bit integer
-        }
-        const checksum = hash.toString(16).padStart(8, '0');
-
-        checksums.add(checksum);
-      }
-
-      // All checksums should be unique
-      expect(checksums.size).toBe(testData.length);
-    });
-
-    it('should verify CBL structure matches library format', () => {
-      // Requirement 8.2: Verify CBL data structure is real
-
-      const mockCBL = {
-        version: 1,
-        fileName: 'test.txt',
-        originalSize: 1000,
-        blockCount: 2,
-        blocks: [
-          { id: 'block1', size: 512 },
-          { id: 'block2', size: 488 },
-        ],
-        sessionId: 'session_123',
-      };
-
-      // Verify CBL can be serialized/deserialized
-      const cblString = JSON.stringify(mockCBL);
-      const cblBytes = new TextEncoder().encode(cblString);
-      const decodedString = new TextDecoder().decode(cblBytes);
-      const decodedCBL = JSON.parse(decodedString);
-
-      expect(decodedCBL.version).toBe(mockCBL.version);
-      expect(decodedCBL.fileName).toBe(mockCBL.fileName);
-      expect(decodedCBL.originalSize).toBe(mockCBL.originalSize);
-      expect(decodedCBL.blockCount).toBe(mockCBL.blockCount);
-      expect(decodedCBL.blocks).toHaveLength(mockCBL.blocks.length);
-    });
-
-    it('should verify magnet URL format matches library specification', () => {
-      // Requirement 8.2: Verify magnet URLs use real format
-
-      const receiptId = 'abc123def456';
-      const fileName = 'test.txt';
-      const fileSize = 1000;
-      const sessionId = 'session_xyz';
-
-      const params = new URLSearchParams({
-        xt: `urn:brightchain:${receiptId}`,
-        dn: fileName,
-        xl: fileSize.toString(),
-        session: sessionId,
-      });
-
-      const magnetUrl = `magnet:?${params.toString()}`;
-
-      // Verify magnet URL structure
       expect(magnetUrl).toContain('magnet:?');
-      // Note: URLSearchParams encodes the colon, so check for encoded version
-      expect(magnetUrl).toMatch(/urn(%3A|:)brightchain(%3A|:)/);
-      expect(magnetUrl).toContain(receiptId);
-      expect(magnetUrl).toContain(fileName);
-      expect(magnetUrl).toContain(fileSize.toString());
+      expect(magnetUrl).toContain('urn:brightchain:cbl');
 
-      // Verify URL can be parsed
-      const url = new URL(magnetUrl);
-      expect(url.protocol).toBe('magnet:');
-      expect(url.searchParams.get('xt')).toContain('urn:brightchain:');
-      expect(url.searchParams.get('dn')).toBe(fileName);
-      expect(url.searchParams.get('xl')).toBe(fileSize.toString());
+      const parsed = store.parseCBLMagnetUrl(magnetUrl);
+      expect(parsed.blockId1).toBe(blockId1);
+      expect(parsed.blockId2).toBe(blockId2);
+      expect(parsed.blockSize).toBe(blockSize);
     });
 
-    it('should verify error messages contain meaningful information', () => {
-      // Requirement 8.5: Verify error messages are real, not generic
+    it('MemoryBlockStore rejects blocks with unsupported sizes', async () => {
+      const store = new MemoryBlockStore(BlockSize.Small);
 
-      const mockErrors = [
-        'Block abc123... not found in session session_xyz',
-        'Block size 1024 does not match store size 512',
-        'Block validation failed: Invalid checksum',
-        'Cannot delete block def456... - not found in session session_abc',
-      ];
+      // Create a block with Medium size — store only supports Small
+      const data = new Uint8Array(BlockSize.Medium as number);
+      crypto.getRandomValues(data);
+      const block = new RawDataBlock(BlockSize.Medium, data);
 
-      for (const errorMessage of mockErrors) {
-        // Verify error messages contain specific details
-        expect(errorMessage.length).toBeGreaterThan(20);
-        expect(errorMessage).toMatch(/Block|session|size|validation/i);
-
-        // Verify error messages are not generic
-        expect(errorMessage).not.toBe('Error');
-        expect(errorMessage).not.toBe('Unknown error');
-        expect(errorMessage).not.toBe('Failed');
-      }
+      await expect(store.setData(block)).rejects.toThrow();
     });
 
-    it('should verify session isolation uses unique identifiers', () => {
-      // Requirement 8.2: Verify session IDs are real and unique
+    it('MemoryBlockStore supports multi-size configuration', async () => {
+      const store = new MemoryBlockStore([BlockSize.Small, BlockSize.Medium]);
 
-      const generateSessionId = (): string => {
-        const timestamp = Date.now().toString(36);
-        const randomBytes = new Uint8Array(16);
-        crypto.getRandomValues(randomBytes);
-        const randomHex = Array.from(randomBytes, (byte) =>
-          byte.toString(16).padStart(2, '0'),
-        ).join('');
-        return `session_${timestamp}_${randomHex}`;
-      };
+      expect(store.supportedBlockSizes).toContain(BlockSize.Small);
+      expect(store.supportedBlockSizes).toContain(BlockSize.Medium);
 
-      const sessionIds = new Set<string>();
+      // Store blocks of both sizes
+      const smallData = new Uint8Array(BlockSize.Small as number);
+      crypto.getRandomValues(smallData);
+      const smallBlock = new RawDataBlock(BlockSize.Small, smallData);
+      await store.setData(smallBlock);
 
-      // Generate multiple session IDs
-      for (let i = 0; i < 10; i++) {
-        const sessionId = generateSessionId();
-        sessionIds.add(sessionId);
+      const medData = new Uint8Array(BlockSize.Medium as number);
+      crypto.getRandomValues(medData);
+      const medBlock = new RawDataBlock(BlockSize.Medium, medData);
+      await store.setData(medBlock);
 
-        // Verify session ID format
-        expect(sessionId).toMatch(/^session_[a-z0-9]+_[a-f0-9]{32}$/);
-      }
-
-      // All session IDs should be unique
-      expect(sessionIds.size).toBe(10);
-    });
-
-    it('should verify block data integrity through round-trip', () => {
-      // Requirement 8.4: Verify reconstruction uses real library methods
-
-      const originalData = generateTestData(1000);
-      const blockSize = 512;
-      const blocks: Uint8Array[] = [];
-
-      // Simulate chunking (real code uses library)
-      for (let i = 0; i < originalData.length; i += blockSize) {
-        const chunk = originalData.slice(
-          i,
-          Math.min(i + blockSize, originalData.length),
-        );
-        blocks.push(chunk);
-      }
-
-      // Simulate reconstruction (real code uses library)
-      const reconstructed = new Uint8Array(originalData.length);
-      let offset = 0;
-      for (const block of blocks) {
-        reconstructed.set(block, offset);
-        offset += block.length;
-      }
-
-      // Verify round-trip integrity
-      expect(reconstructed.length).toBe(originalData.length);
-      for (let i = 0; i < originalData.length; i++) {
-        expect(reconstructed[i]).toBe(originalData[i]);
-      }
-    });
-
-    it('should verify padding uses cryptographically random data', () => {
-      // Requirement 8.1: Verify padding uses real crypto, not fake data
-
-      const blockSize = 512;
-      const dataSize = 300;
-      const paddingSize = blockSize - dataSize;
-
-      // Generate padding
-      const padding = new Uint8Array(paddingSize);
-      crypto.getRandomValues(padding);
-
-      // Verify padding is not all zeros
-      const sum = Array.from(padding).reduce((a, b) => a + b, 0);
-      expect(sum).toBeGreaterThan(0);
-
-      // Verify padding has reasonable entropy
-      const uniqueValues = new Set(Array.from(padding));
-      expect(uniqueValues.size).toBeGreaterThan(paddingSize / 10);
-    });
-
-    it('should verify library version and exports are consistent', () => {
-      // Requirement 8.1: Verify we're using a consistent library version
-
-      // Verify key export names are defined
-      const requiredExports = [
-        'BlockSize',
-        'BrightChain',
-        'RawDataBlock',
-        'FileReceipt',
-        'BlockInfo',
-      ];
-
-      for (const exportName of requiredExports) {
-        expect(exportName).toBeDefined();
-        expect(exportName.length).toBeGreaterThan(0);
-      }
-    });
-
-    it('should verify data types match library specifications', () => {
-      // Requirement 8.2: Verify data types are real library types
-
-      // Mock receipt structure (should match library)
-      const mockReceipt = {
-        id: 'receipt_123',
-        fileName: 'test.txt',
-        originalSize: 1000,
-        blockCount: 2,
-        blocks: [
-          {
-            id: 'block1',
-            checksum: new Uint8Array(32),
-            size: 512,
-            index: 0,
-          },
-          {
-            id: 'block2',
-            checksum: new Uint8Array(32),
-            size: 488,
-            index: 1,
-          },
-        ],
-        cblData: [1, 2, 3, 4],
-        magnetUrl: 'magnet:?xt=urn:brightchain:receipt_123',
-      };
-
-      // Verify structure matches expected types
-      expect(typeof mockReceipt.id).toBe('string');
-      expect(typeof mockReceipt.fileName).toBe('string');
-      expect(typeof mockReceipt.originalSize).toBe('number');
-      expect(typeof mockReceipt.blockCount).toBe('number');
-      expect(Array.isArray(mockReceipt.blocks)).toBe(true);
-      expect(Array.isArray(mockReceipt.cblData)).toBe(true);
-      expect(typeof mockReceipt.magnetUrl).toBe('string');
-
-      // Verify block structure
-      for (const block of mockReceipt.blocks) {
-        expect(typeof block.id).toBe('string');
-        expect(block.checksum).toBeInstanceOf(Uint8Array);
-        expect(typeof block.size).toBe('number');
-        expect(typeof block.index).toBe('number');
-      }
+      expect(store.size()).toBe(2);
+      expect(await store.has(smallBlock.idChecksum)).toBe(true);
+      expect(await store.has(medBlock.idChecksum)).toBe(true);
     });
   });
 });
