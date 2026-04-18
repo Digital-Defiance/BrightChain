@@ -38,11 +38,20 @@ export const ROLE_PHYSICIAN_DOWNTOWN_ID = 'seed-role-phys-downtown-002';
 /** Healthcare role ID: PATIENT @ City Vet */
 export const ROLE_PATIENT_CITYVET_ID = 'seed-role-patient-cityvet-03';
 
+/** Healthcare role ID: PATIENT @ Sunrise */
+export const ROLE_PATIENT_SUNRISE_ID = 'seed-role-patient-sunrise-04';
+
 /** Invitation ID: Downtown Dental, PATIENT role */
 export const INV_DOWNTOWN_PATIENT_ID = 'seed-inv-downtown-patient-01';
 /** Invitation token: Downtown Dental, PATIENT role */
 export const INV_DOWNTOWN_PATIENT_TOKEN =
   'seed-invite-downtown-patient-token-001';
+
+/** Invitation ID: Sunrise Family Practice, PATIENT role */
+export const INV_SUNRISE_PATIENT_ID = 'seed-inv-sunrise-patient-01';
+/** Invitation token: Sunrise Family Practice, PATIENT role */
+export const INV_SUNRISE_PATIENT_TOKEN =
+  'seed-invite-sunrise-patient-token-001';
 
 // ── Fixed timestamps ────────────────────────────────────────────
 
@@ -132,6 +141,18 @@ export const SEED_HEALTHCARE_ROLES: IHealthcareRoleDocument[] = [
     createdAt: FIXED_CREATED_AT,
     updatedAt: FIXED_UPDATED_AT,
   },
+  {
+    _id: ROLE_PATIENT_SUNRISE_ID,
+    memberId: DEV_USER_ID,
+    roleCode: PATIENT,
+    roleDisplay: ROLE_CODE_DISPLAY[PATIENT],
+    organizationId: ORG_SUNRISE_ID,
+    patientRef: DEV_USER_ID,
+    period: { start: FIXED_PERIOD_START },
+    createdBy: DEV_USER_ID,
+    createdAt: FIXED_CREATED_AT,
+    updatedAt: FIXED_UPDATED_AT,
+  },
 ];
 
 // ── Seed Invitations ────────────────────────────────────────────
@@ -141,6 +162,15 @@ export const SEED_INVITATIONS: IInvitation[] = [
     _id: INV_DOWNTOWN_PATIENT_ID,
     token: INV_DOWNTOWN_PATIENT_TOKEN,
     organizationId: ORG_DOWNTOWN_ID,
+    roleCode: PATIENT,
+    createdBy: DEV_USER_ID,
+    expiresAt: '2099-12-31T23:59:59.000Z',
+    createdAt: FIXED_CREATED_AT,
+  },
+  {
+    _id: INV_SUNRISE_PATIENT_ID,
+    token: INV_SUNRISE_PATIENT_TOKEN,
+    organizationId: ORG_SUNRISE_ID,
     roleCode: PATIENT,
     createdBy: DEV_USER_ID,
     expiresAt: '2099-12-31T23:59:59.000Z',

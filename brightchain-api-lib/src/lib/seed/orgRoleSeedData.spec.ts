@@ -19,11 +19,14 @@ import {
   getDevUserId,
   INV_DOWNTOWN_PATIENT_ID,
   INV_DOWNTOWN_PATIENT_TOKEN,
+  INV_SUNRISE_PATIENT_ID,
+  INV_SUNRISE_PATIENT_TOKEN,
   ORG_CITYVET_ID,
   ORG_DOWNTOWN_ID,
   ORG_SUNRISE_ID,
   ROLE_ADMIN_SUNRISE_ID,
   ROLE_PATIENT_CITYVET_ID,
+  ROLE_PATIENT_SUNRISE_ID,
   ROLE_PHYSICIAN_DOWNTOWN_ID,
   SEED_HEALTHCARE_ROLES,
   SEED_INVITATIONS,
@@ -90,6 +93,59 @@ describe('Feature: org-role-dev-seeding, Property 1: Seed record schema conforma
           }
         },
       ),
+      { numRuns: 100 },
+    );
+  });
+});
+
+describe('Feature: patient-portal-registration, Property 1: Patient registration creates a role with patientRef', () => {
+  /**
+   * **Validates: Requirements 1.3, 1.4**
+   *
+   * The new PATIENT role at Sunrise SHALL have all HEALTHCARE_ROLE_SCHEMA
+   * required fields present and non-null, and SHALL have `patientRef` set
+   * to the dev user ID.
+   *
+   * The new Sunrise invitation SHALL have all INVITATION_SCHEMA required
+   * fields present and non-null.
+   */
+
+  it('PATIENT role at Sunrise has all HEALTHCARE_ROLE_SCHEMA required fields and patientRef is set', () => {
+    fc.assert(
+      fc.property(fc.constant(ROLE_PATIENT_SUNRISE_ID), (roleId) => {
+        const role = SEED_HEALTHCARE_ROLES.find((r) => r._id === roleId);
+        expect(role).toBeDefined();
+
+        const record = role as unknown as Record<string, unknown>;
+        for (const field of HEALTHCARE_ROLE_SCHEMA.required) {
+          expect(record[field]).toBeDefined();
+          expect(record[field]).not.toBeNull();
+        }
+
+        expect(role!.roleCode).toBe(PATIENT);
+        expect(role!.patientRef).toBeDefined();
+        expect(role!.patientRef).toBe(DEV_USER_ID);
+      }),
+      { numRuns: 100 },
+    );
+  });
+
+  it('Sunrise invitation has all INVITATION_SCHEMA required fields', () => {
+    fc.assert(
+      fc.property(fc.constant(INV_SUNRISE_PATIENT_ID), (invId) => {
+        const inv = SEED_INVITATIONS.find((i) => i._id === invId);
+        expect(inv).toBeDefined();
+
+        const record = inv as unknown as Record<string, unknown>;
+        for (const field of INVITATION_SCHEMA.required) {
+          expect(record[field]).toBeDefined();
+          expect(record[field]).not.toBeNull();
+        }
+
+        expect(inv!.token).toBe(INV_SUNRISE_PATIENT_TOKEN);
+        expect(inv!.organizationId).toBe(ORG_SUNRISE_ID);
+        expect(inv!.roleCode).toBe(PATIENT);
+      }),
       { numRuns: 100 },
     );
   });
@@ -236,29 +292,45 @@ describe('Seed data module – unit tests', () => {
     });
   });
 
-  // Req 4.1, 4.3: Invitation is unredeemed with far-future expiry
+  // Req 4.1, 4.3: Invitations are unredeemed with far-future expiry
   describe('invitations (Req 4.1, 4.3)', () => {
-    it('exports one invitation for Downtown Dental with PATIENT role', () => {
-      expect(SEED_INVITATIONS).toHaveLength(1);
-      const inv = SEED_INVITATIONS[0];
-      expect(inv._id).toBe(INV_DOWNTOWN_PATIENT_ID);
-      expect(inv.organizationId).toBe(ORG_DOWNTOWN_ID);
-      expect(inv.roleCode).toBe(PATIENT);
+    it('exports two invitations', () => {
+      expect(SEED_INVITATIONS).toHaveLength(2);
     });
 
-    it('invitation has a deterministic token', () => {
-      expect(SEED_INVITATIONS[0].token).toBe(INV_DOWNTOWN_PATIENT_TOKEN);
+    it('Downtown Dental invitation has correct org, role, and token', () => {
+      const inv = SEED_INVITATIONS.find(
+        (i) => i._id === INV_DOWNTOWN_PATIENT_ID,
+      );
+      expect(inv).toBeDefined();
+      expect(inv!.organizationId).toBe(ORG_DOWNTOWN_ID);
+      expect(inv!.roleCode).toBe(PATIENT);
+      expect(inv!.token).toBe(INV_DOWNTOWN_PATIENT_TOKEN);
     });
 
-    it('invitation has far-future expiry', () => {
-      const expiresAt = new Date(SEED_INVITATIONS[0].expiresAt);
-      expect(expiresAt.getFullYear()).toBeGreaterThanOrEqual(2099);
+    it('Sunrise invitation has correct org, role, and token', () => {
+      const inv = SEED_INVITATIONS.find(
+        (i) => i._id === INV_SUNRISE_PATIENT_ID,
+      );
+      expect(inv).toBeDefined();
+      expect(inv!.organizationId).toBe(ORG_SUNRISE_ID);
+      expect(inv!.roleCode).toBe(PATIENT);
+      expect(inv!.token).toBe(INV_SUNRISE_PATIENT_TOKEN);
     });
 
-    it('invitation is unredeemed (usedBy/usedAt unset)', () => {
-      const inv = SEED_INVITATIONS[0] as Record<string, unknown>;
-      expect(inv['usedBy']).toBeUndefined();
-      expect(inv['usedAt']).toBeUndefined();
+    it('all invitations have far-future expiry', () => {
+      for (const inv of SEED_INVITATIONS) {
+        const expiresAt = new Date(inv.expiresAt);
+        expect(expiresAt.getFullYear()).toBeGreaterThanOrEqual(2099);
+      }
+    });
+
+    it('all invitations are unredeemed (usedBy/usedAt unset)', () => {
+      for (const inv of SEED_INVITATIONS) {
+        const record = inv as Record<string, unknown>;
+        expect(record['usedBy']).toBeUndefined();
+        expect(record['usedAt']).toBeUndefined();
+      }
     });
   });
 
@@ -309,6 +381,106 @@ describe('Seed data module – unit tests', () => {
     it('returns MEMBER_ID env var when set', () => {
       process.env.MEMBER_ID = 'custom-member-id-12345';
       expect(getDevUserId()).toBe('custom-member-id-12345');
+    });
+  });
+});
+
+// ── Unit Tests: New seed data records (Req 1.3, 1.4, 1.5) ──────
+
+describe('Seed data module – new patient-portal seed records', () => {
+  // Req 1.3: SEED_HEALTHCARE_ROLES now contains 4 roles
+  describe('healthcare roles array length', () => {
+    it('exports exactly 4 healthcare roles', () => {
+      expect(SEED_HEALTHCARE_ROLES).toHaveLength(4);
+    });
+  });
+
+  // Req 1.3, 1.4: New PATIENT role at Sunrise
+  describe('PATIENT role at Sunrise (Req 1.3, 1.4)', () => {
+    it('has roleCode set to PATIENT', () => {
+      const role = SEED_HEALTHCARE_ROLES.find(
+        (r) => r._id === ROLE_PATIENT_SUNRISE_ID,
+      );
+      expect(role).toBeDefined();
+      expect(role!.roleCode).toBe(PATIENT);
+    });
+
+    it('has organizationId set to Sunrise org', () => {
+      const role = SEED_HEALTHCARE_ROLES.find(
+        (r) => r._id === ROLE_PATIENT_SUNRISE_ID,
+      );
+      expect(role!.organizationId).toBe(ORG_SUNRISE_ID);
+    });
+
+    it('has patientRef set to DEV_USER_ID', () => {
+      const role = SEED_HEALTHCARE_ROLES.find(
+        (r) => r._id === ROLE_PATIENT_SUNRISE_ID,
+      );
+      expect(role!.patientRef).toBe(DEV_USER_ID);
+    });
+
+    it('has no practitionerRef', () => {
+      const role = SEED_HEALTHCARE_ROLES.find(
+        (r) => r._id === ROLE_PATIENT_SUNRISE_ID,
+      );
+      expect(role!.practitionerRef).toBeUndefined();
+    });
+  });
+
+  // Req 1.4: SEED_INVITATIONS now contains 2 invitations
+  describe('invitations array length', () => {
+    it('exports exactly 2 invitations', () => {
+      expect(SEED_INVITATIONS).toHaveLength(2);
+    });
+  });
+
+  // Req 1.4: New Sunrise invitation
+  describe('Sunrise invitation (Req 1.4)', () => {
+    it('has organizationId set to Sunrise org', () => {
+      const inv = SEED_INVITATIONS.find(
+        (i) => i._id === INV_SUNRISE_PATIENT_ID,
+      );
+      expect(inv).toBeDefined();
+      expect(inv!.organizationId).toBe(ORG_SUNRISE_ID);
+    });
+
+    it('has roleCode set to PATIENT', () => {
+      const inv = SEED_INVITATIONS.find(
+        (i) => i._id === INV_SUNRISE_PATIENT_ID,
+      );
+      expect(inv!.roleCode).toBe(PATIENT);
+    });
+
+    it('has token set to INV_SUNRISE_PATIENT_TOKEN', () => {
+      const inv = SEED_INVITATIONS.find(
+        (i) => i._id === INV_SUNRISE_PATIENT_ID,
+      );
+      expect(inv!.token).toBe(INV_SUNRISE_PATIENT_TOKEN);
+    });
+
+    it('has far-future expiresAt (>= 2099)', () => {
+      const inv = SEED_INVITATIONS.find(
+        (i) => i._id === INV_SUNRISE_PATIENT_ID,
+      );
+      const expiresAt = new Date(inv!.expiresAt);
+      expect(expiresAt.getFullYear()).toBeGreaterThanOrEqual(2099);
+    });
+  });
+
+  // Req 1.5: New constants are deterministic strings matching expected values
+  describe('deterministic constant values (Req 1.5)', () => {
+    it('ROLE_PATIENT_SUNRISE_ID matches expected value', () => {
+      expect(ROLE_PATIENT_SUNRISE_ID).toBe('seed-role-patient-sunrise-04');
+    });
+
+    it('INV_SUNRISE_PATIENT_ID matches expected value', () => {
+      expect(INV_SUNRISE_PATIENT_ID).toBe('seed-inv-sunrise-patient-01');
+    });
+
+    it('INV_SUNRISE_PATIENT_TOKEN matches expected value', () => {
+      expect(INV_SUNRISE_PATIENT_TOKEN).toBe(
+        'seed-invite-sunrise-patient-token-001',
+      );
     });
   });
 });

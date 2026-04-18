@@ -604,10 +604,11 @@ BrightChain is implemented in TypeScript as an Nx monorepo comprising 30+ packag
 | `brightchain-azure-store` | Azure Blob Storage backend for the block store |
 | `brightchain-s3-store` | AWS S3 backend for the block store |
 
-**Application Libraries and UI:**
+**Application Libraries and UI** (all built on BrightDB and the core infrastructure above)**:**
 
 | Package | Purpose |
 |---------|---------|
+| `brightchain-db` | BrightDB document database underpinning all application data storage |
 | `digitalburnbag-lib` | Digital Burnbag core: vaults, seals, Merkle commitment trees, canary protocols |
 | `digitalburnbag-api-lib` | Digital Burnbag Express API layer |
 | `digitalburnbag-react-components` | Digital Burnbag React UI components |

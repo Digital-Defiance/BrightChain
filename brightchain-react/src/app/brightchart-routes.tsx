@@ -11,7 +11,15 @@
  * Requirements: 1.1, 1.4, 3.5, 14.1, 14.3
  */
 
-import { ADMIN, PATIENT } from '@brightchain/brightchart-lib';
+import {
+  ADMIN,
+  DENTIST,
+  MEDICAL_ASSISTANT,
+  PATIENT,
+  PHYSICIAN,
+  REGISTERED_NURSE,
+  VETERINARIAN,
+} from '@brightchain/brightchart-lib';
 import {
   AdminWorkspace,
   BillingWorkspace,
@@ -19,6 +27,7 @@ import {
   ClinicianWorkspace,
   FrontDeskWorkspace,
   PatientPortal,
+  RoleGuardedRoute,
   useHealthcareRoles,
 } from '@brightchain/brightchart-react-components';
 import { PrivateRoute } from '@digitaldefiance/express-suite-react-components';
@@ -79,11 +88,71 @@ const BrightChartRoutesInner: React.FC = () => {
             />
           }
         >
-          <Route path="clinician/*" element={<ClinicianWorkspace />} />
-          <Route path="portal/*" element={<PatientPortal />} />
-          <Route path="front-desk/*" element={<FrontDeskWorkspace />} />
-          <Route path="billing/*" element={<BillingWorkspace />} />
-          <Route path="admin/*" element={<AdminWorkspace />} />
+          <Route
+            path="clinician/*"
+            element={
+              <RoleGuardedRoute
+                allowedRoles={[
+                  PHYSICIAN,
+                  REGISTERED_NURSE,
+                  MEDICAL_ASSISTANT,
+                  DENTIST,
+                  VETERINARIAN,
+                ]}
+              >
+                <ClinicianWorkspace />
+              </RoleGuardedRoute>
+            }
+          />
+          <Route
+            path="portal/*"
+            element={
+              <RoleGuardedRoute allowedRoles={[PATIENT]}>
+                <PatientPortal />
+              </RoleGuardedRoute>
+            }
+          />
+          <Route
+            path="front-desk/*"
+            element={
+              <RoleGuardedRoute
+                allowedRoles={[
+                  PHYSICIAN,
+                  REGISTERED_NURSE,
+                  MEDICAL_ASSISTANT,
+                  DENTIST,
+                  VETERINARIAN,
+                ]}
+              >
+                <FrontDeskWorkspace />
+              </RoleGuardedRoute>
+            }
+          />
+          <Route
+            path="billing/*"
+            element={
+              <RoleGuardedRoute
+                allowedRoles={[
+                  PHYSICIAN,
+                  REGISTERED_NURSE,
+                  MEDICAL_ASSISTANT,
+                  DENTIST,
+                  VETERINARIAN,
+                  ADMIN,
+                ]}
+              >
+                <BillingWorkspace />
+              </RoleGuardedRoute>
+            }
+          />
+          <Route
+            path="admin/*"
+            element={
+              <RoleGuardedRoute allowedRoles={[ADMIN]}>
+                <AdminWorkspace />
+              </RoleGuardedRoute>
+            }
+          />
           {/* Default: redirect to the workspace matching the user's role */}
           <Route path="*" element={<Navigate to={defaultPath} replace />} />
         </Route>
