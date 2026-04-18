@@ -30678,6 +30678,12 @@ __metadata:
   languageName: node
   linkType: hard
 
+"tools-seed-org-roles@workspace:tools/seed-org-roles":
+  version: 0.0.0-use.local
+  resolution: "tools-seed-org-roles@workspace:tools/seed-org-roles"
+  languageName: unknown
+  linkType: soft
+
 "toposort@npm:^2.0.2":
   version: 2.0.2
   resolution: "toposort@npm:2.0.2"

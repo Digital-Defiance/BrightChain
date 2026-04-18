@@ -22,7 +22,8 @@
     "src/**/*.spec.ts",
     "src/**/*.test.ts",
     "src/test-setup.ts",
-    "src/lib/testUtils.ts"
+    "src/lib/testUtils.ts",
+    "src/**/crossController.integration.helpers.ts"
   ],
   "references": [
     {

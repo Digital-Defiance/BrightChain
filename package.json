@@ -34,6 +34,7 @@
     "digitalburnbag-sync-client",
     "showcase",
     "tools",
+    "tools/seed-org-roles",
     "vscode-brightchain-vfs-explorer"
   ],
   "scripts": {
@@ -103,7 +104,8 @@
     "inituserdb": "yarn build:all:dev:stream && npx nx serve brightchain-inituserdb --output-style=stream",
     "inituserdb:full": "NODE_ENV=production yarn build:all:dev:stream --configuration=production && NODE_ENV=production npx nx serve brightchain-inituserdb --output-style=stream --args=--gen-system-user-mnemonic --args=--gen-member-user-mnemonic --args=--gen-mnemonic-hmac-secret --args=--gen-mnemonic-encryption-key --configuration=production",
     "inituserdb:drop": "NODE_ENV=production yarn build:all:dev:stream --configuration=production && NODE_ENV=production npx nx serve brightchain-inituserdb --output-style=stream --args=--drop --configuration=production",
-    "inituserdb:full:drop": "NODE_ENV=production yarn build:all:dev:stream --configuration=production && NODE_ENV=production npx nx serve brightchain-inituserdb --output-style=stream --args=--drop --args=--gen-system-user-mnemonic --args=--gen-member-user-mnemonic --args=--gen-mnemonic-hmac-secret --args=--gen-mnemonic-encryption-key --configuration=production"
+    "inituserdb:full:drop": "NODE_ENV=production yarn build:all:dev:stream --configuration=production && NODE_ENV=production npx nx serve brightchain-inituserdb --output-style=stream --args=--drop --args=--gen-system-user-mnemonic --args=--gen-member-user-mnemonic --args=--gen-mnemonic-hmac-secret --args=--gen-mnemonic-encryption-key --configuration=production",
+    "seed:org-roles": "npx nx run tools-seed-org-roles:serve"
   },
   "private": true,
   "resolutions": {

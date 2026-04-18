@@ -14,7 +14,40 @@ permissions:
 jobs:
   main:
     runs-on: ubuntu-latest
+    env:
+      BRIGHTCHAIN_REGISTRY_TOKEN: ${{ secrets.BRIGHTCHAIN_REGISTRY_TOKEN }}
     steps:
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Self-Whitelist Runner IP (with Retries)
+        run: |
+          RUNNER_IP=$(curl -s https://ifconfig.me)
+          RESOURCE_ID=$(az containerapp show -n verdaccio-registry -g BrightChain --query id -o tsv)
+          
+          # Retry loop to handle (ContainerAppOperationInProgress)
+          for i in {1..5}; do
+            echo "Attempt $i: Whitelisting CI Runner ($RUNNER_IP)..."
+            
+            az rest --method patch --url "${RESOURCE_ID}?api-version=2023-05-01" --body "{
+              \"properties\": {
+                \"configuration\": {
+                  \"ingress\": {
+                    \"external\": true,
+                    \"ipSecurityRestrictions\": [
+                      { \"name\": \"AllowStephenson\", \"ipAddressRange\": \"67.183.70.240/32\", \"action\": \"Allow\" },
+                      { \"name\": \"AllowGitHubRunner\", \"ipAddressRange\": \"$RUNNER_IP/32\", \"action\": \"Allow\" }
+                    ]
+                  }
+                }
+              }
+            }" && break || echo "Azure is busy, retrying in 30s..."
+            
+            sleep 30
+          done
+
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
@@ -47,9 +80,21 @@ jobs:
 
       - name: Configure registries for CI
         run: |
-          yarn config set 'npmScopes["awesome.me"].npmRegistryServer' "https://npm.fontawesome.com/"
+          # 1. Force Yarn to use the correct settings
+          yarn config set 'npmScopes["awesome.me"].npmRegistryServer' "https://verdaccio-registry.nicefield-46a11a16.westus2.azurecontainerapps.io"
           yarn config set 'npmScopes["awesome.me"].npmAlwaysAuth' true
-          yarn config set 'npmScopes["awesome.me"].npmAuthToken' "${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}"
+          yarn config set 'npmScopes["fortawesome"].npmRegistryServer' "https://verdaccio-registry.nicefield-46a11a16.westus2.azurecontainerapps.io"
+          yarn config set 'npmScopes["fortawesome"].npmAlwaysAuth' true
+          yarn config set nodeLinker node-modules
+          
+          # 2. CREATE A PHYSICAL .NPMRC (The 'Silver Bullet' for node-modules linker)
+          # Note: We remove 'https:' from the URL for the config key
+          echo "//verdaccio-registry.nicefield-46a11a16.westus2.azurecontainerapps.io/:_auth=${{ secrets.BRIGHTCHAIN_REGISTRY_TOKEN }}" > .npmrc
+          echo "always-auth=true" >> .npmrc
+
+          # COPY it to showcase just in case the linker checks there
+          mkdir -p showcase
+          cp .npmrc showcase/.npmrc          
 
       - name: Install dependencies
         run: |

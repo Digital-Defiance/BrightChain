@@ -56,3 +56,7 @@ export * from './lib/systemKeyring';
 // Plugin architecture
 export * from './lib/plugins/brightchain-database-plugin';
 export * from './lib/plugins/configure-brightchain-app';
+
+// Seed data
+export * from './lib/seed/orgRoleSeedData';
+export * from './lib/seed/orgRoleSeedRunner';
