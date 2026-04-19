@@ -120,6 +120,7 @@
     "src/lib/enumeration-translations/blockSize.ts",
     "src/lib/enumeration-translations/blockType.ts",
     "src/lib/enumeration-translations/brightTrustDataRecordAction.ts",
+    "src/lib/enumeration-translations/memberStatusType.ts",
     "src/lib/enumeration-translations/memberType.ts",
     "src/lib/enumeration-translations/security-event-severity.ts",
     "src/lib/enumeration-translations/security-event-type.ts",
