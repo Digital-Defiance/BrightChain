@@ -117,7 +117,6 @@ describe('SplitPaperKeyService - Property Tests', () => {
               expect(result).not.toBe(paperKeyValue);
             } catch {
               // Throwing is the expected behaviour — reconstruction failed
-              expect(true).toBe(true);
             }
           },
         ),
@@ -128,9 +127,8 @@ describe('SplitPaperKeyService - Property Tests', () => {
     it('should reconstruct correctly from any subset of T shares out of N', () => {
       fc.assert(
         fc.property(
-          // Use a fixed split (5 shares, threshold 3) and pick different subsets
-          fc.constant(null),
-          () => {
+          fc.integer(),
+          (_seed) => {
             // 1. Generate a fresh paper key
             const paperKey = PaperKeyService.generatePaperKey(eciesService);
             const paperKeyValue = paperKey.value!;

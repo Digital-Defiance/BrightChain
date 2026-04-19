@@ -1,51 +1,43 @@
-// Integration tests for brightchain-api with refactored constants
-// These tests verify that the API compiles and works correctly with constants from brightchain-lib
+/**
+ * Integration tests for brightchain-api with refactored constants.
+ * Verifies that the API can import and use constants from brightchain-lib
+ * and that the cross-package dependency chain works correctly.
+ */
+import { CONSTANTS } from '@brightchain/brightchain-lib';
 
 describe('BrightChain API Integration with Refactored Constants', () => {
-  describe('Build and Compilation', () => {
-    it('should successfully build brightchain-api with refactored constants', () => {
-      // This test passes if the test file itself compiles, which means:
-      // 1. brightchain-lib exports constants correctly
-      // 2. brightchain-api can import and use those constants
-      // 3. The TypeScript compilation succeeds
-      expect(true).toBe(true);
-    });
+  it('should import CONSTANTS from brightchain-lib with expected structure', () => {
+    expect(CONSTANTS).toBeDefined();
+    expect(CONSTANTS.SITE).toBeDefined();
+    expect(typeof CONSTANTS.SITE.CSP_NONCE_SIZE).toBe('number');
+    expect(CONSTANTS.SITE.CSP_NONCE_SIZE).toBeGreaterThan(0);
   });
 
-  describe('End-to-End Verification', () => {
-    it('should verify brightchain-api builds successfully', () => {
-      // The fact that this test suite runs means:
-      // 1. brightchain-lib was built successfully
-      // 2. brightchain-api imports from brightchain-lib work
-      // 3. All TypeScript types are correct
-      // 4. The refactored constants are accessible
+  it('should have CBL constants accessible through the import chain', () => {
+    expect(CONSTANTS.CBL).toBeDefined();
+    expect(CONSTANTS.CBL.BASE_OVERHEAD).toBeGreaterThan(0);
+    expect(CONSTANTS.CBL.MAX_INPUT_FILE_SIZE).toBe(Number.MAX_SAFE_INTEGER);
+  });
 
-      // This is an integration test that verifies the entire chain works:
-      // @digitaldefiance/ecies-lib → brightchain-lib → brightchain-api
+  it('should have TUPLE constants accessible through the import chain', () => {
+    expect(CONSTANTS.TUPLE).toBeDefined();
+    expect(CONSTANTS.TUPLE.SIZE).toBeGreaterThanOrEqual(CONSTANTS.TUPLE.MIN_SIZE);
+    expect(CONSTANTS.TUPLE.SIZE).toBeLessThanOrEqual(CONSTANTS.TUPLE.MAX_SIZE);
+  });
 
-      expect(true).toBe(true);
-    });
+  it('should have FEC constants accessible through the import chain', () => {
+    expect(CONSTANTS.BC_FEC).toBeDefined();
+    expect(CONSTANTS.BC_FEC.REDUNDANCY_FACTOR).toBeGreaterThan(1);
+    expect(CONSTANTS.BC_FEC.MAX_REDUNDANCY).toBeGreaterThan(
+      CONSTANTS.BC_FEC.MIN_REDUNDANCY,
+    );
+  });
 
-    it('should document the constants refactoring integration', () => {
-      // This test documents what was verified:
-      //
-      // 1. Task 11.1: Updated imports in brightchain-api files
-      //    - Verified middlewares.ts imports CONSTANTS from brightchain-lib
-      //    - Verified no compilation errors
-      //    - Build succeeds: npx nx build brightchain-api
-      //
-      // 2. Task 11.2: Integration tests
-      //    - Verified brightchain-api compiles with refactored constants
-      //    - Verified middlewares.ts uses CONSTANTS.SITE.CSP_NONCE_SIZE
-      //    - Verified end-to-end functionality through successful build
-      //
-      // The refactoring maintains backward compatibility:
-      // - Same import pattern: import { CONSTANTS } from '@brightchain/brightchain-lib'
-      // - Same usage pattern: CONSTANTS.SITE.CSP_NONCE_SIZE
-      // - Same constant values
-      // - No breaking changes
-
-      expect(true).toBe(true);
-    });
+  it('should have SEALING constants accessible through the import chain', () => {
+    expect(CONSTANTS.SEALING).toBeDefined();
+    expect(CONSTANTS.SEALING.MIN_SHARES).toBeGreaterThanOrEqual(2);
+    expect(CONSTANTS.SEALING.DEFAULT_THRESHOLD).toBeGreaterThanOrEqual(
+      CONSTANTS.SEALING.MIN_SHARES,
+    );
   });
 });

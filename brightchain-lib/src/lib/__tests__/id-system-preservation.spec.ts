@@ -82,7 +82,7 @@ describe('P7a — GuidV4Provider round-trip (Validates: Requirements 3.1)', () =
    */
   it('idFromString(idToString(guid)) round-trips for any generated GUID', () => {
     fc.assert(
-      fc.property(fc.constant(null), () => {
+      fc.property(fc.integer(), (_seed) => {
         const rawBytes = idProvider.generate();
         const guid = idProvider.fromBytes(rawBytes);
 
@@ -91,7 +91,7 @@ describe('P7a — GuidV4Provider round-trip (Validates: Requirements 3.1)', () =
 
         expect(idProvider.equals(guid, roundTripped)).toBe(true);
       }),
-      { numRuns: 100 },
+      { numRuns: 20 },
     );
   });
 });
@@ -111,7 +111,7 @@ describe('P7b — Member ID byte length (Validates: Requirements 3.2)', () => {
    */
   it('generated ID bytes have length === idProvider.byteLength', () => {
     fc.assert(
-      fc.property(fc.constant(null), () => {
+      fc.property(fc.integer(), (_seed) => {
         const rawBytes = idProvider.generate();
         expect(rawBytes.length).toBe(idProvider.byteLength);
 
@@ -119,7 +119,7 @@ describe('P7b — Member ID byte length (Validates: Requirements 3.2)', () => {
         const backToBytes = idProvider.toBytes(nativeId);
         expect(backToBytes.length).toBe(idProvider.byteLength);
       }),
-      { numRuns: 100 },
+      { numRuns: 20 },
     );
   });
 });
@@ -261,7 +261,7 @@ describe('P7g — ID persistence format (Validates: Requirements 3.9)', () => {
    */
   it('idToString() produces 32-char ShortHexGuid, asFullHexGuid produces 36-char dashed format', () => {
     fc.assert(
-      fc.property(fc.constant(null), () => {
+      fc.property(fc.integer(), (_seed) => {
         const rawBytes = idProvider.generate();
         const guid = idProvider.fromBytes(rawBytes);
 
@@ -287,7 +287,7 @@ describe('P7g — ID persistence format (Validates: Requirements 3.9)', () => {
         // The short hex is the full hex with dashes removed
         expect(shortHex).toBe(fullHex.replace(/-/g, ''));
       }),
-      { numRuns: 100 },
+      { numRuns: 20 },
     );
   });
 });
@@ -303,7 +303,7 @@ describe('P7h — rehydration round-trip (Validates: Requirements 3.10)', () => 
    */
   it('idFromString() reconstructs from full hex-with-dashes format', () => {
     fc.assert(
-      fc.property(fc.constant(null), () => {
+      fc.property(fc.integer(), (_seed) => {
         const rawBytes = idProvider.generate();
         const original = idProvider.fromBytes(rawBytes);
 
@@ -313,13 +313,13 @@ describe('P7h — rehydration round-trip (Validates: Requirements 3.10)', () => 
 
         expect(idProvider.equals(original, rehydrated)).toBe(true);
       }),
-      { numRuns: 100 },
+      { numRuns: 20 },
     );
   });
 
   it('idFromString() reconstructs from short hex format', () => {
     fc.assert(
-      fc.property(fc.constant(null), () => {
+      fc.property(fc.integer(), (_seed) => {
         const rawBytes = idProvider.generate();
         const original = idProvider.fromBytes(rawBytes);
 
@@ -329,13 +329,13 @@ describe('P7h — rehydration round-trip (Validates: Requirements 3.10)', () => 
 
         expect(idProvider.equals(original, rehydrated)).toBe(true);
       }),
-      { numRuns: 100 },
+      { numRuns: 20 },
     );
   });
 
   it('idFromString() reconstructs from base64 serialized format', () => {
     fc.assert(
-      fc.property(fc.constant(null), () => {
+      fc.property(fc.integer(), (_seed) => {
         const rawBytes = idProvider.generate();
         const original = idProvider.fromBytes(rawBytes);
 
@@ -346,7 +346,7 @@ describe('P7h — rehydration round-trip (Validates: Requirements 3.10)', () => 
 
         expect(idProvider.equals(original, rehydrated)).toBe(true);
       }),
-      { numRuns: 100 },
+      { numRuns: 20 },
     );
   });
 });

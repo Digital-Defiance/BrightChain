@@ -61,7 +61,7 @@ describe('Category 1 — Member ID round-trip (Validates: Requirements 1.1, 1.2)
    */
   it('ad-hoc hex conversion matches idProvider.idToString() for any generated ID', () => {
     fc.assert(
-      fc.property(fc.constant(null), () => {
+      fc.property(fc.integer(), (_seed) => {
         const rawBytes = idProvider.generate();
         const id = idProvider.fromBytes(rawBytes);
 
@@ -104,7 +104,7 @@ describe('Category 2 — Entity ID format (Validates: Requirements 1.4)', () => 
    */
   it('uuidv4()-generated ID has same format as idProvider.serialize()', () => {
     fc.assert(
-      fc.property(fc.constant(null), () => {
+      fc.property(fc.integer(), (_seed) => {
         // Provider-generated ID serialized through the canonical path
         const providerBytes = idProvider.generate();
         const providerSerialized = idProvider.serialize(providerBytes);
@@ -178,7 +178,7 @@ describe('Category 4 — Database ID generation (Validates: Requirements 1.5)', 
    */
   it('randomUUID()-generated ID has same format as idProvider.serialize()', () => {
     fc.assert(
-      fc.property(fc.constant(null), () => {
+      fc.property(fc.integer(), (_seed) => {
         // Provider-generated ID serialized through the canonical path
         const providerBytes = idProvider.generate();
         const providerSerialized = idProvider.serialize(providerBytes);
@@ -350,7 +350,7 @@ describe('Category 7 — API layer validation (Validates: Requirements 1.6, 1.7)
 
     // --- Part 2: parseSafe accepts valid provider-generated IDs ---
     fc.assert(
-      fc.property(fc.constant(null), () => {
+      fc.property(fc.integer(), (_seed) => {
         const rawBytes = idProvider.generate();
         const id = idProvider.fromBytes(rawBytes);
         const serialized = idProvider.idToString(id);
@@ -387,7 +387,7 @@ describe('Category 8 — Provider type mismatch crash (Validates: Requirements 1
    */
   it('GuidV4Uint8Array has toHexString() method (required by ObjectIdProvider.idToString)', () => {
     fc.assert(
-      fc.property(fc.constant(null), () => {
+      fc.property(fc.integer(), (_seed) => {
         // Generate a GuidV4Uint8Array ID using the GuidV4Provider
         const rawBytes = idProvider.generate();
         const guidId = idProvider.fromBytes(rawBytes);

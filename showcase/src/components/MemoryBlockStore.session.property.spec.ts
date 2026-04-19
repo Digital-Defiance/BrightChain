@@ -11,10 +11,11 @@
 
 import {
   BlockSize,
+  initializeBrightChain,
   MemoryBlockStore,
   RawDataBlock,
 } from '@brightchain/brightchain-lib';
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
 
 /**
  * Helper: create a RawDataBlock with random data of the given BlockSize.
@@ -27,6 +28,10 @@ function makeRandomBlock(size: BlockSize): RawDataBlock {
 
 describe('MemoryBlockStore Session Isolation Property Tests', () => {
   const BLOCK_SIZE = BlockSize.Small;
+
+  beforeAll(() => {
+    initializeBrightChain();
+  });
 
   describe('Property 6: Memory Store Session Isolation', () => {
     it('should start empty for each new MemoryBlockStore instance', () => {

@@ -78,21 +78,16 @@ describe('Property 7: Frontend POST body mnemonic inclusion', () => {
   });
 
   it('omits mnemonic from POST body when not provided', async () => {
-    await fc.assert(
-      fc.asyncProperty(fc.constant(null), async () => {
-        mockPost.mockClear();
-        mockPost.mockResolvedValue({
-          status: 201,
-          data: { message: 'ok' },
-        });
+    mockPost.mockClear();
+    mockPost.mockResolvedValue({
+      status: 201,
+      data: { message: 'ok' },
+    });
 
-        await authService.register('user', 'u@test.com', 'pass', 'UTC');
+    await authService.register('user', 'u@test.com', 'pass', 'UTC');
 
-        expect(mockPost).toHaveBeenCalledTimes(1);
-        const [, body] = mockPost.mock.calls[0];
-        expect(body).not.toHaveProperty('mnemonic');
-      }),
-      { numRuns: 100 },
-    );
+    expect(mockPost).toHaveBeenCalledTimes(1);
+    const [, body] = mockPost.mock.calls[0];
+    expect(body).not.toHaveProperty('mnemonic');
   });
 });

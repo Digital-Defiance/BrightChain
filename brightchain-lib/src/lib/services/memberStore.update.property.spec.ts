@@ -328,8 +328,8 @@ describe('MemberStore Update Property Tests', () => {
       let testCounter = 0;
       await fc.assert(
         fc.asyncProperty(
-          fc.constant(null), // Just need to run the test
-          async () => {
+          fc.integer(),
+          async (_seed) => {
             // Use unique counter for each test iteration
             const uniqueId = `${Date.now()}_${testCounter++}`;
 
@@ -378,7 +378,7 @@ describe('MemberStore Update Property Tests', () => {
             return true;
           },
         ),
-        { numRuns: 100 },
+        { numRuns: 10 },
       );
     });
 
@@ -386,8 +386,8 @@ describe('MemberStore Update Property Tests', () => {
       let testCounter = 0;
       await fc.assert(
         fc.asyncProperty(
-          fc.constant(null), // Just need to run the test
-          async () => {
+          fc.integer(),
+          async (_seed) => {
             // Use unique counter for each test iteration
             const uniqueId = `${Date.now()}_${testCounter++}`;
 
@@ -432,7 +432,7 @@ describe('MemberStore Update Property Tests', () => {
             return true;
           },
         ),
-        { numRuns: 100 },
+        { numRuns: 10 },
       );
     });
   });

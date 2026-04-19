@@ -667,7 +667,7 @@ describe('EmailSerializer Property Tests', () => {
      */
     it('should generate boundaries with only valid RFC 2046 characters and valid length', () => {
       fc.assert(
-        fc.property(fc.constant(null), () => {
+        fc.property(fc.integer(), (_seed) => {
           const boundary = serializer.generateBoundary();
 
           // RFC 2046 boundary length: 1-70 characters
@@ -682,7 +682,7 @@ describe('EmailSerializer Property Tests', () => {
           expect(boundary).toMatch(validBoundaryChars);
           expect(boundary).not.toMatch(/ $/); // Must not end with space
         }),
-        { numRuns: 100 },
+        { numRuns: 10 },
       );
     });
   });

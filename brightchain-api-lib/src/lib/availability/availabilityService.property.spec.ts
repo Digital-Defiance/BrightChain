@@ -1076,24 +1076,17 @@ describe('AvailabilityService Property Tests - Partition Mode', () => {
     });
 
     it('should return empty result when not in partition mode', async () => {
-      await fc.assert(
-        fc.asyncProperty(fc.constant(null), async () => {
-          const { service } = createTestService();
+      const { service } = createTestService();
 
-          // Not in partition mode
-          expect(service.isInPartitionMode()).toBe(false);
+      // Not in partition mode
+      expect(service.isInPartitionMode()).toBe(false);
 
-          // Exit should return empty result
-          const result = await service.exitPartitionMode();
+      // Exit should return empty result
+      const result = await service.exitPartitionMode();
 
-          expect(result.success).toBe(true);
-          expect(result.peersReconciled).toBe(0);
-          expect(service.isInPartitionMode()).toBe(false);
-
-          return true;
-        }),
-        { numRuns: 10 },
-      );
+      expect(result.success).toBe(true);
+      expect(result.peersReconciled).toBe(0);
+      expect(service.isInPartitionMode()).toBe(false);
     });
 
     it('should emit partition_exited event with reconnected peers', async () => {
@@ -1423,45 +1416,38 @@ describe('AvailabilityService Property Tests - Events', () => {
     });
 
     it('should filter events by block ID pattern', async () => {
-      await fc.assert(
-        fc.asyncProperty(fc.constant(null), async () => {
-          const { service } = createTestService();
-          const receivedBlockIds: string[] = [];
+      const { service } = createTestService();
+      const receivedBlockIds: string[] = [];
 
-          // Subscribe only to blocks starting with 'abc'
-          service.onEvent(
-            (event) => {
-              if ('blockId' in event) {
-                receivedBlockIds.push(event.blockId);
-              }
-            },
-            { blockIdPatterns: ['abc*'] },
-          );
-
-          // Trigger events for different blocks
-          await service.setAvailabilityState(
-            'abc123456789012345678901234567890',
-            AvailabilityState.Remote,
-          );
-          await service.setAvailabilityState(
-            'def123456789012345678901234567890',
-            AvailabilityState.Remote,
-          );
-          await service.setAvailabilityState(
-            'abcdef789012345678901234567890123',
-            AvailabilityState.Cached,
-          );
-
-          // Should only receive events for blocks matching pattern
-          for (const blockId of receivedBlockIds) {
-            expect(blockId.startsWith('abc')).toBe(true);
+      // Subscribe only to blocks starting with 'abc'
+      service.onEvent(
+        (event) => {
+          if ('blockId' in event) {
+            receivedBlockIds.push(event.blockId);
           }
-          expect(receivedBlockIds.length).toBe(2);
-
-          return true;
-        }),
-        { numRuns: 20 },
+        },
+        { blockIdPatterns: ['abc*'] },
       );
+
+      // Trigger events for different blocks
+      await service.setAvailabilityState(
+        'abc123456789012345678901234567890',
+        AvailabilityState.Remote,
+      );
+      await service.setAvailabilityState(
+        'def123456789012345678901234567890',
+        AvailabilityState.Remote,
+      );
+      await service.setAvailabilityState(
+        'abcdef789012345678901234567890123',
+        AvailabilityState.Cached,
+      );
+
+      // Should only receive events for blocks matching pattern
+      for (const blockId of receivedBlockIds) {
+        expect(blockId.startsWith('abc')).toBe(true);
+      }
+      expect(receivedBlockIds.length).toBe(2);
     });
 
     it('should receive all events when no filter is specified', async () => {
@@ -1504,49 +1490,42 @@ describe('AvailabilityService Property Tests - Events', () => {
     });
 
     it('should support multiple filters combined', async () => {
-      await fc.assert(
-        fc.asyncProperty(fc.constant(null), async () => {
-          const { service } = createTestService();
-          const receivedEvents: Array<{ type: string; blockId?: string }> = [];
+      const { service } = createTestService();
+      const receivedEvents: Array<{ type: string; blockId?: string }> = [];
 
-          // Subscribe with both type and pattern filter
-          service.onEvent(
-            (event) => {
-              receivedEvents.push({
-                type: event.type,
-                blockId: 'blockId' in event ? event.blockId : undefined,
-              });
-            },
-            {
-              eventTypes: ['state_changed'],
-              blockIdPatterns: ['test*'],
-            },
-          );
-
-          // Trigger events
-          await service.setAvailabilityState(
-            'test12345678901234567890123456789',
-            AvailabilityState.Remote,
-          );
-          await service.setAvailabilityState(
-            'other1234567890123456789012345678',
-            AvailabilityState.Remote,
-          );
-          await service.updateLocation('test12345678901234567890123456789', {
-            nodeId: 'peer-1',
-            lastSeen: new Date(),
-            isAuthoritative: false,
+      // Subscribe with both type and pattern filter
+      service.onEvent(
+        (event) => {
+          receivedEvents.push({
+            type: event.type,
+            blockId: 'blockId' in event ? event.blockId : undefined,
           });
-
-          // Should only receive state_changed events for test* blocks
-          expect(receivedEvents.length).toBe(1);
-          expect(receivedEvents[0].type).toBe('state_changed');
-          expect(receivedEvents[0].blockId?.startsWith('test')).toBe(true);
-
-          return true;
-        }),
-        { numRuns: 20 },
+        },
+        {
+          eventTypes: ['state_changed'],
+          blockIdPatterns: ['test*'],
+        },
       );
+
+      // Trigger events
+      await service.setAvailabilityState(
+        'test12345678901234567890123456789',
+        AvailabilityState.Remote,
+      );
+      await service.setAvailabilityState(
+        'other1234567890123456789012345678',
+        AvailabilityState.Remote,
+      );
+      await service.updateLocation('test12345678901234567890123456789', {
+        nodeId: 'peer-1',
+        lastSeen: new Date(),
+        isAuthoritative: false,
+      });
+
+      // Should only receive state_changed events for test* blocks
+      expect(receivedEvents.length).toBe(1);
+      expect(receivedEvents[0].type).toBe('state_changed');
+      expect(receivedEvents[0].blockId?.startsWith('test')).toBe(true);
     });
 
     it('should allow removing event handlers', async () => {

@@ -43,9 +43,8 @@ describe('PaperKeyService - Property Tests', () => {
     it('should recover the same member identity from the same paper key across multiple recoveries', () => {
       fc.assert(
         fc.property(
-          // Use fc.constant to trigger a fresh paper key generation per run
-          fc.constant(null),
-          () => {
+          fc.integer(),
+          (_seed) => {
             // 1. Generate a paper key (Requirement 1.1)
             const paperKey = PaperKeyService.generatePaperKey(eciesService);
             const paperKeyValue = paperKey.value!;
@@ -86,7 +85,7 @@ describe('PaperKeyService - Property Tests', () => {
 
     it('should generate valid 24-word BIP39 mnemonics that always pass validation', () => {
       fc.assert(
-        fc.property(fc.constant(null), () => {
+        fc.property(fc.integer(), (_seed) => {
           const paperKey = PaperKeyService.generatePaperKey(eciesService);
           const paperKeyValue = paperKey.value!;
 
@@ -105,7 +104,7 @@ describe('PaperKeyService - Property Tests', () => {
 
     it('should produce unique identities from distinct paper keys', () => {
       fc.assert(
-        fc.property(fc.constant(null), () => {
+        fc.property(fc.integer(), (_seed) => {
           const paperKey1 = PaperKeyService.generatePaperKey(eciesService);
           const paperKey2 = PaperKeyService.generatePaperKey(eciesService);
 

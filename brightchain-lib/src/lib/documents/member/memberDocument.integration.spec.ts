@@ -88,9 +88,9 @@ describe('MemberDocument Integration Tests', () => {
         },
       });
 
-      // Verify update (this would require additional methods in MemberStore)
-      // For now, just verify the update doesn't throw
-      expect(true).toBe(true);
+      // Verify the update persisted by retrieving the profile
+      const updatedProfile = await memberStore.getMemberProfile(reference.id);
+      expect(updatedProfile.publicProfile).not.toBeNull();
     });
   });
 

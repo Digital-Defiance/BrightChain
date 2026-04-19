@@ -147,7 +147,7 @@ describe('DeviceProvisioningService - Property Tests', () => {
      */
     it('should not mark paper key as used when provisioning fails due to storage error', async () => {
       await fc.assert(
-        fc.asyncProperty(fc.constant(null), async () => {
+        fc.asyncProperty(fc.integer(), async (_seed) => {
           const paperKeyService = new MemberPaperKeyService();
           const failingStorage = new FailingDeviceKeyStorage();
 

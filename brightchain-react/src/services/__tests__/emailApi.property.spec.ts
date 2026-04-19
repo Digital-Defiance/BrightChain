@@ -149,28 +149,20 @@ describe('Feature: brightmail-frontend, Property 2: API Error Envelope Propagati
    * error.message, handleApiCall SHALL throw with 'Unknown error'.
    */
   it('falls back to "Unknown error" when envelope error has no message', async () => {
-    await fc.assert(
-      fc.asyncProperty(fc.constant(null), async () => {
-        const envelope: IApiEnvelope<unknown> = {
-          status: 'error',
-        };
+    const envelope: IApiEnvelope<unknown> = {
+      status: 'error',
+    };
 
-        const fakeResponse: AxiosResponse<IApiEnvelope<unknown>> = {
-          data: envelope,
-          status: 200,
-          statusText: 'OK',
-          headers: {},
-          config: { headers: new AxiosHeaders() },
-        };
+    const fakeResponse: AxiosResponse<IApiEnvelope<unknown>> = {
+      data: envelope,
+      status: 200,
+      statusText: 'OK',
+      headers: {},
+      config: { headers: new AxiosHeaders() },
+    };
 
-        try {
-          await handleApiCall(() => Promise.resolve(fakeResponse));
-          return false;
-        } catch (err) {
-          return (err as Error).message === 'Unknown error';
-        }
-      }),
-      { numRuns: 100 },
-    );
+    await expect(
+      handleApiCall(() => Promise.resolve(fakeResponse)),
+    ).rejects.toThrow('Unknown error');
   });
 });

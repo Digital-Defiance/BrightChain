@@ -84,17 +84,12 @@ describe('Property 16: Environment missing variables validation', () => {
 
   describe('Azure — incomplete env var subsets should throw', () => {
     it('should throw when BRIGHTCHAIN_BLOCKSTORE_TYPE=azure and no Azure vars are set', () => {
-      fc.assert(
-        fc.property(fc.constant(null), () => {
-          clearCloudEnvVars();
-          setBaseEnvVars();
-          process.env['BRIGHTCHAIN_BLOCKSTORE_TYPE'] = BlockStoreType.AzureBlob;
+      clearCloudEnvVars();
+      setBaseEnvVars();
+      process.env['BRIGHTCHAIN_BLOCKSTORE_TYPE'] = BlockStoreType.AzureBlob;
 
-          expect(() => new Environment(undefined, true)).toThrow(
-            /Missing required environment variables for Azure/,
-          );
-        }),
-        { numRuns: 10 },
+      expect(() => new Environment(undefined, true)).toThrow(
+        /Missing required environment variables for Azure/,
       );
     });
 
@@ -176,17 +171,12 @@ describe('Property 16: Environment missing variables validation', () => {
 
   describe('S3 — incomplete env var subsets should throw', () => {
     it('should throw when BRIGHTCHAIN_BLOCKSTORE_TYPE=s3 and no S3 vars are set', () => {
-      fc.assert(
-        fc.property(fc.constant(null), () => {
-          clearCloudEnvVars();
-          setBaseEnvVars();
-          process.env['BRIGHTCHAIN_BLOCKSTORE_TYPE'] = BlockStoreType.S3;
+      clearCloudEnvVars();
+      setBaseEnvVars();
+      process.env['BRIGHTCHAIN_BLOCKSTORE_TYPE'] = BlockStoreType.S3;
 
-          expect(() => new Environment(undefined, true)).toThrow(
-            /Missing required environment variable.*S3/,
-          );
-        }),
-        { numRuns: 10 },
+      expect(() => new Environment(undefined, true)).toThrow(
+        /Missing required environment variable.*S3/,
       );
     });
 

@@ -120,7 +120,7 @@ describe('AuthenticBrightChainIntegration Property Tests', () => {
       );
 
       expect(magnetUrl).toContain('magnet:?');
-      expect(magnetUrl).toContain('urn:brightchain:cbl');
+      expect(decodeURIComponent(magnetUrl)).toContain('urn:brightchain:cbl');
 
       const parsed = store.parseCBLMagnetUrl(magnetUrl);
       expect(parsed.blockId1).toBe(blockId1);

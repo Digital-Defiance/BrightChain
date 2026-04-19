@@ -43,7 +43,7 @@ describe('EthereumWalletService - Property Tests', () => {
      */
     it('should derive the same address from the same paper key', () => {
       fc.assert(
-        fc.property(fc.constant(null), () => {
+        fc.property(fc.integer(), (_seed) => {
           const paperKey = PaperKeyService.generatePaperKey(eciesService);
 
           const addr1 = EthereumWalletService.deriveAddress(paperKey.value!);
@@ -66,7 +66,7 @@ describe('EthereumWalletService - Property Tests', () => {
      */
     it('should derive different addresses from different paper keys', () => {
       fc.assert(
-        fc.property(fc.constant(null), () => {
+        fc.property(fc.integer(), (_seed) => {
           const key1 = PaperKeyService.generatePaperKey(eciesService);
           const key2 = PaperKeyService.generatePaperKey(eciesService);
 
