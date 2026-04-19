@@ -72,7 +72,7 @@
     "@digitaldefiance/i18n-lib": "4.7.3",
     "@digitaldefiance/reed-solomon-erasure.wasm": "^1.0.2",
     "@digitaldefiance/secrets": "^2.0.7",
-    "@digitaldefiance/suite-core-lib": "4.26.6",
+    "@digitaldefiance/suite-core-lib": "4.26.7",
     "@ethereumjs/wallet": "^10.0.0",
     "@noble/hashes": "^1.8.0",
     "@peculiar/asn1-pfx": "^2.6.1",
