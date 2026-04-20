@@ -12,6 +12,7 @@ export type * from './brightchain-init-result';
 export type * from './cblHandlers';
 export type * from './checksum-config';
 export type * from './discriminator-collections';
+export type * from './ejsTemplateContext';
 export type * from './environment';
 export type * from './environment-aws';
 export type * from './introspectionApiResponses';

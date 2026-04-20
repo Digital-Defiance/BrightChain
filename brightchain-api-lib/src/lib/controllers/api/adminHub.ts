@@ -96,7 +96,7 @@ export class AdminHubController<
         ? (this.application.services.get('db') as BrightDb)
         : undefined;
       if (brightDb) {
-        const postsCollection = brightDb.collection('posts');
+        const postsCollection = brightDb.collection('brighthub_posts');
         const filter: Record<string, unknown> = {};
         if (request.query?.authorId) {
           filter['authorId'] = request.query.authorId;
@@ -172,7 +172,7 @@ export class AdminHubController<
         ? (this.application.services.get('db') as BrightDb)
         : undefined;
       if (brightDb) {
-        const postsCollection = brightDb.collection('posts');
+        const postsCollection = brightDb.collection('brighthub_posts');
         const result = await postsCollection.updateOne(
           { _id: postId },
           { $set: { isDeleted: true } },

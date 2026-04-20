@@ -14,7 +14,7 @@ import {
   IUpnpConfig,
   UpnpConfig,
 } from '@digitaldefiance/node-express-suite';
-import { join } from 'path';
+import { join, resolve } from 'path';
 import { Constants } from './constants';
 import { EmailServices } from './enumerations/email-services';
 import { IEnvironment } from './interfaces/environment';
@@ -33,6 +33,8 @@ export class Environment<TID extends PlatformID = DefaultBackendIdType>
   private _enabledFeatures: BrightChainFeatures[];
   private _nodeId: string;
   private _nodeIdSource: NodeIdSource;
+  private _ejsSplashRoot: string | undefined;
+  private _splashTemplatePath: string | undefined;
 
   constructor(
     path?: string,
@@ -129,6 +131,25 @@ export class Environment<TID extends PlatformID = DefaultBackendIdType>
       console.warn(
         '[ warning ] No NODE_ID or SYSTEM_ID available — using ephemeral generated node ID. ' +
           'Run inituserdb to establish a persistent node identity.',
+      );
+    }
+
+    // EJS splash page configuration
+    const rawEjsSplashRoot = envObj['EJS_SPLASH_ROOT'];
+    const rawSplashTemplatePath = envObj['SPLASH_TEMPLATE_PATH'];
+
+    this._ejsSplashRoot = rawEjsSplashRoot
+      ? resolve(process.cwd(), rawEjsSplashRoot)
+      : undefined;
+
+    this._splashTemplatePath = rawSplashTemplatePath
+      ? resolve(process.cwd(), rawSplashTemplatePath)
+      : undefined;
+
+    if (this._ejsSplashRoot && this._splashTemplatePath) {
+      console.warn(
+        '[ warning ] Both EJS_SPLASH_ROOT and SPLASH_TEMPLATE_PATH are set. ' +
+          'SPLASH_TEMPLATE_PATH is deprecated — using EJS_SPLASH_ROOT.',
       );
     }
 
@@ -242,5 +263,22 @@ export class Environment<TID extends PlatformID = DefaultBackendIdType>
    */
   public get nodeIdSource(): NodeIdSource {
     return this._nodeIdSource;
+  }
+
+  /**
+   * Root directory for custom EJS templates.
+   * Set via EJS_SPLASH_ROOT env var.
+   */
+  public get ejsSplashRoot(): string | undefined {
+    return this._ejsSplashRoot;
+  }
+
+  /**
+   * @deprecated Use ejsSplashRoot instead.
+   * Direct path to a single custom template file.
+   * Set via SPLASH_TEMPLATE_PATH env var.
+   */
+  public get splashTemplatePath(): string | undefined {
+    return this._splashTemplatePath;
   }
 }

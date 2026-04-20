@@ -1030,6 +1030,45 @@ export class PostService implements IPostService {
   }
 
   /**
+   * Get aggregate post statistics for the admin dashboard.
+   * Returns total non-deleted posts and count of distinct authors
+   * active in the last 30 days.
+   * @see Requirements: 2.4
+   */
+  async getStats(): Promise<{
+    totalPosts: number;
+    activeUsersLast30Days: number;
+  }> {
+    try {
+      // Get all non-deleted posts
+      const activePosts = await this.postsCollection
+        .find({ isDeleted: false } as Partial<PostRecord>)
+        .exec();
+
+      const totalPosts = activePosts.length;
+
+      // Compute distinct authors active in the last 30 days
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      const cutoff = thirtyDaysAgo.toISOString();
+
+      const recentAuthors = new Set<string>();
+      for (const post of activePosts) {
+        if (post.createdAt >= cutoff) {
+          recentAuthors.add(post.authorId);
+        }
+      }
+
+      return {
+        totalPosts,
+        activeUsersLast30Days: recentAuthors.size,
+      };
+    } catch {
+      return { totalPosts: 0, activeUsersLast30Days: 0 };
+    }
+  }
+
+  /**
    * Get the interaction status for a user on a post
    * @see Requirements: 3.7
    */

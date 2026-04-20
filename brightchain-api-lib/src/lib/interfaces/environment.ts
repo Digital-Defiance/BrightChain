@@ -114,4 +114,17 @@ export interface IEnvironment<TID extends PlatformID>
    * Indicates where the node ID was sourced from.
    */
   nodeIdSource: NodeIdSource;
+
+  /**
+   * Root directory for custom EJS templates.
+   * Set via EJS_SPLASH_ROOT env var.
+   */
+  ejsSplashRoot: string | undefined;
+
+  /**
+   * @deprecated Use ejsSplashRoot instead.
+   * Direct path to a single custom template file.
+   * Set via SPLASH_TEMPLATE_PATH env var.
+   */
+  splashTemplatePath: string | undefined;
 }

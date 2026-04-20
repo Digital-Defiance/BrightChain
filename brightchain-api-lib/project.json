@@ -33,6 +33,11 @@
             "input": "brightchain-api-lib",
             "glob": "package.json",
             "output": "."
+          },
+          {
+            "input": "brightchain-api-lib/src/lib/templates",
+            "glob": "**/*.ejs",
+            "output": "src/lib/templates"
           }
         ]
       },

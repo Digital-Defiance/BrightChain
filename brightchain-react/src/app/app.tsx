@@ -730,6 +730,7 @@ const InnerApp: FC = () => {
         >
           <Routes>
             <Route path="/" element={<SplashPage />} />
+            <Route path="/_spa" element={<SplashPage />} />
             <Route path="/demo" element={<BrightChainSoupDemo />} />
             <Route
               path="/showcase/storage-pools"

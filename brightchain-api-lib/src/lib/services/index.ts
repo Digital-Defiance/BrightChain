@@ -14,6 +14,7 @@ export * from './cliOperatorPrompt';
 export * from './contentAwareBlocksService';
 export * from './contentIngestionService';
 export * from './diskBrightTrustService';
+export * from './ejsTemplateService';
 export * from './emailGateway';
 export * from './encryptedPoolService';
 export * from './eventNotificationSystem';
