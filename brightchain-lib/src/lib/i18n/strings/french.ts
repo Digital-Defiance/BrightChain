@@ -1390,7 +1390,10 @@ export const FrenchStrings: ComponentStrings<BrightChainStringKey> = {
   [BrightChainStrings.Splash_RealWorldValue]: 'Valeur Réelle',
   [BrightChainStrings.Splash_RealWorldValueDescription]:
     'Les valeurs des Joules sont fixées par une formule basée sur les coûts réels, et nous affinons cette formule au fil du temps — pas de trading, pas de volatilité.',
-
+  [BrightChainStrings.Splash_Documentation]: 'Documentation',
+  [BrightChainStrings.Splash_FAQ]: 'Foire Aux Questions',
+  [BrightChainStrings.Splash_PrivacyPolicy]: 'Politique de confidentialité',
+  [BrightChainStrings.Splash_TermsOfService]: 'Conditions d\'utilisation',
   // Dashboard
   [BrightChainStrings.Dashboard_Title]: 'Votre tableau de bord',
   [BrightChainStrings.Dashboard_EnergyBalance]: 'Solde énergétique',
@@ -1474,12 +1477,12 @@ export const FrenchStrings: ComponentStrings<BrightChainStringKey> = {
   [BrightChainStrings.Admin_Dashboard_DeliveryFailures]: 'Échecs de livraison',
   [BrightChainStrings.Admin_Dashboard_Last24Hours]: 'Dernières 24h',
   [BrightChainStrings.Admin_Menu_Dashboard]: 'Tableau de bord admin',
-  [BrightChainStrings.Admin_Menu_Users]: 'User Management',
-  [BrightChainStrings.Admin_Menu_Blocks]: 'Block Explorer',
-  [BrightChainStrings.Admin_Menu_Chat]: 'Chat Admin',
-  [BrightChainStrings.Admin_Menu_Hub]: 'Hub Admin',
-  [BrightChainStrings.Admin_Menu_Mail]: 'Mail Admin',
-  [BrightChainStrings.Admin_Menu_Pass]: 'Pass Admin',
+  [BrightChainStrings.Admin_Menu_Users]: 'Gestion des utilisateurs',
+  [BrightChainStrings.Admin_Menu_Blocks]: 'Explorateur de blocs',
+  [BrightChainStrings.Admin_Menu_Chat]: 'Admin Chat',
+  [BrightChainStrings.Admin_Menu_Hub]: 'Admin Hub',
+  [BrightChainStrings.Admin_Menu_Mail]: 'Admin Mail',
+  [BrightChainStrings.Admin_Menu_Pass]: 'Admin Pass',
   [BrightChainStrings.Admin_Menu_About]: 'À propos',
   [BrightChainStrings.Admin_Common_Loading]: 'Chargement…',
   [BrightChainStrings.Admin_Common_Previous]: 'Précédent',
@@ -1529,16 +1532,16 @@ export const FrenchStrings: ComponentStrings<BrightChainStringKey> = {
     'Vous ne pouvez pas changer votre propre rôle.',
   [BrightChainStrings.Admin_Users_CannotChangeSystemUser]:
     "Le rôle de l'utilisateur système ne peut pas être modifié.",
-  [BrightChainStrings.Admin_Users_DeleteUser]: 'Delete User',
-  [BrightChainStrings.Admin_Users_DeleteUserTitle]: 'Delete User',
+  [BrightChainStrings.Admin_Users_DeleteUser]: "Supprimer l'utilisateur",
+  [BrightChainStrings.Admin_Users_DeleteUserTitle]: "Supprimer l'utilisateur",
   [BrightChainStrings.Admin_Users_DeleteConfirmTemplate]:
-    'Are you sure you want to permanently delete user "{USERNAME}"? This will remove their CBLs, settings, and all database records. This action cannot be undone.',
+    'Êtes-vous sûr de vouloir supprimer définitivement l\'utilisateur « {USERNAME} » ? Cela supprimera ses CBL, paramètres et tous les enregistrements de la base de données. Cette action est irréversible.',
   [BrightChainStrings.Admin_Users_DeleteWarning]:
-    ' This is a destructive operation.',
+    ' Ceci est une opération destructrice.',
   [BrightChainStrings.Admin_Users_CannotDeleteSelf]:
-    'You cannot delete your own account.',
+    'Vous ne pouvez pas supprimer votre propre compte.',
   [BrightChainStrings.Admin_Users_CannotDeleteSystemUser]:
-    'The system user cannot be deleted.',
+    "L'utilisateur système ne peut pas être supprimé.",
   [BrightChainStrings.Admin_Blocks_Title]: 'Explorateur de blocs',
   [BrightChainStrings.Admin_Blocks_SearchPlaceholder]:
     'Rechercher par ID de bloc',

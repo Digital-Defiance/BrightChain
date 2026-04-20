@@ -12,7 +12,6 @@ import {
   IdentitySealingPipeline,
   IdentityValidator,
   IDiscoveryProtocol,
-  InMemoryEmailMetadataStore,
   IReconciliationService,
   MembershipProofService,
   MemberStore,
@@ -87,6 +86,14 @@ import {
 import { BrightChainAuthenticationProvider } from './services/brightchain-authentication-provider';
 import { wrapCollection } from './services/brighthub/collectionAdapter';
 import { createThreadService } from './services/brighthub/threadService';
+import { createChatStorageProvider, ChatCollectionAdapter } from './services/brightchat/chatStorageAdapter';
+import {
+  BrightDbEmailMetadataStore,
+  BRIGHTMAIL_EMAILS_COLLECTION,
+  BRIGHTMAIL_ATTACHMENTS_COLLECTION,
+  BRIGHTMAIL_READ_TRACKING_COLLECTION,
+} from './services/brightmail/brightDbEmailMetadataStore';
+import type { VaultMetadataDocument } from './services/brightpass';
 import { ClientWebSocketServer } from './services/clientWebSocketServer';
 import { EventNotificationSystem } from './services/eventNotificationSystem';
 import { FakeEmailService } from './services/fakeEmailService';
@@ -114,7 +121,7 @@ export class App<TID extends PlatformID> extends BrightDbApplication<
 > {
   private controllers: Map<string, unknown> = new Map();
   private readonly keyStorage: SecureKeyStorage;
-  private readonly _brightchainDocumentStore: DocumentStore;
+  private _preConnectionStore: DocumentStore | null = null;
   private _plugin: BrightChainDatabasePlugin<TID>;
   private apiRouter: ApiRouter<TID> | null = null;
   private eventSystem: EventNotificationSystem | null = null;
@@ -159,23 +166,27 @@ export class App<TID extends PlatformID> extends BrightDbApplication<
     this._plugin = plugin;
 
     this.keyStorage = SecureKeyStorage.getInstance();
-    this._brightchainDocumentStore = createBlockDocumentStore({
-      useMemory: true,
-      blockSize: BlockSize.Medium,
-    });
   }
 
   public override get db(): DocumentStore {
     // Prefer the plugin's document store (wraps the real BrightDb that
-    // RBAC seeding and admin controllers also use). Fall back to the
-    // standalone store only before the plugin is connected.
+    // RBAC seeding and admin controllers also use). Fall back to a
+    // lazy-initialized in-memory store only before the plugin is connected.
     try {
       const pluginDb = this._plugin.db;
       if (pluginDb) return pluginDb;
     } catch {
-      // Plugin not connected yet — fall through
+      // Plugin not connected yet — fall through to pre-connection store
     }
-    return this._brightchainDocumentStore;
+    // Lazy-init a temporary in-memory store for early callers (before plugin connects).
+    // Once the plugin connects, this store is never reached again.
+    if (!this._preConnectionStore) {
+      this._preConnectionStore = createBlockDocumentStore({
+        useMemory: true,
+        blockSize: BlockSize.Medium,
+      });
+    }
+    return this._preConnectionStore;
   }
 
   /**
@@ -204,7 +215,7 @@ export class App<TID extends PlatformID> extends BrightDbApplication<
     } catch {
       // Plugin not connected yet — fall through to document store
     }
-    return this._brightchainDocumentStore.collection<U>(modelName);
+    return this.db.collection<U>(modelName);
   }
 
   public override async start(dbUri?: string): Promise<void> {
@@ -434,7 +445,11 @@ export class App<TID extends PlatformID> extends BrightDbApplication<
       } as unknown as MessageCBLService;
 
       const messageMetadataStore = new MemoryMessageMetadataStore();
-      const emailMetadataStore = new InMemoryEmailMetadataStore();
+      const emailMetadataStore = new BrightDbEmailMetadataStore(
+        this.getModel(BRIGHTMAIL_EMAILS_COLLECTION),
+        this.getModel(BRIGHTMAIL_ATTACHMENTS_COLLECTION),
+        this.getModel(BRIGHTMAIL_READ_TRACKING_COLLECTION),
+      );
 
       // No-op gossip stub — real gossip is wired externally via setPoolDiscoveryService
       const gossipStubForEmail: IGossipService = {
@@ -480,6 +495,7 @@ export class App<TID extends PlatformID> extends BrightDbApplication<
       // Store on the App instance and register with the service container
       this.messagePassingService = mps;
       this.services.register('messagePassingService', () => mps);
+      this.services.register('emailMetadataStore', () => emailMetadataStore);
 
       // Wire to both the messages controller and the email controller
       if (this.apiRouter) {
@@ -609,9 +625,35 @@ export class App<TID extends PlatformID> extends BrightDbApplication<
     // ── BrightChat communication services initialization ────────────
     if (this.apiRouter) {
       const permissionService = new PermissionService();
-      const conversationService = new ConversationService();
-      const groupService = new GroupService(permissionService);
-      const channelService = new ChannelService(permissionService);
+
+      // Create a BrightDb-backed storage provider for BrightChat services.
+      // Uses the same getModel pattern as BrightHub services so all data
+      // flows through the single BrightDb instance.
+      const chatStorageProvider = createChatStorageProvider(
+        (name) => this.getModel(name),
+      );
+
+      const conversationService = new ConversationService(
+        null,
+        undefined,
+        chatStorageProvider,
+      );
+      const groupService = new GroupService(
+        permissionService,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        chatStorageProvider,
+      );
+      const channelService = new ChannelService(
+        permissionService,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        chatStorageProvider,
+      );
 
       // Wire group promotion handler so conversations can be promoted to groups
       conversationService.setGroupPromotionHandler(
@@ -639,6 +681,22 @@ export class App<TID extends PlatformID> extends BrightDbApplication<
         this.environment.debug,
         'log',
         '[ ready ] BrightChat communication services initialized',
+      );
+    }
+
+    // ── BrightPass vault metadata collection ────────────────────────
+    // Register a BrightDb-backed collection for BrightPass vault metadata.
+    // BrightPassController retrieves this from the services container and
+    // passes it to BrightPassService so vault index data flows through BrightDb.
+    {
+      const vaultMetadataCollection =
+        new ChatCollectionAdapter<VaultMetadataDocument>(
+          this.getModel('brightpass_vaults'),
+          'id',
+        );
+      this.services.register(
+        'vaultMetadataCollection',
+        () => vaultMetadataCollection,
       );
     }
 

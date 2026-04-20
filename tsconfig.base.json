@@ -77,9 +77,7 @@
       "@brightchain/digitalburnbag-api-lib": [
         "digitalburnbag-api-lib/src/index.ts"
       ],
-      "@brightchain/digitalburnbag-api-lib/*": [
-        "digitalburnbag-api-lib/src/*"
-      ],
+      "@brightchain/digitalburnbag-api-lib/*": ["digitalburnbag-api-lib/src/*"],
       "@brightchain/digitalburnbag-sync-client": [
         "digitalburnbag-sync-client/src/index.ts"
       ],
@@ -91,7 +89,13 @@
       ],
       "@brightchain/vscode-brightchain-vfs-explorer/*": [
         "vscode-brightchain-vfs-explorer/src/*"
-      ]
+      ],
+      "@brightchain/brightcal-lib": ["brightcal-lib/src/index.ts"],
+      "@brightchain/brightcal-lib/*": ["brightcal-lib/src/*"],
+      "@brightchain/brightcal-api-lib": ["brightcal-api-lib/src/index.ts"],
+      "@brightchain/brightcal-api-lib/*": ["brightcal-api-lib/src/*"],
+      "@brightchain/brightcal-react-components": ["brightcal-react-components/src/index.ts"],
+      "@brightchain/brightcal-react-components/*": ["brightcal-react-components/src/*"]
     }
   },
   "exclude": ["node_modules", "tmp", "dist"]

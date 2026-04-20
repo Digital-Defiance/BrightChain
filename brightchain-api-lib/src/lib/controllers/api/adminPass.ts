@@ -130,7 +130,7 @@ export class AdminPassController<
         ? (this.application.services.get('db') as BrightDb)
         : undefined;
       if (brightDb) {
-        const collection = brightDb.collection('vaults');
+        const collection = brightDb.collection('brightpass_vaults');
         const total = await collection.countDocuments();
         const skip = (page - 1) * limit;
         const docs = await collection.find().skip(skip).limit(limit).toArray();
@@ -209,7 +209,7 @@ export class AdminPassController<
         ? (this.application.services.get('db') as BrightDb)
         : undefined;
       if (brightDb) {
-        const collection = brightDb.collection('vaults');
+        const collection = brightDb.collection('brightpass_vaults');
         const result = await collection.deleteOne({ _id: vaultId });
         if (!result.deletedCount) {
           return notFoundError('Vault', vaultId);

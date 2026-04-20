@@ -184,7 +184,11 @@ export const ShowcaseMandarinStrings: Partial<
   [ShowcaseStrings.FAQ_Tech_Q11_BrightChart_Title]: '患者自有医疗记录',
   [ShowcaseStrings.FAQ_Tech_Q11_BrightChart_Text]:
     '一个由患者持有密钥的电子病历。BrightChart将符合FHIR R4标准的医疗数据作为加密块存储在BrightChain上——没有可被攻破的中央数据库。患者通过BrightTrust委托向医疗提供者授予细粒度访问权限，每次访问事件都记录在不可变的审计追踪中。从单一代码库支持医疗、牙科和兽医诊所。',
-  [ShowcaseStrings.FAQ_Tech_Q11_BrightMail_Title]: '主权通信',
+  [ShowcaseStrings.FAQ_BrightCal_Logo_Alt]: 'BrightCal标志',
+  [ShowcaseStrings.FAQ_Tech_Q11_BrightCal_Title]: '共享和个人日历管理',
+  [ShowcaseStrings.FAQ_Tech_Q11_BrightCal_Text]:
+    '一个由所有者持有密鑰的日历系统。BrightCal实现具有细粒度访问控制的安全加密日程安排。事件以加密块的形式存储。所有日历数据均不可变更且可恢复，支持循环事件、提醒以及与传统日历系统的集成。',
+    [ShowcaseStrings.FAQ_Tech_Q11_BrightMail_Title]: '主权通信',
   [ShowcaseStrings.FAQ_Tech_Q11_BrightMail_Text]:
     '一个完全符合RFC标准的电子邮件系统，连接传统SMTP和去中心化存储。与标准电子邮件提供商不同，BrightMail将每条消息分片到"无主"区块存储中，支持端到端加密的"暗模式"消息。',
   [ShowcaseStrings.FAQ_Tech_Q11_BrightHub_Title]: '社交网络和主权图谱',
@@ -389,7 +393,7 @@ export const ShowcaseMandarinStrings: Partial<
 
   // About Section
   [ShowcaseStrings.About_Title_BuiltWith]: '构建于',
-  [ShowcaseStrings.About_Title_By]: 'by Digital Defiance',
+  [ShowcaseStrings.About_Title_By]: '由 Digital Defiance 开发',
   [ShowcaseStrings.About_Subtitle]: '去中心化基础设施领域的开源创新',
   [ShowcaseStrings.About_Vision_Title]: '我们的愿景',
   [ShowcaseStrings.About_Vision_P1]:
@@ -413,13 +417,13 @@ export const ShowcaseMandarinStrings: Partial<
   [ShowcaseStrings.About_OtherImpl_Title]: '其他实现',
   [ShowcaseStrings.About_OtherImpl_P1]:
     '虽然这个 TypeScript/Node.js 实现是 BrightChain 最主要、最成熟的版本，但一个并行的 C++ 核心库及 macOS/iOS 用户界面正在开发中。这个原生实现将 BrightChain 的隐私和安全特性带到了 Apple 平台。两个代码仓库都处于早期开发阶段，尚未准备好用于生产环境。',
-  // TODO: translate
+  // About - Other Implementations (linked text)
   [ShowcaseStrings.About_OtherImpl_P1_Before]:
-    'While this TypeScript/Node.js implementation is the primary and most mature version of BrightChain, a parallel ',
-  [ShowcaseStrings.About_OtherImpl_P1_CppLink]: 'C++ core library',
-  [ShowcaseStrings.About_OtherImpl_P1_AppleLink]: 'macOS/iOS UI',
+    '虽然这个 TypeScript/Node.js 实现是主要且最成熟的版本，但一个',
+  [ShowcaseStrings.About_OtherImpl_P1_CppLink]: 'C++ 核心库',
+  [ShowcaseStrings.About_OtherImpl_P1_AppleLink]: 'macOS/iOS 界面',
   [ShowcaseStrings.About_OtherImpl_P1_After]:
-    " is in development. This native implementation brings BrightChain's privacy and security features to Apple platforms. Both repositories are in early development and not yet ready for production use.",
+    '正在开发中。这个原生实现将 BrightChain 的隐私和性能能力直接带到 Apple 设备上。',
   [ShowcaseStrings.About_Feature_OwnerFree_Title]: '无主存储',
   [ShowcaseStrings.About_Feature_OwnerFree_Desc]:
     '密码学随机性消除了存储责任。没有任何单个区块包含可识别的内容，为节点运营者提供法律豁免。',
@@ -1376,456 +1380,483 @@ export const ShowcaseMandarinStrings: Partial<
   [ShowcaseStrings.Blog_ByAuthorTemplate]: '{AUTHOR}著',
   [ShowcaseStrings.Blog_BackToHome]: '← 返回首页',
 
-  // BlogPost.tsx (TODO: translate)
-  [ShowcaseStrings.BlogPost_Loading]: 'Loading post...',
-  [ShowcaseStrings.BlogPost_NotFoundTitle]: 'Post Not Found',
+  // BlogPost.tsx
+  [ShowcaseStrings.BlogPost_Loading]: '加载文章中...',
+  [ShowcaseStrings.BlogPost_NotFoundTitle]: '文章未找到',
   [ShowcaseStrings.BlogPost_NotFoundDesc]:
-    "The blog post you're looking for doesn't exist.",
-  [ShowcaseStrings.BlogPost_BackToBlog]: '← Back to Blog',
+    '您查找的博客文章不存在。',
+  [ShowcaseStrings.BlogPost_BackToBlog]: '← 返回博客',
   [ShowcaseStrings.BlogPost_NewBanner]:
-    '✨ This post was just published! It will appear in the blog list after the next site deployment.',
-  [ShowcaseStrings.BlogPost_ByAuthorTemplate]: 'By {AUTHOR}',
+    '✨ 这篇文章刚刚发布！它将在下次网站更新后出现在博客列表中。',
+  [ShowcaseStrings.BlogPost_ByAuthorTemplate]: '作者：{AUTHOR}',
 
-  // Components.tsx feature cards (TODO: translate)
+  // Components.tsx feature cards
   [ShowcaseStrings.Feat_BrightDB_Desc]:
-    'MongoDB-competitive document database storing data on the Owner-Free Filesystem. Every document transparently stored as whitened blocks with TUPLE architecture for plausible deniability.',
-  [ShowcaseStrings.Feat_BrightDB_Cat]: 'Storage',
-  [ShowcaseStrings.Feat_BrightDB_Tech1]: 'Document Store',
-  [ShowcaseStrings.Feat_BrightDB_Tech2]: 'ACID Transactions',
-  [ShowcaseStrings.Feat_BrightDB_Tech3]: 'Aggregation Pipeline',
+    '在无主文件系统上存储数据的MongoDB竞争文档数据库。每个文档都以TUPLE架构的白化块形式透明存储，以实现合理推诿。',
+  [ShowcaseStrings.Feat_BrightDB_Cat]: '存储',
+  [ShowcaseStrings.Feat_BrightDB_Tech1]: '文档存储',
+  [ShowcaseStrings.Feat_BrightDB_Tech2]: 'ACID事务',
+  [ShowcaseStrings.Feat_BrightDB_Tech3]: '聚合管道',
   [ShowcaseStrings.Feat_BrightDB_HL1]:
-    'MongoDB-like API: collections, CRUD, queries, indexes, transactions',
+    'MongoDB风格API：集合、CRUD、查询、索引、事务',
   [ShowcaseStrings.Feat_BrightDB_HL2]:
-    '15 query operators: $eq, $ne, $gt, $gte, $lt, $lte, $in, $nin, $regex, $exists, $and, $or, $not, $nor, $elemMatch',
+    '15个查询操作符：$eq、$ne、$gt、$gte、$lt、$lte、$in、$nin、$regex、$exists、$and、$or、$not、$nor、$elemMatch',
   [ShowcaseStrings.Feat_BrightDB_HL3]:
-    'Aggregation pipeline: $match, $group, $sort, $limit, $skip, $project, $unwind, $count, $addFields, $lookup',
+    '聚合管道：$match、$group、$sort、$limit、$skip、$project、$unwind、$count、$addFields、$lookup',
   [ShowcaseStrings.Feat_BrightDB_HL4]:
-    'Single-field, compound, and unique indexes with B-tree structures',
+    '具有B树结构的单字段、复合和唯一索引',
   [ShowcaseStrings.Feat_BrightDB_HL5]:
-    'Multi-document ACID transactions with commit/abort and optimistic concurrency',
+    '具有提交/中止和乐观并发的多文档ACID事务',
   [ShowcaseStrings.Feat_BrightDB_HL6]:
-    'Change streams for real-time insert/update/delete event subscriptions',
+    '用于实时插入/更新/删除事件订阅的变更流',
   [ShowcaseStrings.Feat_BrightDB_HL7]:
-    'Express REST middleware for drop-in API access to collections',
+    '用于即插即用API访问集合的Express REST中间件',
   [ShowcaseStrings.Feat_BrightDB_HL8]:
-    'TTL indexes for automatic document expiration',
+    '用于文档自动过期的TTL索引',
   [ShowcaseStrings.Feat_BrightDB_HL9]:
-    'Schema validation with strict/moderate levels and default values',
+    '具有严格/中等级别和默认值的模式验证',
   [ShowcaseStrings.Feat_BrightDB_HL10]:
-    'Full-text search with weighted fields and $text operator',
+    '具有加权字段和$text操作符的全文搜索',
   [ShowcaseStrings.Feat_BrightDB_HL11]:
-    'Copy-on-write storage: blocks never deleted, only mappings updated',
+    '写时复制存储：块永不删除，仅更新映射',
   [ShowcaseStrings.Feat_BrightDB_HL12]:
-    'Every document stored as 3-block TUPLE (data + 2 randomizers) for plausible deniability',
-  [ShowcaseStrings.Feat_BrightDBPools_Title]: 'BrightDB Pools',
+    '每个文档存储为3块TUPLE（数据+2个随机化器）以实现合理推诿',
+  [ShowcaseStrings.Feat_BrightDBPools_Title]: 'BrightDB池',
   [ShowcaseStrings.Feat_BrightDBPools_Desc]:
-    'Lightweight namespace-isolated storage pools that logically partition blocks without separate physical storage. Each pool enforces its own ACL, encryption, and whitening boundaries — enabling multi-tenant, multi-application data isolation on a single BrightChain node.',
-  [ShowcaseStrings.Feat_BrightDBPools_Cat]: 'Storage',
-  [ShowcaseStrings.Feat_BrightDBPools_Tech1]: 'Namespace Isolation',
-  [ShowcaseStrings.Feat_BrightDBPools_Tech2]: 'Pool ACLs',
-  [ShowcaseStrings.Feat_BrightDBPools_Tech3]: 'Gossip Discovery',
+    '轻量级命名空间隔离存储池，在没有单独物理存储的情况下逻辑分区块。每个池强制执行自己的ACL、加密和白化边界——在单个BrightChain节点上实现多租户、多应用程序数据隔离。',
+  [ShowcaseStrings.Feat_BrightDBPools_Cat]: '存储',
+  [ShowcaseStrings.Feat_BrightDBPools_Tech1]: '命名空间隔离',
+  [ShowcaseStrings.Feat_BrightDBPools_Tech2]: '池ACL',
+  [ShowcaseStrings.Feat_BrightDBPools_Tech3]: 'Gossip发现',
   [ShowcaseStrings.Feat_BrightDBPools_HL1]:
-    'Namespace-prefixed storage keys (poolId:hash) — logical isolation without physical separation',
+    '命名空间前缀存储键（poolId:hash）— 无物理分离的逻辑隔离',
   [ShowcaseStrings.Feat_BrightDBPools_HL2]:
-    'Per-pool ACLs with Read, Write, Replicate, and Admin permissions enforced at the store layer',
+    '每个池的ACL，在存储层强制执行读取、写入、复制和管理权限',
   [ShowcaseStrings.Feat_BrightDBPools_HL3]:
-    'Pool-scoped XOR whitening: tuples never cross pool boundaries, preserving per-pool plausible deniability',
+    '池范围的XOR白化：元组永不跨越池边界，保留每个池的合理推诿',
   [ShowcaseStrings.Feat_BrightDBPools_HL4]:
-    'Gossip-based pool discovery across peers with configurable query timeouts and caching',
+    '基于gossip的跨对等点池发现，具有可配置的查询超时和缓存',
   [ShowcaseStrings.Feat_BrightDBPools_HL5]:
-    'Pool bootstrap seeding: generate cryptographic random blocks as whitening material for new pools',
+    '池引导播种：生成加密随机块作为新池的白化材料',
   [ShowcaseStrings.Feat_BrightDBPools_HL6]:
-    'Safe deletion validation — checks cross-pool XOR dependencies before removing a pool',
+    '安全删除验证 — 在删除池之前检查跨池XOR依赖关系',
   [ShowcaseStrings.Feat_BrightDBPools_HL7]:
-    'Pool-scoped Bloom filters and manifests for efficient peer reconciliation',
+    '池范围的Bloom过滤器和清单，用于高效的对等协调',
   [ShowcaseStrings.Feat_BrightDBPools_HL8]:
-    'Multi-admin quorum governance: ACL updates require >50% admin signatures',
+    '多管理员法定人数治理：ACL更新需要>50%的管理员签名',
   [ShowcaseStrings.Feat_BrightDBPools_HL9]:
-    'Public read/write flags for open pools, or locked-down member-only access',
-  [ShowcaseStrings.Feat_OFFS_Title]: 'Owner-Free File System (OFFS)',
+    '开放池的公共读/写标志，或仅限成员的锁定访问',
+  [ShowcaseStrings.Feat_OFFS_Title]: '无主文件系统 (OFFS)',
   [ShowcaseStrings.Feat_OFFS_Desc]:
-    'Revolutionary distributed storage that breaks files into blocks and XORs them with random data. No single block contains identifiable content, providing legal immunity for node operators while enabling secure, decentralized file storage.',
-  [ShowcaseStrings.Feat_OFFS_Cat]: 'Storage',
-  [ShowcaseStrings.Feat_OFFS_Tech1]: 'XOR Encryption',
-  [ShowcaseStrings.Feat_OFFS_Tech2]: 'Distributed Storage',
+    '革命性的分布式存储，将文件拆分为块并与随机数据进行 XOR 运算。没有任何单个块包含可识别的内容，为节点运营者提供法律豁免，同时实现安全的去中心化文件存储。',
+  [ShowcaseStrings.Feat_OFFS_Cat]: '存储',
+  [ShowcaseStrings.Feat_OFFS_Tech1]: 'XOR 加密',
+  [ShowcaseStrings.Feat_OFFS_Tech2]: '分布式存储',
   [ShowcaseStrings.Feat_OFFS_Tech3]: 'SHA-512',
   [ShowcaseStrings.Feat_OFFS_HL1]:
-    'Files split into source blocks and merged with random data via XOR',
+    '文件拆分为源块并通过 XOR 与随机数据合并',
   [ShowcaseStrings.Feat_OFFS_HL2]:
-    'Original blocks discarded - only randomized blocks stored',
+    '原始块被丢弃——仅存储随机化后的块',
   [ShowcaseStrings.Feat_OFFS_HL3]:
-    'Constituent Block Lists (CBL) track block relationships',
+    '组成块列表 (CBL) 跟踪块之间的关系',
   [ShowcaseStrings.Feat_OFFS_HL4]:
-    'Blocks identified by SHA-512 hash - automatic deduplication',
+    '块通过 SHA-512 哈希标识——自动去重',
   [ShowcaseStrings.Feat_OFFS_HL5]:
-    'Multi-use blocks can be part of multiple files simultaneously',
+    '多用途块可以同时属于多个文件',
   [ShowcaseStrings.Feat_OFFS_HL6]:
-    'Legal protection for node operators - no identifiable content stored',
-  [ShowcaseStrings.Feat_Messaging_Title]: 'Messaging System',
+    '为节点运营者提供法律保护——不存储可识别的内容',
+  [ShowcaseStrings.Feat_Messaging_Title]: '消息传递系统',
   [ShowcaseStrings.Feat_Messaging_Desc]:
-    'Secure, decentralized message passing with encryption, routing, delivery tracking, and gossip protocol for epidemic-style propagation. Built on the block store with WebSocket real-time delivery.',
-  [ShowcaseStrings.Feat_Messaging_Cat]: 'Network',
-  [ShowcaseStrings.Feat_Messaging_Tech1]: 'Gossip Protocol',
+    '安全的去中心化消息传递，支持加密、路由、投递跟踪和 gossip 协议的流行式传播。基于块存储构建，支持 WebSocket 实时投递。',
+  [ShowcaseStrings.Feat_Messaging_Cat]: '网络',
+  [ShowcaseStrings.Feat_Messaging_Tech1]: 'Gossip 协议',
   [ShowcaseStrings.Feat_Messaging_Tech2]: 'ECIES',
   [ShowcaseStrings.Feat_Messaging_Tech3]: 'WebSocket',
-  [ShowcaseStrings.Feat_Messaging_Tech4]: 'Bloom Filters',
+  [ShowcaseStrings.Feat_Messaging_Tech4]: 'Bloom 过滤器',
   [ShowcaseStrings.Feat_Messaging_HL1]:
-    'Encrypted message passing with per-recipient or shared key encryption',
+    '加密消息传递，支持每个收件人或共享密钥加密',
   [ShowcaseStrings.Feat_Messaging_HL2]:
-    'Epidemic-style gossip propagation with priority-based delivery',
+    '流行式 gossip 传播，支持基于优先级的投递',
   [ShowcaseStrings.Feat_Messaging_HL3]:
-    'Automatic retry with exponential backoff for failed deliveries',
+    '投递失败时自动重试，采用指数退避策略',
   [ShowcaseStrings.Feat_Messaging_HL4]:
-    'Bloom filter-based discovery protocol for efficient block location',
+    '基于 Bloom 过滤器的发现协议，高效定位块',
   [ShowcaseStrings.Feat_Messaging_HL5]:
-    'Real-time WebSocket events for message delivery and acknowledgments',
+    '通过 WebSocket 实时推送消息投递和确认事件',
   [ShowcaseStrings.Feat_Messaging_HL6]:
-    'Persistent delivery tracking with per-recipient status',
+    '持久化投递跟踪，支持每个收件人的状态',
   [ShowcaseStrings.Feat_BrightMail_Desc]:
-    'RFC 5322/2045 compliant email with threading, BCC privacy, attachments, inbox operations, and delivery tracking. Full email composition, sending, and retrieval built on messaging infrastructure.',
-  [ShowcaseStrings.Feat_BrightMail_Cat]: 'Network',
+    '符合RFC 5322/2045的电子邮件，具有线程、BCC隐私、附件、收件箱操作和投递跟踪。基于消息传递基础设施构建的完整电子邮件撰写、发送和检索。',
+  [ShowcaseStrings.Feat_BrightMail_Cat]: '网络',
   [ShowcaseStrings.Feat_BrightMail_Tech1]: 'RFC 5322',
   [ShowcaseStrings.Feat_BrightMail_Tech2]: 'RFC 2045',
   [ShowcaseStrings.Feat_BrightMail_Tech3]: 'MIME',
-  [ShowcaseStrings.Feat_BrightMail_Tech4]: 'Threading',
+  [ShowcaseStrings.Feat_BrightMail_Tech4]: '线程',
   [ShowcaseStrings.Feat_BrightMail_HL1]:
-    'RFC-compliant Internet Message Format with MIME support',
+    '符合RFC的互联网消息格式，支持MIME',
   [ShowcaseStrings.Feat_BrightMail_HL2]:
-    'Threading via In-Reply-To and References headers',
+    '通过In-Reply-To和References标头实现线程',
   [ShowcaseStrings.Feat_BrightMail_HL3]:
-    'BCC privacy with cryptographically separated copies per recipient',
+    'BCC隐私，每个收件人的副本经过加密分离',
   [ShowcaseStrings.Feat_BrightMail_HL4]:
-    'Multiple attachments with Content-ID for inline images',
+    '多个附件，支持内联图像的Content-ID',
   [ShowcaseStrings.Feat_BrightMail_HL5]:
-    'Inbox operations: query, filter, sort, search with pagination',
+    '收件箱操作：查询、过滤、排序、带分页的搜索',
   [ShowcaseStrings.Feat_BrightMail_HL6]:
-    'Per-recipient delivery tracking via gossip acknowledgments',
+    '通过gossip确认进行每个收件人的投递跟踪',
   [ShowcaseStrings.Feat_BrightMail_HL7]:
-    'Multiple encryption schemes: ECIES, shared key, S/MIME',
+    '多种加密方案：ECIES、共享密钥、S/MIME',
   [ShowcaseStrings.Feat_BrightMail_HL8]:
-    'Digital signatures for sender authentication',
+    '用于发件人身份验证的数字签名',
   [ShowcaseStrings.Feat_BrightMail_HL9]:
-    'Forward/reply with RFC-compliant Resent-* headers',
+    '使用符合RFC的Resent-*标头进行转发/回复',
+  [ShowcaseStrings.Feat_BrightCal_Desc]:
+    '可与 Google Calendar 竞争的共享日历系统，与 BrightMail 集成。兼容 iCal/CalDAV，端到端加密事件，细粒度共享权限，会议预约和冲突检测。',
+  [ShowcaseStrings.Feat_BrightCal_Cat]: '网络',
+  [ShowcaseStrings.Feat_BrightCal_Tech1]: 'iCal/RFC 5545',
+  [ShowcaseStrings.Feat_BrightCal_Tech2]: 'CalDAV',
+  [ShowcaseStrings.Feat_BrightCal_Tech3]: 'ECIES 加密',
+  [ShowcaseStrings.Feat_BrightCal_Tech4]: 'iTIP/iMIP',
+  [ShowcaseStrings.Feat_BrightCal_HL1]:
+    'RFC 5545 iCalendar 格式，完整支持 VEVENT、VTODO、VJOURNAL 和 VFREEBUSY',
+  [ShowcaseStrings.Feat_BrightCal_HL2]:
+    'CalDAV 服务器协议，原生同步 Apple Calendar、Thunderbird 和 Android',
+  [ShowcaseStrings.Feat_BrightCal_HL3]:
+    '端到端加密事件，以 ECIES 加密块形式存储在无主文件系统中',
+  [ShowcaseStrings.Feat_BrightCal_HL4]:
+    '细粒度共享：按日历按用户查看空闲/忙碌、查看详情、编辑或委托',
+  [ShowcaseStrings.Feat_BrightCal_HL5]:
+    '通过 iTIP/iMIP 发送会议邀请，集成 BrightMail 和 RSVP 跟踪',
+  [ShowcaseStrings.Feat_BrightCal_HL6]:
+    '跨共享日历的冲突检测和可用性查询，支持空闲/忙碌聚合',
+  [ShowcaseStrings.Feat_BrightCal_HL7]:
+    '预约页面，支持可配置的可用时间窗口、缓冲时间和确认流程',
+  [ShowcaseStrings.Feat_BrightCal_HL8]:
+    '循环事件支持 RRULE、EXDATE 和每次出现的覆盖处理',
+  [ShowcaseStrings.Feat_BrightCal_HL9]:
+    '多时区显示，自动处理夏令时和每事件时区固定',
+  [ShowcaseStrings.Feat_BrightCal_HL10]:
+    '日/周/月/议程 UI 组件，支持拖放重新安排和内联编辑',
   [ShowcaseStrings.Feat_BrightChat_Desc]:
-    'Discord-competitive communication platform with Signal-grade end-to-end encryption. Direct messaging, group chats, and channels with real-time presence, typing indicators, and role-based permissions.',
-  [ShowcaseStrings.Feat_BrightChat_Cat]: 'Network',
-  [ShowcaseStrings.Feat_BrightChat_Tech1]: 'E2E Encryption',
+    '可与 Discord 竞争的通信平台，具有 Signal 级别的端到端加密。支持私信、群聊和频道，具有实时在线状态、输入指示器和基于角色的权限。',
+  [ShowcaseStrings.Feat_BrightChat_Cat]: '网络',
+  [ShowcaseStrings.Feat_BrightChat_Tech1]: '端到端加密',
   [ShowcaseStrings.Feat_BrightChat_Tech2]: 'WebSocket',
-  [ShowcaseStrings.Feat_BrightChat_Tech3]: 'Key Rotation',
+  [ShowcaseStrings.Feat_BrightChat_Tech3]: '密钥轮换',
   [ShowcaseStrings.Feat_BrightChat_Tech4]: 'RBAC',
   [ShowcaseStrings.Feat_BrightChat_HL1]:
-    'Direct messaging for person-to-person encrypted conversations',
+    '私信功能，支持点对点加密对话',
   [ShowcaseStrings.Feat_BrightChat_HL2]:
-    'Group chats with shared encryption and automatic key rotation',
+    '群聊支持共享加密和自动密钥轮换',
   [ShowcaseStrings.Feat_BrightChat_HL3]:
-    'Channels with four visibility modes: public/private/secret/invisible',
+    '频道支持四种可见性模式：公开/私密/秘密/隐形',
   [ShowcaseStrings.Feat_BrightChat_HL4]:
-    'Real-time presence system: online/offline/idle/DND',
+    '实时在线状态系统：在线/离线/空闲/勿扰',
   [ShowcaseStrings.Feat_BrightChat_HL5]:
-    'Role-based permissions: Owner/Admin/Moderator/Member',
+    '基于角色的权限：所有者/管理员/版主/成员',
   [ShowcaseStrings.Feat_BrightChat_HL6]:
-    'Typing indicators, reactions, and message edits via WebSocket',
+    '通过 WebSocket 支持输入指示器、表情回应和消息编辑',
   [ShowcaseStrings.Feat_BrightChat_HL7]:
-    'Time-limited, usage-limited invite tokens for channels',
+    '支持时间限制和使用次数限制的频道邀请令牌',
   [ShowcaseStrings.Feat_BrightChat_HL8]:
-    'Full-text message search within channel history',
+    '频道历史记录中的全文消息搜索',
   [ShowcaseStrings.Feat_BrightChat_HL9]:
-    'Seamless conversation promotion from DMs to groups',
+    '无缝将私信对话升级为群聊',
   [ShowcaseStrings.Feat_BrightPass_Desc]:
-    '1Password-competitive password keychain with VCBL architecture for efficient encrypted credential storage. TOTP/2FA, breach detection, emergency access, and import from major password managers.',
-  [ShowcaseStrings.Feat_BrightPass_Cat]: 'Identity',
+    '可与 1Password 竞争的密码钥匙链，采用 VCBL 架构实现高效的加密凭证存储。支持 TOTP/2FA、泄露检测、紧急访问，以及从主流密码管理器导入。',
+  [ShowcaseStrings.Feat_BrightPass_Cat]: '身份',
   [ShowcaseStrings.Feat_BrightPass_Tech1]: 'VCBL',
   [ShowcaseStrings.Feat_BrightPass_Tech2]: 'TOTP',
   [ShowcaseStrings.Feat_BrightPass_Tech3]: 'AES-256-GCM',
-  [ShowcaseStrings.Feat_BrightPass_Tech4]: 'Shamir Sharing',
+  [ShowcaseStrings.Feat_BrightPass_Tech4]: 'Shamir 秘密共享',
   [ShowcaseStrings.Feat_BrightPass_HL1]:
-    'VCBL (Vault Constituent Block List) for efficient encrypted storage',
+    'VCBL（保险库组成块列表）实现高效加密存储',
   [ShowcaseStrings.Feat_BrightPass_HL2]:
-    'Multiple entry types: login, secure note, credit card, identity',
+    '多种条目类型：登录、安全笔记、信用卡、身份',
   [ShowcaseStrings.Feat_BrightPass_HL3]:
-    'Cryptographically secure password generation with constraints',
+    '密码学安全的密码生成，支持约束条件',
   [ShowcaseStrings.Feat_BrightPass_HL4]:
-    'TOTP/2FA support with QR code generation for authenticators',
+    'TOTP/2FA 支持，可为认证器生成二维码',
   [ShowcaseStrings.Feat_BrightPass_HL5]:
-    'k-anonymity breach detection via Have I Been Pwned API',
+    '通过 Have I Been Pwned API 的 k-匿名性泄露检测',
   [ShowcaseStrings.Feat_BrightPass_HL6]:
-    'Append-only encrypted audit logging for all vault operations',
+    '所有保险库操作的仅追加加密审计日志',
   [ShowcaseStrings.Feat_BrightPass_HL7]:
-    "Emergency access via Shamir's Secret Sharing for recovery",
+    '通过 Shamir 秘密共享实现紧急访问恢复',
   [ShowcaseStrings.Feat_BrightPass_HL8]:
-    'Multi-member vault sharing with ECIES per-recipient encryption',
+    '多成员保险库共享，采用 ECIES 每收件人加密',
   [ShowcaseStrings.Feat_BrightPass_HL9]:
-    'Import from 1Password, LastPass, Bitwarden, Chrome, Firefox, KeePass, Dashlane',
+    '支持从 1Password、LastPass、Bitwarden、Chrome、Firefox、KeePass、Dashlane 导入',
   [ShowcaseStrings.Feat_BrightPass_HL10]:
-    'Browser extension autofill API ready',
+    '浏览器扩展自动填充 API 就绪',
   [ShowcaseStrings.Feat_BrightVote_Desc]:
-    'Privacy-preserving elections using Paillier homomorphic encryption with ECDH-derived keys. Supports 15+ voting methods from simple plurality to complex ranked choice with government compliance features.',
-  [ShowcaseStrings.Feat_BrightVote_Cat]: 'Governance',
-  [ShowcaseStrings.Feat_BrightVote_Tech1]: 'Paillier Encryption',
+    '使用 Paillier 同态加密和 ECDH 派生密钥的隐私保护选举。支持 15 种以上投票方法，从简单多数制到复杂的排名选择，具备政府合规功能。',
+  [ShowcaseStrings.Feat_BrightVote_Cat]: '治理',
+  [ShowcaseStrings.Feat_BrightVote_Tech1]: 'Paillier 加密',
   [ShowcaseStrings.Feat_BrightVote_Tech2]: 'ECDH',
-  [ShowcaseStrings.Feat_BrightVote_Tech3]: 'Homomorphic Cryptography',
+  [ShowcaseStrings.Feat_BrightVote_Tech3]: '同态密码学',
   [ShowcaseStrings.Feat_BrightVote_HL1]:
-    'ECDH-to-Paillier bridge derives homomorphic keys from ECDSA/ECDH keys',
+    'ECDH 到 Paillier 桥从 ECDSA/ECDH 密钥派生同态密钥',
   [ShowcaseStrings.Feat_BrightVote_HL2]:
-    'Privacy-preserving vote aggregation via homomorphic addition',
+    '通过同态加法实现隐私保护的投票聚合',
   [ShowcaseStrings.Feat_BrightVote_HL3]:
-    '15+ voting methods: Plurality, Approval, Weighted, Borda, Score, Ranked Choice, IRV, STAR, STV, Quadratic, Consensus, etc.',
+    '15 种以上投票方法：多数制、赞成制、加权、Borda、评分、排名选择、IRV、STAR、STV、二次方、共识等',
   [ShowcaseStrings.Feat_BrightVote_HL4]:
-    'Security classifications: fully homomorphic, multi-round, insecure',
+    '安全分类：完全同态、多轮、不安全',
   [ShowcaseStrings.Feat_BrightVote_HL5]:
-    'Government compliance: immutable audit logs, public bulletin board, verifiable receipts',
+    '政府合规：不可变审计日志、公共公告板、可验证回执',
   [ShowcaseStrings.Feat_BrightVote_HL6]:
-    'Hierarchical aggregation: Precinct → County → State → National',
+    '层级聚合：选区 → 县 → 州 → 全国',
   [ShowcaseStrings.Feat_BrightVote_HL7]:
-    '128-bit security level with Miller-Rabin primality testing (256 rounds)',
+    '128 位安全级别，采用 Miller-Rabin 素性测试（256 轮）',
   [ShowcaseStrings.Feat_BrightVote_HL8]:
-    'Cross-platform determinism (Node.js and browser environments)',
+    '跨平台确定性（Node.js 和浏览器环境）',
   [ShowcaseStrings.Feat_BrightVote_HL9]:
-    'Timing attack resistance with constant-time operations',
+    '通过常量时间操作抵抗时序攻击',
   [ShowcaseStrings.Feat_BrightHub_Desc]:
-    'Twitter-competitive decentralized social network with unique FontAwesome icon markup syntax. Posts, threads, DMs, connection lists, hubs for privacy, and real-time notifications via WebSocket.',
-  [ShowcaseStrings.Feat_BrightHub_Cat]: 'Network',
+    '可与 Twitter 竞争的去中心化社交网络，具有独特的 FontAwesome 图标标记语法。支持帖子、话题、私信、联系人列表、隐私中心，以及通过 WebSocket 的实时通知。',
+  [ShowcaseStrings.Feat_BrightHub_Cat]: '网络',
   [ShowcaseStrings.Feat_BrightHub_Tech1]: 'WebSocket',
-  [ShowcaseStrings.Feat_BrightHub_Tech2]: 'Real-time Messaging',
-  [ShowcaseStrings.Feat_BrightHub_Tech3]: 'Connection Management',
+  [ShowcaseStrings.Feat_BrightHub_Tech2]: '实时消息',
+  [ShowcaseStrings.Feat_BrightHub_Tech3]: '联系人管理',
   [ShowcaseStrings.Feat_BrightHub_HL1]:
-    'Posts with 280-char limit, markdown, and unique {{icon}} syntax for FontAwesome',
+    '帖子支持 280 字符限制、Markdown 和独特的 {{icon}} FontAwesome 语法',
   [ShowcaseStrings.Feat_BrightHub_HL2]:
-    'Threaded conversations with 10-level nesting and reply hierarchies',
+    '话题对话支持 10 级嵌套和回复层级',
   [ShowcaseStrings.Feat_BrightHub_HL3]:
-    'Connection lists, categories, and hubs for organizing relationships',
+    '联系人列表、分类和中心，用于组织关系',
   [ShowcaseStrings.Feat_BrightHub_HL4]:
-    'Direct messaging with read receipts, typing indicators, and reactions',
+    '私信支持已读回执、输入指示器和表情回应',
   [ShowcaseStrings.Feat_BrightHub_HL5]:
-    'Group conversations (up to 50 participants) with admin roles',
+    '群组对话（最多 50 名参与者），支持管理员角色',
   [ShowcaseStrings.Feat_BrightHub_HL6]:
-    'Message requests for non-followers with accept/decline workflow',
+    '非关注者的消息请求，支持接受/拒绝工作流',
   [ShowcaseStrings.Feat_BrightHub_HL7]:
-    'Real-time notifications via WebSocket with smart grouping',
+    '通过 WebSocket 实时通知，支持智能分组',
   [ShowcaseStrings.Feat_BrightHub_HL8]:
-    'Notification preferences: quiet hours, DND mode, per-category settings',
+    '通知偏好：安静时段、勿扰模式、按类别设置',
   [ShowcaseStrings.Feat_BrightHub_HL9]:
-    'Protected accounts with follow request approval workflow',
+    '受保护账户，支持关注请求审批工作流',
   [ShowcaseStrings.Feat_BrightHub_HL10]:
-    'Connection insights: strength calculation, mutual connections, suggestions',
+    '联系人洞察：强度计算、共同联系人、推荐',
   [ShowcaseStrings.Feat_BrightHub_HL11]:
-    'Hub-based content visibility for private group sharing',
+    '基于中心的内容可见性，用于私密群组分享',
   [ShowcaseStrings.Feat_BrightHub_HL12]:
-    'Rich text formatting with XSS prevention and emoji support',
-  [ShowcaseStrings.Feat_Anonymity_Title]: 'Brokered Anonymity & BrightTrust',
+    '富文本格式，支持 XSS 防护和表情符号',
+  [ShowcaseStrings.Feat_Anonymity_Title]: '中介匿名与 BrightTrust',
   [ShowcaseStrings.Feat_Anonymity_Desc]:
-    "Sophisticated privacy mechanism enabling anonymous operations while maintaining accountability. Identity information encrypted and split using Shamir's Secret Sharing, reconstructable only through majority BrightTrust consensus.",
-  [ShowcaseStrings.Feat_Anonymity_Cat]: 'Governance',
-  [ShowcaseStrings.Feat_Anonymity_Tech1]: "Shamir's Secret Sharing",
-  [ShowcaseStrings.Feat_Anonymity_Tech2]: 'Forward Error Correction',
-  [ShowcaseStrings.Feat_Anonymity_Tech3]: 'BrightTrust Consensus',
+    '精密的隐私机制，在保持问责制的同时实现匿名操作。身份信息通过 Shamir 秘密共享进行加密和拆分，仅通过多数 BrightTrust 共识才能重建。',
+  [ShowcaseStrings.Feat_Anonymity_Cat]: '治理',
+  [ShowcaseStrings.Feat_Anonymity_Tech1]: 'Shamir 秘密共享',
+  [ShowcaseStrings.Feat_Anonymity_Tech2]: '前向纠错',
+  [ShowcaseStrings.Feat_Anonymity_Tech3]: 'BrightTrust 共识',
   [ShowcaseStrings.Feat_Anonymity_HL1]:
-    'Post anonymously with encrypted identity backup',
+    '匿名发布，带加密身份备份',
   [ShowcaseStrings.Feat_Anonymity_HL2]:
-    'Identity shards distributed across ~24 BrightTrust members',
+    '身份分片分布在约 24 个 BrightTrust 成员中',
   [ShowcaseStrings.Feat_Anonymity_HL3]:
-    'Majority vote required to reconstruct identity information',
+    '重建身份信息需要多数投票',
   [ShowcaseStrings.Feat_Anonymity_HL4]:
-    'Time-limited accountability - data expires after statute of limitations',
+    '有时限的问责制——数据在诉讼时效后过期',
   [ShowcaseStrings.Feat_Anonymity_HL5]:
-    'Legal compliance mechanism for FISA warrants and court orders',
+    '针对 FISA 令状和法院命令的法律合规机制',
   [ShowcaseStrings.Feat_Anonymity_HL6]:
-    'Permanent privacy protection after expiration period',
-  [ShowcaseStrings.Feat_Encryption_Title]: 'Advanced Encryption Stack',
+    '过期后的永久隐私保护',
+  [ShowcaseStrings.Feat_Encryption_Title]: '高级加密栈',
   [ShowcaseStrings.Feat_Encryption_Desc]:
-    'State-of-the-art encryption combining ECIES for key derivation with AES-256-GCM for file security. Complete cryptosystem with BIP39/32 authentication and SECP256k1 elliptic curve cryptography.',
-  [ShowcaseStrings.Feat_Encryption_Cat]: 'Cryptography',
+    '最先进的加密技术，结合 ECIES 密钥派生和 AES-256-GCM 文件安全。完整的密码系统，支持 BIP39/32 认证和 SECP256k1 椭圆曲线密码学。',
+  [ShowcaseStrings.Feat_Encryption_Cat]: '密码学',
   [ShowcaseStrings.Feat_Encryption_Tech1]: 'ECIES',
   [ShowcaseStrings.Feat_Encryption_Tech2]: 'AES-256-GCM',
   [ShowcaseStrings.Feat_Encryption_Tech3]: 'BIP39/32',
   [ShowcaseStrings.Feat_Encryption_Tech4]: 'SECP256k1',
   [ShowcaseStrings.Feat_Encryption_HL1]:
-    'ECIES encryption with user-specific key derivation',
+    'ECIES 加密，支持用户特定的密钥派生',
   [ShowcaseStrings.Feat_Encryption_HL2]:
-    'AES-256-GCM for authenticated file encryption',
+    'AES-256-GCM 认证文件加密',
   [ShowcaseStrings.Feat_Encryption_HL3]:
-    'BIP39/32 mnemonic-based authentication',
+    'BIP39/32 基于助记词的认证',
   [ShowcaseStrings.Feat_Encryption_HL4]:
-    'SECP256k1 elliptic curve (Ethereum-compatible keyspace)',
+    'SECP256k1 椭圆曲线（兼容以太坊密钥空间）',
   [ShowcaseStrings.Feat_Encryption_HL5]:
-    'Verified block-level data integrity with XOR functionality',
+    '经验证的块级数据完整性，支持 XOR 功能',
   [ShowcaseStrings.Feat_Encryption_HL6]:
-    'Cross-platform cryptographic operations',
-  [ShowcaseStrings.Feat_Storage_Title]: 'Decentralized Storage Network',
+    '跨平台密码学操作',
+  [ShowcaseStrings.Feat_Storage_Title]: '去中心化存储网络',
   [ShowcaseStrings.Feat_Storage_Desc]:
-    'Peer-to-peer distributed file system that monetizes unused storage on personal devices. IPFS-like architecture with energy-efficient proof-of-work and reputation-based incentives.',
-  [ShowcaseStrings.Feat_Storage_Cat]: 'Network',
-  [ShowcaseStrings.Feat_Storage_Tech1]: 'P2P Networks',
+    '点对点分布式文件系统，将个人设备上的闲置存储变现。类 IPFS 架构，具有节能的工作量证明和基于声誉的激励。',
+  [ShowcaseStrings.Feat_Storage_Cat]: '网络',
+  [ShowcaseStrings.Feat_Storage_Tech1]: 'P2P 网络',
   [ShowcaseStrings.Feat_Storage_Tech2]: 'DHT',
-  [ShowcaseStrings.Feat_Storage_Tech3]: 'Block Replication',
+  [ShowcaseStrings.Feat_Storage_Tech3]: '块复制',
   [ShowcaseStrings.Feat_Storage_HL1]:
-    'Utilize wasted storage space on personal computers and devices',
+    '利用个人电脑和设备上的闲置存储空间',
   [ShowcaseStrings.Feat_Storage_HL2]:
-    'Distributed Hash Table (DHT) for efficient block tracking',
+    '分布式哈希表 (DHT) 实现高效的块跟踪',
   [ShowcaseStrings.Feat_Storage_HL3]:
-    'Configurable block durability and accessibility requirements',
+    '可配置的块持久性和可访问性要求',
   [ShowcaseStrings.Feat_Storage_HL4]:
-    'Dynamic replication based on block usefulness and access patterns',
+    '基于块使用率和访问模式的动态复制',
   [ShowcaseStrings.Feat_Storage_HL5]:
-    'Energy-efficient alternative to traditional proof-of-work mining',
+    '传统工作量证明挖矿的节能替代方案',
   [ShowcaseStrings.Feat_Storage_HL6]:
-    'Storage credits and bandwidth compensation for node operators',
-  [ShowcaseStrings.Feat_Sealing_Title]: 'BrightTrust-Based Document Sealing',
+    '节点运营者的存储积分和带宽补偿',
+  [ShowcaseStrings.Feat_Sealing_Title]: '基于 BrightTrust 的文档封存',
   [ShowcaseStrings.Feat_Sealing_Desc]:
-    'Advanced document protection with customizable threshold requirements for access restoration. Groups can seal sensitive information requiring configurable majority consensus to unseal.',
-  [ShowcaseStrings.Feat_Sealing_Cat]: 'Governance',
-  [ShowcaseStrings.Feat_Sealing_Tech1]: 'Threshold Cryptography',
-  [ShowcaseStrings.Feat_Sealing_Tech2]: 'Secret Sharing',
-  [ShowcaseStrings.Feat_Sealing_Tech3]: 'Multi-Party Computation',
+    '高级文档保护，支持可自定义的阈值要求以恢复访问。群组可以封存敏感信息，需要可配置的多数共识才能解封。',
+  [ShowcaseStrings.Feat_Sealing_Cat]: '治理',
+  [ShowcaseStrings.Feat_Sealing_Tech1]: '门限密码学',
+  [ShowcaseStrings.Feat_Sealing_Tech2]: '秘密共享',
+  [ShowcaseStrings.Feat_Sealing_Tech3]: '多方计算',
   [ShowcaseStrings.Feat_Sealing_HL1]:
-    'Seal documents with configurable quorum thresholds (e.g., 3-of-5, 7-of-10)',
+    '使用可配置的法定人数阈值封存文档（例如 3/5、7/10）',
   [ShowcaseStrings.Feat_Sealing_HL2]:
-    'Distributed shard storage across trusted BrightTrust members',
+    '分布式分片存储在受信任的 BrightTrust 成员中',
   [ShowcaseStrings.Feat_Sealing_HL3]:
-    'Mathematical guarantee of security until threshold reached',
+    '在达到阈值之前的数学安全保证',
   [ShowcaseStrings.Feat_Sealing_HL4]:
-    'Flexible unsealing for legal compliance or group decisions',
+    '灵活的解封机制，用于法律合规或群组决策',
   [ShowcaseStrings.Feat_Sealing_HL5]:
-    'Supports organizational governance and compliance workflows',
+    '支持组织治理和合规工作流',
   [ShowcaseStrings.Feat_Sealing_HL6]:
-    'Time-based expiration for automatic privacy protection',
+    '基于时间的过期机制，实现自动隐私保护',
   [ShowcaseStrings.Feat_BrightID_Desc]:
-    'Sophisticated identity management ensuring user privacy and control. Support for registered aliases, anonymous posting, and cryptographic identity verification.',
-  [ShowcaseStrings.Feat_BrightID_Cat]: 'Identity',
-  [ShowcaseStrings.Feat_BrightID_Tech1]: 'Public Key Infrastructure',
+    '精密的身份管理，确保用户隐私和控制。支持注册别名、匿名发布和密码学身份验证。',
+  [ShowcaseStrings.Feat_BrightID_Cat]: '身份',
+  [ShowcaseStrings.Feat_BrightID_Tech1]: '公钥基础设施',
   [ShowcaseStrings.Feat_BrightID_Tech2]: 'BIP39/32',
-  [ShowcaseStrings.Feat_BrightID_Tech3]: 'Identity Management',
+  [ShowcaseStrings.Feat_BrightID_Tech3]: '身份管理',
   [ShowcaseStrings.Feat_BrightID_HL1]:
-    'BIP39/32 mnemonic-based identity generation',
+    'BIP39/32 基于助记词的身份生成',
   [ShowcaseStrings.Feat_BrightID_HL2]:
-    'Multiple registered aliases per user account',
+    '每个用户账户支持多个注册别名',
   [ShowcaseStrings.Feat_BrightID_HL3]:
-    'Anonymous posting with optional identity recovery',
+    '匿名发布，支持可选的身份恢复',
   [ShowcaseStrings.Feat_BrightID_HL4]:
-    'Public key-based authentication (SECP256k1)',
+    '基于公钥的认证 (SECP256k1)',
   [ShowcaseStrings.Feat_BrightID_HL5]:
-    'Forward Error Correction for identity backup',
+    '前向纠错用于身份备份',
   [ShowcaseStrings.Feat_BrightID_HL6]:
-    'Privacy-preserving identity verification',
-  [ShowcaseStrings.Feat_Reputation_Title]: 'Reputation & Energy Tracking',
+    '隐私保护的身份验证',
+  [ShowcaseStrings.Feat_Reputation_Title]: '声誉与能量追踪',
   [ShowcaseStrings.Feat_Reputation_Desc]:
-    'Revolutionary reputation system that tracks energy costs in Joules. Good actors enjoy minimal proof-of-work requirements while bad actors face increased computational burdens.',
-  [ShowcaseStrings.Feat_Reputation_Cat]: 'Network',
-  [ShowcaseStrings.Feat_Reputation_Tech1]: 'Proof of Work',
-  [ShowcaseStrings.Feat_Reputation_Tech2]: 'Reputation Systems',
-  [ShowcaseStrings.Feat_Reputation_Tech3]: 'Energy Accounting',
+    '革命性的声誉系统，以焦耳为单位追踪能量成本。良好行为者享受最低的工作量证明要求，而不良行为者面临更高的计算负担。',
+  [ShowcaseStrings.Feat_Reputation_Cat]: '网络',
+  [ShowcaseStrings.Feat_Reputation_Tech1]: '工作量证明',
+  [ShowcaseStrings.Feat_Reputation_Tech2]: '声誉系统',
+  [ShowcaseStrings.Feat_Reputation_Tech3]: '能量核算',
   [ShowcaseStrings.Feat_Reputation_HL1]:
-    'Energy costs measured in actual Joules for real-world correlation',
+    '能量成本以实际焦耳计量，与现实世界关联',
   [ShowcaseStrings.Feat_Reputation_HL2]:
-    'Dynamic proof-of-work based on user reputation',
+    '基于用户声誉的动态工作量证明',
   [ShowcaseStrings.Feat_Reputation_HL3]:
-    'Content creators rewarded as their content is consumed',
+    '内容创作者在其内容被消费时获得奖励',
   [ShowcaseStrings.Feat_Reputation_HL4]:
-    'Bad actors throttled with increased computational requirements',
+    '不良行为者通过增加计算要求被限流',
   [ShowcaseStrings.Feat_Reputation_HL5]:
-    'Storage and bandwidth costs tracked and compensated',
+    '存储和带宽成本被追踪和补偿',
   [ShowcaseStrings.Feat_Reputation_HL6]:
-    'Incentivizes positive contributions and quality content',
-  [ShowcaseStrings.Feat_BlockTemp_Title]: 'Block Temperature & Lifecycle',
+    '激励积极贡献和优质内容',
+  [ShowcaseStrings.Feat_BlockTemp_Title]: '块温度与生命周期',
   [ShowcaseStrings.Feat_BlockTemp_Desc]:
-    "Intelligent block management with hot/cold storage tiers. Frequently accessed blocks stay 'hot' with high replication, while unused blocks cool down and may expire.",
-  [ShowcaseStrings.Feat_BlockTemp_Cat]: 'Storage',
-  [ShowcaseStrings.Feat_BlockTemp_Tech1]: 'Storage Tiering',
-  [ShowcaseStrings.Feat_BlockTemp_Tech2]: 'Block Lifecycle',
-  [ShowcaseStrings.Feat_BlockTemp_Tech3]: 'Access Patterns',
+    '智能块管理，支持热/冷存储分层。频繁访问的块保持"热"状态并高度复制，而未使用的块逐渐冷却并可能过期。',
+  [ShowcaseStrings.Feat_BlockTemp_Cat]: '存储',
+  [ShowcaseStrings.Feat_BlockTemp_Tech1]: '存储分层',
+  [ShowcaseStrings.Feat_BlockTemp_Tech2]: '块生命周期',
+  [ShowcaseStrings.Feat_BlockTemp_Tech3]: '访问模式',
   [ShowcaseStrings.Feat_BlockTemp_HL1]:
-    "'Keep Until At Least' contracts for minimum storage duration",
+    '"至少保留到"合约，保证最低存储时长',
   [ShowcaseStrings.Feat_BlockTemp_HL2]:
-    'Block usefulness increases with access, staleness decreases',
+    '块的有用性随访问增加，陈旧度随时间降低',
   [ShowcaseStrings.Feat_BlockTemp_HL3]:
-    'Dynamic replication based on access patterns and temperature',
+    '基于访问模式和温度的动态复制',
   [ShowcaseStrings.Feat_BlockTemp_HL4]:
-    'Auto-extension of contracts for frequently accessed blocks',
+    '频繁访问的块自动延长合约',
   [ShowcaseStrings.Feat_BlockTemp_HL5]:
-    'Energy credits returned for blocks that prove useful',
+    '证明有用的块返还能量积分',
   [ShowcaseStrings.Feat_BlockTemp_HL6]:
-    'Configurable durability and accessibility requirements',
-  [ShowcaseStrings.Feat_ZeroMining_Title]: 'Zero Mining Waste',
+    '可配置的持久性和可访问性要求',
+  [ShowcaseStrings.Feat_ZeroMining_Title]: '零挖矿浪费',
   [ShowcaseStrings.Feat_ZeroMining_Desc]:
-    "Built on Ethereum's foundation but engineered without proof-of-work constraints. All computational work serves useful purposes - storage, verification, and network operations.",
-  [ShowcaseStrings.Feat_ZeroMining_Cat]: 'Network',
-  [ShowcaseStrings.Feat_ZeroMining_Tech1]: 'Ethereum Keyspace',
-  [ShowcaseStrings.Feat_ZeroMining_Tech2]: 'Efficient Consensus',
-  [ShowcaseStrings.Feat_ZeroMining_Tech3]: 'Green Blockchain',
+    '基于以太坊基础构建，但摆脱了工作量证明的限制。所有计算工作都服务于有用的目的——存储、验证和网络运营。',
+  [ShowcaseStrings.Feat_ZeroMining_Cat]: '网络',
+  [ShowcaseStrings.Feat_ZeroMining_Tech1]: '以太坊密钥空间',
+  [ShowcaseStrings.Feat_ZeroMining_Tech2]: '高效共识',
+  [ShowcaseStrings.Feat_ZeroMining_Tech3]: '绿色区块链',
   [ShowcaseStrings.Feat_ZeroMining_HL1]:
-    'No wasteful mining - all computation serves useful purposes',
+    '无浪费的挖矿——所有计算都服务于有用的目的',
   [ShowcaseStrings.Feat_ZeroMining_HL2]:
-    'Ethereum-compatible keyspace and cryptography (SECP256k1)',
+    '兼容以太坊的密钥空间和密码学 (SECP256k1)',
   [ShowcaseStrings.Feat_ZeroMining_HL3]:
-    'Proof-of-work used only for transaction throttling',
+    '工作量证明仅用于交易限流',
   [ShowcaseStrings.Feat_ZeroMining_HL4]:
-    'Energy-efficient consensus mechanisms',
+    '节能的共识机制',
   [ShowcaseStrings.Feat_ZeroMining_HL5]:
-    'Sustainable blockchain without environmental impact',
+    '可持续的区块链，无环境影响',
   [ShowcaseStrings.Feat_ZeroMining_HL6]:
-    'Focus on storage and computation, not artificial scarcity',
-  [ShowcaseStrings.Feat_CrossPlatform_Title]: 'Cross-Platform Determinism',
+    '专注于存储和计算，而非人为稀缺性',
+  [ShowcaseStrings.Feat_CrossPlatform_Title]: '跨平台确定性',
   [ShowcaseStrings.Feat_CrossPlatform_Desc]:
-    'Identical cryptographic operations across Node.js and browser environments. Deterministic key generation ensures consistent results regardless of platform.',
-  [ShowcaseStrings.Feat_CrossPlatform_Cat]: 'Cryptography',
+    '在 Node.js 和浏览器环境中实现相同的密码学操作。确定性密钥生成确保无论平台如何都能获得一致的结果。',
+  [ShowcaseStrings.Feat_CrossPlatform_Cat]: '密码学',
   [ShowcaseStrings.Feat_CrossPlatform_Tech1]: 'Node.js',
-  [ShowcaseStrings.Feat_CrossPlatform_Tech2]: 'Browser Crypto',
-  [ShowcaseStrings.Feat_CrossPlatform_Tech3]: 'Deterministic Algorithms',
+  [ShowcaseStrings.Feat_CrossPlatform_Tech2]: '浏览器 Crypto',
+  [ShowcaseStrings.Feat_CrossPlatform_Tech3]: '确定性算法',
   [ShowcaseStrings.Feat_CrossPlatform_HL1]:
-    'Unified cryptographic operations across platforms',
+    '跨平台统一的密码学操作',
   [ShowcaseStrings.Feat_CrossPlatform_HL2]:
-    'Deterministic random bit generation (HMAC-DRBG)',
+    '确定性随机位生成 (HMAC-DRBG)',
   [ShowcaseStrings.Feat_CrossPlatform_HL3]:
-    'Consistent Paillier key derivation from ECDH keys',
-  [ShowcaseStrings.Feat_CrossPlatform_HL4]: 'Browser and Node.js compatibility',
+    '从 ECDH 密钥一致派生 Paillier 密钥',
+  [ShowcaseStrings.Feat_CrossPlatform_HL4]: '浏览器和 Node.js 兼容',
   [ShowcaseStrings.Feat_CrossPlatform_HL5]:
-    'Reproducible cryptographic results',
+    '可复现的密码学结果',
   [ShowcaseStrings.Feat_CrossPlatform_HL6]:
-    'Cross-platform testing and verification',
-  [ShowcaseStrings.Feat_Contracts_Title]: 'Digital Contracts & Governance',
+    '跨平台测试和验证',
+  [ShowcaseStrings.Feat_Contracts_Title]: '数字合约与治理',
   [ShowcaseStrings.Feat_Contracts_Desc]:
-    'Smart contract capabilities for decentralized applications. BrightTrust-based governance with configurable voting thresholds for network decisions and policy enforcement.',
-  [ShowcaseStrings.Feat_Contracts_Cat]: 'Governance',
-  [ShowcaseStrings.Feat_Contracts_Tech1]: 'Smart Contracts',
-  [ShowcaseStrings.Feat_Contracts_Tech2]: 'Governance',
-  [ShowcaseStrings.Feat_Contracts_Tech3]: 'Voting Systems',
+    '去中心化应用的智能合约能力。基于 BrightTrust 的治理，支持可配置的投票阈值，用于网络决策和策略执行。',
+  [ShowcaseStrings.Feat_Contracts_Cat]: '治理',
+  [ShowcaseStrings.Feat_Contracts_Tech1]: '智能合约',
+  [ShowcaseStrings.Feat_Contracts_Tech2]: '治理',
+  [ShowcaseStrings.Feat_Contracts_Tech3]: '投票系统',
   [ShowcaseStrings.Feat_Contracts_HL1]:
-    'Digital contract execution on decentralized network',
+    '在去中心化网络上执行数字合约',
   [ShowcaseStrings.Feat_Contracts_HL2]:
-    'BrightTrust-based decision making for network governance',
+    '基于 BrightTrust 的网络治理决策',
   [ShowcaseStrings.Feat_Contracts_HL3]:
-    'Configurable majority requirements for different actions',
+    '不同操作的可配置多数要求',
   [ShowcaseStrings.Feat_Contracts_HL4]:
-    'Homomorphic voting for privacy-preserving governance',
-  [ShowcaseStrings.Feat_Contracts_HL5]: 'Reputation-weighted voting mechanisms',
+    '同态投票实现隐私保护的治理',
+  [ShowcaseStrings.Feat_Contracts_HL5]: '基于声誉加权的投票机制',
   [ShowcaseStrings.Feat_Contracts_HL6]:
-    'Transparent and auditable governance processes',
-  [ShowcaseStrings.Feat_SecretsJS_Title]: 'Secrets.js (fork)',
+    '透明且可审计的治理流程',
+  [ShowcaseStrings.Feat_SecretsJS_Title]: 'Secrets.js（分支）',
   [ShowcaseStrings.Feat_SecretsJS_Desc]:
-    "Enhanced implementation of Shamir's Secret Sharing for secure data splitting and reconstruction. Pure TypeScript with native browser support, cryptographically audited, and optimized for splitting any secret (passwords, keys, files) into threshold-recoverable shares.",
-  [ShowcaseStrings.Feat_SecretsJS_Cat]: 'Cryptography',
-  [ShowcaseStrings.Feat_SecretsJS_Tech1]: "Shamir's Secret Sharing",
-  [ShowcaseStrings.Feat_SecretsJS_Tech2]: 'Data Security',
+    'Shamir 秘密共享的增强实现，用于安全的数据拆分和重建。纯 TypeScript，原生浏览器支持，经密码学审计，优化用于将任何秘密（密码、密钥、文件）拆分为阈值可恢复的份额。',
+  [ShowcaseStrings.Feat_SecretsJS_Cat]: '密码学',
+  [ShowcaseStrings.Feat_SecretsJS_Tech1]: 'Shamir 秘密共享',
+  [ShowcaseStrings.Feat_SecretsJS_Tech2]: '数据安全',
   [ShowcaseStrings.Feat_SecretsJS_Tech3]: 'TypeScript',
   [ShowcaseStrings.Feat_SecretsJS_Tech4]: 'CSPRNG',
   [ShowcaseStrings.Feat_SecretsJS_HL1]:
-    'Divide secrets into n shares with configurable t-of-n threshold recovery',
+    '将秘密分成 n 份，支持可配置的 t/n 阈值恢复',
   [ShowcaseStrings.Feat_SecretsJS_HL2]:
-    'Information-theoretically secure - shares below threshold reveal no information',
+    '信息论安全——低于阈值的份额不泄露任何信息',
   [ShowcaseStrings.Feat_SecretsJS_HL3]:
-    'Cure53 security audit (July 2019) with zero issues found',
+    'Cure53 安全审计（2019 年 7 月），零问题发现',
   [ShowcaseStrings.Feat_SecretsJS_HL4]:
-    'Native browser support without polyfills (crypto.getRandomValues)',
+    '原生浏览器支持，无需 polyfill (crypto.getRandomValues)',
   [ShowcaseStrings.Feat_SecretsJS_HL5]:
-    'Cross-platform deterministic operations (Node.js and browser)',
+    '跨平台确定性操作（Node.js 和浏览器）',
   [ShowcaseStrings.Feat_SecretsJS_HL6]:
-    'Full TypeScript support with comprehensive type definitions',
+    '完整的 TypeScript 支持，带全面的类型定义',
   [ShowcaseStrings.Feat_SecretsJS_HL7]:
-    'Convert passwords, files, and keys to/from hex with automatic padding',
+    '将密码、文件和密钥转换为十六进制，支持自动填充',
   [ShowcaseStrings.Feat_SecretsJS_HL8]:
-    'Generate new shares dynamically from existing shares',
+    '从现有份额动态生成新份额',
   [ShowcaseStrings.Feat_SecretsJS_HL9]:
-    'Configurable Galois field (3-20 bits) supporting up to 1,048,575 shares',
+    '可配置的伽罗瓦域（3-20 位），支持最多 1,048,575 个份额',
   [ShowcaseStrings.Feat_Burnbag_Desc]:
     '零知识安全存储，配备自动故障安全协议。密码学擦除销毁配方（映射+密钥），使分散的加密块在触发时永久不可恢复。',
   [ShowcaseStrings.Feat_Burnbag_Cat]: '密码学',
@@ -1888,113 +1919,268 @@ export const ShowcaseMandarinStrings: Partial<
   [ShowcaseStrings.Feat_BrightChart_HL12]:
     '零知识证明实现保险验证，无需暴露完整病历',
 
-  // Remaining (TODO: translate)
-  [ShowcaseStrings.Soup_Time]: 'Time',
+  // Soup Alerts
+  [ShowcaseStrings.Soup_Time]: '时间',
   [ShowcaseStrings.Soup_AlertRetrieveFailed]:
-    'Failed to retrieve file: {ERROR}',
-  [ShowcaseStrings.Soup_AlertUploadCBLOnly]: 'Please upload a .cbl file',
+    '文件检索失败：{ERROR}',
+  [ShowcaseStrings.Soup_AlertUploadCBLOnly]: '请上传 .cbl 文件',
   [ShowcaseStrings.Soup_AlertCBLLoaded]:
-    'CBL loaded! File: {NAME} ({BLOCKS} blocks). You can now retrieve the file if all blocks are in the soup.',
-  [ShowcaseStrings.Soup_AlertParseCBLFailed]: 'Failed to parse CBL: {ERROR}',
+    'CBL 已加载！文件：{NAME}（{BLOCKS} 个块）。如果所有块都在汤中，您现在可以检索文件。',
+  [ShowcaseStrings.Soup_AlertParseCBLFailed]: 'CBL 解析失败：{ERROR}',
   [ShowcaseStrings.Soup_AlertReconstructed]:
-    'File reconstructed successfully! Size: {SIZE} bytes. The file has been downloaded and added to receipts.',
+    '文件重建成功！大小：{SIZE} 字节。文件已下载。',
   [ShowcaseStrings.Soup_AlertMagnetFailed]:
-    'Failed to process magnet URL: {ERROR}',
-  [ShowcaseStrings.Soup_AlertMessageSent]: 'Message sent and stored in soup!',
-  [ShowcaseStrings.Soup_AlertSendFailed]: 'Failed to send message: {ERROR}',
+    '磁力链接处理失败：{ERROR}',
+  [ShowcaseStrings.Soup_AlertMessageSent]: '消息已发送并存储在汤中！',
+  [ShowcaseStrings.Soup_AlertSendFailed]: '消息发送失败：{ERROR}',
   [ShowcaseStrings.Soup_AlertMessageRetrieved]:
-    'Message retrieved from soup: {TEXT}',
+    '从汤中检索到消息：{TEXT}',
   [ShowcaseStrings.Soup_AlertRetrieveMessageFailed]:
-    'Failed to retrieve message: {ERROR}',
-  [ShowcaseStrings.Soup_AlertCopied]: 'Magnet URL copied to clipboard!',
-  [ShowcaseStrings.Anim_PauseBtn]: 'Pause Animation',
-  [ShowcaseStrings.Anim_PlayBtn]: 'Play Animation',
-  [ShowcaseStrings.Anim_ResetBtn]: 'Reset Animation',
-  [ShowcaseStrings.Anim_SpeedLabel]: 'Speed: {SPEED}x',
-  [ShowcaseStrings.Anim_PerfTitle]: '🔧 Performance Monitor',
-  [ShowcaseStrings.Anim_PerfFrameRate]: 'Frame Rate:',
-  [ShowcaseStrings.Anim_PerfFrameTime]: 'Frame Time:',
-  [ShowcaseStrings.Anim_PerfDropped]: 'Dropped Frames:',
-  [ShowcaseStrings.Anim_PerfMemory]: 'Memory:',
-  [ShowcaseStrings.Anim_PerfSequences]: 'Sequences:',
-  [ShowcaseStrings.Anim_PerfErrors]: 'Errors:',
-  [ShowcaseStrings.Anim_WhatHappening]: "What's happening:",
-  [ShowcaseStrings.Anim_DurationLabel]: 'Duration:',
-  [ShowcaseStrings.Anim_SizeInfo]: 'Size: {SIZE} bytes | Blocks: {BLOCKS}',
+    '消息检索失败：{ERROR}',
+  [ShowcaseStrings.Soup_AlertCopied]: '磁力链接已复制到剪贴板！',
+  [ShowcaseStrings.Anim_PauseBtn]: '暂停动画',
+  [ShowcaseStrings.Anim_PlayBtn]: '播放动画',
+  [ShowcaseStrings.Anim_ResetBtn]: '重置动画',
+  [ShowcaseStrings.Anim_SpeedLabel]: '速度：{SPEED}x',
+  [ShowcaseStrings.Anim_PerfTitle]: '🔧 性能监控',
+  [ShowcaseStrings.Anim_PerfFrameRate]: '帧率：',
+  [ShowcaseStrings.Anim_PerfFrameTime]: '帧时间：',
+  [ShowcaseStrings.Anim_PerfDropped]: '丢帧：',
+  [ShowcaseStrings.Anim_PerfMemory]: '内存：',
+  [ShowcaseStrings.Anim_PerfSequences]: '序列：',
+  [ShowcaseStrings.Anim_PerfErrors]: '错误：',
+  [ShowcaseStrings.Anim_WhatHappening]: '正在发生：',
+  [ShowcaseStrings.Anim_DurationLabel]: '持续时间：',
+  [ShowcaseStrings.Anim_SizeInfo]: '大小：{SIZE} 字节 | 块：{BLOCKS}',
 
-  // Educational/Encoding (TODO: translate)
-  [ShowcaseStrings.Edu_CloseTooltip]: 'Close tooltip',
-  [ShowcaseStrings.Edu_WhatsHappening]: "🔍 What's Happening",
-  [ShowcaseStrings.Edu_WhyItMatters]: '💡 Why It Matters',
-  [ShowcaseStrings.Edu_TechnicalDetails]: '⚙️ Technical Details',
-  [ShowcaseStrings.Edu_RelatedConcepts]: '🔗 Related Concepts',
-  [ShowcaseStrings.Edu_VisualCues]: '👁️ Visual Cues',
-  [ShowcaseStrings.Edu_GetHelp]: 'Get help with this step',
-  [ShowcaseStrings.Edu_UnderstandContinue]: '✅ I Understand - Continue',
-  [ShowcaseStrings.Edu_SkipStep]: '⏭️ Skip This Step',
-  [ShowcaseStrings.Edu_GlossaryTitle]: '📚 BrightChain Concept Glossary',
-  [ShowcaseStrings.Edu_CloseGlossary]: 'Close glossary',
-  [ShowcaseStrings.Edu_BackToGlossary]: '← Back to Glossary',
-  [ShowcaseStrings.Edu_Definition]: 'Definition',
-  [ShowcaseStrings.Edu_TechnicalDefinition]: 'Technical Definition',
-  [ShowcaseStrings.Edu_Examples]: 'Examples',
-  [ShowcaseStrings.Edu_RelatedTerms]: 'Related Terms',
-  [ShowcaseStrings.Edu_SearchPlaceholder]: 'Search concepts...',
-  [ShowcaseStrings.Edu_ProcessOverview]: 'Process Overview',
-  [ShowcaseStrings.Edu_WhatWeAccomplished]: 'What We Accomplished',
-  [ShowcaseStrings.Edu_TechnicalOutcomes]: 'Technical Outcomes',
-  [ShowcaseStrings.Edu_WhatsNext]: "What's Next?",
-  [ShowcaseStrings.Edu_LearningProgress]: 'Learning Progress',
+  // Educational/Encoding
+  [ShowcaseStrings.Edu_CloseTooltip]: '关闭提示',
+  [ShowcaseStrings.Edu_WhatsHappening]: '🔍 正在发生什么',
+  [ShowcaseStrings.Edu_WhyItMatters]: '💡 为什么重要',
+  [ShowcaseStrings.Edu_TechnicalDetails]: '⚙️ 技术细节',
+  [ShowcaseStrings.Edu_RelatedConcepts]: '🔗 相关概念',
+  [ShowcaseStrings.Edu_VisualCues]: '👁️ 视觉提示',
+  [ShowcaseStrings.Edu_GetHelp]: '获取此步骤的帮助',
+  [ShowcaseStrings.Edu_UnderstandContinue]: '✅ 我理解了 - 继续',
+  [ShowcaseStrings.Edu_SkipStep]: '⏭️ 跳过此步骤',
+  [ShowcaseStrings.Edu_GlossaryTitle]: '📚 BrightChain 概念词汇表',
+  [ShowcaseStrings.Edu_CloseGlossary]: '关闭词汇表',
+  [ShowcaseStrings.Edu_BackToGlossary]: '← 返回词汇表',
+  [ShowcaseStrings.Edu_Definition]: '定义',
+  [ShowcaseStrings.Edu_TechnicalDefinition]: '技术定义',
+  [ShowcaseStrings.Edu_Examples]: '示例',
+  [ShowcaseStrings.Edu_RelatedTerms]: '相关术语',
+  [ShowcaseStrings.Edu_SearchPlaceholder]: '搜索概念...',
+  [ShowcaseStrings.Edu_ProcessOverview]: '流程概述',
+  [ShowcaseStrings.Edu_WhatWeAccomplished]: '我们完成了什么',
+  [ShowcaseStrings.Edu_TechnicalOutcomes]: '技术成果',
+  [ShowcaseStrings.Edu_WhatsNext]: '接下来是什么？',
+  [ShowcaseStrings.Edu_LearningProgress]: '学习进度',
   [ShowcaseStrings.Edu_StepsCompleted]:
-    '{COMPLETED} of {TOTAL} steps completed',
-  [ShowcaseStrings.Enc_Title]: '🎬 File Encoding Animation',
+    '已完成 {COMPLETED}/{TOTAL} 步',
+  [ShowcaseStrings.Enc_Title]: '🎬 文件编码动画',
   [ShowcaseStrings.Enc_Subtitle]:
-    'Watch as your file is transformed into BrightChain blocks',
-  [ShowcaseStrings.Enc_ChunksTitle]: '📦 File Chunks ({COUNT})',
+    '观看您的文件如何转换为 BrightChain 块',
+  [ShowcaseStrings.Enc_ChunksTitle]: '📦 文件分块（{COUNT}）',
   [ShowcaseStrings.Enc_ChunksSubtitle]:
-    'Each chunk will become a block in the soup',
-  [ShowcaseStrings.Enc_EduWhatsHappening]: "🎓 What's Happening Now",
-  [ShowcaseStrings.Enc_TechDetails]: 'Technical Details:',
-  [ShowcaseStrings.Enc_BlockSizeInfo]: 'Block size: {SIZE} bytes',
-  [ShowcaseStrings.Enc_ExpectedChunks]: 'Expected chunks: {COUNT}',
+    '每个分块将成为汤中的一个块',
+  [ShowcaseStrings.Enc_EduWhatsHappening]: '🎓 正在发生什么',
+  [ShowcaseStrings.Enc_TechDetails]: '技术细节：',
+  [ShowcaseStrings.Enc_BlockSizeInfo]: '块大小：{SIZE} 字节',
+  [ShowcaseStrings.Enc_ExpectedChunks]: '预期分块：{COUNT}',
   [ShowcaseStrings.Enc_ChunkBecomesBlock]:
-    'Each chunk becomes one block in the soup',
-  [ShowcaseStrings.Enc_WhyPadding]: 'Why Padding?',
-  [ShowcaseStrings.Enc_PaddingSameSize]: 'All blocks must be the same size',
+    '每个分块成为汤中的一个块',
+  [ShowcaseStrings.Enc_WhyPadding]: '为什么需要填充？',
+  [ShowcaseStrings.Enc_PaddingSameSize]: '所有块必须大小相同',
   [ShowcaseStrings.Enc_PaddingPreventsAnalysis]:
-    'Random padding prevents data analysis',
+    '随机填充防止数据分析',
   [ShowcaseStrings.Enc_PaddingRemoved]:
-    'Padding is removed during reconstruction',
-  [ShowcaseStrings.Enc_ChecksumPurpose]: 'Checksum Purpose:',
-  [ShowcaseStrings.Enc_EnsuresIntegrity]: 'Ensures data integrity',
-  [ShowcaseStrings.Enc_UniqueIdentifier]: 'Used as unique block identifier',
+    '填充在重建时被移除',
+  [ShowcaseStrings.Enc_ChecksumPurpose]: '校验和用途：',
+  [ShowcaseStrings.Enc_EnsuresIntegrity]: '确保数据完整性',
+  [ShowcaseStrings.Enc_UniqueIdentifier]: '用作唯一块标识符',
   [ShowcaseStrings.Enc_EnablesVerification]:
-    'Enables verification during retrieval',
+    '在检索时启用验证',
 
-  // ProcessCompletionSummary (TODO)
-  [ShowcaseStrings.Edu_KeyLearningPoints]: '🧠 Key Learning Points',
-  [ShowcaseStrings.Edu_CloseSummary]: 'Close summary',
-  [ShowcaseStrings.Edu_Overview]: 'Overview',
-  [ShowcaseStrings.Edu_Achievements]: 'Achievements',
-  [ShowcaseStrings.Edu_Technical]: 'Technical',
-  [ShowcaseStrings.Edu_NextSteps]: 'Next Steps',
-  [ShowcaseStrings.Edu_Previous]: '← Previous',
-  [ShowcaseStrings.Edu_Next]: 'Next →',
-  [ShowcaseStrings.Edu_Finish]: 'Finish',
+  // ProcessCompletionSummary
+  [ShowcaseStrings.Edu_KeyLearningPoints]: '🧠 关键学习要点',
+  [ShowcaseStrings.Edu_CloseSummary]: '关闭摘要',
+  [ShowcaseStrings.Edu_Overview]: '概述',
+  [ShowcaseStrings.Edu_Achievements]: '成就',
+  [ShowcaseStrings.Edu_Technical]: '技术',
+  [ShowcaseStrings.Edu_NextSteps]: '下一步',
+  [ShowcaseStrings.Edu_Previous]: '← 上一步',
+  [ShowcaseStrings.Edu_Next]: '下一步 →',
+  [ShowcaseStrings.Edu_Finish]: '完成',
 
-  // EducationalModeControls (TODO)
-  [ShowcaseStrings.Edu_EducationalMode]: '🎓 Educational Mode',
-  [ShowcaseStrings.Edu_AnimationSpeed]: 'Animation Speed:',
-  [ShowcaseStrings.Edu_SpeedVerySlow]: '0.25x (Very Slow)',
-  [ShowcaseStrings.Edu_SpeedSlow]: '0.5x (Slow)',
-  [ShowcaseStrings.Edu_SpeedModerate]: '0.75x (Moderate)',
-  [ShowcaseStrings.Edu_SpeedNormal]: '1x (Normal)',
-  [ShowcaseStrings.Edu_SpeedFast]: '1.5x (Fast)',
-  [ShowcaseStrings.Edu_SpeedVeryFast]: '2x (Very Fast)',
-  [ShowcaseStrings.Edu_StepByStep]: 'Step-by-Step Mode',
-  [ShowcaseStrings.Edu_ShowTooltips]: 'Show Tooltips',
-  [ShowcaseStrings.Edu_ShowExplanations]: 'Show Explanations',
-  [ShowcaseStrings.Edu_AutoAdvance]: 'Auto Advance Steps',
+  // EducationalModeControls
+  [ShowcaseStrings.Edu_EducationalMode]: '🎓 教学模式',
+  [ShowcaseStrings.Edu_AnimationSpeed]: '动画速度：',
+  [ShowcaseStrings.Edu_SpeedVerySlow]: '0.25x（非常慢）',
+  [ShowcaseStrings.Edu_SpeedSlow]: '0.5x（慢）',
+  [ShowcaseStrings.Edu_SpeedModerate]: '0.75x（适中）',
+  [ShowcaseStrings.Edu_SpeedNormal]: '1x（正常）',
+  [ShowcaseStrings.Edu_SpeedFast]: '1.5x（快）',
+  [ShowcaseStrings.Edu_SpeedVeryFast]: '2x（非常快）',
+  [ShowcaseStrings.Edu_StepByStep]: '逐步模式',
+  [ShowcaseStrings.Edu_ShowTooltips]: '显示提示',
+  [ShowcaseStrings.Edu_ShowExplanations]: '显示说明',
+  [ShowcaseStrings.Edu_AutoAdvance]: '自动推进步骤',
+
+  // Privacy Policy Page
+  [ShowcaseStrings.PP_Title]: '隐私政策',
+  [ShowcaseStrings.PP_LastUpdated]: '最后更新：2026年4月20日',
+  [ShowcaseStrings.PP_BackToHome]: '← 返回首页',
+
+  // Section 1: Introduction
+  [ShowcaseStrings.PP_S1_Title]: '1. 引言',
+  [ShowcaseStrings.PP_S1_P1]:
+    'BrightChain是由Digital Defiance运营的开源去中心化平台，Digital Defiance是一家501(c)(3)非营利组织（"我们"）。本隐私政策描述了当您使用BrightChain平台、网站、应用程序和相关服务（统称"服务"）时，我们如何收集、使用、存储和披露信息。',
+  [ShowcaseStrings.PP_S1_P2]:
+    '通过访问或使用服务，您确认已阅读、理解并同意受本隐私政策的约束。如果您不同意，则不得使用服务。',
+
+  // Section 2: How BrightChain Works
+  [ShowcaseStrings.PP_S2_Title]: '2. BrightChain的工作原理 — 架构背景',
+  [ShowcaseStrings.PP_S2_P1]:
+    'BrightChain建立在无主文件系统（OFF）模型之上。存储在网络上的所有数据被分割成固定大小的块，与加密随机块进行XOR运算（称为"TUPLE白化"的过程），并分布在参与节点之间。因此：',
+  [ShowcaseStrings.PP_S2_Li1]:
+    '单个块与随机数据无法区分，如果没有完整的组成块集合和相应的组成块列表（CBL），则无法读取。',
+  [ShowcaseStrings.PP_S2_Li2]:
+    '数据可以选择使用椭圆曲线集成加密方案（ECIES）和AES-256-GCM进行加密，在TUPLE白化提供的合理否认性之上提供每个接收者的机密性。',
+  [ShowcaseStrings.PP_S2_Li3]:
+    '节点运营商——包括Digital Defiance——通常无法确定存储在网络上的任何单个块的内容、所有权或性质。',
+  [ShowcaseStrings.PP_S2_P2]:
+    '这种架构意味着本政策中描述的隐私保护在许多情况下是由数学而非仅由政策来执行的。',
+
+  // Section 3: Information We Collect
+  [ShowcaseStrings.PP_S3_Title]: '3. 我们收集的信息',
+  [ShowcaseStrings.PP_S3_1_Title]: '3.1 账户信息',
+  [ShowcaseStrings.PP_S3_1_P1]:
+    '当您创建BrightChain账户时，我们会收集用户名、电子邮件地址和您的公共加密密钥（从您的BIP39助记词派生）。我们不收集、存储或访问您的助记词短语或私钥。',
+  [ShowcaseStrings.PP_S3_2_Title]: '3.2 用户生成的内容',
+  [ShowcaseStrings.PP_S3_2_P1]:
+    '您在网络上存储的文件、消息、凭证和其他内容被分割成TUPLE白化块。我们没有能力读取、重建或检查此内容。如果您使用可选的ECIES加密，内容会额外为特定接收者加密，任何人——包括我们——在没有相应私钥的情况下都无法访问。',
+  [ShowcaseStrings.PP_S3_3_Title]: '3.3 自动收集的信息',
+  [ShowcaseStrings.PP_S3_3_P1]:
+    '当您与我们基于网络的服务交互时，我们可能会自动收集标准服务器日志数据，包括IP地址、浏览器类型、引用URL、访问的页面和时间戳。此信息仅用于运营目的（安全监控、滥用预防和服务可靠性），保留时间不超过90天。',
+  [ShowcaseStrings.PP_S3_4_Title]: '3.4 区块链账本条目',
+  [ShowcaseStrings.PP_S3_4_P1]:
+    '某些操作（保险库创建、保险库读取、保险库销毁、治理投票）记录在仅追加的区块链账本上。这些条目包含操作类型、时间戳和加密哈希——而非底层数据的内容。账本条目在设计上是不可变的，无法删除。',
+
+  // Section 4: How We Use Information
+  [ShowcaseStrings.PP_S4_Title]: '4. 我们如何使用信息',
+  [ShowcaseStrings.PP_S4_P1]: '我们使用收集的信息来：',
+  [ShowcaseStrings.PP_S4_Li1]: '提供、维护和改进服务',
+  [ShowcaseStrings.PP_S4_Li2]: '验证用户身份和管理账户',
+  [ShowcaseStrings.PP_S4_Li3]: '检测和防止欺诈、滥用和安全事件',
+  [ShowcaseStrings.PP_S4_Li4]: '遵守适用的法律义务',
+  [ShowcaseStrings.PP_S4_Li5]:
+    '就服务与您沟通（例如，服务公告、安全警报）',
+  [ShowcaseStrings.PP_S4_P2]:
+    '我们不会向第三方出售、出租或交易您的个人信息。我们不会将您的数据用于广告或用户画像。',
+
+  // Section 5: Data Storage and Security
+  [ShowcaseStrings.PP_S5_Title]: '5. 数据存储和安全',
+  [ShowcaseStrings.PP_S5_P1]:
+    '用户生成的内容以TUPLE白化块的形式存储，分布在去中心化网络中。账户元数据（用户名、电子邮件、公钥）存储在我们的运营数据库中，采用行业标准的安全措施，包括静态加密和传输加密。',
+  [ShowcaseStrings.PP_S5_P2]:
+    '一旦数据作为白化块存储并分布到网络中，其他参与者的数据可能会通过XOR白化过程依赖于相同的块。这意味着删除单个块在技术上可能是不可能的，否则会影响其他用户的数据。然而，重建文件需要组成块列表（CBL）——块标识符的有序配方。没有CBL，分布式块在计算上与随机数据无法区分，无法重新组装。删除或销毁CBL足以使底层数据永久不可访问。',
+  [ShowcaseStrings.PP_S5_P3]:
+    'CBL可能根据应用程序存储在不同位置。Digital Burnbag将CBL存储在由BrightDB支持的保险库系统中。用户也可以将CBL保留为MagnetURL引用。在所有情况下，销毁CBL——无论其存储位置如何——都是数据擦除的有效机制，即使底层块仍然存在于网络中。',
+
+  // Section 6: Cryptographic Protections
+  [ShowcaseStrings.PP_S6_Title]: '6. 加密保护和限制',
+  [ShowcaseStrings.PP_S6_P1]:
+    'BrightChain采用强大的加密保护，包括SHA3-512哈希、使用secp256k1的ECIES、AES-256-GCM对称加密、HMAC-SHA3-512密封和用于隐私保护投票的Paillier同态加密。这些保护由协议执行，不依赖于我们的合作或善意。',
+  [ShowcaseStrings.PP_S6_P2]:
+    '正确使用时，BrightChain可以提供非常强大的隐私保护。然而，我们不保证任何特定的加密算法将无限期保持安全。计算技术的进步（包括量子计算）可能会影响当前加密原语的安全性。用户有责任了解可用的保护措施并相应地配置其对服务的使用。',
+
+  // Section 7: Law Enforcement
+  [ShowcaseStrings.PP_S7_Title]: '7. 执法和法律请求',
+  [ShowcaseStrings.PP_S7_P1]:
+    'Digital Defiance作为网络运营商和基础设施提供商运营。我们在技术可行的范围内遵守有效的法律程序，包括有管辖权的法院发出的传票、法院命令和搜查令。',
+  [ShowcaseStrings.PP_S7_P2]: '然而，由于BrightChain的架构设计：',
+  [ShowcaseStrings.PP_S7_Li1]:
+    '我们通常无法提供以TUPLE白化块形式存储的用户生成数据的内容，因为我们不拥有重建或解密该数据所需的CBL或解密密钥。',
+  [ShowcaseStrings.PP_S7_Li2]:
+    '我们可以在保留范围内提供账户元数据（用户名、电子邮件、公钥）和服务器日志数据。',
+  [ShowcaseStrings.PP_S7_Li3]:
+    '区块链账本条目是不可变的，可以根据有效的法律程序提供。',
+  [ShowcaseStrings.PP_S7_Li4]:
+    '如果Digital Burnbag保险库已被加密销毁，销毁证明是唯一剩余的工件——它证明数据已消失，而非数据包含的内容。',
+  [ShowcaseStrings.PP_S7_P3]:
+    '我们将在法律允许的范围内通知受影响的用户有关法律请求。我们保留对我们认为过于宽泛、法律上有缺陷或其他不当的法律请求提出质疑的权利。',
+
+  // Section 8: Brokered Anonymity
+  [ShowcaseStrings.PP_S8_Title]: '8. 代理匿名',
+  [ShowcaseStrings.PP_S8_P1]:
+    'BrightChain支持"代理匿名"协议，其中用户的真实身份可以使用Shamir秘密共享进行密封，并分布在BrightTrust治理成员之间。身份恢复需要BrightTrust成员的阈值投票，并受可配置的时效限制，之后身份碎片将被永久删除，真实身份将变得不可恢复。该机制旨在在集体治理下平衡隐私与问责。',
+
+  // Section 9: Third-Party Services
+  [ShowcaseStrings.PP_S9_Title]: '9. 第三方服务',
+  [ShowcaseStrings.PP_S9_P1]:
+    '某些功能（如金丝雀协议活动监控）可能与第三方服务集成（例如GitHub、Fitbit、Slack）。您对这些集成的使用受相应第三方隐私政策的约束。我们仅访问提供所请求功能所需的最少信息（例如，用于死人开关监控的最近活动时间戳），并且不在我们的服务器上存储第三方凭证——身份验证通过OAuth令牌处理，您可以随时撤销。',
+
+  // Section 10: Children's Privacy
+  [ShowcaseStrings.PP_S10_Title]: '10. 儿童隐私',
+  [ShowcaseStrings.PP_S10_P1]:
+    '服务不面向13岁以下的儿童（或您所在司法管辖区适用的数字同意年龄）。我们不会故意收集儿童的个人信息。如果我们得知已收集了儿童的个人信息，我们将采取措施及时删除该信息。',
+
+  // Section 11: International Users
+  [ShowcaseStrings.PP_S11_Title]: '11. 国际用户',
+  [ShowcaseStrings.PP_S11_P1]:
+    'Digital Defiance总部位于美国。如果您从美国境外访问服务，您的信息可能会被转移到、存储在美国或我们基础设施运营的其他司法管辖区并在那里处理。使用服务即表示您同意此类转移和处理。',
+  [ShowcaseStrings.PP_S11_1_Title]: '11.1 欧洲经济区（EEA）和英国',
+  [ShowcaseStrings.PP_S11_1_P1]:
+    '如果您位于EEA或英国，您可能根据《通用数据保护条例》（GDPR）或英国GDPR享有权利，包括访问、更正、删除、限制处理和转移您的个人数据的权利，以及反对处理的权利。要行使这些权利，请通过以下地址联系我们。请注意，由于系统的去中心化和不可变性质，某些数据（区块链账本条目、分布式TUPLE块）在技术上可能无法删除。BrightChain的可证明销毁功能（通过Digital Burnbag）旨在支持用户控制数据的GDPR第17条删除权合规。',
+
+  // Section 12: Data Retention
+  [ShowcaseStrings.PP_S12_Title]: '12. 数据保留',
+  [ShowcaseStrings.PP_S12_P1]:
+    '账户元数据在您的账户处于活动状态或提供服务所需的期间内保留。服务器日志保留最多90天。区块链账本条目作为不可变账本的一部分无限期保留。TUPLE白化块根据存储合同条款和能量平衡经济学在网络上保留；存储合同到期且未续签的块可能会被节点回收。',
+
+  // Section 13: Disclaimer
+  [ShowcaseStrings.PP_S13_Title]: '13. 免责声明和责任限制',
+  [ShowcaseStrings.PP_S13_P1]:
+    '服务按"原样"和"可用"提供，不提供任何形式的保证，无论是明示的、暗示的还是法定的，包括但不限于对适销性、特定用途适用性、所有权和不侵权的暗示保证。',
+  [ShowcaseStrings.PP_S13_P2]:
+    'DIGITAL DEFIANCE、其管理人员、董事、员工、志愿者和贡献者（包括JESSICA MULEIN）不对任何间接的、附带的、特殊的、后果性的或惩罚性的损害，或任何利润、数据、使用、商誉或其他无形损失承担责任，这些损失源于（A）您对服务的访问或使用或无法访问或使用服务；（B）服务上任何第三方的任何行为或内容；（C）从服务获得的任何内容；（D）未经授权访问、使用或更改您的传输或内容；或（E）任何加密机制的失败，无论是基于保证、合同、侵权（包括疏忽）还是任何其他法律理论，无论我们是否已被告知此类损害的可能性。',
+  [ShowcaseStrings.PP_S13_P3]:
+    '在任何情况下，DIGITAL DEFIANCE及其管理人员、董事、员工、志愿者和贡献者对与服务相关的所有索赔的总责任不得超过一百美元（100.00美元）或您在索赔前十二（12）个月内向我们支付的金额中的较大者。',
+  [ShowcaseStrings.PP_S13_P4]:
+    '某些司法管辖区不允许排除或限制某些保证或责任。在此类司法管辖区，我们的责任将限于法律允许的最大范围。',
+
+  // Section 14: Indemnification
+  [ShowcaseStrings.PP_S14_Title]: '14. 赔偿',
+  [ShowcaseStrings.PP_S14_P1]:
+    '您同意赔偿、辩护并使Digital Defiance、其管理人员、董事、员工、志愿者和贡献者（包括Jessica Mulein）免受因您访问或使用服务、违反本隐私政策或违反任何适用法律或任何第三方权利而产生的或以任何方式相关的所有索赔、责任、损害、损失、费用和开支（包括合理的律师费）。',
+
+  // Section 15: Governing Law
+  [ShowcaseStrings.PP_S15_Title]: '15. 适用法律和争议解决',
+  [ShowcaseStrings.PP_S15_P1]:
+    '本隐私政策受美国华盛顿州法律管辖并据其解释，不考虑其法律冲突条款。因本隐私政策或服务引起的或与之相关的任何争议应专属于华盛顿州金县的州或联邦法院解决，您同意此类法院的属人管辖权。',
+
+  // Section 16: Open Source
+  [ShowcaseStrings.PP_S16_Title]: '16. 开源',
+  [ShowcaseStrings.PP_S16_P1_Before]:
+    'BrightChain是开源软件。源代码公开可用于 ',
+  [ShowcaseStrings.PP_S16_P1_LinkText]:
+    'github.com/Digital-Defiance/BrightChain',
+  [ShowcaseStrings.PP_S16_P1_After]:
+    '。我们鼓励您审查代码以验证本政策中描述的隐私属性。本文描述的加密保护在代码库中实现，可通过检查进行验证。',
+
+  // Section 17: Changes
+  [ShowcaseStrings.PP_S17_Title]: '17. 本政策的变更',
+  [ShowcaseStrings.PP_S17_P1]:
+    '我们可能会不时更新本隐私政策。我们将通过在服务上发布更新后的政策并附上修订后的"最后更新"日期来通知您重大变更。在任何变更生效日期后您继续使用服务即构成您对修订后政策的接受。',
+
+  // Section 18: Contact
+  [ShowcaseStrings.PP_S18_Title]: '18. 联系我们',
+  [ShowcaseStrings.PP_S18_P1]:
+    '如果您对本隐私政策有疑问或希望行使您的数据保护权利，请联系：',
+  [ShowcaseStrings.PP_S18_OrgName]: 'Digital Defiance',
+  [ShowcaseStrings.PP_S18_EmailLabel]: '电子邮件：',
+  [ShowcaseStrings.PP_S18_WebLabel]: '网站：',
 };
 
 export default ShowcaseMandarinStrings;

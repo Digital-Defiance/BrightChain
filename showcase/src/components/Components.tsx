@@ -9,6 +9,7 @@ import {
   faIdBadge,
   faLock,
 } from '@awesome.me/kit-a20d532681/icons/classic/solid';
+import { faCalendarDays } from '@awesome.me/kit-a20d532681/icons/sharp-duotone/solid';
 
 import { faCircleNodes } from '@awesome.me/kit-a20d532681/icons/classic/thin';
 import { BirdbagLogo } from '@brightchain/digitalburnbag-react-components';
@@ -231,6 +232,38 @@ const getFeatures = (
       t(ShowcaseStrings.Feat_BrightMail_HL7),
       t(ShowcaseStrings.Feat_BrightMail_HL8),
       t(ShowcaseStrings.Feat_BrightMail_HL9),
+    ],
+  },
+  {
+    logo: (
+      <BrightChainSubLogo
+        subText="Cal"
+        icon={faCalendarDays}
+        altText={t(ShowcaseStrings.FAQ_BrightCal_Logo_Alt)}
+        height={40}
+        iconHeight={35}
+      />
+    ),
+    icon: <FontAwesomeIcon icon={faCalendarDays} />,
+    description: t(ShowcaseStrings.Feat_BrightCal_Desc),
+    tech: [
+      t(ShowcaseStrings.Feat_BrightCal_Tech1),
+      t(ShowcaseStrings.Feat_BrightCal_Tech2),
+      t(ShowcaseStrings.Feat_BrightCal_Tech3),
+      t(ShowcaseStrings.Feat_BrightCal_Tech4),
+    ],
+    category: t(ShowcaseStrings.Feat_BrightCal_Cat) as Feature['category'],
+    highlights: [
+      t(ShowcaseStrings.Feat_BrightCal_HL1),
+      t(ShowcaseStrings.Feat_BrightCal_HL2),
+      t(ShowcaseStrings.Feat_BrightCal_HL3),
+      t(ShowcaseStrings.Feat_BrightCal_HL4),
+      t(ShowcaseStrings.Feat_BrightCal_HL5),
+      t(ShowcaseStrings.Feat_BrightCal_HL6),
+      t(ShowcaseStrings.Feat_BrightCal_HL7),
+      t(ShowcaseStrings.Feat_BrightCal_HL8),
+      t(ShowcaseStrings.Feat_BrightCal_HL9),
+      t(ShowcaseStrings.Feat_BrightCal_HL10),
     ],
   },
   {

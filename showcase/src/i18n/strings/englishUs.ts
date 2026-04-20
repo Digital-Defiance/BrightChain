@@ -21,6 +21,7 @@ export const ShowcaseAmericanEnglishStrings: ComponentStrings<ShowcaseStringKey>
     [ShowcaseStrings.Nav_ToggleMenu]: 'Toggle menu',
     [ShowcaseStrings.FAQ_TopSecret_Logo_Alt]: 'Top Secret dApp',
     [ShowcaseStrings.FAQ_BrightChat_Logo_Alt]: 'BrightChat Logo',
+    [ShowcaseStrings.FAQ_BrightCal_Logo_Alt]: 'BrightCal Logo',
     [ShowcaseStrings.FAQ_BrightID_Logo_Alt]: 'BrightID Logo',
     [ShowcaseStrings.FAQ_BrightHub_Logo_Alt]: 'BrightHub Logo',
     [ShowcaseStrings.FAQ_BrightMail_Logo_Alt]: 'BrightMail Logo',
@@ -200,6 +201,10 @@ export const ShowcaseAmericanEnglishStrings: ComponentStrings<ShowcaseStringKey>
       'Patient-Owned Medical Records',
     [ShowcaseStrings.FAQ_Tech_Q11_BrightChart_Text]:
       'An electronic health record where the patient holds the keys. BrightChart stores FHIR R4-compliant medical data as encrypted blocks on BrightChain — no central database to breach. Patients grant granular access to providers via BrightTrust delegation, and every access event is recorded in an immutable audit trail. Supports medical, dental, and veterinary practices from a single codebase.',
+    [ShowcaseStrings.FAQ_Tech_Q11_BrightCal_Title]:
+      'Shared and Personal Calendar Management',
+    [ShowcaseStrings.FAQ_Tech_Q11_BrightCal_Text]:
+      'A calendar system where the owner holds the keys. BrightCal enables secure, encrypted scheduling with fine-grained access control. Events are stored as encrypted blocks. All calendar data is immutable and recoverable, with support for recurring events, reminders, and integration with traditional calendar systems.',
     [ShowcaseStrings.FAQ_Tech_Q11_BrightMail_Title]: 'Sovereign Communication',
     [ShowcaseStrings.FAQ_Tech_Q11_BrightMail_Text]:
       'A fully RFC-compliant email system bridging traditional SMTP and decentralized storage. Unlike standard email providers, BrightMail shards every message into the "Owner-Free" block-store with support for end-to-end encrypted "Dark Mode" messaging.',
@@ -1622,6 +1627,33 @@ export const ShowcaseAmericanEnglishStrings: ComponentStrings<ShowcaseStringKey>
       'Digital signatures for sender authentication',
     [ShowcaseStrings.Feat_BrightMail_HL9]:
       'Forward/reply with RFC-compliant Resent-* headers',
+    [ShowcaseStrings.Feat_BrightCal_Desc]:
+      'Google Calendar-competitive shared calendar system integrated with BrightMail. iCal/CalDAV compatible, end-to-end encrypted events, granular sharing permissions, meeting booking, and conflict detection.',
+    [ShowcaseStrings.Feat_BrightCal_Cat]: 'Network',
+    [ShowcaseStrings.Feat_BrightCal_Tech1]: 'iCal/RFC 5545',
+    [ShowcaseStrings.Feat_BrightCal_Tech2]: 'CalDAV',
+    [ShowcaseStrings.Feat_BrightCal_Tech3]: 'ECIES Encryption',
+    [ShowcaseStrings.Feat_BrightCal_Tech4]: 'iTIP/iMIP',
+    [ShowcaseStrings.Feat_BrightCal_HL1]:
+      'RFC 5545 iCalendar format with full VEVENT, VTODO, VJOURNAL, and VFREEBUSY support',
+    [ShowcaseStrings.Feat_BrightCal_HL2]:
+      'CalDAV server protocol for native sync with Apple Calendar, Thunderbird, and Android',
+    [ShowcaseStrings.Feat_BrightCal_HL3]:
+      'End-to-end encrypted events stored as ECIES-encrypted blocks in the Owner-Free Filesystem',
+    [ShowcaseStrings.Feat_BrightCal_HL4]:
+      'Granular sharing: view free/busy only, view details, edit, or delegate per-calendar per-user',
+    [ShowcaseStrings.Feat_BrightCal_HL5]:
+      'Meeting invitations via iTIP/iMIP with BrightMail integration and RSVP tracking',
+    [ShowcaseStrings.Feat_BrightCal_HL6]:
+      'Conflict detection and availability queries across shared calendars with free/busy aggregation',
+    [ShowcaseStrings.Feat_BrightCal_HL7]:
+      'Booking pages with configurable availability windows, buffer times, and confirmation flows',
+    [ShowcaseStrings.Feat_BrightCal_HL8]:
+      'Recurring event support with RRULE, EXDATE, and per-occurrence override handling',
+    [ShowcaseStrings.Feat_BrightCal_HL9]:
+      'Multi-timezone display with automatic DST handling and per-event timezone pinning',
+    [ShowcaseStrings.Feat_BrightCal_HL10]:
+      'Day/week/month/agenda UI widgets with drag-and-drop rescheduling and inline editing',
     [ShowcaseStrings.Feat_BrightChat_Desc]:
       'Discord-competitive communication platform with Signal-grade end-to-end encryption. Direct messaging, group chats, and channels with real-time presence, typing indicators, and role-based permissions.',
     [ShowcaseStrings.Feat_BrightChat_Cat]: 'Network',
@@ -2114,4 +2146,170 @@ export const ShowcaseAmericanEnglishStrings: ComponentStrings<ShowcaseStringKey>
     [ShowcaseStrings.Edu_ShowTooltips]: 'Show Tooltips',
     [ShowcaseStrings.Edu_ShowExplanations]: 'Show Explanations',
     [ShowcaseStrings.Edu_AutoAdvance]: 'Auto Advance Steps',
+
+    // Privacy Policy Page
+    [ShowcaseStrings.PP_Title]: 'Privacy Policy',
+    [ShowcaseStrings.PP_LastUpdated]: 'Last Updated: April 20, 2026',
+    [ShowcaseStrings.PP_BackToHome]: '← Back to Home',
+
+    // Section 1: Introduction
+    [ShowcaseStrings.PP_S1_Title]: '1. Introduction',
+    [ShowcaseStrings.PP_S1_P1]:
+      'BrightChain is an open-source decentralized platform operated by Digital Defiance, a 501(c)(3) nonprofit organization ("we," "us," or "our"). This Privacy Policy describes how we collect, use, store, and disclose information when you use the BrightChain platform, website, applications, and related services (collectively, the "Services").',
+    [ShowcaseStrings.PP_S1_P2]:
+      'By accessing or using the Services you acknowledge that you have read, understood, and agree to be bound by this Privacy Policy. If you do not agree, you must not use the Services.',
+
+    // Section 2: How BrightChain Works
+    [ShowcaseStrings.PP_S2_Title]:
+      '2. How BrightChain Works — Architectural Context',
+    [ShowcaseStrings.PP_S2_P1]:
+      'BrightChain is built on the Owner-Free Filesystem (OFF) model. All data stored on the network is broken into fixed-size blocks, XOR\'d with cryptographically random blocks (a process called "TUPLE whitening"), and distributed across participating nodes. As a result:',
+    [ShowcaseStrings.PP_S2_Li1]:
+      'Individual blocks are indistinguishable from random data and cannot be read without the complete set of constituent blocks and the corresponding Constituent Block List (CBL).',
+    [ShowcaseStrings.PP_S2_Li2]:
+      'Data may optionally be encrypted with Elliptic Curve Integrated Encryption Scheme (ECIES) using AES-256-GCM, providing per-recipient confidentiality on top of the plausible deniability provided by TUPLE whitening.',
+    [ShowcaseStrings.PP_S2_Li3]:
+      'Node operators — including Digital Defiance — generally cannot determine the content, ownership, or nature of any individual block stored on the network.',
+    [ShowcaseStrings.PP_S2_P2]:
+      'This architecture means that the privacy protections described in this policy are, in many cases, enforced by mathematics rather than by policy alone.',
+
+    // Section 3: Information We Collect
+    [ShowcaseStrings.PP_S3_Title]: '3. Information We Collect',
+    [ShowcaseStrings.PP_S3_1_Title]: '3.1 Account Information',
+    [ShowcaseStrings.PP_S3_1_P1]:
+      'When you create a BrightChain account we collect a username, email address, and your public cryptographic key (derived from your BIP39 mnemonic). We do not collect, store, or have access to your mnemonic phrase or private keys.',
+    [ShowcaseStrings.PP_S3_2_Title]: '3.2 User-Generated Content',
+    [ShowcaseStrings.PP_S3_2_P1]:
+      'Files, messages, credentials, and other content you store on the network are broken into TUPLE-whitened blocks. We do not have the ability to read, reconstruct, or inspect this content. If you use optional ECIES encryption, the content is additionally encrypted for specific recipients and is inaccessible to anyone — including us — without the corresponding private key.',
+    [ShowcaseStrings.PP_S3_3_Title]: '3.3 Automatically Collected Information',
+    [ShowcaseStrings.PP_S3_3_P1]:
+      'When you interact with our web-based Services we may automatically collect standard server log data, including IP addresses, browser type, referring URLs, pages visited, and timestamps. This information is used solely for operational purposes (security monitoring, abuse prevention, and service reliability) and is retained for no more than 90 days.',
+    [ShowcaseStrings.PP_S3_4_Title]: '3.4 Blockchain Ledger Entries',
+    [ShowcaseStrings.PP_S3_4_P1]:
+      'Certain operations (vault creation, vault reads, vault destruction, governance votes) are recorded on an append-only blockchain ledger. These entries contain operation type, timestamp, and cryptographic hashes — not the content of the underlying data. Ledger entries are immutable by design and cannot be deleted.',
+
+    // Section 4: How We Use Information
+    [ShowcaseStrings.PP_S4_Title]: '4. How We Use Information',
+    [ShowcaseStrings.PP_S4_P1]: 'We use the information we collect to:',
+    [ShowcaseStrings.PP_S4_Li1]:
+      'Provide, maintain, and improve the Services',
+    [ShowcaseStrings.PP_S4_Li2]:
+      'Authenticate users and manage accounts',
+    [ShowcaseStrings.PP_S4_Li3]:
+      'Detect and prevent fraud, abuse, and security incidents',
+    [ShowcaseStrings.PP_S4_Li4]:
+      'Comply with applicable legal obligations',
+    [ShowcaseStrings.PP_S4_Li5]:
+      'Communicate with you about the Services (e.g., service announcements, security alerts)',
+    [ShowcaseStrings.PP_S4_P2]:
+      'We do not sell, rent, or trade your personal information to third parties. We do not use your data for advertising or profiling.',
+
+    // Section 5: Data Storage and Security
+    [ShowcaseStrings.PP_S5_Title]: '5. Data Storage and Security',
+    [ShowcaseStrings.PP_S5_P1]:
+      'User-generated content is stored as TUPLE-whitened blocks distributed across the decentralized network. Account metadata (username, email, public key) is stored in our operational databases with industry-standard security measures including encryption at rest and in transit.',
+    [ShowcaseStrings.PP_S5_P2]:
+      'Once data is stored as whitened blocks and distributed to the network, other participants\u2019 data may become dependent on those same blocks through the XOR whitening process. This means that deleting individual blocks may be technically impossible without impacting other users\u2019 data. However, reconstructing a file requires the Constituent Block List (CBL) \u2014 the ordered recipe of block identifiers. Without the CBL, the distributed blocks are computationally indistinguishable from random data and cannot be reassembled. Deleting or destroying the CBL is sufficient to render the underlying data permanently inaccessible.',
+    [ShowcaseStrings.PP_S5_P3]:
+      'CBLs may be stored in various locations depending on the application. Digital Burnbag stores CBLs within its vault system backed by BrightDB. Users may also retain CBLs as MagnetURL references. In all cases, destroying the CBL \u2014 regardless of where it is stored \u2014 is the effective mechanism for data erasure, even when the underlying blocks persist on the network.',
+
+    // Section 6: Cryptographic Protections
+    [ShowcaseStrings.PP_S6_Title]:
+      '6. Cryptographic Protections and Limitations',
+    [ShowcaseStrings.PP_S6_P1]:
+      'BrightChain employs strong cryptographic protections including SHA3-512 hashing, ECIES with secp256k1, AES-256-GCM symmetric encryption, HMAC-SHA3-512 seals, and Paillier homomorphic encryption for privacy-preserving voting. These protections are enforced by the protocol and are not dependent on our cooperation or goodwill.',
+    [ShowcaseStrings.PP_S6_P2]:
+      'When used correctly, BrightChain can provide very strong privacy protections. However, we make no guarantee that any specific cryptographic algorithm will remain secure indefinitely. Advances in computing (including quantum computing) may affect the security of current cryptographic primitives. Users are responsible for understanding the protections available to them and configuring their use of the Services accordingly.',
+
+    // Section 7: Law Enforcement
+    [ShowcaseStrings.PP_S7_Title]:
+      '7. Law Enforcement and Legal Requests',
+    [ShowcaseStrings.PP_S7_P1]:
+      'Digital Defiance operates as a network carrier and infrastructure provider. We comply with valid legal process, including subpoenas, court orders, and search warrants issued by courts of competent jurisdiction, to the extent technically feasible.',
+    [ShowcaseStrings.PP_S7_P2]:
+      'However, due to the architectural design of BrightChain:',
+    [ShowcaseStrings.PP_S7_Li1]:
+      'We generally cannot produce the content of user-generated data stored as TUPLE-whitened blocks, because we do not possess the CBLs or decryption keys necessary to reconstruct or decrypt that data.',
+    [ShowcaseStrings.PP_S7_Li2]:
+      'We can produce account metadata (username, email, public key) and server log data to the extent we retain it.',
+    [ShowcaseStrings.PP_S7_Li3]:
+      'Blockchain ledger entries are immutable and may be produced in response to valid legal process.',
+    [ShowcaseStrings.PP_S7_Li4]:
+      'If a Digital Burnbag vault has been cryptographically destroyed, the destruction proof is the only remaining artifact — it proves the data is gone, not what the data contained.',
+    [ShowcaseStrings.PP_S7_P3]:
+      'We will notify affected users of legal requests to the extent permitted by law. We reserve the right to challenge legal requests that we believe are overbroad, legally deficient, or otherwise improper.',
+
+    // Section 8: Brokered Anonymity
+    [ShowcaseStrings.PP_S8_Title]: '8. Brokered Anonymity',
+    [ShowcaseStrings.PP_S8_P1]:
+      'BrightChain supports a "Brokered Anonymity" protocol in which a user\'s real identity may be sealed using Shamir\'s Secret Sharing and distributed among BrightTrust governance members. Identity recovery requires a threshold vote of BrightTrust members and is subject to a configurable statute of limitations, after which the identity shards are permanently deleted and the real identity becomes irrecoverable. This mechanism is designed to balance privacy with accountability under collective governance.',
+
+    // Section 9: Third-Party Services
+    [ShowcaseStrings.PP_S9_Title]: '9. Third-Party Services',
+    [ShowcaseStrings.PP_S9_P1]:
+      'Certain features (such as canary protocol activity monitoring) may integrate with third-party services (e.g., GitHub, Fitbit, Slack). Your use of those integrations is governed by the respective third-party privacy policies. We access only the minimum information necessary to provide the requested functionality (e.g., recent activity timestamps for dead man\'s switch monitoring) and do not store third-party credentials on our servers — authentication is handled via OAuth tokens that you may revoke at any time.',
+
+    // Section 10: Children\'s Privacy
+    [ShowcaseStrings.PP_S10_Title]: "10. Children's Privacy",
+    [ShowcaseStrings.PP_S10_P1]:
+      'The Services are not directed to children under the age of 13 (or the applicable age of digital consent in your jurisdiction). We do not knowingly collect personal information from children. If we learn that we have collected personal information from a child, we will take steps to delete that information promptly.',
+
+    // Section 11: International Users
+    [ShowcaseStrings.PP_S11_Title]: '11. International Users',
+    [ShowcaseStrings.PP_S11_P1]:
+      'Digital Defiance is based in the United States. If you access the Services from outside the United States, your information may be transferred to, stored in, and processed in the United States or other jurisdictions where our infrastructure operates. By using the Services, you consent to such transfer and processing.',
+    [ShowcaseStrings.PP_S11_1_Title]:
+      '11.1 European Economic Area (EEA) and United Kingdom',
+    [ShowcaseStrings.PP_S11_1_P1]:
+      "If you are located in the EEA or UK, you may have rights under the General Data Protection Regulation (GDPR) or UK GDPR, including the right to access, rectify, erase, restrict processing of, and port your personal data, and the right to object to processing. To exercise these rights, contact us at the address below. Note that certain data (blockchain ledger entries, distributed TUPLE blocks) may be technically impossible to erase due to the decentralized and immutable nature of the system. BrightChain's provable destruction capability (via Digital Burnbag) is designed to support GDPR Article 17 right-to-erasure compliance for user-controlled data.",
+
+    // Section 12: Data Retention
+    [ShowcaseStrings.PP_S12_Title]: '12. Data Retention',
+    [ShowcaseStrings.PP_S12_P1]:
+      'Account metadata is retained for as long as your account is active or as needed to provide the Services. Server logs are retained for up to 90 days. Blockchain ledger entries are retained indefinitely as part of the immutable ledger. TUPLE-whitened blocks are retained on the network according to storage contract terms and energy balance economics; blocks whose storage contracts expire and are not renewed may be garbage-collected by nodes.',
+
+    // Section 13: Disclaimer
+    [ShowcaseStrings.PP_S13_Title]:
+      '13. Disclaimer of Warranties and Limitation of Liability',
+    [ShowcaseStrings.PP_S13_P1]:
+      'THE SERVICES ARE PROVIDED "AS IS" AND "AS AVAILABLE" WITHOUT WARRANTIES OF ANY KIND, WHETHER EXPRESS, IMPLIED, OR STATUTORY, INCLUDING BUT NOT LIMITED TO IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE, AND NON-INFRINGEMENT.',
+    [ShowcaseStrings.PP_S13_P2]:
+      'DIGITAL DEFIANCE, ITS OFFICERS, DIRECTORS, EMPLOYEES, VOLUNTEERS, AND CONTRIBUTORS (INCLUDING JESSICA MULEIN) SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES, OR ANY LOSS OF PROFITS, DATA, USE, GOODWILL, OR OTHER INTANGIBLE LOSSES, RESULTING FROM (A) YOUR ACCESS TO OR USE OF OR INABILITY TO ACCESS OR USE THE SERVICES; (B) ANY CONDUCT OR CONTENT OF ANY THIRD PARTY ON THE SERVICES; (C) ANY CONTENT OBTAINED FROM THE SERVICES; (D) UNAUTHORIZED ACCESS, USE, OR ALTERATION OF YOUR TRANSMISSIONS OR CONTENT; OR (E) THE FAILURE OF ANY CRYPTOGRAPHIC MECHANISM, WHETHER BASED ON WARRANTY, CONTRACT, TORT (INCLUDING NEGLIGENCE), OR ANY OTHER LEGAL THEORY, WHETHER OR NOT WE HAVE BEEN INFORMED OF THE POSSIBILITY OF SUCH DAMAGE.',
+    [ShowcaseStrings.PP_S13_P3]:
+      'IN NO EVENT SHALL THE AGGREGATE LIABILITY OF DIGITAL DEFIANCE AND ITS OFFICERS, DIRECTORS, EMPLOYEES, VOLUNTEERS, AND CONTRIBUTORS FOR ALL CLAIMS RELATING TO THE SERVICES EXCEED THE GREATER OF ONE HUNDRED U.S. DOLLARS (US $100.00) OR THE AMOUNT YOU PAID US IN THE TWELVE (12) MONTHS PRECEDING THE CLAIM.',
+    [ShowcaseStrings.PP_S13_P4]:
+      'SOME JURISDICTIONS DO NOT ALLOW THE EXCLUSION OR LIMITATION OF CERTAIN WARRANTIES OR LIABILITY. IN SUCH JURISDICTIONS, OUR LIABILITY SHALL BE LIMITED TO THE GREATEST EXTENT PERMITTED BY LAW.',
+
+    // Section 14: Indemnification
+    [ShowcaseStrings.PP_S14_Title]: '14. Indemnification',
+    [ShowcaseStrings.PP_S14_P1]:
+      'You agree to indemnify, defend, and hold harmless Digital Defiance, its officers, directors, employees, volunteers, and contributors (including Jessica Mulein) from and against any and all claims, liabilities, damages, losses, costs, and expenses (including reasonable attorneys\' fees) arising out of or in any way connected with your access to or use of the Services, your violation of this Privacy Policy, or your violation of any applicable law or the rights of any third party.',
+
+    // Section 15: Governing Law
+    [ShowcaseStrings.PP_S15_Title]:
+      '15. Governing Law and Dispute Resolution',
+    [ShowcaseStrings.PP_S15_P1]:
+      'This Privacy Policy shall be governed by and construed in accordance with the laws of the State of Washington, United States, without regard to its conflict of law provisions. Any dispute arising out of or relating to this Privacy Policy or the Services shall be resolved exclusively in the state or federal courts located in King County, Washington, and you consent to the personal jurisdiction of such courts.',
+
+    // Section 16: Open Source
+    [ShowcaseStrings.PP_S16_Title]: '16. Open Source',
+    [ShowcaseStrings.PP_S16_P1_Before]:
+      'BrightChain is open-source software. The source code is publicly available at ',
+    [ShowcaseStrings.PP_S16_P1_LinkText]:
+      'github.com/Digital-Defiance/BrightChain',
+    [ShowcaseStrings.PP_S16_P1_After]:
+      '. You are encouraged to review the code to verify the privacy properties described in this policy. The cryptographic protections described herein are implemented in the codebase and are verifiable by inspection.',
+
+    // Section 17: Changes
+    [ShowcaseStrings.PP_S17_Title]: '17. Changes to This Policy',
+    [ShowcaseStrings.PP_S17_P1]:
+      'We may update this Privacy Policy from time to time. We will notify you of material changes by posting the updated policy on the Services with a revised "Last Updated" date. Your continued use of the Services after the effective date of any changes constitutes your acceptance of the revised policy.',
+
+    // Section 18: Contact
+    [ShowcaseStrings.PP_S18_Title]: '18. Contact Us',
+    [ShowcaseStrings.PP_S18_P1]:
+      'If you have questions about this Privacy Policy or wish to exercise your data protection rights, please contact:',
+    [ShowcaseStrings.PP_S18_OrgName]: 'Digital Defiance',
+    [ShowcaseStrings.PP_S18_EmailLabel]: 'Email:',
+    [ShowcaseStrings.PP_S18_WebLabel]: 'Web:',
   };

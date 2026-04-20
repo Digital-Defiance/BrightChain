@@ -43,6 +43,7 @@ import {
   VCBLBlock,
   VCBLService,
   type BlockId,
+  type IChatCollection,
 } from '@brightchain/brightchain-lib';
 import { Member, PlatformID } from '@digitaldefiance/ecies-lib';
 import { v4 as uuidv4 } from 'uuid';
@@ -124,6 +125,30 @@ interface StoredVault {
 }
 
 /**
+ * Serializable vault metadata document for BrightDb persistence.
+ * Contains only the metadata portion — no encryption keys or entry data.
+ * Keyed by vault ID in the `brightpass_vaults` collection.
+ */
+export interface VaultMetadataDocument {
+  /** Vault ID (primary key) */
+  id: string;
+  /** Vault owner member ID */
+  ownerId: string;
+  /** Vault display name */
+  name: string;
+  /** Members this vault is shared with */
+  sharedWith: string[];
+  /** Vault creation timestamp (ISO string for serialization) */
+  createdAt: string;
+  /** Last update timestamp (ISO string for serialization) */
+  updatedAt: string;
+  /** Entry count for quick access */
+  entryCount: number;
+  /** VCBL block ID in the block store */
+  vcblBlockId: string;
+}
+
+/**
  * Errors specific to BrightPass operations
  */
 export class VaultNotFoundError extends Error {
@@ -178,6 +203,11 @@ export class BrightPassService<TID extends PlatformID = Uint8Array> {
   /** memberId → Set<vaultId> for quick listing */
   private readonly memberVaults = new Map<string, Set<string>>();
 
+  /** Optional persistent collection for vault metadata (write-through to BrightDb). */
+  private readonly vaultMetadataCollection:
+    | IChatCollection<VaultMetadataDocument>
+    | undefined;
+
   /**
    * Create a new BrightPassService.
    *
@@ -185,6 +215,7 @@ export class BrightPassService<TID extends PlatformID = Uint8Array> {
    * @param vcblService - VCBL service for vault operations
    * @param blockService - Block service for encryption
    * @param member - Member for block creation
+   * @param vaultMetadataCollection - Optional BrightDb collection for vault metadata persistence
    *
    * Requirements: 1.1, 1.5
    */
@@ -193,6 +224,7 @@ export class BrightPassService<TID extends PlatformID = Uint8Array> {
     vcblService?: VCBLService<TID>,
     blockService?: BlockService<TID>,
     member?: Member<TID>,
+    vaultMetadataCollection?: IChatCollection<VaultMetadataDocument>,
   ) {
     // Default to MemoryBlockStore if not provided (for backward compatibility)
     this.blockStore = blockStore ?? new MemoryBlockStore(BlockSize.Small);
@@ -200,6 +232,7 @@ export class BrightPassService<TID extends PlatformID = Uint8Array> {
     this.vcblService = vcblService as VCBLService<TID>;
     this.blockService = blockService ?? new BlockService<TID>();
     this.member = member as Member<TID>;
+    this.vaultMetadataCollection = vaultMetadataCollection;
   }
 
   /**
@@ -213,6 +246,38 @@ export class BrightPassService<TID extends PlatformID = Uint8Array> {
    */
   setMember(member: Member<TID>): void {
     this.member = member;
+  }
+
+  /**
+   * Convert vault metadata to a serializable document for BrightDb persistence.
+   * Only includes metadata fields — no encryption keys or entry data.
+   */
+  private toVaultMetadataDocument(metadata: VaultMetadata): VaultMetadataDocument {
+    return {
+      id: metadata.id,
+      ownerId: metadata.ownerId,
+      name: metadata.name,
+      sharedWith: [...metadata.sharedWith],
+      createdAt: metadata.createdAt.toISOString(),
+      updatedAt: metadata.updatedAt.toISOString(),
+      entryCount: metadata.entryCount,
+      vcblBlockId: metadata.vcblBlockId,
+    };
+  }
+
+  /**
+   * Persist vault metadata to BrightDb collection (write-through).
+   * No-op when no collection is injected.
+   */
+  private async persistVaultMetadata(metadata: VaultMetadata): Promise<void> {
+    if (!this.vaultMetadataCollection) return;
+    const doc = this.toVaultMetadataDocument(metadata);
+    const existing = await this.vaultMetadataCollection.findById(metadata.id);
+    if (existing) {
+      await this.vaultMetadataCollection.update(metadata.id, doc);
+    } else {
+      await this.vaultMetadataCollection.create(doc);
+    }
   }
 
   /** bcrypt cost factor - 12 rounds provides ~300ms hash time on modern hardware */
@@ -337,6 +402,9 @@ export class BrightPassService<TID extends PlatformID = Uint8Array> {
       action: AuditAction.VAULT_UPDATED,
       metadata: { action: 'seed_regenerated' },
     });
+
+    // Write-through: update vault metadata (updatedAt) in BrightDb
+    await this.persistVaultMetadata(vault.metadata);
 
     return newMnemonic;
   }
@@ -603,6 +671,9 @@ export class BrightPassService<TID extends PlatformID = Uint8Array> {
       action: AuditAction.VAULT_CREATED,
     });
 
+    // Write-through: persist vault metadata to BrightDb collection
+    await this.persistVaultMetadata(metadata);
+
     return { ...metadata };
   }
 
@@ -769,6 +840,11 @@ export class BrightPassService<TID extends PlatformID = Uint8Array> {
     if (memberVaultIds) {
       memberVaultIds.delete(vaultId);
     }
+
+    // Write-through: remove vault metadata from BrightDb collection
+    if (this.vaultMetadataCollection) {
+      await this.vaultMetadataCollection.delete(vaultId);
+    }
   }
 
   // ─── Entry CRUD ─────────────────────────────────────────────
@@ -830,6 +906,9 @@ export class BrightPassService<TID extends PlatformID = Uint8Array> {
       action: AuditAction.ENTRY_CREATED,
       metadata: { entryId: fullEntry.id, entryType: fullEntry.type },
     });
+
+    // Write-through: update vault metadata (entry count, updatedAt) in BrightDb
+    await this.persistVaultMetadata(vault.metadata);
 
     return fullEntry;
   }
@@ -952,6 +1031,9 @@ export class BrightPassService<TID extends PlatformID = Uint8Array> {
       metadata: { entryId },
     });
 
+    // Write-through: update vault metadata (updatedAt) in BrightDb
+    await this.persistVaultMetadata(vault.metadata);
+
     return updated;
   }
 
@@ -1006,6 +1088,9 @@ export class BrightPassService<TID extends PlatformID = Uint8Array> {
       action: AuditAction.ENTRY_DELETED,
       metadata: { entryId },
     });
+
+    // Write-through: update vault metadata (entry count, updatedAt) in BrightDb
+    await this.persistVaultMetadata(vault.metadata);
   }
 
   /**
@@ -1096,6 +1181,9 @@ export class BrightPassService<TID extends PlatformID = Uint8Array> {
       action: AuditAction.VAULT_SHARED,
       metadata: { recipients: recipientMemberIds.join(',') },
     });
+
+    // Write-through: update vault metadata (sharedWith, updatedAt) in BrightDb
+    await this.persistVaultMetadata(vault.metadata);
   }
 
   /**
@@ -1165,6 +1253,9 @@ export class BrightPassService<TID extends PlatformID = Uint8Array> {
       action: AuditAction.VAULT_SHARE_REVOKED,
       metadata: { revokedMemberId: memberId, seedRegenerated: 'true' },
     });
+
+    // Write-through: update vault metadata (sharedWith, updatedAt) in BrightDb
+    await this.persistVaultMetadata(vault.metadata);
   }
 
   // ─── Quorum Governance ─────────────────────────────────────────
@@ -1299,6 +1390,9 @@ export class BrightPassService<TID extends PlatformID = Uint8Array> {
     // Hash new password using bcrypt
     vault.masterPasswordHash = await this.hashMasterPasswordAsync(newPassword);
     vault.metadata.updatedAt = new Date();
+
+    // Write-through: update vault metadata (updatedAt) in BrightDb
+    await this.persistVaultMetadata(vault.metadata);
   }
 
   // ─── Emergency Access ───────────────────────────────────────

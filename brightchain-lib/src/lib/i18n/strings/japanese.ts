@@ -1288,7 +1288,10 @@ export const JapaneseStrings: ComponentStrings<BrightChainStringKey> = {
   [BrightChainStrings.Splash_RealWorldValue]: '現実世界の価値',
   [BrightChainStrings.Splash_RealWorldValueDescription]:
     'ジュールの値は実際のコストに基づく公式で設定され、時間とともにその公式を改善していきます — 取引なし、変動なし。',
-
+  [BrightChainStrings.Splash_Documentation]: 'ドキュメント',
+  [BrightChainStrings.Splash_FAQ]: 'よくある質問',
+  [BrightChainStrings.Splash_PrivacyPolicy]: 'プライバシーポリシー',
+  [BrightChainStrings.Splash_TermsOfService]: '利用規約',
   // Dashboard
   [BrightChainStrings.Dashboard_Title]: 'ダッシュボード',
   [BrightChainStrings.Dashboard_EnergyBalance]: 'エネルギー残高',
@@ -1369,12 +1372,12 @@ export const JapaneseStrings: ComponentStrings<BrightChainStringKey> = {
   [BrightChainStrings.Admin_Dashboard_DeliveryFailures]: '配信失敗',
   [BrightChainStrings.Admin_Dashboard_Last24Hours]: '過去24時間',
   [BrightChainStrings.Admin_Menu_Dashboard]: '管理ダッシュボード',
-  [BrightChainStrings.Admin_Menu_Users]: 'User Management',
-  [BrightChainStrings.Admin_Menu_Blocks]: 'Block Explorer',
-  [BrightChainStrings.Admin_Menu_Chat]: 'Chat Admin',
-  [BrightChainStrings.Admin_Menu_Hub]: 'Hub Admin',
-  [BrightChainStrings.Admin_Menu_Mail]: 'Mail Admin',
-  [BrightChainStrings.Admin_Menu_Pass]: 'Pass Admin',
+  [BrightChainStrings.Admin_Menu_Users]: 'ユーザー管理',
+  [BrightChainStrings.Admin_Menu_Blocks]: 'ブロックエクスプローラー',
+  [BrightChainStrings.Admin_Menu_Chat]: 'チャット管理',
+  [BrightChainStrings.Admin_Menu_Hub]: 'ハブ管理',
+  [BrightChainStrings.Admin_Menu_Mail]: 'メール管理',
+  [BrightChainStrings.Admin_Menu_Pass]: 'パス管理',
   [BrightChainStrings.Admin_Menu_About]: '概要',
   [BrightChainStrings.Admin_Common_Loading]: '読み込み中…',
   [BrightChainStrings.Admin_Common_Previous]: '前へ',
@@ -1422,16 +1425,16 @@ export const JapaneseStrings: ComponentStrings<BrightChainStringKey> = {
     '自分の役割を変更することはできません。',
   [BrightChainStrings.Admin_Users_CannotChangeSystemUser]:
     'システムユーザーの役割は変更できません。',
-  [BrightChainStrings.Admin_Users_DeleteUser]: 'Delete User',
-  [BrightChainStrings.Admin_Users_DeleteUserTitle]: 'Delete User',
+  [BrightChainStrings.Admin_Users_DeleteUser]: 'ユーザーを削除',
+  [BrightChainStrings.Admin_Users_DeleteUserTitle]: 'ユーザーを削除',
   [BrightChainStrings.Admin_Users_DeleteConfirmTemplate]:
-    'Are you sure you want to permanently delete user "{USERNAME}"? This will remove their CBLs, settings, and all database records. This action cannot be undone.',
+    'ユーザー「{USERNAME}」を完全に削除してもよろしいですか？CBL、設定、およびすべてのデータベースレコードが削除されます。この操作は元に戻せません。',
   [BrightChainStrings.Admin_Users_DeleteWarning]:
-    ' This is a destructive operation.',
+    ' これは破壊的な操作です。',
   [BrightChainStrings.Admin_Users_CannotDeleteSelf]:
-    'You cannot delete your own account.',
+    '自分のアカウントは削除できません。',
   [BrightChainStrings.Admin_Users_CannotDeleteSystemUser]:
-    'The system user cannot be deleted.',
+    'システムユーザーは削除できません。',
   [BrightChainStrings.Admin_Blocks_Title]: 'ブロックエクスプローラー',
   [BrightChainStrings.Admin_Blocks_SearchPlaceholder]: 'ブロック ID で検索',
   [BrightChainStrings.Admin_Blocks_FilterAllDurability]: 'すべての耐久性',

@@ -25,6 +25,7 @@ export * from './members';
 export * from './messages';
 export * from './nodes';
 export * from './scbl';
+export * from './servers';
 export * from './sessions';
 export * from './sync';
 export * from './unifiedNotifications';

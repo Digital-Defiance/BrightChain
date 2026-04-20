@@ -10,6 +10,7 @@ import {
   IReconciliationService,
   NodeIdSource,
   PermissionService,
+  ServerService,
 } from '@brightchain/brightchain-lib';
 import {
   IConnectionService,
@@ -68,6 +69,7 @@ import { KeyStoreController } from '../controllers/api/keyStore';
 import { MessagesController } from '../controllers/api/messages';
 import { NodesController } from '../controllers/api/nodes';
 import { SCBLController } from '../controllers/api/scbl';
+import { ServerController } from '../controllers/api/servers';
 import { SyncController } from '../controllers/api/sync';
 import { UnifiedNotificationController } from '../controllers/api/unifiedNotifications';
 import { UserController } from '../controllers/api/user';
@@ -111,6 +113,7 @@ export class ApiRouter<
   private readonly brightTrustController: BrightTrustController<TID>;
   private readonly cblController: CBLController<TID>;
   private readonly scblController: SCBLController<TID>;
+  private readonly serverController: ServerController<TID>;
   private readonly syncController: SyncController<TID>;
   declare protected readonly userController: UserController<TID>;
   private readonly brightHubPostController: BrightHubPostController<TID>;
@@ -166,6 +169,7 @@ export class ApiRouter<
     this.brightTrustController = new BrightTrustController(application);
     this.cblController = new CBLController(application);
     this.scblController = new SCBLController(application);
+    this.serverController = new ServerController(application);
     this.syncController = new SyncController(application);
 
     // BrightHub controllers
@@ -212,6 +216,7 @@ export class ApiRouter<
         this.conversationController.router,
       );
       this.router.use('/brightchat/groups', this.groupController.router);
+      this.router.use('/brightchat/servers', this.serverController.router);
     }
     if (
       application.environment.enabledFeatures.some(
@@ -437,6 +442,14 @@ export class ApiRouter<
   }
 
   /**
+   * Set the ServerService for the ServerController.
+   * @requirements 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 3.1, 3.2, 3.3, 3.4
+   */
+  public setServerService(service: ServerService): void {
+    this.serverController.setServerService(service);
+  }
+
+  /**
    * Set the PermissionService for both GroupController and ChannelController.
    * @requirements 6.1, 6.2, 6.3, 6.4
    */
@@ -497,6 +510,13 @@ export class ApiRouter<
    */
   public getChannelController(): typeof this.channelController {
     return this.channelController;
+  }
+
+  /**
+   * Get the ServerController instance.
+   */
+  public getServerController(): ServerController<TID> {
+    return this.serverController;
   }
 
   // ─── BrightHub service injection ─────────────────────────────────

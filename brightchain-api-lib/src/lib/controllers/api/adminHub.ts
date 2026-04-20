@@ -113,11 +113,36 @@ export class AdminHubController<
           .limit(limit)
           .toArray();
 
+        // Resolve author usernames from member_index
+        const authorIds = [
+          ...new Set(
+            docs.map(
+              (doc: Record<string, unknown>) => doc['authorId'] as string,
+            ),
+          ),
+        ].filter(Boolean);
+        const usernameMap = new Map<string, string>();
+        if (authorIds.length > 0) {
+          const memberIndexCollection =
+            brightDb.collection('member_index');
+          const members = await memberIndexCollection
+            .find({ _id: { $in: authorIds } } as never)
+            .toArray();
+          for (const m of members) {
+            const member = m as Record<string, unknown>;
+            usernameMap.set(
+              member['_id'] as string,
+              (member['username'] as string) ?? '',
+            );
+          }
+        }
+
         const posts = docs.map((doc: Record<string, unknown>) => ({
           id: doc['_id'] ?? doc['id'],
           authorId: doc['authorId'] ?? '',
-          authorUsername: doc['authorUsername'] ?? '',
-          contentPreview: String(doc['content'] ?? '').slice(0, 200),
+          authorUsername:
+            usernameMap.get(doc['authorId'] as string) ?? '',
+          content: String(doc['content'] ?? '').slice(0, 200),
           createdAt: doc['createdAt'] ?? null,
           isDeleted: doc['isDeleted'] ?? false,
           likeCount: doc['likeCount'] ?? 0,

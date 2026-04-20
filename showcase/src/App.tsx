@@ -16,6 +16,7 @@ import { EducationalModeProvider } from './components/EducationalModeProvider';
 import FAQ from './components/FAQ';
 import Hero from './components/Hero';
 import { LedgerDemo } from './components/LedgerDemo';
+import { PrivacyPolicyPage } from './components/PrivacyPolicyPage';
 import { ScrollIndicator } from './components/ScrollIndicator';
 import { SkipLink } from './components/SkipLink';
 import { ShowcaseI18nProvider } from './i18n/ShowcaseI18nContext';
@@ -58,6 +59,7 @@ function App() {
               <Route path="/animation" element={<AnimatedBrightChainDemo />} />
               <Route path="/ledger" element={<LedgerDemo />} />
               <Route path="/faq" element={<FAQ />} />
+              <Route path="/privacy" element={<PrivacyPolicyPage />} />
             </Routes>
           </EducationalModeProvider>
         </AccessibilityProvider>

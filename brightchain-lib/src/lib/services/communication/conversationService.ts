@@ -5,6 +5,11 @@
  * encrypted content storage to MessagePassingService. Supports cursor-based
  * pagination, message deletion, and conversation promotion to groups.
  *
+ * When an IChatStorageProvider is injected, conversations and messages are
+ * also persisted to the provider's collections (write-through). Sync helper
+ * methods continue to read from the in-memory Maps so their signatures
+ * remain unchanged.
+ *
  * Requirements: 10.1
  */
 
@@ -15,6 +20,10 @@ import {
   IGroup,
   IPaginatedResult,
 } from '../../interfaces/communication';
+import {
+  IChatCollection,
+  IChatStorageProvider,
+} from '../../interfaces/communication/chatStorageProvider';
 import {
   ICommunicationEventEmitter,
   NullEventEmitter,
@@ -111,12 +120,27 @@ export class ConversationService {
   private readonly memberReachabilityCheck: MemberReachabilityCheck | null;
   private readonly eventEmitter: ICommunicationEventEmitter;
 
+  /** Optional persistent collection for conversations (write-through). */
+  private readonly conversationCollection:
+    | IChatCollection<IConversation>
+    | undefined;
+
+  /** Optional persistent collection for messages (write-through). */
+  private readonly messageCollection:
+    | IChatCollection<ICommunicationMessage>
+    | undefined;
+
   constructor(
     memberReachabilityCheck: MemberReachabilityCheck | null = null,
     eventEmitter: ICommunicationEventEmitter = new NullEventEmitter(),
+    storageProvider?: IChatStorageProvider,
   ) {
     this.memberReachabilityCheck = memberReachabilityCheck;
     this.eventEmitter = eventEmitter;
+    if (storageProvider) {
+      this.conversationCollection = storageProvider.conversations;
+      this.messageCollection = storageProvider.messages;
+    }
   }
 
   /**
@@ -189,6 +213,11 @@ export class ConversationService {
     this.conversations.set(conversation.id, conversation);
     this.messages.set(conversation.id, []);
     this.participantIndex.set(key, conversation.id);
+
+    // Persist to storage provider if available
+    if (this.conversationCollection) {
+      await this.conversationCollection.create(conversation);
+    }
 
     return conversation;
   }
@@ -288,6 +317,14 @@ export class ConversationService {
     // Update conversation's lastMessageAt
     conversation.lastMessageAt = now;
 
+    // Persist to storage provider if available
+    if (this.messageCollection) {
+      await this.messageCollection.create(message);
+    }
+    if (this.conversationCollection) {
+      await this.conversationCollection.update(conversation.id, conversation);
+    }
+
     // Emit message sent event
     this.eventEmitter.emitMessageSent(
       'conversation',
@@ -332,6 +369,11 @@ export class ConversationService {
 
     message.deleted = true;
     message.deletedBy = memberId;
+
+    // Persist deletion to storage provider if available
+    if (this.messageCollection) {
+      await this.messageCollection.update(messageId, message);
+    }
 
     // Emit message deleted event
     this.eventEmitter.emitMessageDeleted(

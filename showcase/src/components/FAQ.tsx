@@ -4,6 +4,7 @@ import {
   faLock,
 } from '@awesome.me/kit-a20d532681/icons/classic/solid';
 import { faCircleNodes } from '@awesome.me/kit-a20d532681/icons/classic/thin';
+import { faCalendarDays } from '@awesome.me/kit-a20d532681/icons/sharp-duotone/solid';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useShowcaseI18n } from '../i18n/ShowcaseI18nContext';
@@ -341,6 +342,18 @@ function TechnicalFAQ() {
           />
           <h3>{t(ShowcaseStrings.FAQ_Tech_Q11_BrightMail_Title)}</h3>
           <p>{t(ShowcaseStrings.FAQ_Tech_Q11_BrightMail_Text)}</p>
+        </div>
+
+        <div className="faq-sub-section">
+          <BrightChainSubLogo
+            subText="Cal"
+            altText={t(ShowcaseStrings.FAQ_BrightCal_Logo_Alt)}
+            height={40}
+            iconHeight={35}
+            icon={faCalendarDays}
+          />
+          <h3>{t(ShowcaseStrings.FAQ_Tech_Q11_BrightCal_Title)}</h3>
+          <p>{t(ShowcaseStrings.FAQ_Tech_Q11_BrightCal_Text)}</p>
         </div>
 
         <div className="faq-sub-section">

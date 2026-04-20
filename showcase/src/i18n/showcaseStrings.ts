@@ -48,6 +48,7 @@ export const ShowcaseStrings = createI18nStringKeys(ShowcaseComponentId, {
   FAQ_BackToHome: 'FAQ_BackToHome',
   FAQ_TopSecret_Logo_Alt: 'FAQ_TopSecret_Logo_Alt',
   FAQ_BrightChat_Logo_Alt: 'FAQ_BrightChat_Logo_Alt',
+  FAQ_BrightCal_Logo_Alt: 'FAQ_BrightCal_Logo_Alt',
   FAQ_BrightDB_Logo_Alt: 'FAQ_BrightDB_Logo_Alt',
   FAQ_BrightID_Logo_Alt: 'FAQ_BrightID_Logo_Alt',
   FAQ_BrightHub_Logo_Alt: 'FAQ_BrightHub_Logo_Alt',
@@ -139,6 +140,8 @@ export const ShowcaseStrings = createI18nStringKeys(ShowcaseComponentId, {
   FAQ_Tech_Q11_Intro: 'FAQ_Tech_Q11_Intro',
   FAQ_Tech_Q11_BrightChart_Title: 'FAQ_Tech_Q11_BrightChart_Title',
   FAQ_Tech_Q11_BrightChart_Text: 'FAQ_Tech_Q11_BrightChart_Text',
+  FAQ_Tech_Q11_BrightCal_Title: 'FAQ_Tech_Q11_BrightCal_Title',
+  FAQ_Tech_Q11_BrightCal_Text: 'FAQ_Tech_Q11_BrightCal_Text',
   FAQ_Tech_Q11_BrightMail_Title: 'FAQ_Tech_Q11_BrightMail_Title',
   FAQ_Tech_Q11_BrightMail_Text: 'FAQ_Tech_Q11_BrightMail_Text',
   FAQ_Tech_Q11_BrightHub_Title: 'FAQ_Tech_Q11_BrightHub_Title',
@@ -1183,6 +1186,22 @@ export const ShowcaseStrings = createI18nStringKeys(ShowcaseComponentId, {
   Feat_BrightMail_HL7: 'Feat_BrightMail_HL7',
   Feat_BrightMail_HL8: 'Feat_BrightMail_HL8',
   Feat_BrightMail_HL9: 'Feat_BrightMail_HL9',
+  Feat_BrightCal_Desc: 'Feat_BrightCal_Desc',
+  Feat_BrightCal_Cat: 'Feat_BrightCal_Cat',
+  Feat_BrightCal_Tech1: 'Feat_BrightCal_Tech1',
+  Feat_BrightCal_Tech2: 'Feat_BrightCal_Tech2',
+  Feat_BrightCal_Tech3: 'Feat_BrightCal_Tech3',
+  Feat_BrightCal_Tech4: 'Feat_BrightCal_Tech4',
+  Feat_BrightCal_HL1: 'Feat_BrightCal_HL1',
+  Feat_BrightCal_HL2: 'Feat_BrightCal_HL2',
+  Feat_BrightCal_HL3: 'Feat_BrightCal_HL3',
+  Feat_BrightCal_HL4: 'Feat_BrightCal_HL4',
+  Feat_BrightCal_HL5: 'Feat_BrightCal_HL5',
+  Feat_BrightCal_HL6: 'Feat_BrightCal_HL6',
+  Feat_BrightCal_HL7: 'Feat_BrightCal_HL7',
+  Feat_BrightCal_HL8: 'Feat_BrightCal_HL8',
+  Feat_BrightCal_HL9: 'Feat_BrightCal_HL9',
+  Feat_BrightCal_HL10: 'Feat_BrightCal_HL10',
   Feat_BrightChat_Desc: 'Feat_BrightChat_Desc',
   Feat_BrightChat_Cat: 'Feat_BrightChat_Cat',
   Feat_BrightChat_Tech1: 'Feat_BrightChat_Tech1',
@@ -1512,6 +1531,120 @@ export const ShowcaseStrings = createI18nStringKeys(ShowcaseComponentId, {
   Edu_ShowTooltips: 'Edu_ShowTooltips',
   Edu_ShowExplanations: 'Edu_ShowExplanations',
   Edu_AutoAdvance: 'Edu_AutoAdvance',
+
+  // Privacy Policy Page
+  PP_Title: 'PP_Title',
+  PP_LastUpdated: 'PP_LastUpdated',
+  PP_BackToHome: 'PP_BackToHome',
+
+  // Section 1: Introduction
+  PP_S1_Title: 'PP_S1_Title',
+  PP_S1_P1: 'PP_S1_P1',
+  PP_S1_P2: 'PP_S1_P2',
+
+  // Section 2: How BrightChain Works
+  PP_S2_Title: 'PP_S2_Title',
+  PP_S2_P1: 'PP_S2_P1',
+  PP_S2_Li1: 'PP_S2_Li1',
+  PP_S2_Li2: 'PP_S2_Li2',
+  PP_S2_Li3: 'PP_S2_Li3',
+  PP_S2_P2: 'PP_S2_P2',
+
+  // Section 3: Information We Collect
+  PP_S3_Title: 'PP_S3_Title',
+  PP_S3_1_Title: 'PP_S3_1_Title',
+  PP_S3_1_P1: 'PP_S3_1_P1',
+  PP_S3_2_Title: 'PP_S3_2_Title',
+  PP_S3_2_P1: 'PP_S3_2_P1',
+  PP_S3_3_Title: 'PP_S3_3_Title',
+  PP_S3_3_P1: 'PP_S3_3_P1',
+  PP_S3_4_Title: 'PP_S3_4_Title',
+  PP_S3_4_P1: 'PP_S3_4_P1',
+
+  // Section 4: How We Use Information
+  PP_S4_Title: 'PP_S4_Title',
+  PP_S4_P1: 'PP_S4_P1',
+  PP_S4_Li1: 'PP_S4_Li1',
+  PP_S4_Li2: 'PP_S4_Li2',
+  PP_S4_Li3: 'PP_S4_Li3',
+  PP_S4_Li4: 'PP_S4_Li4',
+  PP_S4_Li5: 'PP_S4_Li5',
+  PP_S4_P2: 'PP_S4_P2',
+
+  // Section 5: Data Storage and Security
+  PP_S5_Title: 'PP_S5_Title',
+  PP_S5_P1: 'PP_S5_P1',
+  PP_S5_P2: 'PP_S5_P2',
+  PP_S5_P3: 'PP_S5_P3',
+
+  // Section 6: Cryptographic Protections
+  PP_S6_Title: 'PP_S6_Title',
+  PP_S6_P1: 'PP_S6_P1',
+  PP_S6_P2: 'PP_S6_P2',
+
+  // Section 7: Law Enforcement
+  PP_S7_Title: 'PP_S7_Title',
+  PP_S7_P1: 'PP_S7_P1',
+  PP_S7_P2: 'PP_S7_P2',
+  PP_S7_Li1: 'PP_S7_Li1',
+  PP_S7_Li2: 'PP_S7_Li2',
+  PP_S7_Li3: 'PP_S7_Li3',
+  PP_S7_Li4: 'PP_S7_Li4',
+  PP_S7_P3: 'PP_S7_P3',
+
+  // Section 8: Brokered Anonymity
+  PP_S8_Title: 'PP_S8_Title',
+  PP_S8_P1: 'PP_S8_P1',
+
+  // Section 9: Third-Party Services
+  PP_S9_Title: 'PP_S9_Title',
+  PP_S9_P1: 'PP_S9_P1',
+
+  // Section 10: Children's Privacy
+  PP_S10_Title: 'PP_S10_Title',
+  PP_S10_P1: 'PP_S10_P1',
+
+  // Section 11: International Users
+  PP_S11_Title: 'PP_S11_Title',
+  PP_S11_P1: 'PP_S11_P1',
+  PP_S11_1_Title: 'PP_S11_1_Title',
+  PP_S11_1_P1: 'PP_S11_1_P1',
+
+  // Section 12: Data Retention
+  PP_S12_Title: 'PP_S12_Title',
+  PP_S12_P1: 'PP_S12_P1',
+
+  // Section 13: Disclaimer
+  PP_S13_Title: 'PP_S13_Title',
+  PP_S13_P1: 'PP_S13_P1',
+  PP_S13_P2: 'PP_S13_P2',
+  PP_S13_P3: 'PP_S13_P3',
+  PP_S13_P4: 'PP_S13_P4',
+
+  // Section 14: Indemnification
+  PP_S14_Title: 'PP_S14_Title',
+  PP_S14_P1: 'PP_S14_P1',
+
+  // Section 15: Governing Law
+  PP_S15_Title: 'PP_S15_Title',
+  PP_S15_P1: 'PP_S15_P1',
+
+  // Section 16: Open Source
+  PP_S16_Title: 'PP_S16_Title',
+  PP_S16_P1_Before: 'PP_S16_P1_Before',
+  PP_S16_P1_LinkText: 'PP_S16_P1_LinkText',
+  PP_S16_P1_After: 'PP_S16_P1_After',
+
+  // Section 17: Changes
+  PP_S17_Title: 'PP_S17_Title',
+  PP_S17_P1: 'PP_S17_P1',
+
+  // Section 18: Contact
+  PP_S18_Title: 'PP_S18_Title',
+  PP_S18_P1: 'PP_S18_P1',
+  PP_S18_OrgName: 'PP_S18_OrgName',
+  PP_S18_EmailLabel: 'PP_S18_EmailLabel',
+  PP_S18_WebLabel: 'PP_S18_WebLabel',
 } as const);
 
 export type ShowcaseStringKey = BrandedStringKeyValue<typeof ShowcaseStrings>;

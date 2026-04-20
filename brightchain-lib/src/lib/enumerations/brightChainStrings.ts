@@ -1253,6 +1253,10 @@ const _brightChainKeys = {
   Splash_JoulesDescription: 'Splash_JoulesDescription',
   Splash_RealWorldValue: 'Splash_RealWorldValue',
   Splash_RealWorldValueDescription: 'Splash_RealWorldValueDescription',
+  Splash_Documentation: 'Splash_Documentation',
+  Splash_FAQ: 'Splash_FAQ',
+  Splash_PrivacyPolicy: 'Splash_PrivacyPolicy',
+  Splash_TermsOfService: 'Splash_TermsOfService',
 
   // Dashboard
   Dashboard_Title: 'Dashboard_Title',

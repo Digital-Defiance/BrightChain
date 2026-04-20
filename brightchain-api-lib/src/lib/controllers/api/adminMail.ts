@@ -127,7 +127,7 @@ export class AdminMailController<
         ? (this.application.services.get('db') as BrightDb)
         : undefined;
       if (brightDb) {
-        const collection = brightDb.collection('emails');
+        const collection = brightDb.collection('brightmail_emails');
         const total = await collection.countDocuments();
         const skip = (page - 1) * limit;
         const docs = await collection.find().skip(skip).limit(limit).toArray();
@@ -209,7 +209,7 @@ export class AdminMailController<
         ? (this.application.services.get('db') as BrightDb)
         : undefined;
       if (brightDb) {
-        const collection = brightDb.collection('emails');
+        const collection = brightDb.collection('brightmail_emails');
         const result = await collection.deleteOne({ _id: emailId });
         if (!result.deletedCount) {
           return notFoundError('Email', emailId);
