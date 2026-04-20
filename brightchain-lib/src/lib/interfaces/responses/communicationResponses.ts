@@ -23,6 +23,7 @@ import {
   IPaginatedResult,
   ISearchResultItem,
 } from '../communication';
+import { IServer, IServerInviteToken } from '../communication/server';
 
 // ─── Direct Message responses ───────────────────────────────────────────────
 
@@ -156,3 +157,33 @@ export type ISearchAllMessagesResponse<
   TId = string,
   TData = string,
 > = IApiEnvelope<IPaginatedResult<ISearchResultItem<TId, TData>>>;
+
+// ─── Server responses ───────────────────────────────────────────────────────
+
+export type ICreateServerResponse<TId = string, TData = string> = IApiEnvelope<
+  IServer<TId, TData>
+>;
+
+export type IListServersResponse<TId = string, TData = string> = IApiEnvelope<
+  IPaginatedResult<IServer<TId, TData>>
+>;
+
+export type IGetServerResponse<TId = string, TData = string> = IApiEnvelope<
+  IServer<TId, TData>
+>;
+
+export type IUpdateServerResponse<TId = string, TData = string> = IApiEnvelope<
+  IServer<TId, TData>
+>;
+
+export type IDeleteServerResponse = IApiEnvelope<{ deleted: boolean }>;
+
+export type IAddServerMembersResponse = IApiEnvelope<{ added: string[] }>;
+
+export type IRemoveServerMemberResponse = IApiEnvelope<{ removed: string }>;
+
+export type ICreateServerInviteResponse<TId = string> = IApiEnvelope<
+  IServerInviteToken<TId>
+>;
+
+export type IRedeemServerInviteResponse = IApiEnvelope<{ redeemed: boolean }>;

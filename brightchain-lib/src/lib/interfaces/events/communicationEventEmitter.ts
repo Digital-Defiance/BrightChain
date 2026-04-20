@@ -132,6 +132,20 @@ export interface ICommunicationEventEmitter {
     channelId: string,
     updatedBy: string,
   ): void;
+
+  /** Emit when a member is removed from a server. */
+  emitServerMemberRemoved(serverId: string, memberId: string): void;
+
+  /** Emit when a channel is created within a server. */
+  emitServerChannelCreated(
+    serverId: string,
+    channelId: string,
+    channelName: string,
+    categoryId: string,
+  ): void;
+
+  /** Emit when a channel is deleted from a server. */
+  emitServerChannelDeleted(serverId: string, channelId: string): void;
 }
 
 /**
@@ -176,6 +190,15 @@ export class NullEventEmitter implements ICommunicationEventEmitter {
     /* no-op */
   }
   emitChannelUpdated(): void {
+    /* no-op */
+  }
+  emitServerMemberRemoved(): void {
+    /* no-op */
+  }
+  emitServerChannelCreated(): void {
+    /* no-op */
+  }
+  emitServerChannelDeleted(): void {
     /* no-op */
   }
 }

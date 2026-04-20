@@ -201,7 +201,11 @@ export const ShowcaseSpanishStrings: Partial<
     'Expedientes médicos propiedad del paciente',
   [ShowcaseStrings.FAQ_Tech_Q11_BrightChart_Text]:
     'Un expediente médico electrónico donde el paciente posee las claves. BrightChart almacena datos médicos compatibles con FHIR R4 como bloques cifrados en BrightChain — sin base de datos central que vulnerar. Los pacientes otorgan acceso granular a proveedores mediante delegación BrightTrust, y cada evento de acceso se registra en un rastro de auditoría inmutable. Compatible con consultorios médicos, dentales y veterinarios desde una sola base de código.',
-  [ShowcaseStrings.FAQ_Tech_Q11_BrightMail_Title]: 'Comunicación Soberana',
+  [ShowcaseStrings.FAQ_BrightCal_Logo_Alt]: 'Logo de BrightCal',
+  [ShowcaseStrings.FAQ_Tech_Q11_BrightCal_Title]: 'Gestión de calendario compartido y personal',
+  [ShowcaseStrings.FAQ_Tech_Q11_BrightCal_Text]:
+    'Un sistema de calendario donde el propietario posee las claves. BrightCal permite una programación segura y cifrada con control de acceso granular. Los eventos se almacenan como bloques cifrados. Todos los datos del calendario son inmutables y recuperables, con soporte para eventos recurrentes, recordatorios e integración con sistemas de calendario tradicionales.',
+    [ShowcaseStrings.FAQ_Tech_Q11_BrightMail_Title]: 'Comunicación Soberana',
   [ShowcaseStrings.FAQ_Tech_Q11_BrightMail_Text]:
     'Un sistema de correo electrónico totalmente compatible con RFC que conecta SMTP tradicional y almacenamiento descentralizado. A diferencia de los proveedores de correo estándar, BrightMail fragmenta cada mensaje en el almacén de bloques "Sin Propietario" con soporte para mensajería cifrada de extremo a extremo en "Modo Oscuro".',
   [ShowcaseStrings.FAQ_Tech_Q11_BrightHub_Title]: 'Red Social y Grafo Soberano',
@@ -280,7 +284,7 @@ export const ShowcaseSpanishStrings: Partial<
   [ShowcaseStrings.FAQ_Eco_Volta_Description]:
     'Nombrada en honor a Alessandro Volta, inventor de la batería, Volta es una chispa viviente — un zorro geométrico dentado, azul neón hecho de electricidad pura y crepitante. Ella es la Proveedora: genera y empuja Julios a través del sistema, ansiosa por alimentar cada operación a máxima potencia. Hiperactiva, generosa con la energía y ligeramente imprudente, Volta piensa que la conservación es aburrida. "¿Quieres 20 terajulios? Hecho. ¿Qué más?" En la UI, crepita cerca del medidor de Julios, y durante operaciones pesadas brilla al blanco, vibrando con el deseo de ejecutar. Ella representa el potencial puro y caótico — el deseo de actuar.',
   [ShowcaseStrings.FAQ_Eco_Volta_Alt]:
-    'Volta mascot — a neon-blue geometric fox made of electricity',
+    'Mascota Volta — un zorro geométrico azul neón hecho de electricidad',
 
   [ShowcaseStrings.FAQ_Eco_Ohm_Title]: 'Ohm — El Ancla',
   [ShowcaseStrings.FAQ_Eco_Ohm_Tagline]: 'El Monje Estoico de la Resistencia',
@@ -447,11 +451,11 @@ export const ShowcaseSpanishStrings: Partial<
     'Aunque esta implementación en TypeScript/Node.js es la versión principal y más madura de BrightChain, una biblioteca central en C++ paralela con UI para macOS/iOS está en desarrollo. Esta implementación nativa trae las características de privacidad y seguridad de BrightChain a las plataformas Apple. Ambos repositorios están en desarrollo temprano y aún no están listos para uso en producción.',
   // TODO: translate
   [ShowcaseStrings.About_OtherImpl_P1_Before]:
-    'While this TypeScript/Node.js implementation is the primary and most mature version of BrightChain, a parallel ',
-  [ShowcaseStrings.About_OtherImpl_P1_CppLink]: 'C++ core library',
-  [ShowcaseStrings.About_OtherImpl_P1_AppleLink]: 'macOS/iOS UI',
+    'Aunque esta implementación en TypeScript/Node.js es la versión principal y más madura, una ',
+  [ShowcaseStrings.About_OtherImpl_P1_CppLink]: 'biblioteca central en C++',
+  [ShowcaseStrings.About_OtherImpl_P1_AppleLink]: 'interfaz macOS/iOS',
   [ShowcaseStrings.About_OtherImpl_P1_After]:
-    " is in development. This native implementation brings BrightChain's privacy and security features to Apple platforms. Both repositories are in early development and not yet ready for production use.",
+    ' está en desarrollo. Esta implementación nativa lleva las capacidades de privacidad y rendimiento de BrightChain directamente a los dispositivos Apple.',
   [ShowcaseStrings.About_Feature_OwnerFree_Title]:
     'Almacenamiento Sin Propietario',
   [ShowcaseStrings.About_Feature_OwnerFree_Desc]:
@@ -708,6 +712,7 @@ export const ShowcaseSpanishStrings: Partial<
   [ShowcaseStrings.Ledger_PayloadSize]: 'Tamaño de la Carga Útil',
   [ShowcaseStrings.Ledger_Payload]: 'Carga Útil',
   [ShowcaseStrings.Ledger_BytesTemplate]: '{COUNT} bytes',
+  // Note: "bytes" is the standard technical term in Spanish
 
   // SkipLink
   [ShowcaseStrings.SkipLink_Text]: 'Saltar al contenido principal',
@@ -937,6 +942,7 @@ export const ShowcaseSpanishStrings: Partial<
   [ShowcaseStrings.Soup_Size]: 'Tamaño:',
   [ShowcaseStrings.Soup_Id]: 'ID:',
   [ShowcaseStrings.Soup_Color]: 'Color:',
+  // Note: "Color" is the same word in Spanish
   [ShowcaseStrings.Soup_SoupStats]: 'Estadísticas de la sopa',
   [ShowcaseStrings.Soup_TotalFiles]: 'Total de archivos:',
   [ShowcaseStrings.Soup_TotalBlocks]: 'Total de bloques:',
@@ -1530,455 +1536,471 @@ export const ShowcaseSpanishStrings: Partial<
   [ShowcaseStrings.Blog_BackToHome]: '← Volver al Inicio',
 
   // BlogPost.tsx (TODO: translate)
-  [ShowcaseStrings.BlogPost_Loading]: 'Loading post...',
-  [ShowcaseStrings.BlogPost_NotFoundTitle]: 'Post Not Found',
+  [ShowcaseStrings.BlogPost_Loading]: 'Cargando publicación...',
+  [ShowcaseStrings.BlogPost_NotFoundTitle]: 'Publicación no encontrada',
   [ShowcaseStrings.BlogPost_NotFoundDesc]:
-    "The blog post you're looking for doesn't exist.",
-  [ShowcaseStrings.BlogPost_BackToBlog]: '← Back to Blog',
+    'La publicación que buscas no existe.',
+  [ShowcaseStrings.BlogPost_BackToBlog]: '← Volver al Blog',
   [ShowcaseStrings.BlogPost_NewBanner]:
-    '✨ This post was just published! It will appear in the blog list after the next site deployment.',
-  [ShowcaseStrings.BlogPost_ByAuthorTemplate]: 'By {AUTHOR}',
+    '✨ ¡Esta publicación acaba de ser publicada! Aparecerá en la lista del blog después de la próxima actualización del sitio.',
+  [ShowcaseStrings.BlogPost_ByAuthorTemplate]: 'Por {AUTHOR}',
 
   // Components.tsx feature cards (TODO: translate)
   [ShowcaseStrings.Feat_BrightDB_Desc]:
-    'MongoDB-competitive document database storing data on the Owner-Free Filesystem. Every document transparently stored as whitened blocks with TUPLE architecture for plausible deniability.',
-  [ShowcaseStrings.Feat_BrightDB_Cat]: 'Storage',
-  [ShowcaseStrings.Feat_BrightDB_Tech1]: 'Document Store',
-  [ShowcaseStrings.Feat_BrightDB_Tech2]: 'ACID Transactions',
-  [ShowcaseStrings.Feat_BrightDB_Tech3]: 'Aggregation Pipeline',
+    'Base de datos de documentos competitiva con MongoDB que almacena datos en el sistema de archivos sin propietario. Cada documento almacenado de forma transparente como bloques blanqueados con arquitectura TUPLE para negación plausible.',
+  [ShowcaseStrings.Feat_BrightDB_Cat]: 'Almacenamiento',
+  [ShowcaseStrings.Feat_BrightDB_Tech1]: 'Almacén de documentos',
+  [ShowcaseStrings.Feat_BrightDB_Tech2]: 'Transacciones ACID',
+  [ShowcaseStrings.Feat_BrightDB_Tech3]: 'Pipeline de agregación',
   [ShowcaseStrings.Feat_BrightDB_HL1]:
-    'MongoDB-like API: collections, CRUD, queries, indexes, transactions',
+    'API tipo MongoDB: colecciones, CRUD, consultas, índices, transacciones',
   [ShowcaseStrings.Feat_BrightDB_HL2]:
-    '15 query operators: $eq, $ne, $gt, $gte, $lt, $lte, $in, $nin, $regex, $exists, $and, $or, $not, $nor, $elemMatch',
+    '15 operadores de consulta: $eq, $ne, $gt, $gte, $lt, $lte, $in, $nin, $regex, $exists, $and, $or, $not, $nor, $elemMatch',
   [ShowcaseStrings.Feat_BrightDB_HL3]:
-    'Aggregation pipeline: $match, $group, $sort, $limit, $skip, $project, $unwind, $count, $addFields, $lookup',
+    'Pipeline de agregación: $match, $group, $sort, $limit, $skip, $project, $unwind, $count, $addFields, $lookup',
   [ShowcaseStrings.Feat_BrightDB_HL4]:
-    'Single-field, compound, and unique indexes with B-tree structures',
+    'Índices de campo único, compuestos y únicos con estructuras B-tree',
   [ShowcaseStrings.Feat_BrightDB_HL5]:
-    'Multi-document ACID transactions with commit/abort and optimistic concurrency',
+    'Transacciones ACID multi-documento con commit/abort y concurrencia optimista',
   [ShowcaseStrings.Feat_BrightDB_HL6]:
-    'Change streams for real-time insert/update/delete event subscriptions',
+    'Flujos de cambios para suscripciones de eventos de inserción/actualización/eliminación en tiempo real',
   [ShowcaseStrings.Feat_BrightDB_HL7]:
-    'Express REST middleware for drop-in API access to collections',
+    'Middleware REST Express para acceso API plug-and-play a colecciones',
   [ShowcaseStrings.Feat_BrightDB_HL8]:
-    'TTL indexes for automatic document expiration',
+    'Índices TTL para expiración automática de documentos',
   [ShowcaseStrings.Feat_BrightDB_HL9]:
-    'Schema validation with strict/moderate levels and default values',
+    'Validación de esquema con niveles estricto/moderado y valores predeterminados',
   [ShowcaseStrings.Feat_BrightDB_HL10]:
-    'Full-text search with weighted fields and $text operator',
+    'Búsqueda de texto completo con campos ponderados y operador $text',
   [ShowcaseStrings.Feat_BrightDB_HL11]:
-    'Copy-on-write storage: blocks never deleted, only mappings updated',
+    'Almacenamiento copy-on-write: los bloques nunca se eliminan, solo se actualizan los mapeos',
   [ShowcaseStrings.Feat_BrightDB_HL12]:
-    'Every document stored as 3-block TUPLE (data + 2 randomizers) for plausible deniability',
-  [ShowcaseStrings.Feat_BrightDBPools_Title]: 'BrightDB Pools',
+    'Cada documento almacenado como TUPLE de 3 bloques (datos + 2 aleatorizadores) para negación plausible',
+  [ShowcaseStrings.Feat_BrightDBPools_Title]: 'Pools de BrightDB',
   [ShowcaseStrings.Feat_BrightDBPools_Desc]:
-    'Lightweight namespace-isolated storage pools that logically partition blocks without separate physical storage. Each pool enforces its own ACL, encryption, and whitening boundaries — enabling multi-tenant, multi-application data isolation on a single BrightChain node.',
-  [ShowcaseStrings.Feat_BrightDBPools_Cat]: 'Storage',
-  [ShowcaseStrings.Feat_BrightDBPools_Tech1]: 'Namespace Isolation',
-  [ShowcaseStrings.Feat_BrightDBPools_Tech2]: 'Pool ACLs',
-  [ShowcaseStrings.Feat_BrightDBPools_Tech3]: 'Gossip Discovery',
+    'Pools de almacenamiento ligeros aislados por espacio de nombres que particionan lógicamente bloques sin almacenamiento físico separado. Cada pool aplica sus propios límites de ACL, cifrado y blanqueamiento — permitiendo aislamiento de datos multi-inquilino y multi-aplicación en un solo nodo BrightChain.',
+  [ShowcaseStrings.Feat_BrightDBPools_Cat]: 'Almacenamiento',
+  [ShowcaseStrings.Feat_BrightDBPools_Tech1]: 'Aislamiento de espacio de nombres',
+  [ShowcaseStrings.Feat_BrightDBPools_Tech2]: 'ACL de pool',
+  [ShowcaseStrings.Feat_BrightDBPools_Tech3]: 'Descubrimiento Gossip',
   [ShowcaseStrings.Feat_BrightDBPools_HL1]:
-    'Namespace-prefixed storage keys (poolId:hash) — logical isolation without physical separation',
+    'Claves de almacenamiento con prefijo de espacio de nombres (poolId:hash) — aislamiento lógico sin separación física',
   [ShowcaseStrings.Feat_BrightDBPools_HL2]:
-    'Per-pool ACLs with Read, Write, Replicate, and Admin permissions enforced at the store layer',
+    'ACL por pool con permisos de Lectura, Escritura, Replicación y Admin aplicados en la capa de almacenamiento',
   [ShowcaseStrings.Feat_BrightDBPools_HL3]:
-    'Pool-scoped XOR whitening: tuples never cross pool boundaries, preserving per-pool plausible deniability',
+    'Blanqueamiento XOR limitado al pool: los tuplas nunca cruzan límites de pool, preservando la negación plausible por pool',
   [ShowcaseStrings.Feat_BrightDBPools_HL4]:
-    'Gossip-based pool discovery across peers with configurable query timeouts and caching',
+    'Descubrimiento de pool basado en gossip entre pares con tiempos de espera de consulta configurables y almacenamiento en caché',
   [ShowcaseStrings.Feat_BrightDBPools_HL5]:
-    'Pool bootstrap seeding: generate cryptographic random blocks as whitening material for new pools',
+    'Inicialización de pool: generación de bloques aleatorios criptográficos como material de blanqueamiento para nuevos pools',
   [ShowcaseStrings.Feat_BrightDBPools_HL6]:
-    'Safe deletion validation — checks cross-pool XOR dependencies before removing a pool',
+    'Validación de eliminación segura — verifica dependencias XOR entre pools antes de eliminar un pool',
   [ShowcaseStrings.Feat_BrightDBPools_HL7]:
-    'Pool-scoped Bloom filters and manifests for efficient peer reconciliation',
+    'Filtros Bloom y manifiestos limitados al pool para reconciliación eficiente entre pares',
   [ShowcaseStrings.Feat_BrightDBPools_HL8]:
-    'Multi-admin quorum governance: ACL updates require >50% admin signatures',
+    'Gobernanza de quórum multi-admin: las actualizaciones de ACL requieren >50% de firmas de admin',
   [ShowcaseStrings.Feat_BrightDBPools_HL9]:
-    'Public read/write flags for open pools, or locked-down member-only access',
+    'Banderas de lectura/escritura públicas para pools abiertos, o acceso bloqueado solo para miembros',
   [ShowcaseStrings.Feat_OFFS_Title]: 'Owner-Free File System (OFFS)',
   [ShowcaseStrings.Feat_OFFS_Desc]:
-    'Revolutionary distributed storage that breaks files into blocks and XORs them with random data. No single block contains identifiable content, providing legal immunity for node operators while enabling secure, decentralized file storage.',
-  [ShowcaseStrings.Feat_OFFS_Cat]: 'Storage',
-  [ShowcaseStrings.Feat_OFFS_Tech1]: 'XOR Encryption',
-  [ShowcaseStrings.Feat_OFFS_Tech2]: 'Distributed Storage',
+    'Almacenamiento distribuido revolucionario que divide archivos en bloques y los combina con datos aleatorios mediante XOR. Ningún bloque individual contiene contenido identificable, proporcionando inmunidad legal a los operadores de nodos mientras permite almacenamiento de archivos seguro y descentralizado.',
+  [ShowcaseStrings.Feat_OFFS_Cat]: 'Almacenamiento',
+  [ShowcaseStrings.Feat_OFFS_Tech1]: 'Cifrado XOR',
+  [ShowcaseStrings.Feat_OFFS_Tech2]: 'Almacenamiento distribuido',
   [ShowcaseStrings.Feat_OFFS_Tech3]: 'SHA-512',
   [ShowcaseStrings.Feat_OFFS_HL1]:
-    'Files split into source blocks and merged with random data via XOR',
+    'Los archivos se dividen en bloques fuente y se combinan con datos aleatorios mediante XOR',
   [ShowcaseStrings.Feat_OFFS_HL2]:
-    'Original blocks discarded - only randomized blocks stored',
+    'Los bloques originales se descartan — solo se almacenan bloques aleatorizados',
   [ShowcaseStrings.Feat_OFFS_HL3]:
-    'Constituent Block Lists (CBL) track block relationships',
+    'Las Listas de Bloques Constituyentes (CBL) rastrean las relaciones entre bloques',
   [ShowcaseStrings.Feat_OFFS_HL4]:
-    'Blocks identified by SHA-512 hash - automatic deduplication',
+    'Los bloques se identifican por hash SHA-512 — deduplicación automática',
   [ShowcaseStrings.Feat_OFFS_HL5]:
-    'Multi-use blocks can be part of multiple files simultaneously',
+    'Los bloques multiuso pueden ser parte de múltiples archivos simultáneamente',
   [ShowcaseStrings.Feat_OFFS_HL6]:
-    'Legal protection for node operators - no identifiable content stored',
-  [ShowcaseStrings.Feat_Messaging_Title]: 'Messaging System',
+    'Protección legal para operadores de nodos — no se almacena contenido identificable',
+  [ShowcaseStrings.Feat_Messaging_Title]: 'Sistema de mensajería',
   [ShowcaseStrings.Feat_Messaging_Desc]:
-    'Secure, decentralized message passing with encryption, routing, delivery tracking, and gossip protocol for epidemic-style propagation. Built on the block store with WebSocket real-time delivery.',
-  [ShowcaseStrings.Feat_Messaging_Cat]: 'Network',
-  [ShowcaseStrings.Feat_Messaging_Tech1]: 'Gossip Protocol',
+    'Paso de mensajes seguro y descentralizado con cifrado, enrutamiento, seguimiento de entrega y protocolo gossip para propagación estilo epidémico. Construido sobre el almacén de bloques con entrega en tiempo real por WebSocket.',
+  [ShowcaseStrings.Feat_Messaging_Cat]: 'Red',
+  [ShowcaseStrings.Feat_Messaging_Tech1]: 'Protocolo Gossip',
   [ShowcaseStrings.Feat_Messaging_Tech2]: 'ECIES',
   [ShowcaseStrings.Feat_Messaging_Tech3]: 'WebSocket',
-  [ShowcaseStrings.Feat_Messaging_Tech4]: 'Bloom Filters',
+  [ShowcaseStrings.Feat_Messaging_Tech4]: 'Filtros Bloom',
   [ShowcaseStrings.Feat_Messaging_HL1]:
-    'Encrypted message passing with per-recipient or shared key encryption',
+    'Paso de mensajes cifrados con cifrado por destinatario o clave compartida',
   [ShowcaseStrings.Feat_Messaging_HL2]:
-    'Epidemic-style gossip propagation with priority-based delivery',
+    'Propagación gossip estilo epidémico con entrega basada en prioridad',
   [ShowcaseStrings.Feat_Messaging_HL3]:
-    'Automatic retry with exponential backoff for failed deliveries',
+    'Reintento automático con retroceso exponencial para entregas fallidas',
   [ShowcaseStrings.Feat_Messaging_HL4]:
-    'Bloom filter-based discovery protocol for efficient block location',
+    'Protocolo de descubrimiento basado en filtros Bloom para localización eficiente de bloques',
   [ShowcaseStrings.Feat_Messaging_HL5]:
-    'Real-time WebSocket events for message delivery and acknowledgments',
+    'Eventos WebSocket en tiempo real para entrega de mensajes y confirmaciones',
   [ShowcaseStrings.Feat_Messaging_HL6]:
-    'Persistent delivery tracking with per-recipient status',
+    'Seguimiento de entrega persistente con estado por destinatario',
   [ShowcaseStrings.Feat_BrightMail_Desc]:
-    'RFC 5322/2045 compliant email with threading, BCC privacy, attachments, inbox operations, and delivery tracking. Full email composition, sending, and retrieval built on messaging infrastructure.',
-  [ShowcaseStrings.Feat_BrightMail_Cat]: 'Network',
+    'Correo electrónico conforme con RFC 5322/2045 con hilos, privacidad BCC, archivos adjuntos, operaciones de bandeja de entrada y seguimiento de entrega. Composición, envío y recuperación completa de correo electrónico construida sobre infraestructura de mensajería.',
+  [ShowcaseStrings.Feat_BrightMail_Cat]: 'Red',
   [ShowcaseStrings.Feat_BrightMail_Tech1]: 'RFC 5322',
   [ShowcaseStrings.Feat_BrightMail_Tech2]: 'RFC 2045',
   [ShowcaseStrings.Feat_BrightMail_Tech3]: 'MIME',
-  [ShowcaseStrings.Feat_BrightMail_Tech4]: 'Threading',
+  [ShowcaseStrings.Feat_BrightMail_Tech4]: 'Hilos',
   [ShowcaseStrings.Feat_BrightMail_HL1]:
-    'RFC-compliant Internet Message Format with MIME support',
+    'Formato de mensaje de Internet conforme con RFC con soporte MIME',
   [ShowcaseStrings.Feat_BrightMail_HL2]:
-    'Threading via In-Reply-To and References headers',
+    'Hilos mediante encabezados In-Reply-To y References',
   [ShowcaseStrings.Feat_BrightMail_HL3]:
-    'BCC privacy with cryptographically separated copies per recipient',
+    'Privacidad BCC con copias criptográficamente separadas por destinatario',
   [ShowcaseStrings.Feat_BrightMail_HL4]:
-    'Multiple attachments with Content-ID for inline images',
+    'Múltiples archivos adjuntos con soporte Content-ID para imágenes en línea',
   [ShowcaseStrings.Feat_BrightMail_HL5]:
-    'Inbox operations: query, filter, sort, search with pagination',
+    'Operaciones de bandeja de entrada: consulta, filtro, ordenación, búsqueda con paginación',
   [ShowcaseStrings.Feat_BrightMail_HL6]:
-    'Per-recipient delivery tracking via gossip acknowledgments',
+    'Seguimiento de entrega por destinatario mediante confirmaciones gossip',
   [ShowcaseStrings.Feat_BrightMail_HL7]:
-    'Multiple encryption schemes: ECIES, shared key, S/MIME',
+    'Múltiples esquemas de cifrado: ECIES, clave compartida, S/MIME',
   [ShowcaseStrings.Feat_BrightMail_HL8]:
-    'Digital signatures for sender authentication',
+    'Firmas digitales para autenticación del remitente',
   [ShowcaseStrings.Feat_BrightMail_HL9]:
-    'Forward/reply with RFC-compliant Resent-* headers',
+    'Reenvío/respuesta con encabezados Resent-* conformes con RFC',
+  [ShowcaseStrings.Feat_BrightCal_Desc]: 'Calendario cifrado con control de acceso granular, eventos recurrentes, recordatorios e integración con sistemas de calendario tradicionales a través de CalDAV.',
+  [ShowcaseStrings.Feat_BrightCal_Cat]: 'Red',
+  [ShowcaseStrings.Feat_BrightCal_Tech1]: 'iCal/RFC 5545',
+  [ShowcaseStrings.Feat_BrightCal_Tech2]: 'CalDAV',
+  [ShowcaseStrings.Feat_BrightCal_Tech3]: 'Cifrado ECIES',
+  [ShowcaseStrings.Feat_BrightCal_Tech4]: 'iTIP/iMIP',
+  [ShowcaseStrings.Feat_BrightCal_HL1]: 'Eventos almacenados como bloques cifrados en BrightChain',
+  [ShowcaseStrings.Feat_BrightCal_HL2]: 'Control de acceso granular mediante delegación BrightTrust',
+  [ShowcaseStrings.Feat_BrightCal_HL3]: 'Soporte completo para eventos recurrentes con reglas RRULE',
+  [ShowcaseStrings.Feat_BrightCal_HL4]: 'Recordatorios y notificaciones con entrega cifrada',
+  [ShowcaseStrings.Feat_BrightCal_HL5]: 'Integración CalDAV para clientes de calendario tradicionales',
+  [ShowcaseStrings.Feat_BrightCal_HL6]: 'Programación de invitaciones con protocolo iTIP/iMIP',
+  [ShowcaseStrings.Feat_BrightCal_HL7]: 'Historial de versiones inmutable para todos los cambios de eventos',
+  [ShowcaseStrings.Feat_BrightCal_HL8]: 'Calendarios compartidos con permisos por usuario',
+  [ShowcaseStrings.Feat_BrightCal_HL9]: 'Detección de conflictos y resolución automática',
+  [ShowcaseStrings.Feat_BrightCal_HL10]: 'Exportación e importación en formato iCalendar estándar',
   [ShowcaseStrings.Feat_BrightChat_Desc]:
-    'Discord-competitive communication platform with Signal-grade end-to-end encryption. Direct messaging, group chats, and channels with real-time presence, typing indicators, and role-based permissions.',
-  [ShowcaseStrings.Feat_BrightChat_Cat]: 'Network',
-  [ShowcaseStrings.Feat_BrightChat_Tech1]: 'E2E Encryption',
+    'Plataforma de comunicación competitiva con Discord con cifrado de extremo a extremo de grado Signal. Mensajería directa, chats grupales y canales con presencia en tiempo real, indicadores de escritura y permisos basados en roles.',
+  [ShowcaseStrings.Feat_BrightChat_Cat]: 'Red',
+  [ShowcaseStrings.Feat_BrightChat_Tech1]: 'Cifrado E2E',
   [ShowcaseStrings.Feat_BrightChat_Tech2]: 'WebSocket',
-  [ShowcaseStrings.Feat_BrightChat_Tech3]: 'Key Rotation',
+  [ShowcaseStrings.Feat_BrightChat_Tech3]: 'Rotación de claves',
   [ShowcaseStrings.Feat_BrightChat_Tech4]: 'RBAC',
   [ShowcaseStrings.Feat_BrightChat_HL1]:
-    'Direct messaging for person-to-person encrypted conversations',
+    'Mensajería directa para conversaciones cifradas persona a persona',
   [ShowcaseStrings.Feat_BrightChat_HL2]:
-    'Group chats with shared encryption and automatic key rotation',
+    'Chats grupales con cifrado compartido y rotación automática de claves',
   [ShowcaseStrings.Feat_BrightChat_HL3]:
-    'Channels with four visibility modes: public/private/secret/invisible',
+    'Canales con cuatro modos de visibilidad: público/privado/secreto/invisible',
   [ShowcaseStrings.Feat_BrightChat_HL4]:
-    'Real-time presence system: online/offline/idle/DND',
+    'Sistema de presencia en tiempo real: en línea/desconectado/inactivo/no molestar',
   [ShowcaseStrings.Feat_BrightChat_HL5]:
-    'Role-based permissions: Owner/Admin/Moderator/Member',
+    'Permisos basados en roles: Propietario/Admin/Moderador/Miembro',
   [ShowcaseStrings.Feat_BrightChat_HL6]:
-    'Typing indicators, reactions, and message edits via WebSocket',
+    'Indicadores de escritura, reacciones y edición de mensajes vía WebSocket',
   [ShowcaseStrings.Feat_BrightChat_HL7]:
-    'Time-limited, usage-limited invite tokens for channels',
+    'Tokens de invitación con límite de tiempo y uso para canales',
   [ShowcaseStrings.Feat_BrightChat_HL8]:
-    'Full-text message search within channel history',
+    'Búsqueda de texto completo en el historial de mensajes del canal',
   [ShowcaseStrings.Feat_BrightChat_HL9]:
-    'Seamless conversation promotion from DMs to groups',
+    'Promoción fluida de conversaciones de mensajes directos a grupos',
   [ShowcaseStrings.Feat_BrightPass_Desc]:
-    '1Password-competitive password keychain with VCBL architecture for efficient encrypted credential storage. TOTP/2FA, breach detection, emergency access, and import from major password managers.',
-  [ShowcaseStrings.Feat_BrightPass_Cat]: 'Identity',
+    'Llavero de contraseñas competitivo con 1Password con arquitectura VCBL para almacenamiento eficiente de credenciales cifradas. TOTP/2FA, detección de brechas, acceso de emergencia e importación desde los principales gestores de contraseñas.',
+  [ShowcaseStrings.Feat_BrightPass_Cat]: 'Identidad',
   [ShowcaseStrings.Feat_BrightPass_Tech1]: 'VCBL',
   [ShowcaseStrings.Feat_BrightPass_Tech2]: 'TOTP',
   [ShowcaseStrings.Feat_BrightPass_Tech3]: 'AES-256-GCM',
-  [ShowcaseStrings.Feat_BrightPass_Tech4]: 'Shamir Sharing',
+  [ShowcaseStrings.Feat_BrightPass_Tech4]: 'Secreto compartido de Shamir',
   [ShowcaseStrings.Feat_BrightPass_HL1]:
-    'VCBL (Vault Constituent Block List) for efficient encrypted storage',
+    'VCBL (Lista de Bloques Constituyentes de Bóveda) para almacenamiento cifrado eficiente',
   [ShowcaseStrings.Feat_BrightPass_HL2]:
-    'Multiple entry types: login, secure note, credit card, identity',
+    'Múltiples tipos de entrada: inicio de sesión, nota segura, tarjeta de crédito, identidad',
   [ShowcaseStrings.Feat_BrightPass_HL3]:
-    'Cryptographically secure password generation with constraints',
+    'Generación de contraseñas criptográficamente seguras con restricciones',
   [ShowcaseStrings.Feat_BrightPass_HL4]:
-    'TOTP/2FA support with QR code generation for authenticators',
+    'Soporte TOTP/2FA con generación de código QR para autenticadores',
   [ShowcaseStrings.Feat_BrightPass_HL5]:
-    'k-anonymity breach detection via Have I Been Pwned API',
+    'Detección de brechas por k-anonimato vía API de Have I Been Pwned',
   [ShowcaseStrings.Feat_BrightPass_HL6]:
-    'Append-only encrypted audit logging for all vault operations',
+    'Registro de auditoría cifrado de solo adición para todas las operaciones de bóveda',
   [ShowcaseStrings.Feat_BrightPass_HL7]:
-    "Emergency access via Shamir's Secret Sharing for recovery",
+    'Acceso de emergencia mediante secreto compartido de Shamir para recuperación',
   [ShowcaseStrings.Feat_BrightPass_HL8]:
-    'Multi-member vault sharing with ECIES per-recipient encryption',
+    'Compartición de bóveda multi-miembro con cifrado ECIES por destinatario',
   [ShowcaseStrings.Feat_BrightPass_HL9]:
-    'Import from 1Password, LastPass, Bitwarden, Chrome, Firefox, KeePass, Dashlane',
+    'Importación desde 1Password, LastPass, Bitwarden, Chrome, Firefox, KeePass, Dashlane',
   [ShowcaseStrings.Feat_BrightPass_HL10]:
-    'Browser extension autofill API ready',
+    'API de autocompletado para extensión de navegador lista',
   [ShowcaseStrings.Feat_BrightVote_Desc]:
-    'Privacy-preserving elections using Paillier homomorphic encryption with ECDH-derived keys. Supports 15+ voting methods from simple plurality to complex ranked choice with government compliance features.',
-  [ShowcaseStrings.Feat_BrightVote_Cat]: 'Governance',
-  [ShowcaseStrings.Feat_BrightVote_Tech1]: 'Paillier Encryption',
+    'Elecciones que preservan la privacidad usando cifrado homomórfico Paillier con claves derivadas de ECDH. Soporta más de 15 métodos de votación desde pluralidad simple hasta elección por ranking compleja con características de cumplimiento gubernamental.',
+  [ShowcaseStrings.Feat_BrightVote_Cat]: 'Gobernanza',
+  [ShowcaseStrings.Feat_BrightVote_Tech1]: 'Cifrado Paillier',
   [ShowcaseStrings.Feat_BrightVote_Tech2]: 'ECDH',
-  [ShowcaseStrings.Feat_BrightVote_Tech3]: 'Homomorphic Cryptography',
+  [ShowcaseStrings.Feat_BrightVote_Tech3]: 'Criptografía homomórfica',
   [ShowcaseStrings.Feat_BrightVote_HL1]:
-    'ECDH-to-Paillier bridge derives homomorphic keys from ECDSA/ECDH keys',
+    'Puente ECDH-a-Paillier deriva claves homomórficas de claves ECDSA/ECDH',
   [ShowcaseStrings.Feat_BrightVote_HL2]:
-    'Privacy-preserving vote aggregation via homomorphic addition',
+    'Agregación de votos que preserva la privacidad mediante adición homomórfica',
   [ShowcaseStrings.Feat_BrightVote_HL3]:
-    '15+ voting methods: Plurality, Approval, Weighted, Borda, Score, Ranked Choice, IRV, STAR, STV, Quadratic, Consensus, etc.',
+    'Más de 15 métodos de votación: Pluralidad, Aprobación, Ponderado, Borda, Puntuación, Elección por Ranking, IRV, STAR, VUT, Cuadrática, Consenso, etc.',
   [ShowcaseStrings.Feat_BrightVote_HL4]:
-    'Security classifications: fully homomorphic, multi-round, insecure',
+    'Clasificaciones de seguridad: totalmente homomórfico, multi-ronda, inseguro',
   [ShowcaseStrings.Feat_BrightVote_HL5]:
-    'Government compliance: immutable audit logs, public bulletin board, verifiable receipts',
+    'Cumplimiento gubernamental: registros de auditoría inmutables, tablón público, recibos verificables',
   [ShowcaseStrings.Feat_BrightVote_HL6]:
-    'Hierarchical aggregation: Precinct → County → State → National',
+    'Agregación jerárquica: Distrito → Condado → Estado → Nacional',
   [ShowcaseStrings.Feat_BrightVote_HL7]:
-    '128-bit security level with Miller-Rabin primality testing (256 rounds)',
+    'Nivel de seguridad de 128 bits con prueba de primalidad Miller-Rabin (256 rondas)',
   [ShowcaseStrings.Feat_BrightVote_HL8]:
-    'Cross-platform determinism (Node.js and browser environments)',
+    'Determinismo multiplataforma (entornos Node.js y navegador)',
   [ShowcaseStrings.Feat_BrightVote_HL9]:
-    'Timing attack resistance with constant-time operations',
+    'Resistencia a ataques de temporización con operaciones de tiempo constante',
   [ShowcaseStrings.Feat_BrightHub_Desc]:
-    'Twitter-competitive decentralized social network with unique FontAwesome icon markup syntax. Posts, threads, DMs, connection lists, hubs for privacy, and real-time notifications via WebSocket.',
-  [ShowcaseStrings.Feat_BrightHub_Cat]: 'Network',
+    'Red social descentralizada competitiva con Twitter con sintaxis única de marcado de iconos FontAwesome. Publicaciones, hilos, mensajes directos, listas de conexiones, hubs para privacidad y notificaciones en tiempo real vía WebSocket.',
+  [ShowcaseStrings.Feat_BrightHub_Cat]: 'Red',
   [ShowcaseStrings.Feat_BrightHub_Tech1]: 'WebSocket',
-  [ShowcaseStrings.Feat_BrightHub_Tech2]: 'Real-time Messaging',
-  [ShowcaseStrings.Feat_BrightHub_Tech3]: 'Connection Management',
+  [ShowcaseStrings.Feat_BrightHub_Tech2]: 'Mensajería en tiempo real',
+  [ShowcaseStrings.Feat_BrightHub_Tech3]: 'Gestión de conexiones',
   [ShowcaseStrings.Feat_BrightHub_HL1]:
-    'Posts with 280-char limit, markdown, and unique {{icon}} syntax for FontAwesome',
+    'Publicaciones con límite de 280 caracteres, markdown y sintaxis única {{icon}} para FontAwesome',
   [ShowcaseStrings.Feat_BrightHub_HL2]:
-    'Threaded conversations with 10-level nesting and reply hierarchies',
+    'Conversaciones en hilos con anidamiento de 10 niveles y jerarquías de respuesta',
   [ShowcaseStrings.Feat_BrightHub_HL3]:
-    'Connection lists, categories, and hubs for organizing relationships',
+    'Listas de conexiones, categorías y hubs para organizar relaciones',
   [ShowcaseStrings.Feat_BrightHub_HL4]:
-    'Direct messaging with read receipts, typing indicators, and reactions',
+    'Mensajería directa con confirmaciones de lectura, indicadores de escritura y reacciones',
   [ShowcaseStrings.Feat_BrightHub_HL5]:
-    'Group conversations (up to 50 participants) with admin roles',
+    'Conversaciones grupales (hasta 50 participantes) con roles de administrador',
   [ShowcaseStrings.Feat_BrightHub_HL6]:
-    'Message requests for non-followers with accept/decline workflow',
+    'Solicitudes de mensaje para no seguidores con flujo de aceptar/rechazar',
   [ShowcaseStrings.Feat_BrightHub_HL7]:
-    'Real-time notifications via WebSocket with smart grouping',
+    'Notificaciones en tiempo real vía WebSocket con agrupación inteligente',
   [ShowcaseStrings.Feat_BrightHub_HL8]:
-    'Notification preferences: quiet hours, DND mode, per-category settings',
+    'Preferencias de notificación: horas silenciosas, modo no molestar, configuración por categoría',
   [ShowcaseStrings.Feat_BrightHub_HL9]:
-    'Protected accounts with follow request approval workflow',
+    'Cuentas protegidas con flujo de aprobación de solicitudes de seguimiento',
   [ShowcaseStrings.Feat_BrightHub_HL10]:
-    'Connection insights: strength calculation, mutual connections, suggestions',
+    'Información de conexiones: cálculo de fortaleza, conexiones mutuas, sugerencias',
   [ShowcaseStrings.Feat_BrightHub_HL11]:
-    'Hub-based content visibility for private group sharing',
+    'Visibilidad de contenido basada en hubs para compartición privada en grupo',
   [ShowcaseStrings.Feat_BrightHub_HL12]:
-    'Rich text formatting with XSS prevention and emoji support',
-  [ShowcaseStrings.Feat_Anonymity_Title]: 'Brokered Anonymity & BrightTrust',
+    'Formato de texto enriquecido con prevención de XSS y soporte de emojis',
+  [ShowcaseStrings.Feat_Anonymity_Title]: 'Anonimato intermediado y BrightTrust',
   [ShowcaseStrings.Feat_Anonymity_Desc]:
-    "Sophisticated privacy mechanism enabling anonymous operations while maintaining accountability. Identity information encrypted and split using Shamir's Secret Sharing, reconstructable only through majority BrightTrust consensus.",
-  [ShowcaseStrings.Feat_Anonymity_Cat]: 'Governance',
-  [ShowcaseStrings.Feat_Anonymity_Tech1]: "Shamir's Secret Sharing",
-  [ShowcaseStrings.Feat_Anonymity_Tech2]: 'Forward Error Correction',
-  [ShowcaseStrings.Feat_Anonymity_Tech3]: 'BrightTrust Consensus',
+    'Mecanismo de privacidad sofisticado que permite operaciones anónimas manteniendo la responsabilidad. La información de identidad se cifra y divide usando el secreto compartido de Shamir, reconstruible solo mediante consenso mayoritario de BrightTrust.',
+  [ShowcaseStrings.Feat_Anonymity_Cat]: 'Gobernanza',
+  [ShowcaseStrings.Feat_Anonymity_Tech1]: 'Secreto compartido de Shamir',
+  [ShowcaseStrings.Feat_Anonymity_Tech2]: 'Corrección de errores hacia adelante',
+  [ShowcaseStrings.Feat_Anonymity_Tech3]: 'Consenso BrightTrust',
   [ShowcaseStrings.Feat_Anonymity_HL1]:
-    'Post anonymously with encrypted identity backup',
+    'Publica anónimamente con respaldo de identidad cifrado',
   [ShowcaseStrings.Feat_Anonymity_HL2]:
-    'Identity shards distributed across ~24 BrightTrust members',
+    'Fragmentos de identidad distribuidos entre ~24 miembros de BrightTrust',
   [ShowcaseStrings.Feat_Anonymity_HL3]:
-    'Majority vote required to reconstruct identity information',
+    'Se requiere voto mayoritario para reconstruir la información de identidad',
   [ShowcaseStrings.Feat_Anonymity_HL4]:
-    'Time-limited accountability - data expires after statute of limitations',
+    'Responsabilidad con límite de tiempo — los datos expiran después del plazo de prescripción',
   [ShowcaseStrings.Feat_Anonymity_HL5]:
-    'Legal compliance mechanism for FISA warrants and court orders',
+    'Mecanismo de cumplimiento legal para órdenes FISA y órdenes judiciales',
   [ShowcaseStrings.Feat_Anonymity_HL6]:
-    'Permanent privacy protection after expiration period',
-  [ShowcaseStrings.Feat_Encryption_Title]: 'Advanced Encryption Stack',
+    'Protección de privacidad permanente después del período de expiración',
+  [ShowcaseStrings.Feat_Encryption_Title]: 'Stack de cifrado avanzado',
   [ShowcaseStrings.Feat_Encryption_Desc]:
-    'State-of-the-art encryption combining ECIES for key derivation with AES-256-GCM for file security. Complete cryptosystem with BIP39/32 authentication and SECP256k1 elliptic curve cryptography.',
-  [ShowcaseStrings.Feat_Encryption_Cat]: 'Cryptography',
+    'Cifrado de última generación que combina ECIES para derivación de claves con AES-256-GCM para seguridad de archivos. Criptosistema completo con autenticación BIP39/32 y criptografía de curva elíptica SECP256k1.',
+  [ShowcaseStrings.Feat_Encryption_Cat]: 'Criptografía',
   [ShowcaseStrings.Feat_Encryption_Tech1]: 'ECIES',
   [ShowcaseStrings.Feat_Encryption_Tech2]: 'AES-256-GCM',
   [ShowcaseStrings.Feat_Encryption_Tech3]: 'BIP39/32',
   [ShowcaseStrings.Feat_Encryption_Tech4]: 'SECP256k1',
   [ShowcaseStrings.Feat_Encryption_HL1]:
-    'ECIES encryption with user-specific key derivation',
+    'Cifrado ECIES con derivación de claves específica por usuario',
   [ShowcaseStrings.Feat_Encryption_HL2]:
-    'AES-256-GCM for authenticated file encryption',
+    'AES-256-GCM para cifrado autenticado de archivos',
   [ShowcaseStrings.Feat_Encryption_HL3]:
-    'BIP39/32 mnemonic-based authentication',
+    'Autenticación basada en mnemónicos BIP39/32',
   [ShowcaseStrings.Feat_Encryption_HL4]:
-    'SECP256k1 elliptic curve (Ethereum-compatible keyspace)',
+    'Curva elíptica SECP256k1 (espacio de claves compatible con Ethereum)',
   [ShowcaseStrings.Feat_Encryption_HL5]:
-    'Verified block-level data integrity with XOR functionality',
+    'Integridad de datos verificada a nivel de bloque con funcionalidad XOR',
   [ShowcaseStrings.Feat_Encryption_HL6]:
-    'Cross-platform cryptographic operations',
-  [ShowcaseStrings.Feat_Storage_Title]: 'Decentralized Storage Network',
+    'Operaciones criptográficas multiplataforma',
+  [ShowcaseStrings.Feat_Storage_Title]: 'Red de almacenamiento descentralizado',
   [ShowcaseStrings.Feat_Storage_Desc]:
-    'Peer-to-peer distributed file system that monetizes unused storage on personal devices. IPFS-like architecture with energy-efficient proof-of-work and reputation-based incentives.',
-  [ShowcaseStrings.Feat_Storage_Cat]: 'Network',
-  [ShowcaseStrings.Feat_Storage_Tech1]: 'P2P Networks',
+    'Sistema de archivos distribuido peer-to-peer que monetiza el almacenamiento no utilizado en dispositivos personales. Arquitectura tipo IPFS con prueba de trabajo eficiente energéticamente e incentivos basados en reputación.',
+  [ShowcaseStrings.Feat_Storage_Cat]: 'Red',
+  [ShowcaseStrings.Feat_Storage_Tech1]: 'Redes P2P',
   [ShowcaseStrings.Feat_Storage_Tech2]: 'DHT',
-  [ShowcaseStrings.Feat_Storage_Tech3]: 'Block Replication',
+  [ShowcaseStrings.Feat_Storage_Tech3]: 'Replicación de bloques',
   [ShowcaseStrings.Feat_Storage_HL1]:
-    'Utilize wasted storage space on personal computers and devices',
+    'Utiliza el espacio de almacenamiento desperdiciado en computadoras y dispositivos personales',
   [ShowcaseStrings.Feat_Storage_HL2]:
-    'Distributed Hash Table (DHT) for efficient block tracking',
+    'Tabla de hash distribuida (DHT) para seguimiento eficiente de bloques',
   [ShowcaseStrings.Feat_Storage_HL3]:
-    'Configurable block durability and accessibility requirements',
+    'Requisitos configurables de durabilidad y accesibilidad de bloques',
   [ShowcaseStrings.Feat_Storage_HL4]:
-    'Dynamic replication based on block usefulness and access patterns',
+    'Replicación dinámica basada en utilidad de bloques y patrones de acceso',
   [ShowcaseStrings.Feat_Storage_HL5]:
-    'Energy-efficient alternative to traditional proof-of-work mining',
+    'Alternativa eficiente energéticamente a la minería tradicional de prueba de trabajo',
   [ShowcaseStrings.Feat_Storage_HL6]:
-    'Storage credits and bandwidth compensation for node operators',
-  [ShowcaseStrings.Feat_Sealing_Title]: 'BrightTrust-Based Document Sealing',
+    'Créditos de almacenamiento y compensación de ancho de banda para operadores de nodos',
+  [ShowcaseStrings.Feat_Sealing_Title]: 'Sellado de documentos basado en BrightTrust',
   [ShowcaseStrings.Feat_Sealing_Desc]:
-    'Advanced document protection with customizable threshold requirements for access restoration. Groups can seal sensitive information requiring configurable majority consensus to unseal.',
-  [ShowcaseStrings.Feat_Sealing_Cat]: 'Governance',
-  [ShowcaseStrings.Feat_Sealing_Tech1]: 'Threshold Cryptography',
-  [ShowcaseStrings.Feat_Sealing_Tech2]: 'Secret Sharing',
-  [ShowcaseStrings.Feat_Sealing_Tech3]: 'Multi-Party Computation',
+    'Protección avanzada de documentos con requisitos de umbral personalizables para restauración de acceso. Los grupos pueden sellar información sensible requiriendo consenso mayoritario configurable para dessellar.',
+  [ShowcaseStrings.Feat_Sealing_Cat]: 'Gobernanza',
+  [ShowcaseStrings.Feat_Sealing_Tech1]: 'Criptografía de umbral',
+  [ShowcaseStrings.Feat_Sealing_Tech2]: 'Secreto compartido',
+  [ShowcaseStrings.Feat_Sealing_Tech3]: 'Computación multipartita',
   [ShowcaseStrings.Feat_Sealing_HL1]:
-    'Seal documents with configurable quorum thresholds (e.g., 3-of-5, 7-of-10)',
+    'Sella documentos con umbrales de quórum configurables (ej., 3-de-5, 7-de-10)',
   [ShowcaseStrings.Feat_Sealing_HL2]:
-    'Distributed shard storage across trusted BrightTrust members',
+    'Almacenamiento distribuido de fragmentos entre miembros de BrightTrust de confianza',
   [ShowcaseStrings.Feat_Sealing_HL3]:
-    'Mathematical guarantee of security until threshold reached',
+    'Garantía matemática de seguridad hasta alcanzar el umbral',
   [ShowcaseStrings.Feat_Sealing_HL4]:
-    'Flexible unsealing for legal compliance or group decisions',
+    'Dessellado flexible para cumplimiento legal o decisiones grupales',
   [ShowcaseStrings.Feat_Sealing_HL5]:
-    'Supports organizational governance and compliance workflows',
+    'Soporta flujos de gobernanza organizacional y cumplimiento',
   [ShowcaseStrings.Feat_Sealing_HL6]:
-    'Time-based expiration for automatic privacy protection',
+    'Expiración basada en tiempo para protección automática de privacidad',
   [ShowcaseStrings.Feat_BrightID_Desc]:
-    'Sophisticated identity management ensuring user privacy and control. Support for registered aliases, anonymous posting, and cryptographic identity verification.',
-  [ShowcaseStrings.Feat_BrightID_Cat]: 'Identity',
-  [ShowcaseStrings.Feat_BrightID_Tech1]: 'Public Key Infrastructure',
+    'Gestión de identidad sofisticada que garantiza la privacidad y el control del usuario. Soporte para alias registrados, publicación anónima y verificación criptográfica de identidad.',
+  [ShowcaseStrings.Feat_BrightID_Cat]: 'Identidad',
+  [ShowcaseStrings.Feat_BrightID_Tech1]: 'Infraestructura de clave pública',
   [ShowcaseStrings.Feat_BrightID_Tech2]: 'BIP39/32',
-  [ShowcaseStrings.Feat_BrightID_Tech3]: 'Identity Management',
+  [ShowcaseStrings.Feat_BrightID_Tech3]: 'Gestión de identidad',
   [ShowcaseStrings.Feat_BrightID_HL1]:
-    'BIP39/32 mnemonic-based identity generation',
+    'Generación de identidad basada en mnemónicos BIP39/32',
   [ShowcaseStrings.Feat_BrightID_HL2]:
-    'Multiple registered aliases per user account',
+    'Múltiples alias registrados por cuenta de usuario',
   [ShowcaseStrings.Feat_BrightID_HL3]:
-    'Anonymous posting with optional identity recovery',
+    'Publicación anónima con recuperación de identidad opcional',
   [ShowcaseStrings.Feat_BrightID_HL4]:
-    'Public key-based authentication (SECP256k1)',
+    'Autenticación basada en clave pública (SECP256k1)',
   [ShowcaseStrings.Feat_BrightID_HL5]:
-    'Forward Error Correction for identity backup',
+    'Corrección de errores hacia adelante para respaldo de identidad',
   [ShowcaseStrings.Feat_BrightID_HL6]:
-    'Privacy-preserving identity verification',
-  [ShowcaseStrings.Feat_Reputation_Title]: 'Reputation & Energy Tracking',
+    'Verificación de identidad que preserva la privacidad',
+  [ShowcaseStrings.Feat_Reputation_Title]: 'Reputación y seguimiento de energía',
   [ShowcaseStrings.Feat_Reputation_Desc]:
-    'Revolutionary reputation system that tracks energy costs in Joules. Good actors enjoy minimal proof-of-work requirements while bad actors face increased computational burdens.',
-  [ShowcaseStrings.Feat_Reputation_Cat]: 'Network',
-  [ShowcaseStrings.Feat_Reputation_Tech1]: 'Proof of Work',
-  [ShowcaseStrings.Feat_Reputation_Tech2]: 'Reputation Systems',
-  [ShowcaseStrings.Feat_Reputation_Tech3]: 'Energy Accounting',
+    'Sistema de reputación revolucionario que rastrea costos energéticos en Julios. Los buenos actores disfrutan de requisitos mínimos de prueba de trabajo mientras que los malos actores enfrentan cargas computacionales mayores.',
+  [ShowcaseStrings.Feat_Reputation_Cat]: 'Red',
+  [ShowcaseStrings.Feat_Reputation_Tech1]: 'Prueba de trabajo',
+  [ShowcaseStrings.Feat_Reputation_Tech2]: 'Sistemas de reputación',
+  [ShowcaseStrings.Feat_Reputation_Tech3]: 'Contabilidad energética',
   [ShowcaseStrings.Feat_Reputation_HL1]:
-    'Energy costs measured in actual Joules for real-world correlation',
+    'Costos energéticos medidos en Julios reales para correlación con el mundo real',
   [ShowcaseStrings.Feat_Reputation_HL2]:
-    'Dynamic proof-of-work based on user reputation',
+    'Prueba de trabajo dinámica basada en la reputación del usuario',
   [ShowcaseStrings.Feat_Reputation_HL3]:
-    'Content creators rewarded as their content is consumed',
+    'Los creadores de contenido son recompensados cuando su contenido es consumido',
   [ShowcaseStrings.Feat_Reputation_HL4]:
-    'Bad actors throttled with increased computational requirements',
+    'Los malos actores son limitados con requisitos computacionales mayores',
   [ShowcaseStrings.Feat_Reputation_HL5]:
-    'Storage and bandwidth costs tracked and compensated',
+    'Costos de almacenamiento y ancho de banda rastreados y compensados',
   [ShowcaseStrings.Feat_Reputation_HL6]:
-    'Incentivizes positive contributions and quality content',
-  [ShowcaseStrings.Feat_BlockTemp_Title]: 'Block Temperature & Lifecycle',
+    'Incentiva contribuciones positivas y contenido de calidad',
+  [ShowcaseStrings.Feat_BlockTemp_Title]: 'Temperatura de bloques y ciclo de vida',
   [ShowcaseStrings.Feat_BlockTemp_Desc]:
-    "Intelligent block management with hot/cold storage tiers. Frequently accessed blocks stay 'hot' with high replication, while unused blocks cool down and may expire.",
-  [ShowcaseStrings.Feat_BlockTemp_Cat]: 'Storage',
-  [ShowcaseStrings.Feat_BlockTemp_Tech1]: 'Storage Tiering',
-  [ShowcaseStrings.Feat_BlockTemp_Tech2]: 'Block Lifecycle',
-  [ShowcaseStrings.Feat_BlockTemp_Tech3]: 'Access Patterns',
+    'Gestión inteligente de bloques con niveles de almacenamiento caliente/frío. Los bloques accedidos frecuentemente permanecen "calientes" con alta replicación, mientras que los bloques no utilizados se enfrían y pueden expirar.',
+  [ShowcaseStrings.Feat_BlockTemp_Cat]: 'Almacenamiento',
+  [ShowcaseStrings.Feat_BlockTemp_Tech1]: 'Niveles de almacenamiento',
+  [ShowcaseStrings.Feat_BlockTemp_Tech2]: 'Ciclo de vida de bloques',
+  [ShowcaseStrings.Feat_BlockTemp_Tech3]: 'Patrones de acceso',
   [ShowcaseStrings.Feat_BlockTemp_HL1]:
-    "'Keep Until At Least' contracts for minimum storage duration",
+    'Contratos "Mantener hasta al menos" para duración mínima de almacenamiento',
   [ShowcaseStrings.Feat_BlockTemp_HL2]:
-    'Block usefulness increases with access, staleness decreases',
+    'La utilidad del bloque aumenta con el acceso, la obsolescencia disminuye',
   [ShowcaseStrings.Feat_BlockTemp_HL3]:
-    'Dynamic replication based on access patterns and temperature',
+    'Replicación dinámica basada en patrones de acceso y temperatura',
   [ShowcaseStrings.Feat_BlockTemp_HL4]:
-    'Auto-extension of contracts for frequently accessed blocks',
+    'Auto-extensión de contratos para bloques accedidos frecuentemente',
   [ShowcaseStrings.Feat_BlockTemp_HL5]:
-    'Energy credits returned for blocks that prove useful',
+    'Créditos de energía devueltos por bloques que demuestran ser útiles',
   [ShowcaseStrings.Feat_BlockTemp_HL6]:
-    'Configurable durability and accessibility requirements',
-  [ShowcaseStrings.Feat_ZeroMining_Title]: 'Zero Mining Waste',
+    'Requisitos configurables de durabilidad y accesibilidad',
+  [ShowcaseStrings.Feat_ZeroMining_Title]: 'Cero desperdicio de minería',
   [ShowcaseStrings.Feat_ZeroMining_Desc]:
-    "Built on Ethereum's foundation but engineered without proof-of-work constraints. All computational work serves useful purposes - storage, verification, and network operations.",
-  [ShowcaseStrings.Feat_ZeroMining_Cat]: 'Network',
-  [ShowcaseStrings.Feat_ZeroMining_Tech1]: 'Ethereum Keyspace',
-  [ShowcaseStrings.Feat_ZeroMining_Tech2]: 'Efficient Consensus',
-  [ShowcaseStrings.Feat_ZeroMining_Tech3]: 'Green Blockchain',
+    'Construido sobre la base de Ethereum pero diseñado sin restricciones de prueba de trabajo. Todo el trabajo computacional sirve propósitos útiles — almacenamiento, verificación y operaciones de red.',
+  [ShowcaseStrings.Feat_ZeroMining_Cat]: 'Red',
+  [ShowcaseStrings.Feat_ZeroMining_Tech1]: 'Espacio de claves Ethereum',
+  [ShowcaseStrings.Feat_ZeroMining_Tech2]: 'Consenso eficiente',
+  [ShowcaseStrings.Feat_ZeroMining_Tech3]: 'Blockchain verde',
   [ShowcaseStrings.Feat_ZeroMining_HL1]:
-    'No wasteful mining - all computation serves useful purposes',
+    'Sin minería desperdiciadora — toda la computación sirve propósitos útiles',
   [ShowcaseStrings.Feat_ZeroMining_HL2]:
-    'Ethereum-compatible keyspace and cryptography (SECP256k1)',
+    'Espacio de claves y criptografía compatible con Ethereum (SECP256k1)',
   [ShowcaseStrings.Feat_ZeroMining_HL3]:
-    'Proof-of-work used only for transaction throttling',
+    'Prueba de trabajo usada solo para limitación de transacciones',
   [ShowcaseStrings.Feat_ZeroMining_HL4]:
-    'Energy-efficient consensus mechanisms',
+    'Mecanismos de consenso eficientes energéticamente',
   [ShowcaseStrings.Feat_ZeroMining_HL5]:
-    'Sustainable blockchain without environmental impact',
+    'Blockchain sostenible sin impacto ambiental',
   [ShowcaseStrings.Feat_ZeroMining_HL6]:
-    'Focus on storage and computation, not artificial scarcity',
-  [ShowcaseStrings.Feat_CrossPlatform_Title]: 'Cross-Platform Determinism',
+    'Enfoque en almacenamiento y computación, no en escasez artificial',
+  [ShowcaseStrings.Feat_CrossPlatform_Title]: 'Determinismo multiplataforma',
   [ShowcaseStrings.Feat_CrossPlatform_Desc]:
-    'Identical cryptographic operations across Node.js and browser environments. Deterministic key generation ensures consistent results regardless of platform.',
-  [ShowcaseStrings.Feat_CrossPlatform_Cat]: 'Cryptography',
+    'Operaciones criptográficas idénticas en entornos Node.js y navegador. La generación determinista de claves garantiza resultados consistentes independientemente de la plataforma.',
+  [ShowcaseStrings.Feat_CrossPlatform_Cat]: 'Criptografía',
   [ShowcaseStrings.Feat_CrossPlatform_Tech1]: 'Node.js',
-  [ShowcaseStrings.Feat_CrossPlatform_Tech2]: 'Browser Crypto',
-  [ShowcaseStrings.Feat_CrossPlatform_Tech3]: 'Deterministic Algorithms',
+  [ShowcaseStrings.Feat_CrossPlatform_Tech2]: 'Crypto del navegador',
+  [ShowcaseStrings.Feat_CrossPlatform_Tech3]: 'Algoritmos deterministas',
   [ShowcaseStrings.Feat_CrossPlatform_HL1]:
-    'Unified cryptographic operations across platforms',
+    'Operaciones criptográficas unificadas entre plataformas',
   [ShowcaseStrings.Feat_CrossPlatform_HL2]:
-    'Deterministic random bit generation (HMAC-DRBG)',
+    'Generación determinista de bits aleatorios (HMAC-DRBG)',
   [ShowcaseStrings.Feat_CrossPlatform_HL3]:
-    'Consistent Paillier key derivation from ECDH keys',
-  [ShowcaseStrings.Feat_CrossPlatform_HL4]: 'Browser and Node.js compatibility',
+    'Derivación consistente de claves Paillier desde claves ECDH',
+  [ShowcaseStrings.Feat_CrossPlatform_HL4]: 'Compatibilidad con navegador y Node.js',
   [ShowcaseStrings.Feat_CrossPlatform_HL5]:
-    'Reproducible cryptographic results',
+    'Resultados criptográficos reproducibles',
   [ShowcaseStrings.Feat_CrossPlatform_HL6]:
-    'Cross-platform testing and verification',
-  [ShowcaseStrings.Feat_Contracts_Title]: 'Digital Contracts & Governance',
+    'Pruebas y verificación multiplataforma',
+  [ShowcaseStrings.Feat_Contracts_Title]: 'Contratos digitales y gobernanza',
   [ShowcaseStrings.Feat_Contracts_Desc]:
-    'Smart contract capabilities for decentralized applications. BrightTrust-based governance with configurable voting thresholds for network decisions and policy enforcement.',
-  [ShowcaseStrings.Feat_Contracts_Cat]: 'Governance',
-  [ShowcaseStrings.Feat_Contracts_Tech1]: 'Smart Contracts',
-  [ShowcaseStrings.Feat_Contracts_Tech2]: 'Governance',
-  [ShowcaseStrings.Feat_Contracts_Tech3]: 'Voting Systems',
+    'Capacidades de contratos inteligentes para aplicaciones descentralizadas. Gobernanza basada en BrightTrust con umbrales de votación configurables para decisiones de red y aplicación de políticas.',
+  [ShowcaseStrings.Feat_Contracts_Cat]: 'Gobernanza',
+  [ShowcaseStrings.Feat_Contracts_Tech1]: 'Contratos inteligentes',
+  [ShowcaseStrings.Feat_Contracts_Tech2]: 'Gobernanza',
+  [ShowcaseStrings.Feat_Contracts_Tech3]: 'Sistemas de votación',
   [ShowcaseStrings.Feat_Contracts_HL1]:
-    'Digital contract execution on decentralized network',
+    'Ejecución de contratos digitales en red descentralizada',
   [ShowcaseStrings.Feat_Contracts_HL2]:
-    'BrightTrust-based decision making for network governance',
+    'Toma de decisiones basada en BrightTrust para gobernanza de red',
   [ShowcaseStrings.Feat_Contracts_HL3]:
-    'Configurable majority requirements for different actions',
+    'Requisitos de mayoría configurables para diferentes acciones',
   [ShowcaseStrings.Feat_Contracts_HL4]:
-    'Homomorphic voting for privacy-preserving governance',
-  [ShowcaseStrings.Feat_Contracts_HL5]: 'Reputation-weighted voting mechanisms',
+    'Votación homomórfica para gobernanza que preserva la privacidad',
+  [ShowcaseStrings.Feat_Contracts_HL5]: 'Mecanismos de votación ponderados por reputación',
   [ShowcaseStrings.Feat_Contracts_HL6]:
-    'Transparent and auditable governance processes',
+    'Procesos de gobernanza transparentes y auditables',
   [ShowcaseStrings.Feat_SecretsJS_Title]: 'Secrets.js (fork)',
   [ShowcaseStrings.Feat_SecretsJS_Desc]:
-    "Enhanced implementation of Shamir's Secret Sharing for secure data splitting and reconstruction. Pure TypeScript with native browser support, cryptographically audited, and optimized for splitting any secret (passwords, keys, files) into threshold-recoverable shares.",
-  [ShowcaseStrings.Feat_SecretsJS_Cat]: 'Cryptography',
-  [ShowcaseStrings.Feat_SecretsJS_Tech1]: "Shamir's Secret Sharing",
-  [ShowcaseStrings.Feat_SecretsJS_Tech2]: 'Data Security',
+    'Implementación mejorada del secreto compartido de Shamir para división y reconstrucción segura de datos. TypeScript puro con soporte nativo de navegador, auditado criptográficamente y optimizado para dividir cualquier secreto (contraseñas, claves, archivos) en fragmentos recuperables por umbral.',
+  [ShowcaseStrings.Feat_SecretsJS_Cat]: 'Criptografía',
+  [ShowcaseStrings.Feat_SecretsJS_Tech1]: 'Secreto compartido de Shamir',
+  [ShowcaseStrings.Feat_SecretsJS_Tech2]: 'Seguridad de datos',
   [ShowcaseStrings.Feat_SecretsJS_Tech3]: 'TypeScript',
   [ShowcaseStrings.Feat_SecretsJS_Tech4]: 'CSPRNG',
   [ShowcaseStrings.Feat_SecretsJS_HL1]:
-    'Divide secrets into n shares with configurable t-of-n threshold recovery',
+    'Divide secretos en n fragmentos con recuperación de umbral t-de-n configurable',
   [ShowcaseStrings.Feat_SecretsJS_HL2]:
-    'Information-theoretically secure - shares below threshold reveal no information',
+    'Seguridad teórica de la información — los fragmentos por debajo del umbral no revelan información',
   [ShowcaseStrings.Feat_SecretsJS_HL3]:
-    'Cure53 security audit (July 2019) with zero issues found',
+    'Auditoría de seguridad de Cure53 (julio 2019) sin problemas encontrados',
   [ShowcaseStrings.Feat_SecretsJS_HL4]:
-    'Native browser support without polyfills (crypto.getRandomValues)',
+    'Soporte nativo de navegador sin polyfills (crypto.getRandomValues)',
   [ShowcaseStrings.Feat_SecretsJS_HL5]:
-    'Cross-platform deterministic operations (Node.js and browser)',
+    'Operaciones deterministas multiplataforma (Node.js y navegador)',
   [ShowcaseStrings.Feat_SecretsJS_HL6]:
-    'Full TypeScript support with comprehensive type definitions',
+    'Soporte completo de TypeScript con definiciones de tipos exhaustivas',
   [ShowcaseStrings.Feat_SecretsJS_HL7]:
-    'Convert passwords, files, and keys to/from hex with automatic padding',
+    'Convierte contraseñas, archivos y claves a/desde hex con relleno automático',
   [ShowcaseStrings.Feat_SecretsJS_HL8]:
-    'Generate new shares dynamically from existing shares',
+    'Genera nuevos fragmentos dinámicamente a partir de fragmentos existentes',
   [ShowcaseStrings.Feat_SecretsJS_HL9]:
-    'Configurable Galois field (3-20 bits) supporting up to 1,048,575 shares',
+    'Campo de Galois configurable (3-20 bits) soportando hasta 1.048.575 fragmentos',
   [ShowcaseStrings.Feat_Burnbag_Desc]:
     'Almacenamiento seguro de conocimiento cero con protocolos de seguridad automatizados. El borrado criptográfico destruye la Receta (mapa + claves), haciendo que los bloques cifrados dispersos sean permanentemente irrecuperables al activarse.',
   [ShowcaseStrings.Feat_Burnbag_Cat]: 'Criptografía',
@@ -2043,112 +2065,278 @@ export const ShowcaseSpanishStrings: Partial<
     'Pruebas de conocimiento cero permiten verificación de seguros sin exponer el historial médico completo',
 
   // Remaining (TODO: translate)
-  [ShowcaseStrings.Soup_Time]: 'Time',
+  [ShowcaseStrings.Soup_Time]: 'Hora',
   [ShowcaseStrings.Soup_AlertRetrieveFailed]:
-    'Failed to retrieve file: {ERROR}',
-  [ShowcaseStrings.Soup_AlertUploadCBLOnly]: 'Please upload a .cbl file',
+    'Error al recuperar archivo: {ERROR}',
+  [ShowcaseStrings.Soup_AlertUploadCBLOnly]: 'Por favor sube un archivo .cbl',
   [ShowcaseStrings.Soup_AlertCBLLoaded]:
-    'CBL loaded! File: {NAME} ({BLOCKS} blocks). You can now retrieve the file if all blocks are in the soup.',
-  [ShowcaseStrings.Soup_AlertParseCBLFailed]: 'Failed to parse CBL: {ERROR}',
+    '¡CBL cargado! Archivo: {NAME} ({BLOCKS} bloques). Ahora puedes recuperar el archivo si todos los bloques están en la sopa.',
+  [ShowcaseStrings.Soup_AlertParseCBLFailed]: 'Error al analizar CBL: {ERROR}',
   [ShowcaseStrings.Soup_AlertReconstructed]:
-    'File reconstructed successfully! Size: {SIZE} bytes. The file has been downloaded and added to receipts.',
+    '¡Archivo reconstruido exitosamente! Tamaño: {SIZE} bytes. El archivo ha sido descargado.',
   [ShowcaseStrings.Soup_AlertMagnetFailed]:
-    'Failed to process magnet URL: {ERROR}',
-  [ShowcaseStrings.Soup_AlertMessageSent]: 'Message sent and stored in soup!',
-  [ShowcaseStrings.Soup_AlertSendFailed]: 'Failed to send message: {ERROR}',
+    'Error al procesar URL magnet: {ERROR}',
+  [ShowcaseStrings.Soup_AlertMessageSent]: '¡Mensaje enviado y almacenado en la sopa!',
+  [ShowcaseStrings.Soup_AlertSendFailed]: 'Error al enviar mensaje: {ERROR}',
   [ShowcaseStrings.Soup_AlertMessageRetrieved]:
-    'Message retrieved from soup: {TEXT}',
+    'Mensaje recuperado de la sopa: {TEXT}',
   [ShowcaseStrings.Soup_AlertRetrieveMessageFailed]:
-    'Failed to retrieve message: {ERROR}',
-  [ShowcaseStrings.Soup_AlertCopied]: 'Magnet URL copied to clipboard!',
-  [ShowcaseStrings.Anim_PauseBtn]: 'Pause Animation',
-  [ShowcaseStrings.Anim_PlayBtn]: 'Play Animation',
-  [ShowcaseStrings.Anim_ResetBtn]: 'Reset Animation',
-  [ShowcaseStrings.Anim_SpeedLabel]: 'Speed: {SPEED}x',
-  [ShowcaseStrings.Anim_PerfTitle]: '🔧 Performance Monitor',
-  [ShowcaseStrings.Anim_PerfFrameRate]: 'Frame Rate:',
-  [ShowcaseStrings.Anim_PerfFrameTime]: 'Frame Time:',
-  [ShowcaseStrings.Anim_PerfDropped]: 'Dropped Frames:',
-  [ShowcaseStrings.Anim_PerfMemory]: 'Memory:',
-  [ShowcaseStrings.Anim_PerfSequences]: 'Sequences:',
-  [ShowcaseStrings.Anim_PerfErrors]: 'Errors:',
-  [ShowcaseStrings.Anim_WhatHappening]: "What's happening:",
-  [ShowcaseStrings.Anim_DurationLabel]: 'Duration:',
-  [ShowcaseStrings.Anim_SizeInfo]: 'Size: {SIZE} bytes | Blocks: {BLOCKS}',
+    'Error al recuperar mensaje: {ERROR}',
+  [ShowcaseStrings.Soup_AlertCopied]: '¡URL Magnet copiada al portapapeles!',
+  [ShowcaseStrings.Anim_PauseBtn]: 'Pausar animación',
+  [ShowcaseStrings.Anim_PlayBtn]: 'Reproducir animación',
+  [ShowcaseStrings.Anim_ResetBtn]: 'Reiniciar animación',
+  [ShowcaseStrings.Anim_SpeedLabel]: 'Velocidad: {SPEED}x',
+  [ShowcaseStrings.Anim_PerfTitle]: '🔧 Monitor de rendimiento',
+  [ShowcaseStrings.Anim_PerfFrameRate]: 'Tasa de cuadros:',
+  [ShowcaseStrings.Anim_PerfFrameTime]: 'Tiempo de cuadro:',
+  [ShowcaseStrings.Anim_PerfDropped]: 'Cuadros perdidos:',
+  [ShowcaseStrings.Anim_PerfMemory]: 'Memoria:',
+  [ShowcaseStrings.Anim_PerfSequences]: 'Secuencias:',
+  [ShowcaseStrings.Anim_PerfErrors]: 'Errores:',
+  [ShowcaseStrings.Anim_WhatHappening]: 'Lo que está pasando:',
+  [ShowcaseStrings.Anim_DurationLabel]: 'Duración:',
+  [ShowcaseStrings.Anim_SizeInfo]: 'Tamaño: {SIZE} bytes | Bloques: {BLOCKS}',
 
   // Educational/Encoding (TODO: translate)
-  [ShowcaseStrings.Edu_CloseTooltip]: 'Close tooltip',
-  [ShowcaseStrings.Edu_WhatsHappening]: "🔍 What's Happening",
-  [ShowcaseStrings.Edu_WhyItMatters]: '💡 Why It Matters',
-  [ShowcaseStrings.Edu_TechnicalDetails]: '⚙️ Technical Details',
-  [ShowcaseStrings.Edu_RelatedConcepts]: '🔗 Related Concepts',
-  [ShowcaseStrings.Edu_VisualCues]: '👁️ Visual Cues',
-  [ShowcaseStrings.Edu_GetHelp]: 'Get help with this step',
-  [ShowcaseStrings.Edu_UnderstandContinue]: '✅ I Understand - Continue',
-  [ShowcaseStrings.Edu_SkipStep]: '⏭️ Skip This Step',
-  [ShowcaseStrings.Edu_GlossaryTitle]: '📚 BrightChain Concept Glossary',
-  [ShowcaseStrings.Edu_CloseGlossary]: 'Close glossary',
-  [ShowcaseStrings.Edu_BackToGlossary]: '← Back to Glossary',
-  [ShowcaseStrings.Edu_Definition]: 'Definition',
-  [ShowcaseStrings.Edu_TechnicalDefinition]: 'Technical Definition',
-  [ShowcaseStrings.Edu_Examples]: 'Examples',
-  [ShowcaseStrings.Edu_RelatedTerms]: 'Related Terms',
-  [ShowcaseStrings.Edu_SearchPlaceholder]: 'Search concepts...',
-  [ShowcaseStrings.Edu_ProcessOverview]: 'Process Overview',
-  [ShowcaseStrings.Edu_WhatWeAccomplished]: 'What We Accomplished',
-  [ShowcaseStrings.Edu_TechnicalOutcomes]: 'Technical Outcomes',
-  [ShowcaseStrings.Edu_WhatsNext]: "What's Next?",
-  [ShowcaseStrings.Edu_LearningProgress]: 'Learning Progress',
+  [ShowcaseStrings.Edu_CloseTooltip]: 'Cerrar información',
+  [ShowcaseStrings.Edu_WhatsHappening]: '🔍 Qué está pasando',
+  [ShowcaseStrings.Edu_WhyItMatters]: '💡 Por qué importa',
+  [ShowcaseStrings.Edu_TechnicalDetails]: '⚙️ Detalles técnicos',
+  [ShowcaseStrings.Edu_RelatedConcepts]: '🔗 Conceptos relacionados',
+  [ShowcaseStrings.Edu_VisualCues]: '👁️ Señales visuales',
+  [ShowcaseStrings.Edu_GetHelp]: 'Obtener ayuda con este paso',
+  [ShowcaseStrings.Edu_UnderstandContinue]: '✅ Entendido - Continuar',
+  [ShowcaseStrings.Edu_SkipStep]: '⏭️ Saltar este paso',
+  [ShowcaseStrings.Edu_GlossaryTitle]: '📚 Glosario de conceptos de BrightChain',
+  [ShowcaseStrings.Edu_CloseGlossary]: 'Cerrar glosario',
+  [ShowcaseStrings.Edu_BackToGlossary]: '← Volver al glosario',
+  [ShowcaseStrings.Edu_Definition]: 'Definición',
+  [ShowcaseStrings.Edu_TechnicalDefinition]: 'Definición técnica',
+  [ShowcaseStrings.Edu_Examples]: 'Ejemplos',
+  [ShowcaseStrings.Edu_RelatedTerms]: 'Términos relacionados',
+  [ShowcaseStrings.Edu_SearchPlaceholder]: 'Buscar conceptos...',
+  [ShowcaseStrings.Edu_ProcessOverview]: 'Resumen del proceso',
+  [ShowcaseStrings.Edu_WhatWeAccomplished]: 'Lo que logramos',
+  [ShowcaseStrings.Edu_TechnicalOutcomes]: 'Resultados técnicos',
+  [ShowcaseStrings.Edu_WhatsNext]: '¿Qué sigue?',
+  [ShowcaseStrings.Edu_LearningProgress]: 'Progreso de aprendizaje',
   [ShowcaseStrings.Edu_StepsCompleted]:
-    '{COMPLETED} of {TOTAL} steps completed',
-  [ShowcaseStrings.Enc_Title]: '🎬 File Encoding Animation',
+    '{COMPLETED} de {TOTAL} pasos completados',
+  [ShowcaseStrings.Enc_Title]: '🎬 Animación de codificación de archivos',
   [ShowcaseStrings.Enc_Subtitle]:
-    'Watch as your file is transformed into BrightChain blocks',
-  [ShowcaseStrings.Enc_ChunksTitle]: '📦 File Chunks ({COUNT})',
+    'Observa cómo tu archivo se transforma en bloques de BrightChain',
+  [ShowcaseStrings.Enc_ChunksTitle]: '📦 Fragmentos de archivo ({COUNT})',
   [ShowcaseStrings.Enc_ChunksSubtitle]:
-    'Each chunk will become a block in the soup',
-  [ShowcaseStrings.Enc_EduWhatsHappening]: "🎓 What's Happening Now",
-  [ShowcaseStrings.Enc_TechDetails]: 'Technical Details:',
-  [ShowcaseStrings.Enc_BlockSizeInfo]: 'Block size: {SIZE} bytes',
-  [ShowcaseStrings.Enc_ExpectedChunks]: 'Expected chunks: {COUNT}',
+    'Cada fragmento se convertirá en un bloque en la sopa',
+  [ShowcaseStrings.Enc_EduWhatsHappening]: '🎓 Qué está pasando ahora',
+  [ShowcaseStrings.Enc_TechDetails]: 'Detalles técnicos:',
+  [ShowcaseStrings.Enc_BlockSizeInfo]: 'Tamaño de bloque: {SIZE} bytes',
+  [ShowcaseStrings.Enc_ExpectedChunks]: 'Fragmentos esperados: {COUNT}',
   [ShowcaseStrings.Enc_ChunkBecomesBlock]:
-    'Each chunk becomes one block in the soup',
-  [ShowcaseStrings.Enc_WhyPadding]: 'Why Padding?',
-  [ShowcaseStrings.Enc_PaddingSameSize]: 'All blocks must be the same size',
+    'Cada fragmento se convierte en un bloque en la sopa',
+  [ShowcaseStrings.Enc_WhyPadding]: '¿Por qué relleno?',
+  [ShowcaseStrings.Enc_PaddingSameSize]: 'Todos los bloques deben tener el mismo tamaño',
   [ShowcaseStrings.Enc_PaddingPreventsAnalysis]:
-    'Random padding prevents data analysis',
+    'El relleno aleatorio previene el análisis de datos',
   [ShowcaseStrings.Enc_PaddingRemoved]:
-    'Padding is removed during reconstruction',
-  [ShowcaseStrings.Enc_ChecksumPurpose]: 'Checksum Purpose:',
-  [ShowcaseStrings.Enc_EnsuresIntegrity]: 'Ensures data integrity',
-  [ShowcaseStrings.Enc_UniqueIdentifier]: 'Used as unique block identifier',
+    'El relleno se elimina durante la reconstrucción',
+  [ShowcaseStrings.Enc_ChecksumPurpose]: 'Propósito del checksum:',
+  [ShowcaseStrings.Enc_EnsuresIntegrity]: 'Garantiza la integridad de los datos',
+  [ShowcaseStrings.Enc_UniqueIdentifier]: 'Se usa como identificador único de bloque',
   [ShowcaseStrings.Enc_EnablesVerification]:
-    'Enables verification during retrieval',
+    'Permite la verificación durante la recuperación',
 
   // ProcessCompletionSummary (TODO)
-  [ShowcaseStrings.Edu_KeyLearningPoints]: '🧠 Key Learning Points',
-  [ShowcaseStrings.Edu_CloseSummary]: 'Close summary',
-  [ShowcaseStrings.Edu_Overview]: 'Overview',
-  [ShowcaseStrings.Edu_Achievements]: 'Achievements',
-  [ShowcaseStrings.Edu_Technical]: 'Technical',
-  [ShowcaseStrings.Edu_NextSteps]: 'Next Steps',
-  [ShowcaseStrings.Edu_Previous]: '← Previous',
-  [ShowcaseStrings.Edu_Next]: 'Next →',
-  [ShowcaseStrings.Edu_Finish]: 'Finish',
+  [ShowcaseStrings.Edu_KeyLearningPoints]: '🧠 Puntos clave de aprendizaje',
+  [ShowcaseStrings.Edu_CloseSummary]: 'Cerrar resumen',
+  [ShowcaseStrings.Edu_Overview]: 'Resumen',
+  [ShowcaseStrings.Edu_Achievements]: 'Logros',
+  [ShowcaseStrings.Edu_Technical]: 'Técnico',
+  [ShowcaseStrings.Edu_NextSteps]: 'Próximos pasos',
+  [ShowcaseStrings.Edu_Previous]: '← Anterior',
+  [ShowcaseStrings.Edu_Next]: 'Siguiente →',
+  [ShowcaseStrings.Edu_Finish]: 'Finalizar',
 
   // EducationalModeControls (TODO)
-  [ShowcaseStrings.Edu_EducationalMode]: '🎓 Educational Mode',
-  [ShowcaseStrings.Edu_AnimationSpeed]: 'Animation Speed:',
-  [ShowcaseStrings.Edu_SpeedVerySlow]: '0.25x (Very Slow)',
-  [ShowcaseStrings.Edu_SpeedSlow]: '0.5x (Slow)',
-  [ShowcaseStrings.Edu_SpeedModerate]: '0.75x (Moderate)',
+  [ShowcaseStrings.Edu_EducationalMode]: '🎓 Modo educativo',
+  [ShowcaseStrings.Edu_AnimationSpeed]: 'Velocidad de animación:',
+  [ShowcaseStrings.Edu_SpeedVerySlow]: '0.25x (Muy lento)',
+  [ShowcaseStrings.Edu_SpeedSlow]: '0.5x (Lento)',
+  [ShowcaseStrings.Edu_SpeedModerate]: '0.75x (Moderado)',
   [ShowcaseStrings.Edu_SpeedNormal]: '1x (Normal)',
-  [ShowcaseStrings.Edu_SpeedFast]: '1.5x (Fast)',
-  [ShowcaseStrings.Edu_SpeedVeryFast]: '2x (Very Fast)',
-  [ShowcaseStrings.Edu_StepByStep]: 'Step-by-Step Mode',
-  [ShowcaseStrings.Edu_ShowTooltips]: 'Show Tooltips',
-  [ShowcaseStrings.Edu_ShowExplanations]: 'Show Explanations',
-  [ShowcaseStrings.Edu_AutoAdvance]: 'Auto Advance Steps',
+  [ShowcaseStrings.Edu_SpeedFast]: '1.5x (Rápido)',
+  [ShowcaseStrings.Edu_SpeedVeryFast]: '2x (Muy rápido)',
+  [ShowcaseStrings.Edu_StepByStep]: 'Modo paso a paso',
+  [ShowcaseStrings.Edu_ShowTooltips]: 'Mostrar información',
+  [ShowcaseStrings.Edu_ShowExplanations]: 'Mostrar explicaciones',
+  [ShowcaseStrings.Edu_AutoAdvance]: 'Avanzar pasos automáticamente',
+
+  // Privacy Policy Page
+  [ShowcaseStrings.PP_Title]: 'Política de Privacidad',
+  [ShowcaseStrings.PP_LastUpdated]: 'Última actualización: 20 de abril de 2026',
+  [ShowcaseStrings.PP_BackToHome]: '← Volver al inicio',
+
+  // Section 1: Introduction
+  [ShowcaseStrings.PP_S1_Title]: '1. Introducción',
+  [ShowcaseStrings.PP_S1_P1]:
+    'BrightChain es una plataforma descentralizada de código abierto operada por Digital Defiance, una organización sin fines de lucro 501(c)(3) ("nosotros" o "nuestro"). Esta Política de Privacidad describe cómo recopilamos, usamos, almacenamos y divulgamos información cuando usted utiliza la plataforma BrightChain, el sitio web, las aplicaciones y los servicios relacionados (colectivamente, los "Servicios").',
+  [ShowcaseStrings.PP_S1_P2]:
+    'Al acceder o utilizar los Servicios, usted reconoce que ha leído, comprendido y acepta estar sujeto a esta Política de Privacidad. Si no está de acuerdo, no debe utilizar los Servicios.',
+
+  // Section 2: How BrightChain Works
+  [ShowcaseStrings.PP_S2_Title]:
+    '2. Cómo funciona BrightChain — Contexto arquitectónico',
+  [ShowcaseStrings.PP_S2_P1]:
+    'BrightChain se basa en el modelo de Sistema de Archivos Libre de Propietario (OFF). Todos los datos almacenados en la red se dividen en bloques de tamaño fijo, se aplica XOR con bloques criptográficamente aleatorios (un proceso llamado "blanqueamiento TUPLE") y se distribuyen entre los nodos participantes. Como resultado:',
+  [ShowcaseStrings.PP_S2_Li1]:
+    'Los bloques individuales son indistinguibles de datos aleatorios y no pueden leerse sin el conjunto completo de bloques constituyentes y la Lista de Bloques Constituyentes (CBL) correspondiente.',
+  [ShowcaseStrings.PP_S2_Li2]:
+    'Los datos pueden cifrarse opcionalmente con el Esquema de Cifrado Integrado de Curva Elíptica (ECIES) usando AES-256-GCM, proporcionando confidencialidad por destinatario además de la negación plausible proporcionada por el blanqueamiento TUPLE.',
+  [ShowcaseStrings.PP_S2_Li3]:
+    'Los operadores de nodos — incluido Digital Defiance — generalmente no pueden determinar el contenido, la propiedad o la naturaleza de ningún bloque individual almacenado en la red.',
+  [ShowcaseStrings.PP_S2_P2]:
+    'Esta arquitectura significa que las protecciones de privacidad descritas en esta política son, en muchos casos, aplicadas por las matemáticas en lugar de solo por la política.',
+
+  // Section 3: Information We Collect
+  [ShowcaseStrings.PP_S3_Title]: '3. Información que recopilamos',
+  [ShowcaseStrings.PP_S3_1_Title]: '3.1 Información de la cuenta',
+  [ShowcaseStrings.PP_S3_1_P1]:
+    'Cuando crea una cuenta de BrightChain, recopilamos un nombre de usuario, dirección de correo electrónico y su clave criptográfica pública (derivada de su mnemónico BIP39). No recopilamos, almacenamos ni tenemos acceso a su frase mnemónica ni a sus claves privadas.',
+  [ShowcaseStrings.PP_S3_2_Title]: '3.2 Contenido generado por el usuario',
+  [ShowcaseStrings.PP_S3_2_P1]:
+    'Los archivos, mensajes, credenciales y otro contenido que almacena en la red se dividen en bloques blanqueados por TUPLE. No tenemos la capacidad de leer, reconstruir o inspeccionar este contenido. Si utiliza el cifrado ECIES opcional, el contenido se cifra adicionalmente para destinatarios específicos y es inaccesible para cualquiera — incluidos nosotros — sin la clave privada correspondiente.',
+  [ShowcaseStrings.PP_S3_3_Title]: '3.3 Información recopilada automáticamente',
+  [ShowcaseStrings.PP_S3_3_P1]:
+    'Cuando interactúa con nuestros Servicios basados en web, podemos recopilar automáticamente datos estándar de registro del servidor, incluidas direcciones IP, tipo de navegador, URLs de referencia, páginas visitadas y marcas de tiempo. Esta información se utiliza únicamente con fines operativos (monitoreo de seguridad, prevención de abusos y fiabilidad del servicio) y se conserva por no más de 90 días.',
+  [ShowcaseStrings.PP_S3_4_Title]: '3.4 Entradas del libro mayor blockchain',
+  [ShowcaseStrings.PP_S3_4_P1]:
+    'Ciertas operaciones (creación de bóvedas, lecturas de bóvedas, destrucción de bóvedas, votos de gobernanza) se registran en un libro mayor blockchain de solo adición. Estas entradas contienen tipo de operación, marca de tiempo y hashes criptográficos — no el contenido de los datos subyacentes. Las entradas del libro mayor son inmutables por diseño y no pueden eliminarse.',
+
+  // Section 4: How We Use Information
+  [ShowcaseStrings.PP_S4_Title]: '4. Cómo usamos la información',
+  [ShowcaseStrings.PP_S4_P1]: 'Usamos la información que recopilamos para:',
+  [ShowcaseStrings.PP_S4_Li1]:
+    'Proporcionar, mantener y mejorar los Servicios',
+  [ShowcaseStrings.PP_S4_Li2]:
+    'Autenticar usuarios y gestionar cuentas',
+  [ShowcaseStrings.PP_S4_Li3]:
+    'Detectar y prevenir fraude, abuso e incidentes de seguridad',
+  [ShowcaseStrings.PP_S4_Li4]:
+    'Cumplir con las obligaciones legales aplicables',
+  [ShowcaseStrings.PP_S4_Li5]:
+    'Comunicarnos con usted sobre los Servicios (por ejemplo, anuncios de servicio, alertas de seguridad)',
+  [ShowcaseStrings.PP_S4_P2]:
+    'No vendemos, alquilamos ni intercambiamos su información personal con terceros. No utilizamos sus datos para publicidad ni elaboración de perfiles.',
+
+  // Section 5: Data Storage and Security
+  [ShowcaseStrings.PP_S5_Title]: '5. Almacenamiento y seguridad de datos',
+  [ShowcaseStrings.PP_S5_P1]:
+    'El contenido generado por el usuario se almacena como bloques blanqueados por TUPLE distribuidos en la red descentralizada. Los metadatos de la cuenta (nombre de usuario, correo electrónico, clave pública) se almacenan en nuestras bases de datos operativas con medidas de seguridad estándar de la industria, incluido el cifrado en reposo y en tránsito.',
+  [ShowcaseStrings.PP_S5_P2]:
+    'Una vez que los datos se almacenan como bloques blanqueados y se distribuyen en la red, los datos de otros participantes pueden depender de esos mismos bloques a través del proceso de blanqueo XOR. Esto significa que eliminar bloques individuales puede ser técnicamente imposible sin afectar los datos de otros usuarios. Sin embargo, reconstruir un archivo requiere la Lista de Bloques Constituyentes (CBL): la receta ordenada de identificadores de bloques. Sin la CBL, los bloques distribuidos son computacionalmente indistinguibles de datos aleatorios y no pueden reensamblarse. Eliminar o destruir la CBL es suficiente para hacer que los datos subyacentes sean permanentemente inaccesibles.',
+  [ShowcaseStrings.PP_S5_P3]:
+    'Las CBL pueden almacenarse en varias ubicaciones según la aplicación. Digital Burnbag almacena las CBL dentro de su sistema de bóvedas respaldado por BrightDB. Los usuarios también pueden conservar las CBL como referencias MagnetURL. En todos los casos, destruir la CBL — independientemente de dónde esté almacenada — es el mecanismo efectivo para la eliminación de datos, incluso cuando los bloques subyacentes persisten en la red.',
+
+  // Section 6: Cryptographic Protections
+  [ShowcaseStrings.PP_S6_Title]:
+    '6. Protecciones criptográficas y limitaciones',
+  [ShowcaseStrings.PP_S6_P1]:
+    'BrightChain emplea fuertes protecciones criptográficas que incluyen hash SHA3-512, ECIES con secp256k1, cifrado simétrico AES-256-GCM, sellos HMAC-SHA3-512 y cifrado homomórfico de Paillier para votación que preserva la privacidad. Estas protecciones son aplicadas por el protocolo y no dependen de nuestra cooperación o buena voluntad.',
+  [ShowcaseStrings.PP_S6_P2]:
+    'Cuando se usa correctamente, BrightChain puede proporcionar protecciones de privacidad muy fuertes. Sin embargo, no garantizamos que ningún algoritmo criptográfico específico permanezca seguro indefinidamente. Los avances en computación (incluida la computación cuántica) pueden afectar la seguridad de las primitivas criptográficas actuales. Los usuarios son responsables de comprender las protecciones disponibles para ellos y configurar su uso de los Servicios en consecuencia.',
+
+  // Section 7: Law Enforcement
+  [ShowcaseStrings.PP_S7_Title]:
+    '7. Fuerzas del orden y solicitudes legales',
+  [ShowcaseStrings.PP_S7_P1]:
+    'Digital Defiance opera como operador de red y proveedor de infraestructura. Cumplimos con procesos legales válidos, incluidas citaciones, órdenes judiciales y órdenes de registro emitidas por tribunales de jurisdicción competente, en la medida en que sea técnicamente factible.',
+  [ShowcaseStrings.PP_S7_P2]:
+    'Sin embargo, debido al diseño arquitectónico de BrightChain:',
+  [ShowcaseStrings.PP_S7_Li1]:
+    'Generalmente no podemos producir el contenido de los datos generados por el usuario almacenados como bloques blanqueados por TUPLE, porque no poseemos las CBL ni las claves de descifrado necesarias para reconstruir o descifrar esos datos.',
+  [ShowcaseStrings.PP_S7_Li2]:
+    'Podemos producir metadatos de la cuenta (nombre de usuario, correo electrónico, clave pública) y datos de registro del servidor en la medida en que los conservemos.',
+  [ShowcaseStrings.PP_S7_Li3]:
+    'Las entradas del libro mayor blockchain son inmutables y pueden producirse en respuesta a procesos legales válidos.',
+  [ShowcaseStrings.PP_S7_Li4]:
+    'Si una bóveda Digital Burnbag ha sido destruida criptográficamente, la prueba de destrucción es el único artefacto restante — demuestra que los datos han desaparecido, no lo que contenían.',
+  [ShowcaseStrings.PP_S7_P3]:
+    'Notificaremos a los usuarios afectados sobre solicitudes legales en la medida permitida por la ley. Nos reservamos el derecho de impugnar solicitudes legales que consideremos excesivas, legalmente deficientes o de otro modo improcedentes.',
+
+  // Section 8: Brokered Anonymity
+  [ShowcaseStrings.PP_S8_Title]: '8. Anonimato intermediado',
+  [ShowcaseStrings.PP_S8_P1]:
+    'BrightChain admite un protocolo de "Anonimato Intermediado" en el que la identidad real de un usuario puede sellarse utilizando el Secreto Compartido de Shamir y distribuirse entre los miembros de gobernanza de BrightTrust. La recuperación de identidad requiere un voto de umbral de los miembros de BrightTrust y está sujeta a un plazo de prescripción configurable, después del cual los fragmentos de identidad se eliminan permanentemente y la identidad real se vuelve irrecuperable. Este mecanismo está diseñado para equilibrar la privacidad con la responsabilidad bajo gobernanza colectiva.',
+
+  // Section 9: Third-Party Services
+  [ShowcaseStrings.PP_S9_Title]: '9. Servicios de terceros',
+  [ShowcaseStrings.PP_S9_P1]:
+    'Ciertas funciones (como el monitoreo de actividad del protocolo canario) pueden integrarse con servicios de terceros (por ejemplo, GitHub, Fitbit, Slack). Su uso de esas integraciones se rige por las respectivas políticas de privacidad de terceros. Accedemos solo a la información mínima necesaria para proporcionar la funcionalidad solicitada (por ejemplo, marcas de tiempo de actividad reciente para el monitoreo del interruptor de hombre muerto) y no almacenamos credenciales de terceros en nuestros servidores — la autenticación se maneja mediante tokens OAuth que puede revocar en cualquier momento.',
+
+  // Section 10: Children's Privacy
+  [ShowcaseStrings.PP_S10_Title]: '10. Privacidad de los niños',
+  [ShowcaseStrings.PP_S10_P1]:
+    'Los Servicios no están dirigidos a niños menores de 13 años (o la edad aplicable de consentimiento digital en su jurisdicción). No recopilamos intencionalmente información personal de niños. Si descubrimos que hemos recopilado información personal de un niño, tomaremos medidas para eliminar esa información de inmediato.',
+
+  // Section 11: International Users
+  [ShowcaseStrings.PP_S11_Title]: '11. Usuarios internacionales',
+  [ShowcaseStrings.PP_S11_P1]:
+    'Digital Defiance tiene su sede en los Estados Unidos. Si accede a los Servicios desde fuera de los Estados Unidos, su información puede transferirse, almacenarse y procesarse en los Estados Unidos u otras jurisdicciones donde opera nuestra infraestructura. Al utilizar los Servicios, usted consiente dicha transferencia y procesamiento.',
+  [ShowcaseStrings.PP_S11_1_Title]:
+    '11.1 Espacio Económico Europeo (EEE) y Reino Unido',
+  [ShowcaseStrings.PP_S11_1_P1]:
+    'Si se encuentra en el EEE o el Reino Unido, puede tener derechos en virtud del Reglamento General de Protección de Datos (RGPD) o el RGPD del Reino Unido, incluido el derecho de acceso, rectificación, supresión, restricción del procesamiento y portabilidad de sus datos personales, y el derecho a oponerse al procesamiento. Para ejercer estos derechos, contáctenos en la dirección que se indica a continuación. Tenga en cuenta que ciertos datos (entradas del libro mayor blockchain, bloques TUPLE distribuidos) pueden ser técnicamente imposibles de borrar debido a la naturaleza descentralizada e inmutable del sistema. La capacidad de destrucción demostrable de BrightChain (a través de Digital Burnbag) está diseñada para respaldar el cumplimiento del derecho de supresión del Artículo 17 del RGPD para datos controlados por el usuario.',
+
+  // Section 12: Data Retention
+  [ShowcaseStrings.PP_S12_Title]: '12. Retención de datos',
+  [ShowcaseStrings.PP_S12_P1]:
+    'Los metadatos de la cuenta se conservan mientras su cuenta esté activa o según sea necesario para proporcionar los Servicios. Los registros del servidor se conservan hasta 90 días. Las entradas del libro mayor blockchain se conservan indefinidamente como parte del libro mayor inmutable. Los bloques blanqueados por TUPLE se conservan en la red según los términos del contrato de almacenamiento y la economía del balance energético; los bloques cuyos contratos de almacenamiento expiran y no se renuevan pueden ser recolectados por los nodos.',
+
+  // Section 13: Disclaimer
+  [ShowcaseStrings.PP_S13_Title]:
+    '13. Descargo de garantías y limitación de responsabilidad',
+  [ShowcaseStrings.PP_S13_P1]:
+    'LOS SERVICIOS SE PROPORCIONAN "TAL CUAL" Y "SEGÚN DISPONIBILIDAD" SIN GARANTÍAS DE NINGÚN TIPO, YA SEAN EXPRESAS, IMPLÍCITAS O LEGALES, INCLUIDAS, ENTRE OTRAS, LAS GARANTÍAS IMPLÍCITAS DE COMERCIABILIDAD, IDONEIDAD PARA UN FIN PARTICULAR, TÍTULO Y NO INFRACCIÓN.',
+  [ShowcaseStrings.PP_S13_P2]:
+    'DIGITAL DEFIANCE, SUS FUNCIONARIOS, DIRECTORES, EMPLEADOS, VOLUNTARIOS Y COLABORADORES (INCLUIDA JESSICA MULEIN) NO SERÁN RESPONSABLES DE NINGÚN DAÑO INDIRECTO, INCIDENTAL, ESPECIAL, CONSECUENTE O PUNITIVO, NI DE NINGUNA PÉRDIDA DE BENEFICIOS, DATOS, USO, FONDO DE COMERCIO U OTRAS PÉRDIDAS INTANGIBLES, RESULTANTES DE (A) SU ACCESO O USO O INCAPACIDAD DE ACCEDER O USAR LOS SERVICIOS; (B) CUALQUIER CONDUCTA O CONTENIDO DE TERCEROS EN LOS SERVICIOS; (C) CUALQUIER CONTENIDO OBTENIDO DE LOS SERVICIOS; (D) ACCESO NO AUTORIZADO, USO O ALTERACIÓN DE SUS TRANSMISIONES O CONTENIDO; O (E) EL FALLO DE CUALQUIER MECANISMO CRIPTOGRÁFICO, YA SEA BASADO EN GARANTÍA, CONTRATO, AGRAVIO (INCLUIDA NEGLIGENCIA) O CUALQUIER OTRA TEORÍA LEGAL, HAYAMOS SIDO INFORMADOS O NO DE LA POSIBILIDAD DE DICHO DAÑO.',
+  [ShowcaseStrings.PP_S13_P3]:
+    'EN NINGÚN CASO LA RESPONSABILIDAD AGREGADA DE DIGITAL DEFIANCE Y SUS FUNCIONARIOS, DIRECTORES, EMPLEADOS, VOLUNTARIOS Y COLABORADORES POR TODAS LAS RECLAMACIONES RELACIONADAS CON LOS SERVICIOS EXCEDERÁ EL MAYOR DE CIEN DÓLARES ESTADOUNIDENSES (US $100,00) O LA CANTIDAD QUE NOS HAYA PAGADO EN LOS DOCE (12) MESES ANTERIORES A LA RECLAMACIÓN.',
+  [ShowcaseStrings.PP_S13_P4]:
+    'ALGUNAS JURISDICCIONES NO PERMITEN LA EXCLUSIÓN O LIMITACIÓN DE CIERTAS GARANTÍAS O RESPONSABILIDADES. EN DICHAS JURISDICCIONES, NUESTRA RESPONSABILIDAD SE LIMITARÁ EN LA MAYOR MEDIDA PERMITIDA POR LA LEY.',
+
+  // Section 14: Indemnification
+  [ShowcaseStrings.PP_S14_Title]: '14. Indemnización',
+  [ShowcaseStrings.PP_S14_P1]:
+    'Usted acepta indemnizar, defender y eximir de responsabilidad a Digital Defiance, sus funcionarios, directores, empleados, voluntarios y colaboradores (incluida Jessica Mulein) de y contra todas y cada una de las reclamaciones, responsabilidades, daños, pérdidas, costos y gastos (incluidos los honorarios razonables de abogados) que surjan de o estén de alguna manera relacionados con su acceso o uso de los Servicios, su violación de esta Política de Privacidad o su violación de cualquier ley aplicable o los derechos de cualquier tercero.',
+
+  // Section 15: Governing Law
+  [ShowcaseStrings.PP_S15_Title]:
+    '15. Ley aplicable y resolución de disputas',
+  [ShowcaseStrings.PP_S15_P1]:
+    'Esta Política de Privacidad se regirá e interpretará de acuerdo con las leyes del Estado de Washington, Estados Unidos, sin tener en cuenta sus disposiciones sobre conflictos de leyes. Cualquier disputa que surja de o esté relacionada con esta Política de Privacidad o los Servicios se resolverá exclusivamente en los tribunales estatales o federales ubicados en el Condado de King, Washington, y usted consiente la jurisdicción personal de dichos tribunales.',
+
+  // Section 16: Open Source
+  [ShowcaseStrings.PP_S16_Title]: '16. Código abierto',
+  [ShowcaseStrings.PP_S16_P1_Before]:
+    'BrightChain es software de código abierto. El código fuente está disponible públicamente en ',
+  [ShowcaseStrings.PP_S16_P1_LinkText]:
+    'github.com/Digital-Defiance/BrightChain',
+  [ShowcaseStrings.PP_S16_P1_After]:
+    '. Le animamos a revisar el código para verificar las propiedades de privacidad descritas en esta política. Las protecciones criptográficas descritas en este documento están implementadas en el código fuente y son verificables mediante inspección.',
+
+  // Section 17: Changes
+  [ShowcaseStrings.PP_S17_Title]: '17. Cambios a esta política',
+  [ShowcaseStrings.PP_S17_P1]:
+    'Podemos actualizar esta Política de Privacidad de vez en cuando. Le notificaremos los cambios materiales publicando la política actualizada en los Servicios con una fecha de "Última actualización" revisada. Su uso continuado de los Servicios después de la fecha de entrada en vigor de cualquier cambio constituye su aceptación de la política revisada.',
+
+  // Section 18: Contact
+  [ShowcaseStrings.PP_S18_Title]: '18. Contáctenos',
+  [ShowcaseStrings.PP_S18_P1]:
+    'Si tiene preguntas sobre esta Política de Privacidad o desea ejercer sus derechos de protección de datos, por favor contacte:',
+  [ShowcaseStrings.PP_S18_OrgName]: 'Digital Defiance',
+  [ShowcaseStrings.PP_S18_EmailLabel]: 'Correo electrónico:',
+  [ShowcaseStrings.PP_S18_WebLabel]: 'Web:',
 };
 
 export default ShowcaseSpanishStrings;

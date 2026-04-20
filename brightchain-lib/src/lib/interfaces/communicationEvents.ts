@@ -164,6 +164,47 @@ export interface IChannelUpdatedEvent extends ICommunicationEventBase {
 }
 
 /**
+ * Server channel created event — emitted when a channel is created in a server.
+ * Requirement 10.1: real-time channel creation updates.
+ */
+export interface IServerChannelCreatedEvent extends ICommunicationEventBase {
+  type: CommunicationEventType.SERVER_CHANNEL_CREATED;
+  data: {
+    serverId: string;
+    channelId: string;
+    channelName: string;
+    categoryId: string;
+  };
+}
+
+/**
+ * Server channel deleted event — emitted when a channel is deleted from a server.
+ * Requirement 10.2: real-time channel deletion updates.
+ */
+export interface IServerChannelDeletedEvent extends ICommunicationEventBase {
+  type: CommunicationEventType.SERVER_CHANNEL_DELETED;
+  data: { serverId: string; channelId: string };
+}
+
+/**
+ * Server member joined event — emitted when a member joins a server.
+ * Requirement 10.3: real-time member join updates.
+ */
+export interface IServerMemberJoinedEvent extends ICommunicationEventBase {
+  type: CommunicationEventType.SERVER_MEMBER_JOINED;
+  data: { serverId: string; memberId: string };
+}
+
+/**
+ * Server member removed event — emitted when a member is removed from a server.
+ * Requirement 10.4: real-time member removal updates.
+ */
+export interface IServerMemberRemovedEvent extends ICommunicationEventBase {
+  type: CommunicationEventType.SERVER_MEMBER_REMOVED;
+  data: { serverId: string; memberId: string };
+}
+
+/**
  * Union type of all communication events.
  */
 export type CommunicationEvent =
@@ -179,7 +220,11 @@ export type CommunicationEvent =
   | IMemberKickedEvent
   | IMemberMutedEvent
   | IGroupCreatedEvent
-  | IChannelUpdatedEvent;
+  | IChannelUpdatedEvent
+  | IServerChannelCreatedEvent
+  | IServerChannelDeletedEvent
+  | IServerMemberJoinedEvent
+  | IServerMemberRemovedEvent;
 
 /**
  * Message sent event — emitted when a new message is sent.

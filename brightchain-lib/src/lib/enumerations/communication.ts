@@ -57,6 +57,11 @@ export enum CommunicationEventType {
   MESSAGE_EXPIRED = 'communication:message_expired',
   MESSAGE_EXPLODED = 'communication:message_exploded',
   MESSAGE_READ_COUNT_EXCEEDED = 'communication:message_read_count_exceeded',
+  SERVER_CHANNEL_CREATED = 'communication:server_channel_created',
+  SERVER_CHANNEL_DELETED = 'communication:server_channel_deleted',
+  SERVER_MEMBER_JOINED = 'communication:server_member_joined',
+  SERVER_MEMBER_REMOVED = 'communication:server_member_removed',
+  SERVER_UPDATED = 'communication:server_updated',
 }
 
 export const DEFAULT_ROLE_PERMISSIONS: Record<DefaultRole, Permission[]> = {

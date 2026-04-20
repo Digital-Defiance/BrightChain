@@ -199,6 +199,9 @@ For comprehensive understanding:
 - **Networking**:
   - [UPnP Configuration](./docs/UPnP_Configuration.md): Enable automatic port forwarding, configuration options, and troubleshooting
 
+- **Node Customization**:
+  - [Custom Splash Page (EJS Templates)](./docs/guides/08-custom-splash-page.md): Customize your node's splash page and add multi-page EJS routes without modifying source code
+
 - **Development**:
   - [Implementation Roadmap](./docs/ImplementationRoadmap.md): Development roadmap and future plans
 

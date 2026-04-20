@@ -115,6 +115,7 @@ import '../styles.scss';
 import AboutPage from './components/AboutPage';
 import AdminDashboardPage from './components/AdminDashboardPage';
 import { AdminMenuRegistration } from './components/AdminMenuRegistration';
+import { AppFooter } from './components/AppFooter';
 import DashboardPage from './components/DashboardPage';
 import { GlobalNotificationBell } from './components/GlobalNotificationBell';
 import { SplashPage } from './components/SplashPage';
@@ -925,6 +926,7 @@ const InnerApp: FC = () => {
             />
           </Routes>
         </Suspense>
+        <AppFooter />
       </Box>
     </MenuProvider>
   );

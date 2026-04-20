@@ -74,3 +74,18 @@ export * from './searchService';
 
 // ── explodingMessageService (no conflicts) ──────────────────────────────────
 export * from './explodingMessageService';
+
+// ── serverService (no conflicts) ────────────────────────────────────────────
+export {
+  MemberAlreadyInServerError,
+  NotServerMemberError,
+  ServerInviteExpiredError,
+  ServerInviteNotFoundError,
+  ServerNameValidationError,
+  ServerNotFoundError,
+  ServerPermissionError,
+  ServerService,
+  type CreateChannelInServerParams,
+  type CreateServerInviteParams,
+  type CreateServerParams,
+} from './serverService';

@@ -91,6 +91,8 @@ export interface IChannel<TId = string, TData = string> {
   lastMessageAt: Date;
   pinnedMessageIds: TId[];
   historyVisibleToNewMembers: boolean;
+  /** Optional link to the parent Server. Channels without serverId remain standalone. */
+  serverId?: TId;
 }
 
 /**

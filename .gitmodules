@@ -50,3 +50,12 @@
 [submodule "brightchart-lib"]
 	path = brightchart-lib
 	url = https://github.com/Digital-Defiance/brightchart-lib.git
+[submodule "brightcal-lib"]
+	path = brightcal-lib
+	url = https://github.com/Digital-Defiance/brightcal-lib.git
+[submodule "brightcal-react-components"]
+	path = brightcal-react-components
+	url = https://github.com/Digital-Defiance/brightcal-react-components.git
+[submodule "brightcal-api-lib"]
+	path = brightcal-api-lib
+	url = https://github.com/Digital-Defiance/brightcal-api-lib.git

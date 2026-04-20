@@ -341,3 +341,72 @@ export const setPresenceValidation: ValidationChain[] = [
     .isIn(validPresenceStatuses)
     .withMessage(`status must be one of: ${validPresenceStatuses.join(', ')}`),
 ];
+
+// ─── Server validations ─────────────────────────────────────────────────────
+
+export const createServerValidation: ValidationChain[] = [
+  body('name')
+    .isString()
+    .isLength({ min: 1, max: 100 })
+    .withMessage('name must be a string between 1 and 100 characters'),
+  body('iconUrl').optional().isString().withMessage('iconUrl must be a string'),
+];
+
+export const listServersValidation: ValidationChain[] = [
+  query('cursor').optional().isString().withMessage('cursor must be a string'),
+  query('limit')
+    .optional()
+    .isInt({ min: 1, max: 100 })
+    .withMessage('limit must be an integer between 1 and 100'),
+];
+
+export const serverIdParamValidation: ValidationChain[] = [
+  param('serverId').isString().notEmpty().withMessage('serverId is required'),
+];
+
+export const updateServerValidation: ValidationChain[] = [
+  param('serverId').isString().notEmpty().withMessage('serverId is required'),
+  body('name')
+    .optional()
+    .isString()
+    .isLength({ min: 1, max: 100 })
+    .withMessage('name must be a string between 1 and 100 characters'),
+  body('iconUrl').optional().isString().withMessage('iconUrl must be a string'),
+  body('categories')
+    .optional()
+    .isArray()
+    .withMessage('categories must be an array'),
+];
+
+export const addServerMembersValidation: ValidationChain[] = [
+  param('serverId').isString().notEmpty().withMessage('serverId is required'),
+  body('memberIds')
+    .isArray({ min: 1 })
+    .withMessage('memberIds must be a non-empty array'),
+  body('memberIds.*')
+    .isString()
+    .notEmpty()
+    .withMessage('Each memberId must be a non-empty string'),
+];
+
+export const removeServerMemberValidation: ValidationChain[] = [
+  param('serverId').isString().notEmpty().withMessage('serverId is required'),
+  param('memberId').isString().notEmpty().withMessage('memberId is required'),
+];
+
+export const createServerInviteValidation: ValidationChain[] = [
+  param('serverId').isString().notEmpty().withMessage('serverId is required'),
+  body('maxUses')
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage('maxUses must be a positive integer'),
+  body('expiresInMs')
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage('expiresInMs must be a positive integer'),
+];
+
+export const redeemServerInviteValidation: ValidationChain[] = [
+  param('serverId').isString().notEmpty().withMessage('serverId is required'),
+  param('token').isString().notEmpty().withMessage('token is required'),
+];

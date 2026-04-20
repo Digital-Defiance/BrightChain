@@ -1252,7 +1252,10 @@ export const MandarinStrings: ComponentStrings<BrightChainStringKey> = {
   [BrightChainStrings.Splash_RealWorldValue]: '现实世界价值',
   [BrightChainStrings.Splash_RealWorldValueDescription]:
     '焦耳的价值由基于实际成本的公式设定，我们会随时间不断完善该公式——没有交易，没有波动。',
-
+  [BrightChainStrings.Splash_Documentation]: '文档',
+  [BrightChainStrings.Splash_FAQ]: '常见问题',
+  [BrightChainStrings.Splash_PrivacyPolicy]: '隐私政策',
+  [BrightChainStrings.Splash_TermsOfService]: '服务条款',
   // Dashboard
   [BrightChainStrings.Dashboard_Title]: '您的仪表板',
   [BrightChainStrings.Dashboard_EnergyBalance]: '能量余额',
@@ -1325,12 +1328,12 @@ export const MandarinStrings: ComponentStrings<BrightChainStringKey> = {
   [BrightChainStrings.Admin_Dashboard_DeliveryFailures]: '投递失败',
   [BrightChainStrings.Admin_Dashboard_Last24Hours]: '最近24小时',
   [BrightChainStrings.Admin_Menu_Dashboard]: '管理面板',
-  [BrightChainStrings.Admin_Menu_Users]: 'User Management',
-  [BrightChainStrings.Admin_Menu_Blocks]: 'Block Explorer',
-  [BrightChainStrings.Admin_Menu_Chat]: 'Chat Admin',
-  [BrightChainStrings.Admin_Menu_Hub]: 'Hub Admin',
-  [BrightChainStrings.Admin_Menu_Mail]: 'Mail Admin',
-  [BrightChainStrings.Admin_Menu_Pass]: 'Pass Admin',
+  [BrightChainStrings.Admin_Menu_Users]: '用户管理',
+  [BrightChainStrings.Admin_Menu_Blocks]: '区块浏览器',
+  [BrightChainStrings.Admin_Menu_Chat]: '聊天管理',
+  [BrightChainStrings.Admin_Menu_Hub]: '中心管理',
+  [BrightChainStrings.Admin_Menu_Mail]: '邮件管理',
+  [BrightChainStrings.Admin_Menu_Pass]: '密码管理',
   [BrightChainStrings.Admin_Menu_About]: '关于',
   [BrightChainStrings.Admin_Common_Loading]: '加载中…',
   [BrightChainStrings.Admin_Common_Previous]: '上一页',
@@ -1377,16 +1380,16 @@ export const MandarinStrings: ComponentStrings<BrightChainStringKey> = {
     '您不能更改自己的角色。',
   [BrightChainStrings.Admin_Users_CannotChangeSystemUser]:
     '系统用户的角色不能更改。',
-  [BrightChainStrings.Admin_Users_DeleteUser]: 'Delete User',
-  [BrightChainStrings.Admin_Users_DeleteUserTitle]: 'Delete User',
+  [BrightChainStrings.Admin_Users_DeleteUser]: '删除用户',
+  [BrightChainStrings.Admin_Users_DeleteUserTitle]: '删除用户',
   [BrightChainStrings.Admin_Users_DeleteConfirmTemplate]:
-    'Are you sure you want to permanently delete user "{USERNAME}"? This will remove their CBLs, settings, and all database records. This action cannot be undone.',
+    '您确定要永久删除用户"{USERNAME}"吗？这将删除其 CBL、设置和所有数据库记录。此操作无法撤消。',
   [BrightChainStrings.Admin_Users_DeleteWarning]:
-    ' This is a destructive operation.',
+    ' 这是一个破坏性操作。',
   [BrightChainStrings.Admin_Users_CannotDeleteSelf]:
-    'You cannot delete your own account.',
+    '您不能删除自己的账户。',
   [BrightChainStrings.Admin_Users_CannotDeleteSystemUser]:
-    'The system user cannot be deleted.',
+    '系统用户不能被删除。',
   [BrightChainStrings.Admin_Blocks_Title]: '区块浏览器',
   [BrightChainStrings.Admin_Blocks_SearchPlaceholder]: '按区块 ID 搜索',
   [BrightChainStrings.Admin_Blocks_FilterAllDurability]: '所有持久性',

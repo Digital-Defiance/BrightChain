@@ -5,6 +5,11 @@
  * Supports channel creation with visibility modes, join/leave, messaging,
  * search, invite token generation/redemption, mute/kick operations.
  *
+ * When an IChatStorageProvider is injected, channels, channel messages, and
+ * invite tokens are also persisted to the provider's collections (write-through).
+ * Sync helper methods continue to read from the in-memory Maps so their
+ * signatures remain unchanged.
+ *
  * Requirements: 10.3
  */
 
@@ -24,6 +29,10 @@ import {
   IInviteToken,
   IPaginatedResult,
 } from '../../interfaces/communication';
+import {
+  IChatCollection,
+  IChatStorageProvider,
+} from '../../interfaces/communication/chatStorageProvider';
 import {
   ICommunicationEventEmitter,
   NullEventEmitter,
@@ -181,12 +190,26 @@ export class ChannelService {
   private readonly eventEmitter: ICommunicationEventEmitter;
   private readonly randomBytesProvider: (length: number) => Uint8Array;
 
+  /** Optional persistent collection for channels (write-through). */
+  private readonly channelCollection: IChatCollection<IChannel> | undefined;
+
+  /** Optional persistent collection for channel messages (write-through). */
+  private readonly channelMessageCollection:
+    | IChatCollection<ICommunicationMessage>
+    | undefined;
+
+  /** Optional persistent collection for invite tokens (write-through). */
+  private readonly inviteTokenCollection:
+    | IChatCollection<IInviteToken>
+    | undefined;
+
   constructor(
     permissionService: PermissionService,
     encryptKey: ChannelKeyEncryptionHandler = defaultKeyEncryption,
     messageOps?: MessageOperationsService,
     eventEmitter?: ICommunicationEventEmitter,
     randomBytesProvider?: (length: number) => Uint8Array,
+    storageProvider?: IChatStorageProvider,
   ) {
     this.permissionService = permissionService;
     this.encryptKey = encryptKey;
@@ -194,6 +217,11 @@ export class ChannelService {
       messageOps ?? new MessageOperationsService(permissionService);
     this.eventEmitter = eventEmitter ?? new NullEventEmitter();
     this.randomBytesProvider = randomBytesProvider ?? getRandomBytes;
+    if (storageProvider) {
+      this.channelCollection = storageProvider.channels;
+      this.channelMessageCollection = storageProvider.channelMessages;
+      this.inviteTokenCollection = storageProvider.inviteTokens;
+    }
   }
 
   // ─── Helpers ────────────────────────────────────────────────────────────
@@ -314,6 +342,11 @@ export class ChannelService {
 
     this.permissionService.assignRole(creatorId, channelId, DefaultRole.OWNER);
 
+    // Persist to storage provider if available
+    if (this.channelCollection) {
+      await this.channelCollection.create(channel);
+    }
+
     return channel;
   }
 
@@ -390,6 +423,11 @@ export class ChannelService {
 
     this.eventEmitter.emitChannelUpdated(channelId, channelId, requesterId);
 
+    // Persist channel update to storage provider if available
+    if (this.channelCollection) {
+      await this.channelCollection.update(channelId, channel);
+    }
+
     return channel;
   }
 
@@ -405,6 +443,11 @@ export class ChannelService {
     this.channels.delete(channelId);
     this.messages.delete(channelId);
     this.symmetricKeys.delete(channelId);
+
+    // Persist deletion to storage provider if available
+    if (this.channelCollection) {
+      await this.channelCollection.delete(channelId);
+    }
   }
 
   // ─── Join / Leave ─────────────────────────────────────────────────────
@@ -440,6 +483,11 @@ export class ChannelService {
 
     this.permissionService.assignRole(memberId, channelId, DefaultRole.MEMBER);
 
+    // Persist channel update to storage provider if available
+    if (this.channelCollection) {
+      await this.channelCollection.update(channelId, channel);
+    }
+
     this.eventEmitter.emitMemberJoined('channel', channelId, memberId);
   }
 
@@ -455,6 +503,11 @@ export class ChannelService {
 
     if (channel.members.length > 0) {
       this.rotateKey(channel);
+    }
+
+    // Persist channel update to storage provider if available
+    if (this.channelCollection) {
+      await this.channelCollection.update(channelId, channel);
     }
 
     this.eventEmitter.emitMemberLeft('channel', channelId, memberId);
@@ -492,6 +545,14 @@ export class ChannelService {
 
     this.messages.get(channelId)!.push(message);
     channel.lastMessageAt = now;
+
+    // Persist to storage provider if available
+    if (this.channelMessageCollection) {
+      await this.channelMessageCollection.create(message);
+    }
+    if (this.channelCollection) {
+      await this.channelCollection.update(channelId, channel);
+    }
 
     this.eventEmitter.emitMessageSent(
       'channel',
@@ -575,6 +636,12 @@ export class ChannelService {
     };
 
     this.inviteTokens.set(token.token, token);
+
+    // Persist invite token to storage provider if available
+    if (this.inviteTokenCollection) {
+      await this.inviteTokenCollection.create(token);
+    }
+
     return token;
   }
 
@@ -620,6 +687,14 @@ export class ChannelService {
 
     invite.currentUses++;
 
+    // Persist changes to storage provider if available
+    if (this.channelCollection) {
+      await this.channelCollection.update(channel.id, channel);
+    }
+    if (this.inviteTokenCollection) {
+      await this.inviteTokenCollection.update(invite.token, invite);
+    }
+
     this.eventEmitter.emitMemberJoined('channel', channel.id, memberId);
   }
 
@@ -647,6 +722,11 @@ export class ChannelService {
     const member = channel.members.find((m) => m.memberId === targetId);
     if (member) {
       member.mutedUntil = new Date(Date.now() + durationMs);
+    }
+
+    // Persist channel update to storage provider if available
+    if (this.channelCollection) {
+      await this.channelCollection.update(channelId, channel);
     }
 
     this.eventEmitter.emitMemberMuted(
@@ -679,6 +759,11 @@ export class ChannelService {
 
     if (channel.members.length > 0) {
       this.rotateKey(channel);
+    }
+
+    // Persist channel update to storage provider if available
+    if (this.channelCollection) {
+      await this.channelCollection.update(channelId, channel);
     }
 
     this.eventEmitter.emitMemberKicked(
@@ -714,6 +799,11 @@ export class ChannelService {
       () => new NotMessageAuthorError(),
     );
 
+    // Persist edited message to storage provider if available
+    if (this.channelMessageCollection) {
+      await this.channelMessageCollection.update(messageId, edited);
+    }
+
     this.eventEmitter.emitMessageEdited(
       'channel',
       channelId,
@@ -746,6 +836,14 @@ export class ChannelService {
       (p) => new ChannelPermissionError(p),
     );
 
+    // Persist deleted message to storage provider if available
+    if (this.channelMessageCollection) {
+      const deletedMsg = msgs.find((m) => m.id === messageId);
+      if (deletedMsg) {
+        await this.channelMessageCollection.update(messageId, deletedMsg);
+      }
+    }
+
     this.eventEmitter.emitMessageDeleted(
       'channel',
       channelId,
@@ -776,6 +874,17 @@ export class ChannelService {
       (id) => new ChannelMessageNotFoundError(id),
       (p) => new ChannelPermissionError(p),
     );
+
+    // Persist pin changes to storage provider if available
+    if (this.channelMessageCollection) {
+      const pinnedMsg = msgs.find((m) => m.id === messageId);
+      if (pinnedMsg) {
+        await this.channelMessageCollection.update(messageId, pinnedMsg);
+      }
+    }
+    if (this.channelCollection) {
+      await this.channelCollection.update(channelId, channel);
+    }
 
     this.eventEmitter.emitMessagePinEvent(
       CommunicationEventType.MESSAGE_PINNED,
@@ -809,6 +918,17 @@ export class ChannelService {
       (p) => new ChannelPermissionError(p),
     );
 
+    // Persist unpin changes to storage provider if available
+    if (this.channelMessageCollection) {
+      const unpinnedMsg = msgs.find((m) => m.id === messageId);
+      if (unpinnedMsg) {
+        await this.channelMessageCollection.update(messageId, unpinnedMsg);
+      }
+    }
+    if (this.channelCollection) {
+      await this.channelCollection.update(channelId, channel);
+    }
+
     this.eventEmitter.emitMessagePinEvent(
       CommunicationEventType.MESSAGE_UNPINNED,
       'channel',
@@ -839,6 +959,14 @@ export class ChannelService {
       emoji,
       (id) => new ChannelMessageNotFoundError(id),
     );
+
+    // Persist reaction change to storage provider if available
+    if (this.channelMessageCollection) {
+      const msg = msgs.find((m) => m.id === messageId);
+      if (msg) {
+        await this.channelMessageCollection.update(messageId, msg);
+      }
+    }
 
     this.eventEmitter.emitReactionEvent(
       CommunicationEventType.REACTION_ADDED,
@@ -874,6 +1002,14 @@ export class ChannelService {
       (id) => new ChannelMessageNotFoundError(id),
       (id) => new ChannelReactionNotFoundError(id),
     );
+
+    // Persist reaction removal to storage provider if available
+    if (this.channelMessageCollection) {
+      const msg = msgs.find((m) => m.id === messageId);
+      if (msg) {
+        await this.channelMessageCollection.update(messageId, msg);
+      }
+    }
 
     this.eventEmitter.emitReactionEvent(
       CommunicationEventType.REACTION_REMOVED,

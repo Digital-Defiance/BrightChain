@@ -1384,7 +1384,10 @@ export const UkrainianStrings: ComponentStrings<BrightChainStringKey> = {
   [BrightChainStrings.Splash_RealWorldValue]: 'Реальна цінність',
   [BrightChainStrings.Splash_RealWorldValueDescription]:
     'Значення Джоулів встановлюються за формулою на основі фактичних витрат, і ми вдосконалюємо цю формулу з часом — без торгівлі, без волатильності.',
-
+  [BrightChainStrings.Splash_Documentation]: 'Документація',
+  [BrightChainStrings.Splash_FAQ]: 'Часто задавані питання',
+  [BrightChainStrings.Splash_PrivacyPolicy]: 'Політика конфіденційності',
+  [BrightChainStrings.Splash_TermsOfService]: 'Умови використання',
   // Dashboard
   [BrightChainStrings.Dashboard_Title]: 'Ваша панель керування',
   [BrightChainStrings.Dashboard_EnergyBalance]: 'Баланс енергії',
@@ -1465,12 +1468,12 @@ export const UkrainianStrings: ComponentStrings<BrightChainStringKey> = {
   [BrightChainStrings.Admin_Dashboard_DeliveryFailures]: 'Помилки доставки',
   [BrightChainStrings.Admin_Dashboard_Last24Hours]: 'Останні 24 год',
   [BrightChainStrings.Admin_Menu_Dashboard]: 'Панель адміністратора',
-  [BrightChainStrings.Admin_Menu_Users]: 'User Management',
-  [BrightChainStrings.Admin_Menu_Blocks]: 'Block Explorer',
-  [BrightChainStrings.Admin_Menu_Chat]: 'Chat Admin',
-  [BrightChainStrings.Admin_Menu_Hub]: 'Hub Admin',
-  [BrightChainStrings.Admin_Menu_Mail]: 'Mail Admin',
-  [BrightChainStrings.Admin_Menu_Pass]: 'Pass Admin',
+  [BrightChainStrings.Admin_Menu_Users]: 'Керування користувачами',
+  [BrightChainStrings.Admin_Menu_Blocks]: 'Оглядач блоків',
+  [BrightChainStrings.Admin_Menu_Chat]: 'Адмін чату',
+  [BrightChainStrings.Admin_Menu_Hub]: 'Адмін хабу',
+  [BrightChainStrings.Admin_Menu_Mail]: 'Адмін пошти',
+  [BrightChainStrings.Admin_Menu_Pass]: 'Адмін паролів',
   [BrightChainStrings.Admin_Menu_About]: 'Про',
   [BrightChainStrings.Admin_Common_Loading]: 'Завантаження…',
   [BrightChainStrings.Admin_Common_Previous]: 'Попередня',
@@ -1518,16 +1521,16 @@ export const UkrainianStrings: ComponentStrings<BrightChainStringKey> = {
     'Ви не можете змінити свою власну роль.',
   [BrightChainStrings.Admin_Users_CannotChangeSystemUser]:
     'Роль системного користувача не може бути змінена.',
-  [BrightChainStrings.Admin_Users_DeleteUser]: 'Delete User',
-  [BrightChainStrings.Admin_Users_DeleteUserTitle]: 'Delete User',
+  [BrightChainStrings.Admin_Users_DeleteUser]: 'Видалити користувача',
+  [BrightChainStrings.Admin_Users_DeleteUserTitle]: 'Видалити користувача',
   [BrightChainStrings.Admin_Users_DeleteConfirmTemplate]:
-    'Are you sure you want to permanently delete user "{USERNAME}"? This will remove their CBLs, settings, and all database records. This action cannot be undone.',
+    'Ви впевнені, що хочете назавжди видалити користувача «{USERNAME}»? Це видалить його CBL, налаштування та всі записи бази даних. Цю дію неможливо скасувати.',
   [BrightChainStrings.Admin_Users_DeleteWarning]:
-    ' This is a destructive operation.',
+    ' Це деструктивна операція.',
   [BrightChainStrings.Admin_Users_CannotDeleteSelf]:
-    'You cannot delete your own account.',
+    'Ви не можете видалити свій власний обліковий запис.',
   [BrightChainStrings.Admin_Users_CannotDeleteSystemUser]:
-    'The system user cannot be deleted.',
+    'Системного користувача не можна видалити.',
   [BrightChainStrings.Admin_Blocks_Title]: 'Оглядач блоків',
   [BrightChainStrings.Admin_Blocks_SearchPlaceholder]: 'Пошук за ID блоку',
   [BrightChainStrings.Admin_Blocks_FilterAllDurability]:

@@ -68,6 +68,12 @@ export type * from './identity';
 // Communication interfaces (direct messaging, groups, channels)
 export type * from './communication';
 
+// Communication storage provider (BrightChat DB abstraction)
+export type * from './communication/chatStorageProvider';
+
+// Server interfaces (Discord-style server containers for channels)
+export type * from './communication/server';
+
 // Communication event interfaces (real-time WebSocket events)
 export type * from './communicationEvents';
 

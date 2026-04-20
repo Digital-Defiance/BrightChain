@@ -6,6 +6,11 @@
  * Supports member management with key rotation on departure,
  * message edit/delete/pin/reaction operations.
  *
+ * When an IChatStorageProvider is injected, groups and group messages are
+ * also persisted to the provider's collections (write-through). Sync helper
+ * methods continue to read from the in-memory Maps so their signatures
+ * remain unchanged.
+ *
  * Requirements: 10.2
  */
 
@@ -22,6 +27,10 @@ import {
   IGroupMember,
   IPaginatedResult,
 } from '../../interfaces/communication';
+import {
+  IChatCollection,
+  IChatStorageProvider,
+} from '../../interfaces/communication/chatStorageProvider';
 import {
   ICommunicationEventEmitter,
   NullEventEmitter,
@@ -147,12 +156,21 @@ export class GroupService {
   private readonly eventEmitter: ICommunicationEventEmitter;
   private readonly randomBytesProvider: (length: number) => Uint8Array;
 
+  /** Optional persistent collection for groups (write-through). */
+  private readonly groupCollection: IChatCollection<IGroup> | undefined;
+
+  /** Optional persistent collection for group messages (write-through). */
+  private readonly groupMessageCollection:
+    | IChatCollection<ICommunicationMessage>
+    | undefined;
+
   constructor(
     permissionService: PermissionService,
     encryptKey: KeyEncryptionHandler = defaultKeyEncryption,
     messageOps?: MessageOperationsService,
     eventEmitter?: ICommunicationEventEmitter,
     randomBytesProvider?: (length: number) => Uint8Array,
+    storageProvider?: IChatStorageProvider,
   ) {
     this.permissionService = permissionService;
     this.encryptKey = encryptKey;
@@ -160,6 +178,10 @@ export class GroupService {
       messageOps ?? new MessageOperationsService(permissionService);
     this.eventEmitter = eventEmitter ?? new NullEventEmitter();
     this.randomBytesProvider = randomBytesProvider ?? getRandomBytes;
+    if (storageProvider) {
+      this.groupCollection = storageProvider.groups;
+      this.groupMessageCollection = storageProvider.groupMessages;
+    }
   }
 
   // ─── Helpers ────────────────────────────────────────────────────────────
@@ -273,6 +295,11 @@ export class GroupService {
       this.permissionService.assignRole(member.memberId, groupId, member.role);
     }
 
+    // Persist to storage provider if available
+    if (this.groupCollection) {
+      await this.groupCollection.create(group);
+    }
+
     // Emit group created event
     this.eventEmitter.emitGroupCreated(
       groupId,
@@ -317,6 +344,16 @@ export class GroupService {
         contextId: group.id,
       };
       groupMessages.push(migratedMsg);
+
+      // Persist migrated message to storage provider if available
+      if (this.groupMessageCollection) {
+        await this.groupMessageCollection.create(migratedMsg);
+      }
+    }
+
+    // Persist group update (promotedFromConversation) to storage provider if available
+    if (this.groupCollection) {
+      await this.groupCollection.update(group.id, group);
     }
 
     return group;
@@ -363,6 +400,14 @@ export class GroupService {
 
     this.messages.get(groupId)!.push(message);
     group.lastMessageAt = now;
+
+    // Persist to storage provider if available
+    if (this.groupMessageCollection) {
+      await this.groupMessageCollection.create(message);
+    }
+    if (this.groupCollection) {
+      await this.groupCollection.update(groupId, group);
+    }
 
     // Emit message sent event
     this.eventEmitter.emitMessageSent('group', groupId, message.id, senderId);
@@ -427,6 +472,11 @@ export class GroupService {
       // Emit member joined event
       this.eventEmitter.emitMemberJoined('group', groupId, memberId);
     }
+
+    // Persist group update to storage provider if available
+    if (this.groupCollection) {
+      await this.groupCollection.update(groupId, group);
+    }
   }
 
   /**
@@ -449,6 +499,11 @@ export class GroupService {
     // Rotate key for remaining members
     this.rotateKey(group);
 
+    // Persist group update to storage provider if available
+    if (this.groupCollection) {
+      await this.groupCollection.update(groupId, group);
+    }
+
     // Emit member kicked event
     this.eventEmitter.emitMemberKicked('group', groupId, targetId, requesterId);
   }
@@ -467,6 +522,11 @@ export class GroupService {
     // Rotate key for remaining members
     if (group.members.length > 0) {
       this.rotateKey(group);
+    }
+
+    // Persist group update to storage provider if available
+    if (this.groupCollection) {
+      await this.groupCollection.update(groupId, group);
     }
 
     // Emit member left event
@@ -498,6 +558,11 @@ export class GroupService {
       () => new NotMessageAuthorError(),
     );
 
+    // Persist edited message to storage provider if available
+    if (this.groupMessageCollection) {
+      await this.groupMessageCollection.update(messageId, edited);
+    }
+
     // Emit message edited event
     this.eventEmitter.emitMessageEdited('group', groupId, messageId, memberId);
 
@@ -526,6 +591,14 @@ export class GroupService {
       (p) => new GroupPermissionError(p),
     );
 
+    // Persist deleted message to storage provider if available
+    if (this.groupMessageCollection) {
+      const deletedMsg = msgs.find((m) => m.id === messageId);
+      if (deletedMsg) {
+        await this.groupMessageCollection.update(messageId, deletedMsg);
+      }
+    }
+
     // Emit message deleted event
     this.eventEmitter.emitMessageDeleted('group', groupId, messageId, memberId);
   }
@@ -552,6 +625,17 @@ export class GroupService {
       (id) => new GroupMessageNotFoundError(id),
       (p) => new GroupPermissionError(p),
     );
+
+    // Persist pin changes to storage provider if available
+    if (this.groupMessageCollection) {
+      const pinnedMsg = msgs.find((m) => m.id === messageId);
+      if (pinnedMsg) {
+        await this.groupMessageCollection.update(messageId, pinnedMsg);
+      }
+    }
+    if (this.groupCollection) {
+      await this.groupCollection.update(groupId, group);
+    }
 
     // Emit message pinned event
     this.eventEmitter.emitMessagePinEvent(
@@ -586,6 +670,17 @@ export class GroupService {
       (p) => new GroupPermissionError(p),
     );
 
+    // Persist unpin changes to storage provider if available
+    if (this.groupMessageCollection) {
+      const unpinnedMsg = msgs.find((m) => m.id === messageId);
+      if (unpinnedMsg) {
+        await this.groupMessageCollection.update(messageId, unpinnedMsg);
+      }
+    }
+    if (this.groupCollection) {
+      await this.groupCollection.update(groupId, group);
+    }
+
     // Emit message unpinned event
     this.eventEmitter.emitMessagePinEvent(
       CommunicationEventType.MESSAGE_UNPINNED,
@@ -617,6 +712,14 @@ export class GroupService {
       emoji,
       (id) => new GroupMessageNotFoundError(id),
     );
+
+    // Persist reaction change to storage provider if available
+    if (this.groupMessageCollection) {
+      const msg = msgs.find((m) => m.id === messageId);
+      if (msg) {
+        await this.groupMessageCollection.update(messageId, msg);
+      }
+    }
 
     // Emit reaction added event
     this.eventEmitter.emitReactionEvent(
@@ -653,6 +756,14 @@ export class GroupService {
       (id) => new GroupMessageNotFoundError(id),
       (id) => new ReactionNotFoundError(id),
     );
+
+    // Persist reaction removal to storage provider if available
+    if (this.groupMessageCollection) {
+      const msg = msgs.find((m) => m.id === messageId);
+      if (msg) {
+        await this.groupMessageCollection.update(messageId, msg);
+      }
+    }
 
     // Emit reaction removed event
     this.eventEmitter.emitReactionEvent(

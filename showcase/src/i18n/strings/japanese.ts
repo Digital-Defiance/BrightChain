@@ -48,7 +48,7 @@ export const ShowcaseJapaneseStrings: Partial<
   [ShowcaseStrings.FAQ_Gild_Character]: 'ギルドキャラクター',
   [ShowcaseStrings.FAQ_Phix_Character]: 'フィックスキャラクター',
   [ShowcaseStrings.FAQ_SwitchToModeTemplate]: '{MODE}FAQに切り替え',
-  [ShowcaseStrings.FAQ_Title_Technical]: 'BrightChain FAQ',
+  [ShowcaseStrings.FAQ_Title_Technical]: 'BrightChain よくある質問',
   [ShowcaseStrings.FAQ_Title_Ecosystem]: 'BrightChainユニバース',
   [ShowcaseStrings.FAQ_Subtitle_Technical]:
     'オーナーフリーファイルシステムの進化的後継者',
@@ -200,7 +200,11 @@ export const ShowcaseJapaneseStrings: Partial<
   [ShowcaseStrings.FAQ_Tech_Q11_BrightChart_Title]: '患者所有の医療記録',
   [ShowcaseStrings.FAQ_Tech_Q11_BrightChart_Text]:
     '患者が鍵を保持する電子カルテ。BrightChartはFHIR R4準拠の医療データをBrightChain上の暗号化ブロックとして保存し、侵害される中央データベースはありません。患者はBrightTrust委任を通じてプロバイダーに細粒度のアクセスを付与し、すべてのアクセスイベントは不変の監査証跡に記録されます。単一のコードベースから医療、歯科、獣医の診療をサポートします。',
-  [ShowcaseStrings.FAQ_Tech_Q11_BrightMail_Title]: '主権的コミュニケーション',
+  [ShowcaseStrings.FAQ_BrightCal_Logo_Alt]: 'BrightCalロゴ',
+  [ShowcaseStrings.FAQ_Tech_Q11_BrightCal_Title]: '共有および個人カレンダー管理',
+  [ShowcaseStrings.FAQ_Tech_Q11_BrightCal_Text]:
+    'オーナーが鍵を保持するカレンダーシステム。BrightCalは細粒度のアクセス制御を伴う安全な暗号化スケジューリングを実現します。イベントは暗号化ブロックとして保存されます。すべてのカレンダーデータは不変で復元可能であり、繰り返しイベント、リマインダー、および伝統的なカレンダーシステムとの連携をサポートします。',
+    [ShowcaseStrings.FAQ_Tech_Q11_BrightMail_Title]: '主権的コミュニケーション',
   [ShowcaseStrings.FAQ_Tech_Q11_BrightMail_Text]:
     '従来のSMTPと分散型ストレージを橋渡しする完全RFC準拠のメールシステム。標準的なメールプロバイダーとは異なり、BrightMailはすべてのメッセージを「オーナーフリー」ブロックストアにシャーディングし、エンドツーエンド暗号化された「ダークモード」メッセージングをサポートします。',
   [ShowcaseStrings.FAQ_Tech_Q11_BrightHub_Title]:
@@ -417,7 +421,7 @@ export const ShowcaseJapaneseStrings: Partial<
 
   // About Section
   [ShowcaseStrings.About_Title_BuiltWith]: '構築技術',
-  [ShowcaseStrings.About_Title_By]: 'by Digital Defiance',
+  [ShowcaseStrings.About_Title_By]: 'Digital Defiance 制作',
   [ShowcaseStrings.About_Subtitle]:
     '分散型インフラストラクチャにおけるオープンソースイノベーション',
   [ShowcaseStrings.About_Vision_Title]: '私たちのビジョン',
@@ -442,13 +446,12 @@ export const ShowcaseJapaneseStrings: Partial<
   [ShowcaseStrings.About_OtherImpl_Title]: 'その他の実装',
   [ShowcaseStrings.About_OtherImpl_P1]:
     'このTypeScript/Node.js実装がBrightChainの主要かつ最も成熟したバージョンですが、macOS/iOS UI付きのC++コアライブラリも並行して開発中です。このネイティブ実装はBrightChainのプライバシーとセキュリティ機能をAppleプラットフォームにもたらします。両リポジトリとも初期開発段階であり、本番環境での使用にはまだ対応していません。',
-  // TODO: translate
   [ShowcaseStrings.About_OtherImpl_P1_Before]:
-    'While this TypeScript/Node.js implementation is the primary and most mature version of BrightChain, a parallel ',
-  [ShowcaseStrings.About_OtherImpl_P1_CppLink]: 'C++ core library',
-  [ShowcaseStrings.About_OtherImpl_P1_AppleLink]: 'macOS/iOS UI',
+    'このTypeScript/Node.js実装が主要で最も成熟したバージョンですが、',
+  [ShowcaseStrings.About_OtherImpl_P1_CppLink]: 'C++コアライブラリ',
+  [ShowcaseStrings.About_OtherImpl_P1_AppleLink]: 'macOS/iOSインターフェース',
   [ShowcaseStrings.About_OtherImpl_P1_After]:
-    " is in development. This native implementation brings BrightChain's privacy and security features to Apple platforms. Both repositories are in early development and not yet ready for production use.",
+    'が開発中です。このネイティブ実装はBrightChainのプライバシーとパフォーマンス機能をAppleデバイスに直接もたらします。',
   [ShowcaseStrings.About_Feature_OwnerFree_Title]: 'オーナーフリーストレージ',
   [ShowcaseStrings.About_Feature_OwnerFree_Desc]:
     '暗号学的ランダム性がストレージの法的責任を排除します。単一のブロックに識別可能なコンテンツは含まれず、ノードオペレーターに法的免責を提供します。',
@@ -1454,456 +1457,483 @@ export const ShowcaseJapaneseStrings: Partial<
   [ShowcaseStrings.Blog_ByAuthorTemplate]: '{AUTHOR}著',
   [ShowcaseStrings.Blog_BackToHome]: '← ホームに戻る',
 
-  // BlogPost.tsx (TODO: translate)
-  [ShowcaseStrings.BlogPost_Loading]: 'Loading post...',
-  [ShowcaseStrings.BlogPost_NotFoundTitle]: 'Post Not Found',
+  // BlogPost.tsx
+  [ShowcaseStrings.BlogPost_Loading]: '記事を読み込み中...',
+  [ShowcaseStrings.BlogPost_NotFoundTitle]: '記事が見つかりません',
   [ShowcaseStrings.BlogPost_NotFoundDesc]:
-    "The blog post you're looking for doesn't exist.",
-  [ShowcaseStrings.BlogPost_BackToBlog]: '← Back to Blog',
+    'お探しのブログ記事は存在しません。',
+  [ShowcaseStrings.BlogPost_BackToBlog]: '← ブログに戻る',
   [ShowcaseStrings.BlogPost_NewBanner]:
-    '✨ This post was just published! It will appear in the blog list after the next site deployment.',
-  [ShowcaseStrings.BlogPost_ByAuthorTemplate]: 'By {AUTHOR}',
+    '✨ この記事は公開されたばかりです！次のサイト更新後にブログ一覧に表示されます。',
+  [ShowcaseStrings.BlogPost_ByAuthorTemplate]: '{AUTHOR} 著',
 
-  // Components.tsx feature cards (TODO: translate)
+  // Components.tsx feature cards
   [ShowcaseStrings.Feat_BrightDB_Desc]:
-    'MongoDB-competitive document database storing data on the Owner-Free Filesystem. Every document transparently stored as whitened blocks with TUPLE architecture for plausible deniability.',
-  [ShowcaseStrings.Feat_BrightDB_Cat]: 'Storage',
-  [ShowcaseStrings.Feat_BrightDB_Tech1]: 'Document Store',
-  [ShowcaseStrings.Feat_BrightDB_Tech2]: 'ACID Transactions',
-  [ShowcaseStrings.Feat_BrightDB_Tech3]: 'Aggregation Pipeline',
+    'オーナーフリーファイルシステムにデータを保存するMongoDB競合ドキュメントデータベース。すべてのドキュメントは、もっともらしい否認のためにTUPLEアーキテクチャでホワイトニングされたブロックとして透過的に保存されます。',
+  [ShowcaseStrings.Feat_BrightDB_Cat]: 'ストレージ',
+  [ShowcaseStrings.Feat_BrightDB_Tech1]: 'ドキュメントストア',
+  [ShowcaseStrings.Feat_BrightDB_Tech2]: 'ACIDトランザクション',
+  [ShowcaseStrings.Feat_BrightDB_Tech3]: '集約パイプライン',
   [ShowcaseStrings.Feat_BrightDB_HL1]:
-    'MongoDB-like API: collections, CRUD, queries, indexes, transactions',
+    'MongoDBライクAPI：コレクション、CRUD、クエリ、インデックス、トランザクション',
   [ShowcaseStrings.Feat_BrightDB_HL2]:
-    '15 query operators: $eq, $ne, $gt, $gte, $lt, $lte, $in, $nin, $regex, $exists, $and, $or, $not, $nor, $elemMatch',
+    '15のクエリ演算子：$eq、$ne、$gt、$gte、$lt、$lte、$in、$nin、$regex、$exists、$and、$or、$not、$nor、$elemMatch',
   [ShowcaseStrings.Feat_BrightDB_HL3]:
-    'Aggregation pipeline: $match, $group, $sort, $limit, $skip, $project, $unwind, $count, $addFields, $lookup',
+    '集約パイプライン：$match、$group、$sort、$limit、$skip、$project、$unwind、$count、$addFields、$lookup',
   [ShowcaseStrings.Feat_BrightDB_HL4]:
-    'Single-field, compound, and unique indexes with B-tree structures',
+    'B-tree構造を持つ単一フィールド、複合、およびユニークインデックス',
   [ShowcaseStrings.Feat_BrightDB_HL5]:
-    'Multi-document ACID transactions with commit/abort and optimistic concurrency',
+    'コミット/アボートと楽観的並行性を備えたマルチドキュメントACIDトランザクション',
   [ShowcaseStrings.Feat_BrightDB_HL6]:
-    'Change streams for real-time insert/update/delete event subscriptions',
+    'リアルタイムの挿入/更新/削除イベントサブスクリプション用の変更ストリーム',
   [ShowcaseStrings.Feat_BrightDB_HL7]:
-    'Express REST middleware for drop-in API access to collections',
+    'コレクションへのプラグアンドプレイAPIアクセス用のExpress RESTミドルウェア',
   [ShowcaseStrings.Feat_BrightDB_HL8]:
-    'TTL indexes for automatic document expiration',
+    'ドキュメントの自動有効期限切れのためのTTLインデックス',
   [ShowcaseStrings.Feat_BrightDB_HL9]:
-    'Schema validation with strict/moderate levels and default values',
+    '厳格/中程度レベルとデフォルト値を持つスキーマ検証',
   [ShowcaseStrings.Feat_BrightDB_HL10]:
-    'Full-text search with weighted fields and $text operator',
+    '重み付けフィールドと$textオペレーターを使用した全文検索',
   [ShowcaseStrings.Feat_BrightDB_HL11]:
-    'Copy-on-write storage: blocks never deleted, only mappings updated',
+    'コピーオンライトストレージ：ブロックは削除されず、マッピングのみが更新されます',
   [ShowcaseStrings.Feat_BrightDB_HL12]:
-    'Every document stored as 3-block TUPLE (data + 2 randomizers) for plausible deniability',
-  [ShowcaseStrings.Feat_BrightDBPools_Title]: 'BrightDB Pools',
+    '各ドキュメントは、もっともらしい否認のために3ブロックTUPLE（データ+2ランダマイザー）として保存されます',
+  [ShowcaseStrings.Feat_BrightDBPools_Title]: 'BrightDBプール',
   [ShowcaseStrings.Feat_BrightDBPools_Desc]:
-    'Lightweight namespace-isolated storage pools that logically partition blocks without separate physical storage. Each pool enforces its own ACL, encryption, and whitening boundaries — enabling multi-tenant, multi-application data isolation on a single BrightChain node.',
-  [ShowcaseStrings.Feat_BrightDBPools_Cat]: 'Storage',
-  [ShowcaseStrings.Feat_BrightDBPools_Tech1]: 'Namespace Isolation',
-  [ShowcaseStrings.Feat_BrightDBPools_Tech2]: 'Pool ACLs',
-  [ShowcaseStrings.Feat_BrightDBPools_Tech3]: 'Gossip Discovery',
+    '個別の物理ストレージなしでブロックを論理的に分割する軽量な名前空間分離ストレージプール。各プールは独自のACL、暗号化、ホワイトニング境界を適用し、単一のBrightChainノード上でマルチテナント、マルチアプリケーションのデータ分離を可能にします。',
+  [ShowcaseStrings.Feat_BrightDBPools_Cat]: 'ストレージ',
+  [ShowcaseStrings.Feat_BrightDBPools_Tech1]: '名前空間分離',
+  [ShowcaseStrings.Feat_BrightDBPools_Tech2]: 'プールACL',
+  [ShowcaseStrings.Feat_BrightDBPools_Tech3]: 'ゴシップ検出',
   [ShowcaseStrings.Feat_BrightDBPools_HL1]:
-    'Namespace-prefixed storage keys (poolId:hash) — logical isolation without physical separation',
+    '名前空間プレフィックス付きストレージキー（poolId:hash）— 物理的分離なしの論理的分離',
   [ShowcaseStrings.Feat_BrightDBPools_HL2]:
-    'Per-pool ACLs with Read, Write, Replicate, and Admin permissions enforced at the store layer',
+    'ストレージレイヤーで適用される読み取り、書き込み、レプリケーション、管理権限を持つプールごとのACL',
   [ShowcaseStrings.Feat_BrightDBPools_HL3]:
-    'Pool-scoped XOR whitening: tuples never cross pool boundaries, preserving per-pool plausible deniability',
+    'プールスコープのXORホワイトニング：タプルはプール境界を越えず、プールごとのもっともらしい否認を保持',
   [ShowcaseStrings.Feat_BrightDBPools_HL4]:
-    'Gossip-based pool discovery across peers with configurable query timeouts and caching',
+    '設定可能なクエリタイムアウトとキャッシングを備えたピア間のゴシップベースのプール検出',
   [ShowcaseStrings.Feat_BrightDBPools_HL5]:
-    'Pool bootstrap seeding: generate cryptographic random blocks as whitening material for new pools',
+    'プールブートストラップシーディング：新しいプールのホワイトニング素材として暗号学的ランダムブロックを生成',
   [ShowcaseStrings.Feat_BrightDBPools_HL6]:
-    'Safe deletion validation — checks cross-pool XOR dependencies before removing a pool',
+    '安全な削除検証 — プール削除前にクロスプールXOR依存関係をチェック',
   [ShowcaseStrings.Feat_BrightDBPools_HL7]:
-    'Pool-scoped Bloom filters and manifests for efficient peer reconciliation',
+    '効率的なピア調整のためのプールスコープのBloomフィルターとマニフェスト',
   [ShowcaseStrings.Feat_BrightDBPools_HL8]:
-    'Multi-admin quorum governance: ACL updates require >50% admin signatures',
+    'マルチ管理者クォーラムガバナンス：ACL更新には>50%の管理者署名が必要',
   [ShowcaseStrings.Feat_BrightDBPools_HL9]:
-    'Public read/write flags for open pools, or locked-down member-only access',
+    'オープンプール用のパブリック読み取り/書き込みフラグ、またはメンバー専用のロックダウンアクセス',
   [ShowcaseStrings.Feat_OFFS_Title]: 'Owner-Free File System (OFFS)',
   [ShowcaseStrings.Feat_OFFS_Desc]:
-    'Revolutionary distributed storage that breaks files into blocks and XORs them with random data. No single block contains identifiable content, providing legal immunity for node operators while enabling secure, decentralized file storage.',
-  [ShowcaseStrings.Feat_OFFS_Cat]: 'Storage',
-  [ShowcaseStrings.Feat_OFFS_Tech1]: 'XOR Encryption',
-  [ShowcaseStrings.Feat_OFFS_Tech2]: 'Distributed Storage',
+    'ファイルをブロックに分割しランダムデータとXOR演算する革新的な分散型ストレージ。単一のブロックに識別可能なコンテンツは含まれず、ノードオペレーターに法的免責を提供しながら安全な分散型ファイルストレージを実現します。',
+  [ShowcaseStrings.Feat_OFFS_Cat]: 'ストレージ',
+  [ShowcaseStrings.Feat_OFFS_Tech1]: 'XOR暗号化',
+  [ShowcaseStrings.Feat_OFFS_Tech2]: '分散型ストレージ',
   [ShowcaseStrings.Feat_OFFS_Tech3]: 'SHA-512',
   [ShowcaseStrings.Feat_OFFS_HL1]:
-    'Files split into source blocks and merged with random data via XOR',
+    'ファイルをソースブロックに分割し、XORによりランダムデータと結合',
   [ShowcaseStrings.Feat_OFFS_HL2]:
-    'Original blocks discarded - only randomized blocks stored',
+    '元のブロックは破棄され、ランダム化されたブロックのみが保存',
   [ShowcaseStrings.Feat_OFFS_HL3]:
-    'Constituent Block Lists (CBL) track block relationships',
+    '構成ブロックリスト（CBL）がブロック間の関係を追跡',
   [ShowcaseStrings.Feat_OFFS_HL4]:
-    'Blocks identified by SHA-512 hash - automatic deduplication',
+    'SHA-512ハッシュによるブロック識別 — 自動重複排除',
   [ShowcaseStrings.Feat_OFFS_HL5]:
-    'Multi-use blocks can be part of multiple files simultaneously',
+    'マルチユースブロックは複数のファイルに同時に属することが可能',
   [ShowcaseStrings.Feat_OFFS_HL6]:
-    'Legal protection for node operators - no identifiable content stored',
-  [ShowcaseStrings.Feat_Messaging_Title]: 'Messaging System',
+    'ノードオペレーターの法的保護 — 識別可能なコンテンツは保存されません',
+  [ShowcaseStrings.Feat_Messaging_Title]: 'メッセージングシステム',
   [ShowcaseStrings.Feat_Messaging_Desc]:
-    'Secure, decentralized message passing with encryption, routing, delivery tracking, and gossip protocol for epidemic-style propagation. Built on the block store with WebSocket real-time delivery.',
-  [ShowcaseStrings.Feat_Messaging_Cat]: 'Network',
-  [ShowcaseStrings.Feat_Messaging_Tech1]: 'Gossip Protocol',
+    '暗号化、ルーティング、配信追跡、エピデミック型伝播のためのゴシッププロトコルを備えた安全な分散型メッセージパッシング。WebSocketリアルタイム配信でブロックストア上に構築。',
+  [ShowcaseStrings.Feat_Messaging_Cat]: 'ネットワーク',
+  [ShowcaseStrings.Feat_Messaging_Tech1]: 'ゴシッププロトコル',
   [ShowcaseStrings.Feat_Messaging_Tech2]: 'ECIES',
   [ShowcaseStrings.Feat_Messaging_Tech3]: 'WebSocket',
-  [ShowcaseStrings.Feat_Messaging_Tech4]: 'Bloom Filters',
+  [ShowcaseStrings.Feat_Messaging_Tech4]: 'Bloomフィルター',
   [ShowcaseStrings.Feat_Messaging_HL1]:
-    'Encrypted message passing with per-recipient or shared key encryption',
+    '受信者ごとまたは共有鍵暗号化による暗号化メッセージパッシング',
   [ShowcaseStrings.Feat_Messaging_HL2]:
-    'Epidemic-style gossip propagation with priority-based delivery',
+    '優先度ベースの配信によるエピデミック型ゴシップ伝播',
   [ShowcaseStrings.Feat_Messaging_HL3]:
-    'Automatic retry with exponential backoff for failed deliveries',
+    '配信失敗時の指数バックオフによる自動リトライ',
   [ShowcaseStrings.Feat_Messaging_HL4]:
-    'Bloom filter-based discovery protocol for efficient block location',
+    '効率的なブロック検索のためのBloomフィルターベースの検出プロトコル',
   [ShowcaseStrings.Feat_Messaging_HL5]:
-    'Real-time WebSocket events for message delivery and acknowledgments',
+    'メッセージ配信と確認応答のためのリアルタイムWebSocketイベント',
   [ShowcaseStrings.Feat_Messaging_HL6]:
-    'Persistent delivery tracking with per-recipient status',
+    '受信者ごとのステータスによる永続的な配信追跡',
   [ShowcaseStrings.Feat_BrightMail_Desc]:
-    'RFC 5322/2045 compliant email with threading, BCC privacy, attachments, inbox operations, and delivery tracking. Full email composition, sending, and retrieval built on messaging infrastructure.',
-  [ShowcaseStrings.Feat_BrightMail_Cat]: 'Network',
+    'スレッド化、BCC プライバシー、添付ファイル、受信トレイ操作、配信追跡を備えたRFC 5322/2045準拠の電子メール。メッセージングインフラストラクチャ上に構築された完全な電子メール作成、送信、取得。',
+  [ShowcaseStrings.Feat_BrightMail_Cat]: 'ネットワーク',
   [ShowcaseStrings.Feat_BrightMail_Tech1]: 'RFC 5322',
   [ShowcaseStrings.Feat_BrightMail_Tech2]: 'RFC 2045',
   [ShowcaseStrings.Feat_BrightMail_Tech3]: 'MIME',
-  [ShowcaseStrings.Feat_BrightMail_Tech4]: 'Threading',
+  [ShowcaseStrings.Feat_BrightMail_Tech4]: 'スレッド化',
   [ShowcaseStrings.Feat_BrightMail_HL1]:
-    'RFC-compliant Internet Message Format with MIME support',
+    'MIMEサポート付きRFC準拠インターネットメッセージフォーマット',
   [ShowcaseStrings.Feat_BrightMail_HL2]:
-    'Threading via In-Reply-To and References headers',
+    'In-Reply-ToおよびReferencesヘッダーによるスレッド化',
   [ShowcaseStrings.Feat_BrightMail_HL3]:
-    'BCC privacy with cryptographically separated copies per recipient',
+    '受信者ごとに暗号的に分離されたコピーによるBCCプライバシー',
   [ShowcaseStrings.Feat_BrightMail_HL4]:
-    'Multiple attachments with Content-ID for inline images',
+    'インライン画像用のContent-IDサポート付き複数添付ファイル',
   [ShowcaseStrings.Feat_BrightMail_HL5]:
-    'Inbox operations: query, filter, sort, search with pagination',
+    '受信トレイ操作：クエリ、フィルター、ソート、ページネーション付き検索',
   [ShowcaseStrings.Feat_BrightMail_HL6]:
-    'Per-recipient delivery tracking via gossip acknowledgments',
+    'ゴシップ確認応答による受信者ごとの配信追跡',
   [ShowcaseStrings.Feat_BrightMail_HL7]:
-    'Multiple encryption schemes: ECIES, shared key, S/MIME',
+    '複数の暗号化スキーム：ECIES、共有鍵、S/MIME',
   [ShowcaseStrings.Feat_BrightMail_HL8]:
-    'Digital signatures for sender authentication',
+    '送信者認証のためのデジタル署名',
   [ShowcaseStrings.Feat_BrightMail_HL9]:
-    'Forward/reply with RFC-compliant Resent-* headers',
+    'RFC準拠のResent-*ヘッダーによる転送/返信',
+  [ShowcaseStrings.Feat_BrightCal_Desc]:
+    'BrightMailと統合されたGoogle Calendar競合の共有カレンダーシステム。iCal/CalDAV互換、エンドツーエンド暗号化イベント、細粒度の共有権限、会議予約、競合検出。',
+  [ShowcaseStrings.Feat_BrightCal_Cat]: 'ネットワーク',
+  [ShowcaseStrings.Feat_BrightCal_Tech1]: 'iCal/RFC 5545',
+  [ShowcaseStrings.Feat_BrightCal_Tech2]: 'CalDAV',
+  [ShowcaseStrings.Feat_BrightCal_Tech3]: 'ECIES暗号化',
+  [ShowcaseStrings.Feat_BrightCal_Tech4]: 'iTIP/iMIP',
+  [ShowcaseStrings.Feat_BrightCal_HL1]:
+    'VEVENT、VTODO、VJOURNAL、VFREEBUSYを完全サポートするRFC 5545 iCalendarフォーマット',
+  [ShowcaseStrings.Feat_BrightCal_HL2]:
+    'Apple Calendar、Thunderbird、Androidとのネイティブ同期のためのCalDAVサーバープロトコル',
+  [ShowcaseStrings.Feat_BrightCal_HL3]:
+    'オーナーフリーファイルシステムにECIES暗号化ブロックとして保存されるエンドツーエンド暗号化イベント',
+  [ShowcaseStrings.Feat_BrightCal_HL4]:
+    '細粒度の共有：カレンダーごと・ユーザーごとに空き時間のみ表示、詳細表示、編集、委任',
+  [ShowcaseStrings.Feat_BrightCal_HL5]:
+    'BrightMail統合とRSVP追跡によるiTIP/iMIPでの会議招待',
+  [ShowcaseStrings.Feat_BrightCal_HL6]:
+    '共有カレンダー間の空き時間集約による競合検出と空き状況クエリ',
+  [ShowcaseStrings.Feat_BrightCal_HL7]:
+    '設定可能な空き時間枠、バッファ時間、確認フローを備えた予約ページ',
+  [ShowcaseStrings.Feat_BrightCal_HL8]:
+    'RRULE、EXDATE、および個別オカレンスのオーバーライド処理による繰り返しイベントサポート',
+  [ShowcaseStrings.Feat_BrightCal_HL9]:
+    '自動DST処理とイベントごとのタイムゾーン固定によるマルチタイムゾーン表示',
+  [ShowcaseStrings.Feat_BrightCal_HL10]:
+    'ドラッグ＆ドロップによるリスケジュールとインライン編集を備えた日/週/月/アジェンダUIウィジェット',
   [ShowcaseStrings.Feat_BrightChat_Desc]:
-    'Discord-competitive communication platform with Signal-grade end-to-end encryption. Direct messaging, group chats, and channels with real-time presence, typing indicators, and role-based permissions.',
-  [ShowcaseStrings.Feat_BrightChat_Cat]: 'Network',
-  [ShowcaseStrings.Feat_BrightChat_Tech1]: 'E2E Encryption',
+    'Signal級のエンドツーエンド暗号化を備えたDiscord競合コミュニケーションプラットフォーム。ダイレクトメッセージ、グループチャット、チャンネルにリアルタイムプレゼンス、入力インジケーター、ロールベースの権限を搭載。',
+  [ShowcaseStrings.Feat_BrightChat_Cat]: 'ネットワーク',
+  [ShowcaseStrings.Feat_BrightChat_Tech1]: 'E2E暗号化',
   [ShowcaseStrings.Feat_BrightChat_Tech2]: 'WebSocket',
-  [ShowcaseStrings.Feat_BrightChat_Tech3]: 'Key Rotation',
+  [ShowcaseStrings.Feat_BrightChat_Tech3]: '鍵ローテーション',
   [ShowcaseStrings.Feat_BrightChat_Tech4]: 'RBAC',
   [ShowcaseStrings.Feat_BrightChat_HL1]:
-    'Direct messaging for person-to-person encrypted conversations',
+    '個人間の暗号化会話のためのダイレクトメッセージ',
   [ShowcaseStrings.Feat_BrightChat_HL2]:
-    'Group chats with shared encryption and automatic key rotation',
+    '共有暗号化と自動鍵ローテーションによるグループチャット',
   [ShowcaseStrings.Feat_BrightChat_HL3]:
-    'Channels with four visibility modes: public/private/secret/invisible',
+    'パブリック/プライベート/シークレット/インビジブルの4つの可視性モードを持つチャンネル',
   [ShowcaseStrings.Feat_BrightChat_HL4]:
-    'Real-time presence system: online/offline/idle/DND',
+    'リアルタイムプレゼンスシステム：オンライン/オフライン/アイドル/DND',
   [ShowcaseStrings.Feat_BrightChat_HL5]:
-    'Role-based permissions: Owner/Admin/Moderator/Member',
+    'ロールベースの権限：オーナー/管理者/モデレーター/メンバー',
   [ShowcaseStrings.Feat_BrightChat_HL6]:
-    'Typing indicators, reactions, and message edits via WebSocket',
+    'WebSocketによる入力インジケーター、リアクション、メッセージ編集',
   [ShowcaseStrings.Feat_BrightChat_HL7]:
-    'Time-limited, usage-limited invite tokens for channels',
+    'チャンネル用の時間制限・使用回数制限付き招待トークン',
   [ShowcaseStrings.Feat_BrightChat_HL8]:
-    'Full-text message search within channel history',
+    'チャンネル履歴内の全文メッセージ検索',
   [ShowcaseStrings.Feat_BrightChat_HL9]:
-    'Seamless conversation promotion from DMs to groups',
+    'DMからグループへのシームレスな会話昇格',
   [ShowcaseStrings.Feat_BrightPass_Desc]:
-    '1Password-competitive password keychain with VCBL architecture for efficient encrypted credential storage. TOTP/2FA, breach detection, emergency access, and import from major password managers.',
-  [ShowcaseStrings.Feat_BrightPass_Cat]: 'Identity',
+    '効率的な暗号化資格情報ストレージのためのVCBLアーキテクチャを備えた1Password競合パスワードキーチェーン。TOTP/2FA、侵害検出、緊急アクセス、主要パスワードマネージャーからのインポートに対応。',
+  [ShowcaseStrings.Feat_BrightPass_Cat]: 'アイデンティティ',
   [ShowcaseStrings.Feat_BrightPass_Tech1]: 'VCBL',
   [ShowcaseStrings.Feat_BrightPass_Tech2]: 'TOTP',
   [ShowcaseStrings.Feat_BrightPass_Tech3]: 'AES-256-GCM',
-  [ShowcaseStrings.Feat_BrightPass_Tech4]: 'Shamir Sharing',
+  [ShowcaseStrings.Feat_BrightPass_Tech4]: 'Shamir秘密分散',
   [ShowcaseStrings.Feat_BrightPass_HL1]:
-    'VCBL (Vault Constituent Block List) for efficient encrypted storage',
+    '効率的な暗号化ストレージのためのVCBL（Vault構成ブロックリスト）',
   [ShowcaseStrings.Feat_BrightPass_HL2]:
-    'Multiple entry types: login, secure note, credit card, identity',
+    '複数のエントリタイプ：ログイン、セキュアノート、クレジットカード、アイデンティティ',
   [ShowcaseStrings.Feat_BrightPass_HL3]:
-    'Cryptographically secure password generation with constraints',
+    '制約付きの暗号学的に安全なパスワード生成',
   [ShowcaseStrings.Feat_BrightPass_HL4]:
-    'TOTP/2FA support with QR code generation for authenticators',
+    '認証アプリ用QRコード生成によるTOTP/2FAサポート',
   [ShowcaseStrings.Feat_BrightPass_HL5]:
-    'k-anonymity breach detection via Have I Been Pwned API',
+    'Have I Been Pwned APIによるk-匿名性侵害検出',
   [ShowcaseStrings.Feat_BrightPass_HL6]:
-    'Append-only encrypted audit logging for all vault operations',
+    'すべてのボールト操作の追記専用暗号化監査ログ',
   [ShowcaseStrings.Feat_BrightPass_HL7]:
-    "Emergency access via Shamir's Secret Sharing for recovery",
+    'リカバリのためのShamir秘密分散による緊急アクセス',
   [ShowcaseStrings.Feat_BrightPass_HL8]:
-    'Multi-member vault sharing with ECIES per-recipient encryption',
+    'ECIES受信者ごとの暗号化によるマルチメンバーボールト共有',
   [ShowcaseStrings.Feat_BrightPass_HL9]:
-    'Import from 1Password, LastPass, Bitwarden, Chrome, Firefox, KeePass, Dashlane',
+    '1Password、LastPass、Bitwarden、Chrome、Firefox、KeePass、Dashlaneからのインポート',
   [ShowcaseStrings.Feat_BrightPass_HL10]:
-    'Browser extension autofill API ready',
+    'ブラウザ拡張機能オートフィルAPI対応',
   [ShowcaseStrings.Feat_BrightVote_Desc]:
-    'Privacy-preserving elections using Paillier homomorphic encryption with ECDH-derived keys. Supports 15+ voting methods from simple plurality to complex ranked choice with government compliance features.',
-  [ShowcaseStrings.Feat_BrightVote_Cat]: 'Governance',
-  [ShowcaseStrings.Feat_BrightVote_Tech1]: 'Paillier Encryption',
+    'ECDH導出鍵によるPaillier準同型暗号を使用したプライバシー保護型選挙。単純多数決から複雑な順位選択まで15以上の投票方式をサポートし、政府準拠機能を搭載。',
+  [ShowcaseStrings.Feat_BrightVote_Cat]: 'ガバナンス',
+  [ShowcaseStrings.Feat_BrightVote_Tech1]: 'Paillier暗号',
   [ShowcaseStrings.Feat_BrightVote_Tech2]: 'ECDH',
-  [ShowcaseStrings.Feat_BrightVote_Tech3]: 'Homomorphic Cryptography',
+  [ShowcaseStrings.Feat_BrightVote_Tech3]: '準同型暗号',
   [ShowcaseStrings.Feat_BrightVote_HL1]:
-    'ECDH-to-Paillier bridge derives homomorphic keys from ECDSA/ECDH keys',
+    'ECDSA/ECDH鍵から準同型鍵を導出するECDH-to-Paillierブリッジ',
   [ShowcaseStrings.Feat_BrightVote_HL2]:
-    'Privacy-preserving vote aggregation via homomorphic addition',
+    '準同型加算によるプライバシー保護型投票集約',
   [ShowcaseStrings.Feat_BrightVote_HL3]:
-    '15+ voting methods: Plurality, Approval, Weighted, Borda, Score, Ranked Choice, IRV, STAR, STV, Quadratic, Consensus, etc.',
+    '15以上の投票方式：多数決、承認、加重、ボルダ、スコア、順位選択、IRV、STAR、STV、二次投票、コンセンサスなど',
   [ShowcaseStrings.Feat_BrightVote_HL4]:
-    'Security classifications: fully homomorphic, multi-round, insecure',
+    'セキュリティ分類：完全準同型、マルチラウンド、非セキュア',
   [ShowcaseStrings.Feat_BrightVote_HL5]:
-    'Government compliance: immutable audit logs, public bulletin board, verifiable receipts',
+    '政府準拠：不変監査ログ、公開掲示板、検証可能な受領証',
   [ShowcaseStrings.Feat_BrightVote_HL6]:
-    'Hierarchical aggregation: Precinct → County → State → National',
+    '階層的集約：投票区 → 郡 → 州 → 全国',
   [ShowcaseStrings.Feat_BrightVote_HL7]:
-    '128-bit security level with Miller-Rabin primality testing (256 rounds)',
+    'Miller-Rabin素数判定テスト（256ラウンド）による128ビットセキュリティレベル',
   [ShowcaseStrings.Feat_BrightVote_HL8]:
-    'Cross-platform determinism (Node.js and browser environments)',
+    'クロスプラットフォーム決定論（Node.jsおよびブラウザ環境）',
   [ShowcaseStrings.Feat_BrightVote_HL9]:
-    'Timing attack resistance with constant-time operations',
+    '定数時間演算によるタイミング攻撃耐性',
   [ShowcaseStrings.Feat_BrightHub_Desc]:
-    'Twitter-competitive decentralized social network with unique FontAwesome icon markup syntax. Posts, threads, DMs, connection lists, hubs for privacy, and real-time notifications via WebSocket.',
-  [ShowcaseStrings.Feat_BrightHub_Cat]: 'Network',
+    '独自のFontAwesomeアイコンマークアップ構文を備えたTwitter競合の分散型ソーシャルネットワーク。投稿、スレッド、DM、コネクションリスト、プライバシーのためのハブ、WebSocketによるリアルタイム通知。',
+  [ShowcaseStrings.Feat_BrightHub_Cat]: 'ネットワーク',
   [ShowcaseStrings.Feat_BrightHub_Tech1]: 'WebSocket',
-  [ShowcaseStrings.Feat_BrightHub_Tech2]: 'Real-time Messaging',
-  [ShowcaseStrings.Feat_BrightHub_Tech3]: 'Connection Management',
+  [ShowcaseStrings.Feat_BrightHub_Tech2]: 'リアルタイムメッセージング',
+  [ShowcaseStrings.Feat_BrightHub_Tech3]: 'コネクション管理',
   [ShowcaseStrings.Feat_BrightHub_HL1]:
-    'Posts with 280-char limit, markdown, and unique {{icon}} syntax for FontAwesome',
+    '280文字制限、マークダウン、FontAwesome用の独自{{icon}}構文を持つ投稿',
   [ShowcaseStrings.Feat_BrightHub_HL2]:
-    'Threaded conversations with 10-level nesting and reply hierarchies',
+    '10レベルのネストと返信階層を持つスレッド会話',
   [ShowcaseStrings.Feat_BrightHub_HL3]:
-    'Connection lists, categories, and hubs for organizing relationships',
+    '関係を整理するためのコネクションリスト、カテゴリ、ハブ',
   [ShowcaseStrings.Feat_BrightHub_HL4]:
-    'Direct messaging with read receipts, typing indicators, and reactions',
+    '既読確認、入力インジケーター、リアクション付きダイレクトメッセージ',
   [ShowcaseStrings.Feat_BrightHub_HL5]:
-    'Group conversations (up to 50 participants) with admin roles',
+    '管理者ロール付きグループ会話（最大50人参加）',
   [ShowcaseStrings.Feat_BrightHub_HL6]:
-    'Message requests for non-followers with accept/decline workflow',
+    '非フォロワーからの承認/拒否ワークフロー付きメッセージリクエスト',
   [ShowcaseStrings.Feat_BrightHub_HL7]:
-    'Real-time notifications via WebSocket with smart grouping',
+    'スマートグルーピングによるWebSocketリアルタイム通知',
   [ShowcaseStrings.Feat_BrightHub_HL8]:
-    'Notification preferences: quiet hours, DND mode, per-category settings',
+    '通知設定：静かな時間、DNDモード、カテゴリごとの設定',
   [ShowcaseStrings.Feat_BrightHub_HL9]:
-    'Protected accounts with follow request approval workflow',
+    'フォローリクエスト承認ワークフロー付き保護アカウント',
   [ShowcaseStrings.Feat_BrightHub_HL10]:
-    'Connection insights: strength calculation, mutual connections, suggestions',
+    'コネクションインサイト：強度計算、相互コネクション、提案',
   [ShowcaseStrings.Feat_BrightHub_HL11]:
-    'Hub-based content visibility for private group sharing',
+    'プライベートグループ共有のためのハブベースのコンテンツ可視性',
   [ShowcaseStrings.Feat_BrightHub_HL12]:
-    'Rich text formatting with XSS prevention and emoji support',
-  [ShowcaseStrings.Feat_Anonymity_Title]: 'Brokered Anonymity & BrightTrust',
+    'XSS防止とEmoji対応のリッチテキストフォーマット',
+  [ShowcaseStrings.Feat_Anonymity_Title]: '仲介匿名性とBrightTrust',
   [ShowcaseStrings.Feat_Anonymity_Desc]:
-    "Sophisticated privacy mechanism enabling anonymous operations while maintaining accountability. Identity information encrypted and split using Shamir's Secret Sharing, reconstructable only through majority BrightTrust consensus.",
-  [ShowcaseStrings.Feat_Anonymity_Cat]: 'Governance',
-  [ShowcaseStrings.Feat_Anonymity_Tech1]: "Shamir's Secret Sharing",
-  [ShowcaseStrings.Feat_Anonymity_Tech2]: 'Forward Error Correction',
-  [ShowcaseStrings.Feat_Anonymity_Tech3]: 'BrightTrust Consensus',
+    '説明責任を維持しながら匿名操作を可能にする高度なプライバシーメカニズム。アイデンティティ情報はShamir秘密分散を使用して暗号化・分割され、BrightTrustの多数決コンセンサスによってのみ再構築可能。',
+  [ShowcaseStrings.Feat_Anonymity_Cat]: 'ガバナンス',
+  [ShowcaseStrings.Feat_Anonymity_Tech1]: 'Shamir秘密分散',
+  [ShowcaseStrings.Feat_Anonymity_Tech2]: '前方誤り訂正',
+  [ShowcaseStrings.Feat_Anonymity_Tech3]: 'BrightTrustコンセンサス',
   [ShowcaseStrings.Feat_Anonymity_HL1]:
-    'Post anonymously with encrypted identity backup',
+    '暗号化されたアイデンティティバックアップ付きで匿名投稿',
   [ShowcaseStrings.Feat_Anonymity_HL2]:
-    'Identity shards distributed across ~24 BrightTrust members',
+    'アイデンティティシャードが約24人のBrightTrustメンバーに分散',
   [ShowcaseStrings.Feat_Anonymity_HL3]:
-    'Majority vote required to reconstruct identity information',
+    'アイデンティティ情報の再構築には多数決が必要',
   [ShowcaseStrings.Feat_Anonymity_HL4]:
-    'Time-limited accountability - data expires after statute of limitations',
+    '時限付き説明責任 — 時効後にデータが失効',
   [ShowcaseStrings.Feat_Anonymity_HL5]:
-    'Legal compliance mechanism for FISA warrants and court orders',
+    'FISA令状および裁判所命令のための法的準拠メカニズム',
   [ShowcaseStrings.Feat_Anonymity_HL6]:
-    'Permanent privacy protection after expiration period',
-  [ShowcaseStrings.Feat_Encryption_Title]: 'Advanced Encryption Stack',
+    '失効期間後の永続的プライバシー保護',
+  [ShowcaseStrings.Feat_Encryption_Title]: '高度な暗号化スタック',
   [ShowcaseStrings.Feat_Encryption_Desc]:
-    'State-of-the-art encryption combining ECIES for key derivation with AES-256-GCM for file security. Complete cryptosystem with BIP39/32 authentication and SECP256k1 elliptic curve cryptography.',
-  [ShowcaseStrings.Feat_Encryption_Cat]: 'Cryptography',
+    '鍵導出のためのECIESとファイルセキュリティのためのAES-256-GCMを組み合わせた最先端の暗号化。BIP39/32認証とSECP256k1楕円曲線暗号を備えた完全な暗号システム。',
+  [ShowcaseStrings.Feat_Encryption_Cat]: '暗号技術',
   [ShowcaseStrings.Feat_Encryption_Tech1]: 'ECIES',
   [ShowcaseStrings.Feat_Encryption_Tech2]: 'AES-256-GCM',
   [ShowcaseStrings.Feat_Encryption_Tech3]: 'BIP39/32',
   [ShowcaseStrings.Feat_Encryption_Tech4]: 'SECP256k1',
   [ShowcaseStrings.Feat_Encryption_HL1]:
-    'ECIES encryption with user-specific key derivation',
+    'ユーザー固有の鍵導出によるECIES暗号化',
   [ShowcaseStrings.Feat_Encryption_HL2]:
-    'AES-256-GCM for authenticated file encryption',
+    '認証付きファイル暗号化のためのAES-256-GCM',
   [ShowcaseStrings.Feat_Encryption_HL3]:
-    'BIP39/32 mnemonic-based authentication',
+    'BIP39/32ニーモニックベースの認証',
   [ShowcaseStrings.Feat_Encryption_HL4]:
-    'SECP256k1 elliptic curve (Ethereum-compatible keyspace)',
+    'SECP256k1楕円曲線（Ethereum互換キースペース）',
   [ShowcaseStrings.Feat_Encryption_HL5]:
-    'Verified block-level data integrity with XOR functionality',
+    'XOR機能による検証済みブロックレベルのデータ整合性',
   [ShowcaseStrings.Feat_Encryption_HL6]:
-    'Cross-platform cryptographic operations',
-  [ShowcaseStrings.Feat_Storage_Title]: 'Decentralized Storage Network',
+    'クロスプラットフォーム暗号操作',
+  [ShowcaseStrings.Feat_Storage_Title]: '分散型ストレージネットワーク',
   [ShowcaseStrings.Feat_Storage_Desc]:
-    'Peer-to-peer distributed file system that monetizes unused storage on personal devices. IPFS-like architecture with energy-efficient proof-of-work and reputation-based incentives.',
-  [ShowcaseStrings.Feat_Storage_Cat]: 'Network',
-  [ShowcaseStrings.Feat_Storage_Tech1]: 'P2P Networks',
+    '個人デバイスの未使用ストレージを収益化するP2P分散型ファイルシステム。エネルギー効率の良いProof of Workとレピュテーションベースのインセンティブを備えたIPFS風アーキテクチャ。',
+  [ShowcaseStrings.Feat_Storage_Cat]: 'ネットワーク',
+  [ShowcaseStrings.Feat_Storage_Tech1]: 'P2Pネットワーク',
   [ShowcaseStrings.Feat_Storage_Tech2]: 'DHT',
-  [ShowcaseStrings.Feat_Storage_Tech3]: 'Block Replication',
+  [ShowcaseStrings.Feat_Storage_Tech3]: 'ブロックレプリケーション',
   [ShowcaseStrings.Feat_Storage_HL1]:
-    'Utilize wasted storage space on personal computers and devices',
+    '個人のコンピューターやデバイスの未使用ストレージスペースを活用',
   [ShowcaseStrings.Feat_Storage_HL2]:
-    'Distributed Hash Table (DHT) for efficient block tracking',
+    '効率的なブロック追跡のための分散ハッシュテーブル（DHT）',
   [ShowcaseStrings.Feat_Storage_HL3]:
-    'Configurable block durability and accessibility requirements',
+    '設定可能なブロック耐久性とアクセシビリティ要件',
   [ShowcaseStrings.Feat_Storage_HL4]:
-    'Dynamic replication based on block usefulness and access patterns',
+    'ブロックの有用性とアクセスパターンに基づく動的レプリケーション',
   [ShowcaseStrings.Feat_Storage_HL5]:
-    'Energy-efficient alternative to traditional proof-of-work mining',
+    '従来のProof of Workマイニングに代わるエネルギー効率の良い代替手段',
   [ShowcaseStrings.Feat_Storage_HL6]:
-    'Storage credits and bandwidth compensation for node operators',
-  [ShowcaseStrings.Feat_Sealing_Title]: 'BrightTrust-Based Document Sealing',
+    'ノードオペレーターへのストレージクレジットと帯域幅補償',
+  [ShowcaseStrings.Feat_Sealing_Title]: 'BrightTrustベースのドキュメントシーリング',
   [ShowcaseStrings.Feat_Sealing_Desc]:
-    'Advanced document protection with customizable threshold requirements for access restoration. Groups can seal sensitive information requiring configurable majority consensus to unseal.',
-  [ShowcaseStrings.Feat_Sealing_Cat]: 'Governance',
-  [ShowcaseStrings.Feat_Sealing_Tech1]: 'Threshold Cryptography',
-  [ShowcaseStrings.Feat_Sealing_Tech2]: 'Secret Sharing',
-  [ShowcaseStrings.Feat_Sealing_Tech3]: 'Multi-Party Computation',
+    'アクセス復元のためのカスタマイズ可能な閾値要件を備えた高度なドキュメント保護。グループは設定可能な多数決コンセンサスを必要とする機密情報をシールできます。',
+  [ShowcaseStrings.Feat_Sealing_Cat]: 'ガバナンス',
+  [ShowcaseStrings.Feat_Sealing_Tech1]: '閾値暗号',
+  [ShowcaseStrings.Feat_Sealing_Tech2]: '秘密分散',
+  [ShowcaseStrings.Feat_Sealing_Tech3]: 'マルチパーティ計算',
   [ShowcaseStrings.Feat_Sealing_HL1]:
-    'Seal documents with configurable quorum thresholds (e.g., 3-of-5, 7-of-10)',
+    '設定可能なクォーラム閾値でドキュメントをシール（例：3-of-5、7-of-10）',
   [ShowcaseStrings.Feat_Sealing_HL2]:
-    'Distributed shard storage across trusted BrightTrust members',
+    '信頼されたBrightTrustメンバー間での分散シャードストレージ',
   [ShowcaseStrings.Feat_Sealing_HL3]:
-    'Mathematical guarantee of security until threshold reached',
+    '閾値に達するまでのセキュリティの数学的保証',
   [ShowcaseStrings.Feat_Sealing_HL4]:
-    'Flexible unsealing for legal compliance or group decisions',
+    '法的準拠またはグループ決定のための柔軟なアンシーリング',
   [ShowcaseStrings.Feat_Sealing_HL5]:
-    'Supports organizational governance and compliance workflows',
+    '組織ガバナンスとコンプライアンスワークフローをサポート',
   [ShowcaseStrings.Feat_Sealing_HL6]:
-    'Time-based expiration for automatic privacy protection',
+    '自動プライバシー保護のための時間ベースの失効',
   [ShowcaseStrings.Feat_BrightID_Desc]:
-    'Sophisticated identity management ensuring user privacy and control. Support for registered aliases, anonymous posting, and cryptographic identity verification.',
-  [ShowcaseStrings.Feat_BrightID_Cat]: 'Identity',
-  [ShowcaseStrings.Feat_BrightID_Tech1]: 'Public Key Infrastructure',
+    'ユーザーのプライバシーとコントロールを保証する高度なアイデンティティ管理。登録エイリアス、匿名投稿、暗号学的アイデンティティ検証をサポート。',
+  [ShowcaseStrings.Feat_BrightID_Cat]: 'アイデンティティ',
+  [ShowcaseStrings.Feat_BrightID_Tech1]: '公開鍵基盤',
   [ShowcaseStrings.Feat_BrightID_Tech2]: 'BIP39/32',
-  [ShowcaseStrings.Feat_BrightID_Tech3]: 'Identity Management',
+  [ShowcaseStrings.Feat_BrightID_Tech3]: 'アイデンティティ管理',
   [ShowcaseStrings.Feat_BrightID_HL1]:
-    'BIP39/32 mnemonic-based identity generation',
+    'BIP39/32ニーモニックベースのアイデンティティ生成',
   [ShowcaseStrings.Feat_BrightID_HL2]:
-    'Multiple registered aliases per user account',
+    'ユーザーアカウントごとの複数の登録エイリアス',
   [ShowcaseStrings.Feat_BrightID_HL3]:
-    'Anonymous posting with optional identity recovery',
+    'オプションのアイデンティティリカバリ付き匿名投稿',
   [ShowcaseStrings.Feat_BrightID_HL4]:
-    'Public key-based authentication (SECP256k1)',
+    '公開鍵ベースの認証（SECP256k1）',
   [ShowcaseStrings.Feat_BrightID_HL5]:
-    'Forward Error Correction for identity backup',
+    'アイデンティティバックアップのための前方誤り訂正',
   [ShowcaseStrings.Feat_BrightID_HL6]:
-    'Privacy-preserving identity verification',
-  [ShowcaseStrings.Feat_Reputation_Title]: 'Reputation & Energy Tracking',
+    'プライバシー保護型アイデンティティ検証',
+  [ShowcaseStrings.Feat_Reputation_Title]: 'レピュテーション＆エネルギー追跡',
   [ShowcaseStrings.Feat_Reputation_Desc]:
-    'Revolutionary reputation system that tracks energy costs in Joules. Good actors enjoy minimal proof-of-work requirements while bad actors face increased computational burdens.',
-  [ShowcaseStrings.Feat_Reputation_Cat]: 'Network',
+    'ジュール単位でエネルギーコストを追跡する革新的なレピュテーションシステム。善良なアクターは最小限のProof of Work要件で済み、悪意あるアクターは増大する計算負荷に直面します。',
+  [ShowcaseStrings.Feat_Reputation_Cat]: 'ネットワーク',
   [ShowcaseStrings.Feat_Reputation_Tech1]: 'Proof of Work',
-  [ShowcaseStrings.Feat_Reputation_Tech2]: 'Reputation Systems',
-  [ShowcaseStrings.Feat_Reputation_Tech3]: 'Energy Accounting',
+  [ShowcaseStrings.Feat_Reputation_Tech2]: 'レピュテーションシステム',
+  [ShowcaseStrings.Feat_Reputation_Tech3]: 'エネルギー会計',
   [ShowcaseStrings.Feat_Reputation_HL1]:
-    'Energy costs measured in actual Joules for real-world correlation',
+    '現実世界との相関のためにジュール単位で測定されるエネルギーコスト',
   [ShowcaseStrings.Feat_Reputation_HL2]:
-    'Dynamic proof-of-work based on user reputation',
+    'ユーザーレピュテーションに基づく動的Proof of Work',
   [ShowcaseStrings.Feat_Reputation_HL3]:
-    'Content creators rewarded as their content is consumed',
+    'コンテンツが消費されるとコンテンツ作成者に報酬',
   [ShowcaseStrings.Feat_Reputation_HL4]:
-    'Bad actors throttled with increased computational requirements',
+    '悪意あるアクターは増大する計算要件でスロットリング',
   [ShowcaseStrings.Feat_Reputation_HL5]:
-    'Storage and bandwidth costs tracked and compensated',
+    'ストレージと帯域幅コストの追跡と補償',
   [ShowcaseStrings.Feat_Reputation_HL6]:
-    'Incentivizes positive contributions and quality content',
-  [ShowcaseStrings.Feat_BlockTemp_Title]: 'Block Temperature & Lifecycle',
+    'ポジティブな貢献と質の高いコンテンツにインセンティブ',
+  [ShowcaseStrings.Feat_BlockTemp_Title]: 'ブロック温度＆ライフサイクル',
   [ShowcaseStrings.Feat_BlockTemp_Desc]:
-    "Intelligent block management with hot/cold storage tiers. Frequently accessed blocks stay 'hot' with high replication, while unused blocks cool down and may expire.",
-  [ShowcaseStrings.Feat_BlockTemp_Cat]: 'Storage',
-  [ShowcaseStrings.Feat_BlockTemp_Tech1]: 'Storage Tiering',
-  [ShowcaseStrings.Feat_BlockTemp_Tech2]: 'Block Lifecycle',
-  [ShowcaseStrings.Feat_BlockTemp_Tech3]: 'Access Patterns',
+    'ホット/コールドストレージ階層によるインテリジェントなブロック管理。頻繁にアクセスされるブロックは高レプリケーションで「ホット」に保たれ、未使用のブロックは冷却して失効する場合があります。',
+  [ShowcaseStrings.Feat_BlockTemp_Cat]: 'ストレージ',
+  [ShowcaseStrings.Feat_BlockTemp_Tech1]: 'ストレージ階層化',
+  [ShowcaseStrings.Feat_BlockTemp_Tech2]: 'ブロックライフサイクル',
+  [ShowcaseStrings.Feat_BlockTemp_Tech3]: 'アクセスパターン',
   [ShowcaseStrings.Feat_BlockTemp_HL1]:
-    "'Keep Until At Least' contracts for minimum storage duration",
+    '最小ストレージ期間のための「Keep Until At Least」コントラクト',
   [ShowcaseStrings.Feat_BlockTemp_HL2]:
-    'Block usefulness increases with access, staleness decreases',
+    'アクセスによりブロックの有用性が増加し、陳腐化により減少',
   [ShowcaseStrings.Feat_BlockTemp_HL3]:
-    'Dynamic replication based on access patterns and temperature',
+    'アクセスパターンと温度に基づく動的レプリケーション',
   [ShowcaseStrings.Feat_BlockTemp_HL4]:
-    'Auto-extension of contracts for frequently accessed blocks',
+    '頻繁にアクセスされるブロックのコントラクト自動延長',
   [ShowcaseStrings.Feat_BlockTemp_HL5]:
-    'Energy credits returned for blocks that prove useful',
+    '有用であることが証明されたブロックにエネルギークレジットを返還',
   [ShowcaseStrings.Feat_BlockTemp_HL6]:
-    'Configurable durability and accessibility requirements',
-  [ShowcaseStrings.Feat_ZeroMining_Title]: 'Zero Mining Waste',
+    '設定可能な耐久性とアクセシビリティ要件',
+  [ShowcaseStrings.Feat_ZeroMining_Title]: 'ゼロマイニング廃棄',
   [ShowcaseStrings.Feat_ZeroMining_Desc]:
-    "Built on Ethereum's foundation but engineered without proof-of-work constraints. All computational work serves useful purposes - storage, verification, and network operations.",
-  [ShowcaseStrings.Feat_ZeroMining_Cat]: 'Network',
-  [ShowcaseStrings.Feat_ZeroMining_Tech1]: 'Ethereum Keyspace',
-  [ShowcaseStrings.Feat_ZeroMining_Tech2]: 'Efficient Consensus',
-  [ShowcaseStrings.Feat_ZeroMining_Tech3]: 'Green Blockchain',
+    'Ethereumの基盤上に構築されながらもProof of Workの制約なしに設計。すべての計算作業がストレージ、検証、ネットワーク運用という有用な目的に使われます。',
+  [ShowcaseStrings.Feat_ZeroMining_Cat]: 'ネットワーク',
+  [ShowcaseStrings.Feat_ZeroMining_Tech1]: 'Ethereumキースペース',
+  [ShowcaseStrings.Feat_ZeroMining_Tech2]: '効率的コンセンサス',
+  [ShowcaseStrings.Feat_ZeroMining_Tech3]: 'グリーンブロックチェーン',
   [ShowcaseStrings.Feat_ZeroMining_HL1]:
-    'No wasteful mining - all computation serves useful purposes',
+    '無駄なマイニングなし — すべての計算が有用な目的に使われます',
   [ShowcaseStrings.Feat_ZeroMining_HL2]:
-    'Ethereum-compatible keyspace and cryptography (SECP256k1)',
+    'Ethereum互換キースペースと暗号技術（SECP256k1）',
   [ShowcaseStrings.Feat_ZeroMining_HL3]:
-    'Proof-of-work used only for transaction throttling',
+    'Proof of Workはトランザクションスロットリングにのみ使用',
   [ShowcaseStrings.Feat_ZeroMining_HL4]:
-    'Energy-efficient consensus mechanisms',
+    'エネルギー効率の良いコンセンサスメカニズム',
   [ShowcaseStrings.Feat_ZeroMining_HL5]:
-    'Sustainable blockchain without environmental impact',
+    '環境への影響のない持続可能なブロックチェーン',
   [ShowcaseStrings.Feat_ZeroMining_HL6]:
-    'Focus on storage and computation, not artificial scarcity',
-  [ShowcaseStrings.Feat_CrossPlatform_Title]: 'Cross-Platform Determinism',
+    '人工的希少性ではなくストレージと計算に焦点',
+  [ShowcaseStrings.Feat_CrossPlatform_Title]: 'クロスプラットフォーム決定論',
   [ShowcaseStrings.Feat_CrossPlatform_Desc]:
-    'Identical cryptographic operations across Node.js and browser environments. Deterministic key generation ensures consistent results regardless of platform.',
-  [ShowcaseStrings.Feat_CrossPlatform_Cat]: 'Cryptography',
+    'Node.jsとブラウザ環境で同一の暗号操作。決定論的鍵生成によりプラットフォームに関係なく一貫した結果を保証。',
+  [ShowcaseStrings.Feat_CrossPlatform_Cat]: '暗号技術',
   [ShowcaseStrings.Feat_CrossPlatform_Tech1]: 'Node.js',
-  [ShowcaseStrings.Feat_CrossPlatform_Tech2]: 'Browser Crypto',
-  [ShowcaseStrings.Feat_CrossPlatform_Tech3]: 'Deterministic Algorithms',
+  [ShowcaseStrings.Feat_CrossPlatform_Tech2]: 'ブラウザ暗号',
+  [ShowcaseStrings.Feat_CrossPlatform_Tech3]: '決定論的アルゴリズム',
   [ShowcaseStrings.Feat_CrossPlatform_HL1]:
-    'Unified cryptographic operations across platforms',
+    'プラットフォーム間で統一された暗号操作',
   [ShowcaseStrings.Feat_CrossPlatform_HL2]:
-    'Deterministic random bit generation (HMAC-DRBG)',
+    '決定論的ランダムビット生成（HMAC-DRBG）',
   [ShowcaseStrings.Feat_CrossPlatform_HL3]:
-    'Consistent Paillier key derivation from ECDH keys',
-  [ShowcaseStrings.Feat_CrossPlatform_HL4]: 'Browser and Node.js compatibility',
+    'ECDH鍵からの一貫したPaillier鍵導出',
+  [ShowcaseStrings.Feat_CrossPlatform_HL4]: 'ブラウザとNode.jsの互換性',
   [ShowcaseStrings.Feat_CrossPlatform_HL5]:
-    'Reproducible cryptographic results',
+    '再現可能な暗号結果',
   [ShowcaseStrings.Feat_CrossPlatform_HL6]:
-    'Cross-platform testing and verification',
-  [ShowcaseStrings.Feat_Contracts_Title]: 'Digital Contracts & Governance',
+    'クロスプラットフォームテストと検証',
+  [ShowcaseStrings.Feat_Contracts_Title]: 'デジタルコントラクト＆ガバナンス',
   [ShowcaseStrings.Feat_Contracts_Desc]:
-    'Smart contract capabilities for decentralized applications. BrightTrust-based governance with configurable voting thresholds for network decisions and policy enforcement.',
-  [ShowcaseStrings.Feat_Contracts_Cat]: 'Governance',
-  [ShowcaseStrings.Feat_Contracts_Tech1]: 'Smart Contracts',
-  [ShowcaseStrings.Feat_Contracts_Tech2]: 'Governance',
-  [ShowcaseStrings.Feat_Contracts_Tech3]: 'Voting Systems',
+    '分散型アプリケーションのためのスマートコントラクト機能。ネットワーク決定とポリシー施行のための設定可能な投票閾値を備えたBrightTrustベースのガバナンス。',
+  [ShowcaseStrings.Feat_Contracts_Cat]: 'ガバナンス',
+  [ShowcaseStrings.Feat_Contracts_Tech1]: 'スマートコントラクト',
+  [ShowcaseStrings.Feat_Contracts_Tech2]: 'ガバナンス',
+  [ShowcaseStrings.Feat_Contracts_Tech3]: '投票システム',
   [ShowcaseStrings.Feat_Contracts_HL1]:
-    'Digital contract execution on decentralized network',
+    '分散型ネットワーク上でのデジタルコントラクト実行',
   [ShowcaseStrings.Feat_Contracts_HL2]:
-    'BrightTrust-based decision making for network governance',
+    'ネットワークガバナンスのためのBrightTrustベースの意思決定',
   [ShowcaseStrings.Feat_Contracts_HL3]:
-    'Configurable majority requirements for different actions',
+    '異なるアクションに対する設定可能な多数決要件',
   [ShowcaseStrings.Feat_Contracts_HL4]:
-    'Homomorphic voting for privacy-preserving governance',
-  [ShowcaseStrings.Feat_Contracts_HL5]: 'Reputation-weighted voting mechanisms',
+    'プライバシー保護型ガバナンスのための準同型投票',
+  [ShowcaseStrings.Feat_Contracts_HL5]: 'レピュテーション加重投票メカニズム',
   [ShowcaseStrings.Feat_Contracts_HL6]:
-    'Transparent and auditable governance processes',
-  [ShowcaseStrings.Feat_SecretsJS_Title]: 'Secrets.js (fork)',
+    '透明で監査可能なガバナンスプロセス',
+  [ShowcaseStrings.Feat_SecretsJS_Title]: 'Secrets.js（フォーク）',
   [ShowcaseStrings.Feat_SecretsJS_Desc]:
-    "Enhanced implementation of Shamir's Secret Sharing for secure data splitting and reconstruction. Pure TypeScript with native browser support, cryptographically audited, and optimized for splitting any secret (passwords, keys, files) into threshold-recoverable shares.",
-  [ShowcaseStrings.Feat_SecretsJS_Cat]: 'Cryptography',
-  [ShowcaseStrings.Feat_SecretsJS_Tech1]: "Shamir's Secret Sharing",
-  [ShowcaseStrings.Feat_SecretsJS_Tech2]: 'Data Security',
+    '安全なデータ分割と再構築のためのShamir秘密分散の強化実装。ネイティブブラウザサポート付きの純粋TypeScriptで、暗号監査済み、パスワード・鍵・ファイルなどあらゆる秘密を閾値回復可能なシェアに分割するために最適化。',
+  [ShowcaseStrings.Feat_SecretsJS_Cat]: '暗号技術',
+  [ShowcaseStrings.Feat_SecretsJS_Tech1]: 'Shamir秘密分散',
+  [ShowcaseStrings.Feat_SecretsJS_Tech2]: 'データセキュリティ',
   [ShowcaseStrings.Feat_SecretsJS_Tech3]: 'TypeScript',
   [ShowcaseStrings.Feat_SecretsJS_Tech4]: 'CSPRNG',
   [ShowcaseStrings.Feat_SecretsJS_HL1]:
-    'Divide secrets into n shares with configurable t-of-n threshold recovery',
+    '設定可能なt-of-n閾値回復で秘密をnシェアに分割',
   [ShowcaseStrings.Feat_SecretsJS_HL2]:
-    'Information-theoretically secure - shares below threshold reveal no information',
+    '情報理論的に安全 — 閾値未満のシェアは情報を一切漏洩しません',
   [ShowcaseStrings.Feat_SecretsJS_HL3]:
-    'Cure53 security audit (July 2019) with zero issues found',
+    'Cure53セキュリティ監査（2019年7月）で問題ゼロ',
   [ShowcaseStrings.Feat_SecretsJS_HL4]:
-    'Native browser support without polyfills (crypto.getRandomValues)',
+    'ポリフィル不要のネイティブブラウザサポート（crypto.getRandomValues）',
   [ShowcaseStrings.Feat_SecretsJS_HL5]:
-    'Cross-platform deterministic operations (Node.js and browser)',
+    'クロスプラットフォーム決定論的操作（Node.jsおよびブラウザ）',
   [ShowcaseStrings.Feat_SecretsJS_HL6]:
-    'Full TypeScript support with comprehensive type definitions',
+    '包括的な型定義による完全なTypeScriptサポート',
   [ShowcaseStrings.Feat_SecretsJS_HL7]:
-    'Convert passwords, files, and keys to/from hex with automatic padding',
+    '自動パディング付きでパスワード、ファイル、鍵をhexに変換',
   [ShowcaseStrings.Feat_SecretsJS_HL8]:
-    'Generate new shares dynamically from existing shares',
+    '既存のシェアから動的に新しいシェアを生成',
   [ShowcaseStrings.Feat_SecretsJS_HL9]:
-    'Configurable Galois field (3-20 bits) supporting up to 1,048,575 shares',
+    '設定可能なガロア体（3-20ビット）で最大1,048,575シェアをサポート',
   [ShowcaseStrings.Feat_Burnbag_Desc]:
     'ゼロ知識の安全なストレージと自動フェイルセーフプロトコル。暗号学的消去によりレシピ（マップ＋鍵）を破壊し、散在する暗号化ブロックをトリガー時に永久に復元不可能にします。',
   [ShowcaseStrings.Feat_Burnbag_Cat]: '暗号技術',
@@ -1967,113 +1997,271 @@ export const ShowcaseJapaneseStrings: Partial<
   [ShowcaseStrings.Feat_BrightChart_HL12]:
     'ゼロ知識証明により、完全な病歴を公開せずに保険検証が可能',
 
-  // Remaining (TODO: translate)
-  [ShowcaseStrings.Soup_Time]: 'Time',
+  // Remaining
+  [ShowcaseStrings.Soup_Time]: '時間',
   [ShowcaseStrings.Soup_AlertRetrieveFailed]:
-    'Failed to retrieve file: {ERROR}',
-  [ShowcaseStrings.Soup_AlertUploadCBLOnly]: 'Please upload a .cbl file',
+    'ファイルの取得に失敗しました：{ERROR}',
+  [ShowcaseStrings.Soup_AlertUploadCBLOnly]: '.cblファイルをアップロードしてください',
   [ShowcaseStrings.Soup_AlertCBLLoaded]:
-    'CBL loaded! File: {NAME} ({BLOCKS} blocks). You can now retrieve the file if all blocks are in the soup.',
-  [ShowcaseStrings.Soup_AlertParseCBLFailed]: 'Failed to parse CBL: {ERROR}',
+    'CBLが読み込まれました！ファイル：{NAME}（{BLOCKS}ブロック）。すべてのブロックがスープにあれば、ファイルを取得できます。',
+  [ShowcaseStrings.Soup_AlertParseCBLFailed]: 'CBLの解析に失敗しました：{ERROR}',
   [ShowcaseStrings.Soup_AlertReconstructed]:
-    'File reconstructed successfully! Size: {SIZE} bytes. The file has been downloaded and added to receipts.',
+    'ファイルの再構築に成功しました！サイズ：{SIZE}バイト。ファイルがダウンロードされました。',
   [ShowcaseStrings.Soup_AlertMagnetFailed]:
-    'Failed to process magnet URL: {ERROR}',
-  [ShowcaseStrings.Soup_AlertMessageSent]: 'Message sent and stored in soup!',
-  [ShowcaseStrings.Soup_AlertSendFailed]: 'Failed to send message: {ERROR}',
+    'マグネットURLの処理に失敗しました：{ERROR}',
+  [ShowcaseStrings.Soup_AlertMessageSent]: 'メッセージが送信され、スープに保存されました！',
+  [ShowcaseStrings.Soup_AlertSendFailed]: 'メッセージの送信に失敗しました：{ERROR}',
   [ShowcaseStrings.Soup_AlertMessageRetrieved]:
-    'Message retrieved from soup: {TEXT}',
+    'スープからメッセージを取得しました：{TEXT}',
   [ShowcaseStrings.Soup_AlertRetrieveMessageFailed]:
-    'Failed to retrieve message: {ERROR}',
-  [ShowcaseStrings.Soup_AlertCopied]: 'Magnet URL copied to clipboard!',
-  [ShowcaseStrings.Anim_PauseBtn]: 'Pause Animation',
-  [ShowcaseStrings.Anim_PlayBtn]: 'Play Animation',
-  [ShowcaseStrings.Anim_ResetBtn]: 'Reset Animation',
-  [ShowcaseStrings.Anim_SpeedLabel]: 'Speed: {SPEED}x',
-  [ShowcaseStrings.Anim_PerfTitle]: '🔧 Performance Monitor',
-  [ShowcaseStrings.Anim_PerfFrameRate]: 'Frame Rate:',
-  [ShowcaseStrings.Anim_PerfFrameTime]: 'Frame Time:',
-  [ShowcaseStrings.Anim_PerfDropped]: 'Dropped Frames:',
-  [ShowcaseStrings.Anim_PerfMemory]: 'Memory:',
-  [ShowcaseStrings.Anim_PerfSequences]: 'Sequences:',
-  [ShowcaseStrings.Anim_PerfErrors]: 'Errors:',
-  [ShowcaseStrings.Anim_WhatHappening]: "What's happening:",
-  [ShowcaseStrings.Anim_DurationLabel]: 'Duration:',
-  [ShowcaseStrings.Anim_SizeInfo]: 'Size: {SIZE} bytes | Blocks: {BLOCKS}',
+    'メッセージの取得に失敗しました：{ERROR}',
+  [ShowcaseStrings.Soup_AlertCopied]: 'マグネットURLがクリップボードにコピーされました！',
+  [ShowcaseStrings.Anim_PauseBtn]: 'アニメーションを一時停止',
+  [ShowcaseStrings.Anim_PlayBtn]: 'アニメーションを再生',
+  [ShowcaseStrings.Anim_ResetBtn]: 'アニメーションをリセット',
+  [ShowcaseStrings.Anim_SpeedLabel]: '速度：{SPEED}x',
+  [ShowcaseStrings.Anim_PerfTitle]: '🔧 パフォーマンスモニター',
+  [ShowcaseStrings.Anim_PerfFrameRate]: 'フレームレート：',
+  [ShowcaseStrings.Anim_PerfFrameTime]: 'フレーム時間：',
+  [ShowcaseStrings.Anim_PerfDropped]: 'ドロップフレーム：',
+  [ShowcaseStrings.Anim_PerfMemory]: 'メモリ：',
+  [ShowcaseStrings.Anim_PerfSequences]: 'シーケンス：',
+  [ShowcaseStrings.Anim_PerfErrors]: 'エラー：',
+  [ShowcaseStrings.Anim_WhatHappening]: '実行中の処理：',
+  [ShowcaseStrings.Anim_DurationLabel]: '所要時間：',
+  [ShowcaseStrings.Anim_SizeInfo]: 'サイズ：{SIZE}バイト | ブロック：{BLOCKS}',
 
-  // Educational/Encoding (TODO: translate)
-  [ShowcaseStrings.Edu_CloseTooltip]: 'Close tooltip',
-  [ShowcaseStrings.Edu_WhatsHappening]: "🔍 What's Happening",
-  [ShowcaseStrings.Edu_WhyItMatters]: '💡 Why It Matters',
-  [ShowcaseStrings.Edu_TechnicalDetails]: '⚙️ Technical Details',
-  [ShowcaseStrings.Edu_RelatedConcepts]: '🔗 Related Concepts',
-  [ShowcaseStrings.Edu_VisualCues]: '👁️ Visual Cues',
-  [ShowcaseStrings.Edu_GetHelp]: 'Get help with this step',
-  [ShowcaseStrings.Edu_UnderstandContinue]: '✅ I Understand - Continue',
-  [ShowcaseStrings.Edu_SkipStep]: '⏭️ Skip This Step',
-  [ShowcaseStrings.Edu_GlossaryTitle]: '📚 BrightChain Concept Glossary',
-  [ShowcaseStrings.Edu_CloseGlossary]: 'Close glossary',
-  [ShowcaseStrings.Edu_BackToGlossary]: '← Back to Glossary',
-  [ShowcaseStrings.Edu_Definition]: 'Definition',
-  [ShowcaseStrings.Edu_TechnicalDefinition]: 'Technical Definition',
-  [ShowcaseStrings.Edu_Examples]: 'Examples',
-  [ShowcaseStrings.Edu_RelatedTerms]: 'Related Terms',
-  [ShowcaseStrings.Edu_SearchPlaceholder]: 'Search concepts...',
-  [ShowcaseStrings.Edu_ProcessOverview]: 'Process Overview',
-  [ShowcaseStrings.Edu_WhatWeAccomplished]: 'What We Accomplished',
-  [ShowcaseStrings.Edu_TechnicalOutcomes]: 'Technical Outcomes',
-  [ShowcaseStrings.Edu_WhatsNext]: "What's Next?",
-  [ShowcaseStrings.Edu_LearningProgress]: 'Learning Progress',
+  // Educational/Encoding
+  [ShowcaseStrings.Edu_CloseTooltip]: 'ツールチップを閉じる',
+  [ShowcaseStrings.Edu_WhatsHappening]: '🔍 何が起きているか',
+  [ShowcaseStrings.Edu_WhyItMatters]: '💡 なぜ重要か',
+  [ShowcaseStrings.Edu_TechnicalDetails]: '⚙️ 技術的詳細',
+  [ShowcaseStrings.Edu_RelatedConcepts]: '🔗 関連概念',
+  [ShowcaseStrings.Edu_VisualCues]: '👁️ 視覚的手がかり',
+  [ShowcaseStrings.Edu_GetHelp]: 'このステップのヘルプを取得',
+  [ShowcaseStrings.Edu_UnderstandContinue]: '✅ 理解しました - 続行',
+  [ShowcaseStrings.Edu_SkipStep]: '⏭️ このステップをスキップ',
+  [ShowcaseStrings.Edu_GlossaryTitle]: '📚 BrightChain概念用語集',
+  [ShowcaseStrings.Edu_CloseGlossary]: '用語集を閉じる',
+  [ShowcaseStrings.Edu_BackToGlossary]: '← 用語集に戻る',
+  [ShowcaseStrings.Edu_Definition]: '定義',
+  [ShowcaseStrings.Edu_TechnicalDefinition]: '技術的定義',
+  [ShowcaseStrings.Edu_Examples]: '例',
+  [ShowcaseStrings.Edu_RelatedTerms]: '関連用語',
+  [ShowcaseStrings.Edu_SearchPlaceholder]: '概念を検索...',
+  [ShowcaseStrings.Edu_ProcessOverview]: 'プロセス概要',
+  [ShowcaseStrings.Edu_WhatWeAccomplished]: '達成したこと',
+  [ShowcaseStrings.Edu_TechnicalOutcomes]: '技術的成果',
+  [ShowcaseStrings.Edu_WhatsNext]: '次は何？',
+  [ShowcaseStrings.Edu_LearningProgress]: '学習進捗',
   [ShowcaseStrings.Edu_StepsCompleted]:
-    '{COMPLETED} of {TOTAL} steps completed',
-  [ShowcaseStrings.Enc_Title]: '🎬 File Encoding Animation',
+    '{COMPLETED}/{TOTAL}ステップ完了',
+  [ShowcaseStrings.Enc_Title]: '🎬 ファイルエンコーディングアニメーション',
   [ShowcaseStrings.Enc_Subtitle]:
-    'Watch as your file is transformed into BrightChain blocks',
-  [ShowcaseStrings.Enc_ChunksTitle]: '📦 File Chunks ({COUNT})',
+    'ファイルがBrightChainブロックに変換される様子をご覧ください',
+  [ShowcaseStrings.Enc_ChunksTitle]: '📦 ファイルチャンク（{COUNT}）',
   [ShowcaseStrings.Enc_ChunksSubtitle]:
-    'Each chunk will become a block in the soup',
-  [ShowcaseStrings.Enc_EduWhatsHappening]: "🎓 What's Happening Now",
-  [ShowcaseStrings.Enc_TechDetails]: 'Technical Details:',
-  [ShowcaseStrings.Enc_BlockSizeInfo]: 'Block size: {SIZE} bytes',
-  [ShowcaseStrings.Enc_ExpectedChunks]: 'Expected chunks: {COUNT}',
+    '各チャンクはスープ内の1ブロックになります',
+  [ShowcaseStrings.Enc_EduWhatsHappening]: '🎓 今何が起きているか',
+  [ShowcaseStrings.Enc_TechDetails]: '技術的詳細：',
+  [ShowcaseStrings.Enc_BlockSizeInfo]: 'ブロックサイズ：{SIZE}バイト',
+  [ShowcaseStrings.Enc_ExpectedChunks]: '予想チャンク数：{COUNT}',
   [ShowcaseStrings.Enc_ChunkBecomesBlock]:
-    'Each chunk becomes one block in the soup',
-  [ShowcaseStrings.Enc_WhyPadding]: 'Why Padding?',
-  [ShowcaseStrings.Enc_PaddingSameSize]: 'All blocks must be the same size',
+    '各チャンクはスープ内の1ブロックになります',
+  [ShowcaseStrings.Enc_WhyPadding]: 'なぜパディングが必要？',
+  [ShowcaseStrings.Enc_PaddingSameSize]: 'すべてのブロックは同じサイズでなければなりません',
   [ShowcaseStrings.Enc_PaddingPreventsAnalysis]:
-    'Random padding prevents data analysis',
+    'ランダムパディングがデータ分析を防止します',
   [ShowcaseStrings.Enc_PaddingRemoved]:
-    'Padding is removed during reconstruction',
-  [ShowcaseStrings.Enc_ChecksumPurpose]: 'Checksum Purpose:',
-  [ShowcaseStrings.Enc_EnsuresIntegrity]: 'Ensures data integrity',
-  [ShowcaseStrings.Enc_UniqueIdentifier]: 'Used as unique block identifier',
+    'パディングは再構築時に除去されます',
+  [ShowcaseStrings.Enc_ChecksumPurpose]: 'チェックサムの目的：',
+  [ShowcaseStrings.Enc_EnsuresIntegrity]: 'データの整合性を保証します',
+  [ShowcaseStrings.Enc_UniqueIdentifier]: '一意のブロック識別子として使用されます',
   [ShowcaseStrings.Enc_EnablesVerification]:
-    'Enables verification during retrieval',
+    '取得時の検証を可能にします',
 
-  // ProcessCompletionSummary (TODO)
-  [ShowcaseStrings.Edu_KeyLearningPoints]: '🧠 Key Learning Points',
-  [ShowcaseStrings.Edu_CloseSummary]: 'Close summary',
-  [ShowcaseStrings.Edu_Overview]: 'Overview',
-  [ShowcaseStrings.Edu_Achievements]: 'Achievements',
-  [ShowcaseStrings.Edu_Technical]: 'Technical',
-  [ShowcaseStrings.Edu_NextSteps]: 'Next Steps',
-  [ShowcaseStrings.Edu_Previous]: '← Previous',
-  [ShowcaseStrings.Edu_Next]: 'Next →',
-  [ShowcaseStrings.Edu_Finish]: 'Finish',
+  // ProcessCompletionSummary
+  [ShowcaseStrings.Edu_KeyLearningPoints]: '🧠 重要な学習ポイント',
+  [ShowcaseStrings.Edu_CloseSummary]: 'サマリーを閉じる',
+  [ShowcaseStrings.Edu_Overview]: '概要',
+  [ShowcaseStrings.Edu_Achievements]: '達成事項',
+  [ShowcaseStrings.Edu_Technical]: '技術',
+  [ShowcaseStrings.Edu_NextSteps]: '次のステップ',
+  [ShowcaseStrings.Edu_Previous]: '← 前へ',
+  [ShowcaseStrings.Edu_Next]: '次へ →',
+  [ShowcaseStrings.Edu_Finish]: '完了',
 
-  // EducationalModeControls (TODO)
-  [ShowcaseStrings.Edu_EducationalMode]: '🎓 Educational Mode',
-  [ShowcaseStrings.Edu_AnimationSpeed]: 'Animation Speed:',
-  [ShowcaseStrings.Edu_SpeedVerySlow]: '0.25x (Very Slow)',
-  [ShowcaseStrings.Edu_SpeedSlow]: '0.5x (Slow)',
-  [ShowcaseStrings.Edu_SpeedModerate]: '0.75x (Moderate)',
-  [ShowcaseStrings.Edu_SpeedNormal]: '1x (Normal)',
-  [ShowcaseStrings.Edu_SpeedFast]: '1.5x (Fast)',
-  [ShowcaseStrings.Edu_SpeedVeryFast]: '2x (Very Fast)',
-  [ShowcaseStrings.Edu_StepByStep]: 'Step-by-Step Mode',
-  [ShowcaseStrings.Edu_ShowTooltips]: 'Show Tooltips',
-  [ShowcaseStrings.Edu_ShowExplanations]: 'Show Explanations',
-  [ShowcaseStrings.Edu_AutoAdvance]: 'Auto Advance Steps',
+  // EducationalModeControls
+  [ShowcaseStrings.Edu_EducationalMode]: '🎓 教育モード',
+  [ShowcaseStrings.Edu_AnimationSpeed]: 'アニメーション速度：',
+  [ShowcaseStrings.Edu_SpeedVerySlow]: '0.25x（非常に遅い）',
+  [ShowcaseStrings.Edu_SpeedSlow]: '0.5x（遅い）',
+  [ShowcaseStrings.Edu_SpeedModerate]: '0.75x（普通）',
+  [ShowcaseStrings.Edu_SpeedNormal]: '1x（通常）',
+  [ShowcaseStrings.Edu_SpeedFast]: '1.5x（速い）',
+  [ShowcaseStrings.Edu_SpeedVeryFast]: '2x（非常に速い）',
+  [ShowcaseStrings.Edu_StepByStep]: 'ステップバイステップモード',
+  [ShowcaseStrings.Edu_ShowTooltips]: 'ツールチップを表示',
+  [ShowcaseStrings.Edu_ShowExplanations]: '説明を表示',
+  [ShowcaseStrings.Edu_AutoAdvance]: 'ステップを自動進行',
+
+  // Privacy Policy Page
+  [ShowcaseStrings.PP_Title]: 'プライバシーポリシー',
+  [ShowcaseStrings.PP_LastUpdated]: '最終更新日：2026年4月20日',
+  [ShowcaseStrings.PP_BackToHome]: '← ホームに戻る',
+
+  // Section 1: Introduction
+  [ShowcaseStrings.PP_S1_Title]: '1. はじめに',
+  [ShowcaseStrings.PP_S1_P1]:
+    'BrightChainは、501(c)(3)非営利団体であるDigital Defiance（「当社」）が運営するオープンソースの分散型プラットフォームです。本プライバシーポリシーは、BrightChainプラットフォーム、ウェブサイト、アプリケーション、および関連サービス（総称して「サービス」）をご利用の際に、当社がどのように情報を収集、使用、保存、開示するかを説明します。',
+  [ShowcaseStrings.PP_S1_P2]:
+    'サービスにアクセスまたは使用することにより、お客様は本プライバシーポリシーを読み、理解し、これに拘束されることに同意したものとみなされます。同意されない場合は、サービスを使用しないでください。',
+
+  // Section 2: How BrightChain Works
+  [ShowcaseStrings.PP_S2_Title]:
+    '2. BrightChainの仕組み — アーキテクチャの背景',
+  [ShowcaseStrings.PP_S2_P1]:
+    'BrightChainは、オーナーフリーファイルシステム（OFF）モデルに基づいて構築されています。ネットワークに保存されるすべてのデータは固定サイズのブロックに分割され、暗号学的にランダムなブロックとXOR演算（「TUPLEホワイトニング」と呼ばれるプロセス）が行われ、参加ノード間に分散されます。その結果：',
+  [ShowcaseStrings.PP_S2_Li1]:
+    '個々のブロックはランダムデータと区別がつかず、構成ブロックの完全なセットと対応する構成ブロックリスト（CBL）がなければ読み取ることができません。',
+  [ShowcaseStrings.PP_S2_Li2]:
+    'データはオプションで楕円曲線統合暗号化方式（ECIES）とAES-256-GCMを使用して暗号化でき、TUPLEホワイトニングによる合理的否認性に加えて、受信者ごとの機密性を提供します。',
+  [ShowcaseStrings.PP_S2_Li3]:
+    'ノードオペレーター（Digital Defianceを含む）は、一般的にネットワークに保存された個々のブロックの内容、所有権、または性質を判断することができません。',
+  [ShowcaseStrings.PP_S2_P2]:
+    'このアーキテクチャは、本ポリシーに記載されているプライバシー保護が、多くの場合、ポリシーだけでなく数学によって強制されることを意味します。',
+
+  // Section 3: Information We Collect
+  [ShowcaseStrings.PP_S3_Title]: '3. 当社が収集する情報',
+  [ShowcaseStrings.PP_S3_1_Title]: '3.1 アカウント情報',
+  [ShowcaseStrings.PP_S3_1_P1]:
+    'BrightChainアカウントを作成する際、ユーザー名、メールアドレス、および公開暗号鍵（BIP39ニーモニックから派生）を収集します。ニーモニックフレーズや秘密鍵は収集、保存、またはアクセスしません。',
+  [ShowcaseStrings.PP_S3_2_Title]: '3.2 ユーザー生成コンテンツ',
+  [ShowcaseStrings.PP_S3_2_P1]:
+    'ネットワークに保存するファイル、メッセージ、資格情報、その他のコンテンツは、TUPLEホワイトニングされたブロックに分割されます。当社にはこのコンテンツを読み取り、再構築、または検査する能力がありません。オプションのECIES暗号化を使用する場合、コンテンツは特定の受信者向けにさらに暗号化され、対応する秘密鍵がなければ当社を含む誰もアクセスできません。',
+  [ShowcaseStrings.PP_S3_3_Title]: '3.3 自動的に収集される情報',
+  [ShowcaseStrings.PP_S3_3_P1]:
+    '当社のウェブベースのサービスとやり取りする際、IPアドレス、ブラウザの種類、参照URL、訪問したページ、タイムスタンプなどの標準的なサーバーログデータを自動的に収集する場合があります。この情報は運用目的（セキュリティ監視、不正使用防止、サービスの信頼性）のみに使用され、90日以内に保持されます。',
+  [ShowcaseStrings.PP_S3_4_Title]: '3.4 ブロックチェーン台帳エントリ',
+  [ShowcaseStrings.PP_S3_4_P1]:
+    '特定の操作（ボールト作成、ボールト読み取り、ボールト破棄、ガバナンス投票）は、追記専用のブロックチェーン台帳に記録されます。これらのエントリには、操作タイプ、タイムスタンプ、暗号ハッシュが含まれますが、基礎データの内容は含まれません。台帳エントリは設計上不変であり、削除できません。',
+
+  // Section 4: How We Use Information
+  [ShowcaseStrings.PP_S4_Title]: '4. 情報の使用方法',
+  [ShowcaseStrings.PP_S4_P1]: '当社は収集した情報を以下の目的で使用します：',
+  [ShowcaseStrings.PP_S4_Li1]: 'サービスの提供、維持、改善',
+  [ShowcaseStrings.PP_S4_Li2]: 'ユーザーの認証とアカウント管理',
+  [ShowcaseStrings.PP_S4_Li3]: '詐欺、不正使用、セキュリティインシデントの検出と防止',
+  [ShowcaseStrings.PP_S4_Li4]: '適用される法的義務の遵守',
+  [ShowcaseStrings.PP_S4_Li5]:
+    'サービスに関するお客様とのコミュニケーション（例：サービスのお知らせ、セキュリティアラート）',
+  [ShowcaseStrings.PP_S4_P2]:
+    '当社はお客様の個人情報を第三者に販売、貸与、または取引しません。お客様のデータを広告やプロファイリングに使用しません。',
+
+  // Section 5: Data Storage and Security
+  [ShowcaseStrings.PP_S5_Title]: '5. データの保存とセキュリティ',
+  [ShowcaseStrings.PP_S5_P1]:
+    'ユーザー生成コンテンツは、分散型ネットワーク全体に分散されたTUPLEホワイトニングブロックとして保存されます。アカウントメタデータ（ユーザー名、メール、公開鍵）は、保存時および転送時の暗号化を含む業界標準のセキュリティ対策を備えた運用データベースに保存されます。',
+  [ShowcaseStrings.PP_S5_P2]:
+    'データがホワイトニングされたブロックとして保存されネットワークに分散されると、他の参加者のデータがXORホワイトニングプロセスを通じて同じブロックに依存する場合があります。これは、個々のブロックを削除すると他のユーザーのデータに影響を与える可能性があるため、技術的に不可能な場合があることを意味します。ただし、ファイルの再構築にはConstituent Block List（CBL）——ブロック識別子の順序付きレシピ——が必要です。CBLがなければ、分散ブロックは計算上ランダムデータと区別がつかず、再組み立てできません。CBLを削除または破壊するだけで、基礎となるデータを永久にアクセス不能にすることができます。',
+  [ShowcaseStrings.PP_S5_P3]:
+    'CBLはアプリケーションに応じてさまざまな場所に保存される場合があります。Digital BurnbagはBrightDBに裏付けられたボールトシステム内にCBLを保存します。ユーザーはMagnetURL参照としてCBLを保持することもできます。すべての場合において、CBLの破壊——保存場所に関係なく——が、基礎となるブロックがネットワーク上に残存していても、データ消去の有効なメカニズムです。',
+
+  // Section 6: Cryptographic Protections
+  [ShowcaseStrings.PP_S6_Title]: '6. 暗号保護と制限',
+  [ShowcaseStrings.PP_S6_P1]:
+    'BrightChainは、SHA3-512ハッシュ、secp256k1を使用したECIES、AES-256-GCM対称暗号化、HMAC-SHA3-512シール、プライバシー保護投票のためのPaillier準同型暗号化を含む強力な暗号保護を採用しています。これらの保護はプロトコルによって強制され、当社の協力や善意に依存しません。',
+  [ShowcaseStrings.PP_S6_P2]:
+    '正しく使用すれば、BrightChainは非常に強力なプライバシー保護を提供できます。ただし、特定の暗号アルゴリズムが無期限に安全であり続けることを保証するものではありません。コンピューティングの進歩（量子コンピューティングを含む）は、現在の暗号プリミティブのセキュリティに影響を与える可能性があります。ユーザーは、利用可能な保護を理解し、それに応じてサービスの使用を設定する責任があります。',
+
+  // Section 7: Law Enforcement
+  [ShowcaseStrings.PP_S7_Title]: '7. 法執行機関と法的要請',
+  [ShowcaseStrings.PP_S7_P1]:
+    'Digital Defianceはネットワークキャリアおよびインフラストラクチャプロバイダーとして運営しています。技術的に実行可能な範囲で、管轄裁判所が発行した召喚状、裁判所命令、捜索令状を含む有効な法的手続きに従います。',
+  [ShowcaseStrings.PP_S7_P2]:
+    'ただし、BrightChainのアーキテクチャ設計により：',
+  [ShowcaseStrings.PP_S7_Li1]:
+    'TUPLEホワイトニングされたブロックとして保存されたユーザー生成データの内容は、そのデータを再構築または復号するために必要なCBLまたは復号鍵を保有していないため、一般的に提供できません。',
+  [ShowcaseStrings.PP_S7_Li2]:
+    'アカウントメタデータ（ユーザー名、メール、公開鍵）およびサーバーログデータは、保持している範囲で提供できます。',
+  [ShowcaseStrings.PP_S7_Li3]:
+    'ブロックチェーン台帳エントリは不変であり、有効な法的手続きに応じて提供される場合があります。',
+  [ShowcaseStrings.PP_S7_Li4]:
+    'Digital Burnbagボールトが暗号学的に破棄された場合、破棄証明が唯一の残存アーティファクトです。これはデータが消失したことを証明するものであり、データの内容を証明するものではありません。',
+  [ShowcaseStrings.PP_S7_P3]:
+    '法律で許可される範囲で、影響を受けるユーザーに法的要請について通知します。過度に広範、法的に不十分、またはその他不適切と考える法的要請に異議を申し立てる権利を留保します。',
+
+  // Section 8: Brokered Anonymity
+  [ShowcaseStrings.PP_S8_Title]: '8. 仲介匿名性',
+  [ShowcaseStrings.PP_S8_P1]:
+    'BrightChainは「仲介匿名性」プロトコルをサポートしており、ユーザーの実際の身元をShamirの秘密分散を使用して封印し、BrightTrustガバナンスメンバー間に分散できます。身元の回復にはBrightTrustメンバーの閾値投票が必要であり、設定可能な時効の対象となります。時効後、身元の断片は永久に削除され、実際の身元は回復不能になります。このメカニズムは、集団ガバナンスの下でプライバシーと説明責任のバランスを取るように設計されています。',
+
+  // Section 9: Third-Party Services
+  [ShowcaseStrings.PP_S9_Title]: '9. サードパーティサービス',
+  [ShowcaseStrings.PP_S9_P1]:
+    '特定の機能（カナリアプロトコルのアクティビティ監視など）は、サードパーティサービス（GitHub、Fitbit、Slackなど）と統合される場合があります。これらの統合の使用は、それぞれのサードパーティのプライバシーポリシーに準拠します。要求された機能を提供するために必要な最小限の情報のみにアクセスし（例：デッドマンスイッチ監視のための最近のアクティビティタイムスタンプ）、サードパーティの資格情報をサーバーに保存しません。認証はいつでも取り消し可能なOAuthトークンを介して処理されます。',
+
+  // Section 10: Children's Privacy
+  [ShowcaseStrings.PP_S10_Title]: '10. 子供のプライバシー',
+  [ShowcaseStrings.PP_S10_P1]:
+    'サービスは13歳未満の子供（またはお客様の管轄区域で適用されるデジタル同意年齢）を対象としていません。子供から故意に個人情報を収集することはありません。子供の個人情報を収集したことが判明した場合、速やかにその情報を削除する措置を講じます。',
+
+  // Section 11: International Users
+  [ShowcaseStrings.PP_S11_Title]: '11. 海外ユーザー',
+  [ShowcaseStrings.PP_S11_P1]:
+    'Digital Defianceは米国に拠点を置いています。米国外からサービスにアクセスする場合、お客様の情報は米国または当社のインフラストラクチャが運用されている他の管轄区域に転送、保存、処理される場合があります。サービスを使用することにより、そのような転送と処理に同意したものとみなされます。',
+  [ShowcaseStrings.PP_S11_1_Title]:
+    '11.1 欧州経済領域（EEA）および英国',
+  [ShowcaseStrings.PP_S11_1_P1]:
+    'EEAまたは英国にお住まいの場合、一般データ保護規則（GDPR）または英国GDPRに基づく権利を有する場合があります。これには、個人データへのアクセス、訂正、消去、処理の制限、ポータビリティの権利、および処理に異議を唱える権利が含まれます。これらの権利を行使するには、以下の住所までお問い合わせください。特定のデータ（ブロックチェーン台帳エントリ、分散TUPLEブロック）は、システムの分散型で不変の性質により、技術的に消去が不可能な場合があることにご注意ください。BrightChainの証明可能な破棄機能（Digital Burnbagを介して）は、ユーザー管理データのGDPR第17条消去権コンプライアンスをサポートするように設計されています。',
+
+  // Section 12: Data Retention
+  [ShowcaseStrings.PP_S12_Title]: '12. データ保持',
+  [ShowcaseStrings.PP_S12_P1]:
+    'アカウントメタデータは、アカウントがアクティブである限り、またはサービスの提供に必要な限り保持されます。サーバーログは最大90日間保持されます。ブロックチェーン台帳エントリは、不変台帳の一部として無期限に保持されます。TUPLEホワイトニングされたブロックは、ストレージ契約条件とエネルギーバランス経済に従ってネットワーク上に保持されます。ストレージ契約が期限切れで更新されないブロックは、ノードによってガベージコレクションされる場合があります。',
+
+  // Section 13: Disclaimer
+  [ShowcaseStrings.PP_S13_Title]: '13. 保証の免責および責任の制限',
+  [ShowcaseStrings.PP_S13_P1]:
+    'サービスは、商品性、特定目的への適合性、権原、および非侵害の黙示的保証を含むがこれに限定されない、明示的、黙示的、または法定のいかなる種類の保証もなく、「現状のまま」および「利用可能な状態で」提供されます。',
+  [ShowcaseStrings.PP_S13_P2]:
+    'DIGITAL DEFIANCE、その役員、取締役、従業員、ボランティア、および貢献者（JESSICA MULEINを含む）は、（A）サービスへのアクセスもしくは使用またはアクセスもしくは使用の不能、（B）サービス上の第三者の行為またはコンテンツ、（C）サービスから取得したコンテンツ、（D）お客様の送信またはコンテンツへの不正アクセス、使用、または改変、または（E）暗号メカニズムの障害に起因する間接的、付随的、特別、結果的、または懲罰的損害、または利益、データ、使用、のれん、またはその他の無形の損失について、保証、契約、不法行為（過失を含む）、またはその他の法理論に基づくかどうかにかかわらず、そのような損害の可能性について通知されていたかどうかにかかわらず、責任を負いません。',
+  [ShowcaseStrings.PP_S13_P3]:
+    'いかなる場合も、サービスに関連するすべての請求に対するDIGITAL DEFIANCEおよびその役員、取締役、従業員、ボランティア、および貢献者の総責任は、100米ドル（100.00米ドル）または請求に先立つ12か月間にお客様が当社に支払った金額のいずれか大きい方を超えないものとします。',
+  [ShowcaseStrings.PP_S13_P4]:
+    '一部の管轄区域では、特定の保証または責任の除外または制限が認められていません。そのような管轄区域では、当社の責任は法律で許可される最大限の範囲に制限されます。',
+
+  // Section 14: Indemnification
+  [ShowcaseStrings.PP_S14_Title]: '14. 補償',
+  [ShowcaseStrings.PP_S14_P1]:
+    'お客様は、サービスへのアクセスまたは使用、本プライバシーポリシーの違反、または適用法もしくは第三者の権利の違反に起因するまたは何らかの形で関連するすべての請求、責任、損害、損失、費用、および経費（合理的な弁護士費用を含む）について、Digital Defiance、その役員、取締役、従業員、ボランティア、および貢献者（Jessica Muleinを含む）を補償し、防御し、免責することに同意します。',
+
+  // Section 15: Governing Law
+  [ShowcaseStrings.PP_S15_Title]: '15. 準拠法および紛争解決',
+  [ShowcaseStrings.PP_S15_P1]:
+    '本プライバシーポリシーは、法の抵触に関する規定にかかわらず、米国ワシントン州の法律に準拠し、これに従って解釈されます。本プライバシーポリシーまたはサービスに起因するまたは関連する紛争は、ワシントン州キング郡に所在する州または連邦裁判所で排他的に解決されるものとし、お客様はそのような裁判所の対人管轄権に同意します。',
+
+  // Section 16: Open Source
+  [ShowcaseStrings.PP_S16_Title]: '16. オープンソース',
+  [ShowcaseStrings.PP_S16_P1_Before]:
+    'BrightChainはオープンソースソフトウェアです。ソースコードは以下で公開されています：',
+  [ShowcaseStrings.PP_S16_P1_LinkText]:
+    'github.com/Digital-Defiance/BrightChain',
+  [ShowcaseStrings.PP_S16_P1_After]:
+    '。本ポリシーに記載されているプライバシー特性を検証するためにコードを確認することをお勧めします。本書に記載されている暗号保護はコードベースに実装されており、検査によって検証可能です。',
+
+  // Section 17: Changes
+  [ShowcaseStrings.PP_S17_Title]: '17. 本ポリシーの変更',
+  [ShowcaseStrings.PP_S17_P1]:
+    '当社は本プライバシーポリシーを随時更新する場合があります。重要な変更については、改訂された「最終更新日」とともに更新されたポリシーをサービスに掲載してお知らせします。変更の発効日以降もサービスを継続して使用することは、改訂されたポリシーへの同意を構成します。',
+
+  // Section 18: Contact
+  [ShowcaseStrings.PP_S18_Title]: '18. お問い合わせ',
+  [ShowcaseStrings.PP_S18_P1]:
+    '本プライバシーポリシーについてご質問がある場合、またはデータ保護の権利を行使したい場合は、以下までご連絡ください：',
+  [ShowcaseStrings.PP_S18_OrgName]: 'Digital Defiance',
+  [ShowcaseStrings.PP_S18_EmailLabel]: 'メール：',
+  [ShowcaseStrings.PP_S18_WebLabel]: 'ウェブ：',
 };
 
 export default ShowcaseJapaneseStrings;

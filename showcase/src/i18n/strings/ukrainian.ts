@@ -48,7 +48,7 @@ export const ShowcaseUkrainianStrings: Partial<
   [ShowcaseStrings.FAQ_Gild_Character]: 'Персонаж Gild',
   [ShowcaseStrings.FAQ_Phix_Character]: 'Персонаж Phix',
   [ShowcaseStrings.FAQ_SwitchToModeTemplate]: 'Перемкнути на {MODE} FAQ',
-  [ShowcaseStrings.FAQ_Title_Technical]: 'BrightChain FAQ',
+  [ShowcaseStrings.FAQ_Title_Technical]: 'BrightChain Часті Запитання',
   [ShowcaseStrings.FAQ_Title_Ecosystem]: 'Всесвіт BrightChain',
   [ShowcaseStrings.FAQ_Subtitle_Technical]:
     'Еволюційний наступник файлової системи без власника',
@@ -201,7 +201,11 @@ export const ShowcaseUkrainianStrings: Partial<
     'Медичні записи, що належать пацієнту',
   [ShowcaseStrings.FAQ_Tech_Q11_BrightChart_Text]:
     'Електронна медична картка, де пацієнт тримає ключі. BrightChart зберігає медичні дані, сумісні з FHIR R4, як зашифровані блоки на BrightChain — немає центральної бази даних для злому. Пацієнти надають гранулярний доступ постачальникам через делегування BrightTrust, і кожна подія доступу записується в незмінному аудиторському сліді. Підтримує медичні, стоматологічні та ветеринарні практики з єдиної кодової бази.',
-  [ShowcaseStrings.FAQ_Tech_Q11_BrightMail_Title]: 'Суверенна комунікація',
+  [ShowcaseStrings.FAQ_BrightCal_Logo_Alt]: 'Логотип BrightCal',
+  [ShowcaseStrings.FAQ_Tech_Q11_BrightCal_Title]: 'Управління спільним та особистим календарем',
+  [ShowcaseStrings.FAQ_Tech_Q11_BrightCal_Text]:
+    'Система календаря, де власник зберігає ключі. BrightCal забезпечує безпечне зашифроване планування з детальним контролем доступу. Події зберігаються як зашифровані блоки. Усі дані календаря є незмінними та відновлюваними, з підтримкою повторюваних подій, нагадувань та інтеграції з традиційними системами календаря.',
+    [ShowcaseStrings.FAQ_Tech_Q11_BrightMail_Title]: 'Суверенна комунікація',
   [ShowcaseStrings.FAQ_Tech_Q11_BrightMail_Text]:
     'Повністю RFC-сумісна система електронної пошти, що з\'єднує традиційний SMTP та децентралізоване зберігання. На відміну від стандартних провайдерів електронної пошти, BrightMail шардує кожне повідомлення у сховище блоків "без власника" з підтримкою наскрізного зашифрованого обміну повідомленнями "Темного режиму".',
   [ShowcaseStrings.FAQ_Tech_Q11_BrightHub_Title]:
@@ -433,13 +437,12 @@ export const ShowcaseUkrainianStrings: Partial<
   [ShowcaseStrings.About_OtherImpl_Title]: 'Інші реалізації',
   [ShowcaseStrings.About_OtherImpl_P1]:
     'Хоча ця реалізація на TypeScript/Node.js є основною та найбільш зрілою версією BrightChain, паралельна основна бібліотека на C++ з UI для macOS/iOS знаходиться в розробці. Ця нативна реалізація приносить функції конфіденційності та безпеки BrightChain на платформи Apple. Обидва репозиторії знаходяться на ранній стадії розробки і ще не готові для виробничого використання.',
-  // TODO: translate
   [ShowcaseStrings.About_OtherImpl_P1_Before]:
-    'While this TypeScript/Node.js implementation is the primary and most mature version of BrightChain, a parallel ',
-  [ShowcaseStrings.About_OtherImpl_P1_CppLink]: 'C++ core library',
-  [ShowcaseStrings.About_OtherImpl_P1_AppleLink]: 'macOS/iOS UI',
+    'Хоча ця реалізація на TypeScript/Node.js є основною та найбільш зрілою версією, ',
+  [ShowcaseStrings.About_OtherImpl_P1_CppLink]: 'основна бібліотека C++',
+  [ShowcaseStrings.About_OtherImpl_P1_AppleLink]: 'інтерфейс macOS/iOS',
   [ShowcaseStrings.About_OtherImpl_P1_After]:
-    " is in development. This native implementation brings BrightChain's privacy and security features to Apple platforms. Both repositories are in early development and not yet ready for production use.",
+    ' знаходиться в розробці. Ця нативна реалізація приносить можливості конфіденційності та продуктивності BrightChain безпосередньо на пристрої Apple.',
   [ShowcaseStrings.About_Feature_OwnerFree_Title]: 'Зберігання без власника',
   [ShowcaseStrings.About_Feature_OwnerFree_Desc]:
     'Криптографічна випадковість усуває відповідальність за зберігання. Жоден окремий блок не містить ідентифікованого контенту, забезпечуючи юридичний імунітет для операторів вузлів.',
@@ -904,7 +907,7 @@ export const ShowcaseUkrainianStrings: Partial<
   [ShowcaseStrings.Soup_RetrieveFile]: '📥 Отримати файл',
   [ShowcaseStrings.Soup_DownloadCBL]: 'Завантажити CBL',
   [ShowcaseStrings.Soup_RetrieveMessage]: '📥 Отримати повідомлення',
-  [ShowcaseStrings.Soup_MagnetURL]: '🧲 Magnet URL',
+  [ShowcaseStrings.Soup_MagnetURL]: '🧲 Магнітне посилання',
   [ShowcaseStrings.Soup_WhitenedCBLInfo]:
     'Відбілений CBL magnet URL (використовуйте "Використати Magnet URL" для отримання)',
   [ShowcaseStrings.Soup_ProcessingSteps]: 'Кроки обробки',
@@ -1499,456 +1502,483 @@ export const ShowcaseUkrainianStrings: Partial<
   [ShowcaseStrings.Blog_ByAuthorTemplate]: 'Автор: {AUTHOR}',
   [ShowcaseStrings.Blog_BackToHome]: '← Повернутися на Головну',
 
-  // BlogPost.tsx (TODO: translate)
-  [ShowcaseStrings.BlogPost_Loading]: 'Loading post...',
-  [ShowcaseStrings.BlogPost_NotFoundTitle]: 'Post Not Found',
+  // BlogPost.tsx
+  [ShowcaseStrings.BlogPost_Loading]: 'Завантаження публікації...',
+  [ShowcaseStrings.BlogPost_NotFoundTitle]: 'Публікацію не знайдено',
   [ShowcaseStrings.BlogPost_NotFoundDesc]:
-    "The blog post you're looking for doesn't exist.",
-  [ShowcaseStrings.BlogPost_BackToBlog]: '← Back to Blog',
+    'Публікація, яку ви шукаєте, не існує.',
+  [ShowcaseStrings.BlogPost_BackToBlog]: '← Повернутися до блогу',
   [ShowcaseStrings.BlogPost_NewBanner]:
-    '✨ This post was just published! It will appear in the blog list after the next site deployment.',
-  [ShowcaseStrings.BlogPost_ByAuthorTemplate]: 'By {AUTHOR}',
+    '✨ Ця публікація щойно опублікована! Вона з\'явиться у списку блогу після наступного оновлення сайту.',
+  [ShowcaseStrings.BlogPost_ByAuthorTemplate]: 'Автор: {AUTHOR}',
 
-  // Components.tsx feature cards (TODO: translate)
+  // Components.tsx feature cards
   [ShowcaseStrings.Feat_BrightDB_Desc]:
-    'MongoDB-competitive document database storing data on the Owner-Free Filesystem. Every document transparently stored as whitened blocks with TUPLE architecture for plausible deniability.',
-  [ShowcaseStrings.Feat_BrightDB_Cat]: 'Storage',
-  [ShowcaseStrings.Feat_BrightDB_Tech1]: 'Document Store',
-  [ShowcaseStrings.Feat_BrightDB_Tech2]: 'ACID Transactions',
-  [ShowcaseStrings.Feat_BrightDB_Tech3]: 'Aggregation Pipeline',
+    'Конкурентна MongoDB документна база даних, що зберігає дані в файловій системі без власника. Кожен документ прозоро зберігається як відбілені блоки з архітектурою TUPLE для правдоподібного заперечення.',
+  [ShowcaseStrings.Feat_BrightDB_Cat]: 'Сховище',
+  [ShowcaseStrings.Feat_BrightDB_Tech1]: 'Сховище документів',
+  [ShowcaseStrings.Feat_BrightDB_Tech2]: 'ACID-транзакції',
+  [ShowcaseStrings.Feat_BrightDB_Tech3]: 'Конвеєр агрегації',
   [ShowcaseStrings.Feat_BrightDB_HL1]:
-    'MongoDB-like API: collections, CRUD, queries, indexes, transactions',
+    'API в стилі MongoDB: колекції, CRUD, запити, індекси, транзакції',
   [ShowcaseStrings.Feat_BrightDB_HL2]:
-    '15 query operators: $eq, $ne, $gt, $gte, $lt, $lte, $in, $nin, $regex, $exists, $and, $or, $not, $nor, $elemMatch',
+    '15 операторів запитів: $eq, $ne, $gt, $gte, $lt, $lte, $in, $nin, $regex, $exists, $and, $or, $not, $nor, $elemMatch',
   [ShowcaseStrings.Feat_BrightDB_HL3]:
-    'Aggregation pipeline: $match, $group, $sort, $limit, $skip, $project, $unwind, $count, $addFields, $lookup',
+    'Конвеєр агрегації: $match, $group, $sort, $limit, $skip, $project, $unwind, $count, $addFields, $lookup',
   [ShowcaseStrings.Feat_BrightDB_HL4]:
-    'Single-field, compound, and unique indexes with B-tree structures',
+    'Однопольові, складені та унікальні індекси зі структурами B-дерева',
   [ShowcaseStrings.Feat_BrightDB_HL5]:
-    'Multi-document ACID transactions with commit/abort and optimistic concurrency',
+    'Багатодокументні ACID-транзакції з commit/abort та оптимістичною конкурентністю',
   [ShowcaseStrings.Feat_BrightDB_HL6]:
-    'Change streams for real-time insert/update/delete event subscriptions',
+    'Потоки змін для підписок на події вставки/оновлення/видалення в реальному часі',
   [ShowcaseStrings.Feat_BrightDB_HL7]:
-    'Express REST middleware for drop-in API access to collections',
+    'Express REST middleware для plug-and-play API доступу до колекцій',
   [ShowcaseStrings.Feat_BrightDB_HL8]:
-    'TTL indexes for automatic document expiration',
+    'TTL індекси для автоматичного закінчення терміну дії документів',
   [ShowcaseStrings.Feat_BrightDB_HL9]:
-    'Schema validation with strict/moderate levels and default values',
+    'Валідація схеми з суворими/помірними рівнями та значеннями за замовчуванням',
   [ShowcaseStrings.Feat_BrightDB_HL10]:
-    'Full-text search with weighted fields and $text operator',
+    'Повнотекстовий пошук із зваженими полями та оператором $text',
   [ShowcaseStrings.Feat_BrightDB_HL11]:
-    'Copy-on-write storage: blocks never deleted, only mappings updated',
+    'Сховище copy-on-write: блоки ніколи не видаляються, оновлюються лише відображення',
   [ShowcaseStrings.Feat_BrightDB_HL12]:
-    'Every document stored as 3-block TUPLE (data + 2 randomizers) for plausible deniability',
-  [ShowcaseStrings.Feat_BrightDBPools_Title]: 'BrightDB Pools',
+    'Кожен документ зберігається як 3-блоковий TUPLE (дані + 2 рандомізатори) для правдоподібного заперечення',
+  [ShowcaseStrings.Feat_BrightDBPools_Title]: 'Пули BrightDB',
   [ShowcaseStrings.Feat_BrightDBPools_Desc]:
-    'Lightweight namespace-isolated storage pools that logically partition blocks without separate physical storage. Each pool enforces its own ACL, encryption, and whitening boundaries — enabling multi-tenant, multi-application data isolation on a single BrightChain node.',
-  [ShowcaseStrings.Feat_BrightDBPools_Cat]: 'Storage',
-  [ShowcaseStrings.Feat_BrightDBPools_Tech1]: 'Namespace Isolation',
-  [ShowcaseStrings.Feat_BrightDBPools_Tech2]: 'Pool ACLs',
-  [ShowcaseStrings.Feat_BrightDBPools_Tech3]: 'Gossip Discovery',
+    'Легкі пули зберігання, ізольовані простором імен, які логічно розділяють блоки без окремого фізичного сховища. Кожен пул застосовує власні межі ACL, шифрування та відбілювання — забезпечуючи багатоорендну, багатододаткову ізоляцію даних на одному вузлі BrightChain.',
+  [ShowcaseStrings.Feat_BrightDBPools_Cat]: 'Сховище',
+  [ShowcaseStrings.Feat_BrightDBPools_Tech1]: 'Ізоляція простору імен',
+  [ShowcaseStrings.Feat_BrightDBPools_Tech2]: 'ACL пулів',
+  [ShowcaseStrings.Feat_BrightDBPools_Tech3]: 'Виявлення Gossip',
   [ShowcaseStrings.Feat_BrightDBPools_HL1]:
-    'Namespace-prefixed storage keys (poolId:hash) — logical isolation without physical separation',
+    'Ключі зберігання з префіксом простору імен (poolId:hash) — логічна ізоляція без фізичного розділення',
   [ShowcaseStrings.Feat_BrightDBPools_HL2]:
-    'Per-pool ACLs with Read, Write, Replicate, and Admin permissions enforced at the store layer',
+    'ACL для кожного пулу з дозволами на читання, запис, реплікацію та адміністрування, застосованими на рівні сховища',
   [ShowcaseStrings.Feat_BrightDBPools_HL3]:
-    'Pool-scoped XOR whitening: tuples never cross pool boundaries, preserving per-pool plausible deniability',
+    'XOR відбілювання в межах пулу: кортежі ніколи не перетинають межі пулу, зберігаючи правдоподібне заперечення для кожного пулу',
   [ShowcaseStrings.Feat_BrightDBPools_HL4]:
-    'Gossip-based pool discovery across peers with configurable query timeouts and caching',
+    'Виявлення пулів на основі gossip між вузлами з налаштовуваними тайм-аутами запитів та кешуванням',
   [ShowcaseStrings.Feat_BrightDBPools_HL5]:
-    'Pool bootstrap seeding: generate cryptographic random blocks as whitening material for new pools',
+    'Початкове заповнення пулу: генерація криптографічних випадкових блоків як матеріалу для відбілювання нових пулів',
   [ShowcaseStrings.Feat_BrightDBPools_HL6]:
-    'Safe deletion validation — checks cross-pool XOR dependencies before removing a pool',
+    'Безпечна валідація видалення — перевіряє міжпульні XOR залежності перед видаленням пулу',
   [ShowcaseStrings.Feat_BrightDBPools_HL7]:
-    'Pool-scoped Bloom filters and manifests for efficient peer reconciliation',
+    'Bloom-фільтри та маніфести в межах пулу для ефективної узгодженості між вузлами',
   [ShowcaseStrings.Feat_BrightDBPools_HL8]:
-    'Multi-admin quorum governance: ACL updates require >50% admin signatures',
+    'Управління кворумом кількох адміністраторів: оновлення ACL вимагають >50% підписів адміністраторів',
   [ShowcaseStrings.Feat_BrightDBPools_HL9]:
-    'Public read/write flags for open pools, or locked-down member-only access',
+    'Публічні прапорці читання/запису для відкритих пулів або заблокований доступ лише для членів',
   [ShowcaseStrings.Feat_OFFS_Title]: 'Owner-Free File System (OFFS)',
   [ShowcaseStrings.Feat_OFFS_Desc]:
-    'Revolutionary distributed storage that breaks files into blocks and XORs them with random data. No single block contains identifiable content, providing legal immunity for node operators while enabling secure, decentralized file storage.',
-  [ShowcaseStrings.Feat_OFFS_Cat]: 'Storage',
-  [ShowcaseStrings.Feat_OFFS_Tech1]: 'XOR Encryption',
-  [ShowcaseStrings.Feat_OFFS_Tech2]: 'Distributed Storage',
+    'Революційне розподілене сховище, яке розбиває файли на блоки та XOR-змішує їх з випадковими даними. Жоден окремий блок не містить ідентифікованого контенту, забезпечуючи юридичний імунітет для операторів вузлів та безпечне децентралізоване зберігання файлів.',
+  [ShowcaseStrings.Feat_OFFS_Cat]: 'Сховище',
+  [ShowcaseStrings.Feat_OFFS_Tech1]: 'XOR шифрування',
+  [ShowcaseStrings.Feat_OFFS_Tech2]: 'Розподілене сховище',
   [ShowcaseStrings.Feat_OFFS_Tech3]: 'SHA-512',
   [ShowcaseStrings.Feat_OFFS_HL1]:
-    'Files split into source blocks and merged with random data via XOR',
+    'Файли розбиваються на вихідні блоки та змішуються з випадковими даними через XOR',
   [ShowcaseStrings.Feat_OFFS_HL2]:
-    'Original blocks discarded - only randomized blocks stored',
+    'Оригінальні блоки видаляються — зберігаються лише рандомізовані блоки',
   [ShowcaseStrings.Feat_OFFS_HL3]:
-    'Constituent Block Lists (CBL) track block relationships',
+    'Списки складових блоків (CBL) відстежують зв\'язки між блоками',
   [ShowcaseStrings.Feat_OFFS_HL4]:
-    'Blocks identified by SHA-512 hash - automatic deduplication',
+    'Блоки ідентифікуються за хешем SHA-512 — автоматична дедуплікація',
   [ShowcaseStrings.Feat_OFFS_HL5]:
-    'Multi-use blocks can be part of multiple files simultaneously',
+    'Багаторазові блоки можуть бути частиною кількох файлів одночасно',
   [ShowcaseStrings.Feat_OFFS_HL6]:
-    'Legal protection for node operators - no identifiable content stored',
-  [ShowcaseStrings.Feat_Messaging_Title]: 'Messaging System',
+    'Юридичний захист для операторів вузлів — жоден ідентифікований контент не зберігається',
+  [ShowcaseStrings.Feat_Messaging_Title]: 'Система обміну повідомленнями',
   [ShowcaseStrings.Feat_Messaging_Desc]:
-    'Secure, decentralized message passing with encryption, routing, delivery tracking, and gossip protocol for epidemic-style propagation. Built on the block store with WebSocket real-time delivery.',
-  [ShowcaseStrings.Feat_Messaging_Cat]: 'Network',
-  [ShowcaseStrings.Feat_Messaging_Tech1]: 'Gossip Protocol',
+    'Безпечна децентралізована передача повідомлень з шифруванням, маршрутизацією, відстеженням доставки та gossip протоколом для епідемічного поширення. Побудована на сховищі блоків з доставкою в реальному часі через WebSocket.',
+  [ShowcaseStrings.Feat_Messaging_Cat]: 'Мережа',
+  [ShowcaseStrings.Feat_Messaging_Tech1]: 'Gossip протокол',
   [ShowcaseStrings.Feat_Messaging_Tech2]: 'ECIES',
   [ShowcaseStrings.Feat_Messaging_Tech3]: 'WebSocket',
-  [ShowcaseStrings.Feat_Messaging_Tech4]: 'Bloom Filters',
+  [ShowcaseStrings.Feat_Messaging_Tech4]: 'Bloom-фільтри',
   [ShowcaseStrings.Feat_Messaging_HL1]:
-    'Encrypted message passing with per-recipient or shared key encryption',
+    'Зашифрована передача повідомлень з шифруванням для кожного одержувача або спільним ключем',
   [ShowcaseStrings.Feat_Messaging_HL2]:
-    'Epidemic-style gossip propagation with priority-based delivery',
+    'Епідемічне gossip поширення з пріоритетною доставкою',
   [ShowcaseStrings.Feat_Messaging_HL3]:
-    'Automatic retry with exponential backoff for failed deliveries',
+    'Автоматичне повторення з експоненціальним відступом для невдалих доставок',
   [ShowcaseStrings.Feat_Messaging_HL4]:
-    'Bloom filter-based discovery protocol for efficient block location',
+    'Протокол виявлення на основі Bloom-фільтрів для ефективного пошуку блоків',
   [ShowcaseStrings.Feat_Messaging_HL5]:
-    'Real-time WebSocket events for message delivery and acknowledgments',
+    'WebSocket події в реальному часі для доставки повідомлень та підтверджень',
   [ShowcaseStrings.Feat_Messaging_HL6]:
-    'Persistent delivery tracking with per-recipient status',
+    'Постійне відстеження доставки зі статусом для кожного одержувача',
   [ShowcaseStrings.Feat_BrightMail_Desc]:
-    'RFC 5322/2045 compliant email with threading, BCC privacy, attachments, inbox operations, and delivery tracking. Full email composition, sending, and retrieval built on messaging infrastructure.',
-  [ShowcaseStrings.Feat_BrightMail_Cat]: 'Network',
+    'Електронна пошта, сумісна з RFC 5322/2045, з потоками, конфіденційністю BCC, вкладеннями, операціями вхідних повідомлень та відстеженням доставки. Повне створення, надсилання та отримання електронної пошти на основі інфраструктури обміну повідомленнями.',
+  [ShowcaseStrings.Feat_BrightMail_Cat]: 'Мережа',
   [ShowcaseStrings.Feat_BrightMail_Tech1]: 'RFC 5322',
   [ShowcaseStrings.Feat_BrightMail_Tech2]: 'RFC 2045',
   [ShowcaseStrings.Feat_BrightMail_Tech3]: 'MIME',
-  [ShowcaseStrings.Feat_BrightMail_Tech4]: 'Threading',
+  [ShowcaseStrings.Feat_BrightMail_Tech4]: 'Потоки',
   [ShowcaseStrings.Feat_BrightMail_HL1]:
-    'RFC-compliant Internet Message Format with MIME support',
+    'Формат інтернет-повідомлень, сумісний з RFC, з підтримкою MIME',
   [ShowcaseStrings.Feat_BrightMail_HL2]:
-    'Threading via In-Reply-To and References headers',
+    'Потоки через заголовки In-Reply-To та References',
   [ShowcaseStrings.Feat_BrightMail_HL3]:
-    'BCC privacy with cryptographically separated copies per recipient',
+    'Конфіденційність BCC з криптографічно розділеними копіями для кожного одержувача',
   [ShowcaseStrings.Feat_BrightMail_HL4]:
-    'Multiple attachments with Content-ID for inline images',
+    'Кілька вкладень з підтримкою Content-ID для вбудованих зображень',
   [ShowcaseStrings.Feat_BrightMail_HL5]:
-    'Inbox operations: query, filter, sort, search with pagination',
+    'Операції вхідних повідомлень: запит, фільтр, сортування, пошук з пагінацією',
   [ShowcaseStrings.Feat_BrightMail_HL6]:
-    'Per-recipient delivery tracking via gossip acknowledgments',
+    'Відстеження доставки для кожного одержувача через gossip підтвердження',
   [ShowcaseStrings.Feat_BrightMail_HL7]:
-    'Multiple encryption schemes: ECIES, shared key, S/MIME',
+    'Кілька схем шифрування: ECIES, спільний ключ, S/MIME',
   [ShowcaseStrings.Feat_BrightMail_HL8]:
-    'Digital signatures for sender authentication',
+    'Цифрові підписи для автентифікації відправника',
   [ShowcaseStrings.Feat_BrightMail_HL9]:
-    'Forward/reply with RFC-compliant Resent-* headers',
+    'Пересилання/відповідь із заголовками Resent-*, сумісними з RFC',
+  [ShowcaseStrings.Feat_BrightCal_Desc]:
+    'Система спільного календаря рівня Google Calendar, інтегрована з BrightMail. Сумісна з iCal/CalDAV, наскрізне шифрування подій, гранулярні дозволи спільного доступу, бронювання зустрічей та виявлення конфліктів.',
+  [ShowcaseStrings.Feat_BrightCal_Cat]: 'Мережа',
+  [ShowcaseStrings.Feat_BrightCal_Tech1]: 'iCal/RFC 5545',
+  [ShowcaseStrings.Feat_BrightCal_Tech2]: 'CalDAV',
+  [ShowcaseStrings.Feat_BrightCal_Tech3]: 'Шифрування ECIES',
+  [ShowcaseStrings.Feat_BrightCal_Tech4]: 'iTIP/iMIP',
+  [ShowcaseStrings.Feat_BrightCal_HL1]:
+    'Формат iCalendar RFC 5545 з повною підтримкою VEVENT, VTODO, VJOURNAL та VFREEBUSY',
+  [ShowcaseStrings.Feat_BrightCal_HL2]:
+    'Серверний протокол CalDAV для нативної синхронізації з Apple Calendar, Thunderbird та Android',
+  [ShowcaseStrings.Feat_BrightCal_HL3]:
+    'Наскрізно зашифровані події, збережені як ECIES-зашифровані блоки у файловій системі без власника',
+  [ShowcaseStrings.Feat_BrightCal_HL4]:
+    'Гранулярний спільний доступ: перегляд зайнятості, перегляд деталей, редагування або делегування для кожного календаря та користувача',
+  [ShowcaseStrings.Feat_BrightCal_HL5]:
+    'Запрошення на зустрічі через iTIP/iMIP з інтеграцією BrightMail та відстеженням RSVP',
+  [ShowcaseStrings.Feat_BrightCal_HL6]:
+    'Виявлення конфліктів та запити доступності між спільними календарями з агрегацією зайнятості',
+  [ShowcaseStrings.Feat_BrightCal_HL7]:
+    'Сторінки бронювання з налаштовуваними вікнами доступності, буферним часом та потоками підтвердження',
+  [ShowcaseStrings.Feat_BrightCal_HL8]:
+    'Підтримка повторюваних подій з RRULE, EXDATE та обробкою перевизначень для кожного випадку',
+  [ShowcaseStrings.Feat_BrightCal_HL9]:
+    'Відображення кількох часових зон з автоматичною обробкою DST та прив\'язкою часової зони для кожної події',
+  [ShowcaseStrings.Feat_BrightCal_HL10]:
+    'UI-віджети день/тиждень/місяць/порядок денний з перетягуванням для перепланування та вбудованим редагуванням',
   [ShowcaseStrings.Feat_BrightChat_Desc]:
-    'Discord-competitive communication platform with Signal-grade end-to-end encryption. Direct messaging, group chats, and channels with real-time presence, typing indicators, and role-based permissions.',
-  [ShowcaseStrings.Feat_BrightChat_Cat]: 'Network',
-  [ShowcaseStrings.Feat_BrightChat_Tech1]: 'E2E Encryption',
+    'Комунікаційна платформа рівня Discord з наскрізним шифруванням рівня Signal. Прямі повідомлення, групові чати та канали з присутністю в реальному часі, індикаторами набору тексту та рольовими дозволами.',
+  [ShowcaseStrings.Feat_BrightChat_Cat]: 'Мережа',
+  [ShowcaseStrings.Feat_BrightChat_Tech1]: 'Наскрізне шифрування',
   [ShowcaseStrings.Feat_BrightChat_Tech2]: 'WebSocket',
-  [ShowcaseStrings.Feat_BrightChat_Tech3]: 'Key Rotation',
+  [ShowcaseStrings.Feat_BrightChat_Tech3]: 'Ротація ключів',
   [ShowcaseStrings.Feat_BrightChat_Tech4]: 'RBAC',
   [ShowcaseStrings.Feat_BrightChat_HL1]:
-    'Direct messaging for person-to-person encrypted conversations',
+    'Прямі повідомлення для зашифрованих розмов між двома особами',
   [ShowcaseStrings.Feat_BrightChat_HL2]:
-    'Group chats with shared encryption and automatic key rotation',
+    'Групові чати зі спільним шифруванням та автоматичною ротацією ключів',
   [ShowcaseStrings.Feat_BrightChat_HL3]:
-    'Channels with four visibility modes: public/private/secret/invisible',
+    'Канали з чотирма режимами видимості: публічний/приватний/секретний/невидимий',
   [ShowcaseStrings.Feat_BrightChat_HL4]:
-    'Real-time presence system: online/offline/idle/DND',
+    'Система присутності в реальному часі: онлайн/офлайн/неактивний/не турбувати',
   [ShowcaseStrings.Feat_BrightChat_HL5]:
-    'Role-based permissions: Owner/Admin/Moderator/Member',
+    'Рольові дозволи: Власник/Адміністратор/Модератор/Учасник',
   [ShowcaseStrings.Feat_BrightChat_HL6]:
-    'Typing indicators, reactions, and message edits via WebSocket',
+    'Індикатори набору тексту, реакції та редагування повідомлень через WebSocket',
   [ShowcaseStrings.Feat_BrightChat_HL7]:
-    'Time-limited, usage-limited invite tokens for channels',
+    'Обмежені за часом та використанням токени запрошень для каналів',
   [ShowcaseStrings.Feat_BrightChat_HL8]:
-    'Full-text message search within channel history',
+    'Повнотекстовий пошук повідомлень в історії каналу',
   [ShowcaseStrings.Feat_BrightChat_HL9]:
-    'Seamless conversation promotion from DMs to groups',
+    'Безшовне підвищення розмов від прямих повідомлень до груп',
   [ShowcaseStrings.Feat_BrightPass_Desc]:
-    '1Password-competitive password keychain with VCBL architecture for efficient encrypted credential storage. TOTP/2FA, breach detection, emergency access, and import from major password managers.',
-  [ShowcaseStrings.Feat_BrightPass_Cat]: 'Identity',
+    'Менеджер паролів рівня 1Password з архітектурою VCBL для ефективного зашифрованого зберігання облікових даних. TOTP/2FA, виявлення витоків, екстрений доступ та імпорт з основних менеджерів паролів.',
+  [ShowcaseStrings.Feat_BrightPass_Cat]: 'Ідентичність',
   [ShowcaseStrings.Feat_BrightPass_Tech1]: 'VCBL',
   [ShowcaseStrings.Feat_BrightPass_Tech2]: 'TOTP',
   [ShowcaseStrings.Feat_BrightPass_Tech3]: 'AES-256-GCM',
-  [ShowcaseStrings.Feat_BrightPass_Tech4]: 'Shamir Sharing',
+  [ShowcaseStrings.Feat_BrightPass_Tech4]: 'Розділення секрету Шаміра',
   [ShowcaseStrings.Feat_BrightPass_HL1]:
-    'VCBL (Vault Constituent Block List) for efficient encrypted storage',
+    'VCBL (Vault Constituent Block List) для ефективного зашифрованого зберігання',
   [ShowcaseStrings.Feat_BrightPass_HL2]:
-    'Multiple entry types: login, secure note, credit card, identity',
+    'Кілька типів записів: логін, захищена нотатка, кредитна картка, ідентичність',
   [ShowcaseStrings.Feat_BrightPass_HL3]:
-    'Cryptographically secure password generation with constraints',
+    'Криптографічно безпечна генерація паролів з обмеженнями',
   [ShowcaseStrings.Feat_BrightPass_HL4]:
-    'TOTP/2FA support with QR code generation for authenticators',
+    'Підтримка TOTP/2FA з генерацією QR-кодів для автентифікаторів',
   [ShowcaseStrings.Feat_BrightPass_HL5]:
-    'k-anonymity breach detection via Have I Been Pwned API',
+    'Виявлення витоків через k-анонімність за допомогою Have I Been Pwned API',
   [ShowcaseStrings.Feat_BrightPass_HL6]:
-    'Append-only encrypted audit logging for all vault operations',
+    'Зашифрований журнал аудиту тільки для додавання для всіх операцій сховища',
   [ShowcaseStrings.Feat_BrightPass_HL7]:
-    "Emergency access via Shamir's Secret Sharing for recovery",
+    'Екстрений доступ через розділення секрету Шаміра для відновлення',
   [ShowcaseStrings.Feat_BrightPass_HL8]:
-    'Multi-member vault sharing with ECIES per-recipient encryption',
+    'Спільне використання сховища кількома учасниками з ECIES шифруванням для кожного одержувача',
   [ShowcaseStrings.Feat_BrightPass_HL9]:
-    'Import from 1Password, LastPass, Bitwarden, Chrome, Firefox, KeePass, Dashlane',
+    'Імпорт з 1Password, LastPass, Bitwarden, Chrome, Firefox, KeePass, Dashlane',
   [ShowcaseStrings.Feat_BrightPass_HL10]:
-    'Browser extension autofill API ready',
+    'API автозаповнення для розширення браузера готовий',
   [ShowcaseStrings.Feat_BrightVote_Desc]:
-    'Privacy-preserving elections using Paillier homomorphic encryption with ECDH-derived keys. Supports 15+ voting methods from simple plurality to complex ranked choice with government compliance features.',
-  [ShowcaseStrings.Feat_BrightVote_Cat]: 'Governance',
-  [ShowcaseStrings.Feat_BrightVote_Tech1]: 'Paillier Encryption',
+    'Вибори зі збереженням конфіденційності з використанням гомоморфного шифрування Пайє з ключами, виведеними з ECDH. Підтримує 15+ методів голосування від простого плюрального до складного рейтингового з функціями відповідності державним вимогам.',
+  [ShowcaseStrings.Feat_BrightVote_Cat]: 'Управління',
+  [ShowcaseStrings.Feat_BrightVote_Tech1]: 'Шифрування Пайє',
   [ShowcaseStrings.Feat_BrightVote_Tech2]: 'ECDH',
-  [ShowcaseStrings.Feat_BrightVote_Tech3]: 'Homomorphic Cryptography',
+  [ShowcaseStrings.Feat_BrightVote_Tech3]: 'Гомоморфна криптографія',
   [ShowcaseStrings.Feat_BrightVote_HL1]:
-    'ECDH-to-Paillier bridge derives homomorphic keys from ECDSA/ECDH keys',
+    'Міст ECDH-Пайє виводить гомоморфні ключі з ключів ECDSA/ECDH',
   [ShowcaseStrings.Feat_BrightVote_HL2]:
-    'Privacy-preserving vote aggregation via homomorphic addition',
+    'Агрегація голосів зі збереженням конфіденційності через гомоморфне додавання',
   [ShowcaseStrings.Feat_BrightVote_HL3]:
-    '15+ voting methods: Plurality, Approval, Weighted, Borda, Score, Ranked Choice, IRV, STAR, STV, Quadratic, Consensus, etc.',
+    '15+ методів голосування: плюральне, схвальне, зважене, Борда, бальне, рейтингове, IRV, STAR, STV, квадратичне, консенсусне тощо',
   [ShowcaseStrings.Feat_BrightVote_HL4]:
-    'Security classifications: fully homomorphic, multi-round, insecure',
+    'Класифікації безпеки: повністю гомоморфне, багатораундове, небезпечне',
   [ShowcaseStrings.Feat_BrightVote_HL5]:
-    'Government compliance: immutable audit logs, public bulletin board, verifiable receipts',
+    'Відповідність державним вимогам: незмінні журнали аудиту, публічна дошка оголошень, верифіковані квитанції',
   [ShowcaseStrings.Feat_BrightVote_HL6]:
-    'Hierarchical aggregation: Precinct → County → State → National',
+    'Ієрархічна агрегація: Дільниця → Округ → Штат → Національний',
   [ShowcaseStrings.Feat_BrightVote_HL7]:
-    '128-bit security level with Miller-Rabin primality testing (256 rounds)',
+    '128-бітний рівень безпеки з тестом простоти Міллера-Рабіна (256 раундів)',
   [ShowcaseStrings.Feat_BrightVote_HL8]:
-    'Cross-platform determinism (Node.js and browser environments)',
+    'Кросплатформний детермінізм (середовища Node.js та браузера)',
   [ShowcaseStrings.Feat_BrightVote_HL9]:
-    'Timing attack resistance with constant-time operations',
+    'Стійкість до атак за часом з операціями постійного часу',
   [ShowcaseStrings.Feat_BrightHub_Desc]:
-    'Twitter-competitive decentralized social network with unique FontAwesome icon markup syntax. Posts, threads, DMs, connection lists, hubs for privacy, and real-time notifications via WebSocket.',
-  [ShowcaseStrings.Feat_BrightHub_Cat]: 'Network',
+    'Децентралізована соціальна мережа рівня Twitter з унікальним синтаксисом розмітки іконок FontAwesome. Пости, потоки, прямі повідомлення, списки контактів, хаби для конфіденційності та сповіщення в реальному часі через WebSocket.',
+  [ShowcaseStrings.Feat_BrightHub_Cat]: 'Мережа',
   [ShowcaseStrings.Feat_BrightHub_Tech1]: 'WebSocket',
-  [ShowcaseStrings.Feat_BrightHub_Tech2]: 'Real-time Messaging',
-  [ShowcaseStrings.Feat_BrightHub_Tech3]: 'Connection Management',
+  [ShowcaseStrings.Feat_BrightHub_Tech2]: 'Обмін повідомленнями в реальному часі',
+  [ShowcaseStrings.Feat_BrightHub_Tech3]: 'Управління контактами',
   [ShowcaseStrings.Feat_BrightHub_HL1]:
-    'Posts with 280-char limit, markdown, and unique {{icon}} syntax for FontAwesome',
+    'Пости з обмеженням 280 символів, markdown та унікальним синтаксисом {{icon}} для FontAwesome',
   [ShowcaseStrings.Feat_BrightHub_HL2]:
-    'Threaded conversations with 10-level nesting and reply hierarchies',
+    'Потокові розмови з 10-рівневою вкладеністю та ієрархіями відповідей',
   [ShowcaseStrings.Feat_BrightHub_HL3]:
-    'Connection lists, categories, and hubs for organizing relationships',
+    'Списки контактів, категорії та хаби для організації зв\'язків',
   [ShowcaseStrings.Feat_BrightHub_HL4]:
-    'Direct messaging with read receipts, typing indicators, and reactions',
+    'Прямі повідомлення з підтвердженнями прочитання, індикаторами набору тексту та реакціями',
   [ShowcaseStrings.Feat_BrightHub_HL5]:
-    'Group conversations (up to 50 participants) with admin roles',
+    'Групові розмови (до 50 учасників) з ролями адміністраторів',
   [ShowcaseStrings.Feat_BrightHub_HL6]:
-    'Message requests for non-followers with accept/decline workflow',
+    'Запити на повідомлення для не-підписників з робочим процесом прийняття/відхилення',
   [ShowcaseStrings.Feat_BrightHub_HL7]:
-    'Real-time notifications via WebSocket with smart grouping',
+    'Сповіщення в реальному часі через WebSocket з розумним групуванням',
   [ShowcaseStrings.Feat_BrightHub_HL8]:
-    'Notification preferences: quiet hours, DND mode, per-category settings',
+    'Налаштування сповіщень: тихі години, режим "не турбувати", налаштування за категоріями',
   [ShowcaseStrings.Feat_BrightHub_HL9]:
-    'Protected accounts with follow request approval workflow',
+    'Захищені акаунти з робочим процесом схвалення запитів на підписку',
   [ShowcaseStrings.Feat_BrightHub_HL10]:
-    'Connection insights: strength calculation, mutual connections, suggestions',
+    'Аналітика контактів: розрахунок сили зв\'язку, спільні контакти, рекомендації',
   [ShowcaseStrings.Feat_BrightHub_HL11]:
-    'Hub-based content visibility for private group sharing',
+    'Видимість контенту на основі хабів для приватного обміну в групах',
   [ShowcaseStrings.Feat_BrightHub_HL12]:
-    'Rich text formatting with XSS prevention and emoji support',
-  [ShowcaseStrings.Feat_Anonymity_Title]: 'Brokered Anonymity & BrightTrust',
+    'Форматування тексту з захистом від XSS та підтримкою емодзі',
+  [ShowcaseStrings.Feat_Anonymity_Title]: 'Посередницька анонімність та BrightTrust',
   [ShowcaseStrings.Feat_Anonymity_Desc]:
-    "Sophisticated privacy mechanism enabling anonymous operations while maintaining accountability. Identity information encrypted and split using Shamir's Secret Sharing, reconstructable only through majority BrightTrust consensus.",
-  [ShowcaseStrings.Feat_Anonymity_Cat]: 'Governance',
-  [ShowcaseStrings.Feat_Anonymity_Tech1]: "Shamir's Secret Sharing",
-  [ShowcaseStrings.Feat_Anonymity_Tech2]: 'Forward Error Correction',
-  [ShowcaseStrings.Feat_Anonymity_Tech3]: 'BrightTrust Consensus',
+    'Складний механізм конфіденційності, що забезпечує анонімні операції зі збереженням відповідальності. Інформація про ідентичність шифрується та розділяється за допомогою розділення секрету Шаміра, відновлювана лише через консенсус більшості BrightTrust.',
+  [ShowcaseStrings.Feat_Anonymity_Cat]: 'Управління',
+  [ShowcaseStrings.Feat_Anonymity_Tech1]: 'Розділення секрету Шаміра',
+  [ShowcaseStrings.Feat_Anonymity_Tech2]: 'Пряме виправлення помилок',
+  [ShowcaseStrings.Feat_Anonymity_Tech3]: 'Консенсус BrightTrust',
   [ShowcaseStrings.Feat_Anonymity_HL1]:
-    'Post anonymously with encrypted identity backup',
+    'Анонімні публікації з зашифрованою резервною копією ідентичності',
   [ShowcaseStrings.Feat_Anonymity_HL2]:
-    'Identity shards distributed across ~24 BrightTrust members',
+    'Шарди ідентичності розподілені між ~24 членами BrightTrust',
   [ShowcaseStrings.Feat_Anonymity_HL3]:
-    'Majority vote required to reconstruct identity information',
+    'Для відновлення інформації про ідентичність потрібне голосування більшості',
   [ShowcaseStrings.Feat_Anonymity_HL4]:
-    'Time-limited accountability - data expires after statute of limitations',
+    'Обмежена за часом відповідальність — дані закінчуються після строку давності',
   [ShowcaseStrings.Feat_Anonymity_HL5]:
-    'Legal compliance mechanism for FISA warrants and court orders',
+    'Механізм юридичної відповідності для ордерів FISA та судових наказів',
   [ShowcaseStrings.Feat_Anonymity_HL6]:
-    'Permanent privacy protection after expiration period',
-  [ShowcaseStrings.Feat_Encryption_Title]: 'Advanced Encryption Stack',
+    'Постійний захист конфіденційності після закінчення періоду',
+  [ShowcaseStrings.Feat_Encryption_Title]: 'Передовий стек шифрування',
   [ShowcaseStrings.Feat_Encryption_Desc]:
-    'State-of-the-art encryption combining ECIES for key derivation with AES-256-GCM for file security. Complete cryptosystem with BIP39/32 authentication and SECP256k1 elliptic curve cryptography.',
-  [ShowcaseStrings.Feat_Encryption_Cat]: 'Cryptography',
+    'Найсучасніше шифрування, що поєднує ECIES для виведення ключів з AES-256-GCM для безпеки файлів. Повна криптосистема з автентифікацією BIP39/32 та криптографією еліптичних кривих SECP256k1.',
+  [ShowcaseStrings.Feat_Encryption_Cat]: 'Криптографія',
   [ShowcaseStrings.Feat_Encryption_Tech1]: 'ECIES',
   [ShowcaseStrings.Feat_Encryption_Tech2]: 'AES-256-GCM',
   [ShowcaseStrings.Feat_Encryption_Tech3]: 'BIP39/32',
   [ShowcaseStrings.Feat_Encryption_Tech4]: 'SECP256k1',
   [ShowcaseStrings.Feat_Encryption_HL1]:
-    'ECIES encryption with user-specific key derivation',
+    'Шифрування ECIES з виведенням ключів для кожного користувача',
   [ShowcaseStrings.Feat_Encryption_HL2]:
-    'AES-256-GCM for authenticated file encryption',
+    'AES-256-GCM для автентифікованого шифрування файлів',
   [ShowcaseStrings.Feat_Encryption_HL3]:
-    'BIP39/32 mnemonic-based authentication',
+    'Автентифікація на основі мнемоніки BIP39/32',
   [ShowcaseStrings.Feat_Encryption_HL4]:
-    'SECP256k1 elliptic curve (Ethereum-compatible keyspace)',
+    'Еліптична крива SECP256k1 (простір ключів, сумісний з Ethereum)',
   [ShowcaseStrings.Feat_Encryption_HL5]:
-    'Verified block-level data integrity with XOR functionality',
+    'Верифікована цілісність даних на рівні блоків з функціональністю XOR',
   [ShowcaseStrings.Feat_Encryption_HL6]:
-    'Cross-platform cryptographic operations',
-  [ShowcaseStrings.Feat_Storage_Title]: 'Decentralized Storage Network',
+    'Кросплатформні криптографічні операції',
+  [ShowcaseStrings.Feat_Storage_Title]: 'Децентралізована мережа зберігання',
   [ShowcaseStrings.Feat_Storage_Desc]:
-    'Peer-to-peer distributed file system that monetizes unused storage on personal devices. IPFS-like architecture with energy-efficient proof-of-work and reputation-based incentives.',
-  [ShowcaseStrings.Feat_Storage_Cat]: 'Network',
-  [ShowcaseStrings.Feat_Storage_Tech1]: 'P2P Networks',
+    'Однорангова розподілена файлова система, що монетизує невикористане сховище на персональних пристроях. Архітектура типу IPFS з енергоефективним доказом роботи та стимулами на основі репутації.',
+  [ShowcaseStrings.Feat_Storage_Cat]: 'Мережа',
+  [ShowcaseStrings.Feat_Storage_Tech1]: 'P2P мережі',
   [ShowcaseStrings.Feat_Storage_Tech2]: 'DHT',
-  [ShowcaseStrings.Feat_Storage_Tech3]: 'Block Replication',
+  [ShowcaseStrings.Feat_Storage_Tech3]: 'Реплікація блоків',
   [ShowcaseStrings.Feat_Storage_HL1]:
-    'Utilize wasted storage space on personal computers and devices',
+    'Використання марного простору зберігання на персональних комп\'ютерах та пристроях',
   [ShowcaseStrings.Feat_Storage_HL2]:
-    'Distributed Hash Table (DHT) for efficient block tracking',
+    'Розподілена хеш-таблиця (DHT) для ефективного відстеження блоків',
   [ShowcaseStrings.Feat_Storage_HL3]:
-    'Configurable block durability and accessibility requirements',
+    'Налаштовувані вимоги до довговічності та доступності блоків',
   [ShowcaseStrings.Feat_Storage_HL4]:
-    'Dynamic replication based on block usefulness and access patterns',
+    'Динамічна реплікація на основі корисності блоків та патернів доступу',
   [ShowcaseStrings.Feat_Storage_HL5]:
-    'Energy-efficient alternative to traditional proof-of-work mining',
+    'Енергоефективна альтернатива традиційному майнінгу з доказом роботи',
   [ShowcaseStrings.Feat_Storage_HL6]:
-    'Storage credits and bandwidth compensation for node operators',
-  [ShowcaseStrings.Feat_Sealing_Title]: 'BrightTrust-Based Document Sealing',
+    'Кредити за зберігання та компенсація пропускної здатності для операторів вузлів',
+  [ShowcaseStrings.Feat_Sealing_Title]: 'Запечатування документів на основі BrightTrust',
   [ShowcaseStrings.Feat_Sealing_Desc]:
-    'Advanced document protection with customizable threshold requirements for access restoration. Groups can seal sensitive information requiring configurable majority consensus to unseal.',
-  [ShowcaseStrings.Feat_Sealing_Cat]: 'Governance',
-  [ShowcaseStrings.Feat_Sealing_Tech1]: 'Threshold Cryptography',
-  [ShowcaseStrings.Feat_Sealing_Tech2]: 'Secret Sharing',
-  [ShowcaseStrings.Feat_Sealing_Tech3]: 'Multi-Party Computation',
+    'Передовий захист документів з налаштовуваними пороговими вимогами для відновлення доступу. Групи можуть запечатувати конфіденційну інформацію, що вимагає налаштовуваного консенсусу більшості для розпечатування.',
+  [ShowcaseStrings.Feat_Sealing_Cat]: 'Управління',
+  [ShowcaseStrings.Feat_Sealing_Tech1]: 'Порогова криптографія',
+  [ShowcaseStrings.Feat_Sealing_Tech2]: 'Розділення секрету',
+  [ShowcaseStrings.Feat_Sealing_Tech3]: 'Багатосторонні обчислення',
   [ShowcaseStrings.Feat_Sealing_HL1]:
-    'Seal documents with configurable quorum thresholds (e.g., 3-of-5, 7-of-10)',
+    'Запечатування документів з налаштовуваними пороговими кворумами (наприклад, 3-з-5, 7-з-10)',
   [ShowcaseStrings.Feat_Sealing_HL2]:
-    'Distributed shard storage across trusted BrightTrust members',
+    'Розподілене зберігання шардів серед довірених членів BrightTrust',
   [ShowcaseStrings.Feat_Sealing_HL3]:
-    'Mathematical guarantee of security until threshold reached',
+    'Математична гарантія безпеки до досягнення порогу',
   [ShowcaseStrings.Feat_Sealing_HL4]:
-    'Flexible unsealing for legal compliance or group decisions',
+    'Гнучке розпечатування для юридичної відповідності або групових рішень',
   [ShowcaseStrings.Feat_Sealing_HL5]:
-    'Supports organizational governance and compliance workflows',
+    'Підтримка робочих процесів організаційного управління та відповідності',
   [ShowcaseStrings.Feat_Sealing_HL6]:
-    'Time-based expiration for automatic privacy protection',
+    'Закінчення терміну дії за часом для автоматичного захисту конфіденційності',
   [ShowcaseStrings.Feat_BrightID_Desc]:
-    'Sophisticated identity management ensuring user privacy and control. Support for registered aliases, anonymous posting, and cryptographic identity verification.',
-  [ShowcaseStrings.Feat_BrightID_Cat]: 'Identity',
-  [ShowcaseStrings.Feat_BrightID_Tech1]: 'Public Key Infrastructure',
+    'Складне управління ідентичністю, що забезпечує конфіденційність та контроль користувача. Підтримка зареєстрованих псевдонімів, анонімних публікацій та криптографічної верифікації ідентичності.',
+  [ShowcaseStrings.Feat_BrightID_Cat]: 'Ідентичність',
+  [ShowcaseStrings.Feat_BrightID_Tech1]: 'Інфраструктура відкритих ключів',
   [ShowcaseStrings.Feat_BrightID_Tech2]: 'BIP39/32',
-  [ShowcaseStrings.Feat_BrightID_Tech3]: 'Identity Management',
+  [ShowcaseStrings.Feat_BrightID_Tech3]: 'Управління ідентичністю',
   [ShowcaseStrings.Feat_BrightID_HL1]:
-    'BIP39/32 mnemonic-based identity generation',
+    'Генерація ідентичності на основі мнемоніки BIP39/32',
   [ShowcaseStrings.Feat_BrightID_HL2]:
-    'Multiple registered aliases per user account',
+    'Кілька зареєстрованих псевдонімів на один обліковий запис',
   [ShowcaseStrings.Feat_BrightID_HL3]:
-    'Anonymous posting with optional identity recovery',
+    'Анонімні публікації з опціональним відновленням ідентичності',
   [ShowcaseStrings.Feat_BrightID_HL4]:
-    'Public key-based authentication (SECP256k1)',
+    'Автентифікація на основі відкритого ключа (SECP256k1)',
   [ShowcaseStrings.Feat_BrightID_HL5]:
-    'Forward Error Correction for identity backup',
+    'Пряме виправлення помилок для резервного копіювання ідентичності',
   [ShowcaseStrings.Feat_BrightID_HL6]:
-    'Privacy-preserving identity verification',
-  [ShowcaseStrings.Feat_Reputation_Title]: 'Reputation & Energy Tracking',
+    'Верифікація ідентичності зі збереженням конфіденційності',
+  [ShowcaseStrings.Feat_Reputation_Title]: 'Репутація та відстеження енергії',
   [ShowcaseStrings.Feat_Reputation_Desc]:
-    'Revolutionary reputation system that tracks energy costs in Joules. Good actors enjoy minimal proof-of-work requirements while bad actors face increased computational burdens.',
-  [ShowcaseStrings.Feat_Reputation_Cat]: 'Network',
-  [ShowcaseStrings.Feat_Reputation_Tech1]: 'Proof of Work',
-  [ShowcaseStrings.Feat_Reputation_Tech2]: 'Reputation Systems',
-  [ShowcaseStrings.Feat_Reputation_Tech3]: 'Energy Accounting',
+    'Революційна система репутації, що відстежує енергетичні витрати в Джоулях. Добросовісні учасники мають мінімальні вимоги до доказу роботи, тоді як зловмисники стикаються зі збільшеним обчислювальним навантаженням.',
+  [ShowcaseStrings.Feat_Reputation_Cat]: 'Мережа',
+  [ShowcaseStrings.Feat_Reputation_Tech1]: 'Доказ роботи',
+  [ShowcaseStrings.Feat_Reputation_Tech2]: 'Системи репутації',
+  [ShowcaseStrings.Feat_Reputation_Tech3]: 'Енергетичний облік',
   [ShowcaseStrings.Feat_Reputation_HL1]:
-    'Energy costs measured in actual Joules for real-world correlation',
+    'Енергетичні витрати вимірюються в реальних Джоулях для кореляції з реальним світом',
   [ShowcaseStrings.Feat_Reputation_HL2]:
-    'Dynamic proof-of-work based on user reputation',
+    'Динамічний доказ роботи на основі репутації користувача',
   [ShowcaseStrings.Feat_Reputation_HL3]:
-    'Content creators rewarded as their content is consumed',
+    'Творці контенту винагороджуються, коли їхній контент споживається',
   [ShowcaseStrings.Feat_Reputation_HL4]:
-    'Bad actors throttled with increased computational requirements',
+    'Зловмисники обмежуються збільшеними обчислювальними вимогами',
   [ShowcaseStrings.Feat_Reputation_HL5]:
-    'Storage and bandwidth costs tracked and compensated',
+    'Витрати на зберігання та пропускну здатність відстежуються та компенсуються',
   [ShowcaseStrings.Feat_Reputation_HL6]:
-    'Incentivizes positive contributions and quality content',
-  [ShowcaseStrings.Feat_BlockTemp_Title]: 'Block Temperature & Lifecycle',
+    'Стимулює позитивні внески та якісний контент',
+  [ShowcaseStrings.Feat_BlockTemp_Title]: 'Температура блоків та життєвий цикл',
   [ShowcaseStrings.Feat_BlockTemp_Desc]:
-    "Intelligent block management with hot/cold storage tiers. Frequently accessed blocks stay 'hot' with high replication, while unused blocks cool down and may expire.",
-  [ShowcaseStrings.Feat_BlockTemp_Cat]: 'Storage',
-  [ShowcaseStrings.Feat_BlockTemp_Tech1]: 'Storage Tiering',
-  [ShowcaseStrings.Feat_BlockTemp_Tech2]: 'Block Lifecycle',
-  [ShowcaseStrings.Feat_BlockTemp_Tech3]: 'Access Patterns',
+    'Інтелектуальне управління блоками з рівнями гарячого/холодного зберігання. Часто використовувані блоки залишаються "гарячими" з високою реплікацією, тоді як невикористані блоки охолоджуються та можуть закінчитися.',
+  [ShowcaseStrings.Feat_BlockTemp_Cat]: 'Сховище',
+  [ShowcaseStrings.Feat_BlockTemp_Tech1]: 'Рівні зберігання',
+  [ShowcaseStrings.Feat_BlockTemp_Tech2]: 'Життєвий цикл блоків',
+  [ShowcaseStrings.Feat_BlockTemp_Tech3]: 'Патерни доступу',
   [ShowcaseStrings.Feat_BlockTemp_HL1]:
-    "'Keep Until At Least' contracts for minimum storage duration",
+    'Контракти "Зберігати щонайменше до" для мінімальної тривалості зберігання',
   [ShowcaseStrings.Feat_BlockTemp_HL2]:
-    'Block usefulness increases with access, staleness decreases',
+    'Корисність блоку зростає з доступом, застарілість зменшується',
   [ShowcaseStrings.Feat_BlockTemp_HL3]:
-    'Dynamic replication based on access patterns and temperature',
+    'Динамічна реплікація на основі патернів доступу та температури',
   [ShowcaseStrings.Feat_BlockTemp_HL4]:
-    'Auto-extension of contracts for frequently accessed blocks',
+    'Автоматичне продовження контрактів для часто використовуваних блоків',
   [ShowcaseStrings.Feat_BlockTemp_HL5]:
-    'Energy credits returned for blocks that prove useful',
+    'Енергетичні кредити повертаються за блоки, що виявилися корисними',
   [ShowcaseStrings.Feat_BlockTemp_HL6]:
-    'Configurable durability and accessibility requirements',
-  [ShowcaseStrings.Feat_ZeroMining_Title]: 'Zero Mining Waste',
+    'Налаштовувані вимоги до довговічності та доступності',
+  [ShowcaseStrings.Feat_ZeroMining_Title]: 'Нульове марнотратство майнінгу',
   [ShowcaseStrings.Feat_ZeroMining_Desc]:
-    "Built on Ethereum's foundation but engineered without proof-of-work constraints. All computational work serves useful purposes - storage, verification, and network operations.",
-  [ShowcaseStrings.Feat_ZeroMining_Cat]: 'Network',
-  [ShowcaseStrings.Feat_ZeroMining_Tech1]: 'Ethereum Keyspace',
-  [ShowcaseStrings.Feat_ZeroMining_Tech2]: 'Efficient Consensus',
-  [ShowcaseStrings.Feat_ZeroMining_Tech3]: 'Green Blockchain',
+    'Побудований на основі Ethereum, але спроектований без обмежень доказу роботи. Всі обчислення служать корисним цілям — зберігання, верифікація та мережеві операції.',
+  [ShowcaseStrings.Feat_ZeroMining_Cat]: 'Мережа',
+  [ShowcaseStrings.Feat_ZeroMining_Tech1]: 'Простір ключів Ethereum',
+  [ShowcaseStrings.Feat_ZeroMining_Tech2]: 'Ефективний консенсус',
+  [ShowcaseStrings.Feat_ZeroMining_Tech3]: 'Зелений блокчейн',
   [ShowcaseStrings.Feat_ZeroMining_HL1]:
-    'No wasteful mining - all computation serves useful purposes',
+    'Без марнотратного майнінгу — всі обчислення служать корисним цілям',
   [ShowcaseStrings.Feat_ZeroMining_HL2]:
-    'Ethereum-compatible keyspace and cryptography (SECP256k1)',
+    'Простір ключів та криптографія, сумісні з Ethereum (SECP256k1)',
   [ShowcaseStrings.Feat_ZeroMining_HL3]:
-    'Proof-of-work used only for transaction throttling',
+    'Доказ роботи використовується лише для обмеження транзакцій',
   [ShowcaseStrings.Feat_ZeroMining_HL4]:
-    'Energy-efficient consensus mechanisms',
+    'Енергоефективні механізми консенсусу',
   [ShowcaseStrings.Feat_ZeroMining_HL5]:
-    'Sustainable blockchain without environmental impact',
+    'Сталий блокчейн без впливу на довкілля',
   [ShowcaseStrings.Feat_ZeroMining_HL6]:
-    'Focus on storage and computation, not artificial scarcity',
-  [ShowcaseStrings.Feat_CrossPlatform_Title]: 'Cross-Platform Determinism',
+    'Фокус на зберіганні та обчисленнях, а не штучному дефіциті',
+  [ShowcaseStrings.Feat_CrossPlatform_Title]: 'Кросплатформний детермінізм',
   [ShowcaseStrings.Feat_CrossPlatform_Desc]:
-    'Identical cryptographic operations across Node.js and browser environments. Deterministic key generation ensures consistent results regardless of platform.',
-  [ShowcaseStrings.Feat_CrossPlatform_Cat]: 'Cryptography',
+    'Ідентичні криптографічні операції в середовищах Node.js та браузера. Детерміністична генерація ключів забезпечує узгоджені результати незалежно від платформи.',
+  [ShowcaseStrings.Feat_CrossPlatform_Cat]: 'Криптографія',
   [ShowcaseStrings.Feat_CrossPlatform_Tech1]: 'Node.js',
   [ShowcaseStrings.Feat_CrossPlatform_Tech2]: 'Browser Crypto',
-  [ShowcaseStrings.Feat_CrossPlatform_Tech3]: 'Deterministic Algorithms',
+  [ShowcaseStrings.Feat_CrossPlatform_Tech3]: 'Детерміністичні алгоритми',
   [ShowcaseStrings.Feat_CrossPlatform_HL1]:
-    'Unified cryptographic operations across platforms',
+    'Уніфіковані криптографічні операції на різних платформах',
   [ShowcaseStrings.Feat_CrossPlatform_HL2]:
-    'Deterministic random bit generation (HMAC-DRBG)',
+    'Детерміністична генерація випадкових бітів (HMAC-DRBG)',
   [ShowcaseStrings.Feat_CrossPlatform_HL3]:
-    'Consistent Paillier key derivation from ECDH keys',
-  [ShowcaseStrings.Feat_CrossPlatform_HL4]: 'Browser and Node.js compatibility',
+    'Узгоджене виведення ключів Пайє з ключів ECDH',
+  [ShowcaseStrings.Feat_CrossPlatform_HL4]: 'Сумісність з браузером та Node.js',
   [ShowcaseStrings.Feat_CrossPlatform_HL5]:
-    'Reproducible cryptographic results',
+    'Відтворювані криптографічні результати',
   [ShowcaseStrings.Feat_CrossPlatform_HL6]:
-    'Cross-platform testing and verification',
-  [ShowcaseStrings.Feat_Contracts_Title]: 'Digital Contracts & Governance',
+    'Кросплатформне тестування та верифікація',
+  [ShowcaseStrings.Feat_Contracts_Title]: 'Цифрові контракти та управління',
   [ShowcaseStrings.Feat_Contracts_Desc]:
-    'Smart contract capabilities for decentralized applications. BrightTrust-based governance with configurable voting thresholds for network decisions and policy enforcement.',
-  [ShowcaseStrings.Feat_Contracts_Cat]: 'Governance',
-  [ShowcaseStrings.Feat_Contracts_Tech1]: 'Smart Contracts',
-  [ShowcaseStrings.Feat_Contracts_Tech2]: 'Governance',
-  [ShowcaseStrings.Feat_Contracts_Tech3]: 'Voting Systems',
+    'Можливості смарт-контрактів для децентралізованих додатків. Управління на основі BrightTrust з налаштовуваними порогами голосування для мережевих рішень та застосування політик.',
+  [ShowcaseStrings.Feat_Contracts_Cat]: 'Управління',
+  [ShowcaseStrings.Feat_Contracts_Tech1]: 'Смарт-контракти',
+  [ShowcaseStrings.Feat_Contracts_Tech2]: 'Управління',
+  [ShowcaseStrings.Feat_Contracts_Tech3]: 'Системи голосування',
   [ShowcaseStrings.Feat_Contracts_HL1]:
-    'Digital contract execution on decentralized network',
+    'Виконання цифрових контрактів у децентралізованій мережі',
   [ShowcaseStrings.Feat_Contracts_HL2]:
-    'BrightTrust-based decision making for network governance',
+    'Прийняття рішень на основі BrightTrust для мережевого управління',
   [ShowcaseStrings.Feat_Contracts_HL3]:
-    'Configurable majority requirements for different actions',
+    'Налаштовувані вимоги більшості для різних дій',
   [ShowcaseStrings.Feat_Contracts_HL4]:
-    'Homomorphic voting for privacy-preserving governance',
-  [ShowcaseStrings.Feat_Contracts_HL5]: 'Reputation-weighted voting mechanisms',
+    'Гомоморфне голосування для управління зі збереженням конфіденційності',
+  [ShowcaseStrings.Feat_Contracts_HL5]: 'Механізми голосування, зважені за репутацією',
   [ShowcaseStrings.Feat_Contracts_HL6]:
-    'Transparent and auditable governance processes',
-  [ShowcaseStrings.Feat_SecretsJS_Title]: 'Secrets.js (fork)',
+    'Прозорі та перевіряємі процеси управління',
+  [ShowcaseStrings.Feat_SecretsJS_Title]: 'Secrets.js (форк)',
   [ShowcaseStrings.Feat_SecretsJS_Desc]:
-    "Enhanced implementation of Shamir's Secret Sharing for secure data splitting and reconstruction. Pure TypeScript with native browser support, cryptographically audited, and optimized for splitting any secret (passwords, keys, files) into threshold-recoverable shares.",
-  [ShowcaseStrings.Feat_SecretsJS_Cat]: 'Cryptography',
-  [ShowcaseStrings.Feat_SecretsJS_Tech1]: "Shamir's Secret Sharing",
-  [ShowcaseStrings.Feat_SecretsJS_Tech2]: 'Data Security',
+    'Покращена реалізація розділення секрету Шаміра для безпечного розділення та реконструкції даних. Чистий TypeScript з нативною підтримкою браузера, криптографічно перевірений та оптимізований для розділення будь-якого секрету (паролі, ключі, файли) на шарди з пороговим відновленням.',
+  [ShowcaseStrings.Feat_SecretsJS_Cat]: 'Криптографія',
+  [ShowcaseStrings.Feat_SecretsJS_Tech1]: 'Розділення секрету Шаміра',
+  [ShowcaseStrings.Feat_SecretsJS_Tech2]: 'Безпека даних',
   [ShowcaseStrings.Feat_SecretsJS_Tech3]: 'TypeScript',
   [ShowcaseStrings.Feat_SecretsJS_Tech4]: 'CSPRNG',
   [ShowcaseStrings.Feat_SecretsJS_HL1]:
-    'Divide secrets into n shares with configurable t-of-n threshold recovery',
+    'Розділення секретів на n шардів з налаштовуваним пороговим відновленням t-з-n',
   [ShowcaseStrings.Feat_SecretsJS_HL2]:
-    'Information-theoretically secure - shares below threshold reveal no information',
+    'Інформаційно-теоретична безпека — шарди нижче порогу не розкривають жодної інформації',
   [ShowcaseStrings.Feat_SecretsJS_HL3]:
-    'Cure53 security audit (July 2019) with zero issues found',
+    'Аудит безпеки Cure53 (липень 2019) з нульовою кількістю знайдених проблем',
   [ShowcaseStrings.Feat_SecretsJS_HL4]:
-    'Native browser support without polyfills (crypto.getRandomValues)',
+    'Нативна підтримка браузера без поліфілів (crypto.getRandomValues)',
   [ShowcaseStrings.Feat_SecretsJS_HL5]:
-    'Cross-platform deterministic operations (Node.js and browser)',
+    'Кросплатформні детерміністичні операції (Node.js та браузер)',
   [ShowcaseStrings.Feat_SecretsJS_HL6]:
-    'Full TypeScript support with comprehensive type definitions',
+    'Повна підтримка TypeScript з вичерпними визначеннями типів',
   [ShowcaseStrings.Feat_SecretsJS_HL7]:
-    'Convert passwords, files, and keys to/from hex with automatic padding',
+    'Конвертація паролів, файлів та ключів у/з hex з автоматичним доповненням',
   [ShowcaseStrings.Feat_SecretsJS_HL8]:
-    'Generate new shares dynamically from existing shares',
+    'Динамічна генерація нових шардів з існуючих шардів',
   [ShowcaseStrings.Feat_SecretsJS_HL9]:
-    'Configurable Galois field (3-20 bits) supporting up to 1,048,575 shares',
+    'Налаштовуване поле Галуа (3-20 біт) з підтримкою до 1 048 575 шардів',
   [ShowcaseStrings.Feat_Burnbag_Desc]:
     'Безпечне сховище з нульовим знанням та автоматизованими протоколами відмовостійкості. Криптографічне стирання знищує Рецепт (карту + ключі), роблячи розкидані зашифровані блоки назавжди невідновлюваними при спрацюванні.',
   [ShowcaseStrings.Feat_Burnbag_Cat]: 'Криптографія',
@@ -2012,113 +2042,278 @@ export const ShowcaseUkrainianStrings: Partial<
   [ShowcaseStrings.Feat_BrightChart_HL12]:
     'Докази з нульовим розголошенням дозволяють верифікацію страхування без розкриття повної медичної історії',
 
-  // Remaining (TODO: translate)
-  [ShowcaseStrings.Soup_Time]: 'Time',
+  // Remaining
+  [ShowcaseStrings.Soup_Time]: 'Час',
   [ShowcaseStrings.Soup_AlertRetrieveFailed]:
-    'Failed to retrieve file: {ERROR}',
-  [ShowcaseStrings.Soup_AlertUploadCBLOnly]: 'Please upload a .cbl file',
+    'Не вдалося отримати файл: {ERROR}',
+  [ShowcaseStrings.Soup_AlertUploadCBLOnly]: 'Будь ласка, завантажте файл .cbl',
   [ShowcaseStrings.Soup_AlertCBLLoaded]:
-    'CBL loaded! File: {NAME} ({BLOCKS} blocks). You can now retrieve the file if all blocks are in the soup.',
-  [ShowcaseStrings.Soup_AlertParseCBLFailed]: 'Failed to parse CBL: {ERROR}',
+    'CBL завантажено! Файл: {NAME} ({BLOCKS} блоків). Тепер ви можете отримати файл, якщо всі блоки є в супі.',
+  [ShowcaseStrings.Soup_AlertParseCBLFailed]: 'Не вдалося розібрати CBL: {ERROR}',
   [ShowcaseStrings.Soup_AlertReconstructed]:
-    'File reconstructed successfully! Size: {SIZE} bytes. The file has been downloaded and added to receipts.',
+    'Файл успішно відновлено! Розмір: {SIZE} байт. Файл завантажено.',
   [ShowcaseStrings.Soup_AlertMagnetFailed]:
-    'Failed to process magnet URL: {ERROR}',
-  [ShowcaseStrings.Soup_AlertMessageSent]: 'Message sent and stored in soup!',
-  [ShowcaseStrings.Soup_AlertSendFailed]: 'Failed to send message: {ERROR}',
+    'Не вдалося обробити magnet URL: {ERROR}',
+  [ShowcaseStrings.Soup_AlertMessageSent]: 'Повідомлення надіслано та збережено в супі!',
+  [ShowcaseStrings.Soup_AlertSendFailed]: 'Не вдалося надіслати повідомлення: {ERROR}',
   [ShowcaseStrings.Soup_AlertMessageRetrieved]:
-    'Message retrieved from soup: {TEXT}',
+    'Повідомлення отримано з супу: {TEXT}',
   [ShowcaseStrings.Soup_AlertRetrieveMessageFailed]:
-    'Failed to retrieve message: {ERROR}',
-  [ShowcaseStrings.Soup_AlertCopied]: 'Magnet URL copied to clipboard!',
-  [ShowcaseStrings.Anim_PauseBtn]: 'Pause Animation',
-  [ShowcaseStrings.Anim_PlayBtn]: 'Play Animation',
-  [ShowcaseStrings.Anim_ResetBtn]: 'Reset Animation',
-  [ShowcaseStrings.Anim_SpeedLabel]: 'Speed: {SPEED}x',
-  [ShowcaseStrings.Anim_PerfTitle]: '🔧 Performance Monitor',
-  [ShowcaseStrings.Anim_PerfFrameRate]: 'Frame Rate:',
-  [ShowcaseStrings.Anim_PerfFrameTime]: 'Frame Time:',
-  [ShowcaseStrings.Anim_PerfDropped]: 'Dropped Frames:',
-  [ShowcaseStrings.Anim_PerfMemory]: 'Memory:',
-  [ShowcaseStrings.Anim_PerfSequences]: 'Sequences:',
-  [ShowcaseStrings.Anim_PerfErrors]: 'Errors:',
-  [ShowcaseStrings.Anim_WhatHappening]: "What's happening:",
-  [ShowcaseStrings.Anim_DurationLabel]: 'Duration:',
-  [ShowcaseStrings.Anim_SizeInfo]: 'Size: {SIZE} bytes | Blocks: {BLOCKS}',
+    'Не вдалося отримати повідомлення: {ERROR}',
+  [ShowcaseStrings.Soup_AlertCopied]: 'Magnet URL скопійовано в буфер обміну!',
+  [ShowcaseStrings.Anim_PauseBtn]: 'Призупинити анімацію',
+  [ShowcaseStrings.Anim_PlayBtn]: 'Відтворити анімацію',
+  [ShowcaseStrings.Anim_ResetBtn]: 'Скинути анімацію',
+  [ShowcaseStrings.Anim_SpeedLabel]: 'Швидкість: {SPEED}x',
+  [ShowcaseStrings.Anim_PerfTitle]: '🔧 Монітор продуктивності',
+  [ShowcaseStrings.Anim_PerfFrameRate]: 'Частота кадрів:',
+  [ShowcaseStrings.Anim_PerfFrameTime]: 'Час кадру:',
+  [ShowcaseStrings.Anim_PerfDropped]: 'Пропущені кадри:',
+  [ShowcaseStrings.Anim_PerfMemory]: "Пам'ять:",
+  [ShowcaseStrings.Anim_PerfSequences]: 'Послідовності:',
+  [ShowcaseStrings.Anim_PerfErrors]: 'Помилки:',
+  [ShowcaseStrings.Anim_WhatHappening]: 'Що відбувається:',
+  [ShowcaseStrings.Anim_DurationLabel]: 'Тривалість:',
+  [ShowcaseStrings.Anim_SizeInfo]: 'Розмір: {SIZE} байт | Блоки: {BLOCKS}',
 
-  // Educational/Encoding (TODO: translate)
-  [ShowcaseStrings.Edu_CloseTooltip]: 'Close tooltip',
-  [ShowcaseStrings.Edu_WhatsHappening]: "🔍 What's Happening",
-  [ShowcaseStrings.Edu_WhyItMatters]: '💡 Why It Matters',
-  [ShowcaseStrings.Edu_TechnicalDetails]: '⚙️ Technical Details',
-  [ShowcaseStrings.Edu_RelatedConcepts]: '🔗 Related Concepts',
-  [ShowcaseStrings.Edu_VisualCues]: '👁️ Visual Cues',
-  [ShowcaseStrings.Edu_GetHelp]: 'Get help with this step',
-  [ShowcaseStrings.Edu_UnderstandContinue]: '✅ I Understand - Continue',
-  [ShowcaseStrings.Edu_SkipStep]: '⏭️ Skip This Step',
-  [ShowcaseStrings.Edu_GlossaryTitle]: '📚 BrightChain Concept Glossary',
-  [ShowcaseStrings.Edu_CloseGlossary]: 'Close glossary',
-  [ShowcaseStrings.Edu_BackToGlossary]: '← Back to Glossary',
-  [ShowcaseStrings.Edu_Definition]: 'Definition',
-  [ShowcaseStrings.Edu_TechnicalDefinition]: 'Technical Definition',
-  [ShowcaseStrings.Edu_Examples]: 'Examples',
-  [ShowcaseStrings.Edu_RelatedTerms]: 'Related Terms',
-  [ShowcaseStrings.Edu_SearchPlaceholder]: 'Search concepts...',
-  [ShowcaseStrings.Edu_ProcessOverview]: 'Process Overview',
-  [ShowcaseStrings.Edu_WhatWeAccomplished]: 'What We Accomplished',
-  [ShowcaseStrings.Edu_TechnicalOutcomes]: 'Technical Outcomes',
-  [ShowcaseStrings.Edu_WhatsNext]: "What's Next?",
-  [ShowcaseStrings.Edu_LearningProgress]: 'Learning Progress',
+  // Educational/Encoding
+  [ShowcaseStrings.Edu_CloseTooltip]: 'Закрити підказку',
+  [ShowcaseStrings.Edu_WhatsHappening]: '🔍 Що відбувається',
+  [ShowcaseStrings.Edu_WhyItMatters]: '💡 Чому це важливо',
+  [ShowcaseStrings.Edu_TechnicalDetails]: '⚙️ Технічні деталі',
+  [ShowcaseStrings.Edu_RelatedConcepts]: '🔗 Пов\'язані концепції',
+  [ShowcaseStrings.Edu_VisualCues]: '👁️ Візуальні підказки',
+  [ShowcaseStrings.Edu_GetHelp]: 'Отримати допомогу з цим кроком',
+  [ShowcaseStrings.Edu_UnderstandContinue]: '✅ Зрозуміло - Продовжити',
+  [ShowcaseStrings.Edu_SkipStep]: '⏭️ Пропустити цей крок',
+  [ShowcaseStrings.Edu_GlossaryTitle]: '📚 Глосарій концепцій BrightChain',
+  [ShowcaseStrings.Edu_CloseGlossary]: 'Закрити глосарій',
+  [ShowcaseStrings.Edu_BackToGlossary]: '← Повернутися до глосарію',
+  [ShowcaseStrings.Edu_Definition]: 'Визначення',
+  [ShowcaseStrings.Edu_TechnicalDefinition]: 'Технічне визначення',
+  [ShowcaseStrings.Edu_Examples]: 'Приклади',
+  [ShowcaseStrings.Edu_RelatedTerms]: 'Пов\'язані терміни',
+  [ShowcaseStrings.Edu_SearchPlaceholder]: 'Пошук концепцій...',
+  [ShowcaseStrings.Edu_ProcessOverview]: 'Огляд процесу',
+  [ShowcaseStrings.Edu_WhatWeAccomplished]: 'Що ми досягли',
+  [ShowcaseStrings.Edu_TechnicalOutcomes]: 'Технічні результати',
+  [ShowcaseStrings.Edu_WhatsNext]: 'Що далі?',
+  [ShowcaseStrings.Edu_LearningProgress]: 'Прогрес навчання',
   [ShowcaseStrings.Edu_StepsCompleted]:
-    '{COMPLETED} of {TOTAL} steps completed',
-  [ShowcaseStrings.Enc_Title]: '🎬 File Encoding Animation',
+    '{COMPLETED} з {TOTAL} кроків завершено',
+  [ShowcaseStrings.Enc_Title]: '🎬 Анімація кодування файлу',
   [ShowcaseStrings.Enc_Subtitle]:
-    'Watch as your file is transformed into BrightChain blocks',
-  [ShowcaseStrings.Enc_ChunksTitle]: '📦 File Chunks ({COUNT})',
+    'Спостерігайте, як ваш файл перетворюється на блоки BrightChain',
+  [ShowcaseStrings.Enc_ChunksTitle]: '📦 Фрагменти файлу ({COUNT})',
   [ShowcaseStrings.Enc_ChunksSubtitle]:
-    'Each chunk will become a block in the soup',
-  [ShowcaseStrings.Enc_EduWhatsHappening]: "🎓 What's Happening Now",
-  [ShowcaseStrings.Enc_TechDetails]: 'Technical Details:',
-  [ShowcaseStrings.Enc_BlockSizeInfo]: 'Block size: {SIZE} bytes',
-  [ShowcaseStrings.Enc_ExpectedChunks]: 'Expected chunks: {COUNT}',
+    'Кожен фрагмент стане блоком у супі',
+  [ShowcaseStrings.Enc_EduWhatsHappening]: '🎓 Що зараз відбувається',
+  [ShowcaseStrings.Enc_TechDetails]: 'Технічні деталі:',
+  [ShowcaseStrings.Enc_BlockSizeInfo]: 'Розмір блоку: {SIZE} байт',
+  [ShowcaseStrings.Enc_ExpectedChunks]: 'Очікувані фрагменти: {COUNT}',
   [ShowcaseStrings.Enc_ChunkBecomesBlock]:
-    'Each chunk becomes one block in the soup',
-  [ShowcaseStrings.Enc_WhyPadding]: 'Why Padding?',
-  [ShowcaseStrings.Enc_PaddingSameSize]: 'All blocks must be the same size',
+    'Кожен фрагмент стає блоком у супі',
+  [ShowcaseStrings.Enc_WhyPadding]: 'Навіщо доповнення?',
+  [ShowcaseStrings.Enc_PaddingSameSize]: 'Усі блоки повинні бути однакового розміру',
   [ShowcaseStrings.Enc_PaddingPreventsAnalysis]:
-    'Random padding prevents data analysis',
+    'Випадкове доповнення запобігає аналізу даних',
   [ShowcaseStrings.Enc_PaddingRemoved]:
-    'Padding is removed during reconstruction',
-  [ShowcaseStrings.Enc_ChecksumPurpose]: 'Checksum Purpose:',
-  [ShowcaseStrings.Enc_EnsuresIntegrity]: 'Ensures data integrity',
-  [ShowcaseStrings.Enc_UniqueIdentifier]: 'Used as unique block identifier',
+    'Доповнення видаляється під час відновлення',
+  [ShowcaseStrings.Enc_ChecksumPurpose]: 'Призначення контрольної суми:',
+  [ShowcaseStrings.Enc_EnsuresIntegrity]: 'Забезпечує цілісність даних',
+  [ShowcaseStrings.Enc_UniqueIdentifier]: 'Використовується як унікальний ідентифікатор блоку',
   [ShowcaseStrings.Enc_EnablesVerification]:
-    'Enables verification during retrieval',
+    'Дозволяє перевірку під час отримання',
 
-  // ProcessCompletionSummary (TODO)
-  [ShowcaseStrings.Edu_KeyLearningPoints]: '🧠 Key Learning Points',
-  [ShowcaseStrings.Edu_CloseSummary]: 'Close summary',
-  [ShowcaseStrings.Edu_Overview]: 'Overview',
-  [ShowcaseStrings.Edu_Achievements]: 'Achievements',
-  [ShowcaseStrings.Edu_Technical]: 'Technical',
-  [ShowcaseStrings.Edu_NextSteps]: 'Next Steps',
-  [ShowcaseStrings.Edu_Previous]: '← Previous',
-  [ShowcaseStrings.Edu_Next]: 'Next →',
-  [ShowcaseStrings.Edu_Finish]: 'Finish',
+  // ProcessCompletionSummary
+  [ShowcaseStrings.Edu_KeyLearningPoints]: '🧠 Ключові навчальні моменти',
+  [ShowcaseStrings.Edu_CloseSummary]: 'Закрити підсумок',
+  [ShowcaseStrings.Edu_Overview]: 'Огляд',
+  [ShowcaseStrings.Edu_Achievements]: 'Досягнення',
+  [ShowcaseStrings.Edu_Technical]: 'Технічне',
+  [ShowcaseStrings.Edu_NextSteps]: 'Наступні кроки',
+  [ShowcaseStrings.Edu_Previous]: '← Назад',
+  [ShowcaseStrings.Edu_Next]: 'Далі →',
+  [ShowcaseStrings.Edu_Finish]: 'Завершити',
 
-  // EducationalModeControls (TODO)
-  [ShowcaseStrings.Edu_EducationalMode]: '🎓 Educational Mode',
-  [ShowcaseStrings.Edu_AnimationSpeed]: 'Animation Speed:',
-  [ShowcaseStrings.Edu_SpeedVerySlow]: '0.25x (Very Slow)',
-  [ShowcaseStrings.Edu_SpeedSlow]: '0.5x (Slow)',
-  [ShowcaseStrings.Edu_SpeedModerate]: '0.75x (Moderate)',
-  [ShowcaseStrings.Edu_SpeedNormal]: '1x (Normal)',
-  [ShowcaseStrings.Edu_SpeedFast]: '1.5x (Fast)',
-  [ShowcaseStrings.Edu_SpeedVeryFast]: '2x (Very Fast)',
-  [ShowcaseStrings.Edu_StepByStep]: 'Step-by-Step Mode',
-  [ShowcaseStrings.Edu_ShowTooltips]: 'Show Tooltips',
-  [ShowcaseStrings.Edu_ShowExplanations]: 'Show Explanations',
-  [ShowcaseStrings.Edu_AutoAdvance]: 'Auto Advance Steps',
+  // EducationalModeControls
+  [ShowcaseStrings.Edu_EducationalMode]: '🎓 Навчальний режим',
+  [ShowcaseStrings.Edu_AnimationSpeed]: 'Швидкість анімації:',
+  [ShowcaseStrings.Edu_SpeedVerySlow]: '0.25x (Дуже повільно)',
+  [ShowcaseStrings.Edu_SpeedSlow]: '0.5x (Повільно)',
+  [ShowcaseStrings.Edu_SpeedModerate]: '0.75x (Помірно)',
+  [ShowcaseStrings.Edu_SpeedNormal]: '1x (Нормально)',
+  [ShowcaseStrings.Edu_SpeedFast]: '1.5x (Швидко)',
+  [ShowcaseStrings.Edu_SpeedVeryFast]: '2x (Дуже швидко)',
+  [ShowcaseStrings.Edu_StepByStep]: 'Покроковий режим',
+  [ShowcaseStrings.Edu_ShowTooltips]: 'Показати підказки',
+  [ShowcaseStrings.Edu_ShowExplanations]: 'Показати пояснення',
+  [ShowcaseStrings.Edu_AutoAdvance]: 'Автоматичне просування кроків',
+
+  // Privacy Policy Page
+  [ShowcaseStrings.PP_Title]: 'Політика конфіденційності',
+  [ShowcaseStrings.PP_LastUpdated]: 'Останнє оновлення: 20 квітня 2026',
+  [ShowcaseStrings.PP_BackToHome]: '← Повернутися на головну',
+
+  // Section 1: Introduction
+  [ShowcaseStrings.PP_S1_Title]: '1. Вступ',
+  [ShowcaseStrings.PP_S1_P1]:
+    'BrightChain — це децентралізована платформа з відкритим кодом, яку експлуатує Digital Defiance, некомерційна організація 501(c)(3) («ми» або «наш»). Ця Політика конфіденційності описує, як ми збираємо, використовуємо, зберігаємо та розкриваємо інформацію, коли ви використовуєте платформу BrightChain, веб-сайт, додатки та пов\'язані послуги (разом — «Послуги»).',
+  [ShowcaseStrings.PP_S1_P2]:
+    'Отримуючи доступ до Послуг або використовуючи їх, ви підтверджуєте, що прочитали, зрозуміли та погоджуєтесь дотримуватися цієї Політики конфіденційності. Якщо ви не згодні, ви не повинні використовувати Послуги.',
+
+  // Section 2: How BrightChain Works
+  [ShowcaseStrings.PP_S2_Title]:
+    '2. Як працює BrightChain — Архітектурний контекст',
+  [ShowcaseStrings.PP_S2_P1]:
+    'BrightChain побудований на моделі файлової системи без власника (OFF). Усі дані, що зберігаються в мережі, розбиваються на блоки фіксованого розміру, піддаються XOR з криптографічно випадковими блоками (процес, який називається «TUPLE-відбілювання») і розподіляються між вузлами-учасниками. В результаті:',
+  [ShowcaseStrings.PP_S2_Li1]:
+    'Окремі блоки не відрізняються від випадкових даних і не можуть бути прочитані без повного набору складових блоків та відповідного Списку складових блоків (CBL).',
+  [ShowcaseStrings.PP_S2_Li2]:
+    'Дані можуть бути додатково зашифровані за допомогою схеми інтегрованого шифрування на еліптичних кривих (ECIES) з використанням AES-256-GCM, забезпечуючи конфіденційність для кожного отримувача на додаток до правдоподібного заперечення, що забезпечується TUPLE-відбілюванням.',
+  [ShowcaseStrings.PP_S2_Li3]:
+    'Оператори вузлів — включаючи Digital Defiance — як правило, не можуть визначити вміст, власність або характер будь-якого окремого блоку, що зберігається в мережі.',
+  [ShowcaseStrings.PP_S2_P2]:
+    'Ця архітектура означає, що захист конфіденційності, описаний у цій політиці, у багатьох випадках забезпечується математикою, а не лише політикою.',
+
+  // Section 3: Information We Collect
+  [ShowcaseStrings.PP_S3_Title]: '3. Інформація, яку ми збираємо',
+  [ShowcaseStrings.PP_S3_1_Title]: '3.1 Інформація облікового запису',
+  [ShowcaseStrings.PP_S3_1_P1]:
+    'Коли ви створюєте обліковий запис BrightChain, ми збираємо ім\'я користувача, адресу електронної пошти та ваш публічний криптографічний ключ (отриманий з вашого мнемоніка BIP39). Ми не збираємо, не зберігаємо і не маємо доступу до вашої мнемонічної фрази або приватних ключів.',
+  [ShowcaseStrings.PP_S3_2_Title]: '3.2 Контент, створений користувачем',
+  [ShowcaseStrings.PP_S3_2_P1]:
+    'Файли, повідомлення, облікові дані та інший контент, який ви зберігаєте в мережі, розбиваються на TUPLE-відбілені блоки. Ми не маємо можливості читати, реконструювати або перевіряти цей контент. Якщо ви використовуєте додаткове шифрування ECIES, контент додатково шифрується для конкретних отримувачів і є недоступним для будь-кого — включаючи нас — без відповідного приватного ключа.',
+  [ShowcaseStrings.PP_S3_3_Title]: '3.3 Автоматично зібрана інформація',
+  [ShowcaseStrings.PP_S3_3_P1]:
+    'Коли ви взаємодієте з нашими веб-сервісами, ми можемо автоматично збирати стандартні дані журналів сервера, включаючи IP-адреси, тип браузера, URL-адреси переходу, відвідані сторінки та мітки часу. Ця інформація використовується виключно для операційних цілей (моніторинг безпеки, запобігання зловживанням та надійність сервісу) і зберігається не більше 90 днів.',
+  [ShowcaseStrings.PP_S3_4_Title]: '3.4 Записи блокчейн-реєстру',
+  [ShowcaseStrings.PP_S3_4_P1]:
+    'Певні операції (створення сховищ, читання сховищ, знищення сховищ, голосування з управління) записуються в блокчейн-реєстр, що працює лише на додавання. Ці записи містять тип операції, мітку часу та криптографічні хеші — а не вміст базових даних. Записи реєстру є незмінними за конструкцією і не можуть бути видалені.',
+
+  // Section 4: How We Use Information
+  [ShowcaseStrings.PP_S4_Title]: '4. Як ми використовуємо інформацію',
+  [ShowcaseStrings.PP_S4_P1]: 'Ми використовуємо зібрану інформацію для:',
+  [ShowcaseStrings.PP_S4_Li1]: 'Надання, підтримки та покращення Послуг',
+  [ShowcaseStrings.PP_S4_Li2]:
+    'Автентифікації користувачів та управління обліковими записами',
+  [ShowcaseStrings.PP_S4_Li3]:
+    'Виявлення та запобігання шахрайству, зловживанням та інцидентам безпеки',
+  [ShowcaseStrings.PP_S4_Li4]:
+    'Дотримання застосовних правових зобов\'язань',
+  [ShowcaseStrings.PP_S4_Li5]:
+    'Зв\'язку з вами щодо Послуг (наприклад, оголошення про сервіс, сповіщення про безпеку)',
+  [ShowcaseStrings.PP_S4_P2]:
+    'Ми не продаємо, не здаємо в оренду і не обмінюємо вашу особисту інформацію з третіми сторонами. Ми не використовуємо ваші дані для реклами або профілювання.',
+
+  // Section 5: Data Storage and Security
+  [ShowcaseStrings.PP_S5_Title]: '5. Зберігання та безпека даних',
+  [ShowcaseStrings.PP_S5_P1]:
+    'Контент, створений користувачем, зберігається у вигляді TUPLE-відбілених блоків, розподілених по децентралізованій мережі. Метадані облікового запису (ім\'я користувача, електронна пошта, публічний ключ) зберігаються в наших операційних базах даних із заходами безпеки, що відповідають галузевим стандартам, включаючи шифрування в стані спокою та при передачі.',
+  [ShowcaseStrings.PP_S5_P2]:
+    'Після збереження даних у вигляді відбілених блоків та їх розподілу по мережі дані інших учасників можуть стати залежними від тих самих блоків через процес XOR-відбілювання. Це означає, що видалення окремих блоків може бути технічно неможливим без впливу на дані інших користувачів. Однак для відновлення файлу потрібен Список Складових Блоків (CBL) — впорядкований рецепт ідентифікаторів блоків. Без CBL розподілені блоки обчислювально не відрізняються від випадкових даних і не можуть бути повторно зібрані. Видалення або знищення CBL достатньо для того, щоб зробити базові дані назавжди недоступними.',
+  [ShowcaseStrings.PP_S5_P3]:
+    'CBL можуть зберігатися в різних місцях залежно від застосунку. Digital Burnbag зберігає CBL у своїй системі сховищ, підкріпленій BrightDB. Користувачі також можуть зберігати CBL як посилання MagnetURL. У всіх випадках знищення CBL — незалежно від місця зберігання — є ефективним механізмом видалення даних, навіть коли базові блоки залишаються в мережі.',
+
+  // Section 6: Cryptographic Protections
+  [ShowcaseStrings.PP_S6_Title]:
+    '6. Криптографічний захист та обмеження',
+  [ShowcaseStrings.PP_S6_P1]:
+    'BrightChain використовує потужний криптографічний захист, включаючи хешування SHA3-512, ECIES з secp256k1, симетричне шифрування AES-256-GCM, печатки HMAC-SHA3-512 та гомоморфне шифрування Пайє для голосування зі збереженням конфіденційності. Ці засоби захисту забезпечуються протоколом і не залежать від нашої співпраці чи доброї волі.',
+  [ShowcaseStrings.PP_S6_P2]:
+    'При правильному використанні BrightChain може забезпечити дуже потужний захист конфіденційності. Однак ми не гарантуємо, що будь-який конкретний криптографічний алгоритм залишатиметься безпечним нескінченно. Досягнення в обчислювальній техніці (включаючи квантові обчислення) можуть вплинути на безпеку поточних криптографічних примітивів. Користувачі несуть відповідальність за розуміння доступних їм засобів захисту та відповідне налаштування використання Послуг.',
+
+  // Section 7: Law Enforcement
+  [ShowcaseStrings.PP_S7_Title]:
+    '7. Правоохоронні органи та правові запити',
+  [ShowcaseStrings.PP_S7_P1]:
+    'Digital Defiance діє як мережевий оператор та постачальник інфраструктури. Ми виконуємо дійсні правові процедури, включаючи повістки, судові накази та ордери на обшук, видані судами компетентної юрисдикції, в межах технічної можливості.',
+  [ShowcaseStrings.PP_S7_P2]:
+    'Однак через архітектурний дизайн BrightChain:',
+  [ShowcaseStrings.PP_S7_Li1]:
+    'Ми, як правило, не можемо надати вміст даних, створених користувачем та збережених у вигляді TUPLE-відбілених блоків, оскільки не володіємо CBL або ключами дешифрування, необхідними для реконструкції або дешифрування цих даних.',
+  [ShowcaseStrings.PP_S7_Li2]:
+    'Ми можемо надати метадані облікового запису (ім\'я користувача, електронну пошту, публічний ключ) та дані журналів сервера в межах їх зберігання.',
+  [ShowcaseStrings.PP_S7_Li3]:
+    'Записи блокчейн-реєстру є незмінними і можуть бути надані у відповідь на дійсну правову процедуру.',
+  [ShowcaseStrings.PP_S7_Li4]:
+    'Якщо сховище Digital Burnbag було криптографічно знищено, доказ знищення є єдиним залишковим артефактом — він доводить, що дані зникли, а не те, що вони містили.',
+  [ShowcaseStrings.PP_S7_P3]:
+    'Ми повідомимо постраждалих користувачів про правові запити в межах, дозволених законом. Ми залишаємо за собою право оскаржувати правові запити, які вважаємо надмірно широкими, юридично недостатніми або іншим чином неналежними.',
+
+  // Section 8: Brokered Anonymity
+  [ShowcaseStrings.PP_S8_Title]: '8. Посередницька анонімність',
+  [ShowcaseStrings.PP_S8_P1]:
+    'BrightChain підтримує протокол «Посередницької анонімності», в якому справжня особа користувача може бути запечатана за допомогою схеми розділення секрету Шаміра та розподілена серед членів управління BrightTrust. Відновлення особи вимагає порогового голосування членів BrightTrust і підлягає налаштовуваному строку давності, після якого фрагменти особи назавжди видаляються, а справжня особа стає невідновлюваною. Цей механізм розроблений для балансування конфіденційності з підзвітністю під колективним управлінням.',
+
+  // Section 9: Third-Party Services
+  [ShowcaseStrings.PP_S9_Title]: '9. Послуги третіх сторін',
+  [ShowcaseStrings.PP_S9_P1]:
+    'Певні функції (такі як моніторинг активності протоколу канарки) можуть інтегруватися з послугами третіх сторін (наприклад, GitHub, Fitbit, Slack). Використання вами цих інтеграцій регулюється відповідними політиками конфіденційності третіх сторін. Ми отримуємо доступ лише до мінімальної інформації, необхідної для надання запитуваної функціональності (наприклад, мітки часу нещодавньої активності для моніторингу перемикача мертвої людини) і не зберігаємо облікові дані третіх сторін на наших серверах — автентифікація здійснюється через токени OAuth, які ви можете відкликати в будь-який час.',
+
+  // Section 10: Children's Privacy
+  [ShowcaseStrings.PP_S10_Title]: '10. Конфіденційність дітей',
+  [ShowcaseStrings.PP_S10_P1]:
+    'Послуги не призначені для дітей віком до 13 років (або відповідного віку цифрової згоди у вашій юрисдикції). Ми свідомо не збираємо особисту інформацію від дітей. Якщо ми дізнаємося, що зібрали особисту інформацію від дитини, ми вживемо заходів для негайного видалення цієї інформації.',
+
+  // Section 11: International Users
+  [ShowcaseStrings.PP_S11_Title]: '11. Міжнародні користувачі',
+  [ShowcaseStrings.PP_S11_P1]:
+    'Digital Defiance базується в Сполучених Штатах. Якщо ви отримуєте доступ до Послуг з-за меж Сполучених Штатів, ваша інформація може бути передана, збережена та оброблена в Сполучених Штатах або інших юрисдикціях, де працює наша інфраструктура. Використовуючи Послуги, ви погоджуєтесь на таку передачу та обробку.',
+  [ShowcaseStrings.PP_S11_1_Title]:
+    '11.1 Європейський економічний простір (ЄЕП) та Сполучене Королівство',
+  [ShowcaseStrings.PP_S11_1_P1]:
+    'Якщо ви перебуваєте в ЄЕП або Сполученому Королівстві, ви можете мати права відповідно до Загального регламенту захисту даних (GDPR) або GDPR Великобританії, включаючи право на доступ, виправлення, видалення, обмеження обробки та перенесення ваших персональних даних, а також право на заперечення проти обробки. Для реалізації цих прав зв\'яжіться з нами за адресою нижче. Зверніть увагу, що певні дані (записи блокчейн-реєстру, розподілені TUPLE-блоки) можуть бути технічно неможливими для видалення через децентралізовану та незмінну природу системи. Можливість доказового знищення BrightChain (через Digital Burnbag) розроблена для підтримки відповідності праву на видалення за статтею 17 GDPR для даних, контрольованих користувачем.',
+
+  // Section 12: Data Retention
+  [ShowcaseStrings.PP_S12_Title]: '12. Зберігання даних',
+  [ShowcaseStrings.PP_S12_P1]:
+    'Метадані облікового запису зберігаються, поки ваш обліковий запис активний або за потреби для надання Послуг. Журнали сервера зберігаються до 90 днів. Записи блокчейн-реєстру зберігаються безстроково як частина незмінного реєстру. TUPLE-відбілені блоки зберігаються в мережі відповідно до умов контракту на зберігання та економіки енергетичного балансу; блоки, контракти на зберігання яких закінчуються і не поновлюються, можуть бути зібрані вузлами.',
+
+  // Section 13: Disclaimer
+  [ShowcaseStrings.PP_S13_Title]:
+    '13. Відмова від гарантій та обмеження відповідальності',
+  [ShowcaseStrings.PP_S13_P1]:
+    'ПОСЛУГИ НАДАЮТЬСЯ «ЯК Є» ТА «ЗА НАЯВНОСТІ» БЕЗ БУДЬ-ЯКИХ ГАРАНТІЙ, ЯВНИХ, НЕЯВНИХ АБО ПЕРЕДБАЧЕНИХ ЗАКОНОМ, ВКЛЮЧАЮЧИ, АЛЕ НЕ ОБМЕЖУЮЧИСЬ, НЕЯВНІ ГАРАНТІЇ ТОВАРНОЇ ПРИДАТНОСТІ, ПРИДАТНОСТІ ДЛЯ КОНКРЕТНОЇ МЕТИ, ПРАВА ВЛАСНОСТІ ТА НЕПОРУШЕННЯ ПРАВ.',
+  [ShowcaseStrings.PP_S13_P2]:
+    'DIGITAL DEFIANCE, ЙОГО ПОСАДОВІ ОСОБИ, ДИРЕКТОРИ, ПРАЦІВНИКИ, ВОЛОНТЕРИ ТА УЧАСНИКИ (ВКЛЮЧАЮЧИ JESSICA MULEIN) НЕ НЕСУТЬ ВІДПОВІДАЛЬНОСТІ ЗА БУДЬ-ЯКІ НЕПРЯМІ, ВИПАДКОВІ, СПЕЦІАЛЬНІ, НАСЛІДКОВІ АБО ШТРАФНІ ЗБИТКИ, АБО БУДЬ-ЯКУ ВТРАТУ ПРИБУТКУ, ДАНИХ, ВИКОРИСТАННЯ, ДІЛОВОЇ РЕПУТАЦІЇ АБО ІНШИХ НЕМАТЕРІАЛЬНИХ ВТРАТ, ЩО ВИНИКАЮТЬ ВНАСЛІДОК (A) ВАШОГО ДОСТУПУ АБО ВИКОРИСТАННЯ АБО НЕМОЖЛИВОСТІ ДОСТУПУ АБО ВИКОРИСТАННЯ ПОСЛУГ; (B) БУДЬ-ЯКОЇ ПОВЕДІНКИ АБО КОНТЕНТУ ТРЕТІХ ОСІБ У ПОСЛУГАХ; (C) БУДЬ-ЯКОГО КОНТЕНТУ, ОТРИМАНОГО З ПОСЛУГ; (D) НЕСАНКЦІОНОВАНОГО ДОСТУПУ, ВИКОРИСТАННЯ АБО ЗМІНИ ВАШИХ ПЕРЕДАЧ АБО КОНТЕНТУ; АБО (E) ЗБОЮ БУДЬ-ЯКОГО КРИПТОГРАФІЧНОГО МЕХАНІЗМУ, НЕЗАЛЕЖНО ВІД ТОГО, ЧИ БАЗУЄТЬСЯ ЦЕ НА ГАРАНТІЇ, КОНТРАКТІ, ДЕЛІКТІ (ВКЛЮЧАЮЧИ НЕДБАЛІСТЬ) АБО БУДЬ-ЯКІЙ ІНШІЙ ПРАВОВІЙ ТЕОРІЇ, НЕЗАЛЕЖНО ВІД ТОГО, ЧИ БУЛИ МИ ПОІНФОРМОВАНІ ПРО МОЖЛИВІСТЬ ТАКОГО ЗБИТКУ.',
+  [ShowcaseStrings.PP_S13_P3]:
+    'У ЖОДНОМУ ВИПАДКУ СУКУПНА ВІДПОВІДАЛЬНІСТЬ DIGITAL DEFIANCE ТА ЙОГО ПОСАДОВИХ ОСІБ, ДИРЕКТОРІВ, ПРАЦІВНИКІВ, ВОЛОНТЕРІВ ТА УЧАСНИКІВ ЗА ВСІ ПРЕТЕНЗІЇ, ПОВ\'ЯЗАНІ З ПОСЛУГАМИ, НЕ ПЕРЕВИЩУВАТИМЕ БІЛЬШУ З ДВОХ СУМ: СТО ДОЛАРІВ США (100,00 ДОЛАРІВ США) АБО СУМУ, ЯКУ ВИ СПЛАТИЛИ НАМ ПРОТЯГОМ ДВАНАДЦЯТИ (12) МІСЯЦІВ, ЩО ПЕРЕДУЮТЬ ПРЕТЕНЗІЇ.',
+  [ShowcaseStrings.PP_S13_P4]:
+    'ДЕЯКІ ЮРИСДИКЦІЇ НЕ ДОЗВОЛЯЮТЬ ВИКЛЮЧЕННЯ АБО ОБМЕЖЕННЯ ПЕВНИХ ГАРАНТІЙ АБО ВІДПОВІДАЛЬНОСТІ. У ТАКИХ ЮРИСДИКЦІЯХ НАША ВІДПОВІДАЛЬНІСТЬ ОБМЕЖУЄТЬСЯ МАКСИМАЛЬНОЮ МІРОЮ, ДОЗВОЛЕНОЮ ЗАКОНОМ.',
+
+  // Section 14: Indemnification
+  [ShowcaseStrings.PP_S14_Title]: '14. Відшкодування',
+  [ShowcaseStrings.PP_S14_P1]:
+    'Ви погоджуєтесь відшкодувати, захищати та звільняти від відповідальності Digital Defiance, його посадових осіб, директорів, працівників, волонтерів та учасників (включаючи Jessica Mulein) від і проти всіх претензій, зобов\'язань, збитків, втрат, витрат та видатків (включаючи розумні гонорари адвокатів), що виникають з або будь-яким чином пов\'язані з вашим доступом або використанням Послуг, вашим порушенням цієї Політики конфіденційності або вашим порушенням будь-якого застосовного закону чи прав будь-якої третьої сторони.',
+
+  // Section 15: Governing Law
+  [ShowcaseStrings.PP_S15_Title]:
+    '15. Застосовне право та вирішення спорів',
+  [ShowcaseStrings.PP_S15_P1]:
+    'Ця Політика конфіденційності регулюється та тлумачиться відповідно до законів штату Вашингтон, Сполучені Штати, без урахування його положень про колізію законів. Будь-який спір, що виникає з або пов\'язаний з цією Політикою конфіденційності або Послугами, вирішується виключно в державних або федеральних судах, розташованих у окрузі Кінг, Вашингтон, і ви погоджуєтесь з персональною юрисдикцією таких судів.',
+
+  // Section 16: Open Source
+  [ShowcaseStrings.PP_S16_Title]: '16. Відкритий код',
+  [ShowcaseStrings.PP_S16_P1_Before]:
+    'BrightChain — це програмне забезпечення з відкритим кодом. Вихідний код публічно доступний за адресою ',
+  [ShowcaseStrings.PP_S16_P1_LinkText]:
+    'github.com/Digital-Defiance/BrightChain',
+  [ShowcaseStrings.PP_S16_P1_After]:
+    '. Ми заохочуємо вас переглянути код для перевірки властивостей конфіденційності, описаних у цій політиці. Криптографічний захист, описаний у цьому документі, реалізований у кодовій базі та може бути перевірений шляхом інспекції.',
+
+  // Section 17: Changes
+  [ShowcaseStrings.PP_S17_Title]: '17. Зміни до цієї політики',
+  [ShowcaseStrings.PP_S17_P1]:
+    'Ми можемо час від часу оновлювати цю Політику конфіденційності. Ми повідомимо вас про суттєві зміни, опублікувавши оновлену політику в Послугах з переглянутою датою «Останнє оновлення». Ваше подальше використання Послуг після дати набрання чинності будь-яких змін означає вашу згоду з переглянутою політикою.',
+
+  // Section 18: Contact
+  [ShowcaseStrings.PP_S18_Title]: '18. Зв\'яжіться з нами',
+  [ShowcaseStrings.PP_S18_P1]:
+    'Якщо у вас є запитання щодо цієї Політики конфіденційності або ви бажаєте скористатися своїми правами на захист даних, будь ласка, зверніться:',
+  [ShowcaseStrings.PP_S18_OrgName]: 'Digital Defiance',
+  [ShowcaseStrings.PP_S18_EmailLabel]: 'Електронна пошта:',
+  [ShowcaseStrings.PP_S18_WebLabel]: 'Веб:',
 };
 
 export default ShowcaseUkrainianStrings;

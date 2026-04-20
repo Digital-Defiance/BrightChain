@@ -1342,7 +1342,7 @@ export const AmericanEnglishStrings: ComponentStrings<BrightChainStringKey> = {
     'Privacy with moderation capabilities',
   [BrightChainStrings.Splash_ExploreThePlatform]: 'Explore the Platform',
   [BrightChainStrings.Splash_InteractiveDemos]:
-    'Interactive demos showcasing BrightChain&rsquo;s core capabilities',
+    "Interactive demos showcasing BrightChain's core capabilities",
   [BrightChainStrings.Splash_LaunchDemo]: 'Launch Demo',
 
   // Splash - BrightStack
@@ -1380,6 +1380,10 @@ export const AmericanEnglishStrings: ComponentStrings<BrightChainStringKey> = {
   [BrightChainStrings.Splash_RealWorldValue]: 'Real-World Value',
   [BrightChainStrings.Splash_RealWorldValueDescription]:
     'Joule values are set by formula based on actual costs, and we refine that formula over time — no trading, no volatility.',
+  [BrightChainStrings.Splash_Documentation]: 'Documentation',
+  [BrightChainStrings.Splash_FAQ]: 'Frequently Asked Questions',
+  [BrightChainStrings.Splash_PrivacyPolicy]: 'Privacy Policy',
+  [BrightChainStrings.Splash_TermsOfService]: 'Terms of Service',
 
   // Dashboard
   [BrightChainStrings.Dashboard_Title]: 'Your Dashboard',

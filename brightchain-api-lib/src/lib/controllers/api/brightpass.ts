@@ -29,6 +29,8 @@ import {
   VaultAuthenticationError,
   VaultNotFoundError,
 } from '../../services/brightpass';
+import type { VaultMetadataDocument } from '../../services/brightpass';
+import type { IChatCollection } from '@brightchain/brightchain-lib';
 import { DefaultBackendIdType } from '../../shared-types';
 import {
   handleError,
@@ -156,6 +158,16 @@ export class BrightPassController<
   constructor(application: IBrightChainApplication<TID>) {
     super(application);
 
+    // Retrieve the BrightDb-backed vault metadata collection registered
+    // by App.start() so vault index data flows through the unified store.
+    const vaultMetadataCollection = this.application.services.has(
+      'vaultMetadataCollection',
+    )
+      ? (this.application.services.get('vaultMetadataCollection') as
+          | IChatCollection<VaultMetadataDocument>
+          | undefined)
+      : undefined;
+
     // Attempt to wire VCBLService and BlockService from ServiceProvider.
     // If ServiceProvider is not initialized (e.g. in test environments),
     // fall back to the current no-args behavior (graceful degradation).
@@ -174,11 +186,17 @@ export class BrightPassController<
         this.application.services.get('blockStore') as IBlockStore | undefined,
         vcblService,
         blockService,
+        undefined,
+        vaultMetadataCollection,
       );
     } catch {
       // ServiceProvider not yet initialized — degrade gracefully
       this.brightPassService = new BrightPassService<TID>(
         this.application.services.get('blockStore') as IBlockStore | undefined,
+        undefined,
+        undefined,
+        undefined,
+        vaultMetadataCollection,
       );
     }
   }

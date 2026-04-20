@@ -101,7 +101,7 @@ export class AdminChatController<
         ? (this.application.services.get('db') as BrightDb)
         : undefined;
       if (brightDb) {
-        const collection = brightDb.collection('conversations');
+        const collection = brightDb.collection('brightchat_conversations');
         const total = await collection.countDocuments();
         const skip = (page - 1) * limit;
         const docs = await collection.find().skip(skip).limit(limit).toArray();
@@ -170,7 +170,7 @@ export class AdminChatController<
         ? (this.application.services.get('db') as BrightDb)
         : undefined;
       if (brightDb) {
-        const collection = brightDb.collection('messages');
+        const collection = brightDb.collection('brightchat_messages');
         const filter = { conversationId };
         const total = await collection.countDocuments(filter);
         const skip = (page - 1) * limit;
@@ -235,7 +235,7 @@ export class AdminChatController<
         ? (this.application.services.get('db') as BrightDb)
         : undefined;
       if (brightDb) {
-        const collection = brightDb.collection('messages');
+        const collection = brightDb.collection('brightchat_messages');
         const result = await collection.updateOne(
           { _id: messageId },
           { $set: { isDeleted: true } },
