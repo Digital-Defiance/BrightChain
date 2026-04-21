@@ -463,6 +463,7 @@ export class ChannelController<
         return validationError('Missing required fields: name, visibility');
       }
       const memberId = this.getMemberId(req);
+      await this.ensureMemberKeys(memberId);
       const channel = await this.getChannelService().createChannel(
         name,
         memberId,
@@ -592,6 +593,7 @@ export class ChannelController<
     try {
       const { channelId } = (req as JoinLeaveBody).params;
       const memberId = this.getMemberId(req);
+      await this.ensureMemberKeys(memberId);
       await this.getChannelService().joinChannel(channelId, memberId);
       return {
         statusCode: 200,
@@ -754,6 +756,7 @@ export class ChannelController<
     try {
       const { token } = (req as RedeemInviteParams).params;
       const memberId = this.getMemberId(req);
+      await this.ensureMemberKeys(memberId);
       await this.getChannelService().redeemInvite(token, memberId);
       return {
         statusCode: 200,
@@ -1009,7 +1012,7 @@ export class ChannelController<
     response: ApiErrorResponse;
   } {
     if (error instanceof ChannelNotFoundError) {
-      return notFoundError('Channel', 'unknown');
+      return notFoundError('Channel', error.message);
     }
     if (error instanceof NotChannelMemberError) {
       return forbiddenError(error.message);

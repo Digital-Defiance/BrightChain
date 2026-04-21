@@ -249,6 +249,10 @@ export class ServerController<
         return validationError('Missing required field: name');
       }
       const memberId = this.getMemberId(req);
+
+      // Pre-populate the ECIES public key cache for the creator
+      await this.ensureMemberKeys(memberId);
+
       const server = await this.getServerService().createServer(memberId, {
         name,
         iconUrl,
@@ -376,6 +380,7 @@ export class ServerController<
         return validationError('Missing required field: memberIds');
       }
       const memberId = this.getMemberId(req);
+      await this.ensureMemberKeys(memberId, ...memberIds);
       const added = await this.getServerService().addMembers(
         serverId,
         memberId,
@@ -456,6 +461,7 @@ export class ServerController<
     try {
       const { serverId, token } = (req as RedeemInviteParams).params;
       const memberId = this.getMemberId(req);
+      await this.ensureMemberKeys(memberId);
       await this.getServerService().redeemInvite(serverId, token, memberId);
       return {
         statusCode: 200,

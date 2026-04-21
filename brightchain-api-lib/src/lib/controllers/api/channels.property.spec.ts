@@ -82,8 +82,8 @@ describe('ChannelService – Property 12: Channel creation assigns owner role', 
           // Only one member (the creator)
           expect(channel.members.length).toBe(1);
 
-          // Encrypted key exists for creator
-          expect(channel.encryptedSharedKey.has(creatorId)).toBe(true);
+          // Encrypted key exists for creator at epoch 0
+          expect(channel.encryptedSharedKey.get(0)?.has(creatorId)).toBe(true);
         },
       ),
       { numRuns: 100 },

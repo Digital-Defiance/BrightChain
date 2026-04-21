@@ -227,15 +227,16 @@ describe('ConversationPromotion – Property 7: Promotion re-encrypts keys for a
 
           const allMemberIds = [memberA, memberB, ...uniqueNew];
 
-          // encryptedSharedKey has an entry for every member
-          expect(group.encryptedSharedKey.size).toBe(allMemberIds.length);
+          // encryptedSharedKey has an entry for every member at epoch 0
+          const epoch0 = group.encryptedSharedKey.get(0)!;
+          expect(epoch0.size).toBe(allMemberIds.length);
           for (const id of allMemberIds) {
-            expect(group.encryptedSharedKey.has(id)).toBe(true);
+            expect(epoch0.has(id)).toBe(true);
           }
 
           // All entries decrypt to the same symmetric key
           const keys = allMemberIds.map((id) =>
-            extractKeyFromDefault(group.encryptedSharedKey.get(id)!),
+            extractKeyFromDefault(epoch0.get(id)!),
           );
           for (let i = 1; i < keys.length; i++) {
             expect(uint8ArrayEquals(keys[i], keys[0])).toBe(true);

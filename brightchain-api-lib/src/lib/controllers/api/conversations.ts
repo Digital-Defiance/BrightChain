@@ -200,6 +200,7 @@ export class DirectMessageController<
       }
 
       const senderId = this.getMemberId(req);
+      await this.ensureMemberKeys(senderId, recipientId);
       const service = this.getConversationService();
       const message = await service.sendMessage(senderId, recipientId, content);
 
@@ -332,6 +333,7 @@ export class DirectMessageController<
         return validationError('Missing required field: newMemberIds');
       }
 
+      await this.ensureMemberKeys(memberId, ...newMemberIds);
       const group = await service.promoteToGroup(
         conversationId,
         newMemberIds,

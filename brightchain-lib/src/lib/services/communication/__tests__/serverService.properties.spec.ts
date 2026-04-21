@@ -270,21 +270,15 @@ describe('Feature: brightchat-discord-experience — ServerService Properties', 
             const { serverService, channelService } = createServices();
             const server = await serverService.createServer(ownerId, { name: serverName });
 
-            // Add member to server
+            // Add member to server (this now also adds them to all server channels)
             await serverService.addMembers(server.id, ownerId, [memberId]);
 
             // The default "general" channel was created with the owner.
-            // Manually add the member to the channel's members array
-            // (simulating the member joining the channel).
+            // addMembers now automatically distributes keys and adds the member
+            // to all server channels.
             const generalChannelId = server.channelIds[0];
-            const generalChannel = channelService.getChannelById(generalChannelId);
-            expect(generalChannel).toBeDefined();
 
-            // Directly add member to channel members (since joinChannel
-            // requires PUBLIC visibility and the channel is already public)
-            await channelService.joinChannel(generalChannelId, memberId);
-
-            // Verify member is in the channel
+            // Verify member is in the channel (added by addMembers key distribution)
             const channelBefore = channelService.getChannelById(generalChannelId)!;
             expect(channelBefore.members.some((m) => m.memberId === memberId)).toBe(true);
 

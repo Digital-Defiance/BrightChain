@@ -36,6 +36,7 @@ import type { IWriteAclApiManager } from '../auth/writeAclApiRouter';
 import { PoolDiscoveryService } from '../availability/poolDiscoveryService';
 import { AdminBlockController } from '../controllers/api/adminBlock';
 import { AdminChatController } from '../controllers/api/adminChat';
+import { AdminChatServersController } from '../controllers/api/adminChatServers';
 import { AdminHubController } from '../controllers/api/adminHub';
 import { AdminMailController } from '../controllers/api/adminMail';
 import { AdminPassController } from '../controllers/api/adminPass';
@@ -126,6 +127,7 @@ export class ApiRouter<
   private readonly adminBlockController: AdminBlockController<TID>;
   private readonly adminHubController: AdminHubController<TID>;
   private readonly adminChatController: AdminChatController<TID>;
+  private readonly adminChatServersController: AdminChatServersController<TID>;
   private readonly adminPassController: AdminPassController<TID>;
   private readonly adminMailController: AdminMailController<TID>;
   private readonly brightchartRouter: BrightChartRouter<TID>;
@@ -192,6 +194,7 @@ export class ApiRouter<
     this.adminBlockController = new AdminBlockController(application);
     this.adminHubController = new AdminHubController(application);
     this.adminChatController = new AdminChatController(application);
+    this.adminChatServersController = new AdminChatServersController(application);
     this.adminPassController = new AdminPassController(application);
     this.adminMailController = new AdminMailController(application);
 
@@ -298,6 +301,11 @@ export class ApiRouter<
       '/admin/chat',
       ...adminAuth,
       this.adminChatController.router,
+    );
+    this.router.use(
+      '/admin/chat',
+      ...adminAuth,
+      this.adminChatServersController.router,
     );
     this.router.use(
       '/admin/pass',

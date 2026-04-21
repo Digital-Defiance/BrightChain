@@ -74,17 +74,18 @@ describe('GroupService – Property 8: Group creation generates per-member encry
 
           const allMemberIds = [creatorId, ...uniqueOthers];
 
-          // encryptedSharedKey has exactly N entries
-          expect(group.encryptedSharedKey.size).toBe(allMemberIds.length);
+          // encryptedSharedKey has exactly N entries at epoch 0
+          const epoch0 = group.encryptedSharedKey.get(0)!;
+          expect(epoch0.size).toBe(allMemberIds.length);
 
           // Every member has an entry
           for (const id of allMemberIds) {
-            expect(group.encryptedSharedKey.has(id)).toBe(true);
+            expect(epoch0.has(id)).toBe(true);
           }
 
           // All entries decrypt to the same symmetric key
           const keys = allMemberIds.map((id) =>
-            extractKeyFromDefault(group.encryptedSharedKey.get(id)!),
+            extractKeyFromDefault(epoch0.get(id)!),
           );
           for (let i = 1; i < keys.length; i++) {
             expect(uint8ArrayEquals(keys[i], keys[0])).toBe(true);
@@ -200,21 +201,28 @@ describe('GroupService – Property 10: Key rotation on member departure', () =>
           // Key must have rotated
           expect(uint8ArrayEquals(keyAfter, keyBefore)).toBe(false);
 
-          // Removed member has no key entry
-          expect(updatedGroup.encryptedSharedKey.has(targetId)).toBe(false);
+          // Removed member has no key entry in any epoch
+          for (const [, epochMap] of updatedGroup.encryptedSharedKey) {
+            expect(epochMap.has(targetId)).toBe(false);
+          }
 
-          // All remaining members have a valid key entry
+          // Get the current epoch (epoch 1 after rotation)
+          const epochState = groupService.getKeyEpochState(group.id);
+          const currentEpoch = epochState?.currentEpoch ?? 0;
+          const currentEpochMap = updatedGroup.encryptedSharedKey.get(currentEpoch)!;
+
+          // All remaining members have a valid key entry at the current epoch
           const remainingIds = [
             creatorId,
             ...uniqueOthers.filter((id) => id !== targetId),
           ];
-          expect(updatedGroup.encryptedSharedKey.size).toBe(
+          expect(currentEpochMap.size).toBe(
             remainingIds.length,
           );
           for (const id of remainingIds) {
-            expect(updatedGroup.encryptedSharedKey.has(id)).toBe(true);
+            expect(currentEpochMap.has(id)).toBe(true);
             const decrypted = extractKeyFromDefault(
-              updatedGroup.encryptedSharedKey.get(id)!,
+              currentEpochMap.get(id)!,
             );
             expect(uint8ArrayEquals(decrypted, keyAfter)).toBe(true);
           }
@@ -254,17 +262,24 @@ describe('GroupService – Property 10: Key rotation on member departure', () =>
           // Key must have rotated
           expect(uint8ArrayEquals(keyAfter, keyBefore)).toBe(false);
 
-          // Leaver has no key entry
-          expect(updatedGroup.encryptedSharedKey.has(leaverId)).toBe(false);
+          // Leaver has no key entry in any epoch
+          for (const [, epochMap] of updatedGroup.encryptedSharedKey) {
+            expect(epochMap.has(leaverId)).toBe(false);
+          }
 
-          // Remaining members have valid key entries
+          // Get the current epoch (epoch 1 after rotation)
+          const epochState = groupService.getKeyEpochState(group.id);
+          const currentEpoch = epochState?.currentEpoch ?? 0;
+          const currentEpochMap = updatedGroup.encryptedSharedKey.get(currentEpoch)!;
+
+          // Remaining members have valid key entries at the current epoch
           const remainingIds = [
             creatorId,
             ...uniqueOthers.filter((id) => id !== leaverId),
           ];
           for (const id of remainingIds) {
             const decrypted = extractKeyFromDefault(
-              updatedGroup.encryptedSharedKey.get(id)!,
+              currentEpochMap.get(id)!,
             );
             expect(uint8ArrayEquals(decrypted, keyAfter)).toBe(true);
           }

@@ -142,6 +142,11 @@ const AdminChatPanel = lazy(() =>
     default: m.default,
   })),
 );
+const AdminChatServersPanel = lazy(() =>
+  import('./components/AdminChatServersPanel').then((m) => ({
+    default: m.default,
+  })),
+);
 const AdminHubPanel = lazy(() =>
   import('./components/AdminHubPanel').then((m) => ({
     default: m.default,
@@ -786,6 +791,14 @@ const InnerApp: FC = () => {
               element={
                 <PrivateRoute>
                   <AdminChatPanel />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/admin/chat-servers"
+              element={
+                <PrivateRoute>
+                  <AdminChatServersPanel />
                 </PrivateRoute>
               }
             />

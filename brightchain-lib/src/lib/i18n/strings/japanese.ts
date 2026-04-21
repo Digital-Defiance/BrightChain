@@ -1495,6 +1495,53 @@ export const JapaneseStrings: ComponentStrings<BrightChainStringKey> = {
   [BrightChainStrings.Admin_Chat_DeleteMessageTitle]: 'メッセージを削除',
   [BrightChainStrings.Admin_Chat_DeleteMessageConfirm]:
     'このメッセージを削除してもよろしいですか？ソフトデリートされます。',
+
+  // Admin BrightChat Servers
+  [BrightChainStrings.Admin_ChatServers_Title]: 'BrightChat サーバー管理',
+  [BrightChainStrings.Admin_ChatServers_TabServers]: 'サーバー',
+  [BrightChainStrings.Admin_ChatServers_TabChannels]: 'チャンネル',
+  [BrightChainStrings.Admin_ChatServers_TabMembers]: 'メンバー',
+  [BrightChainStrings.Admin_ChatServers_ColName]: '名前',
+  [BrightChainStrings.Admin_ChatServers_ColOwner]: 'オーナー',
+  [BrightChainStrings.Admin_ChatServers_ColMembers]: 'メンバー',
+  [BrightChainStrings.Admin_ChatServers_ColChannels]: 'チャンネル',
+  [BrightChainStrings.Admin_ChatServers_ColCreated]: '作成日',
+  [BrightChainStrings.Admin_ChatServers_ColActions]: 'アクション',
+  [BrightChainStrings.Admin_ChatServers_NoServersFound]: 'サーバーが見つかりません。',
+  [BrightChainStrings.Admin_ChatServers_DeleteServer]: 'サーバーを削除',
+  [BrightChainStrings.Admin_ChatServers_DeleteServerTitle]: 'サーバーを削除',
+  [BrightChainStrings.Admin_ChatServers_DeleteServerConfirm]:
+    'このサーバーを削除してもよろしいですか？すべてのチャンネルとデータが完全に削除されます。',
+  [BrightChainStrings.Admin_ChatServers_EditServer]: 'サーバーを編集',
+  [BrightChainStrings.Admin_ChatServers_EditServerTitle]: 'サーバーを編集',
+  [BrightChainStrings.Admin_ChatServers_ServerName]: 'サーバー名',
+  [BrightChainStrings.Admin_ChatServers_ServerIcon]: 'アイコンURL',
+  [BrightChainStrings.Admin_ChatServers_Save]: '保存',
+  [BrightChainStrings.Admin_ChatServers_ChannelName]: 'チャンネル名',
+  [BrightChainStrings.Admin_ChatServers_ChannelTopic]: 'トピック',
+  [BrightChainStrings.Admin_ChatServers_ChannelVisibility]: '公開設定',
+  [BrightChainStrings.Admin_ChatServers_ChannelMembers]: 'メンバー',
+  [BrightChainStrings.Admin_ChatServers_NoChannelsFound]: 'チャンネルが見つかりません。',
+  [BrightChainStrings.Admin_ChatServers_DeleteChannel]: 'チャンネルを削除',
+  [BrightChainStrings.Admin_ChatServers_DeleteChannelTitle]: 'チャンネルを削除',
+  [BrightChainStrings.Admin_ChatServers_DeleteChannelConfirm]:
+    'このチャンネルを削除してもよろしいですか？すべてのメッセージが完全に削除されます。',
+  [BrightChainStrings.Admin_ChatServers_MemberName]: 'メンバー',
+  [BrightChainStrings.Admin_ChatServers_MemberRole]: '役割',
+  [BrightChainStrings.Admin_ChatServers_MemberJoined]: '参加日',
+  [BrightChainStrings.Admin_ChatServers_NoMembersFound]: 'メンバーが見つかりません。',
+  [BrightChainStrings.Admin_ChatServers_RemoveMember]: 'メンバーを削除',
+  [BrightChainStrings.Admin_ChatServers_RemoveMemberTitle]: 'メンバーを削除',
+  [BrightChainStrings.Admin_ChatServers_RemoveMemberConfirm]:
+    'このメンバーをサーバーから削除してもよろしいですか？',
+  [BrightChainStrings.Admin_ChatServers_ChangeRole]: '役割を変更',
+  [BrightChainStrings.Admin_ChatServers_EncryptedNote]:
+    'メッセージの内容はエンドツーエンドで暗号化されており、管理者には表示されません。',
+  [BrightChainStrings.Admin_ChatServers_FilterByServer]: 'サーバーで絞り込み',
+  [BrightChainStrings.Admin_ChatServers_AllServers]: 'すべてのサーバー',
+  [BrightChainStrings.Admin_Menu_ChatServers]: 'チャットサーバー',
+
+  // Admin BrightHub
   [BrightChainStrings.Admin_Hub_Title]: 'BrightHub 管理',
   [BrightChainStrings.Admin_Hub_FilterByAuthorId]: '著者 ID でフィルター',
   [BrightChainStrings.Admin_Hub_FilterAllPosts]: 'すべての投稿',

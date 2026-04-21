@@ -365,6 +365,20 @@ export * from './ledgerError';
 export * from './ledgerSerializationError';
 
 // ============================================================================
+// Encryption Errors (BrightChat E2E)
+// ============================================================================
+/**
+ * Encryption error classes for BrightChat E2E encryption operations.
+ * @see {@link MissingPublicKeyError}
+ * @see {@link KeyUnwrapError}
+ * @see {@link MessageDecryptionError}
+ * @see {@link AttachmentTooLargeError}
+ * @see {@link TooManyAttachmentsError}
+ * @see {@link KeyEpochNotFoundError}
+ */
+export * from './encryptionErrors';
+
+// ============================================================================
 // Write ACL Errors
 // ============================================================================
 /**

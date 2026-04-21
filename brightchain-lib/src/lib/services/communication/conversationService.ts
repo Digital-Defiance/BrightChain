@@ -5,30 +5,82 @@
  * encrypted content storage to MessagePassingService. Supports cursor-based
  * pagination, message deletion, and conversation promotion to groups.
  *
+ * Uses epoch-aware key management via IKeyEpochState for forward secrecy.
+ * DM conversations generate a 256-bit DM_Key at creation, wrapped per-participant
+ * using the injected key encryption handler. Messages record the keyEpoch they
+ * were encrypted under.
+ *
  * When an IChatStorageProvider is injected, conversations and messages are
  * also persisted to the provider's collections (write-through). Sync helper
  * methods continue to read from the in-memory Maps so their signatures
  * remain unchanged.
  *
- * Requirements: 10.1
+ * Requirements: 10.1, 4.1, 4.2, 4.3, 4.4, 4.5, 4.6, 9.2
  */
 
 import { v4 as uuidv4 } from 'uuid';
+import { getRandomBytes } from '../../crypto/platformCrypto';
 import {
+  IChatAttachmentInput,
   ICommunicationMessage,
   IConversation,
   IGroup,
   IPaginatedResult,
 } from '../../interfaces/communication';
+import { validateAndPrepareAttachments } from './attachmentUtils';
 import {
   IChatCollection,
   IChatStorageProvider,
 } from '../../interfaces/communication/chatStorageProvider';
+import { IBlockContentStore } from '../../interfaces/communication/blockContentStore';
 import {
   ICommunicationEventEmitter,
   NullEventEmitter,
 } from '../../interfaces/events';
 import { paginateItems } from '../../utils/pagination';
+import { IKeyEpochState } from './keyEpochManager';
+import { KeyEpochNotFoundError, KeyUnwrapError } from '../../errors/encryptionErrors';
+
+/**
+ * Callback for encrypting a symmetric key for a specific member.
+ * Returns the encrypted key as a string (e.g. base64).
+ */
+export type ConversationKeyEncryptionHandler = (
+  memberId: string,
+  symmetricKey: Uint8Array,
+) => string;
+
+/**
+ * Default key encryption: base64-encodes the key prefixed with memberId.
+ * Placeholder; real implementations use ECIES.
+ */
+function defaultKeyEncryption(
+  memberId: string,
+  symmetricKey: Uint8Array,
+): string {
+  const binary = Array.from(symmetricKey)
+    .map((b) => String.fromCharCode(b))
+    .join('');
+  const base64 = btoa(binary);
+  return `enc:${memberId}:${base64}`;
+}
+
+/**
+ * Extract the symmetric key from a default-encrypted key string.
+ * Only works with the default placeholder encryption.
+ */
+export function extractConversationKeyFromDefault(
+  encrypted: string,
+): Uint8Array {
+  const parts = encrypted.split(':');
+  const base64 = parts[2];
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return bytes;
+}
 
 /**
  * Callback to check whether a member exists and is not blocked by the sender.
@@ -116,9 +168,14 @@ export class ConversationService {
   /** Set of known member IDs */
   private readonly knownMembers = new Set<string>();
 
+  /** conversationId → epoch-aware key state (raw keys + wrapped keys per epoch) */
+  private readonly keyEpochStates = new Map<string, IKeyEpochState<string>>();
+
   private groupPromotionHandler: GroupPromotionHandler | null = null;
   private readonly memberReachabilityCheck: MemberReachabilityCheck | null;
   private readonly eventEmitter: ICommunicationEventEmitter;
+  private readonly encryptKey: ConversationKeyEncryptionHandler;
+  private readonly randomBytesProvider: (length: number) => Uint8Array;
 
   /** Optional persistent collection for conversations (write-through). */
   private readonly conversationCollection:
@@ -130,18 +187,94 @@ export class ConversationService {
     | IChatCollection<ICommunicationMessage>
     | undefined;
 
+  /** Optional block content store for storing message content as blocks. */
+  private readonly blockContentStore: IBlockContentStore | undefined;
+
   constructor(
     memberReachabilityCheck: MemberReachabilityCheck | null = null,
     eventEmitter: ICommunicationEventEmitter = new NullEventEmitter(),
     storageProvider?: IChatStorageProvider,
+    encryptKey: ConversationKeyEncryptionHandler = defaultKeyEncryption,
+    randomBytesProvider?: (length: number) => Uint8Array,
+    blockContentStore?: IBlockContentStore,
   ) {
     this.memberReachabilityCheck = memberReachabilityCheck;
     this.eventEmitter = eventEmitter;
+    this.encryptKey = encryptKey;
+    this.randomBytesProvider = randomBytesProvider ?? getRandomBytes;
+    this.blockContentStore = blockContentStore;
     if (storageProvider) {
       this.conversationCollection = storageProvider.conversations;
       this.messageCollection = storageProvider.messages;
     }
   }
+
+  // ─── Key management helpers ─────────────────────────────────────────────
+
+  private generateSymmetricKey(): Uint8Array {
+    return this.randomBytesProvider(32); // AES-256
+  }
+
+  /**
+   * Encrypt a symmetric key for multiple members, returning a Map<memberId, wrappedKey>.
+   * Wraps key wrapping failures as KeyUnwrapError with context information.
+   *
+   * Requirements: 12.3
+   */
+  private encryptKeyForMembers(
+    memberIds: string[],
+    symmetricKey: Uint8Array,
+    contextId?: string,
+    epoch?: number,
+  ): Map<string, string> {
+    const encrypted = new Map<string, string>();
+    for (const id of memberIds) {
+      try {
+        encrypted.set(id, this.encryptKey(id, symmetricKey));
+      } catch (error) {
+        if (contextId !== undefined && epoch !== undefined) {
+          throw new KeyUnwrapError(contextId, id, epoch);
+        }
+        throw error;
+      }
+    }
+    return encrypted;
+  }
+
+  /**
+   * Assert that a key epoch exists in the epoch state for a given context.
+   * Throws KeyEpochNotFoundError if the epoch is not found.
+   *
+   * Requirements: 12.3, 12.4
+   */
+  private assertEpochExists(contextId: string, keyEpoch: number): void {
+    const state = this.keyEpochStates.get(contextId);
+    if (!state || !state.epochKeys.has(keyEpoch)) {
+      throw new KeyEpochNotFoundError(contextId, keyEpoch);
+    }
+  }
+
+  /**
+   * Create initial epoch state (epoch 0) for a new conversation.
+   * Uses KeyEpochManager pattern: creates epoch 0 with wrapped keys for all participants.
+   *
+   * Requirements: 4.1, 4.4
+   */
+  private createInitialEpochState(
+    symmetricKey: Uint8Array,
+    memberIds: string[],
+  ): IKeyEpochState<string> {
+    const epochKeys = new Map<number, Uint8Array>();
+    epochKeys.set(0, symmetricKey);
+
+    const wrappedKeys = this.encryptKeyForMembers(memberIds, symmetricKey);
+    const encryptedEpochKeys = new Map<number, Map<string, string>>();
+    encryptedEpochKeys.set(0, wrappedKeys);
+
+    return { currentEpoch: 0, epochKeys, encryptedEpochKeys };
+  }
+
+  // ─── Member management ──────────────────────────────────────────────────
 
   /**
    * Register a member as known (exists in the system).
@@ -186,8 +319,13 @@ export class ConversationService {
     return a < b ? `${a}:${b}` : `${b}:${a}`;
   }
 
+  // ─── Conversation lifecycle ─────────────────────────────────────────────
+
   /**
    * Create a new conversation between two members, or return the existing one.
+   * Generates a DM_Key and wraps for both participants using epoch-aware key management.
+   *
+   * Requirements: 4.1, 4.4, 9.2
    */
   async createOrGetConversation(
     memberA: string,
@@ -203,15 +341,23 @@ export class ConversationService {
     }
 
     const now = new Date();
+    const symmetricKey = this.generateSymmetricKey();
+    const participants: [string, string] = [memberA, memberB];
+
+    // Create initial epoch state (epoch 0) with wrapped keys for both participants
+    const epochState = this.createInitialEpochState(symmetricKey, participants);
+
     const conversation: IConversation = {
       id: uuidv4(),
-      participants: [memberA, memberB],
+      participants,
+      encryptedSharedKey: epochState.encryptedEpochKeys,
       createdAt: now,
       lastMessageAt: now,
     };
 
     this.conversations.set(conversation.id, conversation);
     this.messages.set(conversation.id, []);
+    this.keyEpochStates.set(conversation.id, epochState);
     this.participantIndex.set(key, conversation.id);
 
     // Persist to storage provider if available
@@ -242,7 +388,13 @@ export class ConversationService {
 
   /**
    * Get messages in a conversation, in chronological order.
+   * Messages are returned with their keyEpoch so clients can decrypt
+   * using the appropriate epoch's DM_Key.
+   * Validates that each message's keyEpoch exists in the epoch state;
+   * throws KeyEpochNotFoundError if a message references a non-existent epoch.
    * Supports cursor-based pagination.
+   *
+   * Requirements: 4.3, 4.5, 12.3, 12.4
    */
   async getMessages(
     conversationId: string,
@@ -264,25 +416,40 @@ export class ConversationService {
 
     const msgs = this.messages.get(conversationId) ?? [];
 
+    // Validate that each message's keyEpoch exists in the epoch state
+    for (const msg of msgs) {
+      this.assertEpochExists(conversationId, msg.keyEpoch);
+    }
+
     return paginateItems(msgs, cursor, limit);
   }
 
   /**
    * Send a message in a conversation.
    * Creates the conversation if it doesn't exist.
+   * Encrypts content with the current epoch's DM_Key and records the keyEpoch.
    * Checks recipient reachability and returns a uniform error for
    * non-existent or blocked members.
+   * Optionally accepts attachments which are validated against platform limits.
+   *
+   * Requirements: 4.2, 4.5, 9.2, 11.1, 11.2, 11.4, 11.5
    */
   async sendMessage(
     senderId: string,
     recipientId: string,
     content: string,
     conversationId?: string,
+    attachments?: IChatAttachmentInput[],
   ): Promise<ICommunicationMessage> {
     // Check reachability: uniform error for blocked/non-existent
     if (!this.isReachable(senderId, recipientId)) {
       throw new RecipientNotReachableError();
     }
+
+    // Validate and prepare attachment metadata before creating the message
+    const attachmentMetadata = attachments?.length
+      ? validateAndPrepareAttachments(attachments)
+      : [];
 
     let conversation: IConversation;
     if (conversationId) {
@@ -295,18 +462,34 @@ export class ConversationService {
       conversation = await this.createOrGetConversation(senderId, recipientId);
     }
 
+    const state = this.keyEpochStates.get(conversation.id);
+    const currentEpoch = state?.currentEpoch ?? 0;
+
+    // Store content via block content store if available; otherwise use raw content
+    let messageContent = content;
+    if (this.blockContentStore) {
+      const { blockReference } = await this.blockContentStore.storeContent(
+        content,
+        senderId,
+        [recipientId],
+      );
+      messageContent = blockReference;
+    }
+
     const now = new Date();
     const message: ICommunicationMessage = {
       id: uuidv4(),
       contextType: 'conversation',
       contextId: conversation.id,
       senderId,
-      encryptedContent: content,
+      encryptedContent: messageContent,
       createdAt: now,
       editHistory: [],
       deleted: false,
       pinned: false,
       reactions: [],
+      keyEpoch: currentEpoch,
+      attachments: attachmentMetadata,
     };
 
     const msgs = this.messages.get(conversation.id);
@@ -420,11 +603,32 @@ export class ConversationService {
     );
   }
 
+  // ─── Accessors (for testing / internal use) ───────────────────────────
+
   /**
    * Get a conversation by ID. Returns undefined if not found.
    */
   getConversation(conversationId: string): IConversation | undefined {
     return this.conversations.get(conversationId);
+  }
+
+  /**
+   * Get the current epoch's raw symmetric key for a conversation.
+   * Returns the key for the latest epoch (backward-compatible accessor).
+   */
+  getSymmetricKey(conversationId: string): Uint8Array | undefined {
+    const state = this.keyEpochStates.get(conversationId);
+    if (!state) return undefined;
+    return state.epochKeys.get(state.currentEpoch);
+  }
+
+  /**
+   * Get the full epoch state for a conversation (testing / internal use).
+   */
+  getKeyEpochState(
+    conversationId: string,
+  ): IKeyEpochState<string> | undefined {
+    return this.keyEpochStates.get(conversationId);
   }
 
   /**

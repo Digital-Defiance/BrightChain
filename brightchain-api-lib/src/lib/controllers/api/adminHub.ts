@@ -8,6 +8,7 @@ import {
   routeConfig,
   TypedHandlers,
 } from '@digitaldefiance/node-express-suite';
+import { SchemaCollection } from '../../enumerations/schema-collection';
 import { IBrightChainApplication } from '../../interfaces/application';
 import { DefaultBackendIdType } from '../../shared-types';
 import {
@@ -113,7 +114,7 @@ export class AdminHubController<
           .limit(limit)
           .toArray();
 
-        // Resolve author usernames from member_index
+        // Resolve author usernames from the users collection
         const authorIds = [
           ...new Set(
             docs.map(
@@ -123,16 +124,16 @@ export class AdminHubController<
         ].filter(Boolean);
         const usernameMap = new Map<string, string>();
         if (authorIds.length > 0) {
-          const memberIndexCollection =
-            brightDb.collection('member_index');
-          const members = await memberIndexCollection
+          const usersCollection =
+            brightDb.collection(SchemaCollection.User);
+          const users = await usersCollection
             .find({ _id: { $in: authorIds } } as never)
             .toArray();
-          for (const m of members) {
-            const member = m as Record<string, unknown>;
+          for (const u of users) {
+            const user = u as Record<string, unknown>;
             usernameMap.set(
-              member['_id'] as string,
-              (member['username'] as string) ?? '',
+              user['_id'] as string,
+              (user['username'] as string) ?? '',
             );
           }
         }

@@ -348,7 +348,10 @@ export class ServerService {
    * Skips members who are already in the server. Returns the list of
    * actually added member IDs.
    *
-   * Requirements: 2.7
+   * After adding, distributes channel keys for all server channels
+   * to each new member via ChannelService.addMemberToChannel().
+   *
+   * Requirements: 2.7, 6.1, 6.2, 6.3
    */
   async addMembers(
     serverId: string,
@@ -367,6 +370,13 @@ export class ServerService {
     }
 
     if (added.length > 0) {
+      // Distribute channel keys for all server channels to each new member
+      for (const memberId of added) {
+        for (const channelId of server.channelIds) {
+          await this.channelService.addMemberToChannel(channelId, memberId);
+        }
+      }
+
       server.updatedAt = new Date();
 
       // Persist to storage provider if available
@@ -382,7 +392,11 @@ export class ServerService {
    * Remove a member from a server and all of its channels.
    * Only owner or admin can remove members. Emits SERVER_MEMBER_REMOVED event.
    *
-   * Requirements: 2.8
+   * Delegates to ChannelService.removeMemberFromChannel() for each channel,
+   * which performs epoch-aware key rotation and removes the member's wrapped
+   * key entries from all epochs.
+   *
+   * Requirements: 2.8, 7.1, 7.2, 7.3
    */
   async removeMember(
     serverId: string,
@@ -395,15 +409,9 @@ export class ServerService {
     // Remove from server memberIds
     server.memberIds = server.memberIds.filter((id) => id !== memberId);
 
-    // Remove from all server channels
+    // Remove from all server channels via ChannelService (triggers key rotation)
     for (const channelId of server.channelIds) {
-      const channel = this.channelService.getChannelById(channelId);
-      if (channel && channel.members.some((m) => m.memberId === memberId)) {
-        channel.members = channel.members.filter(
-          (m) => m.memberId !== memberId,
-        );
-        channel.encryptedSharedKey.delete(memberId);
-      }
+      await this.channelService.removeMemberFromChannel(channelId, memberId);
     }
 
     server.updatedAt = new Date();
@@ -465,7 +473,10 @@ export class ServerService {
    * Validates the token belongs to the specified server, checks expiration
    * and max-use limits, increments currentUses, and adds the user to the server.
    *
-   * Requirements: 3.2, 3.3, 3.4
+   * After joining, distributes channel keys for all server channels
+   * to the new member via ChannelService.addMemberToChannel().
+   *
+   * Requirements: 3.2, 3.3, 3.4, 6.1, 6.2, 6.3
    */
   async redeemInvite(
     serverId: string,
@@ -502,6 +513,11 @@ export class ServerService {
     // Add user to server
     server.memberIds.push(userId);
     server.updatedAt = new Date();
+
+    // Distribute channel keys for all server channels to the new member
+    for (const channelId of server.channelIds) {
+      await this.channelService.addMemberToChannel(channelId, userId);
+    }
 
     // Increment usage
     invite.currentUses++;

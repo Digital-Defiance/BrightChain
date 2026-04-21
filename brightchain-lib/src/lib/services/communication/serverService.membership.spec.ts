@@ -129,11 +129,10 @@ describe('ServerService membership management', () => {
       });
       await serverService.addMembers(server.id, owner, ['user-a']);
 
-      // Join user-a to the default general channel
+      // addMembers now automatically adds user-a to all server channels
       const generalChannelId = server.channelIds[0];
-      await channelService.joinChannel(generalChannelId, 'user-a');
 
-      // Verify user-a is in the channel
+      // Verify user-a is in the channel (added by addMembers key distribution)
       const channelBefore = channelService.getChannelById(generalChannelId);
       expect(
         channelBefore?.members.some((m) => m.memberId === 'user-a'),

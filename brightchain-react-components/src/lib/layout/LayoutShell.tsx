@@ -26,6 +26,8 @@ export function LayoutShell({
   toolbarActions,
   detailPanel,
   children,
+  contentSx,
+  shellSx,
 }: LayoutShellProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const isDesktop = useMediaQuery('(min-width:961px)');
@@ -58,6 +60,7 @@ export function LayoutShell({
             flexDirection: 'column',
             height: '100vh',
             width: '100vw',
+            ...shellSx,
           }}
         >
           {/* AppBar */}
@@ -137,6 +140,7 @@ export function LayoutShell({
                 overflow: 'auto',
                 width: 0,
                 p: 2,
+                ...contentSx,
               }}
             >
               {children ?? <Outlet />}

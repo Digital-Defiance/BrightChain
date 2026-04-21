@@ -1,17 +1,17 @@
 /**
  * GroupService — manages group lifecycle, key management, and messaging.
  *
- * Maintains in-memory stores for groups and messages, with symmetric key
- * generation per group and ECIES-style per-member key encryption.
- * Supports member management with key rotation on departure,
- * message edit/delete/pin/reaction operations.
+ * Maintains in-memory stores for groups and messages, with epoch-aware
+ * symmetric key management via IKeyEpochState. Each key rotation creates
+ * a new epoch. Messages record which epoch they were encrypted under.
+ * On member removal, all epoch keys are re-wrapped for remaining members only.
  *
  * When an IChatStorageProvider is injected, groups and group messages are
  * also persisted to the provider's collections (write-through). Sync helper
  * methods continue to read from the in-memory Maps so their signatures
  * remain unchanged.
  *
- * Requirements: 10.2
+ * Requirements: 10.2, 5.1, 5.2, 5.3, 5.4, 9.3
  */
 
 import { v4 as uuidv4 } from 'uuid';
@@ -22,20 +22,25 @@ import {
   Permission,
 } from '../../enumerations/communication';
 import {
+  IChatAttachmentInput,
   ICommunicationMessage,
   IGroup,
   IGroupMember,
   IPaginatedResult,
 } from '../../interfaces/communication';
+import { validateAndPrepareAttachments } from './attachmentUtils';
 import {
   IChatCollection,
   IChatStorageProvider,
 } from '../../interfaces/communication/chatStorageProvider';
+import { IBlockContentStore } from '../../interfaces/communication/blockContentStore';
 import {
   ICommunicationEventEmitter,
   NullEventEmitter,
 } from '../../interfaces/events';
 import { paginateItems } from '../../utils/pagination';
+import { IKeyEpochState } from './keyEpochManager';
+import { KeyEpochNotFoundError, KeyUnwrapError } from '../../errors/encryptionErrors';
 import { MessageOperationsService } from './messageOperationsService';
 import { PermissionService } from './permissionService';
 
@@ -147,8 +152,8 @@ export class GroupService {
   /** groupId → messages (ordered by createdAt ascending) */
   private readonly messages = new Map<string, ICommunicationMessage[]>();
 
-  /** groupId → raw symmetric key (Uint8Array) */
-  private readonly symmetricKeys = new Map<string, Uint8Array>();
+  /** groupId → epoch-aware key state (raw keys + wrapped keys per epoch) */
+  private readonly keyEpochStates = new Map<string, IKeyEpochState<string>>();
 
   private readonly permissionService: PermissionService;
   private readonly encryptKey: KeyEncryptionHandler;
@@ -164,6 +169,9 @@ export class GroupService {
     | IChatCollection<ICommunicationMessage>
     | undefined;
 
+  /** Optional block content store for storing message content as blocks. */
+  private readonly blockContentStore: IBlockContentStore | undefined;
+
   constructor(
     permissionService: PermissionService,
     encryptKey: KeyEncryptionHandler = defaultKeyEncryption,
@@ -171,6 +179,7 @@ export class GroupService {
     eventEmitter?: ICommunicationEventEmitter,
     randomBytesProvider?: (length: number) => Uint8Array,
     storageProvider?: IChatStorageProvider,
+    blockContentStore?: IBlockContentStore,
   ) {
     this.permissionService = permissionService;
     this.encryptKey = encryptKey;
@@ -178,6 +187,7 @@ export class GroupService {
       messageOps ?? new MessageOperationsService(permissionService);
     this.eventEmitter = eventEmitter ?? new NullEventEmitter();
     this.randomBytesProvider = randomBytesProvider ?? getRandomBytes;
+    this.blockContentStore = blockContentStore;
     if (storageProvider) {
       this.groupCollection = storageProvider.groups;
       this.groupMessageCollection = storageProvider.groupMessages;
@@ -218,28 +228,138 @@ export class GroupService {
     return this.randomBytesProvider(32); // AES-256
   }
 
+  /**
+   * Encrypt a symmetric key for multiple members, returning a Map<memberId, wrappedKey>.
+   * Wraps key wrapping failures as KeyUnwrapError with context information.
+   *
+   * Requirements: 12.3
+   */
   private encryptKeyForMembers(
     memberIds: string[],
     symmetricKey: Uint8Array,
+    contextId?: string,
+    epoch?: number,
   ): Map<string, string> {
     const encrypted = new Map<string, string>();
     for (const id of memberIds) {
-      encrypted.set(id, this.encryptKey(id, symmetricKey));
+      try {
+        encrypted.set(id, this.encryptKey(id, symmetricKey));
+      } catch (error) {
+        if (contextId !== undefined && epoch !== undefined) {
+          throw new KeyUnwrapError(contextId, id, epoch);
+        }
+        throw error;
+      }
     }
     return encrypted;
   }
 
   /**
-   * Rotate the group's symmetric key and re-encrypt for remaining members.
-   * Requirement 10.2: key rotation on member departure.
+   * Assert that a key epoch exists in the epoch state for a given context.
+   * Throws KeyEpochNotFoundError if the epoch is not found.
+   *
+   * Requirements: 12.3
    */
-  private rotateKey(group: IGroup): void {
+  private assertEpochExists(contextId: string, keyEpoch: number): void {
+    const state = this.keyEpochStates.get(contextId);
+    if (!state || !state.epochKeys.has(keyEpoch)) {
+      throw new KeyEpochNotFoundError(contextId, keyEpoch);
+    }
+  }
+
+  /**
+   * Create initial epoch state (epoch 0) for a new group.
+   * Uses KeyEpochManager pattern: creates epoch 0 with wrapped keys for all members.
+   *
+   * Requirements: 5.1
+   */
+  private createInitialEpochState(
+    symmetricKey: Uint8Array,
+    memberIds: string[],
+  ): IKeyEpochState<string> {
+    const epochKeys = new Map<number, Uint8Array>();
+    epochKeys.set(0, symmetricKey);
+
+    const wrappedKeys = this.encryptKeyForMembers(memberIds, symmetricKey);
+    const encryptedEpochKeys = new Map<number, Map<string, string>>();
+    encryptedEpochKeys.set(0, wrappedKeys);
+
+    return { currentEpoch: 0, epochKeys, encryptedEpochKeys };
+  }
+
+  /**
+   * Add a member to an existing epoch state: wrap ALL epoch keys for the new member.
+   * This gives the new member access to full message history.
+   *
+   * Requirements: 5.2
+   */
+  private addMemberToEpochState(
+    state: IKeyEpochState<string>,
+    newMemberId: string,
+  ): void {
+    for (const [epoch, rawKey] of state.epochKeys) {
+      const epochMap =
+        state.encryptedEpochKeys.get(epoch) ?? new Map<string, string>();
+      epochMap.set(newMemberId, this.encryptKey(newMemberId, rawKey));
+      state.encryptedEpochKeys.set(epoch, epochMap);
+    }
+  }
+
+  /**
+   * Rotate key: increment epoch, add new key, delete removed member from ALL epochs,
+   * re-wrap ALL epoch keys for remaining members.
+   *
+   * Requirements: 5.3
+   */
+  private rotateEpochState(
+    state: IKeyEpochState<string>,
+    newKey: Uint8Array,
+    remainingMemberIds: string[],
+    removedMemberId: string,
+  ): IKeyEpochState<string> {
+    const newEpoch = state.currentEpoch + 1;
+
+    // Add new epoch key
+    state.epochKeys.set(newEpoch, newKey);
+
+    // Delete removed member from ALL epochs
+    for (const [, memberMap] of state.encryptedEpochKeys) {
+      memberMap.delete(removedMemberId);
+    }
+
+    // Re-wrap ALL epoch keys for remaining members
+    for (const [epoch, rawKey] of state.epochKeys) {
+      state.encryptedEpochKeys.set(
+        epoch,
+        this.encryptKeyForMembers(remainingMemberIds, rawKey),
+      );
+    }
+
+    return { ...state, currentEpoch: newEpoch };
+  }
+
+  /**
+   * Rotate the group's symmetric key using epoch-aware key management.
+   * Generates a new key, increments epoch, re-wraps all epoch keys for remaining members,
+   * and removes the departed member from all epochs.
+   *
+   * Requirements: 5.3
+   */
+  private rotateKey(group: IGroup, removedMemberId: string): void {
     const newKey = this.generateSymmetricKey();
-    this.symmetricKeys.set(group.id, newKey);
-    group.encryptedSharedKey = this.encryptKeyForMembers(
-      group.members.map((m) => m.memberId),
-      newKey,
-    );
+    const state = this.keyEpochStates.get(group.id);
+
+    if (state) {
+      const remainingMemberIds = group.members.map((m) => m.memberId);
+      const newState = this.rotateEpochState(
+        state,
+        newKey,
+        remainingMemberIds,
+        removedMemberId,
+      );
+      this.keyEpochStates.set(group.id, newState);
+      group.encryptedSharedKey = newState.encryptedEpochKeys;
+    }
   }
 
   // ─── Group lifecycle ──────────────────────────────────────────────────
@@ -248,8 +368,9 @@ export class GroupService {
    * Create a new group with the given members.
    * Generates a shared symmetric key and encrypts it for each member.
    * The creator is assigned the OWNER role; others get MEMBER.
+   * Uses KeyEpochManager pattern to create initial epoch 0.
    *
-   * Requirement 10.2: group creation with symmetric key management.
+   * Requirements: 10.2, 5.1, 9.3
    */
   async createGroup(
     name: string,
@@ -270,17 +391,15 @@ export class GroupService {
       joinedAt: now,
     }));
 
-    const encryptedSharedKey = this.encryptKeyForMembers(
-      allMemberIds,
-      symmetricKey,
-    );
+    // Create initial epoch state (epoch 0) with wrapped keys for all members
+    const epochState = this.createInitialEpochState(symmetricKey, allMemberIds);
 
     const group: IGroup = {
       id: groupId,
       name,
       creatorId,
       members,
-      encryptedSharedKey,
+      encryptedSharedKey: epochState.encryptedEpochKeys,
       createdAt: now,
       lastMessageAt: now,
       pinnedMessageIds: [],
@@ -288,7 +407,7 @@ export class GroupService {
 
     this.groups.set(groupId, group);
     this.messages.set(groupId, []);
-    this.symmetricKeys.set(groupId, symmetricKey);
+    this.keyEpochStates.set(groupId, epochState);
 
     // Register roles in PermissionService
     for (const member of members) {
@@ -313,6 +432,7 @@ export class GroupService {
 
   /**
    * Create a group from a promoted conversation, preserving message history.
+   * Generates a FRESH CEK (not reusing the DM key) per Requirement 5.4.
    * Used by ConversationService.promoteToGroup.
    */
   async createGroupFromConversation(
@@ -327,6 +447,7 @@ export class GroupService {
       ...newMemberIds.filter((id) => !existingParticipants.includes(id)),
     ];
 
+    // createGroup generates a FRESH CEK — does not reuse the DM key
     const group = await this.createGroup(
       `Group from conversation`,
       requesterId,
@@ -372,17 +493,41 @@ export class GroupService {
 
   /**
    * Send a message to a group.
-   * Requirement 10.2: group messaging with permission and mute checks.
+   * Encrypts content with the current epoch's CEK and records the keyEpoch.
+   * Optionally accepts attachments which are validated against platform limits.
+   *
+   * Requirements: 10.2, 9.3, 11.1, 11.2, 11.4, 11.5
    */
   async sendMessage(
     groupId: string,
     senderId: string,
     content: string,
+    attachments?: IChatAttachmentInput[],
   ): Promise<ICommunicationMessage> {
     const group = this.assertGroupExists(groupId);
     this.assertIsMember(group, senderId);
     this.assertPermission(senderId, groupId, Permission.SEND_MESSAGES);
     this.assertNotMuted(senderId, groupId);
+
+    // Validate and prepare attachment metadata before creating the message
+    const attachmentMetadata = attachments?.length
+      ? validateAndPrepareAttachments(attachments)
+      : [];
+
+    const state = this.keyEpochStates.get(groupId);
+    const currentEpoch = state?.currentEpoch ?? 0;
+
+    // Store content via block content store if available; otherwise use raw content
+    let messageContent = content;
+    if (this.blockContentStore) {
+      const memberIds = group.members.map((m) => m.memberId);
+      const { blockReference } = await this.blockContentStore.storeContent(
+        content,
+        senderId,
+        memberIds,
+      );
+      messageContent = blockReference;
+    }
 
     const now = new Date();
     const message: ICommunicationMessage = {
@@ -390,12 +535,14 @@ export class GroupService {
       contextType: 'group',
       contextId: groupId,
       senderId,
-      encryptedContent: content,
+      encryptedContent: messageContent,
       createdAt: now,
       editHistory: [],
       deleted: false,
       pinned: false,
       reactions: [],
+      keyEpoch: currentEpoch,
+      attachments: attachmentMetadata,
     };
 
     this.messages.get(groupId)!.push(message);
@@ -417,6 +564,12 @@ export class GroupService {
 
   /**
    * Get messages in a group with cursor-based pagination.
+   * Messages are returned with their keyEpoch so clients can decrypt
+   * using the appropriate epoch's CEK.
+   * Validates that each message's keyEpoch exists in the epoch state;
+   * throws KeyEpochNotFoundError if a message references a non-existent epoch.
+   *
+   * Requirements: 5.1, 12.3
    */
   async getMessages(
     groupId: string,
@@ -429,14 +582,19 @@ export class GroupService {
 
     const msgs = this.messages.get(groupId) ?? [];
 
+    // Validate that each message's keyEpoch exists in the epoch state
+    for (const msg of msgs) {
+      this.assertEpochExists(groupId, msg.keyEpoch);
+    }
+
     return paginateItems(msgs, cursor, limit);
   }
 
   // ─── Member management ────────────────────────────────────────────────
 
   /**
-   * Add members to a group. Re-encrypts the shared key for new members.
-   * Requirement 10.2: membership management.
+   * Add members to a group. Wraps ALL epoch keys for new members.
+   * Requirements: 10.2, 5.2
    */
   async addMembers(
     groupId: string,
@@ -448,7 +606,7 @@ export class GroupService {
     this.assertPermission(requesterId, groupId, Permission.MANAGE_MEMBERS);
 
     const now = new Date();
-    const currentKey = this.symmetricKeys.get(groupId)!;
+    const state = this.keyEpochStates.get(groupId);
 
     for (const memberId of memberIds) {
       if (group.members.some((m) => m.memberId === memberId)) {
@@ -461,11 +619,11 @@ export class GroupService {
         joinedAt: now,
       });
 
-      // Encrypt existing key for new member
-      group.encryptedSharedKey.set(
-        memberId,
-        this.encryptKey(memberId, currentKey),
-      );
+      // Add member to epoch state: wrap ALL epoch keys for the new member
+      if (state) {
+        this.addMemberToEpochState(state, memberId);
+        group.encryptedSharedKey = state.encryptedEpochKeys;
+      }
 
       this.permissionService.assignRole(memberId, groupId, DefaultRole.MEMBER);
 
@@ -480,8 +638,8 @@ export class GroupService {
   }
 
   /**
-   * Remove a member from a group. Rotates the shared key.
-   * Requirement 10.2: key rotation on member removal.
+   * Remove a member from a group. Rotates the shared key using epoch-aware rotation.
+   * Requirements: 10.2, 5.3
    */
   async removeMember(
     groupId: string,
@@ -494,10 +652,19 @@ export class GroupService {
     this.assertPermission(requesterId, groupId, Permission.MANAGE_MEMBERS);
 
     group.members = group.members.filter((m) => m.memberId !== targetId);
-    group.encryptedSharedKey.delete(targetId);
 
-    // Rotate key for remaining members
-    this.rotateKey(group);
+    if (group.members.length > 0) {
+      this.rotateKey(group, targetId);
+    } else {
+      // No members left — clean up epoch state
+      const state = this.keyEpochStates.get(groupId);
+      if (state) {
+        for (const [, epochMap] of state.encryptedEpochKeys) {
+          epochMap.delete(targetId);
+        }
+        group.encryptedSharedKey = state.encryptedEpochKeys;
+      }
+    }
 
     // Persist group update to storage provider if available
     if (this.groupCollection) {
@@ -509,19 +676,26 @@ export class GroupService {
   }
 
   /**
-   * Leave a group voluntarily. Rotates the shared key.
-   * Requirement 10.2: key rotation on member departure.
+   * Leave a group voluntarily. Rotates the shared key using epoch-aware rotation.
+   * Requirements: 10.2, 5.3
    */
   async leaveGroup(groupId: string, memberId: string): Promise<void> {
     const group = this.assertGroupExists(groupId);
     this.assertIsMember(group, memberId);
 
     group.members = group.members.filter((m) => m.memberId !== memberId);
-    group.encryptedSharedKey.delete(memberId);
 
-    // Rotate key for remaining members
     if (group.members.length > 0) {
-      this.rotateKey(group);
+      this.rotateKey(group, memberId);
+    } else {
+      // No members left — clean up epoch state
+      const state = this.keyEpochStates.get(groupId);
+      if (state) {
+        for (const [, epochMap] of state.encryptedEpochKeys) {
+          epochMap.delete(memberId);
+        }
+        group.encryptedSharedKey = state.encryptedEpochKeys;
+      }
     }
 
     // Persist group update to storage provider if available
@@ -549,6 +723,47 @@ export class GroupService {
     this.assertIsMember(group, memberId);
 
     const msgs = this.messages.get(groupId) ?? [];
+
+    if (this.blockContentStore) {
+      // Find the message manually to handle block storage
+      const message = msgs.find((m) => m.id === messageId);
+      if (!message) throw new GroupMessageNotFoundError(messageId);
+      if (message.senderId !== memberId) throw new NotMessageAuthorError();
+
+      // Store new content as a new block
+      const memberIds = group.members.map((m) => m.memberId);
+      const { blockReference } = await this.blockContentStore.storeContent(
+        newContent,
+        memberId,
+        memberIds,
+      );
+
+      // Push old block reference to edit history
+      message.editHistory.push({
+        content: message.encryptedContent,
+        editedAt: new Date(),
+      });
+
+      // Update encryptedContent to new block reference
+      message.encryptedContent = blockReference;
+      message.editedAt = new Date();
+
+      // Persist edited message to storage provider if available
+      if (this.groupMessageCollection) {
+        await this.groupMessageCollection.update(messageId, message);
+      }
+
+      // Emit message edited event
+      this.eventEmitter.emitMessageEdited(
+        'group',
+        groupId,
+        messageId,
+        memberId,
+      );
+
+      return message;
+    }
+
     const edited = this.messageOps.editMessage(
       msgs,
       messageId,
@@ -787,10 +1002,20 @@ export class GroupService {
   }
 
   /**
-   * Get the raw symmetric key for a group (testing only).
+   * Get the current epoch's raw symmetric key for a group.
+   * Returns the key for the latest epoch (backward-compatible accessor).
    */
   getSymmetricKey(groupId: string): Uint8Array | undefined {
-    return this.symmetricKeys.get(groupId);
+    const state = this.keyEpochStates.get(groupId);
+    if (!state) return undefined;
+    return state.epochKeys.get(state.currentEpoch);
+  }
+
+  /**
+   * Get the full epoch state for a group (testing / internal use).
+   */
+  getKeyEpochState(groupId: string): IKeyEpochState<string> | undefined {
+    return this.keyEpochStates.get(groupId);
   }
 
   /**

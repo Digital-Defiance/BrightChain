@@ -1603,6 +1603,53 @@ export const FrenchStrings: ComponentStrings<BrightChainStringKey> = {
   [BrightChainStrings.Admin_Chat_DeleteMessageTitle]: 'Supprimer le message',
   [BrightChainStrings.Admin_Chat_DeleteMessageConfirm]:
     'Êtes-vous sûr de vouloir supprimer ce message ? Il sera supprimé de manière réversible.',
+
+  // Admin BrightChat Servers
+  [BrightChainStrings.Admin_ChatServers_Title]: 'Administration des serveurs BrightChat',
+  [BrightChainStrings.Admin_ChatServers_TabServers]: 'Serveurs',
+  [BrightChainStrings.Admin_ChatServers_TabChannels]: 'Canaux',
+  [BrightChainStrings.Admin_ChatServers_TabMembers]: 'Membres',
+  [BrightChainStrings.Admin_ChatServers_ColName]: 'Nom',
+  [BrightChainStrings.Admin_ChatServers_ColOwner]: 'Propriétaire',
+  [BrightChainStrings.Admin_ChatServers_ColMembers]: 'Membres',
+  [BrightChainStrings.Admin_ChatServers_ColChannels]: 'Canaux',
+  [BrightChainStrings.Admin_ChatServers_ColCreated]: 'Créé',
+  [BrightChainStrings.Admin_ChatServers_ColActions]: 'Actions',
+  [BrightChainStrings.Admin_ChatServers_NoServersFound]: 'Aucun serveur trouvé.',
+  [BrightChainStrings.Admin_ChatServers_DeleteServer]: 'Supprimer le serveur',
+  [BrightChainStrings.Admin_ChatServers_DeleteServerTitle]: 'Supprimer le serveur',
+  [BrightChainStrings.Admin_ChatServers_DeleteServerConfirm]:
+    'Êtes-vous sûr de vouloir supprimer ce serveur ? Tous les canaux et données seront définitivement supprimés.',
+  [BrightChainStrings.Admin_ChatServers_EditServer]: 'Modifier le serveur',
+  [BrightChainStrings.Admin_ChatServers_EditServerTitle]: 'Modifier le serveur',
+  [BrightChainStrings.Admin_ChatServers_ServerName]: 'Nom du serveur',
+  [BrightChainStrings.Admin_ChatServers_ServerIcon]: "URL de l'icône",
+  [BrightChainStrings.Admin_ChatServers_Save]: 'Enregistrer',
+  [BrightChainStrings.Admin_ChatServers_ChannelName]: 'Nom du canal',
+  [BrightChainStrings.Admin_ChatServers_ChannelTopic]: 'Sujet',
+  [BrightChainStrings.Admin_ChatServers_ChannelVisibility]: 'Visibilité',
+  [BrightChainStrings.Admin_ChatServers_ChannelMembers]: 'Membres',
+  [BrightChainStrings.Admin_ChatServers_NoChannelsFound]: 'Aucun canal trouvé.',
+  [BrightChainStrings.Admin_ChatServers_DeleteChannel]: 'Supprimer le canal',
+  [BrightChainStrings.Admin_ChatServers_DeleteChannelTitle]: 'Supprimer le canal',
+  [BrightChainStrings.Admin_ChatServers_DeleteChannelConfirm]:
+    'Êtes-vous sûr de vouloir supprimer ce canal ? Tous les messages seront définitivement supprimés.',
+  [BrightChainStrings.Admin_ChatServers_MemberName]: 'Membre',
+  [BrightChainStrings.Admin_ChatServers_MemberRole]: 'Rôle',
+  [BrightChainStrings.Admin_ChatServers_MemberJoined]: 'Rejoint',
+  [BrightChainStrings.Admin_ChatServers_NoMembersFound]: 'Aucun membre trouvé.',
+  [BrightChainStrings.Admin_ChatServers_RemoveMember]: 'Retirer le membre',
+  [BrightChainStrings.Admin_ChatServers_RemoveMemberTitle]: 'Retirer le membre',
+  [BrightChainStrings.Admin_ChatServers_RemoveMemberConfirm]:
+    'Êtes-vous sûr de vouloir retirer ce membre du serveur ?',
+  [BrightChainStrings.Admin_ChatServers_ChangeRole]: 'Changer le rôle',
+  [BrightChainStrings.Admin_ChatServers_EncryptedNote]:
+    'Le contenu du message est chiffré de bout en bout et non visible par les administrateurs.',
+  [BrightChainStrings.Admin_ChatServers_FilterByServer]: 'Filtrer par serveur',
+  [BrightChainStrings.Admin_ChatServers_AllServers]: 'Tous les serveurs',
+  [BrightChainStrings.Admin_Menu_ChatServers]: 'Serveurs de chat',
+
+  // Admin BrightHub
   [BrightChainStrings.Admin_Hub_Title]: 'Admin BrightHub',
   [BrightChainStrings.Admin_Hub_FilterByAuthorId]: "Filtrer par ID d'auteur",
   [BrightChainStrings.Admin_Hub_FilterAllPosts]: 'Toutes les publications',

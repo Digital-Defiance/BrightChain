@@ -1449,6 +1449,53 @@ export const MandarinStrings: ComponentStrings<BrightChainStringKey> = {
   [BrightChainStrings.Admin_Chat_DeleteMessageTitle]: '删除消息',
   [BrightChainStrings.Admin_Chat_DeleteMessageConfirm]:
     '您确定要删除此消息吗？该消息将被软删除。',
+
+  // Admin BrightChat Servers
+  [BrightChainStrings.Admin_ChatServers_Title]: 'BrightChat 服务器管理',
+  [BrightChainStrings.Admin_ChatServers_TabServers]: '服务器',
+  [BrightChainStrings.Admin_ChatServers_TabChannels]: '频道',
+  [BrightChainStrings.Admin_ChatServers_TabMembers]: '成员',
+  [BrightChainStrings.Admin_ChatServers_ColName]: '名称',
+  [BrightChainStrings.Admin_ChatServers_ColOwner]: '所有者',
+  [BrightChainStrings.Admin_ChatServers_ColMembers]: '成员',
+  [BrightChainStrings.Admin_ChatServers_ColChannels]: '频道',
+  [BrightChainStrings.Admin_ChatServers_ColCreated]: '创建时间',
+  [BrightChainStrings.Admin_ChatServers_ColActions]: '操作',
+  [BrightChainStrings.Admin_ChatServers_NoServersFound]: '未找到服务器。',
+  [BrightChainStrings.Admin_ChatServers_DeleteServer]: '删除服务器',
+  [BrightChainStrings.Admin_ChatServers_DeleteServerTitle]: '删除服务器',
+  [BrightChainStrings.Admin_ChatServers_DeleteServerConfirm]:
+    '您确定要删除此服务器吗？所有频道和数据将被永久删除。',
+  [BrightChainStrings.Admin_ChatServers_EditServer]: '编辑服务器',
+  [BrightChainStrings.Admin_ChatServers_EditServerTitle]: '编辑服务器',
+  [BrightChainStrings.Admin_ChatServers_ServerName]: '服务器名称',
+  [BrightChainStrings.Admin_ChatServers_ServerIcon]: '图标URL',
+  [BrightChainStrings.Admin_ChatServers_Save]: '保存',
+  [BrightChainStrings.Admin_ChatServers_ChannelName]: '频道名称',
+  [BrightChainStrings.Admin_ChatServers_ChannelTopic]: '主题',
+  [BrightChainStrings.Admin_ChatServers_ChannelVisibility]: '可见性',
+  [BrightChainStrings.Admin_ChatServers_ChannelMembers]: '成员',
+  [BrightChainStrings.Admin_ChatServers_NoChannelsFound]: '未找到频道。',
+  [BrightChainStrings.Admin_ChatServers_DeleteChannel]: '删除频道',
+  [BrightChainStrings.Admin_ChatServers_DeleteChannelTitle]: '删除频道',
+  [BrightChainStrings.Admin_ChatServers_DeleteChannelConfirm]:
+    '您确定要删除此频道吗？所有消息将被永久删除。',
+  [BrightChainStrings.Admin_ChatServers_MemberName]: '成员',
+  [BrightChainStrings.Admin_ChatServers_MemberRole]: '角色',
+  [BrightChainStrings.Admin_ChatServers_MemberJoined]: '加入时间',
+  [BrightChainStrings.Admin_ChatServers_NoMembersFound]: '未找到成员。',
+  [BrightChainStrings.Admin_ChatServers_RemoveMember]: '移除成员',
+  [BrightChainStrings.Admin_ChatServers_RemoveMemberTitle]: '移除成员',
+  [BrightChainStrings.Admin_ChatServers_RemoveMemberConfirm]:
+    '您确定要将此成员从服务器中移除吗？',
+  [BrightChainStrings.Admin_ChatServers_ChangeRole]: '更改角色',
+  [BrightChainStrings.Admin_ChatServers_EncryptedNote]:
+    '消息内容已端到端加密，管理员无法查看。',
+  [BrightChainStrings.Admin_ChatServers_FilterByServer]: '按服务器筛选',
+  [BrightChainStrings.Admin_ChatServers_AllServers]: '所有服务器',
+  [BrightChainStrings.Admin_Menu_ChatServers]: '聊天服务器',
+
+  // Admin BrightHub
   [BrightChainStrings.Admin_Hub_Title]: 'BrightHub 管理',
   [BrightChainStrings.Admin_Hub_FilterByAuthorId]: '按作者 ID 筛选',
   [BrightChainStrings.Admin_Hub_FilterAllPosts]: '所有帖子',

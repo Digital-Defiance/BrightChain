@@ -352,6 +352,7 @@ export class GroupController<
         return validationError('Missing required fields: name, memberIds');
       }
       const memberId = this.getMemberId(req);
+      await this.ensureMemberKeys(memberId, ...memberIds);
       const group = await this.getGroupService().createGroup(
         name,
         memberId,
@@ -497,6 +498,7 @@ export class GroupController<
         return validationError('Missing required field: memberIds');
       }
       const memberId = this.getMemberId(req);
+      await this.ensureMemberKeys(memberId, ...memberIds);
       await this.getGroupService().addMembers(groupId, memberId, memberIds);
       return {
         statusCode: 200,

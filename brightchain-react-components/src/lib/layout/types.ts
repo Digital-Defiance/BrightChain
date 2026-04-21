@@ -55,6 +55,10 @@ export interface LayoutShellProps {
   detailPanel?: ReactNode;
   /** Optional children; when provided, rendered instead of <Outlet /> */
   children?: ReactNode;
+  /** Optional SX overrides for the main content area Box */
+  contentSx?: Record<string, unknown>;
+  /** Optional SX overrides for the outermost shell Box (e.g. to adjust height when nested) */
+  shellSx?: Record<string, unknown>;
 }
 
 export interface AppSidebarProps {

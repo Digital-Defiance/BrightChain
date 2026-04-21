@@ -1,4 +1,5 @@
 import type { BrightDb } from '@brightchain/db';
+import { IBlockContentStore } from '@brightchain/brightchain-lib';
 import { CoreLanguageCode } from '@digitaldefiance/i18n-lib';
 import { PlatformID } from '@digitaldefiance/node-ecies-lib';
 import {
@@ -180,13 +181,38 @@ export class AdminChatController<
           .limit(limit)
           .toArray();
 
-        const messages = docs.map((doc: Record<string, unknown>) => ({
-          id: doc['_id'] ?? doc['id'],
-          senderId: doc['senderId'] ?? '',
-          contentPreview: String(doc['content'] ?? '').slice(0, 200),
-          createdAt: doc['createdAt'] ?? null,
-          isDeleted: doc['isDeleted'] ?? false,
-        }));
+        // Retrieve block content store from services container for content preview
+        const blockContentStore = this.application.services.has('blockContentStore')
+          ? (this.application.services.get('blockContentStore') as IBlockContentStore)
+          : undefined;
+
+        const messages = await Promise.all(
+          docs.map(async (doc: Record<string, unknown>) => {
+            const storedContent = String(doc['content'] ?? '');
+            let contentPreview = storedContent.slice(0, 200);
+
+            // Try to retrieve content from block store (encryptedContent is now a block reference)
+            if (blockContentStore && storedContent) {
+              try {
+                const contentBytes = await blockContentStore.retrieveContent(storedContent);
+                if (contentBytes) {
+                  const decoded = new TextDecoder().decode(contentBytes);
+                  contentPreview = decoded.slice(0, 200);
+                }
+              } catch {
+                // Fall back to stored field value
+              }
+            }
+
+            return {
+              id: doc['_id'] ?? doc['id'],
+              senderId: doc['senderId'] ?? '',
+              contentPreview,
+              createdAt: doc['createdAt'] ?? null,
+              isDeleted: doc['isDeleted'] ?? false,
+            };
+          }),
+        );
 
         return {
           statusCode: 200,
@@ -243,6 +269,25 @@ export class AdminChatController<
         if (result.matchedCount === 0) {
           return notFoundError('Message', messageId);
         }
+
+        // Clean up content blocks from the block store
+        try {
+          const blockContentStore = this.application.services.has('blockContentStore')
+            ? (this.application.services.get('blockContentStore') as IBlockContentStore)
+            : undefined;
+          if (blockContentStore) {
+            // Retrieve the message doc to get the block reference
+            const doc = await collection.findOne({ _id: messageId });
+            const blockReference = doc ? String(doc['content'] ?? '') : '';
+            if (blockReference) {
+              await blockContentStore.deleteContent(blockReference);
+            }
+          }
+        } catch {
+          // Gracefully handle missing or failing block store — the BrightDB
+          // record is already soft-deleted, so block cleanup is best-effort.
+        }
+
         return {
           statusCode: 200,
           response: {

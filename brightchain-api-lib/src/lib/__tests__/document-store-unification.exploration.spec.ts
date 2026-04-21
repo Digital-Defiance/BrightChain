@@ -31,6 +31,7 @@ import {
   ReplicationStatus,
   type IEmailMetadataStore,
 } from '@brightchain/brightchain-lib';
+import { createChatStorageProvider } from '../services/brightchat/chatStorageAdapter';
 import { BrightPassService } from '../services/brightpass';
 import type { DefaultBackendIdType } from '../shared-types';
 
@@ -224,8 +225,21 @@ describe('Property 1: Bug Condition — Document Store Divergence', () => {
           const { app, plugin, cleanup } = await createConnectedApp();
 
           try {
-            // Get the app's ConversationService (wired with BrightDb storage provider)
-            const conversationService = app.services.get<ConversationService>('conversationService');
+            // Create a fresh ConversationService with the default (non-ECIES)
+            // key encryption handler but wired to the same BrightDb storage
+            // provider. The app's wired ConversationService uses the ECIES
+            // handler which requires pre-cached public keys — random UUIDs
+            // won't have those. This test validates storage unification, not
+            // encryption, so the default handler is appropriate.
+            const chatStorageProvider = createChatStorageProvider(
+              (name) => app.getModel(name),
+            );
+            const conversationService = new ConversationService(
+              null,      // memberReachabilityCheck
+              undefined, // eventEmitter
+              chatStorageProvider,
+              undefined, // encryptKey — uses default base64 handler
+            );
             conversationService.registerMember(memberA);
             conversationService.registerMember(memberB);
             await conversationService.createOrGetConversation(memberA, memberB);

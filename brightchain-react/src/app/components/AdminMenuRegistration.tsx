@@ -77,6 +77,15 @@ export const AdminMenuRegistration: React.FC = () => {
         index: 5,
       }),
       registerMenuOption({
+        id: 'admin-chat-servers',
+        label: t(BrightChainStrings.Admin_Menu_ChatServers),
+        icon: <FontAwesomeIcon icon={faComment} />,
+        link: '/admin/chat-servers',
+        requiresAuth: true,
+        includeOnMenus: [MenuTypes.UserMenu, MenuTypes.SideMenu],
+        index: 5.5,
+      }),
+      registerMenuOption({
         id: 'admin-mail',
         label: t(BrightChainStrings.Admin_Menu_Mail),
         icon: <FontAwesomeIcon icon={faEnvelope} />,

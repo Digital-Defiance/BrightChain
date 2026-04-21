@@ -48,9 +48,11 @@ export interface IChannelMember<TId = string> {
 /**
  * Represents a direct message conversation between exactly two members.
  */
-export interface IConversation<TId = string> {
+export interface IConversation<TId = string, TData = string> {
   id: TId;
   participants: [TId, TId];
+  /** Per-participant wrapped DM key: Map<epoch, Map<participantId, wrappedKey>> */
+  encryptedSharedKey: Map<number, Map<string, TData>>;
   createdAt: Date;
   lastMessageAt: Date;
   lastMessagePreview?: string;
@@ -60,15 +62,16 @@ export interface IConversation<TId = string> {
  * Represents a group chat entity with members, shared encryption keys,
  * and optional promotion from a conversation.
  *
- * `encryptedSharedKey` maps each member's ID (as string key) to the
- * ECIES-encrypted AES key in TData form.
+ * `encryptedSharedKey` is epoch-aware: the outer key is the epoch number,
+ * the inner map keys each member's ID to the ECIES-encrypted AES key in TData form.
  */
 export interface IGroup<TId = string, TData = string> {
   id: TId;
   name: string;
   creatorId: TId;
   members: IGroupMember<TId>[];
-  encryptedSharedKey: Map<string, TData>;
+  /** epoch → memberId → wrapped key */
+  encryptedSharedKey: Map<number, Map<string, TData>>;
   createdAt: Date;
   lastMessageAt: Date;
   pinnedMessageIds: TId[];
@@ -86,13 +89,66 @@ export interface IChannel<TId = string, TData = string> {
   creatorId: TId;
   visibility: ChannelVisibility;
   members: IChannelMember<TId>[];
-  encryptedSharedKey: Map<string, TData>;
+  /** epoch → memberId → wrapped key */
+  encryptedSharedKey: Map<number, Map<string, TData>>;
   createdAt: Date;
   lastMessageAt: Date;
   pinnedMessageIds: TId[];
   historyVisibleToNewMembers: boolean;
   /** Optional link to the parent Server. Channels without serverId remain standalone. */
   serverId?: TId;
+}
+
+/**
+ * Metadata for an encrypted inline attachment stored as a CBL asset.
+ * Requirements: 11.6, 11.1, 11.2, 11.3
+ *
+ * Renamed from IAttachmentMetadata to avoid collision with the email-focused
+ * IAttachmentMetadata exported from messaging/attachmentMetadata.ts.
+ */
+export interface IChatAttachmentMetadata<TId = string> {
+  /** CBL asset ID referencing the encrypted attachment content */
+  assetId: TId;
+  /** Original file name */
+  fileName: string;
+  /** MIME type (e.g., "image/png", "application/pdf") */
+  mimeType: string;
+  /** Size of the encrypted content in bytes */
+  encryptedSize: number;
+  /** Size of the original content in bytes (before encryption) */
+  originalSize: number;
+}
+
+/**
+ * Platform-level configuration for inline attachment limits.
+ * Requirements: 11.4
+ */
+export interface IAttachmentConfig {
+  /** Maximum size per attachment in bytes (default: 25MB) */
+  maxFileSizeBytes: number;
+  /** Maximum number of attachments per message (default: 10) */
+  maxAttachmentsPerMessage: number;
+}
+
+/**
+ * Default attachment configuration values.
+ */
+export const DEFAULT_ATTACHMENT_CONFIG: IAttachmentConfig = {
+  maxFileSizeBytes: 25 * 1024 * 1024, // 25MB
+  maxAttachmentsPerMessage: 10,
+};
+
+/**
+ * Input type for chat attachments provided by the caller of sendMessage().
+ * Requirements: 11.1, 11.2
+ */
+export interface IChatAttachmentInput {
+  /** Original file name */
+  fileName: string;
+  /** MIME type (e.g., "image/png", "application/pdf") */
+  mimeType: string;
+  /** Raw content bytes */
+  content: Uint8Array;
 }
 
 /**
@@ -112,6 +168,12 @@ export interface ICommunicationMessage<TId = string, TData = string> {
   deletedBy?: TId;
   pinned: boolean;
   reactions: IReaction<TId>[];
+
+  // ─── E2E Encryption fields (Requirements 1.4, 11.6) ────────────────
+  /** Key epoch this message was encrypted under */
+  keyEpoch: number;
+  /** Inline attachments encrypted with the context's CEK */
+  attachments: IChatAttachmentMetadata<TId>[];
 
   // ─── Exploding message fields (Requirements 8.1, 8.2, 8.3) ─────────
   /** When the message should auto-expire (time-based expiration) */

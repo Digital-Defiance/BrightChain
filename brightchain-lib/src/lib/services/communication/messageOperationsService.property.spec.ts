@@ -67,6 +67,8 @@ function makeMessage(
     deleted: false,
     pinned: false,
     reactions: [],
+    keyEpoch: 0,
+    attachments: [],
   };
 }
 

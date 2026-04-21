@@ -66,10 +66,14 @@ export * from './messaging';
 export type * from './identity';
 
 // Communication interfaces (direct messaging, groups, channels)
-export type * from './communication';
+// Uses `export *` because communication contains runtime values (DEFAULT_ATTACHMENT_CONFIG)
+export * from './communication';
 
 // Communication storage provider (BrightChat DB abstraction)
 export type * from './communication/chatStorageProvider';
+
+// Block content store abstraction (platform-agnostic block storage for BrightChat)
+export type * from './communication/blockContentStore';
 
 // Server interfaces (Discord-style server containers for channels)
 export type * from './communication/server';

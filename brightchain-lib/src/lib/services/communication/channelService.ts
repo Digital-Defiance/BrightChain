@@ -5,12 +5,17 @@
  * Supports channel creation with visibility modes, join/leave, messaging,
  * search, invite token generation/redemption, mute/kick operations.
  *
+ * Uses epoch-aware key management via IKeyEpochState for forward secrecy.
+ * Each key rotation creates a new epoch. Messages record which epoch they
+ * were encrypted under. On member removal, all epoch keys are re-wrapped
+ * for remaining members only.
+ *
  * When an IChatStorageProvider is injected, channels, channel messages, and
  * invite tokens are also persisted to the provider's collections (write-through).
  * Sync helper methods continue to read from the in-memory Maps so their
  * signatures remain unchanged.
  *
- * Requirements: 10.3
+ * Requirements: 10.3, 1.1, 1.2, 1.3, 1.4, 2.1, 2.2, 2.3, 2.4, 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 9.1
  */
 
 import { v4 as uuidv4 } from 'uuid';
@@ -25,19 +30,24 @@ import {
   IChannel,
   IChannelMember,
   IChannelUpdate,
+  IChatAttachmentInput,
   ICommunicationMessage,
   IInviteToken,
   IPaginatedResult,
 } from '../../interfaces/communication';
+import { validateAndPrepareAttachments } from './attachmentUtils';
 import {
   IChatCollection,
   IChatStorageProvider,
 } from '../../interfaces/communication/chatStorageProvider';
+import { IBlockContentStore } from '../../interfaces/communication/blockContentStore';
 import {
   ICommunicationEventEmitter,
   NullEventEmitter,
 } from '../../interfaces/events';
 import { paginateItems } from '../../utils/pagination';
+import { IKeyEpochState } from './keyEpochManager';
+import { KeyEpochNotFoundError, KeyUnwrapError } from '../../errors/encryptionErrors';
 import { MessageOperationsService } from './messageOperationsService';
 import { PermissionService } from './permissionService';
 
@@ -175,8 +185,8 @@ export class ChannelService {
   /** channelId → messages (ordered by createdAt ascending) */
   private readonly messages = new Map<string, ICommunicationMessage[]>();
 
-  /** channelId → raw symmetric key (Uint8Array) */
-  private readonly symmetricKeys = new Map<string, Uint8Array>();
+  /** channelId → epoch-aware key state (raw keys + wrapped keys per epoch) */
+  private readonly keyEpochStates = new Map<string, IKeyEpochState<string>>();
 
   /** token string → IInviteToken */
   private readonly inviteTokens = new Map<string, IInviteToken>();
@@ -203,6 +213,9 @@ export class ChannelService {
     | IChatCollection<IInviteToken>
     | undefined;
 
+  /** Optional block content store for storing message content as blocks. */
+  private readonly blockContentStore: IBlockContentStore | undefined;
+
   constructor(
     permissionService: PermissionService,
     encryptKey: ChannelKeyEncryptionHandler = defaultKeyEncryption,
@@ -210,6 +223,7 @@ export class ChannelService {
     eventEmitter?: ICommunicationEventEmitter,
     randomBytesProvider?: (length: number) => Uint8Array,
     storageProvider?: IChatStorageProvider,
+    blockContentStore?: IBlockContentStore,
   ) {
     this.permissionService = permissionService;
     this.encryptKey = encryptKey;
@@ -217,6 +231,7 @@ export class ChannelService {
       messageOps ?? new MessageOperationsService(permissionService);
     this.eventEmitter = eventEmitter ?? new NullEventEmitter();
     this.randomBytesProvider = randomBytesProvider ?? getRandomBytes;
+    this.blockContentStore = blockContentStore;
     if (storageProvider) {
       this.channelCollection = storageProvider.channels;
       this.channelMessageCollection = storageProvider.channelMessages;
@@ -260,24 +275,138 @@ export class ChannelService {
     return this.randomBytesProvider(32);
   }
 
+  /**
+   * Encrypt a symmetric key for multiple members, returning a Map<memberId, wrappedKey>.
+   * Wraps key wrapping failures as KeyUnwrapError with context information.
+   *
+   * Requirements: 12.3
+   */
   private encryptKeyForMembers(
     memberIds: string[],
     symmetricKey: Uint8Array,
+    contextId?: string,
+    epoch?: number,
   ): Map<string, string> {
     const encrypted = new Map<string, string>();
     for (const id of memberIds) {
-      encrypted.set(id, this.encryptKey(id, symmetricKey));
+      try {
+        encrypted.set(id, this.encryptKey(id, symmetricKey));
+      } catch (error) {
+        if (contextId !== undefined && epoch !== undefined) {
+          throw new KeyUnwrapError(contextId, id, epoch);
+        }
+        throw error;
+      }
     }
     return encrypted;
   }
 
-  private rotateKey(channel: IChannel): void {
+  /**
+   * Create initial epoch state (epoch 0) for a new channel.
+   * Uses KeyEpochManager pattern: creates epoch 0 with wrapped keys for all members.
+   *
+   * Requirements: 1.3, 2.1
+   */
+  private createInitialEpochState(
+    symmetricKey: Uint8Array,
+    memberIds: string[],
+  ): IKeyEpochState<string> {
+    const epochKeys = new Map<number, Uint8Array>();
+    epochKeys.set(0, symmetricKey);
+
+    const wrappedKeys = this.encryptKeyForMembers(memberIds, symmetricKey);
+    const encryptedEpochKeys = new Map<number, Map<string, string>>();
+    encryptedEpochKeys.set(0, wrappedKeys);
+
+    return { currentEpoch: 0, epochKeys, encryptedEpochKeys };
+  }
+
+  /**
+   * Add a member to an existing epoch state: wrap ALL epoch keys for the new member.
+   * This gives the new member access to full message history.
+   *
+   * Requirements: 2.2, 6.1, 6.3
+   */
+  private addMemberToEpochState(
+    state: IKeyEpochState<string>,
+    newMemberId: string,
+  ): void {
+    for (const [epoch, rawKey] of state.epochKeys) {
+      const epochMap =
+        state.encryptedEpochKeys.get(epoch) ?? new Map<string, string>();
+      epochMap.set(newMemberId, this.encryptKey(newMemberId, rawKey));
+      state.encryptedEpochKeys.set(epoch, epochMap);
+    }
+  }
+
+  /**
+   * Rotate key: increment epoch, add new key, delete removed member from ALL epochs,
+   * re-wrap ALL epoch keys for remaining members.
+   *
+   * Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6
+   */
+  private rotateEpochState(
+    state: IKeyEpochState<string>,
+    newKey: Uint8Array,
+    remainingMemberIds: string[],
+    removedMemberId: string,
+  ): IKeyEpochState<string> {
+    const newEpoch = state.currentEpoch + 1;
+
+    // Add new epoch key
+    state.epochKeys.set(newEpoch, newKey);
+
+    // Delete removed member from ALL epochs
+    for (const [, memberMap] of state.encryptedEpochKeys) {
+      memberMap.delete(removedMemberId);
+    }
+
+    // Re-wrap ALL epoch keys for remaining members
+    for (const [epoch, rawKey] of state.epochKeys) {
+      state.encryptedEpochKeys.set(
+        epoch,
+        this.encryptKeyForMembers(remainingMemberIds, rawKey),
+      );
+    }
+
+    return { ...state, currentEpoch: newEpoch };
+  }
+
+  /**
+   * Rotate the channel's symmetric key using epoch-aware key management.
+   * Generates a new key, increments epoch, re-wraps all epoch keys for remaining members,
+   * and removes the departed member from all epochs.
+   *
+   * Requirements: 3.1, 3.2, 3.3, 3.4, 3.5
+   */
+  private rotateKey(channel: IChannel, removedMemberId: string): void {
     const newKey = this.generateSymmetricKey();
-    this.symmetricKeys.set(channel.id, newKey);
-    channel.encryptedSharedKey = this.encryptKeyForMembers(
-      channel.members.map((m) => m.memberId),
-      newKey,
-    );
+    const state = this.keyEpochStates.get(channel.id);
+
+    if (state) {
+      const remainingMemberIds = channel.members.map((m) => m.memberId);
+      const newState = this.rotateEpochState(
+        state,
+        newKey,
+        remainingMemberIds,
+        removedMemberId,
+      );
+      this.keyEpochStates.set(channel.id, newState);
+      channel.encryptedSharedKey = newState.encryptedEpochKeys;
+    }
+  }
+
+  /**
+   * Assert that a key epoch exists in the epoch state for a given context.
+   * Throws KeyEpochNotFoundError if the epoch is not found.
+   *
+   * Requirements: 12.3
+   */
+  private assertEpochExists(contextId: string, keyEpoch: number): void {
+    const state = this.keyEpochStates.get(contextId);
+    if (!state || !state.epochKeys.has(keyEpoch)) {
+      throw new KeyEpochNotFoundError(contextId, keyEpoch);
+    }
   }
 
   private normalizeChannelName(name: string): string {
@@ -290,8 +419,9 @@ export class ChannelService {
    * Create a new channel.
    * Generates a shared symmetric key and encrypts it for the creator.
    * The creator is assigned the OWNER role.
+   * Uses KeyEpochManager pattern to create initial epoch 0.
    *
-   * Requirement 10.3: channel creation with visibility.
+   * Requirements: 10.3, 1.3, 2.1, 9.1
    */
   async createChannel(
     name: string,
@@ -316,10 +446,8 @@ export class ChannelService {
       },
     ];
 
-    const encryptedSharedKey = this.encryptKeyForMembers(
-      [creatorId],
-      symmetricKey,
-    );
+    // Create initial epoch state (epoch 0) with wrapped key for creator
+    const epochState = this.createInitialEpochState(symmetricKey, [creatorId]);
 
     const channel: IChannel = {
       id: channelId,
@@ -328,7 +456,7 @@ export class ChannelService {
       creatorId,
       visibility,
       members,
-      encryptedSharedKey,
+      encryptedSharedKey: epochState.encryptedEpochKeys,
       createdAt: now,
       lastMessageAt: now,
       pinnedMessageIds: [],
@@ -337,7 +465,7 @@ export class ChannelService {
 
     this.channels.set(channelId, channel);
     this.messages.set(channelId, []);
-    this.symmetricKeys.set(channelId, symmetricKey);
+    this.keyEpochStates.set(channelId, epochState);
     this.nameIndex.set(normalized, channelId);
 
     this.permissionService.assignRole(creatorId, channelId, DefaultRole.OWNER);
@@ -442,7 +570,7 @@ export class ChannelService {
     this.nameIndex.delete(channel.name);
     this.channels.delete(channelId);
     this.messages.delete(channelId);
-    this.symmetricKeys.delete(channelId);
+    this.keyEpochStates.delete(channelId);
 
     // Persist deletion to storage provider if available
     if (this.channelCollection) {
@@ -454,8 +582,9 @@ export class ChannelService {
 
   /**
    * Join a public channel. Rejects invite-only channels.
+   * Wraps ALL epoch keys for the new member so they can read history.
    *
-   * Requirement 10.3: add member, reject invite-only without invitation.
+   * Requirements: 10.3, 2.2
    */
   async joinChannel(channelId: string, memberId: string): Promise<void> {
     const channel = this.assertChannelExists(channelId);
@@ -475,11 +604,97 @@ export class ChannelService {
       joinedAt: now,
     });
 
-    const currentKey = this.symmetricKeys.get(channelId)!;
-    channel.encryptedSharedKey.set(
+    // Add member to epoch state: wrap ALL epoch keys for the new member
+    const state = this.keyEpochStates.get(channelId);
+    if (state) {
+      this.addMemberToEpochState(state, memberId);
+      channel.encryptedSharedKey = state.encryptedEpochKeys;
+    }
+
+    this.permissionService.assignRole(memberId, channelId, DefaultRole.MEMBER);
+
+    // Persist channel update to storage provider if available
+    if (this.channelCollection) {
+      await this.channelCollection.update(channelId, channel);
+    }
+
+    this.eventEmitter.emitMemberJoined('channel', channelId, memberId);
+  }
+
+  /**
+   * Remove a member from a channel (server-level operation).
+   * Bypasses permission checks — used by ServerService when a member is removed
+   * from a server so that key rotation is performed for each affected channel.
+   * Silently skips if the member is not in the channel.
+   *
+   * Requirements: 7.1, 7.2, 7.3
+   */
+  async removeMemberFromChannel(
+    channelId: string,
+    memberId: string,
+  ): Promise<void> {
+    const channel = this.assertChannelExists(channelId);
+
+    // Skip if not a member
+    if (!channel.members.some((m) => m.memberId === memberId)) {
+      return;
+    }
+
+    channel.members = channel.members.filter((m) => m.memberId !== memberId);
+
+    if (channel.members.length > 0) {
+      this.rotateKey(channel, memberId);
+    } else {
+      // No members left — clean up epoch state
+      const state = this.keyEpochStates.get(channelId);
+      if (state) {
+        for (const [, epochMap] of state.encryptedEpochKeys) {
+          epochMap.delete(memberId);
+        }
+        channel.encryptedSharedKey = state.encryptedEpochKeys;
+      }
+    }
+
+    // Persist channel update to storage provider if available
+    if (this.channelCollection) {
+      await this.channelCollection.update(channelId, channel);
+    }
+
+    this.eventEmitter.emitMemberLeft('channel', channelId, memberId);
+  }
+
+  /**
+   * Add a member to a channel (server-level operation).
+   * Bypasses visibility checks — used by ServerService when a member joins a server
+   * so that all epoch keys are wrapped for the new member across all server channels.
+   * Silently skips if the member is already in the channel.
+   *
+   * Requirements: 6.1, 6.2, 6.3
+   */
+  async addMemberToChannel(
+    channelId: string,
+    memberId: string,
+  ): Promise<void> {
+    const channel = this.assertChannelExists(channelId);
+
+    // Skip if already a member
+    if (channel.members.some((m) => m.memberId === memberId)) {
+      return;
+    }
+
+    const now = new Date();
+    channel.members.push({
       memberId,
-      this.encryptKey(memberId, currentKey),
-    );
+      role: DefaultRole.MEMBER,
+      joinedAt: now,
+    });
+
+    // Add member to epoch state: wrap ALL epoch keys for the new member
+    const state = this.keyEpochStates.get(channelId);
+    if (state) {
+      this.addMemberToEpochState(state, memberId);
+      channel.encryptedSharedKey = state.encryptedEpochKeys;
+    }
 
     this.permissionService.assignRole(memberId, channelId, DefaultRole.MEMBER);
 
@@ -493,16 +708,26 @@ export class ChannelService {
 
   /**
    * Leave a channel voluntarily. Rotates the shared key.
+   *
+   * Requirements: 3.5
    */
   async leaveChannel(channelId: string, memberId: string): Promise<void> {
     const channel = this.assertChannelExists(channelId);
     this.assertIsMember(channel, memberId);
 
     channel.members = channel.members.filter((m) => m.memberId !== memberId);
-    channel.encryptedSharedKey.delete(memberId);
 
     if (channel.members.length > 0) {
-      this.rotateKey(channel);
+      this.rotateKey(channel, memberId);
+    } else {
+      // No members left — clean up epoch state
+      const state = this.keyEpochStates.get(channelId);
+      if (state) {
+        for (const [, epochMap] of state.encryptedEpochKeys) {
+          epochMap.delete(memberId);
+        }
+        channel.encryptedSharedKey = state.encryptedEpochKeys;
+      }
     }
 
     // Persist channel update to storage provider if available
@@ -517,17 +742,41 @@ export class ChannelService {
 
   /**
    * Send a message to a channel.
-   * Requirement 10.3: messaging with permission and mute checks.
+   * Encrypts content with the current epoch's CEK and records the keyEpoch.
+   * Optionally accepts attachments which are validated against platform limits.
+   *
+   * Requirements: 10.3, 1.1, 1.4, 9.1, 11.1, 11.2, 11.4, 11.5
    */
   async sendMessage(
     channelId: string,
     senderId: string,
     content: string,
+    attachments?: IChatAttachmentInput[],
   ): Promise<ICommunicationMessage> {
     const channel = this.assertChannelExists(channelId);
     this.assertIsMember(channel, senderId);
     this.assertPermission(senderId, channelId, Permission.SEND_MESSAGES);
     this.assertNotMuted(senderId, channelId);
+
+    // Validate and prepare attachment metadata before creating the message
+    const attachmentMetadata = attachments?.length
+      ? validateAndPrepareAttachments(attachments)
+      : [];
+
+    const state = this.keyEpochStates.get(channelId);
+    const currentEpoch = state?.currentEpoch ?? 0;
+
+    // Store content via block content store if available; otherwise use raw content
+    let messageContent = content;
+    if (this.blockContentStore) {
+      const memberIds = channel.members.map((m) => m.memberId);
+      const { blockReference } = await this.blockContentStore.storeContent(
+        content,
+        senderId,
+        memberIds,
+      );
+      messageContent = blockReference;
+    }
 
     const now = new Date();
     const message: ICommunicationMessage = {
@@ -535,12 +784,14 @@ export class ChannelService {
       contextType: 'channel',
       contextId: channelId,
       senderId,
-      encryptedContent: content,
+      encryptedContent: messageContent,
       createdAt: now,
       editHistory: [],
       deleted: false,
       pinned: false,
       reactions: [],
+      keyEpoch: currentEpoch,
+      attachments: attachmentMetadata,
     };
 
     this.messages.get(channelId)!.push(message);
@@ -566,6 +817,12 @@ export class ChannelService {
 
   /**
    * Get messages in a channel with cursor-based pagination.
+   * Messages are returned with their keyEpoch so clients can decrypt
+   * using the appropriate epoch's CEK.
+   * Validates that each message's keyEpoch exists in the epoch state;
+   * throws KeyEpochNotFoundError if a message references a non-existent epoch.
+   *
+   * Requirements: 1.2, 12.3
    */
   async getMessages(
     channelId: string,
@@ -577,6 +834,11 @@ export class ChannelService {
     this.assertIsMember(channel, memberId);
 
     const msgs = this.messages.get(channelId) ?? [];
+
+    // Validate that each message's keyEpoch exists in the epoch state
+    for (const msg of msgs) {
+      this.assertEpochExists(channelId, msg.keyEpoch);
+    }
 
     return paginateItems(msgs, cursor, limit);
   }
@@ -596,6 +858,26 @@ export class ChannelService {
 
     const msgs = this.messages.get(channelId) ?? [];
     const lowerQuery = query.toLowerCase();
+
+    if (this.blockContentStore) {
+      // Retrieve content from block store for each non-deleted message before searching
+      const matching: ICommunicationMessage[] = [];
+      for (const m of msgs) {
+        if (m.deleted) continue;
+        const contentBytes = await this.blockContentStore.retrieveContent(
+          m.encryptedContent as string,
+        );
+        if (contentBytes) {
+          const contentText = new TextDecoder().decode(contentBytes);
+          if (contentText.toLowerCase().includes(lowerQuery)) {
+            matching.push(m);
+          }
+        }
+      }
+      return paginateItems(matching, cursor, limit);
+    }
+
+    // Fall back to current direct string search when block store is absent
     const matching = msgs.filter(
       (m) =>
         !m.deleted &&
@@ -647,8 +929,9 @@ export class ChannelService {
 
   /**
    * Redeem an invite token to join a channel.
+   * Wraps ALL epoch keys for the joining member.
    *
-   * Requirement 10.3: validate expiry and usage limits.
+   * Requirements: 10.3, 2.2
    */
   async redeemInvite(token: string, memberId: string): Promise<void> {
     const invite = this.inviteTokens.get(token);
@@ -677,11 +960,12 @@ export class ChannelService {
       joinedAt: now,
     });
 
-    const currentKey = this.symmetricKeys.get(channel.id)!;
-    channel.encryptedSharedKey.set(
-      memberId,
-      this.encryptKey(memberId, currentKey),
-    );
+    // Add member to epoch state: wrap ALL epoch keys for the new member
+    const state = this.keyEpochStates.get(channel.id);
+    if (state) {
+      this.addMemberToEpochState(state, memberId);
+      channel.encryptedSharedKey = state.encryptedEpochKeys;
+    }
 
     this.permissionService.assignRole(memberId, channel.id, DefaultRole.MEMBER);
 
@@ -739,10 +1023,10 @@ export class ChannelService {
   }
 
   /**
-   * Kick a member from a channel. Rotates encryption keys.
+   * Kick a member from a channel. Rotates encryption keys using epoch-aware rotation.
    * Requires KICK_MEMBERS permission.
    *
-   * Requirement 10.3: remove member and rotate keys.
+   * Requirements: 10.3, 3.1, 3.2, 3.3, 3.4
    */
   async kickMember(
     channelId: string,
@@ -755,10 +1039,18 @@ export class ChannelService {
     this.assertPermission(requesterId, channelId, Permission.KICK_MEMBERS);
 
     channel.members = channel.members.filter((m) => m.memberId !== targetId);
-    channel.encryptedSharedKey.delete(targetId);
 
     if (channel.members.length > 0) {
-      this.rotateKey(channel);
+      this.rotateKey(channel, targetId);
+    } else {
+      // No members left — clean up epoch state
+      const state = this.keyEpochStates.get(channelId);
+      if (state) {
+        for (const [, epochMap] of state.encryptedEpochKeys) {
+          epochMap.delete(targetId);
+        }
+        channel.encryptedSharedKey = state.encryptedEpochKeys;
+      }
     }
 
     // Persist channel update to storage provider if available
@@ -790,6 +1082,46 @@ export class ChannelService {
     this.assertIsMember(channel, memberId);
 
     const msgs = this.messages.get(channelId) ?? [];
+
+    if (this.blockContentStore) {
+      // Find the message manually to handle block storage
+      const message = msgs.find((m) => m.id === messageId);
+      if (!message) throw new ChannelMessageNotFoundError(messageId);
+      if (message.senderId !== memberId) throw new NotMessageAuthorError();
+
+      // Store new content as a new block
+      const memberIds = channel.members.map((m) => m.memberId);
+      const { blockReference } = await this.blockContentStore.storeContent(
+        newContent,
+        memberId,
+        memberIds,
+      );
+
+      // Push old block reference to edit history
+      message.editHistory.push({
+        content: message.encryptedContent,
+        editedAt: new Date(),
+      });
+
+      // Update encryptedContent to new block reference
+      message.encryptedContent = blockReference;
+      message.editedAt = new Date();
+
+      // Persist edited message to storage provider if available
+      if (this.channelMessageCollection) {
+        await this.channelMessageCollection.update(messageId, message);
+      }
+
+      this.eventEmitter.emitMessageEdited(
+        'channel',
+        channelId,
+        messageId,
+        memberId,
+      );
+
+      return message;
+    }
+
     const edited = this.messageOps.editMessage(
       msgs,
       messageId,
@@ -1028,8 +1360,21 @@ export class ChannelService {
     return this.channels.get(channelId);
   }
 
+  /**
+   * Get the current epoch's raw symmetric key for a channel.
+   * Returns the key for the latest epoch (backward-compatible accessor).
+   */
   getSymmetricKey(channelId: string): Uint8Array | undefined {
-    return this.symmetricKeys.get(channelId);
+    const state = this.keyEpochStates.get(channelId);
+    if (!state) return undefined;
+    return state.epochKeys.get(state.currentEpoch);
+  }
+
+  /**
+   * Get the full epoch state for a channel (testing / internal use).
+   */
+  getKeyEpochState(channelId: string): IKeyEpochState<string> | undefined {
+    return this.keyEpochStates.get(channelId);
   }
 
   getAllMessages(channelId: string): ICommunicationMessage[] {

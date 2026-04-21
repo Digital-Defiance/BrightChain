@@ -10,6 +10,9 @@ import {
   ServerNotFoundError,
   ServerPermissionError,
   ServerNameValidationError,
+  MemberAlreadyInServerError,
+  ServerInviteNotFoundError,
+  ServerInviteExpiredError,
 } from '../serverService';
 import { ChannelVisibility } from '../../../enumerations/communication';
 
@@ -218,6 +221,104 @@ describe('ServerService — unit tests', () => {
       // owner should see their own server in each service
       const ownerResult = await serverService.listServersForMember(owner);
       expect(ownerResult.items.map((s) => s.id)).toContain(s1.id);
+    });
+  });
+
+  // ── 11. addMembers distributes channel keys ───────────────────────────
+  describe('addMembers — key distribution (Requirements 6.1, 6.2, 6.3)', () => {
+    it('adds new members to all server channels with wrapped epoch keys', async () => {
+      const { serverService, channelService } = createServices();
+      const ownerId = 'owner-1';
+      const newMember = 'member-1';
+
+      const server = await serverService.createServer(ownerId, { name: 'KeyDistServer' });
+
+      // Create an additional channel
+      await serverService.createChannelInServer(server.id, ownerId, {
+        name: 'extra-channel',
+        visibility: ChannelVisibility.PUBLIC,
+      });
+
+      const refreshed = await serverService.getServer(server.id);
+      expect(refreshed.channelIds).toHaveLength(2);
+
+      // Add a new member to the server
+      const added = await serverService.addMembers(server.id, ownerId, [newMember]);
+      expect(added).toEqual([newMember]);
+
+      // Verify the new member is in all server channels
+      for (const channelId of refreshed.channelIds) {
+        const channel = channelService.getChannelById(channelId);
+        expect(channel).toBeDefined();
+        expect(channel!.members.some((m) => m.memberId === newMember)).toBe(true);
+
+        // Verify epoch keys are wrapped for the new member
+        const epochState = channelService.getKeyEpochState(channelId);
+        expect(epochState).toBeDefined();
+        for (const [, memberMap] of epochState!.encryptedEpochKeys) {
+          expect(memberMap.has(newMember)).toBe(true);
+        }
+      }
+    });
+
+    it('skips members already in the server without error', async () => {
+      const { serverService } = createServices();
+      const ownerId = 'owner-1';
+
+      const server = await serverService.createServer(ownerId, { name: 'DupTest' });
+
+      // Adding the owner again should return empty
+      const added = await serverService.addMembers(server.id, ownerId, [ownerId]);
+      expect(added).toEqual([]);
+    });
+  });
+
+  // ── 12. redeemInvite distributes channel keys ─────────────────────────
+  describe('redeemInvite — key distribution (Requirements 6.1, 6.2, 6.3)', () => {
+    it('wraps epoch keys for the joining member across all server channels', async () => {
+      const { serverService, channelService } = createServices();
+      const ownerId = 'owner-1';
+      const joiner = 'joiner-1';
+
+      const server = await serverService.createServer(ownerId, { name: 'InviteServer' });
+
+      // Create an additional channel
+      await serverService.createChannelInServer(server.id, ownerId, {
+        name: 'invite-channel',
+        visibility: ChannelVisibility.PUBLIC,
+      });
+
+      const refreshed = await serverService.getServer(server.id);
+      expect(refreshed.channelIds).toHaveLength(2);
+
+      // Create and redeem an invite
+      const invite = await serverService.createInvite(server.id, ownerId, {});
+      await serverService.redeemInvite(server.id, invite.token, joiner);
+
+      // Verify the joiner is in all server channels with wrapped keys
+      for (const channelId of refreshed.channelIds) {
+        const channel = channelService.getChannelById(channelId);
+        expect(channel).toBeDefined();
+        expect(channel!.members.some((m) => m.memberId === joiner)).toBe(true);
+
+        const epochState = channelService.getKeyEpochState(channelId);
+        expect(epochState).toBeDefined();
+        for (const [, memberMap] of epochState!.encryptedEpochKeys) {
+          expect(memberMap.has(joiner)).toBe(true);
+        }
+      }
+    });
+
+    it('throws MemberAlreadyInServerError if the user is already a member', async () => {
+      const { serverService } = createServices();
+      const ownerId = 'owner-1';
+
+      const server = await serverService.createServer(ownerId, { name: 'DupInvite' });
+      const invite = await serverService.createInvite(server.id, ownerId, {});
+
+      await expect(
+        serverService.redeemInvite(server.id, invite.token, ownerId),
+      ).rejects.toThrow(MemberAlreadyInServerError);
     });
   });
 });

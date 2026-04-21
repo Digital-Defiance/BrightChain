@@ -129,7 +129,7 @@ await users.deleteOne({ email: 'ada@example.com' });
 ```
 
 ```typescript
-// BrightDB — identical calls
+// BrightDb — identical calls
 const result = await users.insertOne({ name: 'Ada', email: 'ada@example.com' });
 const user = await users.findOne({ email: 'ada@example.com' });
 await users.updateOne({ email: 'ada@example.com' }, { $set: { role: 'admin' } });
@@ -150,7 +150,7 @@ const docs = await users.find({ role: 'admin' })
 ```
 
 ```typescript
-// BrightDB — identical chaining
+// BrightDb — identical chaining
 const docs = await users.find({ role: 'admin' })
   .sort({ name: 1 })
   .skip(0)
@@ -172,7 +172,7 @@ const report = await orders.aggregate([
 ```
 
 ```typescript
-// BrightDB — identical pipeline
+// BrightDb — identical pipeline
 const report = await orders.aggregate([
   { $match: { status: 'completed' } },
   { $group: { _id: '$userId', total: { $sum: '$amount' } } },
@@ -194,7 +194,7 @@ changeStream.on('change', (event) => {
 ```
 
 ```typescript
-// BrightDB — callback + unsubscribe
+// BrightDb — callback + unsubscribe
 const unsubscribe = users.watch((event) => {
   console.log('Change:', event.type, event.document);
 });
@@ -302,7 +302,7 @@ const orderSchema = new Schema({
 ```
 
 ```typescript
-// BrightDB — nested CollectionSchema
+// BrightDb — nested CollectionSchema
 const orderSchema: CollectionSchema = {
   properties: {
     userId: { type: 'string', minLength: 1 },

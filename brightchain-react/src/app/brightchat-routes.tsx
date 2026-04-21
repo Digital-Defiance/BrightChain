@@ -1,9 +1,9 @@
 /**
  * BrightChatRoutes — Route definitions for the BrightChat real-time communication system.
  *
- * Uses DiscordLayout (via BrightChatDiscordApp) as the primary layout with
+ * Uses BrightChatLayout (via BrightChatApp) as the primary layout with
  * ServerRail → ChannelSidebar → ChatArea navigation flow.
- * BrightChatLayout is preserved for backward compatibility.
+ * BrightChatLayoutLegacy is preserved for backward compatibility.
  *
  * All routes are relative (rendered inside a parent `<Route path="/brightchat/*">`).
  * Wrapped in PrivateRoute for auth enforcement.
@@ -20,7 +20,7 @@
  */
 
 import {
-  BrightChatDiscordApp,
+  BrightChatApp,
   ChannelListView,
   ConversationListView,
   GroupListView,
@@ -42,7 +42,7 @@ export const BrightChatRoutes: React.FC = () => {
     <PrivateRoute>
       <Suspense fallback={<LoadingFallback />}>
         <Routes>
-          <Route element={<BrightChatDiscordApp />}>
+          <Route element={<BrightChatApp />}>
             <Route index element={<ConversationListView />} />
             <Route path="groups" element={<GroupListView />} />
             <Route path="channels" element={<ChannelListView />} />

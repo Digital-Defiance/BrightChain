@@ -124,18 +124,24 @@ describe('Feature: api-lib-to-lib-migration, Property 23: Group Service Key Rota
           const updatedGroup = groupService.getGroupById(group.id);
           expect(updatedGroup).toBeDefined();
 
-          // Removed member should NOT have an encrypted key
-          expect(updatedGroup!.encryptedSharedKey.has(member2Id)).toBe(false);
+          // Removed member should NOT have an encrypted key in any epoch
+          for (const [, epochMap] of updatedGroup!.encryptedSharedKey) {
+            expect(epochMap.has(member2Id)).toBe(false);
+          }
 
-          // Remaining members should have encrypted keys
-          expect(updatedGroup!.encryptedSharedKey.has(creatorId)).toBe(true);
-          expect(updatedGroup!.encryptedSharedKey.has(member1Id)).toBe(true);
+          // Get the current epoch from the epoch state
+          const epochState = groupService.getKeyEpochState(group.id);
+          const currentEpoch = epochState?.currentEpoch ?? 0;
 
-          // Remaining members' encrypted keys should decrypt to the new symmetric key
+          // Remaining members should have encrypted keys at the current epoch
+          const currentEpochMap = updatedGroup!.encryptedSharedKey.get(currentEpoch)!;
+          expect(currentEpochMap.has(creatorId)).toBe(true);
+          expect(currentEpochMap.has(member1Id)).toBe(true);
+
+          // Remaining members' encrypted keys at current epoch should decrypt to the new symmetric key
           const newKey = groupService.getSymmetricKey(group.id)!;
           for (const remainingId of [creatorId, member1Id]) {
-            const encryptedKey =
-              updatedGroup!.encryptedSharedKey.get(remainingId)!;
+            const encryptedKey = currentEpochMap.get(remainingId)!;
             const decryptedKey = extractKeyFromDefault(encryptedKey);
             const keysMatch =
               decryptedKey.length === newKey.length &&
@@ -225,17 +231,21 @@ describe('Feature: api-lib-to-lib-migration, Property 23: Group Service Key Rota
           const updatedGroup = groupService.getGroupById(group.id);
           expect(updatedGroup).toBeDefined();
 
-          // Departed member should NOT have an encrypted key
-          expect(updatedGroup!.encryptedSharedKey.has(member2Id)).toBe(false);
+          // Departed member should NOT have an encrypted key in any epoch
+          for (const [, epochMap] of updatedGroup!.encryptedSharedKey) {
+            expect(epochMap.has(member2Id)).toBe(false);
+          }
 
-          // Remaining members should have encrypted keys matching the new symmetric key
+          // Get the current epoch from the epoch state
+          const epochState = groupService.getKeyEpochState(group.id);
+          const currentEpoch = epochState?.currentEpoch ?? 0;
+
+          // Remaining members should have encrypted keys matching the new symmetric key at current epoch
           const newKey = groupService.getSymmetricKey(group.id)!;
+          const currentEpochMap = updatedGroup!.encryptedSharedKey.get(currentEpoch)!;
           for (const remainingId of [creatorId, member1Id]) {
-            expect(updatedGroup!.encryptedSharedKey.has(remainingId)).toBe(
-              true,
-            );
-            const encryptedKey =
-              updatedGroup!.encryptedSharedKey.get(remainingId)!;
+            expect(currentEpochMap.has(remainingId)).toBe(true);
+            const encryptedKey = currentEpochMap.get(remainingId)!;
             const decryptedKey = extractKeyFromDefault(encryptedKey);
             const keysMatch =
               decryptedKey.length === newKey.length &&
@@ -373,19 +383,25 @@ describe('Feature: api-lib-to-lib-migration, Property 23: Group Service Key Rota
           );
 
           // Initially: 4 members, 4 encrypted keys
-          expect(group.encryptedSharedKey.size).toBe(4);
+          expect(group.encryptedSharedKey.get(0)!.size).toBe(4);
           expect(group.members.length).toBe(4);
 
           await groupService.removeMember(group.id, creatorId, member3Id);
 
           const afterFirst = groupService.getGroupById(group.id)!;
-          expect(afterFirst.encryptedSharedKey.size).toBe(3);
+          // After first removal: all epochs should have 3 entries for remaining members
+          for (const [, epochMap] of afterFirst.encryptedSharedKey) {
+            expect(epochMap.size).toBe(3);
+          }
           expect(afterFirst.members.length).toBe(3);
 
           await groupService.removeMember(group.id, creatorId, member2Id);
 
           const afterSecond = groupService.getGroupById(group.id)!;
-          expect(afterSecond.encryptedSharedKey.size).toBe(2);
+          // After second removal: all epochs should have 2 entries for remaining members
+          for (const [, epochMap] of afterSecond.encryptedSharedKey) {
+            expect(epochMap.size).toBe(2);
+          }
           expect(afterSecond.members.length).toBe(2);
         },
       ),

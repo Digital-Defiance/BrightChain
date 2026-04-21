@@ -30,6 +30,8 @@ export {
   GroupPromotionNotConfiguredError,
   NotParticipantError,
   RecipientNotReachableError,
+  extractConversationKeyFromDefault,
+  type ConversationKeyEncryptionHandler,
   type GroupPromotionHandler,
   type MemberReachabilityCheck,
 } from './conversationService';
@@ -68,6 +70,15 @@ export {
   extractChannelKeyFromDefault,
   type ChannelKeyEncryptionHandler,
 } from './channelService';
+
+// ── eciesKeyEncryptionHandler (no conflicts) ────────────────────────────────
+export * from './eciesKeyEncryptionHandler';
+
+// ── keyEpochManager (no conflicts) ──────────────────────────────────────────
+export * from './keyEpochManager';
+
+// ── attachmentUtils (no conflicts) ──────────────────────────────────────────
+export * from './attachmentUtils';
 
 // ── searchService (no conflicts) ────────────────────────────────────────────
 export * from './searchService';

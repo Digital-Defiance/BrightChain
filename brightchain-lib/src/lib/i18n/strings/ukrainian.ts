@@ -1592,6 +1592,53 @@ export const UkrainianStrings: ComponentStrings<BrightChainStringKey> = {
   [BrightChainStrings.Admin_Chat_DeleteMessageTitle]: 'Видалити повідомлення',
   [BrightChainStrings.Admin_Chat_DeleteMessageConfirm]:
     "Ви впевнені, що хочете видалити це повідомлення? Воно буде м'яко видалено.",
+
+  // Admin BrightChat Servers
+  [BrightChainStrings.Admin_ChatServers_Title]: 'Адміністрування серверів BrightChat',
+  [BrightChainStrings.Admin_ChatServers_TabServers]: 'Сервери',
+  [BrightChainStrings.Admin_ChatServers_TabChannels]: 'Канали',
+  [BrightChainStrings.Admin_ChatServers_TabMembers]: 'Учасники',
+  [BrightChainStrings.Admin_ChatServers_ColName]: 'Назва',
+  [BrightChainStrings.Admin_ChatServers_ColOwner]: 'Власник',
+  [BrightChainStrings.Admin_ChatServers_ColMembers]: 'Учасники',
+  [BrightChainStrings.Admin_ChatServers_ColChannels]: 'Канали',
+  [BrightChainStrings.Admin_ChatServers_ColCreated]: 'Створено',
+  [BrightChainStrings.Admin_ChatServers_ColActions]: 'Дії',
+  [BrightChainStrings.Admin_ChatServers_NoServersFound]: 'Сервери не знайдено.',
+  [BrightChainStrings.Admin_ChatServers_DeleteServer]: 'Видалити сервер',
+  [BrightChainStrings.Admin_ChatServers_DeleteServerTitle]: 'Видалити сервер',
+  [BrightChainStrings.Admin_ChatServers_DeleteServerConfirm]:
+    'Ви впевнені, що хочете видалити цей сервер? Усі канали та дані будуть остаточно видалені.',
+  [BrightChainStrings.Admin_ChatServers_EditServer]: 'Редагувати сервер',
+  [BrightChainStrings.Admin_ChatServers_EditServerTitle]: 'Редагувати сервер',
+  [BrightChainStrings.Admin_ChatServers_ServerName]: 'Назва сервера',
+  [BrightChainStrings.Admin_ChatServers_ServerIcon]: 'URL іконки',
+  [BrightChainStrings.Admin_ChatServers_Save]: 'Зберегти',
+  [BrightChainStrings.Admin_ChatServers_ChannelName]: 'Назва каналу',
+  [BrightChainStrings.Admin_ChatServers_ChannelTopic]: 'Тема',
+  [BrightChainStrings.Admin_ChatServers_ChannelVisibility]: 'Видимість',
+  [BrightChainStrings.Admin_ChatServers_ChannelMembers]: 'Учасники',
+  [BrightChainStrings.Admin_ChatServers_NoChannelsFound]: 'Канали не знайдено.',
+  [BrightChainStrings.Admin_ChatServers_DeleteChannel]: 'Видалити канал',
+  [BrightChainStrings.Admin_ChatServers_DeleteChannelTitle]: 'Видалити канал',
+  [BrightChainStrings.Admin_ChatServers_DeleteChannelConfirm]:
+    'Ви впевнені, що хочете видалити цей канал? Усі повідомлення будуть остаточно видалені.',
+  [BrightChainStrings.Admin_ChatServers_MemberName]: 'Учасник',
+  [BrightChainStrings.Admin_ChatServers_MemberRole]: 'Роль',
+  [BrightChainStrings.Admin_ChatServers_MemberJoined]: 'Приєднався',
+  [BrightChainStrings.Admin_ChatServers_NoMembersFound]: 'Учасників не знайдено.',
+  [BrightChainStrings.Admin_ChatServers_RemoveMember]: 'Видалити учасника',
+  [BrightChainStrings.Admin_ChatServers_RemoveMemberTitle]: 'Видалити учасника',
+  [BrightChainStrings.Admin_ChatServers_RemoveMemberConfirm]:
+    'Ви впевнені, що хочете видалити цього учасника з сервера?',
+  [BrightChainStrings.Admin_ChatServers_ChangeRole]: 'Змінити роль',
+  [BrightChainStrings.Admin_ChatServers_EncryptedNote]:
+    'Вміст повідомлення зашифровано наскрізним шифруванням і недоступний для адміністраторів.',
+  [BrightChainStrings.Admin_ChatServers_FilterByServer]: 'Фільтрувати за сервером',
+  [BrightChainStrings.Admin_ChatServers_AllServers]: 'Усі сервери',
+  [BrightChainStrings.Admin_Menu_ChatServers]: 'Чат-сервери',
+
+  // Admin BrightHub
   [BrightChainStrings.Admin_Hub_Title]: 'Адміністрування BrightHub',
   [BrightChainStrings.Admin_Hub_FilterByAuthorId]: 'Фільтрувати за ID автора',
   [BrightChainStrings.Admin_Hub_FilterAllPosts]: 'Усі публікації',
