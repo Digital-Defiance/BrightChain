@@ -275,7 +275,7 @@
     "@nx/react": "22.3.3",
     "@nx/vite": "22.3.3",
     "@nx/web": "22.3.3",
-    "@nx/webpack": "22.3.3",
+    "@nx/webpack": "22.7.0",
     "@playwright/test": "^1.59.1",
     "@pmmmwh/react-refresh-webpack-plugin": "^0.5.7",
     "@svgr/webpack": "^8.0.1",
