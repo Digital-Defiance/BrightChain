@@ -175,7 +175,7 @@
     "@mui/material": "^7.3.7",
     "@mui/material-nextjs": "^7.3.7",
     "@mui/system": "^7.3.8",
-    "@mui/x-date-pickers": "^8.23.0",
+    "@mui/x-date-pickers": "^9.0.3",
     "@noble/curves": "^1.9.0",
     "@noble/hashes": "^1.8.0",
     "@scure/bip32": "^1.7.0",
