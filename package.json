@@ -332,7 +332,7 @@
     "eslint-plugin-jsx-a11y": "6.10.1",
     "eslint-plugin-playwright": "^1.6.2",
     "eslint-plugin-prettier": "^5.2.1",
-    "eslint-plugin-react": "7.35.0",
+    "eslint-plugin-react": "7.37.5",
     "eslint-plugin-react-hooks": "5.0.0",
     "fast-check": "^4.7.0",
     "globals": "^17.0.0",
