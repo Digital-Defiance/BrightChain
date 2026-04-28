@@ -10375,9 +10375,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@tiptap/pm@npm:^3.22.2":
-  version: 3.22.4
-  resolution: "@tiptap/pm@npm:3.22.4"
+"@tiptap/pm@npm:^3.22.5":
+  version: 3.22.5
+  resolution: "@tiptap/pm@npm:3.22.5"
   dependencies:
     prosemirror-changeset: "npm:^2.3.0"
     prosemirror-commands: "npm:^1.6.2"
@@ -10391,7 +10391,7 @@ __metadata:
     prosemirror-tables: "npm:^1.6.4"
     prosemirror-transform: "npm:^1.10.2"
     prosemirror-view: "npm:^1.38.1"
-  checksum: 10/e3e39180389a85c8a76951c0b787c57b84f13eafafdda6b48ee79c081298661c0a5b1a3cb6229527465376dfd178fdd79968ce1d94d0c124f57f3b075e11d4d9
+  checksum: 10/6b1b10fcad07c8869e09092ba2e1e249b42aaa9bfc0b6331bc3e6aeafa5fd470cde301ed8a817d2eb16a3ac389451ba4caef9992b3858f9a3957c347aaa94ebe
   languageName: node
   linkType: hard
 
@@ -14578,7 +14578,7 @@ __metadata:
     "@tiptap/core": "npm:^3.22.2"
     "@tiptap/extension-link": "npm:^3.22.2"
     "@tiptap/extension-underline": "npm:^3.22.2"
-    "@tiptap/pm": "npm:^3.22.2"
+    "@tiptap/pm": "npm:^3.22.5"
     "@tiptap/react": "npm:^3.22.2"
     "@tiptap/starter-kit": "npm:^3.22.2"
     "@types/bcrypt": "npm:^6.0.0"
