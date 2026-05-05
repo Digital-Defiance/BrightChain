@@ -82,6 +82,32 @@
   font-size: 1.1rem;
 }
 
+.hero-e2ee-callout {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin: 1.5rem auto;
+  max-width: 700px;
+  padding: 1rem 1.5rem;
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  border-radius: 12px;
+  text-align: left;
+}
+
+.hero-e2ee-callout .e2ee-icon {
+  font-size: 1.8rem;
+  color: #10b981;
+  flex-shrink: 0;
+}
+
+.hero-e2ee-callout p {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
 .hero-stats {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));

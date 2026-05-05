@@ -27,8 +27,8 @@ export default {
     ],
   },
   transformIgnorePatterns: [
-    '/node_modules/\\.store/(?!.*(@faker-js|@noble|@scure|@ethereumjs|uuid)-)',
-    '/node_modules/(?!(\\.store|@noble|@scure|@ethereumjs|uuid|@faker-js)/)',
+    '/node_modules/\\.store/(?!.*(@faker-js|@noble|@scure|@ethereumjs|uuid|@otplib|otplib)-)',
+    '/node_modules/(?!(\\.store|@noble|@scure|@ethereumjs|uuid|@faker-js|@otplib|otplib)/)',
     // Only ignore workspace dist output, not dist/ inside node_modules packages
     '<rootDir>/../dist/',
   ],

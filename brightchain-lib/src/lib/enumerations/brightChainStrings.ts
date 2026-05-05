@@ -1677,7 +1677,7 @@ const _brightChainKeys = {
   Friends_Unauthenticated: 'Friends_Unauthenticated',
 
   // PoUW (Proof of Useful Work) Errors
-  Error_PoUW_WorkUnit_InvalidJSON: 'Error_PoUW_WorkUnit_InvalidJSON',
+  Error_PoUW_WorkUnit_InvalidJSONTemplate: 'Error_PoUW_WorkUnit_InvalidJSONTemplate',
   Error_PoUW_WorkUnit_ExpectedObject: 'Error_PoUW_WorkUnit_ExpectedObject',
   Error_PoUW_WorkUnit_MissingFieldTemplate:
     'Error_PoUW_WorkUnit_MissingFieldTemplate',
@@ -1687,7 +1687,7 @@ const _brightChainKeys = {
     'Error_PoUW_WorkUnit_InvalidOperationTemplate',
   Error_PoUW_WorkUnit_InvalidDifficultyTemplate:
     'Error_PoUW_WorkUnit_InvalidDifficultyTemplate',
-  Error_PoUW_WorkResult_InvalidJSON: 'Error_PoUW_WorkResult_InvalidJSON',
+  Error_PoUW_WorkResult_InvalidJSONTemplate: 'Error_PoUW_WorkResult_InvalidJSONTemplate',
   Error_PoUW_WorkResult_ExpectedObject: 'Error_PoUW_WorkResult_ExpectedObject',
   Error_PoUW_WorkResult_MissingFieldTemplate:
     'Error_PoUW_WorkResult_MissingFieldTemplate',

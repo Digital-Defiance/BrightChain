@@ -208,7 +208,7 @@ export const ShowcaseSpanishStrings: Partial<
     'Un sistema de calendario donde el propietario posee las claves. BrightCal permite una programación segura y cifrada con control de acceso granular. Los eventos se almacenan como bloques cifrados. Todos los datos del calendario son inmutables y recuperables, con soporte para eventos recurrentes, recordatorios e integración con sistemas de calendario tradicionales.',
   [ShowcaseStrings.FAQ_Tech_Q11_BrightMail_Title]: 'Comunicación Soberana',
   [ShowcaseStrings.FAQ_Tech_Q11_BrightMail_Text]:
-    'Un sistema de correo electrónico totalmente compatible con RFC que conecta SMTP tradicional y almacenamiento descentralizado. A diferencia de los proveedores de correo estándar, BrightMail fragmenta cada mensaje en el almacén de bloques "Sin Propietario" con soporte para mensajería cifrada de extremo a extremo en "Modo Oscuro".',
+    'Un sistema de correo electrónico totalmente compatible con RFC que conecta SMTP tradicional y almacenamiento descentralizado. Cada mensaje se cifra en reposo usando la clave pública del destinatario antes de ser almacenado en el bloque "Sin Propietario" — el texto plano nunca persiste. BrightMail aplica E2EE en la capa de almacenamiento a través de cuatro esquemas: RECIPIENT_KEYS (ECIES por destinatario), SHARED_KEY (AES-256-GCM), S/MIME y GPG.',
   [ShowcaseStrings.FAQ_Tech_Q11_BrightHub_Title]: 'Red Social y Grafo Soberano',
   [ShowcaseStrings.FAQ_Tech_Q11_BrightHub_Concept_Label]: 'El Concepto',
   [ShowcaseStrings.FAQ_Tech_Q11_BrightHub_Concept]:
@@ -262,6 +262,25 @@ export const ShowcaseSpanishStrings: Partial<
     '17. ¿Cómo se comparan las Economías de BrightChain e IPFS?',
   [ShowcaseStrings.FAQ_Tech_Q17_Answer]:
     'IPFS depende de Filecoin (una blockchain externa pesada) para incentivos. BrightChain usa el Julio. Es una unidad de cuenta "Térmica" que mide el trabajo real (ciclos CPU/NPU) y el consumo de recursos. Está integrada, tiene bajo overhead, y está directamente vinculada a la "Energía" de la red.',
+
+  [ShowcaseStrings.FAQ_Tech_Q18_Title]:
+    '18. ¿Cómo implementa BrightStack el Cifrado de Extremo a Extremo (E2EE) en reposo?',
+  [ShowcaseStrings.FAQ_Tech_Q18_Intro]:
+    'E2EE en BrightStack no es solo cifrado en tránsito — cada mensaje se cifra antes de ser confirmado en el bloque-almacén. En el momento en que se produce el texto cifrado, el texto plano se elimina permanentemente de la memoria y el almacenamiento.',
+  [ShowcaseStrings.FAQ_Tech_Q18_AtRest_Label]: 'Aplicación en reposo',
+  [ShowcaseStrings.FAQ_Tech_Q18_AtRest]:
+    'Al crearse, EmailMessageService cifra los bytes del mensaje sin procesar y almacena solo el texto cifrado AES-256-GCM en encryptedBody. textBody, htmlBody y todos los cuerpos de partes MIME se establecen explícitamente como indefinidos y nunca se escriben en el almacenamiento.',
+  [ShowcaseStrings.FAQ_Tech_Q18_Schemes_Label]:
+    'Cuatro esquemas de cifrado compatibles',
+  [ShowcaseStrings.FAQ_Tech_Q18_Schemes]:
+    'RECIPIENT_KEYS usa ECIES para producir un texto cifrado único por destinatario. SHARED_KEY usa un único secreto compartido AES-256-GCM. S/MIME y GPG también son totalmente compatibles para interoperabilidad con infraestructura de correo existente.',
+  [ShowcaseStrings.FAQ_Tech_Q18_Purge_Label]:
+    'Garantía de eliminación de texto plano',
+  [ShowcaseStrings.FAQ_Tech_Q18_Purge]:
+    'Tras el cifrado, textBody, htmlBody y todos los campos parts[].body se establecen como indefinidos y nunca se persisten. El contenido cifrado se almacena como encryptedBody junto con encryptionIv y encryptionAuthTag. Los campos binarios se codifican en base64 para transporte JSON a través de la API REST.',
+  [ShowcaseStrings.FAQ_Tech_Q18_Inbound_Label]: 'Cifrado SMTP entrante',
+  [ShowcaseStrings.FAQ_Tech_Q18_Inbound]:
+    'Cuando llega un correo a la puerta de enlace SMTP (InboundProcessor), el servidor resuelve la clave pública de cada destinatario a través de IRecipientKeyLookup. Si se encuentran claves, los bytes se cifran mediante EmailEncryptionService.encryptForRecipients() antes de ser confirmados en el bloque-almacén. La propiedad del baúl se asigna al primer destinatario (to[0]), no al remitente.',
 
   // FAQ Ecosystem Questions
   [ShowcaseStrings.FAQ_Eco_WhatIsBrightChain_Title]:
@@ -363,8 +382,10 @@ export const ShowcaseSpanishStrings: Partial<
   [ShowcaseStrings.Hero_Description_NotCrypto]: 'No es una criptomoneda.',
   [ShowcaseStrings.Hero_Description_P2]:
     'Sin monedas, sin minería, sin prueba de trabajo. BrightChain valora las contribuciones reales de almacenamiento y cómputo, rastreadas en Julios — una unidad vinculada a costos energéticos reales, no a especulación de mercado.',
+  [ShowcaseStrings.Hero_E2EE_Callout]:
+    '🔐 Cifrado de extremo a extremo por defecto. El texto plano nunca toca la red — tus datos se cifran antes de salir de tu dispositivo y solo tú tienes las claves para descifrarlos.',
   [ShowcaseStrings.Hero_Highlight]:
-    '🔒 Almacenamiento Sin Propietario • ⚡ Eficiente Energéticamente • 🌐 Descentralizado • 🎭 Anónimo pero Responsable • 🗳️ Votación Homomórfica • 💾 Almacenamiento Sobre Potencia',
+    '🔒 Almacenamiento Sin Propietario • 🔐 Cifrado de Extremo a Extremo • ⚡ Eficiente Energéticamente • 🌐 Descentralizado • 🎭 Anónimo pero Responsable • 🗳️ Votación Homomórfica • 💾 Almacenamiento Sobre Potencia',
   [ShowcaseStrings.Hero_CTA_InteractiveDemo]: '🧪 Demo Interactiva',
   [ShowcaseStrings.Hero_CTA_SoupDemo]: '🥫 Demo BrightChain Soup',
   [ShowcaseStrings.Hero_CTA_GitHub]: 'Ver en GitHub',
@@ -484,6 +505,9 @@ export const ShowcaseSpanishStrings: Partial<
     'Almacenamiento Sin Propietario',
   [ShowcaseStrings.About_Feature_OwnerFree_Desc]:
     'La aleatoriedad criptográfica elimina la responsabilidad de almacenamiento. Ningún bloque individual contiene contenido identificable, proporcionando inmunidad legal para los operadores de nodos.',
+  [ShowcaseStrings.About_Feature_E2EE_Title]: 'Cifrado de Extremo a Extremo',
+  [ShowcaseStrings.About_Feature_E2EE_Desc]:
+    'Cada dato se cifra antes de salir de tu dispositivo. El texto plano nunca se almacena, nunca se transmite, nunca se expone. Cuatro esquemas de cifrado — claves ECIES por destinatario, claves compartidas AES-256-GCM, S/MIME y GPG — aseguran que tus datos sigan siendo tuyos, desde la creación hasta la reconstrucción.',
   [ShowcaseStrings.About_Feature_EnergyEfficient_Title]:
     'Eficiente Energéticamente',
   [ShowcaseStrings.About_Feature_EnergyEfficient_Desc]:
@@ -1846,7 +1870,7 @@ export const ShowcaseSpanishStrings: Partial<
     'Protección de privacidad permanente después del período de expiración',
   [ShowcaseStrings.Feat_Encryption_Title]: 'Stack de cifrado avanzado',
   [ShowcaseStrings.Feat_Encryption_Desc]:
-    'Cifrado de última generación que combina ECIES para derivación de claves con AES-256-GCM para seguridad de archivos. Criptosistema completo con autenticación BIP39/32 y criptografía de curva elíptica SECP256k1.',
+    'Cifrado de extremo a extremo de última generación con aplicación en reposo. ECIES permite derivación de claves por destinatario; AES-256-GCM proporciona cifrado autenticado. Los cuatro esquemas (RECIPIENT_KEYS, SHARED_KEY, S/MIME, GPG) producen un encryptedBody — el texto plano se elimina en el momento en que se produce el texto cifrado.',
   [ShowcaseStrings.Feat_Encryption_Cat]: 'Criptografía',
   [ShowcaseStrings.Feat_Encryption_Tech1]: 'ECIES',
   [ShowcaseStrings.Feat_Encryption_Tech2]: 'AES-256-GCM',
@@ -1861,9 +1885,9 @@ export const ShowcaseSpanishStrings: Partial<
   [ShowcaseStrings.Feat_Encryption_HL4]:
     'Curva elíptica SECP256k1 (espacio de claves compatible con Ethereum)',
   [ShowcaseStrings.Feat_Encryption_HL5]:
-    'Integridad de datos verificada a nivel de bloque con funcionalidad XOR',
+    'E2EE en reposo: texto plano eliminado tras el cifrado — solo persiste el texto cifrado',
   [ShowcaseStrings.Feat_Encryption_HL6]:
-    'Operaciones criptográficas multiplataforma',
+    'Cuatro esquemas de cifrado interoperables: RECIPIENT_KEYS, SHARED_KEY, S/MIME, GPG',
   [ShowcaseStrings.Feat_Storage_Title]: 'Red de almacenamiento descentralizado',
   [ShowcaseStrings.Feat_Storage_Desc]:
     'Sistema de archivos distribuido peer-to-peer que monetiza el almacenamiento no utilizado en dispositivos personales. Arquitectura tipo IPFS con prueba de trabajo eficiente energéticamente e incentivos basados en reputación.',

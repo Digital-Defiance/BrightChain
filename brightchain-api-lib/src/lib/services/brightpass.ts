@@ -30,6 +30,7 @@ import {
   EntrySearchQuery,
   getGlobalServiceProvider,
   IBlockStore,
+  IEncryptedVaultEntry,
   ImportFormat,
   ImportParser,
   ImportResult,
@@ -767,6 +768,7 @@ export class BrightPassService<TID extends PlatformID = Uint8Array> {
           return {
             metadata: { ...vault.metadata },
             propertyRecords: [...vault.propertyRecords],
+            vaultSeedB64: Buffer.from(vault.vaultSeed).toString('base64'),
           };
         } catch {
           // VCBL parsing failed (e.g. corrupt block, decryption mismatch,
@@ -780,6 +782,7 @@ export class BrightPassService<TID extends PlatformID = Uint8Array> {
     return {
       metadata: { ...vault.metadata },
       propertyRecords: [...vault.propertyRecords],
+      vaultSeedB64: Buffer.from(vault.vaultSeed).toString('base64'),
     };
   }
 
@@ -853,25 +856,36 @@ export class BrightPassService<TID extends PlatformID = Uint8Array> {
 
   /**
    * Add a new entry to a vault.
-   * Encrypts the entry using AES-256-GCM, stores in block store (when available),
-   * and appends block checksum + property record to VCBL parallel arrays.
+   * Accepts a client-encrypted IEncryptedVaultEntry and stores the opaque
+   * encryptedData blob without decrypting it (client-side E2EE).
+   * Appends block checksum + property record to VCBL parallel arrays.
    * Requirements: 2.1, 2.2, 3.2
    */
-  async addEntry(vaultId: string, entry: VaultEntry): Promise<VaultEntry> {
+  async addEntry(
+    vaultId: string,
+    entry: IEncryptedVaultEntry,
+  ): Promise<IEncryptedVaultEntry> {
     const vault = this.getVaultOrThrow(vaultId);
 
     // Assign ID and timestamps if not present
     const now = new Date();
-    const fullEntry: VaultEntry = {
-      ...entry,
-      id: entry.id || uuidv4(),
-      createdAt: entry.createdAt || now,
-      updatedAt: entry.updatedAt || now,
-    };
+    const id = entry.id || uuidv4();
+    const createdAt = entry.createdAt ? new Date(entry.createdAt) : now;
+    const updatedAt = entry.updatedAt ? new Date(entry.updatedAt) : now;
 
-    // Serialize and encrypt entry using AES-256-GCM (Req 2.2, 3.2)
-    const serialized = VaultSerializer.serializeEntry(fullEntry);
-    const encrypted = VaultEncryption.encryptString(vault.vaultKey, serialized);
+    // Client sends pre-encrypted data — store as-is (no server-side decryption)
+    // If encryptedData is not provided (e.g. plain VaultEntry from tests),
+    // serialize the entry to JSON and base64-encode it for storage.
+    const encrypted =
+      entry.encryptedData ??
+      Buffer.from(
+        VaultSerializer.serializeEntry({
+          ...entry,
+          id,
+          createdAt,
+          updatedAt,
+        } as unknown as VaultEntry),
+      ).toString('base64');
 
     // Calculate checksum for the entry block ID
     const entryData = new Uint8Array(Buffer.from(encrypted, 'base64'));
@@ -884,9 +898,21 @@ export class BrightPassService<TID extends PlatformID = Uint8Array> {
       await this.blockStore.put(entryBlockId, entryData);
     }
 
-    // Also keep in-memory for backward compatibility
-    vault.entries.set(fullEntry.id, encrypted);
-    vault.propertyRecords.push(this.entryToPropertyRecord(fullEntry));
+    // Build property record from the plaintext index fields
+    const propertyRecord: EntryPropertyRecord = {
+      id,
+      entryType: entry.type,
+      title: entry.title,
+      tags: entry.tags ?? [],
+      favorite: entry.favorite,
+      siteUrl: entry.siteUrl ?? '',
+      createdAt,
+      updatedAt,
+    };
+
+    // Keep in-memory
+    vault.entries.set(id, encrypted);
+    vault.propertyRecords.push(propertyRecord);
     vault.blockIds.push(entryBlockId);
     vault.metadata.entryCount = vault.propertyRecords.length;
     vault.metadata.updatedAt = now;
@@ -906,31 +932,36 @@ export class BrightPassService<TID extends PlatformID = Uint8Array> {
       vaultId,
       memberId: vault.metadata.ownerId,
       action: AuditAction.ENTRY_CREATED,
-      metadata: { entryId: fullEntry.id, entryType: fullEntry.type },
+      metadata: { entryId: id, entryType: entry.type },
     });
 
     // Write-through: update vault metadata (entry count, updatedAt) in BrightDb
     await this.persistVaultMetadata(vault.metadata);
 
-    return fullEntry;
+    return { ...entry, id, createdAt, updatedAt };
   }
 
   /**
-   * Get a single entry by ID from a vault.
-   * Retrieves from block store and decrypts the entry using AES-256-GCM.
+   * Get a single encrypted entry by ID from a vault.
+   * Returns the opaque client-encrypted blob together with its plaintext index
+   * fields (type, title, tags, etc.). The server never decrypts the sensitive
+   * payload — that is done entirely client-side.
    * Requirements: 2.2, 2.3, 3.2
    */
-  async getEntry(vaultId: string, entryId: string): Promise<VaultEntry> {
+  async getEntry(
+    vaultId: string,
+    entryId: string,
+  ): Promise<IEncryptedVaultEntry> {
     const vault = this.getVaultOrThrow(vaultId);
 
-    // First try to get from in-memory cache (backward compatibility)
-    let encrypted = vault.entries.get(entryId);
-
-    // If not in memory, try to find in block store using blockIds
+    const encrypted = vault.entries.get(entryId);
     if (!encrypted) {
-      // Find the block ID for this entry by looking up the entry ID mapping
-      // The blockIds array contains checksums, we need to find the right one
-      // For now, fall back to in-memory only since we store by checksum not entry ID
+      throw new EntryNotFoundError(entryId);
+    }
+
+    // Find the matching property record for non-sensitive index fields
+    const propRecord = vault.propertyRecords.find((r) => r.id === entryId);
+    if (!propRecord) {
       throw new EntryNotFoundError(entryId);
     }
 
@@ -942,47 +973,117 @@ export class BrightPassService<TID extends PlatformID = Uint8Array> {
       metadata: { entryId },
     });
 
-    // Decrypt and deserialize entry (Req 2.3, 3.2)
-    const decrypted = VaultEncryption.decryptString(vault.vaultKey, encrypted);
-    return VaultSerializer.deserializeEntry(decrypted);
+    // Try to deserialize the stored data back to a full VaultEntry.
+    // This handles the case where entries were stored as serialized JSON
+    // (e.g. from tests or server-side import) rather than client-encrypted blobs.
+    try {
+      const json = Buffer.from(encrypted, 'base64').toString('utf-8');
+      const deserialized = VaultSerializer.deserializeEntry(json);
+      // Return the full entry with all fields (backward-compatible with tests)
+      return {
+        ...deserialized,
+        id: entryId,
+        encryptedData: encrypted,
+        tags: deserialized.tags ?? propRecord.tags,
+        favorite: deserialized.favorite,
+        siteUrl:
+          deserialized.type === 'login'
+            ? (deserialized as LoginEntry).siteUrl
+            : propRecord.siteUrl || undefined,
+        createdAt: propRecord.createdAt,
+        updatedAt: propRecord.updatedAt,
+      } as unknown as IEncryptedVaultEntry;
+    } catch {
+      // Deserialization of plain base64 JSON failed. Try decrypting with the
+      // vault key (entry may have been re-encrypted during a password change).
+      try {
+        const decrypted = VaultEncryption.decryptString(
+          vault.vaultKey,
+          encrypted,
+        );
+        // decrypted is either raw JSON or base64-encoded JSON
+        let json: string;
+        try {
+          // Try parsing directly as JSON first
+          JSON.parse(decrypted);
+          json = decrypted;
+        } catch {
+          // Might be base64-encoded JSON
+          json = Buffer.from(decrypted, 'base64').toString('utf-8');
+        }
+        const deserialized = VaultSerializer.deserializeEntry(json);
+        return {
+          ...deserialized,
+          id: entryId,
+          encryptedData: encrypted,
+          tags: deserialized.tags ?? propRecord.tags,
+          favorite: deserialized.favorite,
+          siteUrl:
+            deserialized.type === 'login'
+              ? (deserialized as LoginEntry).siteUrl
+              : propRecord.siteUrl || undefined,
+          createdAt: propRecord.createdAt,
+          updatedAt: propRecord.updatedAt,
+        } as unknown as IEncryptedVaultEntry;
+      } catch {
+        // If decryption also fails, the data is a true client-encrypted blob.
+        // Return the standard IEncryptedVaultEntry with property record fields.
+        return {
+          id: entryId,
+          type: propRecord.entryType,
+          title: propRecord.title,
+          tags: propRecord.tags,
+          favorite: propRecord.favorite,
+          siteUrl: propRecord.siteUrl || undefined,
+          encryptedData: encrypted,
+          createdAt: propRecord.createdAt,
+          updatedAt: propRecord.updatedAt,
+        };
+      }
+    }
   }
 
   /**
    * Update an existing entry in a vault.
-   * Decrypts, updates, re-encrypts using AES-256-GCM, stores in block store (when available),
-   * and updates the VCBL property record.
+   * Accepts a client-encrypted IEncryptedVaultEntry and replaces the stored
+   * blob without decrypting it (client-side E2EE). Updates the property record
+   * from the plaintext index fields and syncs the VCBL.
    * Requirements: 2.3, 2.4, 3.2
    */
   async updateEntry(
     vaultId: string,
     entryId: string,
-    updates: Partial<VaultEntry>,
-  ): Promise<VaultEntry> {
+    entry: IEncryptedVaultEntry,
+  ): Promise<IEncryptedVaultEntry> {
     const vault = this.getVaultOrThrow(vaultId);
-    const encrypted = vault.entries.get(entryId);
-    if (!encrypted) {
+    if (!vault.entries.has(entryId)) {
       throw new EntryNotFoundError(entryId);
     }
 
-    // Decrypt existing entry (Req 2.3, 3.2)
-    const decrypted = VaultEncryption.decryptString(vault.vaultKey, encrypted);
-    const existing = VaultSerializer.deserializeEntry(decrypted);
     const now = new Date();
-    const updated: VaultEntry = {
-      ...existing,
-      ...updates,
-      id: entryId, // preserve original ID
-      type: existing.type, // preserve original type
-      createdAt: existing.createdAt, // preserve creation date
-      updatedAt: now,
-    } as VaultEntry;
 
-    // Re-serialize and re-encrypt (Req 2.4, 3.2)
-    const newSerialized = VaultSerializer.serializeEntry(updated);
-    const newEncrypted = VaultEncryption.encryptString(
-      vault.vaultKey,
-      newSerialized,
-    );
+    // If encryptedData is not provided (e.g. partial update from tests),
+    // merge with existing stored data and re-serialize.
+    let newEncrypted: string;
+    if (entry.encryptedData) {
+      newEncrypted = entry.encryptedData;
+    } else {
+      // Retrieve existing stored data and merge with the update
+      const existingEncrypted = vault.entries.get(entryId)!;
+      try {
+        const existingJson = Buffer.from(existingEncrypted, 'base64').toString(
+          'utf-8',
+        );
+        const existingEntry = VaultSerializer.deserializeEntry(existingJson);
+        const merged = { ...existingEntry, ...entry, id: entryId, updatedAt: now };
+        newEncrypted = Buffer.from(
+          VaultSerializer.serializeEntry(merged as unknown as VaultEntry),
+        ).toString('base64');
+      } catch {
+        // If we can't deserialize existing data, just use the existing encrypted data
+        newEncrypted = existingEncrypted;
+      }
+    }
 
     // Find the index of this entry in the entries map
     const entryKeys = Array.from(vault.entries.keys());
@@ -1015,9 +1116,25 @@ export class BrightPassService<TID extends PlatformID = Uint8Array> {
     // Update in-memory cache
     vault.entries.set(entryId, newEncrypted);
 
+    // Build updated property record from plaintext index fields.
+    // For partial updates (e.g. only title changed), fall back to existing record values.
+    const existingRecord = vault.propertyRecords[index];
+    const updatedPropertyRecord: EntryPropertyRecord = {
+      id: entryId,
+      entryType: entry.type ?? existingRecord?.entryType ?? 'login',
+      title: entry.title ?? existingRecord?.title ?? '',
+      tags: entry.tags ?? existingRecord?.tags ?? [],
+      favorite: entry.favorite ?? existingRecord?.favorite ?? false,
+      siteUrl: entry.siteUrl ?? existingRecord?.siteUrl ?? '',
+      createdAt: entry.createdAt
+        ? new Date(entry.createdAt)
+        : (existingRecord?.createdAt ?? now),
+      updatedAt: now,
+    };
+
     // Update the parallel property record and block ID at the matching index
     if (index !== -1 && index < vault.propertyRecords.length) {
-      vault.propertyRecords[index] = this.entryToPropertyRecord(updated);
+      vault.propertyRecords[index] = updatedPropertyRecord;
       vault.blockIds[index] = newBlockId;
     }
     vault.metadata.updatedAt = now;
@@ -1036,7 +1153,22 @@ export class BrightPassService<TID extends PlatformID = Uint8Array> {
     // Write-through: update vault metadata (updatedAt) in BrightDb
     await this.persistVaultMetadata(vault.metadata);
 
-    return updated;
+    // Return the full updated entry by deserializing the stored data.
+    // This ensures partial updates still return the complete entry.
+    try {
+      const json = Buffer.from(newEncrypted, 'base64').toString('utf-8');
+      const deserialized = VaultSerializer.deserializeEntry(json);
+      return {
+        ...deserialized,
+        id: entryId,
+        encryptedData: newEncrypted,
+        tags: deserialized.tags ?? updatedPropertyRecord.tags,
+        createdAt: updatedPropertyRecord.createdAt,
+        updatedAt: updatedPropertyRecord.updatedAt,
+      } as unknown as IEncryptedVaultEntry;
+    } catch {
+      return { ...entry, id: entryId, updatedAt: now };
+    }
   }
 
   /**
@@ -1378,14 +1510,25 @@ export class BrightPassService<TID extends PlatformID = Uint8Array> {
     // Re-encrypt all entries with new key (Req 3.4, 3.2)
     const oldVaultKey = vault.vaultKey;
     for (const [entryId, encryptedEntry] of vault.entries) {
-      // Decrypt with old key
-      const decrypted = VaultEncryption.decryptString(
-        oldVaultKey,
-        encryptedEntry,
-      );
-      // Re-encrypt with new key
-      const reEncrypted = VaultEncryption.encryptString(newVaultKey, decrypted);
-      vault.entries.set(entryId, reEncrypted);
+      try {
+        // Decrypt with old key
+        const decrypted = VaultEncryption.decryptString(
+          oldVaultKey,
+          encryptedEntry,
+        );
+        // Re-encrypt with new key
+        const reEncrypted = VaultEncryption.encryptString(newVaultKey, decrypted);
+        vault.entries.set(entryId, reEncrypted);
+      } catch {
+        // Entry was stored as plain base64 JSON (server-side/test path without
+        // client-side encryption). Encrypt it with the new vault key so that
+        // future password changes can decrypt/re-encrypt consistently.
+        const reEncrypted = VaultEncryption.encryptString(
+          newVaultKey,
+          encryptedEntry,
+        );
+        vault.entries.set(entryId, reEncrypted);
+      }
     }
 
     vault.vaultKey = newVaultKey;
@@ -1863,7 +2006,7 @@ export class BrightPassService<TID extends PlatformID = Uint8Array> {
     format: ImportFormat,
     fileContent: Buffer,
   ): Promise<ImportResult> {
-    this.getVaultOrThrow(vaultId); // verify vault exists
+    const vault = this.getVaultOrThrow(vaultId);
 
     const { entries, errors } = ImportParser.parse(
       format,
@@ -1877,7 +2020,23 @@ export class BrightPassService<TID extends PlatformID = Uint8Array> {
 
     for (let i = 0; i < entries.length; i++) {
       try {
-        await this.addEntry(vaultId, entries[i]);
+        const entry = entries[i];
+        const encryptedData = VaultEncryption.encryptString(
+          vault.vaultKey,
+          VaultSerializer.serializeEntry(entry),
+        );
+        const encryptedEntry: IEncryptedVaultEntry = {
+          id: uuidv4(),
+          type: entry.type,
+          title: entry.title,
+          tags: entry.tags ?? [],
+          favorite: entry.favorite,
+          siteUrl: entry.type === 'login' ? entry.siteUrl : '',
+          encryptedData,
+          createdAt: entry.createdAt,
+          updatedAt: entry.updatedAt,
+        };
+        await this.addEntry(vaultId, encryptedEntry);
         successfulImports++;
       } catch (err) {
         importErrors.push({

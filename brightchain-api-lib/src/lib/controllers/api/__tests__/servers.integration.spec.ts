@@ -83,7 +83,30 @@ function createMockApplication(): IBrightChainApplication {
 function createTestSetup() {
   const permissionService = new PermissionService();
   const channelService = new ChannelService(permissionService);
-  const serverService = new ServerService({ channelService });
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const makeCol = () => {
+    const store = new Map<string, any>();
+    return {
+      create: async (doc: any) => { store.set(doc.id ?? doc.token ?? doc._id, doc); },
+      findById: async (key: string) => store.get(key) ?? null,
+      findMany: async () => Array.from(store.values()),
+      update: async (key: string, doc: any) => { store.set(key, doc); },
+      delete: async (key: string) => { store.delete(key); },
+    };
+  };
+  const storageProvider = {
+    conversations: makeCol(),
+    messages: makeCol(),
+    groups: makeCol(),
+    groupMessages: makeCol(),
+    channels: makeCol(),
+    channelMessages: makeCol(),
+    inviteTokens: makeCol(),
+    servers: makeCol(),
+    serverInvites: makeCol(),
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } as any;
+  const serverService = new ServerService({ channelService, storageProvider });
 
   const app = createMockApplication();
   const controller = new ServerController(app);

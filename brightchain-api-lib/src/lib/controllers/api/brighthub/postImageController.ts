@@ -197,16 +197,38 @@ export class PostImageController<
         deps.parseId(fileId),
       );
 
-      // Send binary response directly via Express res object
-      this.res.set('Content-Type', fileInfo.mimeType);
-      this.res.set('Cache-Control', 'public, max-age=31536000, immutable');
-      this.res.set('ETag', etag);
-      this.res.status(200).send(fileBuffer);
+      // If Express res is available, send binary response directly
+      try {
+        const res = this.res;
+        if (typeof res.set === 'function') {
+          res.set('Content-Type', fileInfo.mimeType);
+          res.set('Cache-Control', 'public, max-age=31536000, immutable');
+          res.set('ETag', etag);
+          res.status(200).send(fileBuffer);
 
+          return {
+            statusCode: 200,
+            response: {
+              message: 'OK',
+            } as unknown as ApiErrorResponse,
+          };
+        }
+      } catch {
+        // No active response — fall through to return binary data in response object
+      }
+
+      // Return binary data in response object (for testing / non-Express contexts)
       return {
         statusCode: 200,
         response: {
-          message: 'OK',
+          _binary: true,
+          _buffer: fileBuffer,
+          _contentType: fileInfo.mimeType,
+          _headers: {
+            'Content-Type': fileInfo.mimeType,
+            'Cache-Control': 'public, max-age=31536000, immutable',
+            ETag: etag,
+          },
         } as unknown as ApiErrorResponse,
       };
     } catch (error) {

@@ -261,6 +261,24 @@ export const ShowcaseJapaneseStrings: Partial<
   [ShowcaseStrings.FAQ_Tech_Q17_Answer]:
     'IPFSはインセンティブのためにFilecoin（重い外部ブロックチェーン）に依存しています。BrightChainはジュールを使用します。これは実際の作業（CPU/NPUサイクル）とリソース消費を測定する「熱」の計算単位です。組み込みで、低オーバーヘッドで、ネットワークの「エネルギー」に直接結びついています。',
 
+  [ShowcaseStrings.FAQ_Tech_Q18_Title]:
+    '18. BrightStackは保存時のエンドツーエンド暗号化（E2EE）をどのように実装していますか？',
+  [ShowcaseStrings.FAQ_Tech_Q18_Intro]:
+    'BrightStackのE2EEは転送中の暗号化だけではありません — すべてのメッセージはブロックストアにコミットされる前に暗号化されます。暗号文が生成された瞬間、平文はメモリとストレージから永久に削除されます。',
+  [ShowcaseStrings.FAQ_Tech_Q18_AtRest_Label]: '保存時の適用',
+  [ShowcaseStrings.FAQ_Tech_Q18_AtRest]:
+    '作成時、EmailMessageServiceは生のメッセージバイトを暗号化し、AES-256-GCM暗号文のみをencryptedBodyに保存します。textBody、htmlBody、およびすべてのMIMEパートボディは明示的にundefinedに設定され、ストレージに書き込まれません。',
+  [ShowcaseStrings.FAQ_Tech_Q18_Schemes_Label]:
+    '4つのサポートされる暗号化スキーム',
+  [ShowcaseStrings.FAQ_Tech_Q18_Schemes]:
+    'RECIPIENT_KEYSは受信者ごとに一意の暗号文を生成するためにECIESを使用します。SHARED_KEYは単一のAES-256-GCM共有秘密を使用します。S/MIMEとGPGも既存のメールインフラとの相互運用性のために完全にサポートされています。',
+  [ShowcaseStrings.FAQ_Tech_Q18_Purge_Label]: '平文削除保証',
+  [ShowcaseStrings.FAQ_Tech_Q18_Purge]:
+    '暗号化後、textBody、htmlBody、およびすべてのparts[].bodyフィールドは明示的にundefinedに設定され、永続化されません。暗号化されたコンテンツは、認証された復号化のためにencryptionIvとencryptionAuthTagとともにencryptedBodyとして保存されます。バイナリフィールドはREST APIを介したJSONトランスポートのためにbase64エンコードされます。',
+  [ShowcaseStrings.FAQ_Tech_Q18_Inbound_Label]: '受信SMTPの暗号化',
+  [ShowcaseStrings.FAQ_Tech_Q18_Inbound]:
+    'SMTPゲートウェイ（InboundProcessor）にメールが届くと、サーバーIRecipientKeyLookupを通じて各受信者アドレスの公開鍵を解決します。鍵が見つかった場合、生のメッセージバイトはブロックストアにコミットされる前にEmailEncryptionService.encryptForRecipients()を介して暗号化されます。Vaultの所有権は送信者ではなく最初の受信者（to[0]）に割り当てられます。',
+
   // FAQ Ecosystem Questions
   [ShowcaseStrings.FAQ_Eco_WhatIsBrightChain_Title]:
     '🔗 BrightChainとは本当は何ですか？',
@@ -364,8 +382,10 @@ export const ShowcaseJapaneseStrings: Partial<
   [ShowcaseStrings.Hero_Description_NotCrypto]: '暗号通貨ではありません。',
   [ShowcaseStrings.Hero_Description_P2]:
     'コインなし、マイニングなし、Proof of Workなし。BrightChainはストレージと計算の実際の貢献を重視し、市場の投機ではなく現実のエネルギーコストに連動した単位であるジュールで追跡します。',
+  [ShowcaseStrings.Hero_E2EE_Callout]:
+    '🔐 デフォルトでエンドツーエンド暗号化。平文はネットワークに触れません — データはデバイスを離れる前に暗号化され、復号する鍵を持つのはあなただけです。',
   [ShowcaseStrings.Hero_Highlight]:
-    '🔒 オーナーフリーストレージ • ⚡ エネルギー効率 • 🌐 分散型 • 🎭 匿名かつ説明責任あり • 🗳️ 準同型投票 • 💾 電力よりストレージ',
+    '🔒 オーナーフリーストレージ • 🔐 エンドツーエンド暗号化 • ⚡ エネルギー効率 • 🌐 分散型 • 🎭 匿名かつ説明責任あり • 🗳️ 準同型投票 • 💾 電力よりストレージ',
   [ShowcaseStrings.Hero_CTA_InteractiveDemo]: '🧪 インタラクティブデモ',
   [ShowcaseStrings.Hero_CTA_SoupDemo]: '🥫 BrightChain Soupデモ',
   [ShowcaseStrings.Hero_CTA_GitHub]: 'GitHubで見る',
@@ -479,6 +499,9 @@ export const ShowcaseJapaneseStrings: Partial<
   [ShowcaseStrings.About_Feature_OwnerFree_Title]: 'オーナーフリーストレージ',
   [ShowcaseStrings.About_Feature_OwnerFree_Desc]:
     '暗号学的ランダム性がストレージの法的責任を排除します。単一のブロックに識別可能なコンテンツは含まれず、ノードオペレーターに法的免責を提供します。',
+  [ShowcaseStrings.About_Feature_E2EE_Title]: 'エンドツーエンド暗号化',
+  [ShowcaseStrings.About_Feature_E2EE_Desc]:
+    'すべてのデータはデバイスを離れる前に暗号化されます。平文は保存されず、送信されず、公開されません。ECIES受信者キー、AES-256-GCM共有キー、S/MIME、GPGの4つの暗号化スキームにより、作成から復元まであなたのデータはあなたのものです。',
   [ShowcaseStrings.About_Feature_EnergyEfficient_Title]: 'エネルギー効率',
   [ShowcaseStrings.About_Feature_EnergyEfficient_Desc]:
     '無駄なProof of Workマイニングなし。すべての計算がストレージ、検証、ネットワーク運用という有用な目的に使われます。',
@@ -1758,7 +1781,7 @@ export const ShowcaseJapaneseStrings: Partial<
   [ShowcaseStrings.Feat_Anonymity_HL6]: '失効期間後の永続的プライバシー保護',
   [ShowcaseStrings.Feat_Encryption_Title]: '高度な暗号化スタック',
   [ShowcaseStrings.Feat_Encryption_Desc]:
-    '鍵導出のためのECIESとファイルセキュリティのためのAES-256-GCMを組み合わせた最先端の暗号化。BIP39/32認証とSECP256k1楕円曲線暗号を備えた完全な暗号システム。',
+    '保存時適用を備えた最先端のエンドツーエンド暗号化。ECIESは受信者ごとの鍵導出を可能にし、AES-256-GCMは認証済み暗号化を提供します。4つのスキーム（RECIPIENT_KEYS、SHARED_KEY、S/MIME、GPG）はすべてencryptedBodyを生成します — 暗号文が生成された瞬間に平文が削除されます。',
   [ShowcaseStrings.Feat_Encryption_Cat]: '暗号技術',
   [ShowcaseStrings.Feat_Encryption_Tech1]: 'ECIES',
   [ShowcaseStrings.Feat_Encryption_Tech2]: 'AES-256-GCM',
@@ -1772,8 +1795,9 @@ export const ShowcaseJapaneseStrings: Partial<
   [ShowcaseStrings.Feat_Encryption_HL4]:
     'SECP256k1楕円曲線（Ethereum互換キースペース）',
   [ShowcaseStrings.Feat_Encryption_HL5]:
-    'XOR機能による検証済みブロックレベルのデータ整合性',
-  [ShowcaseStrings.Feat_Encryption_HL6]: 'クロスプラットフォーム暗号操作',
+    '保存時E2EE: 暗号化後に平文を削除 — 暗号文のみが永続化',
+  [ShowcaseStrings.Feat_Encryption_HL6]:
+    '4つの相互運用可能な暗号化スキーム: RECIPIENT_KEYS、SHARED_KEY、S/MIME、GPG',
   [ShowcaseStrings.Feat_Storage_Title]: '分散型ストレージネットワーク',
   [ShowcaseStrings.Feat_Storage_Desc]:
     '個人デバイスの未使用ストレージを収益化するP2P分散型ファイルシステム。エネルギー効率の良いProof of Workとレピュテーションベースのインセンティブを備えたIPFS風アーキテクチャ。',

@@ -221,6 +221,7 @@ describe('InboundProcessor', () => {
     mockedFs.statSync.mockReturnValue({ isFile: () => true } as fs.Stats);
     mockedFs.watch.mockReturnValue({
       close: jest.fn(),
+      on: jest.fn().mockReturnThis(),
     } as unknown as fs.FSWatcher);
   });
 
@@ -275,6 +276,7 @@ describe('InboundProcessor', () => {
       const closeFn = jest.fn();
       mockedFs.watch.mockReturnValue({
         close: closeFn,
+        on: jest.fn().mockReturnThis(),
       } as unknown as fs.FSWatcher);
 
       const proc = new InboundProcessor(
@@ -710,6 +712,300 @@ describe('InboundProcessor', () => {
       expect(externalDispatcher).not.toHaveBeenCalled();
       // receiveEmail was the only EmailMessageService method called
       expect(dispatchSpy).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  // ── Vault creation for email attachments ──────────────────────────
+
+  describe('vault creation for email attachments', () => {
+    const attachmentContent = new Uint8Array([0x50, 0x44, 0x46, 0x2d]);
+
+    function makeMetadataWithAttachments(): IEmailMetadata {
+      return makeEmailMetadata({
+        attachments: [
+          {
+            filename: 'report.pdf',
+            mimeType: 'application/pdf',
+            size: attachmentContent.length,
+            cblMagnetUrl: '',
+            blockIds: [],
+            checksum: '',
+            content: attachmentContent,
+          },
+        ],
+      });
+    }
+
+    function makeMockVaultService() {
+      return {
+        createVaultForEmail: jest.fn().mockResolvedValue({
+          vaultContainerId: 'vault-container-123',
+          files: [{ filename: 'report.pdf', vaultFileId: 'vault-file-456' }],
+        }),
+      };
+    }
+
+    it('should create a vault and upload attachments when vaultService and resolveUserIdByEmail are provided', async () => {
+      const metaWithAttachments = makeMetadataWithAttachments();
+      const attachParser = makeMockEmailParser(metaWithAttachments);
+      const vaultService = makeMockVaultService();
+      const resolveUserId = jest
+        .fn()
+        .mockResolvedValue('user-guid-abc-123-def');
+
+      const proc = new InboundProcessor(
+        config,
+        attachParser,
+        emailService,
+        blockStore,
+        gossip,
+        undefined, // authVerifier
+        vaultService,
+        undefined, // recipientKeyLookup
+        resolveUserId,
+      );
+
+      await proc.processFile('with-attachment.eml');
+
+      // resolveUserIdByEmail should be called with the first recipient's address
+      expect(resolveUserId).toHaveBeenCalledWith('alice@brightchain.org');
+
+      // vaultService.createVaultForEmail should be called with the resolved user ID
+      expect(vaultService.createVaultForEmail).toHaveBeenCalledWith(
+        metaWithAttachments.messageId,
+        metaWithAttachments.subject,
+        metaWithAttachments.date,
+        'user-guid-abc-123-def',
+        [
+          {
+            filename: 'report.pdf',
+            mimeType: 'application/pdf',
+            content: attachmentContent,
+          },
+        ],
+      );
+
+      // receiveEmail should include vaultContainerId and vaultFileId
+      expect(emailService.receiveEmail).toHaveBeenCalledTimes(1);
+      const receiveArg = emailService.receiveEmail.mock.calls[0][0];
+      expect(receiveArg.vaultContainerId).toBe('vault-container-123');
+      expect(receiveArg.attachments[0].vaultFileId).toBe('vault-file-456');
+    });
+
+    it('should skip vault creation when resolveUserIdByEmail returns null', async () => {
+      const metaWithAttachments = makeMetadataWithAttachments();
+      const attachParser = makeMockEmailParser(metaWithAttachments);
+      const vaultService = makeMockVaultService();
+      const resolveUserId = jest.fn().mockResolvedValue(null);
+
+      const proc = new InboundProcessor(
+        config,
+        attachParser,
+        emailService,
+        blockStore,
+        gossip,
+        undefined,
+        vaultService,
+        undefined,
+        resolveUserId,
+      );
+
+      await proc.processFile('unresolved-user.eml');
+
+      // Vault service should NOT be called since user ID couldn't be resolved
+      expect(vaultService.createVaultForEmail).not.toHaveBeenCalled();
+
+      // Email should still be delivered (vault is best-effort)
+      expect(emailService.receiveEmail).toHaveBeenCalledTimes(1);
+      const receiveArg = emailService.receiveEmail.mock.calls[0][0];
+      expect(receiveArg.vaultContainerId).toBeUndefined();
+    });
+
+    it('should skip vault creation when resolveUserIdByEmail is not provided', async () => {
+      const metaWithAttachments = makeMetadataWithAttachments();
+      const attachParser = makeMockEmailParser(metaWithAttachments);
+      const vaultService = makeMockVaultService();
+
+      const proc = new InboundProcessor(
+        config,
+        attachParser,
+        emailService,
+        blockStore,
+        gossip,
+        undefined,
+        vaultService,
+        undefined,
+        undefined, // no resolveUserIdByEmail
+      );
+
+      await proc.processFile('no-resolver.eml');
+
+      // Vault service should NOT be called since there's no resolver
+      expect(vaultService.createVaultForEmail).not.toHaveBeenCalled();
+
+      // Email should still be delivered
+      expect(emailService.receiveEmail).toHaveBeenCalledTimes(1);
+    });
+
+    it('should skip vault creation when vaultService is not provided', async () => {
+      const metaWithAttachments = makeMetadataWithAttachments();
+      const attachParser = makeMockEmailParser(metaWithAttachments);
+      const resolveUserId = jest
+        .fn()
+        .mockResolvedValue('user-guid-abc-123-def');
+
+      const proc = new InboundProcessor(
+        config,
+        attachParser,
+        emailService,
+        blockStore,
+        gossip,
+        undefined,
+        undefined, // no vaultService
+        undefined,
+        resolveUserId,
+      );
+
+      await proc.processFile('no-vault-service.eml');
+
+      // resolveUserId should NOT be called since there's no vault service
+      expect(resolveUserId).not.toHaveBeenCalled();
+
+      // Email should still be delivered
+      expect(emailService.receiveEmail).toHaveBeenCalledTimes(1);
+    });
+
+    it('should skip vault creation when email has no attachments with content', async () => {
+      const metaNoContent = makeEmailMetadata({
+        attachments: [
+          {
+            filename: 'empty.txt',
+            mimeType: 'text/plain',
+            size: 0,
+            cblMagnetUrl: '',
+            blockIds: [],
+            checksum: '',
+            // content is undefined — no raw bytes available
+          },
+        ],
+      });
+      const noContentParser = makeMockEmailParser(metaNoContent);
+      const vaultService = makeMockVaultService();
+      const resolveUserId = jest
+        .fn()
+        .mockResolvedValue('user-guid-abc-123-def');
+
+      const proc = new InboundProcessor(
+        config,
+        noContentParser,
+        emailService,
+        blockStore,
+        gossip,
+        undefined,
+        vaultService,
+        undefined,
+        resolveUserId,
+      );
+
+      await proc.processFile('no-content-attachment.eml');
+
+      // No attachments with content → vault creation skipped
+      expect(vaultService.createVaultForEmail).not.toHaveBeenCalled();
+      expect(emailService.receiveEmail).toHaveBeenCalledTimes(1);
+    });
+
+    it('should continue email delivery when vault creation throws (best-effort)', async () => {
+      const metaWithAttachments = makeMetadataWithAttachments();
+      const attachParser = makeMockEmailParser(metaWithAttachments);
+      const vaultService = {
+        createVaultForEmail: jest
+          .fn()
+          .mockRejectedValue(new Error('Vault storage full')),
+      };
+      const resolveUserId = jest
+        .fn()
+        .mockResolvedValue('user-guid-abc-123-def');
+
+      const proc = new InboundProcessor(
+        config,
+        attachParser,
+        emailService,
+        blockStore,
+        gossip,
+        undefined,
+        vaultService,
+        undefined,
+        resolveUserId,
+      );
+
+      await proc.processFile('vault-error.eml');
+
+      // Vault creation failed but email should still be delivered
+      expect(emailService.receiveEmail).toHaveBeenCalledTimes(1);
+      const receiveArg = emailService.receiveEmail.mock.calls[0][0];
+      expect(receiveArg.vaultContainerId).toBeUndefined();
+
+      // File should be deleted (success — vault is best-effort)
+      expect(mockedFs.unlinkSync).toHaveBeenCalled();
+    });
+
+    it('should handle multiple attachments and map vaultFileIds correctly', async () => {
+      const content1 = new Uint8Array([1, 2, 3]);
+      const content2 = new Uint8Array([4, 5, 6]);
+      const metaMulti = makeEmailMetadata({
+        attachments: [
+          {
+            filename: 'doc.pdf',
+            mimeType: 'application/pdf',
+            size: content1.length,
+            cblMagnetUrl: '',
+            blockIds: [],
+            checksum: '',
+            content: content1,
+          },
+          {
+            filename: 'photo.jpg',
+            mimeType: 'image/jpeg',
+            size: content2.length,
+            cblMagnetUrl: '',
+            blockIds: [],
+            checksum: '',
+            content: content2,
+          },
+        ],
+      });
+      const multiParser = makeMockEmailParser(metaMulti);
+      const vaultService = {
+        createVaultForEmail: jest.fn().mockResolvedValue({
+          vaultContainerId: 'vault-multi-container',
+          files: [
+            { filename: 'doc.pdf', vaultFileId: 'file-id-1' },
+            { filename: 'photo.jpg', vaultFileId: 'file-id-2' },
+          ],
+        }),
+      };
+      const resolveUserId = jest.fn().mockResolvedValue('user-id-multi');
+
+      const proc = new InboundProcessor(
+        config,
+        multiParser,
+        emailService,
+        blockStore,
+        gossip,
+        undefined,
+        vaultService,
+        undefined,
+        resolveUserId,
+      );
+
+      await proc.processFile('multi-attach.eml');
+
+      expect(emailService.receiveEmail).toHaveBeenCalledTimes(1);
+      const receiveArg = emailService.receiveEmail.mock.calls[0][0];
+      expect(receiveArg.vaultContainerId).toBe('vault-multi-container');
+      expect(receiveArg.attachments).toHaveLength(2);
+      expect(receiveArg.attachments[0].vaultFileId).toBe('file-id-1');
+      expect(receiveArg.attachments[1].vaultFileId).toBe('file-id-2');
     });
   });
 });

@@ -16,6 +16,12 @@ export interface VaultMetadata {
 export interface DecryptedVault {
   metadata: VaultMetadata;
   propertyRecords: EntryPropertyRecord[];
+  /**
+   * Base64-encoded vault BIP39 seed returned by the server on openVault.
+   * Used by the client to derive the vault key for client-side E2EE entry
+   * encryption/decryption. Never stored persistently by the client.
+   */
+  vaultSeedB64?: string;
 }
 
 /**
@@ -38,6 +44,11 @@ export interface IDecryptedVault<TID = string> {
     vcblBlockId: BlockId;
   };
   propertyRecords: EntryPropertyRecord[];
+  /**
+   * Base64-encoded vault BIP39 seed returned by the server on openVault.
+   * Used by the client to derive the vault key for client-side E2EE.
+   */
+  vaultSeedB64?: string;
 }
 
 export interface EntrySearchQuery {

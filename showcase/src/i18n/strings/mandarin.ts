@@ -242,6 +242,23 @@ export const ShowcaseMandarinStrings: Partial<
   [ShowcaseStrings.FAQ_Tech_Q17_Answer]:
     'IPFS依赖Filecoin（一个沉重的外部区块链）来提供激励。BrightChain使用焦耳。它是一个"热力"计量单位，衡量实际工作（CPU/NPU周期）和资源消耗。它是内置的、低开销的，并直接与网络的"能量"挂钩。',
 
+  [ShowcaseStrings.FAQ_Tech_Q18_Title]:
+    '18. BrightStack如何实现静态端对端加密（E2EE）？',
+  [ShowcaseStrings.FAQ_Tech_Q18_Intro]:
+    'BrightStack 中的 E2EE 不仅仅是传输加密——每条消息在提交到块存储之前就会被加密。密文生成的那一刻，明文就会从内存和存储中被永久清除。',
+  [ShowcaseStrings.FAQ_Tech_Q18_AtRest_Label]: '静态加密强制实施',
+  [ShowcaseStrings.FAQ_Tech_Q18_AtRest]:
+    '创建时，EmailMessageService 加密原始消息字节，仅将 AES-256-GCM 密文存储在 encryptedBody 中。textBody、htmlBody 和所有 MIME 部分正文被显式设置为 undefined，永远不写入存储。',
+  [ShowcaseStrings.FAQ_Tech_Q18_Schemes_Label]: '四种支持的加密方案',
+  [ShowcaseStrings.FAQ_Tech_Q18_Schemes]:
+    'RECIPIENT_KEYS 使用 ECIES 为每个收件人生成唯一密文。SHARED_KEY 使用单一 AES-256-GCM 共享密钥。S/MIME 和 GPG 也完全支持，以实现与现有电子邮件基础设施的互操作性。',
+  [ShowcaseStrings.FAQ_Tech_Q18_Purge_Label]: '明文清除保证',
+  [ShowcaseStrings.FAQ_Tech_Q18_Purge]:
+    '加密后，textBody、htmlBody 和所有 parts[].body 字段被显式设置为 undefined，永不持久化。加密内容以 encryptedBody 形式存储，同时与 encryptionIv 和 encryptionAuthTag 一起用于认证解密。二进制字段在通过 REST API 的 JSON 传输中进行 base64 编码。',
+  [ShowcaseStrings.FAQ_Tech_Q18_Inbound_Label]: '入站 SMTP 加密',
+  [ShowcaseStrings.FAQ_Tech_Q18_Inbound]:
+    '当电子邮件到达 SMTP 网关（InboundProcessor）时，服务器通过 IRecipientKeyLookup 解析每个收件人地址的公钥。如果找到密钥，原始消息字节在提交到块存储之前通过 EmailEncryptionService.encryptForRecipients() 进行加密。金库所有权分配给第一个收件人（to[0]），而不是发件人。',
+
   // FAQ Ecosystem Questions
   [ShowcaseStrings.FAQ_Eco_WhatIsBrightChain_Title]:
     '🔗 BrightChain到底是什么？',
@@ -340,8 +357,10 @@ export const ShowcaseMandarinStrings: Partial<
   [ShowcaseStrings.Hero_Description_NotCrypto]: '这不是加密货币。',
   [ShowcaseStrings.Hero_Description_P2]:
     '没有代币，没有挖矿，没有工作量证明。BrightChain 重视存储和计算的真实贡献，以焦耳为单位进行追踪——这是一个与现实世界能源成本挂钩的单位，而非市场投机。',
+  [ShowcaseStrings.Hero_E2EE_Callout]:
+    '🔐 默认端到端加密。明文永远不会接触网络——您的数据在离开设备之前就已加密，只有您持有解密密钥。',
   [ShowcaseStrings.Hero_Highlight]:
-    '🔒 无主存储 • ⚡ 节能高效 • 🌐 去中心化 • 🎭 匿名且可追责 • 🗳️ 同态投票 • 💾 存储优先于算力',
+    '🔒 无主存储 • 🔐 端到端加密 • ⚡ 节能高效 • 🌐 去中心化 • 🎭 匿名且可追责 • 🗳️ 同态投票 • 💾 存储优先于算力',
   [ShowcaseStrings.Hero_CTA_InteractiveDemo]: '🧪 交互式演示',
   [ShowcaseStrings.Hero_CTA_SoupDemo]: '🥫 BrightChain Soup 演示',
   [ShowcaseStrings.Hero_CTA_GitHub]: '在 GitHub 上查看',
@@ -450,6 +469,9 @@ export const ShowcaseMandarinStrings: Partial<
   [ShowcaseStrings.About_Feature_OwnerFree_Title]: '无主存储',
   [ShowcaseStrings.About_Feature_OwnerFree_Desc]:
     '密码学随机性消除了存储责任。没有任何单个区块包含可识别的内容，为节点运营者提供法律豁免。',
+  [ShowcaseStrings.About_Feature_E2EE_Title]: '端到端加密',
+  [ShowcaseStrings.About_Feature_E2EE_Desc]:
+    '每一份数据在离开您的设备之前都会被加密。明文永远不会被存储、传输或暴露。四种加密方案——ECIES 每接收者密钥、AES-256-GCM 共享密钥、S/MIME 和 GPG——确保您的数据从创建到重建始终属于您。',
   [ShowcaseStrings.About_Feature_EnergyEfficient_Title]: '节能高效',
   [ShowcaseStrings.About_Feature_EnergyEfficient_Desc]:
     '没有浪费的工作量证明挖矿。所有计算都服务于有用的目的——存储、验证和网络运营。',
@@ -1651,7 +1673,7 @@ export const ShowcaseMandarinStrings: Partial<
   [ShowcaseStrings.Feat_Anonymity_HL6]: '过期后的永久隐私保护',
   [ShowcaseStrings.Feat_Encryption_Title]: '高级加密栈',
   [ShowcaseStrings.Feat_Encryption_Desc]:
-    '最先进的加密技术，结合 ECIES 密钥派生和 AES-256-GCM 文件安全。完整的密码系统，支持 BIP39/32 认证和 SECP256k1 椭圆曲线密码学。',
+    '具有静态强制执行的最先进端对端加密。ECIES 实现每个收件人的密钥派生；AES-256-GCM 提供认证加密。所有四种方案（RECIPIENT_KEYS、SHARED_KEY、S/MIME、GPG）都会生成 encryptedBody——明文在密文产生的瞬间被清除。',
   [ShowcaseStrings.Feat_Encryption_Cat]: '密码学',
   [ShowcaseStrings.Feat_Encryption_Tech1]: 'ECIES',
   [ShowcaseStrings.Feat_Encryption_Tech2]: 'AES-256-GCM',
@@ -1663,8 +1685,9 @@ export const ShowcaseMandarinStrings: Partial<
   [ShowcaseStrings.Feat_Encryption_HL4]:
     'SECP256k1 椭圆曲线（兼容以太坊密钥空间）',
   [ShowcaseStrings.Feat_Encryption_HL5]:
-    '经验证的块级数据完整性，支持 XOR 功能',
-  [ShowcaseStrings.Feat_Encryption_HL6]: '跨平台密码学操作',
+    '静态 E2EE：加密后明文被清除——只有密文持久化',
+  [ShowcaseStrings.Feat_Encryption_HL6]:
+    '四种可互操作的加密方案：RECIPIENT_KEYS、SHARED_KEY、S/MIME、GPG',
   [ShowcaseStrings.Feat_Storage_Title]: '去中心化存储网络',
   [ShowcaseStrings.Feat_Storage_Desc]:
     '点对点分布式文件系统，将个人设备上的闲置存储变现。类 IPFS 架构，具有节能的工作量证明和基于声誉的激励。',

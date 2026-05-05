@@ -12,10 +12,23 @@ export default {
         diagnostics: false,
       },
     ],
+    '^.+\\.js$': [
+      'ts-jest',
+      {
+        tsconfig: {
+          allowJs: true,
+          esModuleInterop: true,
+          module: 'esnext',
+          moduleResolution: 'node',
+        },
+        useESM: true,
+        diagnostics: false,
+      },
+    ],
   },
   transformIgnorePatterns: [
-    'node_modules/(?!(@noble|@scure|@ethereumjs|uuid)/)',
-    '/dist/',
+    '/node_modules/\\.store/(?!.*(@noble|@scure|@ethereumjs|uuid|@otplib|otplib)-)',
+    '/node_modules/(?!(\\.store|@noble|@scure|@ethereumjs|uuid|@otplib|otplib)/)',
     '<rootDir>/../dist/',
   ],
   testPathIgnorePatterns: ['/node_modules/', '/dist/', '<rootDir>/../dist/'],

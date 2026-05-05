@@ -236,7 +236,80 @@ function serializeEmailForJson<T>(email: T): T {
     result['encryptedKeys'] = encObj;
   }
 
+  for (const field of [
+    'encryptedBody',
+    'encryptionIv',
+    'encryptionAuthTag',
+    'contentSignature',
+    'signerPublicKey',
+  ] as const) {
+    const val = result[field];
+    if (val instanceof Uint8Array) {
+      result[field] = Buffer.from(val).toString('base64');
+    }
+  }
+
   return result as T;
+}
+
+/**
+ * Serialize an IEmailContent for JSON transport.
+ * Handles the nested metadata, MIME part bodies, and attachment content.
+ */
+function serializeEmailContentForJson(
+  content: Record<string, unknown>,
+): Record<string, unknown> {
+  const result = { ...content };
+
+  // Serialize nested metadata (encryption fields, maps, etc.)
+  if (result['metadata'] && typeof result['metadata'] === 'object') {
+    result['metadata'] = serializeEmailForJson(
+      result['metadata'] as Record<string, unknown>,
+    );
+  }
+
+  // Serialize MIME part bodies (Uint8Array → base64)
+  if (Array.isArray(result['parts'])) {
+    result['parts'] = (result['parts'] as Record<string, unknown>[]).map(
+      (part) => {
+        if (part['body'] instanceof Uint8Array) {
+          return {
+            ...part,
+            body: Buffer.from(part['body']).toString('base64'),
+          };
+        }
+        return part;
+      },
+    );
+  }
+
+  // Serialize attachment content bytes (Uint8Array → base64)
+  if (Array.isArray(result['attachments'])) {
+    result['attachments'] = (
+      result['attachments'] as Record<string, unknown>[]
+    ).map((att) => {
+      const serialized = { ...att };
+      if (serialized['content'] instanceof Uint8Array) {
+        serialized['content'] = Buffer.from(serialized['content']).toString(
+          'base64',
+        );
+      }
+      // Also serialize metadata.content if present
+      if (
+        serialized['metadata'] &&
+        typeof serialized['metadata'] === 'object'
+      ) {
+        const meta = { ...(serialized['metadata'] as Record<string, unknown>) };
+        if (meta['content'] instanceof Uint8Array) {
+          meta['content'] = Buffer.from(meta['content']).toString('base64');
+        }
+        serialized['metadata'] = meta;
+      }
+      return serialized;
+    });
+  }
+
+  return result;
 }
 
 // ─── Controller ─────────────────────────────────────────────────────────────
@@ -848,7 +921,9 @@ export class EmailController<
         statusCode: 200,
         response: {
           status: 'success' as const,
-          data: content,
+          data: serializeEmailContentForJson(
+            content as unknown as Record<string, unknown>,
+          ) as unknown as typeof content,
         },
       };
     } catch (error) {

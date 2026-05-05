@@ -1,5 +1,6 @@
 import type { PlatformID } from '@digitaldefiance/ecies-lib';
 
+import { SpamClassification } from '../../enumerations/messaging/spamClassification';
 import { IMailbox } from './emailAddress';
 import { IMessageMetadata } from './messageMetadata';
 import {
@@ -7,7 +8,6 @@ import {
   type IContentType,
   type IMimePart,
 } from './mimePart';
-import { SpamClassification } from '../../enumerations/messaging/spamClassification';
 
 // Re-export IMailbox so existing consumers of emailMetadata.ts still work
 export type { IMailbox } from './emailAddress';
@@ -342,6 +342,15 @@ export interface IEmailMetadata<TID extends PlatformID = string>
    * Present when the email content is encrypted.
    */
   encryptionAuthTag?: Uint8Array;
+
+  /**
+   * Encrypted body bytes (AES-256-GCM ciphertext).
+   * Stored when encryptionScheme is RECIPIENT_KEYS, SHARED_KEY, S_MIME, or GPG.
+   * When present, textBody and htmlBody are cleared for security.
+   *
+   * @see Requirement 16.1 - Encrypt email content before storage
+   */
+  encryptedBody?: Uint8Array;
 
   /**
    * Whether the email content has been digitally signed.

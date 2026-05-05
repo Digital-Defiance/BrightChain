@@ -1,3 +1,4 @@
+export type * from './brightChainIdentity';
 export type * from './device';
 export type * from './deviceKeyStorage';
 export type * from './identityProof';

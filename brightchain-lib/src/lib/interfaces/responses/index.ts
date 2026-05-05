@@ -19,6 +19,7 @@ export type * from './getMessageResponse';
 export type * from './getNodeResponse';
 export type * from './healthResponse';
 export type * from './identityProofResponses';
+export type * from './identityResponseData';
 export type * from './listNodesResponse';
 export type * from './loginResponseData';
 export type * from './memberProfileData';

@@ -30,8 +30,10 @@ import type {
 } from '@brightchain/brightchain-lib';
 import {
   asBlockId,
+  EmailEncryptionService,
   EmailMessageService,
   EmailParser,
+  MessageEncryptionScheme,
   SpamClassification,
 } from '@brightchain/brightchain-lib';
 
@@ -42,6 +44,7 @@ import type {
 import type { IEmailAuthVerifier } from './emailAuthVerifier';
 import { EmailAuthVerifier } from './emailAuthVerifier';
 import type { IEmailGatewayConfig } from './emailGatewayConfig';
+import type { IRecipientKeyLookup } from './recipientKeyLookup';
 
 // ─── InboundProcessor ───────────────────────────────────────────────────────
 
@@ -82,6 +85,10 @@ export class InboundProcessor {
     private readonly gossipService: IGossipService,
     authVerifier?: IEmailAuthVerifier,
     private readonly vaultService?: IEmailAttachmentVaultService,
+    private readonly recipientKeyLookup?: IRecipientKeyLookup,
+    private readonly resolveUserIdByEmail?: (
+      email: string,
+    ) => Promise<string | null>,
   ) {
     this.parser = emailParser ?? new EmailParser();
     this.authVerifier = authVerifier ?? new EmailAuthVerifier();
@@ -279,13 +286,54 @@ export class InboundProcessor {
         );
       }
 
-      // 3. Store content in Block Store.
+      // 3. Resolve recipient public keys for at-rest encryption (Req 16.1).
+      const recipientAddressesForKeys = [
+        ...metadata.to.map((m) => m.address),
+        ...(metadata.cc ?? []).map((m) => m.address),
+      ];
+      const recipientPublicKeys = new Map<string, Uint8Array>();
+      if (this.recipientKeyLookup) {
+        for (const addr of recipientAddressesForKeys) {
+          const pubKey =
+            await this.recipientKeyLookup.getPublicKeyForEmail(addr);
+          if (pubKey) {
+            recipientPublicKeys.set(addr, pubKey);
+          }
+        }
+      }
+
+      // Encrypt raw email bytes when at least one recipient key is available.
+      let contentToStore: Buffer = rawContent;
+      let encryptionParams:
+        | {
+            encryptionScheme: MessageEncryptionScheme;
+            recipientPublicKeys: Map<string, Uint8Array>;
+          }
+        | undefined;
+      if (recipientPublicKeys.size > 0) {
+        const encSvc = new EmailEncryptionService();
+        const encResult = await encSvc.encryptForRecipients(
+          new Uint8Array(rawContent),
+          recipientPublicKeys,
+        );
+        contentToStore = Buffer.from(encResult.encryptedContent);
+        encryptionParams = {
+          encryptionScheme: MessageEncryptionScheme.RECIPIENT_KEYS,
+          recipientPublicKeys,
+        };
+        console.info(
+          `[InboundProcessor] Encrypted message ${metadata.messageId} ` +
+            `for ${recipientPublicKeys.size} recipient(s)`,
+        );
+      }
+
+      // Store content in Block Store (encrypted when keys were available).
       // Derive a content-addressable block ID by SHA3-512 hashing the raw
       // email bytes — the message ID is not a valid hex checksum.
       const blockId: BlockId = asBlockId(
         Buffer.from(sha3_512(rawContent)).toString('hex'),
       );
-      await this.blockStore.put(blockId, rawContent);
+      await this.blockStore.put(blockId, contentToStore);
       console.info(
         `[InboundProcessor] Stored message ${metadata.messageId} in Block Store (blockId=${String(blockId)})`,
       );
@@ -321,11 +369,24 @@ export class InboundProcessor {
               content: a.content,
             }),
           );
+          // Vault is owned by the first recipient so only they can access it.
+          // Resolve the email address to a platform user ID.
+          const recipientEmail =
+            metadata.to[0]?.address ?? metadata.from.address;
+          let vaultOwnerId: string | null = null;
+          if (this.resolveUserIdByEmail) {
+            vaultOwnerId = await this.resolveUserIdByEmail(recipientEmail);
+          }
+          if (!vaultOwnerId) {
+            throw new Error(
+              `Cannot resolve user ID for vault owner: ${recipientEmail}`,
+            );
+          }
           const vaultResult = await this.vaultService.createVaultForEmail(
             metadata.messageId,
             metadata.subject,
             metadata.date,
-            metadata.from.address,
+            vaultOwnerId,
             vaultAttachments,
           );
           vaultContainerId = vaultResult.vaultContainerId;
@@ -390,6 +451,7 @@ export class InboundProcessor {
           metadata.customHeaders,
           this.config.spamThresholds,
         ),
+        ...(encryptionParams ?? {}),
       });
       console.info(
         `[InboundProcessor] EmailMessageService accepted message ${metadata.messageId}`,
@@ -486,12 +548,24 @@ export class InboundProcessor {
     }
 
     if (spamScore >= thresholds.definiteSpamScore) {
-      return { spamScore, spamClassification: SpamClassification.DefiniteSpam, folder: 'spam' };
+      return {
+        spamScore,
+        spamClassification: SpamClassification.DefiniteSpam,
+        folder: 'spam',
+      };
     }
     if (spamScore >= thresholds.probableSpamScore) {
-      return { spamScore, spamClassification: SpamClassification.ProbableSpam, folder: 'spam' };
+      return {
+        spamScore,
+        spamClassification: SpamClassification.ProbableSpam,
+        folder: 'spam',
+      };
     }
-    return { spamScore, spamClassification: SpamClassification.Ham, folder: 'inbox' };
+    return {
+      spamScore,
+      spamClassification: SpamClassification.Ham,
+      folder: 'inbox',
+    };
   }
 
   /**

@@ -222,6 +222,27 @@ export class EmailGatewaySubsystemPlugin implements IAppSubsystemPlugin {
       gossipStub,
       undefined, // authVerifier — use default
       attachmentVaultService,
+      undefined, // recipientKeyLookup
+      // Resolve email address → platform user ID for vault ownership.
+      async (email: string): Promise<string | null> => {
+        try {
+          const byEmail = await context.memberStore.queryIndex({ email });
+          if (byEmail.length > 0) {
+            return String(byEmail[0].id);
+          }
+          // Fallback: try by username (local part)
+          const username = email.split('@')[0];
+          const byName = await context.memberStore.queryIndex({
+            name: username,
+          });
+          if (byName.length > 0) {
+            return String(byName[0].id);
+          }
+          return null;
+        } catch {
+          return null;
+        }
+      },
     );
 
     this.inboundProcessor.start();

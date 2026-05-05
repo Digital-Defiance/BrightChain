@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { FaGithub, FaNewspaper } from 'react-icons/fa';
+import { FaGithub, FaLock, FaNewspaper } from 'react-icons/fa';
 import { GiCookingPot } from 'react-icons/gi';
 import { Link } from 'react-router-dom';
 import { useShowcaseI18n } from '../i18n/ShowcaseI18nContext';
@@ -68,6 +68,16 @@ const Hero = ({ scrollY }: HeroProps) => {
             {t(ShowcaseStrings.Hero_Highlight)}
           </span>
         </motion.p>
+
+        <motion.div
+          className="hero-e2ee-callout"
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.75, duration: 0.6 }}
+        >
+          <FaLock className="e2ee-icon" />
+          <p>{t(ShowcaseStrings.Hero_E2EE_Callout)}</p>
+        </motion.div>
 
         <motion.div
           className="hero-cta"

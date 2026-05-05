@@ -13,7 +13,23 @@ export default {
   setupFiles: ['reflect-metadata'],
   transform: {
     '^.+\\.ts$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.spec.json' }],
+    '^.+\\.js$': [
+      'ts-jest',
+      {
+        tsconfig: {
+          allowJs: true,
+          esModuleInterop: true,
+          module: 'esnext',
+          moduleResolution: 'node',
+        },
+        diagnostics: false,
+      },
+    ],
   },
+  transformIgnorePatterns: [
+    '/node_modules/\\.store/(?!.*(@scure|@otplib|otplib|@noble)-)',
+    '/node_modules/(?!(\\.store|@scure|@otplib|otplib|@noble)/)',
+  ],
   moduleFileExtensions: ['ts', 'js', 'html'],
   coverageDirectory: '../coverage/brightchain-api',
   moduleNameMapper: {

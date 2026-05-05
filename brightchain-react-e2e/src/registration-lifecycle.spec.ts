@@ -248,15 +248,11 @@ test.describe('Password Change Lifecycle', () => {
     // Submit the form
     await page.getByRole('button', { name: /change password/i }).click();
 
-    // The AuthProvider's changePassword() checks localStorage for
-    // 'encryptedPassword' which is never set by PasswordLoginService
-    // (it stores 'encryptedPrivateKey' instead). This is a known library bug.
-    // So the browser form will either:
-    // 1. Show an error alert (ECIES bundle missing)
-    // 2. Hang with no response (form submission blocked client-side)
-    //
-    // Either way, we verify the form rendered and submitted, then verify
-    // the password change works at the API level.
+    // The AuthProvider's changePassword() previously checked localStorage for
+    // 'encryptedPassword' which was never set by PasswordLoginService
+    // (it stores 'encryptedPrivateKey' instead). This bug has been fixed —
+    // isBrowserPasswordLoginAvailable now checks the correct key.
+    // The password change should now work through the browser form as well.
     const alertLocator = page.getByRole('alert');
     const _alertVisible = await alertLocator
       .first()

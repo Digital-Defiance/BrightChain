@@ -34,10 +34,11 @@ jest.setTimeout(180_000);
  */
 const STATIC_PLUGINS = [
   'email',
+  'burnbag',
+  'email-gateway',
   'brighthub',
   'brightchat',
   'brightpass',
-  'burnbag',
   'brighttrust',
 ] as const;
 
@@ -231,14 +232,15 @@ describe('Expected subsystem plugin inventory', () => {
     expect(ALL_EXPECTED_PLUGINS).toEqual(
       expect.arrayContaining([
         'email',
+        'email-gateway',
+        'burnbag',
         'brighthub',
         'brightchat',
         'brightpass',
-        'burnbag',
         'brighttrust',
         'brightcal',
       ]),
     );
-    expect(ALL_EXPECTED_PLUGINS).toHaveLength(7);
+    expect(ALL_EXPECTED_PLUGINS).toHaveLength(8);
   });
 });

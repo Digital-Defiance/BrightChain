@@ -62,3 +62,42 @@ export interface AttachmentReference {
   blockId: BlockId;
   isCbl: boolean;
 }
+
+/**
+ * Encrypted vault entry transmitted to/from the server.
+ *
+ * Sensitive fields (password, cvv, card number, note content, etc.) are
+ * encrypted client-side with AES-256-GCM before being sent to the server.
+ * The server stores and returns the opaque `encryptedData` blob without
+ * ever decrypting it.
+ *
+ * Non-sensitive index fields (type, title, tags, favorite, siteUrl) are
+ * kept in plaintext so the server can build property records for search
+ * and autofill matching without accessing secrets.
+ *
+ * Wire format for `encryptedData`:
+ *   base64( [IV(12 bytes)] [AuthTag(16 bytes)] [Ciphertext] )
+ */
+export interface IEncryptedVaultEntry {
+  /** Unique identifier */
+  id: string;
+  /** Entry type – kept plaintext for client-side filtering */
+  type: VaultEntryType;
+  /** Title – kept plaintext for list display */
+  title: string;
+  /** Tags – kept plaintext for search and filter */
+  tags: string[];
+  /** Favourite flag – kept plaintext */
+  favorite: boolean;
+  /** Site URL – kept plaintext for autofill URL matching */
+  siteUrl?: string;
+  /**
+   * AES-256-GCM encrypted JSON of all sensitive fields.
+   * Format: base64 of [IV(12 bytes)][AuthTag(16 bytes)][Ciphertext]
+   * Encrypted entirely client-side; the server treats this as an opaque blob.
+   */
+  encryptedData: string;
+  createdAt: Date | string;
+  updatedAt: Date | string;
+  attachments?: AttachmentReference[];
+}

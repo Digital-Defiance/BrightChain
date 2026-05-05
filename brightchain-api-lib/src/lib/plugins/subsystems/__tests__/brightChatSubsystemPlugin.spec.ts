@@ -47,7 +47,26 @@ jest.mock('../../../services/brightchat/blockContentStoreAdapter', () => ({
 
 // Mock createChatStorageProvider to return a simple stub
 jest.mock('../../../services/brightchat/chatStorageAdapter', () => ({
-  createChatStorageProvider: jest.fn(() => ({})),
+  createChatStorageProvider: jest.fn(() => {
+    const makeCol = () => ({
+      create: jest.fn(async () => {}),
+      findById: jest.fn(async () => null),
+      findMany: jest.fn(async () => []),
+      update: jest.fn(async () => {}),
+      delete: jest.fn(async () => {}),
+    });
+    return {
+      conversations: makeCol(),
+      messages: makeCol(),
+      groups: makeCol(),
+      groupMessages: makeCol(),
+      channels: makeCol(),
+      channelMessages: makeCol(),
+      inviteTokens: makeCol(),
+      servers: makeCol(),
+      serverInvites: makeCol(),
+    };
+  }),
 }));
 
 import { BrightChatSubsystemPlugin } from '../brightChatSubsystemPlugin';

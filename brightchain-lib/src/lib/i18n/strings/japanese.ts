@@ -1766,7 +1766,7 @@ export const JapaneseStrings: ComponentStrings<BrightChainStringKey> = {
   [BrightChainStrings.Friends_Unauthenticated]: '認証が必要です',
 
   // PoUW (Proof of Useful Work) Errors
-  [BrightChainStrings.Error_PoUW_WorkUnit_InvalidJSON]:
+  [BrightChainStrings.Error_PoUW_WorkUnit_InvalidJSONTemplate]:
     'WorkUnit parse error: invalid JSON — {SNIPPET}',
   [BrightChainStrings.Error_PoUW_WorkUnit_ExpectedObject]:
     'WorkUnit parse error: expected a JSON object',
@@ -1778,7 +1778,7 @@ export const JapaneseStrings: ComponentStrings<BrightChainStringKey> = {
     "WorkUnit parse error: field 'operation' must be a valid WorkUnitOperation enum value ({VALID_VALUES}), got '{VALUE}'",
   [BrightChainStrings.Error_PoUW_WorkUnit_InvalidDifficultyTemplate]:
     "WorkUnit parse error: field 'difficulty' must be a valid DifficultyTier enum value ({VALID_VALUES}), got '{VALUE}'",
-  [BrightChainStrings.Error_PoUW_WorkResult_InvalidJSON]:
+  [BrightChainStrings.Error_PoUW_WorkResult_InvalidJSONTemplate]:
     'WorkResult parse error: invalid JSON — {SNIPPET}',
   [BrightChainStrings.Error_PoUW_WorkResult_ExpectedObject]:
     'WorkResult parse error: expected a JSON object',

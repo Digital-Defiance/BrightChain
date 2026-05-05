@@ -1407,10 +1407,15 @@ export class BrightDbUserController<
     const encryptedSecret = (await systemUser.encryptData(Buffer.from(secret, 'utf-8'))).toString('hex');
 
     const docId = userDoc?._id ?? idHex;
-    await usersCol.updateOne(
-      { _id: docId } as never,
-      { $set: { totpPendingSecret: encryptedSecret } } as never,
-    );
+    if (!userDoc) {
+      // Document doesn't exist yet — create it with the pending secret
+      await usersCol.create({ _id: docId, totpPendingSecret: encryptedSecret } as never);
+    } else {
+      await usersCol.updateOne(
+        { _id: docId } as never,
+        { totpPendingSecret: encryptedSecret } as never,
+      );
+    }
 
     const provisioningUri = totpService.generateProvisioningUri(
       secret,
@@ -1479,7 +1484,7 @@ export class BrightDbUserController<
     const docId = userDoc._id ?? idHex;
     await usersCol.updateOne(
       { _id: docId } as never,
-      { $set: { totpSecret: userDoc.totpPendingSecret, totpEnabled: true, totpPendingSecret: null } } as never,
+      { totpSecret: userDoc.totpPendingSecret, totpEnabled: true, totpPendingSecret: null } as never,
     );
 
     return { statusCode: 200, response: { message: 'TOTP has been enabled successfully' } };
@@ -1540,7 +1545,7 @@ export class BrightDbUserController<
     const docId = userDoc._id ?? idHex;
     await usersCol.updateOne(
       { _id: docId } as never,
-      { $set: { totpEnabled: false, totpSecret: null, totpPendingSecret: null } } as never,
+      { totpEnabled: false, totpSecret: null, totpPendingSecret: null } as never,
     );
 
     return { statusCode: 200, response: { message: 'TOTP has been disabled successfully' } };

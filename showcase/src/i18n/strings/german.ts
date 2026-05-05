@@ -370,8 +370,10 @@ export const ShowcaseGermanStrings: Partial<
   [ShowcaseStrings.Hero_Description_NotCrypto]: 'Keine Kryptowährung.',
   [ShowcaseStrings.Hero_Description_P2]:
     'Keine Coins, kein Mining, kein Proof of Work. BrightChain schätzt echte Beiträge an Speicher und Rechenleistung, gemessen in Joules — einer Einheit, die an reale Energiekosten gebunden ist, nicht an Marktspekulation.',
+  [ShowcaseStrings.Hero_E2EE_Callout]:
+    '🔐 Ende-zu-Ende-Verschlüsselung standardmäßig. Klartext berührt niemals das Netzwerk — Ihre Daten werden verschlüsselt, bevor sie Ihr Gerät verlassen, und nur Sie besitzen die Schlüssel zur Entschlüsselung.',
   [ShowcaseStrings.Hero_Highlight]:
-    '🔒 Eigentümerfreier Speicher • ⚡ Energieeffizient • 🌐 Dezentralisiert • 🎭 Anonym und dennoch rechenschaftspflichtig • 🗳️ Homomorphe Abstimmung • 💾 Speicher statt Rechenleistung',
+    '🔒 Eigentümerfreier Speicher • 🔐 Ende-zu-Ende-Verschlüsselung • ⚡ Energieeffizient • 🌐 Dezentralisiert • 🎭 Anonym und dennoch rechenschaftspflichtig • 🗳️ Homomorphe Abstimmung • 💾 Speicher statt Rechenleistung',
   [ShowcaseStrings.Hero_CTA_InteractiveDemo]: '🧪 Interaktive Demo',
   [ShowcaseStrings.Hero_CTA_SoupDemo]: '🥫 BrightChain Soup Demo',
   [ShowcaseStrings.Hero_CTA_GitHub]: 'Auf GitHub ansehen',
@@ -489,6 +491,9 @@ export const ShowcaseGermanStrings: Partial<
   [ShowcaseStrings.About_Feature_OwnerFree_Title]: 'Eigentümerfreier Speicher',
   [ShowcaseStrings.About_Feature_OwnerFree_Desc]:
     'Kryptographische Zufälligkeit beseitigt die Speicherhaftung. Kein einzelner Block enthält identifizierbare Inhalte und bietet so rechtliche Immunität für Knotenbetreiber.',
+  [ShowcaseStrings.About_Feature_E2EE_Title]: 'Ende-zu-Ende-Verschlüsselung',
+  [ShowcaseStrings.About_Feature_E2EE_Desc]:
+    'Jedes Datenstück wird verschlüsselt, bevor es Ihr Gerät verlässt. Klartext wird niemals gespeichert, niemals übertragen, niemals offengelegt. Vier Verschlüsselungsschemata — ECIES pro Empfänger, AES-256-GCM gemeinsame Schlüssel, S/MIME und GPG — stellen sicher, dass Ihre Daten von der Erstellung bis zur Rekonstruktion Ihnen gehören.',
   [ShowcaseStrings.About_Feature_EnergyEfficient_Title]: 'Energieeffizient',
   [ShowcaseStrings.About_Feature_EnergyEfficient_Desc]:
     'Kein verschwenderisches Proof-of-Work-Mining. Alle Berechnungen dienen nützlichen Zwecken — Speicherung, Verifizierung und Netzwerkoperationen.',
@@ -1834,7 +1839,7 @@ export const ShowcaseGermanStrings: Partial<
   [ShowcaseStrings.Feat_Encryption_Title]:
     'Fortschrittlicher Verschlüsselungs-Stack',
   [ShowcaseStrings.Feat_Encryption_Desc]:
-    'Modernste Verschlüsselung, die ECIES für Schlüsselableitung mit AES-256-GCM für Dateisicherheit kombiniert. Vollständiges Kryptosystem mit BIP39/32-Authentifizierung und SECP256k1 Elliptische-Kurven-Kryptographie.',
+    'Modernste Ende-zu-Ende-Verschlüsselung mit Durchsetzung im Ruhezustand. ECIES ermöglicht die empfängerspezifische Schlüsselableitung; AES-256-GCM bietet authentifizierte Verschlüsselung. Alle vier Schemata (RECIPIENT_KEYS, SHARED_KEY, S/MIME, GPG) erzeugen einen encryptedBody — Klartext wird im Moment der Chiffretext-Erzeugung gelöscht.',
   [ShowcaseStrings.Feat_Encryption_Cat]: 'Kryptographie',
   [ShowcaseStrings.Feat_Encryption_Tech1]: 'ECIES',
   [ShowcaseStrings.Feat_Encryption_Tech2]: 'AES-256-GCM',
@@ -1849,9 +1854,9 @@ export const ShowcaseGermanStrings: Partial<
   [ShowcaseStrings.Feat_Encryption_HL4]:
     'SECP256k1 Elliptische Kurve (Ethereum-kompatibler Schlüsselraum)',
   [ShowcaseStrings.Feat_Encryption_HL5]:
-    'Verifizierte Datenintegrität auf Blockebene mit XOR-Funktionalität',
+    'E2EE im Ruhezustand: Klartext nach Verschlüsselung gelöscht — nur Chiffretext bleibt bestehen',
   [ShowcaseStrings.Feat_Encryption_HL6]:
-    'Plattformübergreifende kryptographische Operationen',
+    'Vier interoperable Verschlüsselungsschemata: RECIPIENT_KEYS, SHARED_KEY, S/MIME, GPG',
   [ShowcaseStrings.Feat_Storage_Title]: 'Dezentralisiertes Speichernetzwerk',
   [ShowcaseStrings.Feat_Storage_Desc]:
     'Peer-to-Peer verteiltes Dateisystem, das ungenutzten Speicher auf persönlichen Geräten monetarisiert. IPFS-ähnliche Architektur mit energieeffizientem Proof-of-Work und reputationsbasierten Anreizen.',

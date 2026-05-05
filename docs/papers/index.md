@@ -15,6 +15,7 @@ The BrightChain project is documented through a series of companion papers, each
 
 - [ECDH-to-Paillier Bridge](paillier-bridge) — Detailed algorithmic specification of the deterministic key bridge construction, including byte-level DRBG state, reproducible test vectors, and extended security analysis.
 - [ECIES-Lib](ecies-lib) — The Elliptic Curve Integrated Encryption Scheme library that serves as the cryptographic foundation for the entire platform.
+- [BrightChain Crypto Sessions](brightchain-crypto-sessions) — Server-side key custody for end-to-end encrypted suites: sliding-TTL `CryptoSessionStore` and the `useSessionEstablish` / `useSessionUnlock` middlewares that let users authenticate once per session instead of once per request.
 
 ## Applications
 

@@ -457,6 +457,29 @@ function TechnicalFAQ() {
         <h2>{t(ShowcaseStrings.FAQ_Tech_Q17_Title)}</h2>
         <p>{t(ShowcaseStrings.FAQ_Tech_Q17_Answer)}</p>
       </div>
+
+      <div className="faq-item">
+        <h2>{t(ShowcaseStrings.FAQ_Tech_Q18_Title)}</h2>
+        <p>{t(ShowcaseStrings.FAQ_Tech_Q18_Intro)}</p>
+        <ul>
+          <li>
+            <strong>{t(ShowcaseStrings.FAQ_Tech_Q18_AtRest_Label)}:</strong>{' '}
+            {t(ShowcaseStrings.FAQ_Tech_Q18_AtRest)}
+          </li>
+          <li>
+            <strong>{t(ShowcaseStrings.FAQ_Tech_Q18_Schemes_Label)}:</strong>{' '}
+            {t(ShowcaseStrings.FAQ_Tech_Q18_Schemes)}
+          </li>
+          <li>
+            <strong>{t(ShowcaseStrings.FAQ_Tech_Q18_Purge_Label)}:</strong>{' '}
+            {t(ShowcaseStrings.FAQ_Tech_Q18_Purge)}
+          </li>
+          <li>
+            <strong>{t(ShowcaseStrings.FAQ_Tech_Q18_Inbound_Label)}:</strong>{' '}
+            {t(ShowcaseStrings.FAQ_Tech_Q18_Inbound)}
+          </li>
+        </ul>
+      </div>
     </>
   );
 }

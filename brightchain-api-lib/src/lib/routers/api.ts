@@ -73,6 +73,7 @@ import { EnergyController } from '../controllers/api/energy';
 import { GroupController } from '../controllers/api/groups';
 import { HealthController } from '../controllers/api/health';
 import { I18nController } from '../controllers/api/i18n';
+import { IdentityController } from '../controllers/api/identityController';
 import {
   IntrospectionController,
   IntrospectionControllerConfig,
@@ -125,6 +126,7 @@ export class ApiRouter<
   private readonly groupController: GroupController<TID>;
   private readonly healthController: HealthController<TID>;
   private readonly i18nController: I18nController<TID>;
+  private readonly identityController: IdentityController<TID>;
   private readonly keyStoreController: KeyStoreController<TID>;
   private readonly messagesController: MessagesController<TID>;
   private readonly nodesController: NodesController<TID>;
@@ -190,6 +192,7 @@ export class ApiRouter<
     this.groupController = new GroupController(application);
     this.healthController = new HealthController(application);
     this.i18nController = new I18nController(application);
+    this.identityController = new IdentityController(application);
     this.keyStoreController = new KeyStoreController(application);
     this.messagesController = new MessagesController(application);
     this.nodesController = new NodesController(application);
@@ -311,6 +314,7 @@ export class ApiRouter<
     );
 
     this.router.use('/temp-upload', this.tempUploadController.router);
+    this.router.use('/identity', this.identityController.router);
 
     if (
       application.environment.enabledFeatures.some(

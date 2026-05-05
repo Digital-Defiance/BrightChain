@@ -4,6 +4,7 @@ import {
   FaGithub,
   FaHeart,
   FaLightbulb,
+  FaLock,
   FaRocket,
   FaUsers,
 } from 'react-icons/fa';
@@ -96,6 +97,19 @@ const About = () => {
               transition={{ delay: 0.3, duration: 0.6 }}
             >
               <div className="feature-icon">
+                <FaLock />
+              </div>
+              <h4>{t(ShowcaseStrings.About_Feature_E2EE_Title)}</h4>
+              <p>{t(ShowcaseStrings.About_Feature_E2EE_Desc)}</p>
+            </motion.div>
+
+            <motion.div
+              className="feature-card card"
+              initial={{ opacity: 0, x: -30 }}
+              animate={inView ? { opacity: 1, x: 0 } : {}}
+              transition={{ delay: 0.4, duration: 0.6 }}
+            >
+              <div className="feature-icon">
                 <FaHeart />
               </div>
               <h4>{t(ShowcaseStrings.About_Feature_OwnerFree_Title)}</h4>
@@ -106,7 +120,7 @@ const About = () => {
               className="feature-card card"
               initial={{ opacity: 0, x: -30 }}
               animate={inView ? { opacity: 1, x: 0 } : {}}
-              transition={{ delay: 0.4, duration: 0.6 }}
+              transition={{ delay: 0.5, duration: 0.6 }}
             >
               <div className="feature-icon">
                 <FaCode />
@@ -119,7 +133,7 @@ const About = () => {
               className="feature-card card"
               initial={{ opacity: 0, x: -30 }}
               animate={inView ? { opacity: 1, x: 0 } : {}}
-              transition={{ delay: 0.5, duration: 0.6 }}
+              transition={{ delay: 0.6, duration: 0.6 }}
             >
               <div className="feature-icon">
                 <FaUsers />
@@ -134,7 +148,7 @@ const About = () => {
           className="about-cta"
           initial={{ opacity: 0, y: 30 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
-          transition={{ delay: 0.6, duration: 0.6 }}
+          transition={{ delay: 0.7, duration: 0.6 }}
         >
           <h3>{t(ShowcaseStrings.About_CTA_Title)}</h3>
           <p>{t(ShowcaseStrings.About_CTA_Desc)}</p>

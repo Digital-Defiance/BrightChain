@@ -211,3 +211,121 @@ describe('E2E: Digital Burnbag Upload Lifecycle', () => {
     expect(isValidHexId(uploadedFile.id)).toBe(true);
   });
 });
+
+describe('E2E: GET /api/burnbag/files/:id/encrypted', () => {
+  let authToken: string;
+  let rootFolderId: string;
+  let vaultContainerId: string;
+  let uploadedFileId: string;
+
+  beforeAll(async () => {
+    const result = await registerUser('burnbag_enc');
+    authToken = result.token;
+    if (!authToken) return;
+
+    const vaultRes = await axios.post(
+      '/api/burnbag/vaults',
+      { name: 'E2E Encrypted Download Vault' },
+      { headers: { Authorization: `Bearer ${authToken}` } },
+    );
+    vaultContainerId = vaultRes.data?.id ?? '';
+
+    const rootUrl = vaultContainerId
+      ? `/api/burnbag/folders/root?vaultContainerId=${encodeURIComponent(vaultContainerId)}`
+      : '/api/burnbag/folders/root';
+    const rootRes = await axios.get(rootUrl, {
+      headers: { Authorization: `Bearer ${authToken}` },
+    });
+    rootFolderId = rootRes.data.folder.id;
+
+    // Upload a small test file so we have a valid fileId to query
+    const fileContent = Buffer.from('hello encrypted world');
+    const checksum = computeChecksum(fileContent);
+
+    const initRes = await axios.post(
+      '/api/burnbag/upload/init',
+      {
+        fileName: 'enc-test.txt',
+        mimeType: 'text/plain',
+        totalSizeBytes: fileContent.length,
+        targetFolderId: rootFolderId,
+        vaultContainerId: vaultContainerId || undefined,
+      },
+      { headers: { Authorization: `Bearer ${authToken}` } },
+    );
+    const { sessionId } = initRes.data;
+
+    await axios.put(`/api/burnbag/upload/${sessionId}/chunk/0`, fileContent, {
+      headers: {
+        Authorization: `Bearer ${authToken}`,
+        'Content-Type': 'application/octet-stream',
+        'X-Chunk-Checksum': checksum,
+      },
+    });
+
+    const finalizeRes = await axios.post(
+      `/api/burnbag/upload/${sessionId}/finalize`,
+      {},
+      { headers: { Authorization: `Bearer ${authToken}` } },
+    );
+    uploadedFileId = finalizeRes.data.fileId;
+  });
+
+  const authedEnc = () => ({
+    headers: { Authorization: `Bearer ${authToken}` },
+  });
+
+  it('should require authentication', async () => {
+    if (!uploadedFileId) return;
+    try {
+      await axios.get(`/api/burnbag/files/${uploadedFileId}/encrypted`);
+      throw new Error('Expected 401');
+    } catch (err) {
+      const error = err as AxiosError;
+      expect(error.response?.status).toBe(401);
+    }
+  });
+
+  it('should return 404 for non-existent file', async () => {
+    if (!authToken) return;
+    const fakeId = 'a'.repeat(32);
+    try {
+      await axios.get(`/api/burnbag/files/${fakeId}/encrypted`, authedEnc());
+      throw new Error('Expected 404 or 400');
+    } catch (err) {
+      const error = err as AxiosError;
+      expect([400, 403, 404]).toContain(error.response?.status);
+    }
+  });
+
+  it('should return 200 with expected fields or 403 when no key is stored', async () => {
+    if (!authToken || !uploadedFileId) return;
+    try {
+      const res = await axios.get(
+        `/api/burnbag/files/${uploadedFileId}/encrypted`,
+        authedEnc(),
+      );
+      // 200: dev mode returned encrypted content
+      expect(res.status).toBe(200);
+      expect(res.data).toHaveProperty('fileName');
+      expect(res.data).toHaveProperty('mimeType');
+      expect(res.data).toHaveProperty('encryptedContent');
+      expect(res.data).toHaveProperty('iv');
+      expect(res.data).toHaveProperty('authTag');
+      expect(res.data).toHaveProperty('encryptedSymmetricKey');
+      // All fields should be base64 strings
+      for (const field of [
+        'encryptedContent',
+        'iv',
+        'authTag',
+        'encryptedSymmetricKey',
+      ]) {
+        expect(typeof res.data[field]).toBe('string');
+      }
+    } catch (err) {
+      const error = err as AxiosError;
+      // 403 is acceptable when no wrapped key is stored for this file in dev mode
+      expect(error.response?.status).toBe(403);
+    }
+  });
+});

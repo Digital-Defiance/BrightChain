@@ -207,7 +207,7 @@ export const ShowcaseAmericanEnglishStrings: ComponentStrings<ShowcaseStringKey>
       'A calendar system where the owner holds the keys. BrightCal enables secure, encrypted scheduling with fine-grained access control. Events are stored as encrypted blocks. All calendar data is immutable and recoverable, with support for recurring events, reminders, and integration with traditional calendar systems.',
     [ShowcaseStrings.FAQ_Tech_Q11_BrightMail_Title]: 'Sovereign Communication',
     [ShowcaseStrings.FAQ_Tech_Q11_BrightMail_Text]:
-      'A fully RFC-compliant email system bridging traditional SMTP and decentralized storage. Unlike standard email providers, BrightMail shards every message into the "Owner-Free" block-store with support for end-to-end encrypted "Dark Mode" messaging.',
+      'A fully RFC-compliant email system bridging traditional SMTP and decentralized storage. Every message is encrypted at rest using the recipient\'s public key before being committed to the "Owner-Free" block-store — plaintext never persists. BrightMail enforces E2EE at the storage layer across four schemes: RECIPIENT_KEYS (per-recipient ECIES), SHARED_KEY (AES-256-GCM), S/MIME, and GPG.',
     [ShowcaseStrings.FAQ_Tech_Q11_BrightHub_Title]:
       'Social Network and Sovereign Graph',
     [ShowcaseStrings.FAQ_Tech_Q11_BrightHub_Concept_Label]: 'The Concept',
@@ -262,6 +262,23 @@ export const ShowcaseAmericanEnglishStrings: ComponentStrings<ShowcaseStringKey>
       '17. How do the BrightChain and IPFS Economies compare?',
     [ShowcaseStrings.FAQ_Tech_Q17_Answer]:
       'IPFS relies on Filecoin (a heavy, external blockchain) for incentives. BrightChain uses the Joule. It\'s a "Thermal" unit of account that measures actual work (CPU/NPU cycles) and resource consumption. It is built-in, low-overhead, and directly tied to the "Energy" of the network.',
+
+    [ShowcaseStrings.FAQ_Tech_Q18_Title]:
+      '18. How does BrightStack implement End-to-End Encryption (E2EE) at rest?',
+    [ShowcaseStrings.FAQ_Tech_Q18_Intro]:
+      'E2EE in BrightStack is not just in-transit encryption — every message is encrypted before it is committed to the block-store. The moment ciphertext is produced, plaintext is permanently purged from memory and storage. Even if an attacker accessed the raw block store, they would find only ciphertext tied to specific recipient keys.',
+    [ShowcaseStrings.FAQ_Tech_Q18_AtRest_Label]: 'At-rest enforcement',
+    [ShowcaseStrings.FAQ_Tech_Q18_AtRest]:
+      'On creation, EmailMessageService encrypts the raw message bytes and stores only the AES-256-GCM ciphertext in encryptedBody. The textBody, htmlBody, and all MIME part bodies are explicitly set to undefined and never written to storage.',
+    [ShowcaseStrings.FAQ_Tech_Q18_Schemes_Label]: 'Four supported encryption schemes',
+    [ShowcaseStrings.FAQ_Tech_Q18_Schemes]:
+      'RECIPIENT_KEYS uses ECIES to produce a unique ciphertext per recipient — only the intended recipient\'s private key can decrypt. SHARED_KEY uses a single AES-256-GCM shared secret. S/MIME and GPG are also fully supported for interoperability with existing email infrastructure.',
+    [ShowcaseStrings.FAQ_Tech_Q18_Purge_Label]: 'Plaintext purge guarantee',
+    [ShowcaseStrings.FAQ_Tech_Q18_Purge]:
+      'After encryption, textBody, htmlBody, and all parts[].body fields are explicitly set to undefined and never persisted. The encrypted content is stored as encryptedBody alongside encryptionIv and encryptionAuthTag for authenticated decryption. Binary fields are base64-encoded for JSON transport through the REST API.',
+    [ShowcaseStrings.FAQ_Tech_Q18_Inbound_Label]: 'Inbound SMTP encryption',
+    [ShowcaseStrings.FAQ_Tech_Q18_Inbound]:
+      'When an email arrives at the SMTP gateway (InboundProcessor), the server resolves the public key for each recipient address via IRecipientKeyLookup. If keys are found, the raw message bytes are encrypted via EmailEncryptionService.encryptForRecipients() before being committed to the block store. Vault ownership is assigned to the first recipient (to[0]), not the sender.',
 
     // FAQ Ecosystem Questions
     [ShowcaseStrings.FAQ_Eco_WhatIsBrightChain_Title]:
@@ -365,8 +382,10 @@ export const ShowcaseAmericanEnglishStrings: ComponentStrings<ShowcaseStringKey>
     [ShowcaseStrings.Hero_Description_NotCrypto]: 'Not a cryptocurrency.',
     [ShowcaseStrings.Hero_Description_P2]:
       'No coins, no mining, no proof of work. BrightChain values real contributions of storage and compute, tracked in Joules — a unit tied to real-world energy costs, not market speculation.',
+    [ShowcaseStrings.Hero_E2EE_Callout]:
+      '🔐 End-to-End Encrypted by default. Plaintext never touches the network — your data is encrypted before it leaves your device and only you hold the keys to decrypt it.',
     [ShowcaseStrings.Hero_Highlight]:
-      '🔒 Owner-Free Storage • ⚡ Energy Efficient • 🌐 Decentralized • 🎭 Anonymous yet Accountable • 🗳️ Homomorphic Voting • 💾 Storage Over Power',
+      '🔒 Owner-Free Storage • 🔐 End-to-End Encrypted • ⚡ Energy Efficient • 🌐 Decentralized • 🎭 Anonymous yet Accountable • 🗳️ Homomorphic Voting • 💾 Storage Over Power',
     [ShowcaseStrings.Hero_CTA_InteractiveDemo]: '🧪 Interactive Demo',
     [ShowcaseStrings.Hero_CTA_SoupDemo]: '🥫 BrightChain Soup Demo',
     [ShowcaseStrings.Hero_CTA_GitHub]: 'View on GitHub',
@@ -482,6 +501,9 @@ export const ShowcaseAmericanEnglishStrings: ComponentStrings<ShowcaseStringKey>
     [ShowcaseStrings.About_Feature_OwnerFree_Title]: 'Owner-Free Storage',
     [ShowcaseStrings.About_Feature_OwnerFree_Desc]:
       'Cryptographic randomness removes storage liability. No single block contains identifiable content, providing legal immunity for node operators.',
+    [ShowcaseStrings.About_Feature_E2EE_Title]: 'End-to-End Encrypted',
+    [ShowcaseStrings.About_Feature_E2EE_Desc]:
+      'Every piece of data is encrypted before it leaves your device. Plaintext is never stored, never transmitted, never exposed. Four encryption schemes — ECIES per-recipient keys, AES-256-GCM shared keys, S/MIME, and GPG — ensure your data stays yours, from creation to reconstruction.',
     [ShowcaseStrings.About_Feature_EnergyEfficient_Title]: 'Energy Efficient',
     [ShowcaseStrings.About_Feature_EnergyEfficient_Desc]:
       'No wasteful proof-of-work mining. All computation serves useful purposes — storage, verification, and network operations.',
@@ -1804,7 +1826,7 @@ export const ShowcaseAmericanEnglishStrings: ComponentStrings<ShowcaseStringKey>
       'Permanent privacy protection after expiration period',
     [ShowcaseStrings.Feat_Encryption_Title]: 'Advanced Encryption Stack',
     [ShowcaseStrings.Feat_Encryption_Desc]:
-      'State-of-the-art encryption combining ECIES for key derivation with AES-256-GCM for file security. Complete cryptosystem with BIP39/32 authentication and SECP256k1 elliptic curve cryptography.',
+      'State-of-the-art end-to-end encryption with at-rest enforcement. ECIES enables per-recipient key derivation; AES-256-GCM provides authenticated encryption. All four schemes (RECIPIENT_KEYS, SHARED_KEY, S/MIME, GPG) produce an encryptedBody — plaintext is purged at the moment ciphertext is produced.',
     [ShowcaseStrings.Feat_Encryption_Cat]: 'Cryptography',
     [ShowcaseStrings.Feat_Encryption_Tech1]: 'ECIES',
     [ShowcaseStrings.Feat_Encryption_Tech2]: 'AES-256-GCM',
@@ -1819,9 +1841,9 @@ export const ShowcaseAmericanEnglishStrings: ComponentStrings<ShowcaseStringKey>
     [ShowcaseStrings.Feat_Encryption_HL4]:
       'SECP256k1 elliptic curve (Ethereum-compatible keyspace)',
     [ShowcaseStrings.Feat_Encryption_HL5]:
-      'Verified block-level data integrity with XOR functionality',
+      'E2EE at-rest: plaintext purged after encryption — only ciphertext persists',
     [ShowcaseStrings.Feat_Encryption_HL6]:
-      'Cross-platform cryptographic operations',
+      'Four interoperable encryption schemes: RECIPIENT_KEYS, SHARED_KEY, S/MIME, GPG',
     [ShowcaseStrings.Feat_Storage_Title]: 'Decentralized Storage Network',
     [ShowcaseStrings.Feat_Storage_Desc]:
       'Peer-to-peer distributed file system that monetizes unused storage on personal devices. IPFS-like architecture with energy-efficient proof-of-work and reputation-based incentives.',

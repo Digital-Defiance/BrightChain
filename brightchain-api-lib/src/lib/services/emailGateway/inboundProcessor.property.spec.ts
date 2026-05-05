@@ -124,14 +124,14 @@ const arbFilename: fc.Arbitrary<string> = fc
 // ─── Property Tests ─────────────────────────────────────────────────────────
 
 describe('InboundProcessor Idempotency Property Tests', () => {
-  let sendEmailMock: jest.Mock;
+  let receiveEmailMock: jest.Mock;
   let putMock: jest.Mock;
   let announceMessageMock: jest.Mock;
 
   beforeEach(() => {
     jest.clearAllMocks();
 
-    sendEmailMock = jest.fn().mockResolvedValue({
+    receiveEmailMock = jest.fn().mockResolvedValue({
       messageId: '<test@brightchain.org>',
       brightchainMessageId: 'bc-1',
       deliveryStatus: new Map(),
@@ -157,6 +157,7 @@ describe('InboundProcessor Idempotency Property Tests', () => {
     mockedFs.statSync.mockReturnValue({ isFile: () => true } as fs.Stats);
     mockedFs.watch.mockReturnValue({
       close: jest.fn(),
+      on: jest.fn().mockReturnThis(),
     } as unknown as fs.FSWatcher);
   });
 
@@ -178,7 +179,7 @@ describe('InboundProcessor Idempotency Property Tests', () => {
           fc.integer({ min: 2, max: 10 }),
           async (filename: string, totalCalls: number) => {
             // Reset mocks for each property run
-            sendEmailMock.mockClear();
+            receiveEmailMock.mockClear();
             putMock.mockClear();
             announceMessageMock.mockClear();
 
@@ -189,7 +190,7 @@ describe('InboundProcessor Idempotency Property Tests', () => {
             } as unknown as EmailParser;
 
             const emailService = {
-              sendEmail: sendEmailMock,
+              receiveEmail: receiveEmailMock,
             } as unknown as EmailMessageService;
 
             const blockStore = {
@@ -215,7 +216,7 @@ describe('InboundProcessor Idempotency Property Tests', () => {
             }
 
             // Metadata should be created exactly once (no duplicates)
-            expect(sendEmailMock).toHaveBeenCalledTimes(1);
+            expect(receiveEmailMock).toHaveBeenCalledTimes(1);
             expect(putMock).toHaveBeenCalledTimes(1);
             expect(announceMessageMock).toHaveBeenCalledTimes(1);
 
@@ -238,7 +239,7 @@ describe('InboundProcessor Idempotency Property Tests', () => {
         fc.asyncProperty(
           fc.uniqueArray(arbFilename, { minLength: 1, maxLength: 8 }),
           async (filenames: string[]) => {
-            sendEmailMock.mockClear();
+            receiveEmailMock.mockClear();
             putMock.mockClear();
             announceMessageMock.mockClear();
 
@@ -249,7 +250,7 @@ describe('InboundProcessor Idempotency Property Tests', () => {
             } as unknown as EmailParser;
 
             const emailService = {
-              sendEmail: sendEmailMock,
+              receiveEmail: receiveEmailMock,
             } as unknown as EmailMessageService;
 
             const blockStore = {
@@ -276,7 +277,7 @@ describe('InboundProcessor Idempotency Property Tests', () => {
             }
 
             // Each unique filename should produce exactly one metadata entry
-            expect(sendEmailMock).toHaveBeenCalledTimes(filenames.length);
+            expect(receiveEmailMock).toHaveBeenCalledTimes(filenames.length);
             expect(putMock).toHaveBeenCalledTimes(filenames.length);
             expect(announceMessageMock).toHaveBeenCalledTimes(filenames.length);
 
@@ -299,7 +300,7 @@ describe('InboundProcessor Idempotency Property Tests', () => {
     it('clearProcessedFiles resets idempotency allowing reprocessing', async () => {
       await fc.assert(
         fc.asyncProperty(arbFilename, async (filename: string) => {
-          sendEmailMock.mockClear();
+          receiveEmailMock.mockClear();
           putMock.mockClear();
 
           const metadata = makeEmailMetadata(`<${filename}@example.com>`);
@@ -309,7 +310,7 @@ describe('InboundProcessor Idempotency Property Tests', () => {
           } as unknown as EmailParser;
 
           const emailService = {
-            sendEmail: sendEmailMock,
+            receiveEmail: receiveEmailMock,
           } as unknown as EmailMessageService;
 
           const blockStore = {
@@ -331,14 +332,14 @@ describe('InboundProcessor Idempotency Property Tests', () => {
 
           // First processing
           await proc.processFile(filename);
-          expect(sendEmailMock).toHaveBeenCalledTimes(1);
+          expect(receiveEmailMock).toHaveBeenCalledTimes(1);
 
           // Clear idempotency guard
           proc.clearProcessedFiles();
 
           // Second processing — should succeed since guard was cleared
           await proc.processFile(filename);
-          expect(sendEmailMock).toHaveBeenCalledTimes(2);
+          expect(receiveEmailMock).toHaveBeenCalledTimes(2);
         }),
         { numRuns: 100 },
       );

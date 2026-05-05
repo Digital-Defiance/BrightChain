@@ -136,8 +136,8 @@ export class App<TID extends PlatformID> extends BrightDbApplication<
 
     // Register subsystem plugins (initialized in insertion order during start())
     this.registerSubsystemPlugin(new EmailSubsystemPlugin());
-    this.registerSubsystemPlugin(new EmailGatewaySubsystemPlugin());
     this.registerSubsystemPlugin(new BurnbagSubsystemPlugin());
+    this.registerSubsystemPlugin(new EmailGatewaySubsystemPlugin());
     this.registerSubsystemPlugin(new BrightHubSubsystemPlugin());
     this.registerSubsystemPlugin(new BrightChatSubsystemPlugin());
     this.registerSubsystemPlugin(new BrightPassSubsystemPlugin());

@@ -262,6 +262,23 @@ export const ShowcaseUkrainianStrings: Partial<
   [ShowcaseStrings.FAQ_Tech_Q17_Answer]:
     'IPFS покладається на Filecoin (важкий, зовнішній блокчейн) для стимулів. BrightChain використовує Джоуль. Це "термічна" одиниця обліку, яка вимірює фактичну роботу (цикли CPU/NPU) та споживання ресурсів. Вона вбудована, має низькі накладні витрати та безпосередньо пов\'язана з "Енергією" мережі.',
 
+  [ShowcaseStrings.FAQ_Tech_Q18_Title]:
+    '18. Як BrightStack реалізує наскрізне шифрування (E2EE) у стані спокою?',
+  [ShowcaseStrings.FAQ_Tech_Q18_Intro]:
+    'E2EE у BrightStack — це не лише шифрування під час передачі — кожне повідомлення шифрується до запису у блок-сховище. Миттю, як виникає шифротекст, відкритий текст назавжди видаляється з пам\'яті та сховища.',
+  [ShowcaseStrings.FAQ_Tech_Q18_AtRest_Label]: 'Застосування шифрування у стані спокою',
+  [ShowcaseStrings.FAQ_Tech_Q18_AtRest]:
+    'При створенні EmailMessageService шифрує необроблені байти повідомлення і зберігає лише шифротекст AES-256-GCM в encryptedBody. textBody, htmlBody та всі тіла частин MIME явно встановлюються в undefined і ніколи не записуються до сховища.',
+  [ShowcaseStrings.FAQ_Tech_Q18_Schemes_Label]: 'Чотири підтримувані схеми шифрування',
+  [ShowcaseStrings.FAQ_Tech_Q18_Schemes]:
+    'RECIPIENT_KEYS використовує ECIES для створення унікального шифротексту для кожного одержувача. SHARED_KEY використовує єдиний спільний секрет AES-256-GCM. S/MIME і GPG також повністю підтримуються для сумісності з існуючою поштовою інфраструктурою.',
+  [ShowcaseStrings.FAQ_Tech_Q18_Purge_Label]: 'Гарантія видалення відкритого тексту',
+  [ShowcaseStrings.FAQ_Tech_Q18_Purge]:
+    'Після шифрування textBody, htmlBody та всі поля parts[].body явно встановлюються в undefined і ніколи не зберігаються. Зашифрований вміст зберігається як encryptedBody разом з encryptionIv та encryptionAuthTag. Бінарні поля кодуються в base64 для JSON-транспорту через REST API.',
+  [ShowcaseStrings.FAQ_Tech_Q18_Inbound_Label]: 'Шифрування вхідної пошти SMTP',
+  [ShowcaseStrings.FAQ_Tech_Q18_Inbound]:
+    'Коли лист надходить до SMTP-шлюзу (InboundProcessor), сервер визначає відкритий ключ для кожної адреси одержувача через IRecipientKeyLookup. Якщо ключі знайдено, необроблені байти повідомлення шифруються через EmailEncryptionService.encryptForRecipients() до запису у блок-сховище. Право власності на сховище надається першому одержувачу (to[0]), а не відправнику.',
+
   // FAQ Ecosystem Questions
   [ShowcaseStrings.FAQ_Eco_WhatIsBrightChain_Title]:
     '🔗 Що таке BrightChain насправді?',
@@ -360,8 +377,10 @@ export const ShowcaseUkrainianStrings: Partial<
   [ShowcaseStrings.Hero_Description_NotCrypto]: 'Не криптовалюта.',
   [ShowcaseStrings.Hero_Description_P2]:
     "Без монет, без майнінгу, без доказу роботи. BrightChain цінує реальні внески сховища та обчислень, відстежувані в Джоулях — одиниці, прив'язаній до реальних енергетичних витрат, а не ринкових спекуляцій.",
+  [ShowcaseStrings.Hero_E2EE_Callout]:
+    '🔐 Наскрізне шифрування за замовчуванням. Відкритий текст ніколи не потрапляє в мережу — ваші дані шифруються до того, як покинуть ваш пристрій, і тільки ви маєте ключі для їх розшифрування.',
   [ShowcaseStrings.Hero_Highlight]:
-    '🔒 Зберігання без власника • ⚡ Енергоефективний • 🌐 Децентралізований • 🎭 Анонімний, але відповідальний • 🗳️ Гомоморфне голосування • 💾 Зберігання замість потужності',
+    '🔒 Зберігання без власника • 🔐 Наскрізне шифрування • ⚡ Енергоефективний • 🌐 Децентралізований • 🎭 Анонімний, але відповідальний • 🗳️ Гомоморфне голосування • 💾 Зберігання замість потужності',
   [ShowcaseStrings.Hero_CTA_InteractiveDemo]: '🧪 Інтерактивна демонстрація',
   [ShowcaseStrings.Hero_CTA_SoupDemo]: '🥫 Демо BrightChain Soup',
   [ShowcaseStrings.Hero_CTA_GitHub]: 'Переглянути на GitHub',
@@ -470,6 +489,9 @@ export const ShowcaseUkrainianStrings: Partial<
   [ShowcaseStrings.About_Feature_OwnerFree_Title]: 'Зберігання без власника',
   [ShowcaseStrings.About_Feature_OwnerFree_Desc]:
     'Криптографічна випадковість усуває відповідальність за зберігання. Жоден окремий блок не містить ідентифікованого контенту, забезпечуючи юридичний імунітет для операторів вузлів.',
+  [ShowcaseStrings.About_Feature_E2EE_Title]: 'Наскрізне шифрування',
+  [ShowcaseStrings.About_Feature_E2EE_Desc]:
+    'Кожен фрагмент даних шифрується до того, як покине ваш пристрій. Відкритий текст ніколи не зберігається, ніколи не передається, ніколи не розкривається. Чотири схеми шифрування — ECIES ключі для кожного отримувача, спільні ключі AES-256-GCM, S/MIME та GPG — гарантують, що ваші дані залишаються вашими від створення до відновлення.',
   [ShowcaseStrings.About_Feature_EnergyEfficient_Title]: 'Енергоефективний',
   [ShowcaseStrings.About_Feature_EnergyEfficient_Desc]:
     'Без марнотратного майнінгу з доказом роботи. Всі обчислення служать корисним цілям — зберігання, верифікація та мережеві операції.',
@@ -1812,7 +1834,7 @@ export const ShowcaseUkrainianStrings: Partial<
     'Постійний захист конфіденційності після закінчення періоду',
   [ShowcaseStrings.Feat_Encryption_Title]: 'Передовий стек шифрування',
   [ShowcaseStrings.Feat_Encryption_Desc]:
-    'Найсучасніше шифрування, що поєднує ECIES для виведення ключів з AES-256-GCM для безпеки файлів. Повна криптосистема з автентифікацією BIP39/32 та криптографією еліптичних кривих SECP256k1.',
+    'Найсучасніше наскрізне шифрування із застосуванням у стані спокою. ECIES забезпечує похідні ключі для кожного одержувача; AES-256-GCM забезпечує автентифіковане шифрування. Усі чотири схеми (RECIPIENT_KEYS, SHARED_KEY, S/MIME, GPG) створюють encryptedBody — відкритий текст видаляється в момент створення шифротексту.',
   [ShowcaseStrings.Feat_Encryption_Cat]: 'Криптографія',
   [ShowcaseStrings.Feat_Encryption_Tech1]: 'ECIES',
   [ShowcaseStrings.Feat_Encryption_Tech2]: 'AES-256-GCM',
@@ -1827,9 +1849,9 @@ export const ShowcaseUkrainianStrings: Partial<
   [ShowcaseStrings.Feat_Encryption_HL4]:
     'Еліптична крива SECP256k1 (простір ключів, сумісний з Ethereum)',
   [ShowcaseStrings.Feat_Encryption_HL5]:
-    'Верифікована цілісність даних на рівні блоків з функціональністю XOR',
+    'E2EE у стані спокою: відкритий текст видаляється після шифрування — зберігається лише шифротекст',
   [ShowcaseStrings.Feat_Encryption_HL6]:
-    'Кросплатформні криптографічні операції',
+    'Чотири сумісні схеми шифрування: RECIPIENT_KEYS, SHARED_KEY, S/MIME, GPG',
   [ShowcaseStrings.Feat_Storage_Title]: 'Децентралізована мережа зберігання',
   [ShowcaseStrings.Feat_Storage_Desc]:
     'Однорангова розподілена файлова система, що монетизує невикористане сховище на персональних пристроях. Архітектура типу IPFS з енергоефективним доказом роботи та стимулами на основі репутації.',

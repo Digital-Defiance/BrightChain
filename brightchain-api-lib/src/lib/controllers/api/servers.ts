@@ -1002,16 +1002,38 @@ export class ServerController<
         deps.parseId(server.ownerId as string),
       );
 
-      // Send binary response directly via Express res object
-      this.res.set('Content-Type', 'image/png');
-      this.res.set('Cache-Control', 'public, max-age=86400, immutable');
-      this.res.set('ETag', etag);
-      this.res.status(200).send(fileBuffer);
+      // If Express res is available, send binary response directly
+      try {
+        const res = this.res;
+        if (typeof res.set === 'function') {
+          res.set('Content-Type', 'image/png');
+          res.set('Cache-Control', 'public, max-age=86400, immutable');
+          res.set('ETag', etag);
+          res.status(200).send(fileBuffer);
 
+          return {
+            statusCode: 200,
+            response: {
+              message: 'OK',
+            } as unknown as ApiErrorResponse,
+          };
+        }
+      } catch {
+        // No active response — fall through to return binary data in response object
+      }
+
+      // Return binary data in response object (for testing / non-Express contexts)
       return {
         statusCode: 200,
         response: {
-          message: 'OK',
+          _binary: true,
+          _buffer: fileBuffer,
+          _contentType: 'image/png',
+          _headers: {
+            'Content-Type': 'image/png',
+            'Cache-Control': 'public, max-age=86400, immutable',
+            ETag: etag,
+          },
         } as unknown as ApiErrorResponse,
       };
     } catch (error) {

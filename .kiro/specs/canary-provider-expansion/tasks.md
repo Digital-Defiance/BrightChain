@@ -252,42 +252,42 @@ This plan implements the Canary Provider Expansion — scaling the DigitalBurnba
     - Respond within 5 seconds to all webhook deliveries
     - _Requirements: 10.1, 10.2, 10.3, 10.4, 10.5, 10.6, 10.7, 10.8, 17.1, 17.2, 17.3, 17.5, 17.6, 17.7_
 
-  - [-] 10.3 Write property test: Webhook URL uniqueness and format (Property 7)
+  - [x] 10.3 Write property test: Webhook URL uniqueness and format (Property 7)
     - **Property 7: Webhook URL uniqueness and format**
     - For any number of endpoint creations, every URL path is unique and every secret is exactly 64 hex characters (32 bytes)
     - **Validates: Requirements 10.1, 17.1**
 
-  - [~] 10.4 Write property test: Webhook signature verification round-trip (Property 8)
+  - [x] 10.4 Write property test: Webhook signature verification round-trip (Property 8)
     - **Property 8: Webhook signature verification round-trip**
     - For any payload, secret, and supported signature method: computing then verifying succeeds; verifying with mutated signature fails
     - **Validates: Requirements 10.2, 17.2**
 
-  - [~] 10.5 Write property test: Webhook secret rotation grace period (Property 9)
+  - [x] 10.5 Write property test: Webhook secret rotation grace period (Property 9)
     - **Property 9: Webhook secret rotation grace period**
     - During rotation, verification succeeds with either current or previous secret within grace period; after expiry, previous secret fails
     - **Validates: Requirements 10.6**
 
-  - [~] 10.6 Write property test: Webhook delivery statistics accuracy (Property 10)
+  - [x] 10.6 Write property test: Webhook delivery statistics accuracy (Property 10)
     - **Property 10: Webhook delivery statistics accuracy**
     - For any sequence of delivery attempts, totalReceived = successfullyProcessed + failedValidation; each counter equals its outcome count
     - **Validates: Requirements 10.7**
 
-  - [~] 10.7 Write property test: Webhook consecutive failure disable threshold (Property 11)
+  - [x] 10.7 Write property test: Webhook consecutive failure disable threshold (Property 11)
     - **Property 11: Webhook consecutive failure disable threshold**
     - Endpoint disabled iff ≥10 consecutive failures; any success resets counter to 0
     - **Validates: Requirements 17.5**
 
-  - [~] 10.8 Write property test: Webhook IP allowlist enforcement (Property 12)
+  - [x] 10.8 Write property test: Webhook IP allowlist enforcement (Property 12)
     - **Property 12: Webhook IP allowlist enforcement**
     - Webhook accepted iff source IP falls within at least one allowed CIDR range; empty allowlist accepts all
     - **Validates: Requirements 17.6**
 
-  - [~] 10.9 Write property test: Webhook rate limiting (Property 13)
+  - [x] 10.9 Write property test: Webhook rate limiting (Property 13)
     - **Property 13: Webhook rate limiting**
     - Requests accepted iff count within 60s window ≤ rateLimitPerMinute (default 100)
     - **Validates: Requirements 17.3**
 
-  - [~] 10.10 Write unit tests for WebhookEndpointService
+  - [x] 10.10 Write unit tests for WebhookEndpointService
     - Test HTTP 401 on invalid signature (Req 10.5)
     - Test HTTP 429 on rate limit exceeded (Req 17.3)
     - Test HTTP 403 on IP not in allowlist (Req 17.6)
@@ -298,14 +298,14 @@ This plan implements the Canary Provider Expansion — scaling the DigitalBurnba
     - _Requirements: 10.4, 10.5, 10.8, 17.3, 17.4, 17.5, 17.6, 17.7_
 
 - [ ] 11. Implement WebhookController and expansion API endpoints in digitalburnbag-api-lib
-  - [~] 11.1 Implement WebhookController for inbound webhook processing
+  - [x] 11.1 Implement WebhookController for inbound webhook processing
     - Create `digitalburnbag-api-lib/src/lib/controllers/webhook-controller.ts`
     - `POST /api/webhooks/canary/:connectionId/:secret` — validate and process inbound webhook payload
     - Return HTTP 200 within 5 seconds; process asynchronously if extraction exceeds timeout
     - Return HTTP 401 for invalid signature, HTTP 404 for unknown endpoint (without revealing existence), HTTP 429 for rate limit, HTTP 403 for IP block
     - _Requirements: 10.1, 10.2, 10.3, 10.4, 10.5_
 
-  - [~] 11.2 Implement ProviderCatalog API endpoints
+  - [x] 11.2 Implement ProviderCatalog API endpoints
     - Add to existing provider controller or create new catalog controller
     - `GET /api/providers/catalog` — get full catalog with optional filters (category, authType, supportsWebhooks, searchQuery)
     - `GET /api/providers/catalog/search?q={query}` — search providers by name/description
@@ -313,7 +313,7 @@ This plan implements the Canary Provider Expansion — scaling the DigitalBurnba
     - `GET /api/providers/catalog/recommended` — get recommended providers
     - _Requirements: 11.2, 11.3, 11.4, 11.7_
 
-  - [~] 11.3 Implement MultiCanaryBinding API endpoints
+  - [x] 11.3 Implement MultiCanaryBinding API endpoints
     - Create `digitalburnbag-api-lib/src/lib/controllers/multi-canary-binding-controller.ts`
     - `POST /api/multi-canary-bindings` — create binding (validate 2–20 providers, all connected)
     - `GET /api/multi-canary-bindings` — list user's bindings
@@ -323,7 +323,7 @@ This plan implements the Canary Provider Expansion — scaling the DigitalBurnba
     - `GET /api/multi-canary-bindings/target/:targetId` — get bindings for a target
     - _Requirements: 9.1, 9.2, 9.6_
 
-  - [~] 11.4 Implement WebhookEndpoint management API endpoints
+  - [x] 11.4 Implement WebhookEndpoint management API endpoints
     - Create `digitalburnbag-api-lib/src/lib/controllers/webhook-endpoint-controller.ts`
     - `POST /api/webhook-endpoints` — create webhook endpoint for a connection
     - `GET /api/webhook-endpoints` — list user's endpoints
@@ -333,7 +333,7 @@ This plan implements the Canary Provider Expansion — scaling the DigitalBurnba
     - `GET /api/webhook-endpoints/:id/stats` — get delivery stats
     - _Requirements: 10.1, 10.6, 10.7, 17.6, 17.7_
 
-  - [~] 11.5 Implement NativeCanary API endpoints
+  - [x] 11.5 Implement NativeCanary API endpoints
     - Create `digitalburnbag-api-lib/src/lib/controllers/native-canary-controller.ts`
     - `POST /api/native-canaries` — configure native canary
     - `GET /api/native-canaries` — list user's native canary configs
@@ -341,11 +341,11 @@ This plan implements the Canary Provider Expansion — scaling the DigitalBurnba
     - `PUT /api/native-canaries/duress-codes` — set duress codes (encrypted at rest)
     - _Requirements: 8.1, 8.7_
 
-- [ ] 12. Checkpoint - Verify all backend services, repositories, and API endpoints compile and pass tests
+- [x] 12. Checkpoint - Verify all backend services, repositories, and API endpoints compile and pass tests
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 13. Implement ProviderMarketplace frontend component
-  - [~] 13.1 Create ProviderMarketplace page component
+  - [x] 13.1 Create ProviderMarketplace page component
     - Create `digitalburnbag-react-components/src/lib/components/ProviderMarketplace.tsx`
     - Category sidebar/tabs with provider counts per category
     - Search bar with real-time filtering across names and descriptions
@@ -356,7 +356,7 @@ This plan implements the Canary Provider Expansion — scaling the DigitalBurnba
     - "Connect" button launches ActivationFlow wizard
     - _Requirements: 11.1, 11.2, 11.3, 11.4, 11.5, 11.6, 11.7, 11.8_
 
-  - [~] 13.2 Write unit tests for ProviderMarketplace
+  - [x] 13.2 Write unit tests for ProviderMarketplace
     - Test marketplace accessible from left nav (Req 11.1)
     - Test provider cards display all required fields (Req 11.2)
     - Test category filtering works (Req 11.3)
@@ -368,7 +368,7 @@ This plan implements the Canary Provider Expansion — scaling the DigitalBurnba
     - _Requirements: 11.1, 11.2, 11.3, 11.4, 11.5, 11.6, 11.7, 11.8_
 
 - [ ] 14. Implement ProviderHealthGrid frontend component
-  - [~] 14.1 Create ProviderHealthGrid component
+  - [x] 14.1 Create ProviderHealthGrid component
     - Create `digitalburnbag-react-components/src/lib/components/ProviderHealthGrid.tsx`
     - Responsive grid layout of ProviderConnectionCard components
     - Each card shows: icon, name, status color (green/amber/red/purple), time since last heartbeat, mini sparkline
@@ -379,17 +379,17 @@ This plan implements the Canary Provider Expansion — scaling the DigitalBurnba
     - Aggregate health bar at top: percentage breakdown by status
     - _Requirements: 12.1, 12.2, 12.3, 12.4, 12.5, 12.6, 12.7_
 
-  - [~] 14.2 Write property test: Provider health grid aggregate percentage calculation (Property 18)
+  - [x] 14.2 Write property test: Provider health grid aggregate percentage calculation (Property 18)
     - **Property 18: Provider health grid aggregate percentage calculation**
     - For any set of statuses, percentages sum to 100% (within floating-point tolerance); each category's percentage = (count / total) * 100
     - **Validates: Requirements 12.7**
 
-  - [~] 14.3 Write property test: Provider health grid sorting correctness (Property 19)
+  - [x] 14.3 Write property test: Provider health grid sorting correctness (Property 19)
     - **Property 19: Provider health grid sorting correctness**
     - For any connections and any sort criterion, result is correctly ordered and contains exactly the same elements
     - **Validates: Requirements 12.4**
 
-  - [~] 14.4 Write unit tests for ProviderHealthGrid
+  - [x] 14.4 Write unit tests for ProviderHealthGrid
     - Test responsive grid renders all connected providers (Req 12.1)
     - Test card displays all required fields with correct status colors (Req 12.2)
     - Test WebSocket updates without page refresh (Req 12.3)
@@ -397,8 +397,8 @@ This plan implements the Canary Provider Expansion — scaling the DigitalBurnba
     - Test status transition pulse animation class (Req 12.6)
     - _Requirements: 12.1, 12.2, 12.3, 12.5, 12.6_
 
-- [ ] 15. Implement CanaryContextMenu frontend component
-  - [~] 15.1 Create CanaryContextMenu component
+- [x] 15. Implement CanaryContextMenu frontend component
+  - [x] 15.1 Create CanaryContextMenu component
     - Create `digitalburnbag-react-components/src/lib/components/CanaryContextMenu.tsx`
     - "Attach Canary" menu item with canary icon and count badge showing existing bindings
     - Provider submenu: connected providers grouped by category, each showing status indicator
@@ -409,12 +409,12 @@ This plan implements the Canary Provider Expansion — scaling the DigitalBurnba
     - **Critical**: NO manual ID entry anywhere — all selection via dropdowns, checkboxes, visual pickers
     - _Requirements: 13.1, 13.2, 13.3, 13.4, 13.5, 13.6, 13.7_
 
-  - [~] 15.2 Write property test: Context menu binding count badge accuracy (Property 21)
+  - [x] 15.2 Write property test: Context menu binding count badge accuracy (Property 21)
     - **Property 21: Context menu binding count badge accuracy**
     - For any target with N bindings (N ≥ 0), the count badge displays exactly N
     - **Validates: Requirements 13.5, 13.6**
 
-  - [~] 15.3 Write unit tests for CanaryContextMenu
+  - [x] 15.3 Write unit tests for CanaryContextMenu
     - Test "Attach Canary" appears on right-click (Req 13.1)
     - Test provider submenu grouped by category with status indicators (Req 13.2)
     - Test binding config popover uses dropdowns/sliders, not text inputs (Req 13.3)
@@ -423,15 +423,15 @@ This plan implements the Canary Provider Expansion — scaling the DigitalBurnba
     - Test "Connect a Provider First" message when no providers (Req 13.7)
     - _Requirements: 13.1, 13.2, 13.3, 13.4, 13.5, 13.7_
 
-- [ ] 16. Implement CanaryLeftMenu and MultiCanaryBindingPanel frontend components
-  - [~] 16.1 Create CanaryLeftMenu component
+- [x] 16. Implement CanaryLeftMenu and MultiCanaryBindingPanel frontend components
+  - [x] 16.1 Create CanaryLeftMenu component
     - Create `digitalburnbag-react-components/src/lib/components/CanaryLeftMenu.tsx`
     - Sub-sections: "My Providers" (compact list with status indicators), "Provider Marketplace" (link), "Multi-Canary Bindings" (list with target names, provider count, aggregate status), "Webhook Endpoints" (list with provider name, last received, success rate)
     - Warning badge on "My Providers" when any provider has CHECK_FAILED or ABSENCE
     - Overall canary system health indicator (healthy/degraded/critical)
     - _Requirements: 14.1, 14.2, 14.3, 14.4, 14.5, 14.6, 14.7_
 
-  - [~] 16.2 Create MultiCanaryBindingPanel component
+  - [x] 16.2 Create MultiCanaryBindingPanel component
     - Create `digitalburnbag-react-components/src/lib/components/MultiCanaryBindingPanel.tsx`
     - Provider picker: checkboxes next to connected providers (visual, not ID-based)
     - Redundancy policy selector: dropdown with descriptions of each policy
@@ -441,7 +441,7 @@ This plan implements the Canary Provider Expansion — scaling the DigitalBurnba
     - Status display: per-provider signal indicators and aggregate result
     - _Requirements: 9.1, 9.2, 9.5, 9.6_
 
-  - [~] 16.3 Create WebhookEndpointPanel component
+  - [x] 16.3 Create WebhookEndpointPanel component
     - Create `digitalburnbag-react-components/src/lib/components/WebhookEndpointPanel.tsx`
     - Endpoint list with provider name, URL (copy button), last received, success rate
     - Secret display with show/hide toggle and copy button
@@ -451,22 +451,22 @@ This plan implements the Canary Provider Expansion — scaling the DigitalBurnba
     - Delivery stats: total, successful, failed, chart over time
     - _Requirements: 10.1, 10.6, 10.7, 14.5, 17.6, 17.7_
 
-  - [~] 16.4 Write property test: Multi-canary binding display completeness (Property 20)
+  - [x] 16.4 Write property test: Multi-canary binding display completeness (Property 20)
     - **Property 20: Multi-canary binding display completeness**
     - For any binding, rendered display includes: target names (not IDs), bound provider count, aggregate status, per-provider signal indicators
     - **Validates: Requirements 9.6, 14.4**
 
-  - [~] 16.5 Write property test: Overall system health classification (Property 23)
+  - [x] 16.5 Write property test: Overall system health classification (Property 23)
     - **Property 23: Overall system health classification**
     - "critical" if all providers CHECK_FAILED/ABSENCE and total > 0; "degraded" if any but not all; "healthy" if all PRESENCE or empty
     - **Validates: Requirements 14.7**
 
-  - [~] 16.6 Write property test: Attention-needed badge count accuracy (Property 24)
+  - [x] 16.6 Write property test: Attention-needed badge count accuracy (Property 24)
     - **Property 24: Attention-needed badge count accuracy**
     - Warning badge count equals number of providers with CHECK_FAILED, ABSENCE, "error", "expired", or "paused" status
     - **Validates: Requirements 14.6**
 
-  - [~] 16.7 Write unit tests for CanaryLeftMenu, MultiCanaryBindingPanel, and WebhookEndpointPanel
+  - [x] 16.7 Write unit tests for CanaryLeftMenu, MultiCanaryBindingPanel, and WebhookEndpointPanel
     - Test all four left-menu sub-sections render (Req 14.1)
     - Test "My Providers" compact list with status indicators (Req 14.2)
     - Test marketplace link navigates correctly (Req 14.3)
@@ -481,17 +481,17 @@ This plan implements the Canary Provider Expansion — scaling the DigitalBurnba
     - Test "Test Webhook" button (Req 17.7)
     - _Requirements: 14.1, 14.2, 14.3, 14.4, 14.5, 14.6, 14.7, 9.1, 9.5, 10.1, 10.6, 17.7_
 
-- [ ] 17. Checkpoint - Verify all frontend components compile and pass tests
+- [x] 17. Checkpoint - Verify all frontend components compile and pass tests
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 18. Implement Provider Activation/Deactivation lifecycle and wire components together
-  - [~] 18.1 Implement ActivationFlow wizard component
+- [x] 18. Implement Provider Activation/Deactivation lifecycle and wire components together
+  - [x] 18.1 Implement ActivationFlow wizard component
     - Create `digitalburnbag-react-components/src/lib/components/ActivationFlow.tsx`
     - Steps: authentication → test connection → absence threshold configuration → optional multi-canary binding setup
     - Single streamlined wizard flow launched from ProviderMarketplace "Connect" button
     - _Requirements: 16.1_
 
-  - [~] 18.2 Implement provider pause and disconnect functionality
+  - [x] 18.2 Implement provider pause and disconnect functionality
     - Add pause/resume support: stops heartbeat checks, excludes from aggregation, preserves credentials
     - Add disconnect support: deletes credentials, removes from all multi-canary bindings, archives status history
     - Show disconnect warning when provider is part of multi-canary binding
@@ -499,7 +499,7 @@ This plan implements the Canary Provider Expansion — scaling the DigitalBurnba
     - Paused providers display grayed out with pause icon in ProviderHealthGrid
     - _Requirements: 16.2, 16.3, 16.4, 16.5, 16.6_
 
-  - [~] 18.3 Wire navigation and integrate all frontend components
+  - [x] 18.3 Wire navigation and integrate all frontend components
     - Add ProviderMarketplace to CanaryLeftMenu navigation
     - Wire CanaryContextMenu into file browser right-click handler
     - Wire ProviderHealthGrid into CanaryLeftMenu "My Providers" section
@@ -509,35 +509,35 @@ This plan implements the Canary Provider Expansion — scaling the DigitalBurnba
     - Connect all components to BurnbagApiClient for API calls
     - _Requirements: 11.1, 13.1, 14.1, 14.3_
 
-  - [~] 18.4 Write unit tests for ActivationFlow and provider lifecycle
+  - [x] 18.4 Write unit tests for ActivationFlow and provider lifecycle
     - Test activation flow steps render in correct order (Req 16.1)
     - Test paused provider visual state: grayed out with pause icon (Req 16.3)
     - Test disconnect warning when provider in binding (Req 16.5)
     - Test below-minimum warning when binding would have <2 providers (Req 16.6)
     - _Requirements: 16.1, 16.3, 16.5, 16.6_
 
-- [ ] 19. Write integration tests for end-to-end flows
-  - [~] 19.1 Write integration tests for webhook end-to-end flow
+- [x] 19. Write integration tests for end-to-end flows
+  - [x] 19.1 Write integration tests for webhook end-to-end flow
     - POST to webhook URL → signature verification → signal emission → stats update
     - Secret rotation → both secrets accepted → grace period expires → old rejected
     - _Requirements: 10.1, 10.2, 10.3, 10.6, 10.7_
 
-  - [~] 19.2 Write integration tests for multi-canary evaluation flow
+  - [x] 19.2 Write integration tests for multi-canary evaluation flow
     - Provider signal change → binding evaluation → protocol trigger (or not)
     - Provider disconnect → credential deletion → binding removal → status update
     - _Requirements: 9.3, 16.4, 16.5_
 
-  - [~] 19.3 Write integration tests for native canary event flow
+  - [x] 19.3 Write integration tests for native canary event flow
     - Platform event → native canary evaluation → signal emission
     - Login with duress code → immediate DURESS signal → protocol execution
     - _Requirements: 8.1, 8.2, 8.3_
 
-  - [~] 19.4 Write integration tests for visual UX flows
+  - [x] 19.4 Write integration tests for visual UX flows
     - Context menu → select provider → configure → create binding (full visual flow)
     - Marketplace → connect → configure → attach to vault (full flow)
     - _Requirements: 13.1, 13.3, 11.5, 16.1_
 
-- [ ] 20. Final checkpoint - Ensure all tests pass
+- [x] 20. Final checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
 ## Notes

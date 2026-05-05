@@ -33,6 +33,9 @@ export {
   constantTimeXorMultiple,
 } from './lib/utils/constantTimeXor';
 
+// Export ECIES block encryption utility (browser-compatible)
+export { BlockECIES } from './lib/access/ecies';
+
 // Export ServiceProvider for advanced usage
 export { ServiceProvider } from './lib/services/service.provider';
 

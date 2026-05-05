@@ -19,10 +19,12 @@ DEPLOY_REMOTE="origin"
 # ── Flags ────────────────────────────────────────────────────────────────────
 DRY_RUN=false
 SKIP_BUILD=false
+INIT_DB=false
 for arg in "$@"; do
   case "$arg" in
     --dry-run)    DRY_RUN=true ;;
     --skip-build) SKIP_BUILD=true ;;
+    --initdb)     INIT_DB=true ;;
     -h|--help)
       sed -n '/^# Usage:/,/^###/p' "$0" | head -n -1
       exit 0
@@ -181,6 +183,11 @@ run ./term_prod_forever.sh
 
 # Clean up server.log if it exists
 [ -f "$SCRIPT_DIR/server.log" ] && rm -f "$SCRIPT_DIR/server.log"
+
+if [ "$INIT_DB" = true ]; then
+  log "Initializing database..."
+  run ./prod_init.sh
+fi
 
 log "Starting server..."
 run ./prod_forever.sh

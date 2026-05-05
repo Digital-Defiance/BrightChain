@@ -9,6 +9,7 @@
   ],
   "dependencies": {
     "@aws-sdk/client-ses": "^3.859.0",
+    "@brightchain/brightchain-identity": "^0.30.1",
     "@brightchain/brightchain-lib": "^0.30.1",
     "@brightchain/db": "^0.30.1",
     "@brightchain/node-express-suite": "^0.30.1",
@@ -39,7 +40,7 @@
   "devDependencies": {
     "@digitaldefiance/node-express-suite": "4.27.1",
     "@digitaldefiance/secrets": "^2.0.7",
-    "@digitaldefiance/suite-core-lib": "4.27.0",
+    "@digitaldefiance/suite-core-lib": "4.27.2",
     "@faker-js/faker": "^10.4.0",
     "@noble/curves": "^1.9.0",
     "@noble/hashes": "^1.8.0",

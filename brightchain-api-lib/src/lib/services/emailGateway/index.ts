@@ -20,6 +20,7 @@ export * from './inboundProcessor';
 export * from './outboundDeliveryWorker';
 export * from './outboundQueue';
 export * from './outboundQueueStore';
+export * from './recipientKeyLookup';
 export * from './recipientLookupService';
 export * from './retryBackoff';
 export * from './testModeTransports';

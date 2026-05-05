@@ -1,0 +1,57 @@
+{
+  "name": "@brightchain/brightchain-identity",
+  "version": "0.30.1",
+  "description": "BrightChain identity library - mnemonic-based Member factories and identity descriptors",
+  "main": "src/index.js",
+  "types": "src/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.d.ts",
+      "import": "./src/index.js",
+      "default": "./src/index.js"
+    },
+    "./*": {
+      "types": "./src/*.d.ts",
+      "import": "./src/*.js",
+      "default": "./src/*.js"
+    }
+  },
+  "files": [
+    "src",
+    "README.md"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Digital-Defiance/BrightChain.git",
+    "directory": "brightchain-identity"
+  },
+  "homepage": "https://github.com/Digital-Defiance/BrightChain#readme",
+  "bugs": {
+    "url": "https://github.com/Digital-Defiance/BrightChain/issues"
+  },
+  "keywords": [
+    "brightchain",
+    "identity",
+    "ecies",
+    "mnemonic",
+    "secp256k1",
+    "member"
+  ],
+  "author": "Digital Defiance",
+  "license": "MIT",
+  "peerDependencies": {
+    "@brightchain/brightchain-lib": "*"
+  },
+  "dependencies": {
+    "@digitaldefiance/ecies-lib": "5.1.6",
+    "@digitaldefiance/i18n-lib": "4.7.4",
+    "@digitaldefiance/node-ecies-lib": "5.1.6"
+  },
+  "scripts": {
+    "build": "npx nx build brightchain-identity",
+    "test": "npx nx test brightchain-identity",
+    "lint": "npx nx lint brightchain-identity",
+    "build:dev": "npx nx build brightchain-identity --configuration=development",
+    "build:prod": "npx nx build brightchain-identity --configuration=production"
+  }
+}

@@ -41,6 +41,12 @@
       "@brightchain/brightchain-lib/*": [
         "brightchain-lib/src/*"
       ],
+      "@brightchain/brightchain-identity": [
+        "brightchain-identity/src/index.ts"
+      ],
+      "@brightchain/brightchain-identity/*": [
+        "brightchain-identity/src/*"
+      ],
       "@brightchain/brightchain-inituserdb/*": [
         "brightchain-inituserdb/src/*"
       ],

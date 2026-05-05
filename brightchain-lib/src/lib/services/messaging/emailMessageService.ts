@@ -25,6 +25,7 @@ import { DeliveryStatus } from '../../enumerations/messaging/deliveryStatus';
 import { EmailErrorType } from '../../enumerations/messaging/emailErrorType';
 import { MessageEncryptionScheme } from '../../enumerations/messaging/messageEncryptionScheme';
 import { MessagePriority } from '../../enumerations/messaging/messagePriority';
+import { SpamClassification } from '../../enumerations/messaging/spamClassification';
 import { ReplicationStatus } from '../../enumerations/replicationStatus';
 import { EmailError } from '../../errors/messaging/emailError';
 import type { IGossipService } from '../../interfaces/availability/gossipService';
@@ -43,7 +44,6 @@ import {
   type IContentType,
   type IMimePart,
 } from '../../interfaces/messaging/mimePart';
-import { SpamClassification } from '../../enumerations/messaging/spamClassification';
 import { EmailEncryptionService } from './emailEncryptionService';
 import {
   EmailValidator,
@@ -889,6 +889,16 @@ export class EmailMessageService {
           metadata.isSigned = result.encryptionMetadata.isSigned;
           metadata.contentSignature = result.encryptionMetadata.signature;
           metadata.signerPublicKey = result.encryptionMetadata.signerPublicKey;
+          // Store the encrypted bytes and clear plaintext for security
+          metadata.encryptedBody = result.encryptedContent;
+          metadata.textBody = undefined;
+          metadata.htmlBody = undefined;
+          if (metadata.parts) {
+            metadata.parts = metadata.parts.map((p) => ({
+              ...p,
+              body: undefined,
+            }));
+          }
         } else if (
           email.encryptionScheme === MessageEncryptionScheme.SHARED_KEY
         ) {
@@ -907,6 +917,16 @@ export class EmailMessageService {
 
           metadata.encryptionIv = result.encryptionMetadata.iv;
           metadata.encryptionAuthTag = result.encryptionMetadata.authTag;
+          // Store the encrypted bytes and clear plaintext for security
+          metadata.encryptedBody = result.encryptedContent;
+          metadata.textBody = undefined;
+          metadata.htmlBody = undefined;
+          if (metadata.parts) {
+            metadata.parts = metadata.parts.map((p) => ({
+              ...p,
+              body: undefined,
+            }));
+          }
 
           // Optionally sign
           if (email.senderPrivateKey && email.senderPublicKey) {
@@ -969,6 +989,16 @@ export class EmailMessageService {
               metadata.signerPublicKey =
                 result.encryptionMetadata.signerPublicKey;
             }
+            // Store the encrypted bytes and clear plaintext for security
+            metadata.encryptedBody = result.encryptedContent;
+            metadata.textBody = undefined;
+            metadata.htmlBody = undefined;
+            if (metadata.parts) {
+              metadata.parts = metadata.parts.map((p) => ({
+                ...p,
+                body: undefined,
+              }));
+            }
           } else if (!email.signMessage) {
             // Fallback to legacy S/MIME stub if no real certs provided
             if (
@@ -1001,6 +1031,16 @@ export class EmailMessageService {
             metadata.contentSignature = result.encryptionMetadata.signature;
             metadata.signerPublicKey =
               result.encryptionMetadata.signerPublicKey;
+            // Store the encrypted bytes and clear plaintext for security
+            metadata.encryptedBody = result.encryptedContent;
+            metadata.textBody = undefined;
+            metadata.htmlBody = undefined;
+            if (metadata.parts) {
+              metadata.parts = metadata.parts.map((p) => ({
+                ...p,
+                body: undefined,
+              }));
+            }
           }
         } else if (email.encryptionScheme === MessageEncryptionScheme.GPG) {
           // GPG encryption (RFC 4880) with optional signing (RFC 3156)
@@ -1051,6 +1091,16 @@ export class EmailMessageService {
               metadata.contentSignature = result.encryptionMetadata.signature;
               metadata.signerPublicKey =
                 result.encryptionMetadata.signerPublicKey;
+            }
+            // Store the encrypted bytes and clear plaintext for security
+            metadata.encryptedBody = result.encryptedContent;
+            metadata.textBody = undefined;
+            metadata.htmlBody = undefined;
+            if (metadata.parts) {
+              metadata.parts = metadata.parts.map((p) => ({
+                ...p,
+                body: undefined,
+              }));
             }
           } else {
             throw new EmailError(

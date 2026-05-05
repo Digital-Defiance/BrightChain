@@ -32,6 +32,9 @@
   "references": [
     {
       "path": "../brightchain-lib/tsconfig.lib.json"
+    },
+    {
+      "path": "../brightchain-identity/tsconfig.lib.json"
     }
   ]
 }

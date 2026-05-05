@@ -9,6 +9,7 @@ export type * from './api-express-validation-error';
 export type * from './api-get-block-response';
 export type * from './api-get-node-response';
 export type * from './api-health-response';
+export type * from './api-identity-response';
 export type * from './api-list-nodes-response';
 export type * from './api-login-response';
 export type * from './api-members-response';

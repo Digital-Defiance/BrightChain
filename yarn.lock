@@ -2449,6 +2449,7 @@ __metadata:
   resolution: "@brightchain/brightchain-api-lib@workspace:brightchain-api-lib"
   dependencies:
     "@aws-sdk/client-ses": "npm:^3.859.0"
+    "@brightchain/brightchain-identity": "npm:^0.30.1"
     "@brightchain/brightchain-lib": "npm:^0.30.1"
     "@brightchain/db": "npm:^0.30.1"
     "@brightchain/node-express-suite": "npm:^0.30.1"
@@ -2459,7 +2460,7 @@ __metadata:
     "@digitaldefiance/node-ecies-lib": "npm:5.1.6"
     "@digitaldefiance/node-express-suite": "npm:4.27.1"
     "@digitaldefiance/secrets": "npm:^2.0.7"
-    "@digitaldefiance/suite-core-lib": "npm:4.27.0"
+    "@digitaldefiance/suite-core-lib": "npm:4.27.2"
     "@ethereumjs/wallet": "npm:^10.0.0"
     "@faker-js/faker": "npm:^10.4.0"
     "@noble/curves": "npm:^1.9.0"
@@ -2509,6 +2510,18 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@brightchain/brightchain-identity@npm:^0.30.1, @brightchain/brightchain-identity@workspace:brightchain-identity":
+  version: 0.0.0-use.local
+  resolution: "@brightchain/brightchain-identity@workspace:brightchain-identity"
+  dependencies:
+    "@digitaldefiance/ecies-lib": "npm:5.1.6"
+    "@digitaldefiance/i18n-lib": "npm:4.7.4"
+    "@digitaldefiance/node-ecies-lib": "npm:5.1.6"
+  peerDependencies:
+    "@brightchain/brightchain-lib": "*"
+  languageName: unknown
+  linkType: soft
+
 "@brightchain/brightchain-lib@npm:*, @brightchain/brightchain-lib@npm:^0.30.1, @brightchain/brightchain-lib@workspace:brightchain-lib":
   version: 0.0.0-use.local
   resolution: "@brightchain/brightchain-lib@workspace:brightchain-lib"
@@ -2519,7 +2532,7 @@ __metadata:
     "@digitaldefiance/i18n-lib": "npm:4.7.4"
     "@digitaldefiance/reed-solomon-erasure.wasm": "npm:^1.0.2"
     "@digitaldefiance/secrets": "npm:^2.0.7"
-    "@digitaldefiance/suite-core-lib": "npm:4.27.0"
+    "@digitaldefiance/suite-core-lib": "npm:4.27.2"
     "@ethereumjs/wallet": "npm:^10.0.0"
     "@jest/environment": "npm:^30.3.0"
     "@jest/globals": "npm:^30.3.0"
@@ -2567,7 +2580,7 @@ __metadata:
   dependencies:
     "@brightchain/brightchain-lib": "npm:*"
     "@digitaldefiance/ecies-lib": "npm:5.1.6"
-    "@digitaldefiance/express-suite-react-components": "npm:4.27.9"
+    "@digitaldefiance/express-suite-react-components": "npm:4.28.3"
     "@digitaldefiance/i18n-lib": "npm:4.7.4"
     "@fortawesome/fontawesome-svg-core": "npm:^7.2.0"
     "@fortawesome/react-fontawesome": "npm:^3.2.0"
@@ -2621,7 +2634,7 @@ __metadata:
   resolution: "@brightchain/brightchat-react-components@workspace:brightchat-react-components"
   dependencies:
     "@awesome.me/kit-a20d532681": "npm:^1.0.23"
-    "@digitaldefiance/express-suite-react-components": "npm:4.27.9"
+    "@digitaldefiance/express-suite-react-components": "npm:4.28.3"
     "@mui/icons-material": "npm:^7.3.9"
     "@mui/material": "npm:^7.3.9"
     "@types/react": "npm:^19.2.14"
@@ -2634,7 +2647,7 @@ __metadata:
   peerDependencies:
     "@brightchain/brightchain-lib": "*"
     "@brightchain/brightchat-lib": "*"
-    "@digitaldefiance/express-suite-react-components": 4.27.9
+    "@digitaldefiance/express-suite-react-components": 4.28.3
     "@mui/icons-material": "*"
     "@mui/material": "*"
     react: ^18.0.0
@@ -2674,7 +2687,7 @@ __metadata:
   resolution: "@brightchain/brighthub-react-components@workspace:brighthub-react-components"
   dependencies:
     "@awesome.me/kit-a20d532681": "npm:^1.0.23"
-    "@digitaldefiance/express-suite-react-components": "npm:4.27.9"
+    "@digitaldefiance/express-suite-react-components": "npm:4.28.3"
     "@fortawesome/react-fontawesome": "npm:^3.3.0"
     "@mui/icons-material": "npm:^7.3.9"
     "@mui/material": "npm:^7.3.9"
@@ -2771,7 +2784,7 @@ __metadata:
   resolution: "@brightchain/brightmail-react-components@workspace:brightmail-react-components"
   dependencies:
     "@awesome.me/kit-a20d532681": "npm:^1.0.23"
-    "@digitaldefiance/express-suite-react-components": "npm:4.27.9"
+    "@digitaldefiance/express-suite-react-components": "npm:4.28.3"
     "@mui/icons-material": "npm:^7.3.9"
     "@mui/material": "npm:^7.3.9"
     "@tiptap/extension-link": "npm:^3.22.2"
@@ -2787,7 +2800,7 @@ __metadata:
   peerDependencies:
     "@brightchain/brightchain-lib": "*"
     "@brightchain/brightmail-lib": "*"
-    "@digitaldefiance/express-suite-react-components": 4.27.9
+    "@digitaldefiance/express-suite-react-components": 4.28.3
     "@mui/icons-material": "*"
     "@mui/material": "*"
     react: ^18.0.0
@@ -2811,7 +2824,7 @@ __metadata:
   resolution: "@brightchain/brightpass-react-components@workspace:brightpass-react-components"
   dependencies:
     "@awesome.me/kit-a20d532681": "npm:^1.0.23"
-    "@digitaldefiance/express-suite-react-components": "npm:4.27.9"
+    "@digitaldefiance/express-suite-react-components": "npm:4.28.3"
     "@mui/icons-material": "npm:^7.3.9"
     "@mui/material": "npm:^7.3.9"
     "@types/react": "npm:^19.2.14"
@@ -2824,7 +2837,7 @@ __metadata:
     yup: "npm:^1.7.1"
   peerDependencies:
     "@brightchain/brightchain-lib": "*"
-    "@digitaldefiance/express-suite-react-components": 4.27.9
+    "@digitaldefiance/express-suite-react-components": 4.28.3
     "@digitaldefiance/i18n-lib": 4.7.4
     "@mui/icons-material": "*"
     "@mui/material": "*"
@@ -2947,7 +2960,7 @@ __metadata:
     "@digitaldefiance/i18n-lib": "npm:4.7.4"
     "@digitaldefiance/node-ecies-lib": "npm:5.1.6"
     "@digitaldefiance/node-express-suite": "npm:4.27.1"
-    "@digitaldefiance/suite-core-lib": "npm:4.27.0"
+    "@digitaldefiance/suite-core-lib": "npm:4.27.2"
     "@types/bcrypt": "npm:^6.0.0"
     "@types/cors": "npm:^2.8.19"
     "@types/express": "npm:^5.0.6"
@@ -3182,12 +3195,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@digitaldefiance/express-suite-react-components@npm:4.27.9":
-  version: 4.27.9
-  resolution: "@digitaldefiance/express-suite-react-components@npm:4.27.9"
+"@digitaldefiance/express-suite-react-components@npm:4.28.3":
+  version: 4.28.3
+  resolution: "@digitaldefiance/express-suite-react-components@npm:4.28.3"
   dependencies:
     "@digitaldefiance/i18n-lib": "npm:4.7.4"
-    "@digitaldefiance/suite-core-lib": "npm:4.26.11"
+    "@digitaldefiance/suite-core-lib": "npm:4.27.4"
     "@emotion/react": "npm:^11.14.0"
     "@emotion/styled": "npm:^11.14.0"
     "@mui/icons-material": "npm:^7.0.2"
@@ -3195,6 +3208,7 @@ __metadata:
     "@mui/system": "npm:^7.0.2"
     "@mui/x-date-pickers": "npm:^8.9.0"
     axios: "npm:^1.9.0"
+    bip39: "npm:^3.1.0"
     currency-codes: "npm:^2.2.0"
     formik: "npm:^2.4.6"
     moment-timezone: "npm:^0.6.0"
@@ -3203,7 +3217,7 @@ __metadata:
     yup: "npm:^1.6.1"
   peerDependencies:
     react-router-dom: 6.29.0
-  checksum: 10/2009d14d5e9e3a9583e564b21214d3f8b3413a024afa40639aa492969d999d5909d638e6ef2a5ba810b85065c879c33b2a344110a947ee841793e1d8cb5920c6
+  checksum: 10/de5a8ebb7f7b0a7893f59e7f3369ac4e5b5efdc8d4fc6fa1c8fa053f815b9ce86bcc06d9f7fb4837b4d4ad40ce4be4458f2ebdb1e0b79e7d1d0f73a7ec811876
   languageName: node
   linkType: hard
 
@@ -3314,14 +3328,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@digitaldefiance/suite-core-lib@npm:4.27.0":
-  version: 4.27.0
-  resolution: "@digitaldefiance/suite-core-lib@npm:4.27.0"
+"@digitaldefiance/suite-core-lib@npm:4.27.2":
+  version: 4.27.2
+  resolution: "@digitaldefiance/suite-core-lib@npm:4.27.2"
   dependencies:
     "@digitaldefiance/branded-interface": "npm:^0.0.5"
     "@digitaldefiance/ecies-lib": "npm:5.1.6"
     "@digitaldefiance/i18n-lib": "npm:4.7.4"
-  checksum: 10/c51be50cfa74d71a85b4aab82527ce826c1872a56003255e48c49574fce99b23d288b29e78a56cf3093e1def206875c2fb731f755829e4e53f3413660e011816
+  checksum: 10/c9e2755a5d52a6ed5cb348430e6bf0a7c560c5be150d46734813c0ee0d6c39bfc02ca43d9e25d8af6c995b0c338eeb32a7bdf5cc4c1703f3b89a59bc23e60770
   languageName: node
   linkType: hard
 
@@ -15127,14 +15141,14 @@ __metadata:
     "@digitaldefiance/branded-interface": "npm:0.0.5"
     "@digitaldefiance/bzip2-wasm": "npm:^1.1.1"
     "@digitaldefiance/ecies-lib": "npm:5.1.6"
-    "@digitaldefiance/express-suite-react-components": "npm:4.27.9"
+    "@digitaldefiance/express-suite-react-components": "npm:4.28.3"
     "@digitaldefiance/express-suite-test-utils": "npm:^1.1.2"
     "@digitaldefiance/i18n-lib": "npm:4.7.4"
     "@digitaldefiance/node-ecies-lib": "npm:5.1.6"
     "@digitaldefiance/node-express-suite": "npm:4.27.1"
     "@digitaldefiance/reed-solomon-erasure.wasm": "npm:^1.0.2"
     "@digitaldefiance/secrets": "npm:^2.0.7"
-    "@digitaldefiance/suite-core-lib": "npm:4.27.0"
+    "@digitaldefiance/suite-core-lib": "npm:4.27.2"
     "@emotion/react": "npm:11.14.0"
     "@emotion/styled": "npm:11.14.1"
     "@eslint/js": "npm:^9.39.4"

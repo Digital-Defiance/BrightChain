@@ -212,7 +212,7 @@ export const ShowcaseFrenchStrings: Partial<
     "Un système de calendrier où le propriétaire détient les clés. BrightCal permet une planification sécurisée et chiffrée avec un contrôle d'accès granulaire. Les événements sont stockés sous forme de blocs chiffrés. Toutes les données de calendrier sont immuables et récupérables, avec prise en charge des événements récurrents, des rappels et de l'intégration avec les systèmes de calendrier traditionnels.",
   [ShowcaseStrings.FAQ_Tech_Q11_BrightMail_Title]: 'Communication souveraine',
   [ShowcaseStrings.FAQ_Tech_Q11_BrightMail_Text]:
-    'Un système de messagerie entièrement conforme RFC reliant le SMTP traditionnel et le stockage décentralisé. Contrairement aux fournisseurs de messagerie standard, BrightMail partitionne chaque message dans le magasin de blocs « Sans Propriétaire » avec prise en charge de la messagerie chiffrée de bout en bout en « Mode Sombre ».',
+    "Un système de messagerie entièrement conforme RFC reliant le SMTP traditionnel et le stockage décentralisé. Chaque message est chiffré au repos avec la clé publique du destinataire avant d'être stocké dans le magasin de blocs « Sans Propriétaire » — le texte en clair ne persiste jamais. BrightMail applique le E2EE au niveau de la couche de stockage via quatre schémas : RECIPIENT_KEYS (ECIES par destinataire), SHARED_KEY (AES-256-GCM), S/MIME et GPG.",
   [ShowcaseStrings.FAQ_Tech_Q11_BrightHub_Title]:
     'Réseau social et graphe souverain',
   [ShowcaseStrings.FAQ_Tech_Q11_BrightHub_Concept_Label]: 'Le concept',
@@ -267,6 +267,25 @@ export const ShowcaseFrenchStrings: Partial<
     '17. Comment les économies de BrightChain et IPFS se comparent-elles ?',
   [ShowcaseStrings.FAQ_Tech_Q17_Answer]:
     "IPFS repose sur Filecoin (une blockchain externe lourde) pour les incitations. BrightChain utilise le Joule. C'est une unité de compte « Thermique » qui mesure le travail réel (cycles CPU/NPU) et la consommation de ressources. Elle est intégrée, à faible surcharge, et directement liée à l'« Énergie » du réseau.",
+
+  [ShowcaseStrings.FAQ_Tech_Q18_Title]:
+    '18. Comment BrightStack implémente-t-il le chiffrement de bout en bout (E2EE) au repos ?',
+  [ShowcaseStrings.FAQ_Tech_Q18_Intro]:
+    "E2EE dans BrightStack ne se limite pas au chiffrement en transit — chaque message est chiffré avant d'être validé dans le magasin de blocs. Dès que le texte chiffré est produit, le texte en clair est définitivement purgé de la mémoire et du stockage.",
+  [ShowcaseStrings.FAQ_Tech_Q18_AtRest_Label]: 'Application au repos',
+  [ShowcaseStrings.FAQ_Tech_Q18_AtRest]:
+    'À la création, EmailMessageService chiffre les octets bruts du message et stocke uniquement le texte chiffré AES-256-GCM dans encryptedBody. textBody, htmlBody et tous les corps des parties MIME sont explicitement définis comme indéfinis et ne sont jamais écrits dans le stockage.',
+  [ShowcaseStrings.FAQ_Tech_Q18_Schemes_Label]:
+    'Quatre schémas de chiffrement pris en charge',
+  [ShowcaseStrings.FAQ_Tech_Q18_Schemes]:
+    "RECIPIENT_KEYS utilise ECIES pour produire un texte chiffré unique par destinataire. SHARED_KEY utilise un secret partagé AES-256-GCM unique. S/MIME et GPG sont également entièrement pris en charge pour l'interopérabilité avec l'infrastructure de messagerie existante.",
+  [ShowcaseStrings.FAQ_Tech_Q18_Purge_Label]:
+    'Garantie de purge du texte en clair',
+  [ShowcaseStrings.FAQ_Tech_Q18_Purge]:
+    "Après le chiffrement, textBody, htmlBody et tous les champs parts[].body sont définis comme indéfinis et ne sont jamais persistés. Le contenu chiffré est stocké sous forme d'encryptedBody avec encryptionIv et encryptionAuthTag. Les champs binaires sont encodés en base64 pour le transport JSON via l'API REST.",
+  [ShowcaseStrings.FAQ_Tech_Q18_Inbound_Label]: 'Chiffrement SMTP entrant',
+  [ShowcaseStrings.FAQ_Tech_Q18_Inbound]:
+    "Lorsqu'un e-mail arrive à la passerelle SMTP (InboundProcessor), le serveur résout la clé publique de chaque destinataire via IRecipientKeyLookup. Si des clés sont trouvées, les octets bruts sont chiffrés via EmailEncryptionService.encryptForRecipients() avant d'être validés dans le magasin de blocs. La propriété du coffre est attribuée au premier destinataire (to[0]).",
 
   // FAQ Ecosystem Questions
   [ShowcaseStrings.FAQ_Eco_WhatIsBrightChain_Title]:
@@ -370,8 +389,10 @@ export const ShowcaseFrenchStrings: Partial<
   [ShowcaseStrings.Hero_Description_NotCrypto]: 'Pas une cryptomonnaie.',
   [ShowcaseStrings.Hero_Description_P2]:
     'Pas de jetons, pas de minage, pas de preuve de travail. BrightChain valorise les contributions réelles en stockage et en calcul, mesurées en Joules — une unité liée aux coûts énergétiques réels, pas à la spéculation du marché.',
+  [ShowcaseStrings.Hero_E2EE_Callout]:
+    '🔐 Chiffrement de bout en bout par défaut. Le texte en clair ne touche jamais le réseau — vos données sont chiffrées avant de quitter votre appareil et vous seul détenez les clés pour les déchiffrer.',
   [ShowcaseStrings.Hero_Highlight]:
-    '🔒 Stockage sans propriétaire • ⚡ Économe en énergie • 🌐 Décentralisé • 🎭 Anonyme mais responsable • 🗳️ Vote homomorphe • 💾 Le stockage avant la puissance',
+    '🔒 Stockage sans propriétaire • 🔐 Chiffrement de bout en bout • ⚡ Économe en énergie • 🌐 Décentralisé • 🎭 Anonyme mais responsable • 🗳️ Vote homomorphe • 💾 Le stockage avant la puissance',
   [ShowcaseStrings.Hero_CTA_InteractiveDemo]: '🧪 Démo interactive',
   [ShowcaseStrings.Hero_CTA_SoupDemo]: '🥫 Démo BrightChain Soup',
   [ShowcaseStrings.Hero_CTA_GitHub]: 'Voir sur GitHub',
@@ -488,6 +509,9 @@ export const ShowcaseFrenchStrings: Partial<
   [ShowcaseStrings.About_Feature_OwnerFree_Title]: 'Stockage sans propriétaire',
   [ShowcaseStrings.About_Feature_OwnerFree_Desc]:
     'Le caractère aléatoire cryptographique supprime la responsabilité du stockage. Aucun bloc individuel ne contient de contenu identifiable, offrant une immunité juridique aux opérateurs de nœuds.',
+  [ShowcaseStrings.About_Feature_E2EE_Title]: 'Chiffrement de bout en bout',
+  [ShowcaseStrings.About_Feature_E2EE_Desc]:
+    'Chaque donnée est chiffrée avant de quitter votre appareil. Le texte en clair n\'est jamais stocké, jamais transmis, jamais exposé. Quatre schémas de chiffrement — clés ECIES par destinataire, clés partagées AES-256-GCM, S/MIME et GPG — garantissent que vos données restent les vôtres, de la création à la reconstruction.',
   [ShowcaseStrings.About_Feature_EnergyEfficient_Title]: 'Économe en énergie',
   [ShowcaseStrings.About_Feature_EnergyEfficient_Desc]:
     'Pas de minage par preuve de travail inutile. Tout le calcul sert un objectif utile — stockage, vérification et opérations réseau.',
@@ -1844,7 +1868,7 @@ export const ShowcaseFrenchStrings: Partial<
     "Protection permanente de la vie privée après la période d'expiration",
   [ShowcaseStrings.Feat_Encryption_Title]: 'Pile de chiffrement avancée',
   [ShowcaseStrings.Feat_Encryption_Desc]:
-    'Chiffrement de pointe combinant ECIES pour la dérivation de clés avec AES-256-GCM pour la sécurité des fichiers. Cryptosystème complet avec authentification BIP39/32 et cryptographie sur courbe elliptique SECP256k1.',
+    'Chiffrement de bout en bout de pointe avec application au repos. ECIES permet la dérivation de clés par destinataire ; AES-256-GCM fournit un chiffrement authentifié. Les quatre schémas (RECIPIENT_KEYS, SHARED_KEY, S/MIME, GPG) produisent un encryptedBody — le texte en clair est purgé au moment où le texte chiffré est produit.',
   [ShowcaseStrings.Feat_Encryption_Cat]: 'Cryptographie',
   [ShowcaseStrings.Feat_Encryption_Tech1]: 'ECIES',
   [ShowcaseStrings.Feat_Encryption_Tech2]: 'AES-256-GCM',
@@ -1859,9 +1883,9 @@ export const ShowcaseFrenchStrings: Partial<
   [ShowcaseStrings.Feat_Encryption_HL4]:
     'Courbe elliptique SECP256k1 (espace de clés compatible Ethereum)',
   [ShowcaseStrings.Feat_Encryption_HL5]:
-    'Intégrité des données vérifiée au niveau des blocs avec fonctionnalité XOR',
+    'E2EE au repos : texte en clair purgé après chiffrement — seul le texte chiffré persiste',
   [ShowcaseStrings.Feat_Encryption_HL6]:
-    'Opérations cryptographiques multiplateformes',
+    'Quatre schémas de chiffrement interopérables : RECIPIENT_KEYS, SHARED_KEY, S/MIME, GPG',
   [ShowcaseStrings.Feat_Storage_Title]: 'Réseau de stockage décentralisé',
   [ShowcaseStrings.Feat_Storage_Desc]:
     'Système de fichiers distribué pair-à-pair qui monétise le stockage inutilisé des appareils personnels. Architecture de type IPFS avec preuve de travail économe en énergie et incitations basées sur la réputation.',

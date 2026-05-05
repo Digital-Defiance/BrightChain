@@ -19,6 +19,7 @@ export * from './explodingMessages';
 export * from './groups';
 export * from './health';
 export * from './i18n';
+export * from './identityController';
 export * from './introspection';
 export * from './keyStore';
 export * from './members';

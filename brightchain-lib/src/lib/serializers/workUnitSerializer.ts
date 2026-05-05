@@ -48,7 +48,7 @@ export function parseWorkUnit(json: string): IWorkUnit {
     raw = JSON.parse(json);
   } catch {
     throw new TranslatableBrightChainError(
-      BrightChainStrings.Error_PoUW_WorkUnit_InvalidJSON,
+      BrightChainStrings.Error_PoUW_WorkUnit_InvalidJSONTemplate,
       { SNIPPET: json.length > 120 ? json.slice(0, 120) + '…' : json },
     );
   }
@@ -122,7 +122,7 @@ export function parseWorkResult(json: string): IWorkResult {
     raw = JSON.parse(json);
   } catch {
     throw new TranslatableBrightChainError(
-      BrightChainStrings.Error_PoUW_WorkResult_InvalidJSON,
+      BrightChainStrings.Error_PoUW_WorkResult_InvalidJSONTemplate,
       { SNIPPET: json.length > 120 ? json.slice(0, 120) + '…' : json },
     );
   }
