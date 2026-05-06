@@ -279,6 +279,32 @@ export const ShowcaseJapaneseStrings: Partial<
   [ShowcaseStrings.FAQ_Tech_Q18_Inbound]:
     'SMTPゲートウェイ（InboundProcessor）にメールが届くと、サーバーIRecipientKeyLookupを通じて各受信者アドレスの公開鍵を解決します。鍵が見つかった場合、生のメッセージバイトはブロックストアにコミットされる前にEmailEncryptionService.encryptForRecipients()を介して暗号化されます。Vaultの所有権は送信者ではなく最初の受信者（to[0]）に割り当てられます。',
 
+  // FAQ Technical Q19 — BrightDate
+  [ShowcaseStrings.FAQ_Tech_Q19_Title]:
+    '19. BrightDateとは何ですか？なぜどこにでも表示されるのですか？',
+  [ShowcaseStrings.FAQ_Tech_Q19_Intro]:
+    'BrightDateはBrightChainの公式時間システムです——スタートレックのスターデイトの概念に触発された、しかし実際の科学に基づいた普遍的な十進時間表現です。BrightChainのすべてのタイムスタンプは、メートル法とヤード・ポンド法を並べて表示するように、馴染みのあるロケール日付とBrightDate相当値のデュアルフォーマットで表示されます。例：「2025年1月15日 (BD 9146.438)」。',
+  [ShowcaseStrings.FAQ_Tech_Q19_Epoch_Label]: '科学的エポック',
+  [ShowcaseStrings.FAQ_Tech_Q19_Epoch]:
+    'BrightDateはJ2000.0（2000年1月1日 12:00:00 UTC）からの十進日数を数えます——世界中の天文学者が天体力学に使用するのと同じエポックです。これにより、BrightDateは天文計算や惑星間調整と自然に互換性があります。',
+  [ShowcaseStrings.FAQ_Tech_Q19_Format_Label]: '十進日フォーマット',
+  [ShowcaseStrings.FAQ_Tech_Q19_Format]:
+    '9146.43750のようなBrightDate値は「J2000.0エポックから9146日と1日の43.75%」を意味します。整数部分は日数、小数部分は十進法での時刻です。タイムゾーンなし、夏時間なし、曖昧さなし——1つのタイムライン上の1つの数字だけです。',
+  [ShowcaseStrings.FAQ_Tech_Q19_Arithmetic_Label]: '簡単な算術',
+  [ShowcaseStrings.FAQ_Tech_Q19_Arithmetic]:
+    '2つのイベント間の経過時間が必要？一方のBrightDateからもう一方を引くだけ。結果は日数です。3時間後に何かをスケジュール？0.125を足すだけ。メトリックサブユニット（ミリデイ ≈ 86.4秒、マイクロデイ ≈ 86.4ミリ秒）により、人間スケールの期間が直感的になります。',
+  [ShowcaseStrings.FAQ_Tech_Q19_TAI_Label]: '単調TAIモード',
+  [ShowcaseStrings.FAQ_Tech_Q19_TAI]:
+    'うるう秒を許容できないアプリケーション（暗号タイムスタンプ、分散合意）のために、BrightDateはTAI（国際原子時）モードをサポートします——すべての秒が正確に1 SI秒であり、挿入も削除もない厳密に単調な時間スケールです。',
+  [ShowcaseStrings.FAQ_Tech_Q19_Interplanetary_Label]: '惑星間対応',
+  [ShowcaseStrings.FAQ_Tech_Q19_Interplanetary]:
+    'BrightDateは惑星間調整に自然に拡張されます。火星ソル日変換、光遅延計算、信号伝播タイミングを含みます。BrightChainノードが最終的に地球を超えて広がるとき、時間システムはすでに準備されています。',
+  [ShowcaseStrings.FAQ_Tech_Q19_DualDisplay_Label]: 'デュアル表示の哲学',
+  [ShowcaseStrings.FAQ_Tech_Q19_DualDisplay]:
+    'BrightDateはBrightChain全体で従来の日付と並んで表示されます——メール、ファイルメタデータ、ボールトシール、Jouleトランザクション、カレンダーイベント、その他タイムスタンプが表示されるすべての場所で。目標は段階的な親しみです：常にロケール日付を参照として持ちながら、時間とともにBrightDateがBrightChainエコシステムで時間を考える自然な方法になります。',
+  [ShowcaseStrings.FAQ_Tech_Q19_Conclusion]:
+    'BrightDateはオープンソース（npmの@brightchain/brightdate）であり、タイムゾーンフリーで科学的に根拠のある時間表現の恩恵を受けるあらゆるプロジェクトでBrightChainとは独立して使用できます。',
+
   // FAQ Ecosystem Questions
   [ShowcaseStrings.FAQ_Eco_WhatIsBrightChain_Title]:
     '🔗 BrightChainとは本当は何ですか？',

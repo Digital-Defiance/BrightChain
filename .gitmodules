@@ -74,3 +74,6 @@
 [submodule "docs/WCAP"]
 	path = docs/WCAP
 	url = https://github.com/Digital-Defiance/WCAP.git
+[submodule "brightdate"]
+	path = brightdate
+	url = https://github.com/Digital-Defiance/brightdate.git

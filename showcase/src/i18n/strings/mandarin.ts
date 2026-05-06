@@ -259,6 +259,32 @@ export const ShowcaseMandarinStrings: Partial<
   [ShowcaseStrings.FAQ_Tech_Q18_Inbound]:
     '当电子邮件到达 SMTP 网关（InboundProcessor）时，服务器通过 IRecipientKeyLookup 解析每个收件人地址的公钥。如果找到密钥，原始消息字节在提交到块存储之前通过 EmailEncryptionService.encryptForRecipients() 进行加密。金库所有权分配给第一个收件人（to[0]），而不是发件人。',
 
+  // FAQ Technical Q19 — BrightDate
+  [ShowcaseStrings.FAQ_Tech_Q19_Title]:
+    '19. 什么是BrightDate？为什么它出现在所有地方？',
+  [ShowcaseStrings.FAQ_Tech_Q19_Intro]:
+    'BrightDate是BrightChain的官方时间系统——一种受星际迷航星历概念启发、但基于真实科学的通用十进制时间表示。BrightChain中的每个时间戳都以双重格式显示：熟悉的本地日期旁边是其BrightDate等价物，就像在英制旁边显示公制一样。例如："2025年1月15日 (BD 9146.438)"。',
+  [ShowcaseStrings.FAQ_Tech_Q19_Epoch_Label]: '科学纪元',
+  [ShowcaseStrings.FAQ_Tech_Q19_Epoch]:
+    'BrightDate从J2000.0（2000年1月1日 12:00:00 UTC）开始计算十进制天数——这是全世界天文学家用于天体力学的同一纪元。这使得BrightDate与天文计算和行星际协调天然兼容。',
+  [ShowcaseStrings.FAQ_Tech_Q19_Format_Label]: '十进制日格式',
+  [ShowcaseStrings.FAQ_Tech_Q19_Format]:
+    '像9146.43750这样的BrightDate值意味着"自J2000.0纪元以来的9146天加上一天的43.75%"。整数部分是天数计数，小数部分是十进制的当天时间。没有时区，没有夏令时，没有歧义——只是一条时间线上的一个数字。',
+  [ShowcaseStrings.FAQ_Tech_Q19_Arithmetic_Label]: '简单算术',
+  [ShowcaseStrings.FAQ_Tech_Q19_Arithmetic]:
+    '需要两个事件之间的经过时间？将一个BrightDate减去另一个。结果以天为单位。需要在3小时后安排某事？加0.125。度量子单位（毫日 ≈ 86.4秒，微日 ≈ 86.4毫秒）使人类尺度的持续时间变得直观。',
+  [ShowcaseStrings.FAQ_Tech_Q19_TAI_Label]: '单调TAI模式',
+  [ShowcaseStrings.FAQ_Tech_Q19_TAI]:
+    '对于不能容忍闰秒的应用（加密时间戳、分布式共识），BrightDate支持TAI（国际原子时）模式——一种严格单调的时间尺度，其中每一秒都恰好是一个SI秒，没有插入或删除。',
+  [ShowcaseStrings.FAQ_Tech_Q19_Interplanetary_Label]: '行星际就绪',
+  [ShowcaseStrings.FAQ_Tech_Q19_Interplanetary]:
+    'BrightDate自然扩展到行星际协调。它包括火星太阳日转换、光延迟计算和信号传播定时。随着BrightChain节点最终扩展到地球之外，时间系统已经准备就绪。',
+  [ShowcaseStrings.FAQ_Tech_Q19_DualDisplay_Label]: '双重显示哲学',
+  [ShowcaseStrings.FAQ_Tech_Q19_DualDisplay]:
+    'BrightDate在整个BrightChain中与传统日期并排显示——在电子邮件、文件元数据、金库封印、Joule交易、日历事件以及任何出现时间戳的地方。目标是逐步熟悉：你始终有本地日期作为参考，但随着时间推移，BrightDate成为在BrightChain生态系统中思考时间的自然方式。',
+  [ShowcaseStrings.FAQ_Tech_Q19_Conclusion]:
+    'BrightDate是开源的（npm上的@brightchain/brightdate），可以独立于BrightChain用于任何受益于无时区、科学基础时间表示的项目。',
+
   // FAQ Ecosystem Questions
   [ShowcaseStrings.FAQ_Eco_WhatIsBrightChain_Title]:
     '🔗 BrightChain到底是什么？',

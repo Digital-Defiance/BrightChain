@@ -13,11 +13,9 @@
  *   1. vaultContainerService.createContainer()  — creates vault + root folder
  *   2. For each attachment:
  *      a. uploadService.createSession()
- *      b. uploadService.receiveChunk(0, bytes, sha256hex)
+ *      b. uploadService.receiveChunk(0, bytes, djb2hex)
  *      c. uploadService.finalize()   →  IFileMetadataBase with .id
  */
-
-import { sha256 } from '@noble/hashes/sha256';
 
 import type {
   IUploadService,
@@ -25,6 +23,18 @@ import type {
 } from '@brightchain/digitalburnbag-lib';
 import { VaultVisibility } from '@brightchain/digitalburnbag-lib';
 import type { PlatformID } from '@digitaldefiance/ecies-lib';
+
+/**
+ * DJB2 checksum — must match the default computeChecksum in digitalburnbag-lib's
+ * UploadService so that receiveChunk() validation passes.
+ */
+function djb2Checksum(data: Uint8Array): string {
+  let hash = 5381;
+  for (let i = 0; i < data.length; i++) {
+    hash = ((hash << 5) + hash + data[i]) >>> 0;
+  }
+  return hash.toString(16).padStart(8, '0');
+}
 
 // ─── Public interface ────────────────────────────────────────────────────────
 
@@ -128,11 +138,8 @@ export class EmailAttachmentVaultService<TID extends PlatformID>
     // 2. Upload each attachment into the vault's root folder.
     const fileResults: IVaultFileResult[] = await Promise.all(
       attachments.map(async (att) => {
-        // Compute SHA-256 checksum (hex) for the chunk receipt.
-        const hashBytes = sha256(att.content);
-        const checksum = Array.from(hashBytes)
-          .map((b) => b.toString(16).padStart(2, '0'))
-          .join('');
+        // Compute DJB2 checksum (hex) matching digitalburnbag-lib's UploadService.
+        const checksum = djb2Checksum(att.content);
 
         // 2a. Create upload session.
         const session = await this.uploadService.createSession({

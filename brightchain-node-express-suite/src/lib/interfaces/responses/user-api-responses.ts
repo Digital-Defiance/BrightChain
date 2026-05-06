@@ -14,6 +14,7 @@ import type {
   IRequestUserResponseData,
   IUserProfile,
 } from '@brightchain/brightchain-lib';
+import { BrightDateDisplayMode } from '@brightchain/brightchain-lib';
 import type { IRequestUserDTO } from '@digitaldefiance/suite-core-lib';
 import type { IApiMessageResponse } from '@digitaldefiance/node-express-suite';
 
@@ -47,6 +48,8 @@ export interface IApiUserSettingsResponse extends IApiMessageResponse {
     directChallenge: boolean;
     displayName?: string;
     totpEnabled: boolean;
+    /** How BrightDate is displayed alongside traditional dates. Defaults to 'dual'. */
+    brightDateDisplay?: BrightDateDisplayMode;
   };
 }
 

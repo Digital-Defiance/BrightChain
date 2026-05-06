@@ -1,6 +1,6 @@
 {
   "name": "@brightchain/brightchain-api-lib",
-  "version": "0.30.1",
+  "version": "0.31.0",
   "main": "./src/index.js",
   "types": "./src/index.d.ts",
   "files": [
@@ -9,10 +9,10 @@
   ],
   "dependencies": {
     "@aws-sdk/client-ses": "^3.859.0",
-    "@brightchain/brightchain-identity": "^0.30.1",
-    "@brightchain/brightchain-lib": "^0.30.1",
-    "@brightchain/db": "^0.30.1",
-    "@brightchain/node-express-suite": "^0.30.1",
+    "@brightchain/brightchain-identity": "^0.31.0",
+    "@brightchain/brightchain-lib": "^0.31.0",
+    "@brightchain/db": "^0.31.0",
+    "@brightchain/node-express-suite": "^0.31.0",
     "@digitaldefiance/branded-enum": "0.0.7",
     "@digitaldefiance/ecies-lib": "5.1.6",
     "@digitaldefiance/enclave-bridge-client": "^1.1.0",
@@ -38,9 +38,9 @@
     "validator": "^13.15.15"
   },
   "devDependencies": {
-    "@digitaldefiance/node-express-suite": "4.27.1",
+    "@digitaldefiance/node-express-suite": "4.27.2",
     "@digitaldefiance/secrets": "^2.0.7",
-    "@digitaldefiance/suite-core-lib": "4.27.2",
+    "@digitaldefiance/suite-core-lib": "4.27.4",
     "@faker-js/faker": "^10.4.0",
     "@noble/curves": "^1.9.0",
     "@noble/hashes": "^1.8.0",

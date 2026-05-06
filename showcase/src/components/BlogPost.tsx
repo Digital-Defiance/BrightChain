@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { toBrightDateString } from '@brightchain/brightchain-lib';
 import { useEffect, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Link, useParams } from 'react-router-dom';
@@ -165,7 +166,8 @@ function BlogPost() {
                   year: 'numeric',
                   month: 'long',
                   day: 'numeric',
-                })}
+                })}{' '}
+                (BD {toBrightDateString(metadata.date, 3)})
               </div>
             )}
             {metadata.title && <h1>{metadata.title}</h1>}

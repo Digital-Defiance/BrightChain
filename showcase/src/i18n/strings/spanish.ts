@@ -282,6 +282,32 @@ export const ShowcaseSpanishStrings: Partial<
   [ShowcaseStrings.FAQ_Tech_Q18_Inbound]:
     'Cuando llega un correo a la puerta de enlace SMTP (InboundProcessor), el servidor resuelve la clave pública de cada destinatario a través de IRecipientKeyLookup. Si se encuentran claves, los bytes se cifran mediante EmailEncryptionService.encryptForRecipients() antes de ser confirmados en el bloque-almacén. La propiedad del baúl se asigna al primer destinatario (to[0]), no al remitente.',
 
+  // FAQ Technical Q19 — BrightDate
+  [ShowcaseStrings.FAQ_Tech_Q19_Title]:
+    '19. ¿Qué es BrightDate y por qué aparece en todas partes?',
+  [ShowcaseStrings.FAQ_Tech_Q19_Intro]:
+    'BrightDate es el sistema de tiempo oficial de BrightChain — una representación de tiempo decimal universal inspirada en el concepto de fecha estelar de Star Trek, pero fundamentada en ciencia real. Cada marca de tiempo en BrightChain se muestra en formato dual: la fecha local familiar junto a su equivalente BrightDate, como mostrar el sistema métrico junto al imperial. Por ejemplo: "15 ene 2025 (BD 9146.438)".',
+  [ShowcaseStrings.FAQ_Tech_Q19_Epoch_Label]: 'Época científica',
+  [ShowcaseStrings.FAQ_Tech_Q19_Epoch]:
+    'BrightDate cuenta días decimales desde J2000.0 (1 de enero de 2000, 12:00:00 UTC) — la misma época utilizada por astrónomos de todo el mundo para la mecánica celeste. Esto hace que BrightDate sea naturalmente compatible con cálculos astronómicos y coordinación interplanetaria.',
+  [ShowcaseStrings.FAQ_Tech_Q19_Format_Label]: 'Formato de día decimal',
+  [ShowcaseStrings.FAQ_Tech_Q19_Format]:
+    'Un valor BrightDate como 9146.43750 significa "9146 días y 43.75% de un día desde la época J2000.0." La parte entera es el conteo de días, la parte fraccionaria es la hora del día en decimal. Sin zonas horarias, sin horario de verano, sin ambigüedad — solo un número en una línea temporal.',
+  [ShowcaseStrings.FAQ_Tech_Q19_Arithmetic_Label]: 'Aritmética trivial',
+  [ShowcaseStrings.FAQ_Tech_Q19_Arithmetic]:
+    '¿Necesitas el tiempo transcurrido entre dos eventos? Resta un BrightDate de otro. El resultado está en días. ¿Necesitas programar algo en 3 horas? Suma 0.125. Las sub-unidades métricas (milidías ≈ 86.4 segundos, microdías ≈ 86.4 milisegundos) hacen intuitivas las duraciones a escala humana.',
+  [ShowcaseStrings.FAQ_Tech_Q19_TAI_Label]: 'Modo TAI monotónico',
+  [ShowcaseStrings.FAQ_Tech_Q19_TAI]:
+    'Para aplicaciones que no pueden tolerar segundos intercalares (marcas de tiempo criptográficas, consenso distribuido), BrightDate soporta el modo TAI (Tiempo Atómico Internacional) — una escala de tiempo estrictamente monotónica donde cada segundo es exactamente un segundo SI, sin inserciones ni eliminaciones.',
+  [ShowcaseStrings.FAQ_Tech_Q19_Interplanetary_Label]: 'Listo para lo interplanetario',
+  [ShowcaseStrings.FAQ_Tech_Q19_Interplanetary]:
+    'BrightDate se extiende naturalmente a la coordinación interplanetaria. Incluye conversiones de fecha Sol de Marte, cálculos de retardo de luz y temporización de propagación de señales. A medida que los nodos de BrightChain eventualmente se extiendan más allá de la Tierra, el sistema de tiempo ya está preparado.',
+  [ShowcaseStrings.FAQ_Tech_Q19_DualDisplay_Label]: 'Filosofía de visualización dual',
+  [ShowcaseStrings.FAQ_Tech_Q19_DualDisplay]:
+    'BrightDate se muestra junto a las fechas tradicionales en todo BrightChain — en correos electrónicos, metadatos de archivos, sellos de bóvedas, transacciones Joule, eventos de calendario y en cualquier otro lugar donde aparezca una marca de tiempo. El objetivo es la familiaridad gradual: siempre tienes la fecha local como referencia, pero con el tiempo BrightDate se convierte en la forma natural de pensar sobre el tiempo en el ecosistema BrightChain.',
+  [ShowcaseStrings.FAQ_Tech_Q19_Conclusion]:
+    'BrightDate es de código abierto (@brightchain/brightdate en npm) y puede usarse independientemente de BrightChain para cualquier proyecto que se beneficie de una representación temporal sin zonas horarias y científicamente fundamentada.',
+
   // FAQ Ecosystem Questions
   [ShowcaseStrings.FAQ_Eco_WhatIsBrightChain_Title]:
     '🔗 ¿Qué es BrightChain, realmente?',

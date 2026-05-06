@@ -8,7 +8,7 @@
  * @requirements joule-resource-credits spec, Req 7.5, 8.1 – 8.4
  */
 
-import { formatJoule } from '@brightchain/brightchain-lib';
+import { formatJoule, toBrightDateString } from '@brightchain/brightchain-lib';
 import * as React from 'react';
 
 // ---------------------------------------------------------------------------
@@ -107,7 +107,7 @@ export const DisputeNotice: React.FC<DisputeNoticeProps> = ({
         </div>
         <div className="joule-dispute__row">
           <dt>Opened</dt>
-          <dd>{new Date(dispute.openedAt).toLocaleString()}</dd>
+          <dd>{new Date(dispute.openedAt).toLocaleString()} (BD {toBrightDateString(new Date(dispute.openedAt), 3)})</dd>
         </div>
         {dispute.reason ? (
           <div className="joule-dispute__row">
@@ -118,7 +118,7 @@ export const DisputeNotice: React.FC<DisputeNoticeProps> = ({
         {dispute.resolvedAt ? (
           <div className="joule-dispute__row">
             <dt>Resolved</dt>
-            <dd>{new Date(dispute.resolvedAt).toLocaleString()}</dd>
+            <dd>{new Date(dispute.resolvedAt).toLocaleString()} (BD {toBrightDateString(new Date(dispute.resolvedAt), 3)})</dd>
           </div>
         ) : null}
         {dispute.resolution ? (

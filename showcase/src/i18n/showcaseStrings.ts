@@ -184,6 +184,23 @@ export const ShowcaseStrings = createI18nStringKeys(ShowcaseComponentId, {
   FAQ_Tech_Q18_Inbound_Label: 'FAQ_Tech_Q18_Inbound_Label',
   FAQ_Tech_Q18_Inbound: 'FAQ_Tech_Q18_Inbound',
 
+  // FAQ Technical Q19 — BrightDate
+  FAQ_Tech_Q19_Title: 'FAQ_Tech_Q19_Title',
+  FAQ_Tech_Q19_Intro: 'FAQ_Tech_Q19_Intro',
+  FAQ_Tech_Q19_Epoch_Label: 'FAQ_Tech_Q19_Epoch_Label',
+  FAQ_Tech_Q19_Epoch: 'FAQ_Tech_Q19_Epoch',
+  FAQ_Tech_Q19_Format_Label: 'FAQ_Tech_Q19_Format_Label',
+  FAQ_Tech_Q19_Format: 'FAQ_Tech_Q19_Format',
+  FAQ_Tech_Q19_Arithmetic_Label: 'FAQ_Tech_Q19_Arithmetic_Label',
+  FAQ_Tech_Q19_Arithmetic: 'FAQ_Tech_Q19_Arithmetic',
+  FAQ_Tech_Q19_TAI_Label: 'FAQ_Tech_Q19_TAI_Label',
+  FAQ_Tech_Q19_TAI: 'FAQ_Tech_Q19_TAI',
+  FAQ_Tech_Q19_Interplanetary_Label: 'FAQ_Tech_Q19_Interplanetary_Label',
+  FAQ_Tech_Q19_Interplanetary: 'FAQ_Tech_Q19_Interplanetary',
+  FAQ_Tech_Q19_DualDisplay_Label: 'FAQ_Tech_Q19_DualDisplay_Label',
+  FAQ_Tech_Q19_DualDisplay: 'FAQ_Tech_Q19_DualDisplay',
+  FAQ_Tech_Q19_Conclusion: 'FAQ_Tech_Q19_Conclusion',
+
   // FAQ Ecosystem Questions
   FAQ_Eco_WhatIsBrightChain_Title: 'FAQ_Eco_WhatIsBrightChain_Title',
   FAQ_Eco_WhatIsBrightChain_Answer: 'FAQ_Eco_WhatIsBrightChain_Answer',

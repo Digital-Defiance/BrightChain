@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { toBrightDateString } from '@brightchain/brightchain-lib';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useShowcaseI18n } from '../i18n/ShowcaseI18nContext';
@@ -14,8 +15,12 @@ interface BlogPostMeta {
   isNew?: boolean;
 }
 
-// Blog posts will be discovered by fetching from the public directory
-// This avoids Vite warnings about importing from public
+// Blog posts will be discovered automatically by Vite's import.meta.glob
+// This picks up all .md files in public/blog/ at build time — no hardcoded list needed.
+const blogPosts = import.meta.glob('/public/blog/*.md', {
+  as: 'raw',
+  eager: true,
+});
 
 function Blog() {
   const { t } = useShowcaseI18n();
@@ -58,39 +63,28 @@ function Blog() {
 
   const loadBlogPosts = async () => {
     try {
-      // Fetch the list of blog posts from a manifest or hardcoded list
-      // For now, we'll use a hardcoded list of known posts
-      const knownPosts = ['2025-01-04-welcome-to-brightchain-blog'];
+      const postsWithMeta = Object.entries(blogPosts).map(([path, content]) => {
+        // Extract filename from path: /public/blog/2025-12-22-title.md
+        const filename = path.split('/').pop() || '';
+        const slug = filename.replace(/\.md$/, '');
 
-      const postsWithMeta = await Promise.all(
-        knownPosts.map(async (slug) => {
-          try {
-            const response = await fetch(`/blog/${slug}.md`);
-            if (!response.ok) return null;
-            const content = await response.text();
+        // Parse frontmatter
+        const metadata = parseFrontmatter(content as string);
 
-            // Parse frontmatter
-            const metadata = parseFrontmatter(content);
+        // Extract date from filename (YYYY-MM-DD-title.md)
+        const dateMatch = filename.match(/^(\d{4}-\d{2}-\d{2})/);
+        const date = dateMatch ? dateMatch[1] : metadata.date || '';
 
-            // Extract date from filename (YYYY-MM-DD-title.md)
-            const dateMatch = slug.match(/^(\d{4}-\d{2}-\d{2})/);
-            const date = dateMatch ? dateMatch[1] : metadata.date || '';
-
-            return {
-              slug,
-              title:
-                metadata.title ||
-                slug.replace(/^\d{4}-\d{2}-\d{2}-/, '').replace(/-/g, ' '),
-              date,
-              excerpt: metadata.excerpt || '',
-              author: metadata.author || '',
-            } as BlogPostMeta;
-          } catch (error) {
-            console.error(`Error loading post ${slug}:`, error);
-            return null;
-          }
-        }),
-      ).then((posts) => posts.filter((p): p is BlogPostMeta => p !== null));
+        return {
+          slug,
+          title:
+            metadata.title ||
+            slug.replace(/^\d{4}-\d{2}-\d{2}-/, '').replace(/-/g, ' '),
+          date,
+          excerpt: metadata.excerpt || '',
+          author: metadata.author || '',
+        };
+      });
 
       // Check sessionStorage for newly published posts not yet in build
       const pendingPostsJson = sessionStorage.getItem('blog_pending_posts');
@@ -168,7 +162,8 @@ function Blog() {
                       year: 'numeric',
                       month: 'long',
                       day: 'numeric',
-                    })}
+                    })}{' '}
+                    (BD {toBrightDateString(post.date, 3)})
                   </div>
                   <h2>{post.title}</h2>
                   {post.excerpt && (

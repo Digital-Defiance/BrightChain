@@ -480,6 +480,44 @@ function TechnicalFAQ() {
           </li>
         </ul>
       </div>
+
+      <div className="faq-item">
+        <h2>{t(ShowcaseStrings.FAQ_Tech_Q19_Title)}</h2>
+        <p>{t(ShowcaseStrings.FAQ_Tech_Q19_Intro)}</p>
+        <ul>
+          <li>
+            <strong>{t(ShowcaseStrings.FAQ_Tech_Q19_Epoch_Label)}:</strong>{' '}
+            {t(ShowcaseStrings.FAQ_Tech_Q19_Epoch)}
+          </li>
+          <li>
+            <strong>{t(ShowcaseStrings.FAQ_Tech_Q19_Format_Label)}:</strong>{' '}
+            {t(ShowcaseStrings.FAQ_Tech_Q19_Format)}
+          </li>
+          <li>
+            <strong>
+              {t(ShowcaseStrings.FAQ_Tech_Q19_Arithmetic_Label)}:
+            </strong>{' '}
+            {t(ShowcaseStrings.FAQ_Tech_Q19_Arithmetic)}
+          </li>
+          <li>
+            <strong>{t(ShowcaseStrings.FAQ_Tech_Q19_TAI_Label)}:</strong>{' '}
+            {t(ShowcaseStrings.FAQ_Tech_Q19_TAI)}
+          </li>
+          <li>
+            <strong>
+              {t(ShowcaseStrings.FAQ_Tech_Q19_Interplanetary_Label)}:
+            </strong>{' '}
+            {t(ShowcaseStrings.FAQ_Tech_Q19_Interplanetary)}
+          </li>
+          <li>
+            <strong>
+              {t(ShowcaseStrings.FAQ_Tech_Q19_DualDisplay_Label)}:
+            </strong>{' '}
+            {t(ShowcaseStrings.FAQ_Tech_Q19_DualDisplay)}
+          </li>
+        </ul>
+        <p>{t(ShowcaseStrings.FAQ_Tech_Q19_Conclusion)}</p>
+      </div>
     </>
   );
 }

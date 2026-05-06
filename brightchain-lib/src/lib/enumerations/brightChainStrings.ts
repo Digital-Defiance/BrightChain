@@ -1714,6 +1714,35 @@ const _brightChainKeys = {
     'Error_PoUW_Middleware_ServiceUnavailable',
   Error_PoUW_Middleware_RateLimitDenied:
     'Error_PoUW_Middleware_RateLimitDenied',
+
+  // ── DatePage ──
+  DatePage_Title: 'DatePage_Title',
+  DatePage_BrightDateEpochLabel: 'DatePage_BrightDateEpochLabel',
+  DatePage_HolidaysTitle: 'DatePage_HolidaysTitle',
+  DatePage_AllFormatsTitle: 'DatePage_AllFormatsTitle',
+  DatePage_AboutBrightDateTitle: 'DatePage_AboutBrightDateTitle',
+  DatePage_AboutBrightDate_Epoch: 'DatePage_AboutBrightDate_Epoch',
+  DatePage_AboutBrightDate_Fraction: 'DatePage_AboutBrightDate_Fraction',
+  DatePage_AboutBrightDate_NoTimezones: 'DatePage_AboutBrightDate_NoTimezones',
+  DatePage_Format_BrightDateFull: 'DatePage_Format_BrightDateFull',
+  DatePage_Format_BrightDateCompact: 'DatePage_Format_BrightDateCompact',
+  DatePage_Format_BrightDateStandard: 'DatePage_Format_BrightDateStandard',
+  DatePage_Format_ISO8601: 'DatePage_Format_ISO8601',
+  DatePage_Format_UTC: 'DatePage_Format_UTC',
+  DatePage_Format_LocalDateTime: 'DatePage_Format_LocalDateTime',
+  DatePage_Format_LocalDate: 'DatePage_Format_LocalDate',
+  DatePage_Format_LocalTime: 'DatePage_Format_LocalTime',
+  DatePage_Format_UnixTimestamp: 'DatePage_Format_UnixTimestamp',
+  DatePage_Format_UnixMs: 'DatePage_Format_UnixMs',
+  DatePage_Format_JulianDate: 'DatePage_Format_JulianDate',
+  DatePage_Format_ModifiedJulianDate: 'DatePage_Format_ModifiedJulianDate',
+  DatePage_Format_DayOfYear: 'DatePage_Format_DayOfYear',
+  DatePage_Format_ISOWeek: 'DatePage_Format_ISOWeek',
+  DatePage_Format_RFC2822: 'DatePage_Format_RFC2822',
+  DatePage_HolidayType_Public: 'DatePage_HolidayType_Public',
+  DatePage_HolidayType_Bank: 'DatePage_HolidayType_Bank',
+  DatePage_HolidayType_Observance: 'DatePage_HolidayType_Observance',
+  DatePage_HolidayType_Religious: 'DatePage_HolidayType_Religious',
 } as const;
 
 export const BrightChainStrings: BrandedStringKeys<typeof _brightChainKeys> =

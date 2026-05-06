@@ -19,6 +19,7 @@
 import {
   BrightMailLayout,
   InboxView,
+  LabelsView,
   ThreadView,
 } from '@brightchain/brightmail-react-components';
 import { PrivateRoute } from '@digitaldefiance/express-suite-react-components';
@@ -43,6 +44,7 @@ export const BrightMailRoutes: React.FC = () => {
             <Route path="sent" element={<InboxView folder="sent" />} />
             <Route path="drafts" element={<InboxView folder="drafts" />} />
             <Route path="trash" element={<InboxView folder="trash" />} />
+            <Route path="labels" element={<LabelsView />} />
             <Route path="calendar" element={<CalendarPage />} />
             <Route path="thread/:messageId" element={<ThreadView />} />
           </Route>

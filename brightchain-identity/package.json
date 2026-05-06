@@ -1,6 +1,6 @@
 {
   "name": "@brightchain/brightchain-identity",
-  "version": "0.30.1",
+  "version": "0.31.0",
   "description": "BrightChain identity library - mnemonic-based Member factories and identity descriptors",
   "main": "src/index.js",
   "types": "src/index.d.ts",
@@ -40,7 +40,7 @@
   "author": "Digital Defiance",
   "license": "MIT",
   "peerDependencies": {
-    "@brightchain/brightchain-lib": "*"
+    "@brightchain/brightchain-lib": "^0.31.0"
   },
   "dependencies": {
     "@digitaldefiance/ecies-lib": "5.1.6",

@@ -16,6 +16,7 @@ export * from './blockType';
 export * from './blockValidationErrorType';
 export * from './breadCrumbTraceLevel';
 export * from './brightchainFeatures';
+export * from './brightDateDisplayMode';
 export * from './brightTrustErrorType';
 export * from './cblErrorType';
 export * from './cpuInstructions';

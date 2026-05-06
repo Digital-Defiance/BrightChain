@@ -8,7 +8,7 @@
  * @requirements joule-resource-credits spec, Req 7.3
  */
 
-import { formatJoule } from '@brightchain/brightchain-lib';
+import { formatJoule, toBrightDateString } from '@brightchain/brightchain-lib';
 import * as React from 'react';
 
 // ---------------------------------------------------------------------------
@@ -110,7 +110,7 @@ export const JouleEventLog: React.FC<JouleEventLogProps> = ({
         <tbody>
           {events.map((ev) => (
             <tr key={ev.id}>
-              <td>{new Date(ev.timestamp).toLocaleString()}</td>
+              <td>{new Date(ev.timestamp).toLocaleString()} (BD {toBrightDateString(new Date(ev.timestamp), 3)})</td>
               <td>{ev.kind}</td>
               <td className="joule-event-log__amount">
                 {formatJoule(ev.microJoules)}

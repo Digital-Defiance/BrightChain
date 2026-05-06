@@ -181,3 +181,23 @@ export * from './attachmentValidation';
  * @see {@link sortPair}
  */
 export * from './sortPair';
+
+// ============================================================================
+// BrightDate Formatting Utilities
+// ============================================================================
+/**
+ * BrightDate dual-display formatting utilities.
+ *
+ * BrightDate is the official time system of BrightChain — a decimal day count
+ * since J2000.0 epoch, displayed alongside traditional dates like metric
+ * alongside imperial.
+ *
+ * Provides functions for:
+ * - Converting dates to BrightDate strings
+ * - Dual-display formatting (locale date + BrightDate)
+ * - Compact and log-friendly BrightDate representations
+ * - Getting current time as BrightDate
+ *
+ * @see {@link brightDateFormatting}
+ */
+export * from './brightDateFormatting';

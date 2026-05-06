@@ -18,6 +18,7 @@ import {
   Typography,
 } from '@mui/material';
 import { FC, useState } from 'react';
+import { toBrightDateString } from '@brightchain/brightchain-lib';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -122,7 +123,7 @@ export const ProfileSettings: FC<ProfileSettingsProps> = ({
                   )}
                 </Box>
               }
-              secondary={`Linked ${new Date(account.createdAt).toLocaleDateString()}`}
+              secondary={`Linked ${new Date(account.createdAt).toLocaleDateString()} (BD ${toBrightDateString(account.createdAt, 3)})`}
             />
             <Button
               size="small"

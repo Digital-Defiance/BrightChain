@@ -280,6 +280,32 @@ export const ShowcaseAmericanEnglishStrings: ComponentStrings<ShowcaseStringKey>
     [ShowcaseStrings.FAQ_Tech_Q18_Inbound]:
       'When an email arrives at the SMTP gateway (InboundProcessor), the server resolves the public key for each recipient address via IRecipientKeyLookup. If keys are found, the raw message bytes are encrypted via EmailEncryptionService.encryptForRecipients() before being committed to the block store. Vault ownership is assigned to the first recipient (to[0]), not the sender.',
 
+    // FAQ Technical Q19 — BrightDate
+    [ShowcaseStrings.FAQ_Tech_Q19_Title]:
+      '19. What is BrightDate and why does it appear everywhere?',
+    [ShowcaseStrings.FAQ_Tech_Q19_Intro]:
+      'BrightDate is the official time system of BrightChain — a universal decimal time representation inspired by Star Trek\'s stardate concept, but grounded in real science. Every timestamp in BrightChain is displayed in dual format: the familiar locale date alongside its BrightDate equivalent, like showing metric next to imperial. For example: "Jan 15, 2025 (BD 9146.438)".',
+    [ShowcaseStrings.FAQ_Tech_Q19_Epoch_Label]: 'Scientific epoch',
+    [ShowcaseStrings.FAQ_Tech_Q19_Epoch]:
+      'BrightDate counts decimal days since J2000.0 (January 1, 2000, 12:00:00 UTC) — the same epoch used by astronomers worldwide for celestial mechanics. This makes BrightDate naturally compatible with astronomical calculations and interplanetary coordination.',
+    [ShowcaseStrings.FAQ_Tech_Q19_Format_Label]: 'Decimal day format',
+    [ShowcaseStrings.FAQ_Tech_Q19_Format]:
+      'A BrightDate value like 9146.43750 means "9146 days and 43.75% of a day since J2000.0 epoch." The integer part is the day count, the fractional part is the time-of-day in decimal. No timezones, no DST, no ambiguity — just one number on one timeline.',
+    [ShowcaseStrings.FAQ_Tech_Q19_Arithmetic_Label]: 'Trivial arithmetic',
+    [ShowcaseStrings.FAQ_Tech_Q19_Arithmetic]:
+      'Need the elapsed time between two events? Subtract one BrightDate from another. The result is in days. Need to schedule something 3 hours from now? Add 0.125. Metric sub-units (millidays ≈ 86.4 seconds, microdays ≈ 86.4 milliseconds) make human-scale durations intuitive.',
+    [ShowcaseStrings.FAQ_Tech_Q19_TAI_Label]: 'Monotonic TAI mode',
+    [ShowcaseStrings.FAQ_Tech_Q19_TAI]:
+      'For applications that cannot tolerate leap seconds (cryptographic timestamps, distributed consensus), BrightDate supports TAI (International Atomic Time) mode — a strictly monotonic timescale where every second is exactly one SI second, with no insertions or deletions.',
+    [ShowcaseStrings.FAQ_Tech_Q19_Interplanetary_Label]: 'Interplanetary ready',
+    [ShowcaseStrings.FAQ_Tech_Q19_Interplanetary]:
+      'BrightDate naturally extends to interplanetary coordination. It includes Mars Sol date conversions, light-delay calculations, and signal propagation timing. As BrightChain nodes eventually span beyond Earth, the time system is already prepared.',
+    [ShowcaseStrings.FAQ_Tech_Q19_DualDisplay_Label]: 'Dual display philosophy',
+    [ShowcaseStrings.FAQ_Tech_Q19_DualDisplay]:
+      'BrightDate is shown alongside traditional dates throughout BrightChain — in emails, file metadata, vault seals, Joule transactions, calendar events, and everywhere else a timestamp appears. The goal is gradual familiarity: you always have the locale date for reference, but over time BrightDate becomes the natural way to think about time in the BrightChain ecosystem.',
+    [ShowcaseStrings.FAQ_Tech_Q19_Conclusion]:
+      'BrightDate is open source (@brightchain/brightdate on npm) and can be used independently of BrightChain for any project that benefits from a timezone-free, scientifically grounded time representation.',
+
     // FAQ Ecosystem Questions
     [ShowcaseStrings.FAQ_Eco_WhatIsBrightChain_Title]:
       '🔗 What is BrightChain, really?',

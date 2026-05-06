@@ -13,6 +13,7 @@
  */
 
 import {
+  BrightDateDisplayMode,
   EnergyAccountStore,
   IAuthResponse,
   ILoginRequest,
@@ -1112,6 +1113,7 @@ export class BrightDbUserController<
 
     // Fetch totpEnabled from the users collection
     let totpEnabled = false;
+    let brightDateDisplay: BrightDateDisplayMode | undefined;
     try {
       const sp = ServiceProvider.getInstance();
       const typedId = sp.idProvider.idFromString(user.id);
@@ -1119,6 +1121,7 @@ export class BrightDbUserController<
       const usersCol = this.application.db.collection<{
         _id?: string;
         totpEnabled?: boolean;
+        brightDateDisplay?: BrightDateDisplayMode;
       }>(SchemaCollection.User);
       let userDoc = await usersCol.findOne({ _id: idHex } as never);
       if (!userDoc) {
@@ -1129,6 +1132,7 @@ export class BrightDbUserController<
         userDoc = await usersCol.findOne({ _id: dashed } as never);
       }
       totpEnabled = userDoc?.totpEnabled ?? false;
+      brightDateDisplay = userDoc?.brightDateDisplay;
     } catch {
       // DB lookup failed — default to false
     }
@@ -1148,6 +1152,7 @@ export class BrightDbUserController<
           directChallenge: user.directChallenge || false,
           ...(user.displayName ? { displayName: user.displayName } : {}),
           totpEnabled,
+          brightDateDisplay: brightDateDisplay ?? BrightDateDisplayMode.Dual,
         },
       },
     };
@@ -1182,6 +1187,7 @@ export class BrightDbUserController<
         darkMode,
         directChallenge,
         displayName,
+        brightDateDisplay,
       } = req.body as {
         email?: string;
         timezone?: string;
@@ -1190,6 +1196,7 @@ export class BrightDbUserController<
         darkMode?: boolean;
         directChallenge?: boolean;
         displayName?: string;
+        brightDateDisplay?: BrightDateDisplayMode;
       };
 
       const sp = ServiceProvider.getInstance();
@@ -1216,6 +1223,8 @@ export class BrightDbUserController<
             updateFields['directChallenge'] = directChallenge;
           if (displayName !== undefined)
             updateFields['displayName'] = displayName;
+          if (brightDateDisplay !== undefined)
+            updateFields['brightDateDisplay'] = brightDateDisplay;
 
           if (Object.keys(updateFields).length > 0) {
             // Update the main users collection so buildRequestUserDTO

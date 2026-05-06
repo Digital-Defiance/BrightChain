@@ -8,7 +8,7 @@
  * @requirements joule-resource-credits spec, Req 7.4, 10.5
  */
 
-import { formatJoule } from '@brightchain/brightchain-lib';
+import { formatJoule, toBrightDateString } from '@brightchain/brightchain-lib';
 import * as React from 'react';
 import { type JouleRateTableData } from './hooks';
 
@@ -96,7 +96,7 @@ export const RateTransparency: React.FC<RateTransparencyProps> = ({
           Joule Rate Table — Version {rateTable.version}
         </h3>
         <p className="rate-transparency__meta">
-          Effective: {effectiveDate.toLocaleString()}
+          Effective: {effectiveDate.toLocaleString()} (BD {toBrightDateString(effectiveDate, 3)})
           {rateTable.signedBy ? ` · Signed by: ${rateTable.signedBy}` : ''}
         </p>
       </header>

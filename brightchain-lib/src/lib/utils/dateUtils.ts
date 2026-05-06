@@ -169,3 +169,38 @@ export function isValidDate(date: Date, allowFuture = false): boolean {
 
   return true;
 }
+
+
+// ============================================================================
+// BrightDate-aware serialization
+// ============================================================================
+
+/**
+ * Serialize a date to an object containing both ISO 8601 and BrightDate representations.
+ * Useful for API responses where clients may want either format.
+ *
+ * @param date - Date to serialize
+ * @returns Object with `iso` (ISO 8601 string) and `brightDate` (decimal day string)
+ * @throws Error if date is invalid
+ *
+ * @example
+ * ```typescript
+ * const result = serializeDateDual(new Date("2025-06-15T10:30:00Z"));
+ * // Returns: { iso: "2025-06-15T10:30:00.000Z", brightDate: "9296.93750" }
+ * ```
+ */
+export function serializeDateDual(date: Date): {
+  iso: string;
+  brightDate: string;
+} {
+  const iso = serializeDate(date);
+  // Inline import to avoid circular dependency at module load time
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { toBrightDateString } = require('./brightDateFormatting') as {
+    toBrightDateString: (date: Date | string, precision?: number) => string;
+  };
+  return {
+    iso,
+    brightDate: toBrightDateString(date, 5),
+  };
+}

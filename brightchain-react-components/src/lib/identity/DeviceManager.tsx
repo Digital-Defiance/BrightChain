@@ -23,6 +23,7 @@ import {
   Typography,
 } from '@mui/material';
 import { FC, useState } from 'react';
+import { toBrightDateString } from '@brightchain/brightchain-lib';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -119,7 +120,7 @@ export const DeviceManager: FC<DeviceManagerProps> = ({
           <ListItem key={device.id} divider>
             <ListItemText
               primary={device.deviceName}
-              secondary={`${device.deviceType} — provisioned ${new Date(device.provisionedAt).toLocaleDateString()}`}
+              secondary={`${device.deviceType} — provisioned ${new Date(device.provisionedAt).toLocaleDateString()} (BD ${toBrightDateString(device.provisionedAt, 3)})`}
             />
             <ListItemSecondaryAction>
               <IconButton
@@ -166,7 +167,7 @@ export const DeviceManager: FC<DeviceManagerProps> = ({
               <ListItem key={device.id} divider sx={{ opacity: 0.5 }}>
                 <ListItemText
                   primary={device.deviceName}
-                  secondary={`Revoked ${new Date(device.revokedAt!).toLocaleDateString()}`}
+                  secondary={`Revoked ${new Date(device.revokedAt!).toLocaleDateString()} (BD ${toBrightDateString(device.revokedAt!, 3)})`}
                 />
                 <Chip label="Revoked" size="small" color="error" />
               </ListItem>

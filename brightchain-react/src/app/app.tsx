@@ -9,6 +9,7 @@ import { faCircleNodes } from '@awesome.me/kit-a20d532681/icons/classic/thin';
 import { createBrightCalComponentPackage } from '@brightchain/brightcal-lib';
 import {
   BrightChainFeatures,
+  BrightDateDisplayMode,
   CONSTANTS,
   CoreConstants,
   i18nEngine,
@@ -21,6 +22,7 @@ import {
   BrightChainLogoI18N,
   BrightChainSoupDemo,
   BrightChainSubLogo,
+  BrightDateDisplaySelector,
   BrightPassDemo,
   DatabaseDemo,
   IdentityDemo,
@@ -128,6 +130,7 @@ import AdminDashboardPage from './components/AdminDashboardPage';
 import { AdminMenuRegistration } from './components/AdminMenuRegistration';
 import { AppFooter } from './components/AppFooter';
 import DashboardPage from './components/DashboardPage';
+import { DatePage } from './components/DatePage';
 import { ExplorerMenuRegistration } from './components/ExplorerMenuRegistration';
 import { GlobalNotificationBell } from './components/GlobalNotificationBell';
 import { GoogleAnalytics } from './components/GoogleAnalytics';
@@ -830,6 +833,9 @@ const InnerApp: FC = () => {
             <Route path="/showcase/brightpass" element={<BrightPassDemo />} />
             <Route path="/showcase/database" element={<DatabaseDemo />} />
             <Route path="/showcase/identity" element={<IdentityDemo />} />
+            <Route path="/date" element={<DatePage />} />
+            <Route path="/now" element={<DatePage />} />
+            <Route path="/today" element={<DatePage />} />
             <Route
               path="/dashboard"
               element={
@@ -1022,6 +1028,22 @@ const InnerApp: FC = () => {
                     eciesConfig={eciesConfig}
                     emailDomain={emailDomain}
                     totpAvailable={TOTP_AVAILABLE}
+                    componentProps={{
+                      additionalInitialValues: {
+                        brightDateDisplay: BrightDateDisplayMode.Dual,
+                      },
+                      additionalFields: (formik) => (
+                        <BrightDateDisplaySelector
+                          value={
+                            (formik.values.brightDateDisplay as string) ||
+                            BrightDateDisplayMode.Dual
+                          }
+                          onChange={(val) =>
+                            formik.setFieldValue('brightDateDisplay', val)
+                          }
+                        />
+                      ),
+                    }}
                   />
                 </PrivateRoute>
               }

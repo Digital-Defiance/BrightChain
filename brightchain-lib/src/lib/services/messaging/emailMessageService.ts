@@ -1121,6 +1121,7 @@ export class EmailMessageService {
 
     // 4. Store the sender's copy (retains BCC info for sender's records)
     try {
+      metadata.folder = 'sent';
       await this.metadataStore.store(metadata);
     } catch (err) {
       throw new EmailError(

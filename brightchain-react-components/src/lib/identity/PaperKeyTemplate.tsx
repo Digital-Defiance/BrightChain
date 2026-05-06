@@ -17,6 +17,7 @@ import {
   Typography,
 } from '@mui/material';
 import { FC, useMemo } from 'react';
+import { toBrightDateString } from '@brightchain/brightchain-lib';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -66,7 +67,7 @@ export const PaperKeyTemplate: FC<PaperKeyTemplateProps> = ({
         )}
         {createdAt && (
           <Typography variant="caption" color="text.secondary">
-            Generated: {createdAt.toLocaleDateString()}
+            Generated: {createdAt.toLocaleDateString()} (BD {toBrightDateString(createdAt, 3)})
           </Typography>
         )}
       </Box>

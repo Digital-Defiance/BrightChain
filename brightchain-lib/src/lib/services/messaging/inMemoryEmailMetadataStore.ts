@@ -86,9 +86,11 @@ export class InMemoryEmailMetadataStore implements IEmailMetadataStore {
     // Resolve memberId → email address for recipient matching
     const resolvedEmail = this.resolveUserEmail(userId);
 
-    // 1. Filter: only emails where userId is a recipient
-    let results = Array.from(this.emails.values()).filter((email) =>
-      this.isRecipient(email, resolvedEmail),
+    // 1. Filter: only emails where userId is a recipient OR sender (for sent folder)
+    let results = Array.from(this.emails.values()).filter(
+      (email) =>
+        this.isRecipient(email, resolvedEmail) ||
+        email.from.address.toLowerCase() === resolvedEmail.toLowerCase(),
     );
 
     // 2. Apply filters (use original userId for read-tracking keys)
@@ -232,6 +234,11 @@ export class InMemoryEmailMetadataStore implements IEmailMetadataStore {
     userId: string,
   ): IEmailMetadata[] {
     let results = emails;
+
+    // Folder filter — defaults to 'inbox' if not specified
+    if (query.folder) {
+      results = results.filter((e) => (e.folder ?? 'inbox') === query.folder);
+    }
 
     // Read/unread filter
     if (query.readStatus === 'read') {

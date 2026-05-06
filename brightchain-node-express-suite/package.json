@@ -1,12 +1,12 @@
 {
   "name": "@brightchain/node-express-suite",
-  "version": "0.30.1",
+  "version": "0.31.0",
   "type": "commonjs",
   "main": "./src/index.js",
   "types": "./src/index.d.ts",
   "dependencies": {
     "@digitaldefiance/i18n-lib": "4.7.4",
-    "@digitaldefiance/suite-core-lib": "4.27.2",
+    "@digitaldefiance/suite-core-lib": "4.27.4",
     "bip39": "^3.1.0",
     "cors": "^2.8.5",
     "express": "^5.1.0",
@@ -14,10 +14,10 @@
     "tslib": "^2.3.0"
   },
   "peerDependencies": {
-    "@brightchain/brightchain-lib": "^0.30.1",
-    "@brightchain/db": "^0.30.1",
+    "@brightchain/brightchain-lib": "^0.31.0",
+    "@brightchain/db": "^0.31.0",
     "@digitaldefiance/branded-interface": "0.0.5",
-    "@digitaldefiance/node-express-suite": "4.27.1",
+    "@digitaldefiance/node-express-suite": "4.27.2",
     "bcrypt": "^5.0.0",
     "jsonwebtoken": "^9.0.0"
   },
@@ -25,7 +25,7 @@
     "@digitaldefiance/branded-interface": "0.0.5",
     "@digitaldefiance/ecies-lib": "5.1.6",
     "@digitaldefiance/node-ecies-lib": "5.1.6",
-    "@digitaldefiance/node-express-suite": "4.27.1",
+    "@digitaldefiance/node-express-suite": "4.27.2",
     "@types/bcrypt": "^6.0.0",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",

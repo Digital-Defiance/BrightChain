@@ -269,6 +269,32 @@ export const ShowcaseGermanStrings: Partial<
   [ShowcaseStrings.FAQ_Tech_Q17_Answer]:
     'IPFS verlässt sich auf Filecoin (eine schwere, externe Blockchain) für Anreize. BrightChain verwendet den Joule. Es ist eine „thermische" Rechnungseinheit, die tatsächliche Arbeit (CPU/NPU-Zyklen) und Ressourcenverbrauch misst. Sie ist eingebaut, hat geringen Overhead und ist direkt mit der „Energie" des Netzwerks verbunden.',
 
+  // FAQ Technical Q19 — BrightDate
+  [ShowcaseStrings.FAQ_Tech_Q19_Title]:
+    '19. Was ist BrightDate und warum erscheint es überall?',
+  [ShowcaseStrings.FAQ_Tech_Q19_Intro]:
+    'BrightDate ist das offizielle Zeitsystem von BrightChain — eine universelle dezimale Zeitdarstellung, inspiriert vom Stardate-Konzept aus Star Trek, aber auf realer Wissenschaft basierend. Jeder Zeitstempel in BrightChain wird im Dualformat angezeigt: das vertraute lokale Datum neben seinem BrightDate-Äquivalent, wie metrisch neben imperial. Zum Beispiel: „15. Jan. 2025 (BD 9146.438)".',
+  [ShowcaseStrings.FAQ_Tech_Q19_Epoch_Label]: 'Wissenschaftliche Epoche',
+  [ShowcaseStrings.FAQ_Tech_Q19_Epoch]:
+    'BrightDate zählt Dezimaltage seit J2000.0 (1. Januar 2000, 12:00:00 UTC) — dieselbe Epoche, die von Astronomen weltweit für die Himmelsmechanik verwendet wird. Dies macht BrightDate natürlich kompatibel mit astronomischen Berechnungen und interplanetarer Koordination.',
+  [ShowcaseStrings.FAQ_Tech_Q19_Format_Label]: 'Dezimaltag-Format',
+  [ShowcaseStrings.FAQ_Tech_Q19_Format]:
+    'Ein BrightDate-Wert wie 9146.43750 bedeutet „9146 Tage und 43,75% eines Tages seit der J2000.0-Epoche." Der ganzzahlige Teil ist die Tageszählung, der Bruchteil ist die Tageszeit in Dezimal. Keine Zeitzonen, keine Sommerzeit, keine Mehrdeutigkeit — nur eine Zahl auf einer Zeitlinie.',
+  [ShowcaseStrings.FAQ_Tech_Q19_Arithmetic_Label]: 'Triviale Arithmetik',
+  [ShowcaseStrings.FAQ_Tech_Q19_Arithmetic]:
+    'Die verstrichene Zeit zwischen zwei Ereignissen? Subtrahieren Sie ein BrightDate vom anderen. Das Ergebnis ist in Tagen. Etwas in 3 Stunden planen? Addieren Sie 0,125. Metrische Untereinheiten (Millitage ≈ 86,4 Sekunden, Mikrotage ≈ 86,4 Millisekunden) machen menschliche Zeitspannen intuitiv.',
+  [ShowcaseStrings.FAQ_Tech_Q19_TAI_Label]: 'Monotoner TAI-Modus',
+  [ShowcaseStrings.FAQ_Tech_Q19_TAI]:
+    'Für Anwendungen, die keine Schaltsekunden tolerieren können (kryptographische Zeitstempel, verteilter Konsens), unterstützt BrightDate den TAI-Modus (Internationale Atomzeit) — eine streng monotone Zeitskala, bei der jede Sekunde genau eine SI-Sekunde ist, ohne Einfügungen oder Löschungen.',
+  [ShowcaseStrings.FAQ_Tech_Q19_Interplanetary_Label]: 'Interplanetar bereit',
+  [ShowcaseStrings.FAQ_Tech_Q19_Interplanetary]:
+    'BrightDate erstreckt sich natürlich auf interplanetare Koordination. Es umfasst Mars-Sol-Datum-Konvertierungen, Lichtlaufzeitberechnungen und Signalausbreitungs-Timing. Wenn BrightChain-Knoten sich über die Erde hinaus erstrecken, ist das Zeitsystem bereits vorbereitet.',
+  [ShowcaseStrings.FAQ_Tech_Q19_DualDisplay_Label]: 'Duale Anzeige-Philosophie',
+  [ShowcaseStrings.FAQ_Tech_Q19_DualDisplay]:
+    'BrightDate wird neben traditionellen Daten in ganz BrightChain angezeigt — in E-Mails, Dateimetadaten, Tresor-Siegeln, Joule-Transaktionen, Kalenderereignissen und überall sonst, wo ein Zeitstempel erscheint. Das Ziel ist schrittweise Vertrautheit: Sie haben immer das lokale Datum als Referenz, aber mit der Zeit wird BrightDate zur natürlichen Art, über Zeit im BrightChain-Ökosystem nachzudenken.',
+  [ShowcaseStrings.FAQ_Tech_Q19_Conclusion]:
+    'BrightDate ist Open Source (@brightchain/brightdate auf npm) und kann unabhängig von BrightChain für jedes Projekt verwendet werden, das von einer zeitzonenfreien, wissenschaftlich fundierten Zeitdarstellung profitiert.',
+
   // FAQ Ecosystem Questions
   [ShowcaseStrings.FAQ_Eco_WhatIsBrightChain_Title]:
     '🔗 Was ist BrightChain wirklich?',

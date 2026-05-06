@@ -121,3 +121,17 @@ export { SignerStatus } from './lib/interfaces/ledger/signerStatus';
 export { AuthorizedSignerSet } from './lib/ledger/authorizedSignerSet';
 export { GovernancePayloadSerializer } from './lib/ledger/governancePayloadSerializer';
 export type { IGenesisPayloadData } from './lib/ledger/governancePayloadSerializer';
+
+// BrightDate formatting utilities (browser-safe)
+export { BrightDateDisplayMode } from './lib/enumerations/brightDateDisplayMode';
+export {
+  formatDateByMode,
+  formatDualDate,
+  getDateTooltip,
+  getBrightDateTooltip,
+  nowAsBrightDate,
+  toBrightDateCompact,
+  toBrightDateLog,
+  toBrightDatePrefixed,
+  toBrightDateString,
+} from './lib/utils/brightDateFormatting';

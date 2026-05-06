@@ -156,6 +156,7 @@ interface InboxQueryParams {
     sortDirection?: string;
     page?: string;
     pageSize?: string;
+    folder?: string;
   };
 }
 
@@ -760,6 +761,11 @@ export class EmailController<
         subject,
         textBody,
         htmlBody,
+        attachments: attachments?.map((att) => ({
+          filename: att.filename,
+          mimeType: att.mimeType,
+          content: new Uint8Array(Buffer.from(att.data, 'base64')),
+        })),
       });
 
       return {
@@ -830,6 +836,9 @@ export class EmailController<
       }
       if (queryParams.pageSize) {
         inboxQuery.pageSize = parseInt(queryParams.pageSize, 10);
+      }
+      if (queryParams.folder) {
+        inboxQuery.folder = queryParams.folder;
       }
 
       const service = this.getMessagePassingService();
