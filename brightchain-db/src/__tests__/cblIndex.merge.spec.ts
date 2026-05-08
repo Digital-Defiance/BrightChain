@@ -9,7 +9,7 @@
  */
 
 import type { BlockId, ICBLIndexEntry } from '@brightchain/brightchain-lib';
-import { CBLVisibility } from '@brightchain/brightchain-lib';
+import { brightDateNow, CBLVisibility, dateToBrightDate } from '@brightchain/brightchain-lib';
 import { CBLIndex } from '../lib/cblIndex';
 import { BrightDb } from '../lib/database';
 import { InMemoryHeadRegistry } from '../lib/headRegistry';
@@ -53,7 +53,7 @@ function makeRemoteEntry(
     blockId1: 'block-aaa-111' as BlockId,
     blockId2: 'block-bbb-222' as BlockId,
     blockSize: 256,
-    createdAt: new Date('2025-01-15T10:00:00Z'),
+    createdAt: dateToBrightDate(new Date('2025-01-15T10:00:00Z')),
     visibility: CBLVisibility.Private,
     sequenceNumber: 10,
     ...overrides,
@@ -87,7 +87,7 @@ describe('CBLIndex – mergeEntry idempotent (Req 8.2)', () => {
       blockId1,
       blockId2,
       blockSize: 256,
-      createdAt: new Date(),
+      createdAt: brightDateNow(),
       visibility: CBLVisibility.Private,
     });
 
@@ -161,7 +161,7 @@ describe('CBLIndex – mergeEntry conflict detection (Req 8.3)', () => {
       blockId1,
       blockId2,
       blockSize: 256,
-      createdAt: new Date(),
+      createdAt: brightDateNow(),
       visibility: CBLVisibility.Private,
     });
 
@@ -196,7 +196,7 @@ describe('CBLIndex – mergeEntry conflict detection (Req 8.3)', () => {
       blockId1,
       blockId2,
       blockSize: 256,
-      createdAt: new Date(),
+      createdAt: brightDateNow(),
       visibility: CBLVisibility.Private,
     });
 
@@ -223,7 +223,7 @@ describe('CBLIndex – mergeEntry conflict detection (Req 8.3)', () => {
       blockId1,
       blockId2,
       blockSize: 256,
-      createdAt: new Date(),
+      createdAt: brightDateNow(),
       visibility: CBLVisibility.Private,
     });
 
@@ -255,7 +255,7 @@ describe('CBLIndex – mergeEntry conflict detection (Req 8.3)', () => {
       blockId1,
       blockId2,
       blockSize: 256,
-      createdAt: new Date(),
+      createdAt: brightDateNow(),
       visibility: CBLVisibility.Private,
       metadata: { fileName: 'local.pdf' },
     });
@@ -292,11 +292,11 @@ describe('CBLIndex – mergeSoftDelete (Req 8.6)', () => {
       blockId1,
       blockId2,
       blockSize: 256,
-      createdAt: new Date(),
+      createdAt: brightDateNow(),
       visibility: CBLVisibility.Private,
     });
 
-    const remoteDeletedAt = new Date('2025-06-01T12:00:00Z');
+    const remoteDeletedAt = dateToBrightDate(new Date('2025-06-01T12:00:00Z'));
     await index.mergeSoftDelete('magnet:remote-del', remoteDeletedAt);
 
     // Entry should be soft-deleted
@@ -315,7 +315,7 @@ describe('CBLIndex – mergeSoftDelete (Req 8.6)', () => {
 
     // Should not throw
     await expect(
-      index.mergeSoftDelete('magnet:nonexistent', new Date()),
+      index.mergeSoftDelete('magnet:nonexistent', brightDateNow()),
     ).resolves.toBeUndefined();
   });
 
@@ -328,7 +328,7 @@ describe('CBLIndex – mergeSoftDelete (Req 8.6)', () => {
       blockId1,
       blockId2,
       blockSize: 256,
-      createdAt: new Date(),
+      createdAt: brightDateNow(),
       visibility: CBLVisibility.Private,
     });
 
@@ -336,7 +336,7 @@ describe('CBLIndex – mergeSoftDelete (Req 8.6)', () => {
     await index.softDelete('magnet:already-del');
 
     // Second soft-delete from remote — should not overwrite
-    const secondDeletedAt = new Date('2025-06-01T00:00:00Z');
+    const secondDeletedAt = dateToBrightDate(new Date('2025-06-01T00:00:00Z'));
     await index.mergeSoftDelete('magnet:already-del', secondDeletedAt);
 
     const allEntries = await index.query({ includeDeleted: true });
@@ -357,7 +357,7 @@ describe('CBLIndex – mergeSoftDelete (Req 8.6)', () => {
     );
 
     // Then propagate a soft-delete for it
-    const deletedAt = new Date('2025-07-01T00:00:00Z');
+    const deletedAt = dateToBrightDate(new Date('2025-07-01T00:00:00Z'));
     await index.mergeSoftDelete('magnet:merge-then-del', deletedAt);
 
     const entry = await index.getByMagnetUrl('magnet:merge-then-del');

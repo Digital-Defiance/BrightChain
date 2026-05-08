@@ -10,6 +10,7 @@
  */
 
 import { IAclScope } from './writeAcl';
+import type { BrightDateTimestamp } from '../../types/brightDateTimestamp';
 
 /**
  * Structured audit logger for write ACL events.
@@ -84,7 +85,7 @@ export interface IWriteAclAuditLogger {
   logCapabilityTokenIssued(
     granteePublicKey: string,
     scope: IAclScope,
-    expiresAt: Date,
+    expiresAt: BrightDateTimestamp,
     grantorPublicKey: string,
   ): void;
 

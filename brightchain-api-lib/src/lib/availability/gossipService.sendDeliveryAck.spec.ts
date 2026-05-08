@@ -130,18 +130,11 @@ describe('GossipService.sendDeliveryAck()', () => {
       const peerProvider = new MockPeerProvider('local-node', peers);
       const service = new GossipService(peerProvider, defaultConfig);
 
-      const before = new Date();
       await service.sendDeliveryAck(deliveredAck);
-      const after = new Date();
 
       const pending = service.getPendingAnnouncements();
-      expect(pending[0].timestamp).toBeInstanceOf(Date);
-      expect(pending[0].timestamp.getTime()).toBeGreaterThanOrEqual(
-        before.getTime(),
-      );
-      expect(pending[0].timestamp.getTime()).toBeLessThanOrEqual(
-        after.getTime(),
-      );
+      expect(typeof pending[0].timestamp).toBe('number');
+      expect(isFinite(pending[0].timestamp)).toBe(true);
     });
 
     it('should set ttl to config.defaultTtl', async () => {

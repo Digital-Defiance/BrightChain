@@ -20,6 +20,8 @@ import {
   type IWriteProof,
   LastAdministratorError,
   WriteMode,
+  brightDateNow,
+  brightDateToISO,
   createWriteProofPayload,
 } from '@brightchain/brightchain-lib';
 import { sha256 } from '@noble/hashes/sha256';
@@ -62,8 +64,8 @@ function makeAclDocument(
     aclAdministrators: overrides.aclAdministrators ?? [makePublicKey(0xff)],
     scope: overrides.scope,
     version: overrides.version ?? 1,
-    createdAt: overrides.createdAt ?? new Date(),
-    updatedAt: overrides.updatedAt ?? new Date(),
+    createdAt: overrides.createdAt ?? 9000,
+    updatedAt: overrides.updatedAt ?? 9000,
     creatorPublicKey: overrides.creatorPublicKey ?? makePublicKey(0x01),
     creatorSignature: overrides.creatorSignature ?? makeSignature(0x01),
     previousVersionBlockId: overrides.previousVersionBlockId,
@@ -476,7 +478,7 @@ describe('WriteAclManager', () => {
       const token: ICapabilityToken = {
         granteePublicKey: makePublicKey(0x10),
         scope: { dbName: 'mydb', collectionName: 'users' },
-        expiresAt: new Date(Date.now() - 1000), // expired
+        expiresAt: brightDateNow() - 1000 / 86400000, // expired
         grantorSignature: new Uint8Array(64),
         grantorPublicKey: adminKey,
       };
@@ -496,9 +498,9 @@ describe('WriteAclManager', () => {
       manager.setCachedAcl(acl);
 
       // Build a token with valid signature but non-admin grantor
-      const expiresAt = new Date(Date.now() + 60000);
+      const expiresAt = brightDateNow() + 60000 / 86400000;
       const granteeHex = Buffer.from(makePublicKey(0x10)).toString('hex');
-      const message = `${granteeHex}:mydb:users:${expiresAt.toISOString()}`;
+      const message = `${granteeHex}:mydb:users:${brightDateToISO(expiresAt)}`;
       const payloadHash = sha256(new TextEncoder().encode(message));
 
       const token: ICapabilityToken = {
@@ -525,9 +527,9 @@ describe('WriteAclManager', () => {
       });
       manager.setCachedAcl(acl);
 
-      const expiresAt = new Date(Date.now() + 60000);
+      const expiresAt = brightDateNow() + 60000 / 86400000;
       const granteeHex = Buffer.from(makePublicKey(0x10)).toString('hex');
-      const message = `${granteeHex}:mydb:users:${expiresAt.toISOString()}`;
+      const message = `${granteeHex}:mydb:users:${brightDateToISO(expiresAt)}`;
       const payloadHash = sha256(new TextEncoder().encode(message));
 
       const token: ICapabilityToken = {
@@ -554,9 +556,9 @@ describe('WriteAclManager', () => {
       });
       manager.setCachedAcl(acl);
 
-      const expiresAt = new Date(Date.now() + 60000);
+      const expiresAt = brightDateNow() + 60000 / 86400000;
       const granteeHex = Buffer.from(makePublicKey(0x10)).toString('hex');
-      const message = `${granteeHex}:mydb:users:${expiresAt.toISOString()}`;
+      const message = `${granteeHex}:mydb:users:${brightDateToISO(expiresAt)}`;
       const payloadHash = sha256(new TextEncoder().encode(message));
       const badFirstByte = (payloadHash[0] + 1) % 256;
 
@@ -588,10 +590,10 @@ describe('WriteAclManager', () => {
       });
       manager.setCachedAcl(acl);
 
-      const expiresAt = new Date(Date.now() + 60000);
+      const expiresAt = brightDateNow() + 60000 / 86400000;
       const granteeKey = makePublicKey(0x10);
       const granteeHex = Buffer.from(granteeKey).toString('hex');
-      const message = `${granteeHex}:mydb::${expiresAt.toISOString()}`;
+      const message = `${granteeHex}:mydb::${brightDateToISO(expiresAt)}`;
       const payloadHash = sha256(new TextEncoder().encode(message));
 
       const token: ICapabilityToken = {
@@ -624,10 +626,10 @@ describe('WriteAclManager', () => {
       });
       manager.setCachedAcl(acl);
 
-      const expiresAt = new Date(Date.now() + 60000);
+      const expiresAt = brightDateNow() + 60000 / 86400000;
       const granteeKey = makePublicKey(0x10);
       const granteeHex = Buffer.from(granteeKey).toString('hex');
-      const message = `${granteeHex}:mydb:users:${expiresAt.toISOString()}`;
+      const message = `${granteeHex}:mydb:users:${brightDateToISO(expiresAt)}`;
       const payloadHash = sha256(new TextEncoder().encode(message));
 
       const token: ICapabilityToken = {
@@ -660,7 +662,7 @@ describe('WriteAclManager', () => {
       });
       manager.setCachedAcl(acl);
 
-      const expiresAt = new Date(Date.now() + 60000);
+      const expiresAt = brightDateNow() + 60000 / 86400000;
       const granteeKey = makePublicKey(0x10);
 
       const token: ICapabilityToken = {
@@ -685,10 +687,10 @@ describe('WriteAclManager', () => {
       });
       manager.setCachedAcl(acl);
 
-      const expiresAt = new Date(Date.now() + 60000);
+      const expiresAt = brightDateNow() + 60000 / 86400000;
       const granteeKey = makePublicKey(0x10);
       const granteeHex = Buffer.from(granteeKey).toString('hex');
-      const message = `${granteeHex}:mydb::${expiresAt.toISOString()}`;
+      const message = `${granteeHex}:mydb::${brightDateToISO(expiresAt)}`;
       const payloadHash = sha256(new TextEncoder().encode(message));
       const badFirstByte = (payloadHash[0] + 1) % 256;
 
@@ -716,7 +718,7 @@ describe('WriteAclManager', () => {
 
     it('should reject when no ACL exists for the scope (no admin)', async () => {
       const someKey = makePublicKey(0xaa);
-      const expiresAt = new Date(Date.now() + 60000);
+      const expiresAt = brightDateNow() + 60000 / 86400000;
 
       const token: ICapabilityToken = {
         granteePublicKey: makePublicKey(0x10),

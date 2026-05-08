@@ -503,7 +503,8 @@ describe('Feature: cross-node-pool-coordination, Property 4: Pool deletion creat
 
         const announcement = pending[0];
         expect(announcement.ttl).toBe(testConfig.defaultTtl);
-        expect(announcement.timestamp).toBeInstanceOf(Date);
+        expect(typeof announcement.timestamp).toBe('number');
+        expect(isFinite(announcement.timestamp)).toBe(true);
       }),
       { numRuns: 100 },
     );

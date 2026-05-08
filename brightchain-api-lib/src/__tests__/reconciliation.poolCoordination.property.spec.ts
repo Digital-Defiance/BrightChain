@@ -136,7 +136,7 @@ function createMockManifestProvider(
       return {
         nodeId: localNodeId,
         blockIds: allLocalBlockIds,
-        generatedAt: new Date(),
+        generatedAt: 9000,
         checksum: 'local-checksum',
       };
     },
@@ -153,7 +153,7 @@ function createMockManifestProvider(
       return {
         nodeId: peerId,
         blockIds: allPeerBlockIds,
-        generatedAt: new Date(),
+        generatedAt: 9000,
         checksum: 'peer-checksum',
       };
     },
@@ -203,7 +203,7 @@ function createMockManifestProvider(
       return {
         nodeId: localNodeId,
         pools: new Map(localPools),
-        generatedAt: new Date(),
+        generatedAt: 9000,
         checksum: 'local-pool-checksum',
       };
     },
@@ -216,7 +216,7 @@ function createMockManifestProvider(
       return {
         nodeId: peerId,
         pools: new Map(peerPools),
-        generatedAt: new Date(),
+        generatedAt: 9000,
         checksum: 'peer-pool-checksum',
       };
     },
@@ -464,7 +464,7 @@ function createTombstoneMockProvider(
       return {
         nodeId: localNodeId,
         blockIds: [],
-        generatedAt: new Date(),
+        generatedAt: 9000,
         checksum: 'empty-local-checksum',
       };
     },
@@ -481,7 +481,7 @@ function createTombstoneMockProvider(
       return {
         nodeId: peerId,
         blockIds: allPeerBlockIds,
-        generatedAt: new Date(),
+        generatedAt: 9000,
         checksum: 'peer-checksum',
       };
     },
@@ -531,7 +531,7 @@ function createTombstoneMockProvider(
       return {
         nodeId: localNodeId,
         pools: new Map<PoolId, string[]>(),
-        generatedAt: new Date(),
+        generatedAt: 9000,
         checksum: 'empty-local-pool-checksum',
       };
     },
@@ -544,7 +544,7 @@ function createTombstoneMockProvider(
       return {
         nodeId: peerId,
         pools: new Map(peerPools),
-        generatedAt: new Date(),
+        generatedAt: 9000,
         checksum: 'peer-pool-checksum',
       };
     },

@@ -30,6 +30,7 @@ import {
   ReconciliationEventHandler,
   ReconciliationResult,
   SyncVectorEntry,
+  brightDateNow,
 } from '@brightchain/brightchain-lib';
 import { ApiErrorResponse } from '@digitaldefiance/node-express-suite';
 import * as fc from 'fast-check';
@@ -270,7 +271,7 @@ describe('Sync Endpoint Property Tests', () => {
             initialLocations.set(blockId, [
               {
                 nodeId: localNodeId,
-                lastSeen: new Date(),
+                lastSeen: brightDateNow(),
                 isAuthoritative: true,
               },
             ]);
@@ -461,7 +462,7 @@ describe('Sync Endpoint Property Tests', () => {
                 blockId,
                 nodeIds.map((nodeId) => ({
                   nodeId,
-                  lastSeen: new Date(),
+                  lastSeen: brightDateNow(),
                   isAuthoritative: false,
                 })),
               );
@@ -535,7 +536,7 @@ describe('Sync Endpoint Property Tests', () => {
                 initialLocations.set(blockId, [
                   {
                     nodeId: localNodeId,
-                    lastSeen: new Date(),
+                    lastSeen: brightDateNow(),
                     isAuthoritative: true,
                   },
                 ]);
@@ -544,7 +545,7 @@ describe('Sync Endpoint Property Tests', () => {
                 initialLocations.set(blockId, [
                   {
                     nodeId: 'remote-node-1',
-                    lastSeen: new Date(),
+                    lastSeen: brightDateNow(),
                     isAuthoritative: false,
                   },
                 ]);
@@ -636,7 +637,7 @@ describe('Sync Endpoint Property Tests', () => {
               initialLocations.set(blockId, [
                 {
                   nodeId: localNodeId,
-                  lastSeen: new Date(),
+                  lastSeen: brightDateNow(),
                   isAuthoritative: true,
                 },
               ]);
@@ -697,7 +698,7 @@ describe('Sync Endpoint Property Tests', () => {
               initialLocations.set(blockId, [
                 {
                   nodeId: 'remote-node-1',
-                  lastSeen: new Date(),
+                  lastSeen: brightDateNow(),
                   isAuthoritative: false,
                 },
               ]);

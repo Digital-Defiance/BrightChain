@@ -8,7 +8,9 @@ import { BlockAccessError } from '../errors/block';
 import { ChecksumMismatchError } from '../errors/checksumMismatch';
 import { TranslatableBrightChainError } from '../errors/translatableBrightChainError';
 import { logValidationFailure } from '../logging/blockLogger';
+import type { BrightDateTimestamp } from '../types/brightDateTimestamp';
 import type { ChecksumService } from '../services/checksum.service';
+import { brightDateNow } from '../utils/brightDateConversions';
 import { getGlobalServiceProvider } from '../services/globalServiceProvider';
 import { Checksum } from '../types/checksum';
 import { BaseBlock } from './base';
@@ -24,7 +26,7 @@ export class RawDataBlock extends BaseBlock {
   constructor(
     blockSize: BlockSize,
     data: Uint8Array,
-    dateCreated?: Date,
+    dateCreated?: BrightDateTimestamp,
     checksum?: Checksum,
     blockType: BlockType = BlockType.RawData,
     blockDataType: BlockDataType = BlockDataType.RawData,
@@ -37,7 +39,7 @@ export class RawDataBlock extends BaseBlock {
         BrightChainStrings.Error_BlockError_DataCannotBeNullOrUndefined,
       );
     }
-    const now = new Date();
+    const now = brightDateNow();
     if (data.length > blockSize) {
       throw new TranslatableBrightChainError(
         BrightChainStrings.Error_BlockError_DataLengthExceedsBlockSizeTemplate,

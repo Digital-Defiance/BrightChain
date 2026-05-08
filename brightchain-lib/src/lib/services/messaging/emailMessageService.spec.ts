@@ -24,6 +24,8 @@ import {
   type IReplyInput,
 } from './emailMessageService';
 import type { MessageCBLService } from './messageCBLService';
+import { brightDateNow, brightDateToDate } from '../../utils/brightDateConversions';
+import type { BrightDateTimestamp } from '../../types/brightDateTimestamp';
 
 /** Cast a test string to BlockId without validation — for test data only. */
 const bid = (s: string) => s as unknown as BlockId;
@@ -405,7 +407,7 @@ describe('EmailMessageService', () => {
     });
 
     it('should auto-generate date when not provided', async () => {
-      const beforeSend = new Date();
+      const beforeSend = brightDateNow();
       const input: IEmailInput = {
         from: createMailbox('sender', 'example.com'),
         to: [createMailbox('recipient', 'example.com')],
@@ -418,10 +420,8 @@ describe('EmailMessageService', () => {
       // Second store call is the BCC-stripped copy for To/CC delivery
       expect(storeMock).toHaveBeenCalledTimes(2);
       const storedMetadata = storeMock.mock.calls[0][0] as IEmailMetadata;
-      expect(storedMetadata.date).toBeInstanceOf(Date);
-      expect(storedMetadata.date.getTime()).toBeGreaterThanOrEqual(
-        beforeSend.getTime(),
-      );
+      expect(typeof storedMetadata.date).toBe('number');
+      expect(storedMetadata.date).toBeGreaterThanOrEqual(beforeSend);
     });
 
     it('should use provided messageId when given', async () => {
@@ -667,7 +667,7 @@ describe('EmailMessageService', () => {
     function buildMockMetadata(
       overrides?: Partial<IEmailMetadata>,
     ): IEmailMetadata {
-      const now = new Date();
+      const now = brightDateNow();
       return {
         // IBlockMetadata fields
         blockId: bid('<mock-block-id>'),
@@ -781,7 +781,7 @@ describe('EmailMessageService', () => {
     function buildMockMetadata(
       overrides?: Partial<IEmailMetadata>,
     ): IEmailMetadata {
-      const now = new Date();
+      const now = brightDateNow();
       return {
         blockId: bid('<mock-block-id>'),
         createdAt: now,
@@ -948,7 +948,7 @@ describe('EmailMessageService', () => {
     let deleteMock: jest.Mock;
 
     function buildMockMetadata(): IEmailMetadata {
-      const now = new Date();
+      const now = brightDateNow();
       return {
         blockId: bid('<mock-block-id>'),
         createdAt: now,
@@ -1191,7 +1191,7 @@ describe('EmailMessageService', () => {
     });
 
     it('getEmailContent() should return attachment metadata', async () => {
-      const now = new Date();
+      const now = brightDateNow();
       const mockMetadata: IEmailMetadata = {
         blockId: bid('<mock-block-id>'),
         createdAt: now,

@@ -3,7 +3,7 @@
  *
  * Converts ICapabilityToken instances to/from JSON strings, handling:
  * - Uint8Array fields ↔ hex string encoding
- * - Date fields ↔ ISO 8601 string encoding
+ * - BrightDateTimestamp fields stored as numbers
  * - All other fields pass through as-is
  *
  * Follows the same pattern as aclDocumentSerialization.ts.
@@ -12,6 +12,8 @@
  * @see Requirements 6.6
  */
 
+import type { BrightDateTimestamp } from '../../types/brightDateTimestamp';
+import { normalizeToBrightDate } from '../../utils/brightDateConversions';
 import { ICapabilityToken } from './capabilityToken';
 import { IAclScope } from './writeAcl';
 
@@ -19,12 +21,12 @@ import { IAclScope } from './writeAcl';
  * JSON-serializable representation of ICapabilityToken.
  *
  * Uint8Array fields are hex-encoded strings.
- * Date fields are ISO 8601 strings.
+ * BrightDateTimestamp fields are stored as numbers.
  */
 export interface SerializedCapabilityToken {
   granteePublicKey: string;
   scope: IAclScope;
-  expiresAt: string;
+  expiresAt: number;
   grantorSignature: string;
   grantorPublicKey: string;
 }
@@ -48,7 +50,7 @@ function hexToUint8Array(hex: string): Uint8Array {
  *
  * - Uint8Array fields (granteePublicKey, grantorSignature,
  *   grantorPublicKey) are hex-encoded.
- * - Date fields (expiresAt) are ISO 8601 strings.
+ * - BrightDateTimestamp fields (expiresAt) are stored as numbers.
  * - All other fields pass through unchanged.
  *
  * @param token - The capability token to serialize
@@ -59,7 +61,7 @@ export function serializeCapabilityToken(token: ICapabilityToken): string {
   const serialized: SerializedCapabilityToken = {
     granteePublicKey: uint8ArrayToHex(token.granteePublicKey),
     scope: { ...token.scope },
-    expiresAt: token.expiresAt.toISOString(),
+    expiresAt: token.expiresAt,
     grantorSignature: uint8ArrayToHex(token.grantorSignature),
     grantorPublicKey: uint8ArrayToHex(token.grantorPublicKey),
   };
@@ -70,7 +72,8 @@ export function serializeCapabilityToken(token: ICapabilityToken): string {
  * Deserialize a JSON string into an ICapabilityToken.
  *
  * - Hex-encoded strings are converted back to Uint8Array.
- * - ISO 8601 strings are converted back to Date objects.
+ * - Timestamp fields are normalized to BrightDateTimestamp via normalizeToBrightDate
+ *   (handles both legacy ISO strings and native numeric BrightDateValues).
  * - All other fields pass through unchanged.
  *
  * @param json - JSON string to deserialize
@@ -81,11 +84,9 @@ export function serializeCapabilityToken(token: ICapabilityToken): string {
 export function deserializeCapabilityToken(json: string): ICapabilityToken {
   const parsed: SerializedCapabilityToken = JSON.parse(json);
 
-  const expiresAt = new Date(parsed.expiresAt);
-
-  if (isNaN(expiresAt.getTime())) {
-    throw new Error('Invalid expiresAt date in capability token');
-  }
+  const expiresAt: BrightDateTimestamp = normalizeToBrightDate(
+    parsed.expiresAt as unknown as string | number,
+  );
 
   return {
     granteePublicKey: hexToUint8Array(parsed.granteePublicKey),

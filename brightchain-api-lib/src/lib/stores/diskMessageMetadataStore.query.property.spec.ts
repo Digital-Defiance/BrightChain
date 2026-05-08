@@ -1,5 +1,6 @@
 import {
   BlockSize,
+  brightDateNow,
   DurabilityLevel,
   IMessageMetadata,
   MessageEncryptionScheme,
@@ -38,12 +39,12 @@ describe('DiskMessageMetadataStore - Query Performance Property Tests', () => {
     priority: MessagePriority,
   ): IMessageMetadata => ({
     blockId,
-    createdAt: new Date(),
+    createdAt: brightDateNow(),
     expiresAt: null,
     durabilityLevel: DurabilityLevel.Standard,
     parityBlockIds: [],
     accessCount: 0,
-    lastAccessedAt: new Date(),
+    lastAccessedAt: brightDateNow(),
     replicationStatus: ReplicationStatus.Pending,
     targetReplicationFactor: 3,
     replicaNodeIds: [],

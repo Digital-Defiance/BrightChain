@@ -10,6 +10,7 @@
  * - Backend: TId = GuidV4Buffer or similar
  */
 
+import type { BrightDateTimestamp } from '../../types/brightDateTimestamp';
 import type { BlockId } from '../branded/primitives/blockId';
 import type { PoolId } from './pooledBlockStore';
 
@@ -59,13 +60,13 @@ export interface ICBLIndexEntry<TId = string> {
   /** Pool this CBL belongs to (undefined = default pool) */
   poolId?: PoolId;
   /** When the CBL was stored */
-  createdAt: Date;
+  createdAt: BrightDateTimestamp;
   /** Member ID of the creator */
   createdBy?: TId;
   /** Visibility level */
   visibility: CBLVisibility;
   /** Soft-delete timestamp (undefined = not deleted) */
-  deletedAt?: Date;
+  deletedAt?: BrightDateTimestamp;
   /** Optional user-facing metadata */
   metadata?: ICBLMetadata;
   /** FEC parity block IDs for each XOR component */

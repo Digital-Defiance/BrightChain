@@ -5,6 +5,7 @@ import { BlockType } from '../enumerations/blockType';
 import { EnhancedValidationError } from '../errors/enhancedValidationError';
 import { getGlobalServiceProvider } from '../services/globalServiceProvider';
 import { Checksum } from '../types/checksum';
+import { brightDateNow } from '../utils/brightDateConversions';
 import { BaseBlock } from './base';
 import { RawDataBlock } from './rawData';
 
@@ -214,7 +215,7 @@ export function createBlockHandle<T extends BaseBlock>(
   const instance = new blockConstructor(
     blockSize,
     data,
-    new Date(),
+    brightDateNow(),
     checksum,
     BlockType.Handle,
     BlockDataType.RawData,

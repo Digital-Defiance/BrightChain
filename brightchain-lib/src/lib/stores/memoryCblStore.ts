@@ -15,6 +15,7 @@ import { ICBLStore } from '../interfaces/storage/cblStore';
 import { isTarballCblData } from '../services/blockFormatService';
 import { ServiceLocator } from '../services/serviceLocator';
 import { Checksum } from '../types';
+import { brightDateNow } from '../utils/brightDateConversions';
 
 /**
  * Memory-based CBLStore for Constituent Block Lists (CBLs).
@@ -113,7 +114,7 @@ export class MemoryCBLStore<TID extends PlatformID = Uint8Array>
             this._activeUser,
             BlockEncryptionType.MultiRecipient,
             2,
-            new Date(),
+            brightDateNow(),
           ),
           this._activeUser,
           true,
@@ -158,7 +159,7 @@ export class MemoryCBLStore<TID extends PlatformID = Uint8Array>
             this._activeUser,
             BlockEncryptionType.SingleRecipient,
             1,
-            new Date(),
+            brightDateNow(),
           ),
           this._activeUser,
         );

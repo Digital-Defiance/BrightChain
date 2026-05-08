@@ -17,6 +17,7 @@ import {
   BlockEncryptionType,
   BlockSize,
   ConstituentBlockListBlock,
+  brightDateNow,
   initializeBrightChain,
   ServiceProvider,
   StoreError,
@@ -114,7 +115,7 @@ describe('CBL API Round-Trip Property Tests', () => {
 
               const { headerData } = cblService.makeCblHeader(
                 creator,
-                new Date(),
+                brightDateNow(),
                 blockAddresses.length,
                 fileDataLength,
                 addressList,
@@ -226,7 +227,7 @@ describe('CBL API Round-Trip Property Tests', () => {
 
               const { headerData } = cblService.makeCblHeader(
                 creator,
-                new Date(),
+                brightDateNow(),
                 blockAddresses.length,
                 fileDataLength,
                 addressList,

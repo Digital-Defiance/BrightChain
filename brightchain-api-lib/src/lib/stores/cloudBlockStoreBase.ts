@@ -19,6 +19,9 @@ import {
   BlockSize,
   BlockStoreOptions,
   BlockType,
+  brightDateNow,
+  brightDateToDate,
+  brightDateToISO,
   BrightenResult,
   CBLMagnetComponents,
   CBLStorageResult,
@@ -38,6 +41,7 @@ import {
   IPooledBlockStore,
   lengthToBlockSize,
   ListOptions,
+  normalizeToBrightDate,
   padToBlockSize,
   ParityData,
   PoolDeletionValidationResult,
@@ -287,12 +291,12 @@ export abstract class CloudBlockStoreBase
   protected serializeMetadata(metadata: IBlockMetadata): Uint8Array {
     const file: CloudBlockMetadataFile = {
       blockId: metadata.blockId,
-      createdAt: metadata.createdAt.toISOString(),
-      expiresAt: metadata.expiresAt?.toISOString() ?? null,
+      createdAt: brightDateToISO(metadata.createdAt),
+      expiresAt: metadata.expiresAt !== null ? brightDateToISO(metadata.expiresAt) : null,
       durabilityLevel: metadata.durabilityLevel,
       parityBlockIds: [...metadata.parityBlockIds],
       accessCount: metadata.accessCount,
-      lastAccessedAt: metadata.lastAccessedAt.toISOString(),
+      lastAccessedAt: brightDateToISO(metadata.lastAccessedAt),
       replicationStatus: metadata.replicationStatus,
       targetReplicationFactor: metadata.targetReplicationFactor,
       replicaNodeIds: [...metadata.replicaNodeIds],
@@ -308,12 +312,12 @@ export abstract class CloudBlockStoreBase
     const file: CloudBlockMetadataFile = JSON.parse(json);
     return {
       blockId: file.blockId as unknown as BlockId,
-      createdAt: new Date(file.createdAt),
-      expiresAt: file.expiresAt ? new Date(file.expiresAt) : null,
+      createdAt: normalizeToBrightDate(file.createdAt),
+      expiresAt: file.expiresAt ? normalizeToBrightDate(file.expiresAt) : null,
       durabilityLevel: file.durabilityLevel as DurabilityLevel,
       parityBlockIds: file.parityBlockIds as unknown as BlockId[],
       accessCount: file.accessCount,
-      lastAccessedAt: new Date(file.lastAccessedAt),
+      lastAccessedAt: normalizeToBrightDate(file.lastAccessedAt),
       replicationStatus: file.replicationStatus as ReplicationStatus,
       targetReplicationFactor: file.targetReplicationFactor,
       replicaNodeIds: file.replicaNodeIds,
@@ -381,7 +385,7 @@ export abstract class CloudBlockStoreBase
         const metaData = await this.downloadObject(metaKey);
         const metadata = this.deserializeMetadata(metaData);
         metadata.accessCount++;
-        metadata.lastAccessedAt = new Date();
+        metadata.lastAccessedAt = brightDateNow();
         await this.uploadObject(metaKey, this.serializeMetadata(metadata));
       }
     } catch {
@@ -391,7 +395,7 @@ export abstract class CloudBlockStoreBase
     return new RawDataBlock(
       lengthToBlockSize(data.length),
       data,
-      new Date(),
+      brightDateNow(),
       key,
       BlockType.RawData,
       BlockDataType.RawData,
@@ -565,7 +569,7 @@ export abstract class CloudBlockStoreBase
     const block = new RawDataBlock(
       lengthToBlockSize(data.length),
       data,
-      new Date(),
+      brightDateNow(),
       keyChecksum,
     );
     await this.setData(block, options);
@@ -1261,7 +1265,7 @@ export abstract class CloudBlockStoreBase
         const metaData = await this.downloadObject(metaKey);
         const metadata = this.deserializeMetadata(metaData);
         metadata.accessCount++;
-        metadata.lastAccessedAt = new Date();
+        metadata.lastAccessedAt = brightDateNow();
         await this.uploadObject(metaKey, this.serializeMetadata(metadata));
       }
     } catch {
@@ -1430,8 +1434,8 @@ export abstract class CloudBlockStoreBase
 
     let blockCount = 0;
     let totalBytes = 0;
-    let earliestCreated: Date | null = null;
-    let latestAccessed: Date | null = null;
+    let earliestCreated: number | null = null;
+    let latestAccessed: number | null = null;
 
     for (const key of keys) {
       if (key.endsWith('.meta')) {
@@ -1452,13 +1456,13 @@ export abstract class CloudBlockStoreBase
       }
     }
 
-    const now = new Date();
+    const now = brightDateNow();
     return {
       poolId: pool,
       blockCount,
       totalBytes,
-      createdAt: earliestCreated ?? now,
-      lastAccessedAt: latestAccessed ?? now,
+      createdAt: earliestCreated !== null ? earliestCreated : now,
+      lastAccessedAt: latestAccessed !== null ? latestAccessed : now,
     };
   }
 

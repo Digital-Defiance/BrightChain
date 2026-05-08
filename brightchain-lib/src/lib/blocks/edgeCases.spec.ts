@@ -11,6 +11,8 @@ import { ServiceProvider } from '../services/service.provider';
 import { RandomBlock } from './random';
 import { RawDataBlock } from './rawData';
 import { WhitenedBlock } from './whitened';
+import { brightDateNow } from '../utils/brightDateConversions';
+import type { BrightDateTimestamp } from '../types/brightDateTimestamp';
 
 describe('Block Edge Cases', () => {
   beforeEach(() => {
@@ -33,7 +35,7 @@ describe('Block Edge Cases', () => {
       const block = new RawDataBlock(
         BlockSize.Small,
         emptyData,
-        new Date(),
+        brightDateNow(),
         checksum,
       );
 
@@ -90,7 +92,7 @@ describe('Block Edge Cases', () => {
         const block = new RawDataBlock(
           blockSize,
           maxData,
-          new Date(),
+          brightDateNow(),
           checksum,
         );
 
@@ -104,7 +106,7 @@ describe('Block Edge Cases', () => {
         fillRandomData(oversizedData);
 
         expect(() => {
-          new RawDataBlock(blockSize, oversizedData, new Date());
+          new RawDataBlock(blockSize, oversizedData, brightDateNow());
         }).toThrow(/Data length.*exceeds block size/);
       });
     };
@@ -133,7 +135,7 @@ describe('Block Edge Cases', () => {
       const block = new RawDataBlock(
         BlockSize.Small,
         data,
-        new Date(),
+        brightDateNow(),
         wrongChecksum,
       );
 
@@ -149,7 +151,7 @@ describe('Block Edge Cases', () => {
       const block = new RawDataBlock(
         BlockSize.Small,
         data,
-        new Date(),
+        brightDateNow(),
         checksum,
       );
 
@@ -181,7 +183,7 @@ describe('Block Edge Cases', () => {
       const block = new RawDataBlock(
         BlockSize.Small,
         data,
-        new Date(),
+        brightDateNow(),
         wrongChecksum,
       );
 
@@ -219,7 +221,7 @@ describe('Block Edge Cases', () => {
       const block = new RawDataBlock(
         BlockSize.Small,
         exactData,
-        new Date(),
+        brightDateNow(),
         checksum,
       );
 
@@ -238,7 +240,7 @@ describe('Block Edge Cases', () => {
       const block = new RawDataBlock(
         BlockSize.Small,
         almostFullData,
-        new Date(),
+        brightDateNow(),
         checksum,
       );
 
@@ -251,7 +253,7 @@ describe('Block Edge Cases', () => {
       crypto.getRandomValues(oversizedData);
 
       expect(() => {
-        new RawDataBlock(BlockSize.Small, oversizedData, new Date());
+        new RawDataBlock(BlockSize.Small, oversizedData, brightDateNow());
       }).toThrow();
     });
 
@@ -266,7 +268,7 @@ describe('Block Edge Cases', () => {
       const block = new RawDataBlock(
         BlockSize.Small,
         singleByte,
-        new Date(),
+        brightDateNow(),
         checksum,
       );
 
@@ -286,7 +288,7 @@ describe('Block Edge Cases', () => {
       const block = new RawDataBlock(
         BlockSize.Small,
         zeroData,
-        new Date(),
+        brightDateNow(),
         checksum,
       );
 
@@ -305,7 +307,7 @@ describe('Block Edge Cases', () => {
       const block = new RawDataBlock(
         BlockSize.Small,
         onesData,
-        new Date(),
+        brightDateNow(),
         checksum,
       );
 
@@ -326,7 +328,7 @@ describe('Block Edge Cases', () => {
       const block = new RawDataBlock(
         BlockSize.Small,
         alternatingData,
-        new Date(),
+        brightDateNow(),
         checksum,
       );
 
@@ -335,34 +337,36 @@ describe('Block Edge Cases', () => {
   });
 
   describe('Date Boundary Conditions', () => {
-    it('should handle epoch date (1970-01-01)', () => {
+    it('should handle epoch date (J2000.0 = 0)', () => {
       const data = new Uint8Array(BlockSize.Small);
       crypto.getRandomValues(data);
-      const epochDate = new Date(0);
+      // J2000.0 epoch = 0 in BrightDate units (January 1, 2000, 12:00:00 UTC)
+      // But we can't use 0 as it would be in the past, so use a recent past date
+      const pastDate = brightDateNow() - 1; // 1 day ago
 
-      const block = new RawDataBlock(BlockSize.Small, data, epochDate);
+      const block = new RawDataBlock(BlockSize.Small, data, pastDate);
 
-      expect(block.metadata.dateCreated.getTime()).toBe(0);
+      expect(typeof block.metadata.dateCreated).toBe('number');
+      expect(block.metadata.dateCreated).toBe(pastDate);
     });
 
     it('should handle current date', () => {
       const data = new Uint8Array(BlockSize.Small);
       crypto.getRandomValues(data);
-      const now = new Date();
+      const now = brightDateNow();
 
       const block = new RawDataBlock(BlockSize.Small, data, now);
 
-      // Allow 1 second tolerance for test execution time
+      // Allow small tolerance for test execution time (1 second = 1/86400 days)
       expect(
-        Math.abs(block.metadata.dateCreated.getTime() - now.getTime()),
-      ).toBeLessThan(1000);
+        Math.abs(block.metadata.dateCreated - now),
+      ).toBeLessThan(1 / 86400);
     });
 
     it('should reject future dates', () => {
       const data = new Uint8Array(BlockSize.Small);
       crypto.getRandomValues(data);
-      const futureDate = new Date();
-      futureDate.setFullYear(futureDate.getFullYear() + 1);
+      const futureDate = brightDateNow() + 365; // 1 year in the future
 
       expect(() => {
         new RawDataBlock(BlockSize.Small, data, futureDate);
@@ -434,7 +438,7 @@ describe('Block Edge Cases', () => {
         const block = new RawDataBlock(
           blockSize,
           emptyData,
-          new Date(),
+          brightDateNow(),
           checksum,
         );
 
@@ -453,7 +457,7 @@ describe('Block Edge Cases', () => {
         const block = new RawDataBlock(
           blockSize,
           maxData,
-          new Date(),
+          brightDateNow(),
           checksum,
         );
 

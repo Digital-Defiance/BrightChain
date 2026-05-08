@@ -21,6 +21,7 @@ import { BrightTrustEpoch } from '../interfaces/brightTrustEpoch';
 import { IdentityMode } from '../interfaces/contentWithIdentity';
 import { IBrightTrustDatabase } from '../interfaces/services/brightTrustDatabase';
 import { IdentitySealingPipeline } from './identitySealingPipeline';
+import { brightDateNow } from '../utils/brightDateConversions';
 
 /**
  * AliasRegistry manages pseudonymous alias registration, deregistration,
@@ -103,7 +104,7 @@ export class AliasRegistry<TID extends PlatformID = Uint8Array> {
 
     // 4. Store the AliasRecord
     const epoch = await this.currentEpoch();
-    const now = new Date();
+    const now = brightDateNow();
 
     const aliasRecord: AliasRecord<TID> = {
       aliasName,
@@ -143,7 +144,7 @@ export class AliasRegistry<TID extends PlatformID = Uint8Array> {
     const updatedAlias: AliasRecord<TID> = {
       ...alias,
       isActive: false,
-      deactivatedAt: new Date(),
+      deactivatedAt: brightDateNow(),
     };
 
     await this.db.saveAlias(updatedAlias);

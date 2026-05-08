@@ -9,6 +9,50 @@
 
 import '@testing-library/jest-dom';
 import { render, screen } from '@testing-library/react';
+
+// Mock the i18n hook so components render without an I18nProvider.
+// The mock performs basic {KEY} interpolation to match English translations.
+jest.mock('@digitaldefiance/express-suite-react-components', () => {
+  // Minimal English translations needed by Joule components
+  const translations: Record<string, string> = {
+    Dispute_AriaLabelTemplate: 'Joule dispute {ID}',
+    Dispute_IdTemplate: 'Dispute #{ID}',
+    Dispute_State_Disputed: 'Under review',
+    Dispute_State_ResolvedFinal: 'Resolved (final)',
+    Dispute_State_ResolvedReplaced: 'Resolved (replaced)',
+    Dispute_Field_Amount: 'Amount',
+    Dispute_Field_Opened: 'Opened',
+    Dispute_Field_Resolved: 'Resolved',
+    Dispute_Field_Reason: 'Reason',
+    Dispute_Field_Resolution: 'Resolution',
+    Date_BrightDateTemplate: 'BD {BD}',
+    JouleEventLog_Empty: 'No Joule events recorded yet.',
+    JouleEventLog_AriaLabel: 'Joule event log',
+    RateTransparency_Empty: 'Rate table not available.',
+  };
+
+  function interpolate(key: string, params?: Record<string, string | number>): string {
+    const template = translations[key] ?? key;
+    if (!params) return template;
+    return Object.entries(params).reduce(
+      (str, [k, v]) => str.replace(new RegExp(`\\{${k}\\}`, 'g'), String(v)),
+      template,
+    );
+  }
+
+  return {
+    useI18n: () => ({
+      tComponent: (_componentId: string, key: string, params?: Record<string, string>) =>
+        interpolate(key, params),
+      t: (key: string, params?: Record<string, string>) => interpolate(key, params),
+      tBranded: (key: string, params?: Record<string, string>) => interpolate(key, params),
+      changeLanguage: jest.fn(),
+      currentLanguage: 'en-US',
+    }),
+    I18nProvider: ({ children }: { children: unknown }) => children,
+  };
+});
+
 import { DisputeNotice, JouleDispute } from '../joule/DisputeNotice';
 import { JouleBalance } from '../joule/JouleBalance';
 import {

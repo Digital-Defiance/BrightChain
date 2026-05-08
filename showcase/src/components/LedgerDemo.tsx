@@ -19,6 +19,7 @@ import {
   QuorumType,
   SignerRole,
   SignerStatus,
+  brightDateToISO,
 } from '@brightchain/brightchain-lib';
 import {
   ECIESService,
@@ -808,7 +809,7 @@ export const LedgerDemo: React.FC = () => {
                       {t(ShowcaseStrings.Ledger_Timestamp)}
                     </span>
                     <span className="detail-value">
-                      {selectedEntry.entry.timestamp.toISOString()}
+                      {brightDateToISO(selectedEntry.entry.timestamp)}
                     </span>
                   </div>
                   <div className="detail-row">

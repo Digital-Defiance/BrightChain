@@ -22,10 +22,12 @@ import {
   BlockEncryptionType,
   BlockSize,
   BlockType,
+  brightDateNow,
   CBLService,
   Checksum,
   ChecksumService,
   CONSTANTS,
+  dateToBrightDate,
   initializeBrightChain,
   RandomBlock,
   RawDataBlock,
@@ -155,7 +157,7 @@ describe('Cross-Library Block Compatibility', () => {
       const rawBlock = new RawDataBlock(
         BlockSize.Small,
         randomBlock.data,
-        new Date(),
+        brightDateNow(),
         randomBlock.idChecksum,
       );
       await diskStore.setData(rawBlock);
@@ -247,7 +249,7 @@ describe('Cross-Library Block Compatibility', () => {
     });
 
     it('should preserve date in CBL header', () => {
-      const testDate = new Date('2024-01-01T00:00:00Z');
+      const testDate = dateToBrightDate(new Date('2024-01-01T00:00:00Z'));
       const addressList = Buffer.alloc(0);
       const result = cblService.makeCblHeader(
         testMember,
@@ -262,7 +264,8 @@ describe('Cross-Library Block Compatibility', () => {
       const parsedDate = cblService.getDateCreated(
         Buffer.from(result.headerData),
       );
-      expect(parsedDate.getTime()).toBe(testDate.getTime());
+      // Compare as BrightDateTimestamp numbers with small tolerance
+      expect(Math.abs(parsedDate - testDate)).toBeLessThan(0.001);
     });
   });
 

@@ -10,6 +10,7 @@
  */
 
 import { MessageEncryptionScheme } from '../../enumerations/messaging/messageEncryptionScheme';
+import type { BrightDateTimestamp } from '../../types/brightDateTimestamp';
 import { IGpgKeyMetadata, IGpgKeyPair } from './gpgKey';
 import {
   ISmimeCertificateBundle,
@@ -47,10 +48,10 @@ export interface IKeyStoreEntry<TId = string> {
   metadata: IGpgKeyMetadata | ISmimeCertificateMetadata;
 
   /** Date the entry was created */
-  createdAt: Date;
+  createdAt: BrightDateTimestamp;
 
   /** Date the entry was last updated */
-  updatedAt: Date;
+  updatedAt: BrightDateTimestamp;
 }
 
 /**

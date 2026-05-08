@@ -10,7 +10,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import type { BlockId, ICBLIndexEntry } from '@brightchain/brightchain-lib';
-import { CBLVisibility } from '@brightchain/brightchain-lib';
+import { brightDateNow, CBLVisibility, dateToBrightDate } from '@brightchain/brightchain-lib';
 import * as fc from 'fast-check';
 import { CBLIndex } from '../lib/cblIndex';
 import { BrightDb } from '../lib/database';
@@ -81,7 +81,7 @@ function makeRemoteEntry(
     blockId1: 'default-block-1' as BlockId,
     blockId2: 'default-block-2' as BlockId,
     blockSize: 256,
-    createdAt: new Date('2025-01-15T10:00:00Z'),
+    createdAt: dateToBrightDate(new Date('2025-01-15T10:00:00Z')),
     visibility: CBLVisibility.Private,
     sequenceNumber: 10,
     ...overrides,
@@ -189,7 +189,7 @@ describe('CBLIndex Cross-Node Sync Property-Based Tests', () => {
             blockId1: ids1.blockId1,
             blockId2: ids1.blockId2,
             blockSize,
-            createdAt: new Date('2025-01-15T10:00:00Z'),
+            createdAt: dateToBrightDate(new Date('2025-01-15T10:00:00Z')),
             visibility: CBLVisibility.Private,
           });
 
@@ -255,7 +255,7 @@ describe('CBLIndex Cross-Node Sync Property-Based Tests', () => {
         fc.date({
           min: new Date('2025-01-01T00:00:00Z'),
           max: new Date('2025-12-31T23:59:59Z'),
-        }),
+        }).map((d) => dateToBrightDate(d)),
         async (ids, magnetUrl, blockSize, deletedAt) => {
           const { index } = makeCBLIndex();
 

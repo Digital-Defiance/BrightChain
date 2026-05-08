@@ -259,10 +259,11 @@ export function lengthToClosestBlockSize(length: number): BlockSize {
 
 /**
  * Convert a BlockSize enum value to its string representation.
+ * Returns a stable, locale-independent string suitable for use as a
+ * directory name (e.g. "512", "1024", "4096").
  * @param blockSize - The BlockSize enum value
- * @returns The human-readable name of the block size
- * @throws Error if the block size is invalid
+ * @returns The numeric string representation of the block size
  */
 export function blockSizeToSizeString(blockSize: BlockSize): string {
-  return translate(blockSizeStringNames[blockSize]);
+  return String(blockSize);
 }

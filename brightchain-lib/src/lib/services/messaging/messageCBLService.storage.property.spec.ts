@@ -112,7 +112,7 @@ describe('Feature: message-passing-and-events, Property: Message Block Storage',
           expect(metadata?.encryptionScheme).toBe(encryptionScheme);
           expect(metadata?.isCBL).toBe(true);
           expect(metadata?.cblBlockIds).toEqual(contentBlockIds);
-          expect(metadata?.createdAt).toBeInstanceOf(Date);
+          expect(typeof metadata?.createdAt).toBe("number");
 
           // Verify delivery status initialized for all recipients
           expect(metadata?.deliveryStatus.size).toBe(recipients.length);

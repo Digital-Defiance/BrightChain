@@ -63,6 +63,7 @@ import {
   IMimePart,
   createContentType,
 } from '../../interfaces/messaging/mimePart';
+import { brightDateNow, normalizeToBrightDate } from '../../utils/brightDateConversions';
 
 /**
  * RFC 5322/MIME compliant email parser.
@@ -1091,7 +1092,7 @@ export class EmailParser {
     if (creationDate) {
       const d = new Date(creationDate);
       if (!isNaN(d.getTime())) {
-        result.creationDate = d;
+        result.creationDate = normalizeToBrightDate(d);
       }
     }
 
@@ -1099,7 +1100,7 @@ export class EmailParser {
     if (modificationDate) {
       const d = new Date(modificationDate);
       if (!isNaN(d.getTime())) {
-        result.modificationDate = d;
+        result.modificationDate = normalizeToBrightDate(d);
       }
     }
 
@@ -1107,7 +1108,7 @@ export class EmailParser {
     if (readDate) {
       const d = new Date(readDate);
       if (!isNaN(d.getTime())) {
-        result.readDate = d;
+        result.readDate = normalizeToBrightDate(d);
       }
     }
 
@@ -1253,11 +1254,8 @@ export class EmailParser {
     const subject = email.subject || undefined;
 
     // Parse Date
-    const date = email.date ? new Date(email.date) : new Date();
-    if (isNaN(date.getTime())) {
-      // Fallback to current date if parsing fails
-      date.setTime(Date.now());
-    }
+    const rawDate = email.date ? new Date(email.date) : new Date();
+    const date = normalizeToBrightDate(isNaN(rawDate.getTime()) ? new Date() : rawDate);
 
     // Parse Content-Type from headers
     const contentTypeHeader = this.findHeader(email.headers, 'content-type');
@@ -1326,7 +1324,7 @@ export class EmailParser {
     const attachments = this.convertAttachments(email.attachments);
 
     // Build the IEmailMetadata object
-    const now = new Date();
+    const now = brightDateNow();
     const metadata: IEmailMetadata = {
       // IBlockMetadata fields (defaults for parsed emails)
       blockId: messageId as BlockId,
@@ -1348,7 +1346,7 @@ export class EmailParser {
       recipients: to.map((r) => r.address),
       priority: MessagePriority.NORMAL,
       deliveryStatus: new Map<string, DeliveryStatus>(),
-      acknowledgments: new Map<string, Date>(),
+      acknowledgments: new Map<string, number>(),
       encryptionScheme: MessageEncryptionScheme.NONE,
       isCBL: false,
 

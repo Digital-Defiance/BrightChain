@@ -706,7 +706,7 @@ const Components = () => {
                     <h3>{feature.title}</h3>
                   </>
                 )}
-                {feature.logo && feature.logo}
+                {feature.logo}
                 <span
                   className={`component-badge ${feature.category.toLowerCase()}`}
                 >

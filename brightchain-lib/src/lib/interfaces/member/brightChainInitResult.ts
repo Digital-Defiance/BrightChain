@@ -5,6 +5,7 @@ import {
   IUserBase,
   IUserRoleBase,
 } from '@digitaldefiance/suite-core-lib';
+import type { BrightDateTimestamp } from '../../types/brightDateTimestamp';
 import { IBrightChainBaseInitResult } from './brightChainBaseInitResult';
 
 /**
@@ -24,38 +25,38 @@ import { IBrightChainBaseInitResult } from './brightChainBaseInitResult';
  *   IBrightChainInitResult<GuidV4Buffer, BrightDb>
  *
  * Document fields use the suite-core-lib base interfaces directly (e.g.
- * `IRoleBase<TID, Date>`) rather than the `BaseDocument` intersection aliases
+ * `IRoleBase<TID, BrightDateTimestamp>`) rather than the `BaseDocument` intersection aliases
  * (`RoleDocument`, etc.). The intersection aliases combine `Document<TID> & T`
  * which cannot be naturally constructed — the build methods produce plain data
  * objects that satisfy the base interface, not `Document<TID>` wrapper instances.
  */
 export interface IBrightChainInitResult<TID extends PlatformID, TDb = unknown>
   extends IBrightChainBaseInitResult<TDb, TID> {
-  adminRole: IRoleBase<TID, Date, string>;
-  adminUser: IUserBase<TID, Date, string, AccountStatus>;
+  adminRole: IRoleBase<TID, BrightDateTimestamp, string>;
+  adminUser: IUserBase<TID, BrightDateTimestamp, string, AccountStatus>;
   adminUsername: string;
   adminEmail: string;
   adminMnemonic: string;
   adminPassword: string;
   adminBackupCodes: Array<string>;
   adminMember: Member<TID>;
-  adminUserRole: IUserRoleBase<TID, Date>;
-  memberRole: IRoleBase<TID, Date, string>;
-  memberUser: IUserBase<TID, Date, string, AccountStatus>;
+  adminUserRole: IUserRoleBase<TID, BrightDateTimestamp>;
+  memberRole: IRoleBase<TID, BrightDateTimestamp, string>;
+  memberUser: IUserBase<TID, BrightDateTimestamp, string, AccountStatus>;
   memberUsername: string;
   memberEmail: string;
   memberMnemonic: string;
   memberPassword: string;
   memberBackupCodes: Array<string>;
   memberMember: Member<TID>;
-  memberUserRole: IUserRoleBase<TID, Date>;
-  systemRole: IRoleBase<TID, Date, string>;
-  systemUser: IUserBase<TID, Date, string, AccountStatus>;
+  memberUserRole: IUserRoleBase<TID, BrightDateTimestamp>;
+  systemRole: IRoleBase<TID, BrightDateTimestamp, string>;
+  systemUser: IUserBase<TID, BrightDateTimestamp, string, AccountStatus>;
   systemUsername: string;
   systemEmail: string;
   systemMnemonic: string;
   systemPassword: string;
   systemBackupCodes: Array<string>;
   systemMember: Member<TID>;
-  systemUserRole: IUserRoleBase<TID, Date>;
+  systemUserRole: IUserRoleBase<TID, BrightDateTimestamp>;
 }

@@ -30,6 +30,7 @@ import type {
 } from '@brightchain/brightchain-lib';
 import {
   asBlockId,
+  brightDateToDate,
   EmailEncryptionService,
   EmailMessageService,
   EmailParser,
@@ -385,7 +386,7 @@ export class InboundProcessor {
           const vaultResult = await this.vaultService.createVaultForEmail(
             metadata.messageId,
             metadata.subject,
-            metadata.date,
+            brightDateToDate(metadata.date),
             vaultOwnerId,
             vaultAttachments,
           );

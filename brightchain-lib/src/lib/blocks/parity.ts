@@ -3,6 +3,7 @@ import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockSize } from '../enumerations/blockSize';
 import { BlockType } from '../enumerations/blockType';
 import { TranslatableBrightChainError } from '../errors/translatableBrightChainError';
+import type { BrightDateTimestamp } from '../types/brightDateTimestamp';
 import { Checksum } from '../types/checksum';
 import { RawDataBlock } from './rawData';
 
@@ -15,7 +16,7 @@ export class ParityBlock extends RawDataBlock {
   constructor(
     blockSize: BlockSize,
     data: Uint8Array,
-    dateCreated?: Date,
+    dateCreated?: BrightDateTimestamp,
     checksum?: Checksum,
     canRead = true,
     canPersist = true,

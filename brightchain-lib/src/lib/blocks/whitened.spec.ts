@@ -6,6 +6,8 @@ import { WhitenedError } from '../errors/whitenedError';
 import { ChecksumService } from '../services/checksum.service';
 import { ServiceProvider } from '../services/service.provider';
 import { WhitenedBlock } from './whitened';
+import { brightDateNow } from '../utils/brightDateConversions';
+import type { BrightDateTimestamp } from '../types/brightDateTimestamp';
 
 describe('WhitenedBlock', () => {
   let checksumService: ChecksumService;
@@ -154,7 +156,7 @@ describe('WhitenedBlock', () => {
       const data = new Uint8Array(defaultBlockSize);
       crypto.getRandomValues(data);
       const checksum = checksumService.calculateChecksum(data);
-      const dateCreated = new Date();
+      const dateCreated = brightDateNow();
       const block = await WhitenedBlock.from(
         defaultBlockSize,
         Buffer.from(data),
@@ -207,7 +209,7 @@ describe('WhitenedBlock', () => {
         defaultBlockSize,
         data,
         checksum,
-        new Date(),
+        brightDateNow(),
         true,
         true,
         checksumService,
@@ -225,7 +227,7 @@ describe('WhitenedBlock', () => {
         defaultBlockSize,
         data,
         checksum,
-        new Date(),
+        brightDateNow(),
       );
 
       expect(block.blockSize).toBe(defaultBlockSize);

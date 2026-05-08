@@ -1,4 +1,5 @@
 import { MemberStatusType } from '../../enumerations/memberStatusType';
+import type { BrightDateTimestamp } from '../../types/brightDateTimestamp';
 
 /**
  * Platform-agnostic base DTO for public member profile data.
@@ -8,8 +9,6 @@ import { MemberStatusType } from '../../enumerations/memberStatusType';
  *   - Backend uses `IMemberPublicProfileData<GuidV4Uint8Array>` or `IMemberPublicProfileData<string>`
  *     after serialization at the API boundary via `idProvider.idToString()`
  *
- * All date and bigint fields are pre-serialized to strings for JSON transport.
- *
  * @template TID - ID type. Defaults to `string` for frontend/JSON compatibility.
  */
 export interface IMemberPublicProfileData<TID = string> {
@@ -18,9 +17,9 @@ export interface IMemberPublicProfileData<TID = string> {
   reputation: number;
   storageQuota: string; // BigInt as string for JSON serialization
   storageUsed: string; // BigInt as string for JSON serialization
-  lastActive: string; // ISO date string
-  dateCreated: string; // ISO date string
-  dateUpdated: string; // ISO date string
+  lastActive: BrightDateTimestamp;
+  dateCreated: BrightDateTimestamp;
+  dateUpdated: BrightDateTimestamp;
 }
 
 /**
@@ -35,11 +34,11 @@ export interface IMemberPrivateProfileData<TID = string> {
   settings: Record<string, unknown>;
   activityLog: Array<{
     action: string;
-    timestamp: string; // ISO date string
+    timestamp: BrightDateTimestamp;
     details?: Record<string, unknown>;
   }>;
-  dateCreated: string; // ISO date string
-  dateUpdated: string; // ISO date string
+  dateCreated: BrightDateTimestamp;
+  dateUpdated: BrightDateTimestamp;
 }
 
 /**

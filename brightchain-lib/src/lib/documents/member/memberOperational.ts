@@ -6,6 +6,7 @@ import {
   ITestMemberHydratedData,
 } from '../../interfaces/member/hydrated';
 import { ServiceProvider } from '../../services/service.provider';
+import { brightDateToISO, normalizeToBrightDate } from '../../utils/brightDateConversions';
 
 /**
  * Factory for converting between hydrated data and Member instances
@@ -25,8 +26,8 @@ export const memberOperationalFactory = <
       votingPublicKey:
         hydrated.votingPublicKey && hydrated.votingPublicKey.n.toString(16),
       creatorId: provider.toString(hydrated.creatorId, 'hex'),
-      dateCreated: hydrated.dateCreated.toISOString(),
-      dateUpdated: hydrated.dateUpdated.toISOString(),
+      dateCreated: brightDateToISO(hydrated.dateCreated),
+      dateUpdated: brightDateToISO(hydrated.dateUpdated),
     };
 
     const eciesService = ServiceProvider.getInstance<TID>().eciesService;
@@ -44,8 +45,8 @@ export const memberOperationalFactory = <
       publicKey: operational.publicKey,
       votingPublicKey: operational.votingPublicKey!,
       creatorId: operational.id, // Use the same ID as creator for now
-      dateCreated: operational.dateCreated,
-      dateUpdated: operational.dateUpdated,
+      dateCreated: normalizeToBrightDate(operational.dateCreated),
+      dateUpdated: normalizeToBrightDate(operational.dateUpdated),
     };
   },
 });

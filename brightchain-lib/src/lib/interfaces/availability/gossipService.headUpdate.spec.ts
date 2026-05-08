@@ -13,6 +13,7 @@ import {
   HeadUpdateMetadata,
   validateBlockAnnouncement,
 } from './gossipService';
+import { brightDateNow } from '../../utils/brightDateConversions';
 
 /** Cast a test string to BlockId without validation — for test data only. */
 const bid = (s: string) => s as unknown as BlockId;
@@ -25,7 +26,7 @@ function makeHeadUpdateAnnouncement(
     type: 'head_update',
     blockId: bid('abc123def456'),
     nodeId: 'node-1',
-    timestamp: new Date(),
+    timestamp: brightDateNow(),
     ttl: 3,
     headUpdate: {
       dbName: 'mydb',
@@ -113,7 +114,7 @@ describe('validateBlockAnnouncement – head_update type (Req 2.1)', () => {
         blockId1: bid('b1'),
         blockId2: bid('b2'),
         blockSize: 256,
-        createdAt: new Date(),
+        createdAt: brightDateNow(),
         visibility: 'private' as never,
         sequenceNumber: 1,
       },

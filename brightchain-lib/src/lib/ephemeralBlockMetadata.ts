@@ -8,8 +8,12 @@ import { BlockDataType } from './enumerations/blockDataType';
 import { BlockSize } from './enumerations/blockSize';
 import { BlockType } from './enumerations/blockType';
 import { IEphemeralBlockMetadata } from './interfaces/blocks/metadata/ephemeralBlockMetadata';
+import type { BrightDateTimestamp } from './types/brightDateTimestamp';
 import { getGlobalServiceProvider } from './services/globalServiceProvider';
-import { parseDate } from './utils/dateUtils';
+import {
+  brightDateNow,
+  normalizeToBrightDate,
+} from './utils/brightDateConversions';
 import { parseEphemeralBlockMetadataJson } from './utils/typeGuards';
 
 export class EphemeralBlockMetadata<TID extends PlatformID = Uint8Array>
@@ -23,7 +27,7 @@ export class EphemeralBlockMetadata<TID extends PlatformID = Uint8Array>
     dataType: BlockDataType,
     lengthWithoutPadding: number,
     creator: Member<TID>,
-    dateCreated?: Date,
+    dateCreated?: BrightDateTimestamp,
   ) {
     super(size, type, dataType, lengthWithoutPadding, dateCreated);
     this._creator = creator;
@@ -38,7 +42,7 @@ export class EphemeralBlockMetadata<TID extends PlatformID = Uint8Array>
       type: this.type,
       dataType: this.dataType,
       lengthWithoutPadding: this.lengthWithoutPadding,
-      dateCreated: this.dateCreated.toISOString(),
+      dateCreated: this.dateCreated, // stored as number (BrightDateValue)
       creator: this.creator.toJson(),
     });
   }
@@ -46,7 +50,7 @@ export class EphemeralBlockMetadata<TID extends PlatformID = Uint8Array>
   /**
    * Parse ephemeral metadata from JSON representation using type guards.
    * Validates creator field with type guard.
-   * Uses robust date parsing with timezone support.
+   * Uses normalizeToBrightDate for robust date parsing.
    *
    * @param json - JSON string containing metadata
    * @param eciesService - Optional ECIES service for Member deserialization. If not provided, uses global service provider.
@@ -68,8 +72,11 @@ export class EphemeralBlockMetadata<TID extends PlatformID = Uint8Array>
     // Deserialize the Member from its JSON representation using provided service
     const creator = Member.fromJson<TID>(data.creator, service);
 
-    // Parse date using robust date utilities
-    const dateCreated = parseDate(data.dateCreated);
+    // Parse dateCreated: prefer numeric BrightDateValue, fall back to normalizeToBrightDate for legacy strings
+    const dateCreated: BrightDateTimestamp =
+      typeof data.dateCreated === 'number'
+        ? data.dateCreated
+        : normalizeToBrightDate(data.dateCreated);
 
     // Create a proper EphemeralBlockMetadata instance
     return new EphemeralBlockMetadata<TID>(

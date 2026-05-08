@@ -13,7 +13,7 @@ import type {
   CBLIndexManifest,
   ICBLIndexEntry,
 } from '@brightchain/brightchain-lib';
-import { CBLVisibility } from '@brightchain/brightchain-lib';
+import { brightDateNow, CBLVisibility, dateToBrightDate } from '@brightchain/brightchain-lib';
 import { CBLIndex } from '../lib/cblIndex';
 import { BrightDb } from '../lib/database';
 import { InMemoryHeadRegistry } from '../lib/headRegistry';
@@ -59,7 +59,7 @@ describe('CBLIndex – getCBLIndexManifest (Req 8.4)', () => {
     expect(manifest.poolId).toBe('pool-a');
     expect(manifest.nodeId).toBe('node-1');
     expect(manifest.entries).toHaveLength(0);
-    expect(manifest.generatedAt).toBeInstanceOf(Date);
+    expect(typeof manifest.generatedAt).toBe("number");
   });
 
   it('should return manifest entries for the specified pool only', async () => {
@@ -73,7 +73,7 @@ describe('CBLIndex – getCBLIndexManifest (Req 8.4)', () => {
       blockId2,
       blockSize: 256,
       poolId: 'pool-a',
-      createdAt: new Date(),
+      createdAt: brightDateNow(),
       visibility: CBLVisibility.Public,
     });
 
@@ -84,7 +84,7 @@ describe('CBLIndex – getCBLIndexManifest (Req 8.4)', () => {
       blockId2: 'block-ddd-444' as BlockId,
       blockSize: 256,
       poolId: 'pool-b',
-      createdAt: new Date(),
+      createdAt: brightDateNow(),
       visibility: CBLVisibility.Public,
     });
 
@@ -105,7 +105,7 @@ describe('CBLIndex – getCBLIndexManifest (Req 8.4)', () => {
       blockId2,
       blockSize: 256,
       poolId: 'pool-a',
-      createdAt: new Date(),
+      createdAt: brightDateNow(),
       visibility: CBLVisibility.Public,
     });
 
@@ -116,7 +116,7 @@ describe('CBLIndex – getCBLIndexManifest (Req 8.4)', () => {
       blockId2: 'block-fff-666' as BlockId,
       blockSize: 256,
       poolId: 'pool-a',
-      createdAt: new Date(),
+      createdAt: brightDateNow(),
       visibility: CBLVisibility.Public,
     });
 
@@ -142,7 +142,7 @@ describe('CBLIndex – getCBLIndexManifest (Req 8.4)', () => {
         blockId2: id2,
         blockSize: 256,
         poolId: 'pool-a',
-        createdAt: new Date(),
+        createdAt: brightDateNow(),
         visibility: CBLVisibility.Public,
       });
     }
@@ -172,7 +172,7 @@ describe('CBLIndex – reconcileCBLIndex (Req 8.4)', () => {
       poolId,
       nodeId: 'remote-node',
       entries,
-      generatedAt: new Date(),
+      generatedAt: brightDateNow(),
     };
   }
 
@@ -190,7 +190,7 @@ describe('CBLIndex – reconcileCBLIndex (Req 8.4)', () => {
       blockId2,
       blockSize: 256,
       poolId,
-      createdAt: new Date('2025-01-15T10:00:00Z'),
+      createdAt: dateToBrightDate(new Date('2025-01-15T10:00:00Z')),
       visibility: CBLVisibility.Public,
       sequenceNumber: 10,
     };
@@ -207,7 +207,7 @@ describe('CBLIndex – reconcileCBLIndex (Req 8.4)', () => {
       blockId2,
       blockSize: 256,
       poolId: 'pool-a',
-      createdAt: new Date(),
+      createdAt: brightDateNow(),
       visibility: CBLVisibility.Public,
     });
 
@@ -252,7 +252,7 @@ describe('CBLIndex – reconcileCBLIndex (Req 8.4)', () => {
       blockId2,
       blockSize: 256,
       poolId: 'pool-a',
-      createdAt: new Date(),
+      createdAt: brightDateNow(),
       visibility: CBLVisibility.Public,
     });
 
@@ -318,7 +318,7 @@ describe('CBLIndex – reconcileCBLIndex (Req 8.4)', () => {
       blockId2,
       blockSize: 256,
       poolId: 'pool-a',
-      createdAt: new Date(),
+      createdAt: brightDateNow(),
       visibility: CBLVisibility.Public,
     });
     await index.softDelete('magnet:deleted-locally');

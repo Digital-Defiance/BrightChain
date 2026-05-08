@@ -41,7 +41,7 @@ import type {
  * Delegates all operations to the underlying BrightDB collection.
  */
 export class BrightDbCollection<T extends BsonDocument = BsonDocument>
-  implements ICollection<T>
+  implements ICollection<T, number>
 {
   constructor(private readonly _collection: Collection<T>) {}
 
@@ -150,7 +150,7 @@ export class BrightDbCollection<T extends BsonDocument = BsonDocument>
     return this._collection.bulkWrite(operations, options);
   }
 
-  watch(listener: ChangeListener<T>): () => void {
+  watch(listener: ChangeListener<T, number>): () => void {
     return this._collection.watch(listener);
   }
 

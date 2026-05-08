@@ -13,6 +13,8 @@ import {
   isBlockHandle,
 } from './handle';
 import { RawDataBlock } from './rawData';
+import { brightDateNow } from '../utils/brightDateConversions';
+import type { BrightDateTimestamp } from '../types/brightDateTimestamp';
 
 describe('BlockHandle', () => {
   let checksumService: ChecksumService;
@@ -173,7 +175,7 @@ describe('BlockHandle', () => {
       const block = new RawDataBlock(
         defaultBlockSize,
         data,
-        new Date(),
+        brightDateNow(),
         checksum,
         BlockType.RawData,
         BlockDataType.RawData,

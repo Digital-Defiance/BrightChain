@@ -1,4 +1,5 @@
 import {
+  brightDateToISO,
   getGlobalServiceProvider,
   IBlockStore,
   IBrightTrustService,
@@ -642,7 +643,7 @@ class BlockCollection<
             (id) => sp.idProvider.toString(id, 'hex') as HexString,
           ),
           sharesRequired: sealedResult.sharesRequired,
-          createdAt: sealedResult.createdAt.toISOString(),
+          createdAt: brightDateToISO(sealedResult.createdAt),
         },
       };
 

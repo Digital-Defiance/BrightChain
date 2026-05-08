@@ -20,6 +20,7 @@ import {
 import { SimpleStore } from '../stores/simpleStore';
 import { SealingService } from './sealing.service';
 import { ServiceProvider } from './service.provider';
+import { brightDateNow, normalizeToBrightDate } from '../utils/brightDateConversions';
 
 /**
  * BrightTrustService provides member management and document sealing/unsealing
@@ -82,7 +83,7 @@ export class BrightTrustService<TID extends PlatformID = Uint8Array>
     // Use member.idBytes directly instead of converting through provider
     // This ensures we get the correct bytes regardless of provider configuration
     const hexId = uint8ArrayToHex(member.idBytes) as HexString;
-    const now = new Date();
+    const now = brightDateNow();
 
     const brightTrustMember: IBrightTrustMember<TID> = {
       id: member.id,
@@ -110,7 +111,7 @@ export class BrightTrustService<TID extends PlatformID = Uint8Array>
     // This preserves their ability to participate in existing documents
     const member = this.members.get(hexId);
     member.isActive = false;
-    member.updatedAt = new Date();
+    member.updatedAt = brightDateNow();
     this.members.set(hexId, member);
     // Note: We don't remove from memberIds because the member still exists
   }
@@ -181,7 +182,7 @@ export class BrightTrustService<TID extends PlatformID = Uint8Array>
       encryptedData: sealedDoc.encryptedData,
       memberIds,
       sharesRequired: sealedDoc.sharesRequired,
-      createdAt: sealedDoc.dateCreated,
+      createdAt: normalizeToBrightDate(sealedDoc.dateCreated),
     };
   }
 
@@ -221,7 +222,7 @@ export class BrightTrustService<TID extends PlatformID = Uint8Array>
       id: doc.id,
       memberIds: doc.memberIDs,
       sharesRequired: doc.sharesRequired,
-      createdAt: doc.dateCreated,
+      createdAt: normalizeToBrightDate(doc.dateCreated),
       creatorId: doc.creator.id,
     };
   }
@@ -238,7 +239,7 @@ export class BrightTrustService<TID extends PlatformID = Uint8Array>
             id: doc.id,
             memberIds: doc.memberIDs,
             sharesRequired: doc.sharesRequired,
-            createdAt: doc.dateCreated,
+            createdAt: normalizeToBrightDate(doc.dateCreated),
             creatorId: doc.creator.id,
           });
         } else {
@@ -250,7 +251,7 @@ export class BrightTrustService<TID extends PlatformID = Uint8Array>
               id: doc.id,
               memberIds: doc.memberIDs,
               sharesRequired: doc.sharesRequired,
-              createdAt: doc.dateCreated,
+              createdAt: normalizeToBrightDate(doc.dateCreated),
               creatorId: doc.creator.id,
             });
           }

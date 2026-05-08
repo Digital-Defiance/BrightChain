@@ -4,6 +4,7 @@ import { BlockSize } from './enumerations/blockSize';
 import { BlockType } from './enumerations/blockType';
 import { EphemeralBlockMetadata } from './ephemeralBlockMetadata';
 import { ICBLBlockMetadata } from './interfaces/blocks/metadata/cblBlockMetadata';
+import type { BrightDateTimestamp } from './types/brightDateTimestamp';
 
 export class CblBlockMetadata<TID extends PlatformID = Uint8Array>
   extends EphemeralBlockMetadata<TID>
@@ -20,7 +21,7 @@ export class CblBlockMetadata<TID extends PlatformID = Uint8Array>
     originalDataLength: number,
     fileDataLength: number,
     creator: Member<TID>,
-    dateCreated?: Date,
+    dateCreated?: BrightDateTimestamp,
   ) {
     super(size, type, dataType, originalDataLength, creator, dateCreated);
     this._fileDataLength = fileDataLength;

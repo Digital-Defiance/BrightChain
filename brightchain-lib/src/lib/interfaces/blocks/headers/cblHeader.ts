@@ -2,6 +2,7 @@ import {
   SignatureUint8Array,
   type PlatformID,
 } from '@digitaldefiance/ecies-lib';
+import type { BrightDateTimestamp } from '../../../types/brightDateTimestamp';
 
 export interface IConstituentBlockListBlockHeader<
   TID extends PlatformID = Uint8Array,
@@ -11,9 +12,9 @@ export interface IConstituentBlockListBlockHeader<
    */
   readonly creatorId: TID;
   /**
-   * Date the CBL was created
+   * Date the CBL was created (BrightDateValue)
    */
-  readonly dateCreated: Date;
+  readonly dateCreated: BrightDateTimestamp;
   /**
    * Number of addresses in the CBL
    */

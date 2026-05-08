@@ -6,6 +6,7 @@ import { MessagePriority } from '../../enumerations/messaging/messagePriority';
 import { ReplicationStatus } from '../../enumerations/replicationStatus';
 import type { BlockId } from '../../interfaces/branded/primitives/blockId';
 import { IMessageMetadata } from '../../interfaces/messaging/messageMetadata';
+import { normalizeToBrightDate } from '../../utils/brightDateConversions';
 import { MemoryMessageMetadataStore } from './memoryMessageMetadataStore';
 
 /** Cast a test string to BlockId without validation — for test data only. */
@@ -53,15 +54,16 @@ describe('Feature: message-passing-and-events, Property 23: Comprehensive Messag
           if (uniqueMessages.length === 0) return;
 
           for (const msg of uniqueMessages) {
+            const ts = normalizeToBrightDate(msg.timestamp);
             const metadata: IMessageMetadata = {
               blockId: bid(msg.blockId),
               size: BlockSize.Small,
-              createdAt: msg.timestamp,
-              expiresAt: new Date(msg.timestamp.getTime() + 86400000),
+              createdAt: ts,
+              expiresAt: ts + 1, // 1 day later in BrightDate units
               durabilityLevel: DurabilityLevel.Standard,
               parityBlockIds: [],
               accessCount: 0,
-              lastAccessedAt: msg.timestamp,
+              lastAccessedAt: ts,
               replicationStatus: ReplicationStatus.Pending,
               targetReplicationFactor: 3,
               replicaNodeIds: [],
@@ -127,8 +129,8 @@ describe('Feature: message-passing-and-events, Property 23: Comprehensive Messag
 
           // Test date range filtering
           const sortedDates = uniqueMessages
-            .map((m) => m.timestamp)
-            .sort((a, b) => a.getTime() - b.getTime());
+            .map((m) => normalizeToBrightDate(m.timestamp))
+            .sort((a, b) => a - b);
           if (sortedDates.length >= 4) {
             const startDate =
               sortedDates[Math.floor(sortedDates.length * 0.25)];

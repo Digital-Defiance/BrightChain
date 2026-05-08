@@ -13,6 +13,8 @@
 
 import {
   BlockSize,
+  brightDateNow,
+  dateToBrightDate,
   DurabilityLevel,
   IBlockMetadata,
   ReplicationStatus,
@@ -57,7 +59,7 @@ const arbDate = fc
     min: new Date('2020-01-01').getTime(),
     max: new Date('2030-12-31').getTime(),
   })
-  .map((timestamp) => new Date(timestamp));
+  .map((timestamp) => dateToBrightDate(new Date(timestamp)));
 
 /**
  * Generate an optional date (either a valid date or null)
@@ -103,7 +105,7 @@ describe('DiskBlockMetadataStore Persistence Property Tests', () => {
             const store = new DiskBlockMetadataStore(iterTestDir, blockSize);
 
             try {
-              const now = new Date();
+              const now = brightDateNow();
               const metadata: IBlockMetadata = {
                 blockId,
                 createdAt: now,
@@ -131,7 +133,7 @@ describe('DiskBlockMetadataStore Persistence Property Tests', () => {
               // Verify all fields are correct
               expect(retrieved).not.toBeNull();
               expect(retrieved!.blockId).toBe(blockId);
-              expect(retrieved!.createdAt.getTime()).toBe(now.getTime());
+              expect(retrieved!.createdAt).toBe(now);
               expect(retrieved!.durabilityLevel).toBe(options.durabilityLevel);
               expect(retrieved!.targetReplicationFactor).toBe(
                 options.targetReplicationFactor,
@@ -143,8 +145,8 @@ describe('DiskBlockMetadataStore Persistence Property Tests', () => {
                 expect(retrieved!.expiresAt).toBeNull();
               } else {
                 expect(retrieved!.expiresAt).not.toBeNull();
-                expect(retrieved!.expiresAt!.getTime()).toBe(
-                  options.expiresAt.getTime(),
+                expect(retrieved!.expiresAt!).toBe(
+                  options.expiresAt,
                 );
               }
             } finally {
@@ -177,7 +179,7 @@ describe('DiskBlockMetadataStore Persistence Property Tests', () => {
             const store = new DiskBlockMetadataStore(iterTestDir, blockSize);
 
             try {
-              const now = new Date();
+              const now = brightDateNow();
               const metadata: IBlockMetadata = {
                 blockId,
                 createdAt: now,
@@ -236,7 +238,7 @@ describe('DiskBlockMetadataStore Persistence Property Tests', () => {
             const store = new DiskBlockMetadataStore(iterTestDir, blockSize);
 
             try {
-              const initialTime = new Date();
+              const initialTime = brightDateNow();
               const metadata: IBlockMetadata = {
                 blockId,
                 createdAt: initialTime,
@@ -264,8 +266,8 @@ describe('DiskBlockMetadataStore Persistence Property Tests', () => {
               expect(retrieved).not.toBeNull();
               expect(retrieved!.accessCount).toBe(accessCount);
               expect(
-                retrieved!.lastAccessedAt.getTime(),
-              ).toBeGreaterThanOrEqual(initialTime.getTime());
+                retrieved!.lastAccessedAt,
+              ).toBeGreaterThanOrEqual(initialTime);
             } finally {
               rmSync(iterTestDir, { recursive: true, force: true });
             }
@@ -292,7 +294,7 @@ describe('DiskBlockMetadataStore Persistence Property Tests', () => {
           const store = new DiskBlockMetadataStore(iterTestDir, blockSize);
 
           try {
-            const now = new Date();
+            const now = brightDateNow();
             const metadata: IBlockMetadata = {
               blockId,
               createdAt: now,
@@ -341,7 +343,7 @@ describe('DiskBlockMetadataStore Persistence Property Tests', () => {
           const store = new DiskBlockMetadataStore(iterTestDir, blockSize);
 
           try {
-            const now = new Date();
+            const now = brightDateNow();
             const metadata: IBlockMetadata = {
               blockId,
               createdAt: now,

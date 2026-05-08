@@ -16,6 +16,8 @@ import {
   IPublicMemberProfileHydratedData,
   IPublicMemberProfileStorageData,
 } from '../../interfaces/member/profileStorage';
+import type { BrightDateTimestamp } from '../../types/brightDateTimestamp';
+import { brightDateNow } from '../../utils/brightDateConversions';
 import { MemberCblService } from '../../services/member/memberCblService';
 import { ServiceProvider } from '../../services/service.provider';
 import { Checksum } from '../../types/checksum';
@@ -244,8 +246,8 @@ export class MemberProfileDocument<TID extends PlatformID = Uint8Array> {
 
   /**   * Get date created (from public storage data)
    */
-  public get dateCreated(): Date {
-    return new Date(this.publicData.dateCreated);
+  public get dateCreated(): string {
+    return this.publicData.dateCreated;
   }
 
   /**   * Generate CBLs for both public and private profile data
@@ -367,11 +369,11 @@ export class MemberProfileDocument<TID extends PlatformID = Uint8Array> {
    */
   public addActivityLogEntry(
     action: string,
-    timestamp?: Date,
+    timestamp?: BrightDateTimestamp,
     metadata?: Record<string, unknown>,
   ): void {
     const current = this.getPrivateHydrated();
-    const entryTimestamp = timestamp ?? new Date();
+    const entryTimestamp = timestamp ?? brightDateNow();
     const entryMetadata = metadata ?? {};
 
     const newEntry = {

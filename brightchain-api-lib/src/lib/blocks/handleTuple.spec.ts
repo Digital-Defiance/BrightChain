@@ -4,6 +4,7 @@ import {
   BlockHandleTuple,
   BlockSize,
   BlockType,
+  brightDateNow,
   HandleTupleError,
   RawDataBlock,
   ServiceProvider,
@@ -33,7 +34,7 @@ describe('BlockHandleTuple', () => {
     return new RawDataBlock(
       blockSize,
       blockData,
-      new Date(Date.now() - 1000), // 1 second in the past to avoid timing issues
+      brightDateNow() - 1 / 86400, // 1 second in the past to avoid timing issues
       checksum,
       BlockType.RawData,
       BlockDataType.RawData,

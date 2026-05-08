@@ -19,6 +19,7 @@ import {
 } from '../../interfaces/availability/gossipService';
 import type { BlockId } from '../../interfaces/branded/primitives/blockId';
 import { IMessageMetadata } from '../../interfaces/messaging/messageMetadata';
+import { normalizeToBrightDate } from '../../utils/brightDateConversions';
 
 /**
  * Minimal event emitter interface for message events.
@@ -420,12 +421,12 @@ export class GossipRetryService {
   ): IMessageMetadata {
     return {
       blockId: pending.metadata.cblBlockId,
-      createdAt: pending.createdAt,
+      createdAt: normalizeToBrightDate(pending.createdAt),
       expiresAt: null,
       durabilityLevel: 0 as never,
       parityBlockIds: [],
       accessCount: 0,
-      lastAccessedAt: pending.createdAt,
+      lastAccessedAt: normalizeToBrightDate(pending.createdAt),
       replicationStatus: 0 as never,
       targetReplicationFactor: 0,
       replicaNodeIds: [],

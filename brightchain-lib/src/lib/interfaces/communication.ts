@@ -14,6 +14,7 @@
  */
 
 import { ChannelVisibility, DefaultRole } from '../enumerations/communication';
+import type { BrightDateTimestamp } from '../types/brightDateTimestamp';
 
 /**
  * Represents a reaction (emoji) attached to a message by a member.
@@ -22,7 +23,7 @@ export interface IReaction<TId = string> {
   id: TId;
   emoji: string;
   memberId: TId;
-  createdAt: Date;
+  createdAt: BrightDateTimestamp;
 }
 
 /**
@@ -31,8 +32,8 @@ export interface IReaction<TId = string> {
 export interface IGroupMember<TId = string> {
   memberId: TId;
   role: DefaultRole;
-  joinedAt: Date;
-  mutedUntil?: Date;
+  joinedAt: BrightDateTimestamp;
+  mutedUntil?: BrightDateTimestamp;
 }
 
 /**
@@ -41,8 +42,8 @@ export interface IGroupMember<TId = string> {
 export interface IChannelMember<TId = string> {
   memberId: TId;
   role: DefaultRole;
-  joinedAt: Date;
-  mutedUntil?: Date;
+  joinedAt: BrightDateTimestamp;
+  mutedUntil?: BrightDateTimestamp;
 }
 
 /**
@@ -53,8 +54,8 @@ export interface IConversation<TId = string, TData = string> {
   participants: [TId, TId];
   /** Per-participant wrapped DM key: Map<epoch, Map<participantId, wrappedKey>> */
   encryptedSharedKey: Map<number, Map<string, TData>>;
-  createdAt: Date;
-  lastMessageAt: Date;
+  createdAt: BrightDateTimestamp;
+  lastMessageAt: BrightDateTimestamp;
   lastMessagePreview?: string;
 }
 
@@ -72,8 +73,8 @@ export interface IGroup<TId = string, TData = string> {
   members: IGroupMember<TId>[];
   /** epoch → memberId → wrapped key */
   encryptedSharedKey: Map<number, Map<string, TData>>;
-  createdAt: Date;
-  lastMessageAt: Date;
+  createdAt: BrightDateTimestamp;
+  lastMessageAt: BrightDateTimestamp;
   pinnedMessageIds: TId[];
   promotedFromConversation?: TId;
 }
@@ -91,8 +92,8 @@ export interface IChannel<TId = string, TData = string> {
   members: IChannelMember<TId>[];
   /** epoch → memberId → wrapped key */
   encryptedSharedKey: Map<number, Map<string, TData>>;
-  createdAt: Date;
-  lastMessageAt: Date;
+  createdAt: BrightDateTimestamp;
+  lastMessageAt: BrightDateTimestamp;
   pinnedMessageIds: TId[];
   historyVisibleToNewMembers: boolean;
   /** Optional link to the parent Server. Channels without serverId remain standalone. */
@@ -161,9 +162,9 @@ export interface ICommunicationMessage<TId = string, TData = string> {
   contextId: TId;
   senderId: TId;
   encryptedContent: TData;
-  createdAt: Date;
-  editedAt?: Date;
-  editHistory: Array<{ content: TData; editedAt: Date }>;
+  createdAt: BrightDateTimestamp;
+  editedAt?: BrightDateTimestamp;
+  editHistory: Array<{ content: TData; editedAt: BrightDateTimestamp }>;
   deleted: boolean;
   deletedBy?: TId;
   pinned: boolean;
@@ -177,17 +178,17 @@ export interface ICommunicationMessage<TId = string, TData = string> {
 
   // ─── Exploding message fields (Requirements 8.1, 8.2, 8.3) ─────────
   /** When the message should auto-expire (time-based expiration) */
-  expiresAt?: Date;
+  expiresAt?: BrightDateTimestamp;
   /** Maximum number of reads before the message self-destructs */
   maxReads?: number;
   /** Current number of times the message has been read */
   readCount?: number;
   /** Map of member IDs to the timestamp they read the message */
-  readBy?: Map<string, Date>;
+  readBy?: Map<string, BrightDateTimestamp>;
   /** Whether the message has been exploded (permanently deleted) */
   exploded?: boolean;
   /** When the message was exploded */
-  explodedAt?: Date;
+  explodedAt?: BrightDateTimestamp;
 }
 
 /**
@@ -197,8 +198,8 @@ export interface IInviteToken<TId = string> {
   token: string;
   channelId: TId;
   createdBy: TId;
-  createdAt: Date;
-  expiresAt: Date;
+  createdAt: BrightDateTimestamp;
+  expiresAt: BrightDateTimestamp;
   maxUses: number;
   currentUses: number;
 }

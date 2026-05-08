@@ -12,6 +12,7 @@ import {
   IPublicMemberProfileStorageData,
 } from '../../interfaces/member/profileStorage';
 import { ServiceProvider } from '../../services/service.provider';
+import { normalizeToBrightDate, brightDateToISO } from '../../utils/brightDateConversions';
 import {
   privateMemberProfileHydrationSchema,
   publicMemberProfileHydrationSchema,
@@ -43,9 +44,9 @@ describe('MemberProfileHydration', () => {
         reputation: 100,
         storageQuota: BigInt(1024 * 1024 * 1024 * 100),
         storageUsed: BigInt(1024 * 500),
-        lastActive: new Date('2026-01-20T10:00:00Z'),
-        dateCreated: new Date('2026-01-01T00:00:00Z'),
-        dateUpdated: new Date('2026-01-20T10:00:00Z'),
+        lastActive: normalizeToBrightDate(new Date('2026-01-20T10:00:00Z')),
+        dateCreated: normalizeToBrightDate(new Date('2026-01-01T00:00:00Z')),
+        dateUpdated: normalizeToBrightDate(new Date('2026-01-20T10:00:00Z')),
       };
 
       const schema = publicMemberProfileHydrationSchema<GuidV4Uint8Array>();
@@ -86,13 +87,13 @@ describe('MemberProfileHydration', () => {
       expect(hydratedData.storageQuota).toBe(BigInt('214748364800'));
       expect(hydratedData.storageUsed).toBe(BigInt('1048576'));
       expect(hydratedData.lastActive).toEqual(
-        new Date('2026-01-24T12:00:00.000Z'),
+        normalizeToBrightDate(new Date('2026-01-24T12:00:00.000Z')),
       );
       expect(hydratedData.dateCreated).toEqual(
-        new Date('2026-01-01T00:00:00.000Z'),
+        normalizeToBrightDate(new Date('2026-01-01T00:00:00.000Z')),
       );
       expect(hydratedData.dateUpdated).toEqual(
-        new Date('2026-01-24T12:00:00.000Z'),
+        normalizeToBrightDate(new Date('2026-01-24T12:00:00.000Z')),
       );
     });
 
@@ -103,9 +104,9 @@ describe('MemberProfileHydration', () => {
         reputation: 75,
         storageQuota: BigInt(1024 * 1024 * 50),
         storageUsed: BigInt(1024 * 100),
-        lastActive: new Date('2026-01-15T08:30:00Z'),
-        dateCreated: new Date('2025-12-01T00:00:00Z'),
-        dateUpdated: new Date('2026-01-15T08:30:00Z'),
+        lastActive: normalizeToBrightDate(new Date('2026-01-15T08:30:00Z')),
+        dateCreated: normalizeToBrightDate(new Date('2025-12-01T00:00:00Z')),
+        dateUpdated: normalizeToBrightDate(new Date('2026-01-15T08:30:00Z')),
       };
 
       const schema = publicMemberProfileHydrationSchema<GuidV4Uint8Array>();
@@ -156,12 +157,12 @@ describe('MemberProfileHydration', () => {
           activityLog: [
             {
               action: 'login',
-              timestamp: new Date('2026-01-24T10:00:00Z'),
+              timestamp: normalizeToBrightDate(new Date('2026-01-24T10:00:00Z')),
               metadata: { ip: '127.0.0.1' },
             },
           ],
-          dateCreated: new Date('2026-01-01T00:00:00Z'),
-          dateUpdated: new Date('2026-01-24T10:00:00Z'),
+          dateCreated: normalizeToBrightDate(new Date('2026-01-01T00:00:00Z')),
+          dateUpdated: normalizeToBrightDate(new Date('2026-01-24T10:00:00Z')),
         };
 
       const schema = privateMemberProfileHydrationSchema<GuidV4Uint8Array>();
@@ -219,7 +220,7 @@ describe('MemberProfileHydration', () => {
       expect(hydratedData.activityLog).toHaveLength(1);
       expect(hydratedData.activityLog[0].action).toBe('upload');
       expect(hydratedData.activityLog[0].timestamp).toEqual(
-        new Date('2026-01-23T15:30:00.000Z'),
+        normalizeToBrightDate(new Date('2026-01-23T15:30:00.000Z')),
       );
     });
 
@@ -232,12 +233,12 @@ describe('MemberProfileHydration', () => {
         activityLog: [
           {
             action: 'test',
-            timestamp: new Date('2026-01-20T12:00:00Z'),
+            timestamp: normalizeToBrightDate(new Date('2026-01-20T12:00:00Z')),
             metadata: { test: true },
           },
         ],
-        dateCreated: new Date('2026-01-01T00:00:00Z'),
-        dateUpdated: new Date('2026-01-20T12:00:00Z'),
+        dateCreated: normalizeToBrightDate(new Date('2026-01-01T00:00:00Z')),
+        dateUpdated: normalizeToBrightDate(new Date('2026-01-20T12:00:00Z')),
       };
 
       const schema = privateMemberProfileHydrationSchema<GuidV4Uint8Array>();
@@ -268,8 +269,8 @@ describe('MemberProfileHydration', () => {
           blockedPeers: [],
           settings: {},
           activityLog: [],
-          dateCreated: new Date('2026-01-01T00:00:00Z'),
-          dateUpdated: new Date('2026-01-01T00:00:00Z'),
+          dateCreated: normalizeToBrightDate(new Date('2026-01-01T00:00:00Z')),
+          dateUpdated: normalizeToBrightDate(new Date('2026-01-01T00:00:00Z')),
         };
 
       const schema = privateMemberProfileHydrationSchema<GuidV4Uint8Array>();
@@ -292,9 +293,9 @@ describe('MemberProfileHydration', () => {
         reputation: 0,
         storageQuota: largeValue,
         storageUsed: largeValue,
-        lastActive: new Date(),
-        dateCreated: new Date(),
-        dateUpdated: new Date(),
+        lastActive: normalizeToBrightDate(new Date()),
+        dateCreated: normalizeToBrightDate(new Date()),
+        dateUpdated: normalizeToBrightDate(new Date()),
       };
 
       const schema = publicMemberProfileHydrationSchema<GuidV4Uint8Array>();
@@ -323,12 +324,12 @@ describe('MemberProfileHydration', () => {
           activityLog: [
             {
               action: 'complex',
-              timestamp: new Date('2026-01-24T12:00:00Z'),
+              timestamp: normalizeToBrightDate(new Date('2026-01-24T12:00:00Z')),
               metadata: complexMetadata,
             },
           ],
-          dateCreated: new Date(),
-          dateUpdated: new Date(),
+          dateCreated: normalizeToBrightDate(new Date()),
+          dateUpdated: normalizeToBrightDate(new Date()),
         };
 
       const schema = privateMemberProfileHydrationSchema<GuidV4Uint8Array>();

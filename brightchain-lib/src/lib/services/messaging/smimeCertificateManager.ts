@@ -12,6 +12,7 @@ import type {
   ISmimeSignatureResult,
   ISmimeVerificationResult,
 } from '../../interfaces/messaging/smimeCertificate';
+import { normalizeToBrightDate } from '../../utils/brightDateConversions';
 
 /**
  * Manages S/MIME X.509 certificate lifecycle: import, export, validation,
@@ -658,9 +659,9 @@ export class SmimeCertificateManager {
     const subject = cert.subject;
     const issuer = cert.issuer;
     const serialNumber = cert.serialNumber;
-    const validFrom = cert.notBefore;
-    const validTo = cert.notAfter;
-    const isExpired = validTo < new Date();
+    const validFrom = normalizeToBrightDate(cert.notBefore);
+    const validTo = normalizeToBrightDate(cert.notAfter);
+    const isExpired = cert.notAfter < new Date();
 
     // Extract email addresses from Subject Alternative Name extension
     const emailAddresses = await this.extractEmailAddresses(cert);

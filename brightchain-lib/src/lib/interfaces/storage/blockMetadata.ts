@@ -2,6 +2,8 @@ import { RawDataBlock } from '../../blocks/rawData';
 import { DurabilityLevel } from '../../enumerations/durabilityLevel';
 import { ReplicationStatus } from '../../enumerations/replicationStatus';
 import type { BlockId } from '../branded/primitives/blockId';
+import type { BrightDateTimestamp } from '../../types/brightDateTimestamp';
+import { brightDateNow } from '../../utils/brightDateConversions';
 
 import { PoolId } from './pooledBlockStore';
 
@@ -19,13 +21,13 @@ export interface IBlockMetadata {
   /**
    * Timestamp when the block was created/stored
    */
-  createdAt: Date;
+  createdAt: BrightDateTimestamp;
 
   /**
    * Timestamp when the block expires and becomes eligible for cleanup.
    * Null indicates the block never expires.
    */
-  expiresAt: Date | null;
+  expiresAt: BrightDateTimestamp | null;
 
   /**
    * The durability level determining parity block generation
@@ -45,7 +47,7 @@ export interface IBlockMetadata {
   /**
    * Timestamp of the most recent access to this block
    */
-  lastAccessedAt: Date;
+  lastAccessedAt: BrightDateTimestamp;
 
   /**
    * Current replication status of the block
@@ -87,7 +89,7 @@ export interface BlockStoreOptions {
    * When the block should expire and become eligible for cleanup.
    * Undefined or null means the block never expires.
    */
-  expiresAt?: Date;
+  expiresAt?: BrightDateTimestamp;
 
   /**
    * The durability level for the block, determining parity block generation.
@@ -159,7 +161,7 @@ export function createDefaultBlockMetadata(
   options?: BlockStoreOptions,
   poolId?: PoolId,
 ): IBlockMetadata {
-  const now = new Date();
+  const now = brightDateNow();
   return {
     blockId,
     createdAt: now,

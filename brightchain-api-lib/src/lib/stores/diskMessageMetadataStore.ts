@@ -1,6 +1,7 @@
 import {
   BlockSize,
   blockSizeToSizeString,
+  brightDateToISO,
   DeliveryStatus,
   IMessageMetadata,
   IMessageMetadataStore,
@@ -8,6 +9,7 @@ import {
   MessagePriority,
   MessageQuery,
   MessageQueryOptions,
+  normalizeToBrightDate,
   StoreError,
   StoreErrorType,
   type BlockId,
@@ -81,12 +83,12 @@ export class DiskMessageMetadataStore
     return {
       version: MESSAGE_METADATA_FILE_VERSION,
       blockId: metadata.blockId,
-      createdAt: metadata.createdAt.toISOString(),
-      expiresAt: metadata.expiresAt ? metadata.expiresAt.toISOString() : null,
+      createdAt: brightDateToISO(metadata.createdAt),
+      expiresAt: metadata.expiresAt !== null ? brightDateToISO(metadata.expiresAt) : null,
       durabilityLevel: metadata.durabilityLevel,
       parityBlockIds: [...metadata.parityBlockIds],
       accessCount: metadata.accessCount,
-      lastAccessedAt: metadata.lastAccessedAt.toISOString(),
+      lastAccessedAt: brightDateToISO(metadata.lastAccessedAt),
       replicationStatus: metadata.replicationStatus,
       targetReplicationFactor: metadata.targetReplicationFactor,
       replicaNodeIds: [...metadata.replicaNodeIds],
@@ -98,7 +100,7 @@ export class DiskMessageMetadataStore
       priority: metadata.priority,
       deliveryStatus: Array.from(metadata.deliveryStatus.entries()),
       acknowledgments: Array.from(metadata.acknowledgments.entries()).map(
-        ([k, v]) => [k, v.toISOString()],
+        ([k, v]) => [k, brightDateToISO(v)],
       ),
       encryptionScheme: metadata.encryptionScheme,
       isCBL: metadata.isCBL,
@@ -111,13 +113,13 @@ export class DiskMessageMetadataStore
   ): IMessageMetadata {
     return {
       blockId: toStorageKey(file.blockId),
-      createdAt: new Date(file.createdAt),
-      expiresAt: file.expiresAt ? new Date(file.expiresAt) : null,
+      createdAt: normalizeToBrightDate(file.createdAt),
+      expiresAt: file.expiresAt ? normalizeToBrightDate(file.expiresAt) : null,
       durabilityLevel:
         file.durabilityLevel as IMessageMetadata['durabilityLevel'],
       parityBlockIds: [...file.parityBlockIds].map((id) => toStorageKey(id)),
       accessCount: file.accessCount,
-      lastAccessedAt: new Date(file.lastAccessedAt),
+      lastAccessedAt: normalizeToBrightDate(file.lastAccessedAt),
       replicationStatus:
         file.replicationStatus as IMessageMetadata['replicationStatus'],
       targetReplicationFactor: file.targetReplicationFactor,
@@ -132,7 +134,7 @@ export class DiskMessageMetadataStore
         file.deliveryStatus.map(([k, v]) => [k, v as DeliveryStatus]),
       ),
       acknowledgments: new Map(
-        file.acknowledgments.map(([k, v]) => [k, new Date(v)]),
+        file.acknowledgments.map(([k, v]) => [k, normalizeToBrightDate(v)]),
       ),
       encryptionScheme: file.encryptionScheme as MessageEncryptionScheme,
       isCBL: file.isCBL,
@@ -203,7 +205,7 @@ export class DiskMessageMetadataStore
   async recordAcknowledgment(
     messageId: string,
     recipientId: string,
-    timestamp: Date,
+    timestamp: number,
   ): Promise<void> {
     const meta = await this.getMessageMetadata(messageId);
     if (!meta) {

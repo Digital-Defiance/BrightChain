@@ -1,4 +1,5 @@
 import {
+  brightDateToISO,
   DiscoveryResult,
   IAvailabilityService,
   IDiscoveryProtocol,
@@ -225,7 +226,7 @@ export class NodesController<
       nodeId: location.nodeId,
       status: NodeStatus.ONLINE,
       capabilities: ['block_storage'],
-      lastSeen: location.lastSeen.toISOString(),
+      lastSeen: brightDateToISO(location.lastSeen),
       latencyMs: location.latencyMs,
     };
   }
@@ -410,7 +411,7 @@ export class NodesController<
       const locations = result.locations.map((loc: ILocationRecord) => ({
         nodeId: loc.nodeId,
         latencyMs: loc.latencyMs,
-        lastSeen: loc.lastSeen.toISOString(),
+        lastSeen: brightDateToISO(loc.lastSeen),
       }));
 
       return {

@@ -16,6 +16,7 @@ import {
   BlockManifest,
   BloomFilter,
   CBLMetadataSearchQuery,
+  brightDateNow,
   ICBLIndexEntry,
   ILocationRecord,
 } from '@brightchain/brightchain-lib';
@@ -214,7 +215,7 @@ class MockManifestProvider implements IManifestProvider {
       this.manifests.get(this.nodeId) || {
         nodeId: this.nodeId,
         blockIds: [],
-        generatedAt: new Date(),
+        generatedAt: 9000,
         checksum: '',
       }
     );
@@ -404,7 +405,7 @@ describe('Availability Integration Tests', () => {
       const blockId = randomBytes(32).toString('hex');
       const location: ILocationRecord = {
         nodeId: 'node2',
-        lastSeen: new Date(),
+        lastSeen: brightDateNow(),
         isAuthoritative: true,
         latencyMs: 50,
       };
@@ -463,7 +464,7 @@ describe('Availability Integration Tests', () => {
       // Add remote block location
       await node1.availabilityService.updateLocation(blockId, {
         nodeId: 'node2',
-        lastSeen: new Date(),
+        lastSeen: brightDateNow(),
         isAuthoritative: true,
       });
 
@@ -556,7 +557,7 @@ describe('Availability Integration Tests', () => {
       const remoteBlock = randomBytes(32).toString('hex');
       await node.availabilityService.updateLocation(remoteBlock, {
         nodeId: 'node2',
-        lastSeen: new Date(),
+        lastSeen: brightDateNow(),
         isAuthoritative: true,
       });
 

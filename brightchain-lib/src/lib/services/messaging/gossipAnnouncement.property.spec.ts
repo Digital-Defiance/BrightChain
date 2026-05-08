@@ -6,6 +6,7 @@ import {
   validateBlockAnnouncement,
 } from '../../interfaces/availability/gossipService';
 import type { BlockId } from '../../interfaces/branded/primitives/blockId';
+import { normalizeToBrightDate } from '../../utils/brightDateConversions';
 
 /** Cast a test string to BlockId without validation — for test data only. */
 const bid = (s: string) => s as unknown as BlockId;
@@ -57,7 +58,7 @@ describe('Feature: unified-gossip-delivery, Property 1: Announcement field valid
   const baseAnnouncementFieldsArb = fc.record({
     blockId: nonEmptyStringArb.map((s) => bid(s)),
     nodeId: nonEmptyStringArb,
-    timestamp: fc.date(),
+    timestamp: fc.date().map((d) => normalizeToBrightDate(d)),
     ttl: fc.integer({ min: 1, max: 10 }),
   });
 
@@ -249,7 +250,7 @@ describe('Feature: unified-gossip-delivery, Property 2: Announcement metadata co
   const baseAnnouncementFieldsArb = fc.record({
     blockId: nonEmptyStringArb.map((s) => bid(s)),
     nodeId: nonEmptyStringArb,
-    timestamp: fc.date(),
+    timestamp: fc.date().map((d) => normalizeToBrightDate(d)),
     ttl: fc.integer({ min: 1, max: 10 }),
   });
 

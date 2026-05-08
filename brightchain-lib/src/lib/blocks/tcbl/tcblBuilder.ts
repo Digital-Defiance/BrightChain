@@ -26,6 +26,7 @@ import { ITcblEntryInput } from '../../interfaces/tcbl/tcblEntryInput';
 import { ITcblManifest } from '../../interfaces/tcbl/tcblManifest';
 import { getGlobalServiceProvider } from '../../services/globalServiceProvider';
 import { Checksum } from '../../types/checksum';
+import { brightDateNow } from '../../utils/brightDateConversions';
 import { RawDataBlock } from '../rawData';
 import { TcblManifestSerializer } from './manifestSerializer';
 import { TarballConstituentBlockListBlock } from './tcbl';
@@ -214,7 +215,7 @@ export class TcblBuilder<TID extends PlatformID = Uint8Array> {
     const cblBlockSize = BlockSize.Small;
     const { headerData } = cblService.makeCblHeader(
       this.creator,
-      new Date(),
+      brightDateNow(),
       allAddresses.length,
       payload.length,
       addressList,

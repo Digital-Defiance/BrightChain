@@ -4,6 +4,7 @@ import {
   BlockSize,
   Checksum,
   IBaseBlockMetadata,
+  normalizeToBrightDate,
   RawDataBlock,
   StoreError,
   StoreErrorType,
@@ -57,7 +58,7 @@ export class DiskBlockSyncStore extends DiskBlockStore {
         const block = new RawDataBlock(
           size as BlockSize,
           blockData,
-          new Date(metadata.dateCreated),
+          normalizeToBrightDate(metadata.dateCreated),
           key,
         );
         block.validateSync();

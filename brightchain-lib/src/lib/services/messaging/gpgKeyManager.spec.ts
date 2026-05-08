@@ -35,7 +35,7 @@ describe('GpgKeyManager', () => {
       expect(result.metadata.userId).toContain('test@example.com');
       expect(result.metadata.keyId).toBeTruthy();
       expect(result.metadata.fingerprint).toBeTruthy();
-      expect(result.metadata.createdAt).toBeInstanceOf(Date);
+      expect(typeof result.metadata.createdAt).toBe("number");
       expect(result.metadata.algorithm).toBeTruthy();
     }, 30000);
 
@@ -76,7 +76,7 @@ describe('GpgKeyManager', () => {
       expect(metadata.fingerprint).toBeTruthy();
       expect(metadata.userId).toContain('Import Test');
       expect(metadata.userId).toContain('import@example.com');
-      expect(metadata.createdAt).toBeInstanceOf(Date);
+      expect(typeof metadata.createdAt).toBe("number");
       expect(metadata.algorithm).toBeTruthy();
     });
 

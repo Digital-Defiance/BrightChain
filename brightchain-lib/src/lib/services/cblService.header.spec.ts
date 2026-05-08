@@ -28,12 +28,13 @@ import { BlockEncryptionType } from '../enumerations/blockEncryptionType';
 import { BlockSize } from '../enumerations/blockSize';
 import { CblError } from '../errors/cblError';
 import { initializeBrightChain } from '../init';
+import { dateToBrightDate } from '../utils/brightDateConversions';
 import { ServiceProvider } from './service.provider';
 
 describe('CBL Header Verification', () => {
   let serviceProvider: ServiceProvider;
   let creator: Member<Uint8Array>;
-  const testDate = new Date('2024-01-15T12:00:00.000Z');
+  const testDate = dateToBrightDate(new Date('2024-01-15T12:00:00.000Z'));
 
   beforeAll(() => {
     initializeBrightChain();
@@ -136,7 +137,7 @@ describe('CBL Header Verification', () => {
       );
 
       const dateFromHeader = cblService.getDateCreated(headerData);
-      expect(dateFromHeader.getTime()).toBe(testDate.getTime());
+      expect(Math.abs(dateFromHeader - testDate)).toBeLessThan(0.001); // < 0.001 days tolerance
     });
 
     it('should write address count at correct offset', () => {

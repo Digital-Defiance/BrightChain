@@ -21,6 +21,7 @@ import {
   IPooledBlockStore,
   PoolId,
   PoolMismatchError,
+  brightDateNow,
 } from '@brightchain/brightchain-lib';
 import { sha3_512 } from '@noble/hashes/sha3';
 import fc from 'fast-check';
@@ -314,7 +315,7 @@ function registerBlock(
   const blockId = computeBlockId(data);
   setup.transport.responses.set(blockId, data);
   setup.availability.locations.set(blockId, [
-    { nodeId, lastSeen: new Date(), isAuthoritative: true },
+    { nodeId, lastSeen: brightDateNow(), isAuthoritative: true },
   ]);
   return blockId;
 }

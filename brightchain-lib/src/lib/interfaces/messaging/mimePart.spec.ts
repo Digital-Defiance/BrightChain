@@ -6,6 +6,7 @@ import {
   IContentDisposition,
   IMimePart,
 } from './mimePart';
+import { brightDateNow } from '../../utils/brightDateConversions';
 
 /** Cast a test string to BlockId without validation — for test data only. */
 const bid = (s: string) => s as unknown as BlockId;
@@ -157,7 +158,7 @@ describe('IContentDisposition Interface', () => {
   });
 
   it('should support all optional date fields', () => {
-    const now = new Date();
+    const now = brightDateNow();
     const disposition: IContentDisposition = {
       type: 'attachment',
       filename: 'report.xlsx',

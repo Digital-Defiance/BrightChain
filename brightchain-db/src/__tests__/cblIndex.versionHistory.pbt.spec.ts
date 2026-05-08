@@ -10,7 +10,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import type { BlockId, ICBLIndexEntry } from '@brightchain/brightchain-lib';
-import { CBLVisibility } from '@brightchain/brightchain-lib';
+import { brightDateNow, CBLVisibility, dateToBrightDate } from '@brightchain/brightchain-lib';
 import * as fc from 'fast-check';
 import { CBLIndex } from '../lib/cblIndex';
 import { BrightDb } from '../lib/database';
@@ -108,7 +108,7 @@ describe('CBLIndex Version History Property-Based Tests', () => {
               blockId1: ids.blockId1,
               blockId2: ids.blockId2,
               blockSize: 256,
-              createdAt: new Date(2025, 0, 1, 0, 0, i),
+              createdAt: dateToBrightDate(new Date(2025, 0, 1, 0, 0, i)),
               visibility: CBLVisibility.Private,
             };
             const result = await index.addVersion(fileId, entry);
@@ -172,7 +172,7 @@ describe('CBLIndex Version History Property-Based Tests', () => {
               blockId1: ids.blockId1,
               blockId2: ids.blockId2,
               blockSize: 256,
-              createdAt: new Date(2025, 0, 1, 0, 0, i),
+              createdAt: dateToBrightDate(new Date(2025, 0, 1, 0, 0, i)),
               visibility: CBLVisibility.Private,
             });
             versions.push(result);
@@ -241,7 +241,7 @@ describe('CBLIndex Version History Property-Based Tests', () => {
               blockId1: ids.blockId1,
               blockId2: ids.blockId2,
               blockSize: 256,
-              createdAt: new Date(2025, 0, 1, 0, 0, i),
+              createdAt: dateToBrightDate(new Date(2025, 0, 1, 0, 0, i)),
               visibility: CBLVisibility.Private,
             });
             versions.push(result);
@@ -272,7 +272,7 @@ describe('CBLIndex Version History Property-Based Tests', () => {
           // The soft-deleted version should have a deletedAt timestamp
           const deletedVersion = fullHistory[middleIndex];
           expect(deletedVersion.deletedAt).toBeDefined();
-          expect(deletedVersion.deletedAt).toBeInstanceOf(Date);
+          expect(typeof deletedVersion.deletedAt).toBe('number');
 
           // Without includeDeleted — middle version omitted
           const filteredHistory = await index.getVersionHistory(fileId);

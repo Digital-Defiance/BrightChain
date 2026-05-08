@@ -11,7 +11,7 @@
  */
 
 import type { BlockId, ICBLIndexEntry } from '@brightchain/brightchain-lib';
-import { CBLVisibility } from '@brightchain/brightchain-lib';
+import { brightDateNow, CBLVisibility, dateToBrightDate } from '@brightchain/brightchain-lib';
 import { CBLIndex } from '../lib/cblIndex';
 import { BrightDb } from '../lib/database';
 import { InMemoryHeadRegistry } from '../lib/headRegistry';
@@ -56,7 +56,7 @@ function makeEntry(
     blockId1: 'block-aaa-111' as BlockId,
     blockId2: 'block-bbb-222' as BlockId,
     blockSize: 256,
-    createdAt: new Date('2025-01-15T10:00:00Z'),
+    createdAt: dateToBrightDate(new Date('2025-01-15T10:00:00Z')),
     visibility: CBLVisibility.Private,
     ...overrides,
   };

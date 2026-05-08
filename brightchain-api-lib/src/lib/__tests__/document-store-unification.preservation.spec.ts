@@ -15,7 +15,7 @@
  * EXPECTED OUTCOME: All tests PASS on unfixed code (confirms baseline to preserve).
  */
 
-import { ConversationService } from '@brightchain/brightchain-lib';
+import { brightDateToDate, ConversationService } from '@brightchain/brightchain-lib';
 import * as fc from 'fast-check';
 import * as fs from 'fs';
 import * as http from 'http';
@@ -298,8 +298,9 @@ describe('Property 2: Preservation — Registered Models and Service API Signatu
           expect(conversation.id).toBeDefined();
           expect(conversation.participants).toContain(memberA);
           expect(conversation.participants).toContain(memberB);
-          expect(conversation.createdAt).toBeInstanceOf(Date);
-          expect(conversation.lastMessageAt).toBeInstanceOf(Date);
+          expect(conversation.createdAt).toBeDefined();
+          expect(brightDateToDate(conversation.createdAt)).toBeInstanceOf(Date);
+          expect(brightDateToDate(conversation.lastMessageAt)).toBeInstanceOf(Date);
 
           // sendMessage returns ICommunicationMessage
           const message = await service.sendMessage(
@@ -312,7 +313,8 @@ describe('Property 2: Preservation — Registered Models and Service API Signatu
           expect(message.id).toBeDefined();
           expect(message.senderId).toBe(memberA);
           expect(message.encryptedContent).toBe(messageContent);
-          expect(message.createdAt).toBeInstanceOf(Date);
+          expect(message.createdAt).toBeDefined();
+          expect(brightDateToDate(message.createdAt)).toBeInstanceOf(Date);
 
           // listConversations returns IPaginatedResult<IConversation>
           const listed = await service.listConversations(memberA);

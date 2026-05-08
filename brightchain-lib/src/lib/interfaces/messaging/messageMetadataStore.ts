@@ -2,6 +2,7 @@ import type { PlatformID } from '@digitaldefiance/ecies-lib';
 
 import { DeliveryStatus } from '../../enumerations/messaging/deliveryStatus';
 import { MessagePriority } from '../../enumerations/messaging/messagePriority';
+import type { BrightDateTimestamp } from '../../types/brightDateTimestamp';
 import { IBlockMetadataStore } from '../storage/blockMetadataStore';
 import { IMessageMetadata } from './messageMetadata';
 
@@ -11,8 +12,8 @@ import { IMessageMetadata } from './messageMetadata';
  * @see Requirements 9.1, 9.2, 9.3, 9.4, 9.5
  */
 export interface MessageQueryOptions {
-  startDate?: Date;
-  endDate?: Date;
+  startDate?: BrightDateTimestamp;
+  endDate?: BrightDateTimestamp;
   messageType?: string;
   priority?: MessagePriority;
   limit?: number;
@@ -31,8 +32,8 @@ export interface MessageQuery<TID extends PlatformID = string> {
   recipientId?: TID;
   senderId?: TID;
   messageType?: string;
-  startDate?: Date;
-  endDate?: Date;
+  startDate?: BrightDateTimestamp;
+  endDate?: BrightDateTimestamp;
   priority?: MessagePriority;
   page?: number;
   pageSize?: number;
@@ -86,7 +87,7 @@ export interface IMessageMetadataStore<TID extends PlatformID = string>
   recordAcknowledgment(
     messageId: string,
     recipientId: TID,
-    timestamp: Date,
+    timestamp: BrightDateTimestamp,
   ): Promise<void>;
 
   /**

@@ -43,6 +43,7 @@ import {
 import { IBlockStore } from '../interfaces/storage/blockStore';
 import { IMemberStoreDb } from '../interfaces/storage/documentTypes';
 import { Checksum } from '../types/checksum';
+import { brightDateNow, normalizeToBrightDate, brightDateToISO } from '../utils/brightDateConversions';
 import { MemberCblService } from './member/memberCblService';
 import { ServiceProvider } from './service.provider';
 
@@ -153,7 +154,7 @@ export class MemberStore<TID extends PlatformID = Uint8Array>
           BlockType.RawData,
           BlockDataType.PublicMemberData,
           Number(cbl.originalDataLength),
-          new Date(),
+          brightDateNow(),
         );
 
         const xoredBlock = await tuple.xor(this.blockStore, metadata);
@@ -250,9 +251,9 @@ export class MemberStore<TID extends PlatformID = Uint8Array>
         reputation: 0,
         storageQuota: BigInt(1024 * 1024 * 100), // 100MB default quota
         storageUsed: BigInt(0),
-        lastActive: new Date(),
-        dateCreated: new Date(),
-        dateUpdated: new Date(),
+        lastActive: brightDateNow(),
+        dateCreated: brightDateNow(),
+        dateUpdated: brightDateNow(),
       };
 
       const privateProfileData: IPrivateMemberProfileHydratedData<TID> = {
@@ -265,8 +266,8 @@ export class MemberStore<TID extends PlatformID = Uint8Array>
           preferredRegions: [],
         },
         activityLog: [],
-        dateCreated: new Date(),
-        dateUpdated: new Date(),
+        dateCreated: brightDateNow(),
+        dateUpdated: brightDateNow(),
       };
 
       // Estimate profile data size to pick an appropriate block size.
@@ -410,7 +411,7 @@ export class MemberStore<TID extends PlatformID = Uint8Array>
       publicBlock = new RawDataBlock(
         this.blockSizeForData(publicCBLData.length),
         publicCBLData,
-        doc!.dateCreated,
+        normalizeToBrightDate(doc!.dateCreated),
         undefined, // Let RawDataBlock calculate the checksum
         BlockType.RawData,
         BlockDataType.PublicMemberData,
@@ -419,7 +420,7 @@ export class MemberStore<TID extends PlatformID = Uint8Array>
       privateBlock = new RawDataBlock(
         this.blockSizeForData(privateCBLData.length),
         privateCBLData,
-        doc!.dateCreated,
+        normalizeToBrightDate(doc!.dateCreated),
         undefined, // Let RawDataBlock calculate the checksum
         BlockType.RawData,
         BlockDataType.PrivateMemberData,
@@ -429,7 +430,7 @@ export class MemberStore<TID extends PlatformID = Uint8Array>
       publicProfileBlock = new RawDataBlock(
         this.blockSizeForData(publicProfileCBLData.length),
         publicProfileCBLData,
-        profileDoc!.dateCreated,
+        normalizeToBrightDate(profileDoc!.dateCreated),
         undefined, // Let RawDataBlock calculate the checksum
         BlockType.RawData,
         BlockDataType.PublicMemberData, // Profile uses same data type
@@ -438,7 +439,7 @@ export class MemberStore<TID extends PlatformID = Uint8Array>
       privateProfileBlock = new RawDataBlock(
         this.blockSizeForData(privateProfileCBLData.length),
         privateProfileCBLData,
-        profileDoc!.dateCreated,
+        normalizeToBrightDate(profileDoc!.dateCreated),
         undefined, // Let RawDataBlock calculate the checksum
         BlockType.RawData,
         BlockDataType.PrivateMemberData, // Profile uses same data type
@@ -499,7 +500,7 @@ export class MemberStore<TID extends PlatformID = Uint8Array>
         privateProfileCBL: privateProfileBlock.idChecksum, // Profile private data
         type: data.type,
         status: MemberStatusType.Active,
-        lastUpdate: new Date(),
+        lastUpdate: brightDateNow(),
         region: data.region,
         reputation: 0,
         name: data.name,
@@ -541,7 +542,7 @@ export class MemberStore<TID extends PlatformID = Uint8Array>
       reference: {
         id: member.id,
         type: doc!.type,
-        dateVerified: new Date(),
+        dateVerified: brightDateNow(),
         publicCBL: publicBlock.idChecksum, // Use the actual block checksum
       },
       mnemonic,
@@ -940,9 +941,9 @@ export class MemberStore<TID extends PlatformID = Uint8Array>
           lastActive:
             changes.publicChanges?.lastSeen ??
             currentProfile.publicProfile?.lastActive ??
-            new Date(),
-          dateCreated: currentProfile.publicProfile?.dateCreated ?? new Date(),
-          dateUpdated: new Date(),
+            brightDateNow(),
+          dateCreated: currentProfile.publicProfile?.dateCreated ?? brightDateNow(),
+          dateUpdated: brightDateNow(),
         };
 
         // Create updated private profile data by merging changes
@@ -975,8 +976,8 @@ export class MemberStore<TID extends PlatformID = Uint8Array>
               preferredRegions: [],
             },
           activityLog: currentProfile.privateProfile?.activityLog ?? [],
-          dateCreated: currentProfile.privateProfile?.dateCreated ?? new Date(),
-          dateUpdated: new Date(),
+          dateCreated: currentProfile.privateProfile?.dateCreated ?? brightDateNow(),
+          dateUpdated: brightDateNow(),
         };
 
         // Dehydrate profile data to storage format and serialize to JSON
@@ -1002,7 +1003,7 @@ export class MemberStore<TID extends PlatformID = Uint8Array>
         const newPublicProfileBlock = new RawDataBlock(
           this.blockSizeForData(publicProfileBytes.length),
           publicProfileBytes,
-          new Date(),
+          brightDateNow(),
           undefined, // Let RawDataBlock calculate the checksum
           BlockType.RawData,
           BlockDataType.PublicMemberData,
@@ -1011,7 +1012,7 @@ export class MemberStore<TID extends PlatformID = Uint8Array>
         const newPrivateProfileBlock = new RawDataBlock(
           this.blockSizeForData(privateProfileBytes.length),
           privateProfileBytes,
-          new Date(),
+          brightDateNow(),
           undefined, // Let RawDataBlock calculate the checksum
           BlockType.RawData,
           BlockDataType.PrivateMemberData,
@@ -1047,7 +1048,7 @@ export class MemberStore<TID extends PlatformID = Uint8Array>
       }
 
       // Update timestamp
-      indexEntry.lastUpdate = new Date();
+      indexEntry.lastUpdate = brightDateNow();
 
       // Update the index
       await this.updateIndex(indexEntry);
@@ -1192,7 +1193,7 @@ export class MemberStore<TID extends PlatformID = Uint8Array>
           poolId: this._db.name ?? '',
           type: entry.type,
           status: entry.status,
-          lastUpdate: entry.lastUpdate.toISOString(),
+          lastUpdate: brightDateToISO(entry.lastUpdate),
           ...(entry.region ? { region: entry.region } : {}),
           reputation: entry.reputation,
         };
@@ -1383,7 +1384,7 @@ export class MemberStore<TID extends PlatformID = Uint8Array>
         : {}),
       type: indexDoc.type,
       status: indexDoc.status ?? MemberStatusType.Active,
-      lastUpdate: new Date(indexDoc.lastUpdate),
+      lastUpdate: normalizeToBrightDate(indexDoc.lastUpdate),
       region: indexDoc.region,
       reputation: indexDoc.reputation ?? 0,
     };

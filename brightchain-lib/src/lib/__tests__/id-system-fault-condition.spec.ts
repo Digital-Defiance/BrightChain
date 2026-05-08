@@ -26,6 +26,8 @@ import { asBlockId } from '../interfaces/branded/primitives/blockId';
 import { IMessageMetadata } from '../interfaces/messaging/messageMetadata';
 import { IBrightTrustMember } from '../interfaces/services/brightTrustService';
 import { IBlockMetadata } from '../interfaces/storage/blockMetadata';
+import { brightDateNow } from '../utils/brightDateConversions';
+import type { BrightDateTimestamp } from '../types/brightDateTimestamp';
 
 jest.setTimeout(30_000);
 
@@ -145,8 +147,8 @@ describe('Category 3 — BrightTrust interface generics (Validates: Requirements
       publicKey: new Uint8Array(33),
       metadata: { name: 'test' },
       isActive: true,
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      createdAt: brightDateNow(),
+      updatedAt: brightDateNow(),
     };
 
     // On unfixed code, _platformId exists as a dead optional field on the interface.
@@ -228,12 +230,12 @@ describe('Category 5 — Block ID branded type (Validates: Requirements 1.9)', (
     // The branded BlockId can be assigned to IBlockMetadata.blockId
     const metadata: IBlockMetadata = {
       blockId,
-      createdAt: new Date(),
+      createdAt: brightDateNow(),
       expiresAt: null,
       durabilityLevel: 0 as never,
       parityBlockIds: [],
       accessCount: 0,
-      lastAccessedAt: new Date(),
+      lastAccessedAt: brightDateNow(),
       replicationStatus: 0 as never,
       targetReplicationFactor: 0,
       replicaNodeIds: [],

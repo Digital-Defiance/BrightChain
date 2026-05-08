@@ -299,10 +299,12 @@ export const ShowcaseSpanishStrings: Partial<
   [ShowcaseStrings.FAQ_Tech_Q19_TAI_Label]: 'Modo TAI monotónico',
   [ShowcaseStrings.FAQ_Tech_Q19_TAI]:
     'Para aplicaciones que no pueden tolerar segundos intercalares (marcas de tiempo criptográficas, consenso distribuido), BrightDate soporta el modo TAI (Tiempo Atómico Internacional) — una escala de tiempo estrictamente monotónica donde cada segundo es exactamente un segundo SI, sin inserciones ni eliminaciones.',
-  [ShowcaseStrings.FAQ_Tech_Q19_Interplanetary_Label]: 'Listo para lo interplanetario',
+  [ShowcaseStrings.FAQ_Tech_Q19_Interplanetary_Label]:
+    'Listo para lo interplanetario',
   [ShowcaseStrings.FAQ_Tech_Q19_Interplanetary]:
     'BrightDate se extiende naturalmente a la coordinación interplanetaria. Incluye conversiones de fecha Sol de Marte, cálculos de retardo de luz y temporización de propagación de señales. A medida que los nodos de BrightChain eventualmente se extiendan más allá de la Tierra, el sistema de tiempo ya está preparado.',
-  [ShowcaseStrings.FAQ_Tech_Q19_DualDisplay_Label]: 'Filosofía de visualización dual',
+  [ShowcaseStrings.FAQ_Tech_Q19_DualDisplay_Label]:
+    'Filosofía de visualización dual',
   [ShowcaseStrings.FAQ_Tech_Q19_DualDisplay]:
     'BrightDate se muestra junto a las fechas tradicionales en todo BrightChain — en correos electrónicos, metadatos de archivos, sellos de bóvedas, transacciones Joule, eventos de calendario y en cualquier otro lugar donde aparezca una marca de tiempo. El objetivo es la familiaridad gradual: siempre tienes la fecha local como referencia, pero con el tiempo BrightDate se convierte en la forma natural de pensar sobre el tiempo en el ecosistema BrightChain.',
   [ShowcaseStrings.FAQ_Tech_Q19_Conclusion]:
@@ -2431,6 +2433,13 @@ export const ShowcaseSpanishStrings: Partial<
   [ShowcaseStrings.PP_S18_OrgName]: 'Digital Defiance',
   [ShowcaseStrings.PP_S18_EmailLabel]: 'Correo electrónico:',
   [ShowcaseStrings.PP_S18_WebLabel]: 'Web:',
+  [ShowcaseStrings.Slogan_Math_Search_Warrant]:
+    'Las matemáticas no aceptan una orden de registro.',
+  [ShowcaseStrings.Slogan_Where_State_Sees_Noise]:
+    'Donde el Estado ve ruido, el pueblo encuentra la verdad.',
+  [ShowcaseStrings.Slogan_Building_World_Where_Ideas_Have_No_Borders]:
+    'Construyendo un mundo donde las ideas no tengan fronteras y la verdad no tenga dueño.',
+  [ShowcaseStrings.Slogan_Defiance_By_Design]: 'Desafío por Diseño.',
 };
 
 export default ShowcaseSpanishStrings;

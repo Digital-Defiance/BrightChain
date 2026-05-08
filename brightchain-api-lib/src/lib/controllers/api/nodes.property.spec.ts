@@ -27,6 +27,7 @@ import {
   NodeStatus,
   PeerQueryResult,
   PoolScopedBloomFilter,
+  brightDateNow,
 } from '@brightchain/brightchain-lib';
 import { ApiErrorResponse } from '@digitaldefiance/node-express-suite';
 import * as fc from 'fast-check';
@@ -237,7 +238,7 @@ describe('Nodes Endpoint Property Tests', () => {
             const locations: ILocationRecord[] = nodeIds.map(
               (nodeId: string) => ({
                 nodeId,
-                lastSeen: new Date(),
+                lastSeen: brightDateNow(),
                 isAuthoritative: false,
                 latencyMs: Math.floor(Math.random() * 100) + 5,
               }),
@@ -332,7 +333,7 @@ describe('Nodes Endpoint Property Tests', () => {
               blockLocations.set(blockId, [
                 {
                   nodeId: 'test-node',
-                  lastSeen: new Date(),
+                  lastSeen: brightDateNow(),
                   isAuthoritative: false,
                 },
               ]);

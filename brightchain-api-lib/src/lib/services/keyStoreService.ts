@@ -21,6 +21,8 @@ import {
   ISmimeCertificateBundle,
   ISmimeCertificateMetadata,
   MessageEncryptionScheme,
+  brightDateNow,
+  normalizeToBrightDate,
 } from '@brightchain/brightchain-lib';
 import { createCipheriv, createDecipheriv, randomBytes } from 'crypto';
 
@@ -39,8 +41,8 @@ export interface IKeyStoreDocument {
   privateIv?: string;
   privateAuthTag?: string;
   metadata: Record<string, unknown>;
-  createdAt: string;
-  updatedAt: string;
+  createdAt: number;
+  updatedAt: number;
 }
 
 /**
@@ -51,7 +53,7 @@ export interface IEncryptionPreferenceDocument {
   userId: string;
   contactEmail?: string | null;
   scheme: string;
-  updatedAt: string;
+  updatedAt: number;
 }
 
 // ─── Collection names ────────────────────────────────────────────────────────
@@ -131,14 +133,8 @@ function serializeGpgMetadata(meta: IGpgKeyMetadata): Record<string, unknown> {
     fingerprint: meta.fingerprint,
     algorithm: meta.algorithm,
     gpgUserId: meta.userId,
-    createdAt:
-      meta.createdAt instanceof Date
-        ? meta.createdAt.toISOString()
-        : String(meta.createdAt),
-    expiresAt:
-      meta.expiresAt instanceof Date
-        ? meta.expiresAt.toISOString()
-        : (meta.expiresAt ?? null),
+    createdAt: meta.createdAt,
+    expiresAt: meta.expiresAt ?? null,
   };
 }
 
@@ -148,8 +144,8 @@ function deserializeGpgMetadata(doc: Record<string, unknown>): IGpgKeyMetadata {
     fingerprint: doc['fingerprint'] as string,
     algorithm: doc['algorithm'] as string,
     userId: doc['gpgUserId'] as string,
-    createdAt: new Date(doc['createdAt'] as string),
-    expiresAt: doc['expiresAt'] ? new Date(doc['expiresAt'] as string) : null,
+    createdAt: normalizeToBrightDate(doc['createdAt'] as number | string | Date),
+    expiresAt: doc['expiresAt'] != null ? normalizeToBrightDate(doc['expiresAt'] as number | string | Date) : null,
   };
 }
 
@@ -160,14 +156,8 @@ function serializeSmimeMetadata(
     subject: meta.subject,
     issuer: meta.issuer,
     serialNumber: meta.serialNumber,
-    validFrom:
-      meta.validFrom instanceof Date
-        ? meta.validFrom.toISOString()
-        : String(meta.validFrom),
-    validTo:
-      meta.validTo instanceof Date
-        ? meta.validTo.toISOString()
-        : String(meta.validTo),
+    validFrom: meta.validFrom,
+    validTo: meta.validTo,
     emailAddresses: meta.emailAddresses,
     smimeFingerprint: meta.fingerprint,
     isExpired: meta.isExpired,
@@ -181,8 +171,8 @@ function deserializeSmimeMetadata(
     subject: doc['subject'] as string,
     issuer: doc['issuer'] as string,
     serialNumber: doc['serialNumber'] as string,
-    validFrom: new Date(doc['validFrom'] as string),
-    validTo: new Date(doc['validTo'] as string),
+    validFrom: normalizeToBrightDate(doc['validFrom'] as number | string | Date),
+    validTo: normalizeToBrightDate(doc['validTo'] as number | string | Date),
     emailAddresses: (doc['emailAddresses'] as string[]) ?? [],
     fingerprint: doc['smimeFingerprint'] as string,
     isExpired: (doc['isExpired'] as boolean) ?? false,
@@ -223,8 +213,8 @@ function docToEntry(
     publicMaterial: doc.publicMaterial,
     privateMaterial,
     metadata,
-    createdAt: new Date(doc.createdAt),
-    updatedAt: new Date(doc.updatedAt),
+    createdAt: normalizeToBrightDate(doc.createdAt as unknown as number | string | Date),
+    updatedAt: normalizeToBrightDate(doc.updatedAt as unknown as number | string | Date),
   };
 }
 
@@ -314,7 +304,7 @@ export class KeyStoreService implements IKeyStore<string> {
       keyPair.privateKeyArmored,
       accountKey,
     );
-    const now = new Date().toISOString();
+    const now = brightDateNow();
     const email = this.extractEmailFromGpgUserId(keyPair.metadata.userId);
 
     const doc: IKeyStoreDocument = {
@@ -348,7 +338,7 @@ export class KeyStoreService implements IKeyStore<string> {
     armoredKey: string,
     metadata: IGpgKeyMetadata,
   ): Promise<IKeyStoreEntry<string>> {
-    const now = new Date().toISOString();
+    const now = brightDateNow();
     const doc: IKeyStoreDocument = {
       userId,
       type: 'gpg_public',
@@ -408,7 +398,7 @@ export class KeyStoreService implements IKeyStore<string> {
     userId: string,
     bundle: ISmimeCertificateBundle,
   ): Promise<IKeyStoreEntry<string>> {
-    const now = new Date().toISOString();
+    const now = brightDateNow();
     const email = bundle.metadata.emailAddresses[0] ?? '';
     const type: IKeyStoreDocument['type'] = bundle.privateKeyPem
       ? 'smime_bundle'
@@ -462,7 +452,7 @@ export class KeyStoreService implements IKeyStore<string> {
     certPem: string,
     metadata: ISmimeCertificateMetadata,
   ): Promise<IKeyStoreEntry<string>> {
-    const now = new Date().toISOString();
+    const now = brightDateNow();
     const doc: IKeyStoreDocument = {
       userId,
       type: 'smime_cert',
@@ -535,7 +525,7 @@ export class KeyStoreService implements IKeyStore<string> {
     pref: IEncryptionPreference<string>,
   ): Promise<void> {
     const col = this.getPrefsCollection();
-    const now = new Date().toISOString();
+    const now = brightDateNow();
     const filter: Record<string, unknown> = { userId: pref.userId };
     if (pref.contactEmail) {
       filter['contactEmail'] = pref.contactEmail;

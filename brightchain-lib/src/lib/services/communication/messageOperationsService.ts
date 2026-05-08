@@ -11,6 +11,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import { Permission } from '../../enumerations/communication';
 import { ICommunicationMessage } from '../../interfaces/communication';
+import { brightDateNow } from '../../utils/brightDateConversions';
 import { PermissionService } from './permissionService';
 
 // ─── Error classes ──────────────────────────────────────────────────────────
@@ -83,11 +84,11 @@ export class MessageOperationsService {
 
     message.editHistory.push({
       content: message.encryptedContent,
-      editedAt: new Date(),
+      editedAt: brightDateNow(),
     });
 
     message.encryptedContent = newContent;
-    message.editedAt = new Date();
+    message.editedAt = brightDateNow();
 
     return message;
   }
@@ -214,7 +215,7 @@ export class MessageOperationsService {
       id: reactionId,
       emoji,
       memberId,
-      createdAt: new Date(),
+      createdAt: brightDateNow(),
     });
 
     return reactionId;

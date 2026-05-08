@@ -49,6 +49,7 @@ import {
   NullEventEmitter,
 } from '../../interfaces/events';
 import { paginateItems } from '../../utils/pagination';
+import { brightDateNow } from '../../utils/brightDateConversions';
 import { validateAndPrepareAttachments } from './attachmentUtils';
 import { IKeyEpochState } from './keyEpochManager';
 import { MessageOperationsService } from './messageOperationsService';
@@ -589,7 +590,7 @@ export class ChannelService {
       throw new ChannelNameConflictError(name);
     }
 
-    const now = new Date();
+    const now = brightDateNow();
     const symmetricKey = this.generateSymmetricKey();
     const channelId = uuidv4();
 
@@ -652,7 +653,7 @@ export class ChannelService {
     });
 
     visible.sort(
-      (a, b) => b.lastMessageAt.getTime() - a.lastMessageAt.getTime(),
+      (a, b) => b.lastMessageAt - a.lastMessageAt,
     );
 
     return paginateItems(visible, cursor, limit);
@@ -753,7 +754,7 @@ export class ChannelService {
       throw new ChannelJoinDeniedError();
     }
 
-    const now = new Date();
+    const now = brightDateNow();
     channel.members.push({
       memberId,
       role: DefaultRole.MEMBER,
@@ -835,7 +836,7 @@ export class ChannelService {
       return;
     }
 
-    const now = new Date();
+    const now = brightDateNow();
     channel.members.push({
       memberId,
       role: DefaultRole.MEMBER,
@@ -931,7 +932,7 @@ export class ChannelService {
       messageContent = blockReference;
     }
 
-    const now = new Date();
+    const now = brightDateNow();
     const message: ICommunicationMessage = {
       id: uuidv4(),
       contextType: 'channel',
@@ -1089,13 +1090,13 @@ export class ChannelService {
     this.assertIsMember(channel, creatorId);
     this.assertPermission(creatorId, channelId, Permission.CREATE_INVITES);
 
-    const now = new Date();
+    const now = brightDateNow();
     const token: IInviteToken = {
       token: uuidv4(),
       channelId,
       createdBy: creatorId,
       createdAt: now,
-      expiresAt: new Date(now.getTime() + expiresInMs),
+      expiresAt: now + expiresInMs / 86400000,
       maxUses,
       currentUses: 0,
     };
@@ -1122,7 +1123,7 @@ export class ChannelService {
       throw new InviteTokenNotFoundError(token);
     }
 
-    if (new Date() >= invite.expiresAt) {
+    if (brightDateNow() >= invite.expiresAt) {
       throw new InviteTokenExpiredError();
     }
 
@@ -1136,7 +1137,7 @@ export class ChannelService {
       throw new MemberAlreadyInChannelError(memberId);
     }
 
-    const now = new Date();
+    const now = brightDateNow();
     channel.members.push({
       memberId,
       role: DefaultRole.MEMBER,
@@ -1188,7 +1189,8 @@ export class ChannelService {
 
     const member = channel.members.find((m) => m.memberId === targetId);
     if (member) {
-      member.mutedUntil = new Date(Date.now() + durationMs);
+      // Convert ms to BrightDate days (86400000 ms/day)
+      member.mutedUntil = brightDateNow() + durationMs / 86400000;
     }
 
     // Persist channel update to storage provider if available
@@ -1283,12 +1285,12 @@ export class ChannelService {
       // Push old block reference to edit history
       message.editHistory.push({
         content: message.encryptedContent,
-        editedAt: new Date(),
+        editedAt: brightDateNow(),
       });
 
       // Update encryptedContent to new block reference
       message.encryptedContent = blockReference;
-      message.editedAt = new Date();
+      message.editedAt = brightDateNow();
 
       // Persist edited message to storage provider if available
       if (this.channelMessageCollection) {

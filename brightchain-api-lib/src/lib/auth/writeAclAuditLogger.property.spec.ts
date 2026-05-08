@@ -14,7 +14,8 @@
 import { describe, expect, it } from '@jest/globals';
 import fc from 'fast-check';
 
-import type { IAclScope } from '@brightchain/brightchain-lib';
+import type { BrightDateTimestamp, IAclScope } from '@brightchain/brightchain-lib';
+import { brightDateNow } from '@brightchain/brightchain-lib';
 
 import { AuditOperationType, WriteAclAuditLogger } from './writeAclAuditLogger';
 
@@ -57,10 +58,10 @@ const arbChangeType: fc.Arbitrary<string> = fc.constantFrom(
   'setWriteMode',
 );
 
-/** Arbitrary future date for token expiration. */
-const arbFutureDate: fc.Arbitrary<Date> = fc
+/** Arbitrary future BrightDateTimestamp for token expiration. */
+const arbFutureDate: fc.Arbitrary<BrightDateTimestamp> = fc
   .integer({ min: 1, max: 365 * 24 * 60 * 60 * 1000 })
-  .map((offset) => new Date(Date.now() + offset));
+  .map((offset) => brightDateNow() + offset / 86400000);
 
 /**
  * Discriminated union of all possible audit events for generation.
@@ -92,7 +93,7 @@ type AuditEvent =
       type: 'capabilityTokenIssued';
       granteePublicKey: string;
       scope: IAclScope;
-      expiresAt: Date;
+      expiresAt: BrightDateTimestamp;
       grantorPublicKey: string;
     }
   | {

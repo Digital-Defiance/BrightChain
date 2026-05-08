@@ -16,6 +16,9 @@ import {
   type IAclDocument,
   type IAclScope,
   WriteMode,
+  brightDateNow,
+  brightDateToISO,
+  normalizeToBrightDate,
 } from '@brightchain/brightchain-lib';
 import type { BrightDb } from '@brightchain/db';
 import { sha256 } from '@noble/hashes/sha256';
@@ -49,8 +52,8 @@ export interface ISerializedAclDocument {
   aclAdministrators: string[];
   scope: IAclScope;
   version: number;
-  createdAt: string;
-  updatedAt: string;
+  createdAt: number;
+  updatedAt: number;
   creatorPublicKey: string;
   creatorSignature: string;
   previousVersionBlockId?: string;
@@ -119,7 +122,7 @@ export function computeAclContentHash(acl: IAclDocument): Uint8Array {
 export async function createMemberPoolAcl(
   options: IPoolSecurityInitOptions,
 ): Promise<IAclDocument> {
-  const now = new Date();
+  const now = brightDateNow();
   const scope: IAclScope = {
     dbName: options.poolName,
     // No collectionName = database-level ACL (applies to all collections)
@@ -172,8 +175,8 @@ export function serializeAclDocument(
     ),
     scope: acl.scope,
     version: acl.version,
-    createdAt: acl.createdAt.toISOString(),
-    updatedAt: acl.updatedAt.toISOString(),
+    createdAt: acl.createdAt,
+    updatedAt: acl.updatedAt,
     creatorPublicKey: Buffer.from(acl.creatorPublicKey).toString('hex'),
     creatorSignature: Buffer.from(acl.creatorSignature).toString('hex'),
     previousVersionBlockId: acl.previousVersionBlockId,
@@ -198,8 +201,8 @@ export function deserializeAclDocument(
     ),
     scope: data.scope,
     version: data.version,
-    createdAt: new Date(data.createdAt),
-    updatedAt: new Date(data.updatedAt),
+    createdAt: normalizeToBrightDate(data.createdAt as unknown as string | number),
+    updatedAt: normalizeToBrightDate(data.updatedAt as unknown as string | number),
     creatorPublicKey: new Uint8Array(Buffer.from(data.creatorPublicKey, 'hex')),
     creatorSignature: new Uint8Array(Buffer.from(data.creatorSignature, 'hex')),
     previousVersionBlockId: data.previousVersionBlockId,
@@ -222,7 +225,7 @@ export async function savePoolSecurity(
     _id: POOL_ACL_DOC_ID,
     type: 'acl',
     aclData: serializeAclDocument(acl),
-    updatedAt: new Date().toISOString(),
+    updatedAt: brightDateToISO(brightDateNow()),
     updatedBy: systemUserId,
   };
 
@@ -328,7 +331,7 @@ export async function addNodeToAcl(
       ? currentAcl.authorizedWriters
       : [...currentAcl.authorizedWriters, nodePublicKey],
     version: currentAcl.version + 1,
-    updatedAt: new Date(),
+    updatedAt: brightDateNow(),
     creatorSignature: new Uint8Array(0), // placeholder, signed below
   };
 
@@ -372,7 +375,7 @@ export async function removeNodeFromAcl(
         !w.every((byte: number, i: number) => byte === nodePublicKey[i]),
     ),
     version: currentAcl.version + 1,
-    updatedAt: new Date(),
+    updatedAt: brightDateNow(),
     creatorSignature: new Uint8Array(0), // placeholder, signed below
   };
 

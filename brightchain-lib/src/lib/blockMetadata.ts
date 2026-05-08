@@ -3,7 +3,11 @@ import BlockDataType from './enumerations/blockDataType';
 import { BlockSize } from './enumerations/blockSize';
 import BlockType from './enumerations/blockType';
 import { IBaseBlockMetadata } from './interfaces/blocks/metadata/blockMetadata';
-import { parseDate } from './utils/dateUtils';
+import type { BrightDateTimestamp } from './types/brightDateTimestamp';
+import {
+  brightDateNow,
+  normalizeToBrightDate,
+} from './utils/brightDateConversions';
 import { parseBlockMetadataJson } from './utils/typeGuards';
 
 /**
@@ -15,14 +19,14 @@ export class BlockMetadata implements IBaseBlockMetadata {
   private readonly _type: BlockType;
   private readonly _dataType: BlockDataType;
   private readonly _lengthWithoutPadding: number;
-  private readonly _dateCreated: Date;
+  private readonly _dateCreated: BrightDateTimestamp;
 
   constructor(
     size: BlockSize,
     type: BlockType,
     dataType: BlockDataType,
     lengthWithoutPadding: number,
-    dateCreated = new Date(),
+    dateCreated: BrightDateTimestamp = brightDateNow(),
   ) {
     this._size = size;
     this._type = type;
@@ -41,7 +45,7 @@ export class BlockMetadata implements IBaseBlockMetadata {
       type: this.type,
       dataType: this.dataType,
       lengthWithoutPadding: this.lengthWithoutPadding,
-      dateCreated: this.dateCreated.toISOString(),
+      dateCreated: this.dateCreated, // stored as number (BrightDateValue)
     });
   }
 
@@ -62,8 +66,11 @@ export class BlockMetadata implements IBaseBlockMetadata {
     // Use type guard to validate and parse
     const data = parseBlockMetadataJson(json);
 
-    // Parse date using robust date utilities
-    const dateCreated = parseDate(data.dateCreated);
+    // Parse dateCreated: prefer numeric BrightDateValue, fall back to normalizeToBrightDate for legacy strings
+    const dateCreated: BrightDateTimestamp =
+      typeof data.dateCreated === 'number'
+        ? data.dateCreated
+        : normalizeToBrightDate(data.dateCreated);
 
     // Create a proper BlockMetadata instance
     return new BlockMetadata(
@@ -93,7 +100,7 @@ export class BlockMetadata implements IBaseBlockMetadata {
   public get lengthWithoutPadding(): number {
     return this._lengthWithoutPadding;
   }
-  public get dateCreated(): Date {
+  public get dateCreated(): BrightDateTimestamp {
     return this._dateCreated;
   }
 }

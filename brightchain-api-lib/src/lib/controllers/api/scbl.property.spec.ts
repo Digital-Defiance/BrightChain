@@ -80,7 +80,7 @@ const createMockApplication = (storePath: string) => {
   const services = new Map<string, unknown>();
   const blockStore = new DiskBlockAsyncStore({
     storePath,
-    supportedBlockSizes: [BlockSize.Medium],
+    supportedBlockSizes: [BlockSize.Small],
   });
   services.set('blockStore', blockStore);
 
@@ -96,7 +96,7 @@ const createMockApplication = (storePath: string) => {
       },
       debug: false,
       blockStorePath: storePath,
-      blockStoreBlockSize: BlockSize.Medium,
+      blockStoreBlockSize: BlockSize.Small,
     },
     constants: {},
     ready: true,

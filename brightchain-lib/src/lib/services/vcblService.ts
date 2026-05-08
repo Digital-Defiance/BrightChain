@@ -11,6 +11,7 @@ import { CblError } from '../errors/cblError';
 import { IBlockCapacityCalculator } from '../interfaces/blockCapacity';
 import { EntryPropertyRecord } from '../interfaces/brightpass';
 import { Validator } from '../utils/validator';
+import { dateToBrightDate } from '../utils/brightDateConversions';
 import { CBLService } from './cblService';
 import { ChecksumService } from './checksum.service';
 
@@ -409,7 +410,7 @@ export class VCBLService<TID extends PlatformID = Uint8Array> {
     // Pass lax=true to allow vault names with special characters (/, etc.)
     const { headerData, signature } = this.cblService.makeCblHeader(
       creator,
-      new Date(now),
+      dateToBrightDate(new Date(now)),
       addressList.length / CONSTANTS['CHECKSUM'].SHA3_BUFFER_LENGTH,
       0, // fileDataLength - not used for VCBL
       addressList,

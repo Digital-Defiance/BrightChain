@@ -11,6 +11,7 @@ import type { BlockId } from '@brightchain/brightchain-lib';
 import {
   BlockManifest,
   BloomFilter,
+  brightDateNow,
   IBlockRegistry,
   PoolId,
   PoolScopedBloomFilter,
@@ -295,7 +296,7 @@ export class BlockRegistry implements IBlockRegistry {
     return {
       nodeId: this.nodeId,
       blockIds,
-      generatedAt: new Date(),
+      generatedAt: brightDateNow(),
       checksum,
     };
   }
@@ -472,7 +473,7 @@ export class BlockRegistry implements IBlockRegistry {
     return {
       nodeId: this.nodeId,
       pools,
-      generatedAt: new Date(),
+      generatedAt: brightDateNow(),
       checksum,
     };
   }

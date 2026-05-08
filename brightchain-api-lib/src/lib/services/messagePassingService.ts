@@ -1,5 +1,6 @@
 import {
   BlockAnnouncement,
+  brightDateNow,
   Checksum,
   DeliveryStatus,
   EmailMessageService,
@@ -325,7 +326,7 @@ export class MessagePassingService {
             await this.metadataStore.recordAcknowledgment(
               messageId,
               recipientId,
-              new Date(),
+              brightDateNow(),
             );
           } catch (err) {
             if (

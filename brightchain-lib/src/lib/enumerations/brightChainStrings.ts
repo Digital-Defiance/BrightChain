@@ -1715,6 +1715,8 @@ const _brightChainKeys = {
   Error_PoUW_Middleware_RateLimitDenied:
     'Error_PoUW_Middleware_RateLimitDenied',
 
+  Date_BrightDateTemplate: 'Date_BrightDateTemplate',
+
   // ── DatePage ──
   DatePage_Title: 'DatePage_Title',
   DatePage_BrightDateEpochLabel: 'DatePage_BrightDateEpochLabel',
@@ -1743,6 +1745,63 @@ const _brightChainKeys = {
   DatePage_HolidayType_Bank: 'DatePage_HolidayType_Bank',
   DatePage_HolidayType_Observance: 'DatePage_HolidayType_Observance',
   DatePage_HolidayType_Religious: 'DatePage_HolidayType_Religious',
+
+  // ── DatePage: Cochrane Easter Egg (Interplanetary Telemetry) ──
+  DatePage_Telemetry_Title: 'DatePage_Telemetry_Title',
+  DatePage_Telemetry_Subtitle: 'DatePage_Telemetry_Subtitle',
+  DatePage_Telemetry_MoonDelay: 'DatePage_Telemetry_MoonDelay',
+  DatePage_Telemetry_MarsDelayMin: 'DatePage_Telemetry_MarsDelayMin',
+  DatePage_Telemetry_MarsDelayMax: 'DatePage_Telemetry_MarsDelayMax',
+  DatePage_Telemetry_MarsDelayCurrent: 'DatePage_Telemetry_MarsDelayCurrent',
+  DatePage_Telemetry_Unit: 'DatePage_Telemetry_Unit',
+  DatePage_Telemetry_Footer: 'DatePage_Telemetry_Footer',
+
+  // ── PaperKeyTemplate ──
+  PaperKey_Title: 'PaperKey_Title',
+  PaperKey_GeneratedTemplate: 'PaperKey_GeneratedTemplate',
+  PaperKey_SecurityWarning: 'PaperKey_SecurityWarning',
+  PaperKey_WordsAriaLabel: 'PaperKey_WordsAriaLabel',
+  PaperKey_QrScanLabel: 'PaperKey_QrScanLabel',
+  PaperKey_QrAlt: 'PaperKey_QrAlt',
+  PaperKey_SecurityRecommendations: 'PaperKey_SecurityRecommendations',
+  PaperKey_Tip_Fireproof: 'PaperKey_Tip_Fireproof',
+  PaperKey_Tip_Split: 'PaperKey_Tip_Split',
+  PaperKey_Tip_NoDigital: 'PaperKey_Tip_NoDigital',
+  PaperKey_Tip_NeverShare: 'PaperKey_Tip_NeverShare',
+  PaperKey_PrintButton: 'PaperKey_PrintButton',
+
+  // ── DisputeNotice ──
+  Dispute_AriaLabelTemplate: 'Dispute_AriaLabelTemplate',
+  Dispute_IdTemplate: 'Dispute_IdTemplate',
+  Dispute_State_Disputed: 'Dispute_State_Disputed',
+  Dispute_State_ResolvedFinal: 'Dispute_State_ResolvedFinal',
+  Dispute_State_ResolvedReplaced: 'Dispute_State_ResolvedReplaced',
+  Dispute_Field_Amount: 'Dispute_Field_Amount',
+  Dispute_Field_Opened: 'Dispute_Field_Opened',
+  Dispute_Field_Reason: 'Dispute_Field_Reason',
+  Dispute_Field_Resolved: 'Dispute_Field_Resolved',
+  Dispute_Field_Resolution: 'Dispute_Field_Resolution',
+
+  // ── RateTransparency ──
+  RateTransparency_Loading: 'RateTransparency_Loading',
+  RateTransparency_Error: 'RateTransparency_Error',
+  RateTransparency_Empty: 'RateTransparency_Empty',
+  RateTransparency_TitleTemplate: 'RateTransparency_TitleTemplate',
+  RateTransparency_EffectiveTemplate: 'RateTransparency_EffectiveTemplate',
+  RateTransparency_SignedByTemplate: 'RateTransparency_SignedByTemplate',
+  RateTransparency_Col_ResourceClass: 'RateTransparency_Col_ResourceClass',
+  RateTransparency_Col_Rate: 'RateTransparency_Col_Rate',
+  RateTransparency_Col_PerUnit: 'RateTransparency_Col_PerUnit',
+
+  // ── JouleEventLog ──
+  JouleEventLog_Loading: 'JouleEventLog_Loading',
+  JouleEventLog_Error: 'JouleEventLog_Error',
+  JouleEventLog_Empty: 'JouleEventLog_Empty',
+  JouleEventLog_AriaLabel: 'JouleEventLog_AriaLabel',
+  JouleEventLog_Col_Time: 'JouleEventLog_Col_Time',
+  JouleEventLog_Col_Kind: 'JouleEventLog_Col_Kind',
+  JouleEventLog_Col_Amount: 'JouleEventLog_Col_Amount',
+  JouleEventLog_Col_Description: 'JouleEventLog_Col_Description',
 } as const;
 
 export const BrightChainStrings: BrandedStringKeys<typeof _brightChainKeys> =

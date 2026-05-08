@@ -17,6 +17,7 @@ import {
   IPublicMemberProfileHydratedData,
 } from '../../interfaces/member/profileStorage';
 import { ServiceProvider } from '../../services/service.provider';
+import { normalizeToBrightDate } from '../../utils/brightDateConversions';
 import { Checksum } from '../../types/checksum';
 import { MemberProfileDocument } from './memberProfileDocument';
 
@@ -51,9 +52,9 @@ describe('MemberProfileDocument', () => {
       reputation: 100,
       storageQuota: BigInt(1024 * 1024 * 100), // 100MB
       storageUsed: BigInt(1024 * 500), // 500KB
-      lastActive: new Date('2026-01-20T10:00:00Z'),
-      dateCreated: new Date('2026-01-01T00:00:00Z'),
-      dateUpdated: new Date('2026-01-20T10:00:00Z'),
+      lastActive: normalizeToBrightDate(new Date('2026-01-20T10:00:00Z')),
+      dateCreated: normalizeToBrightDate(new Date('2026-01-01T00:00:00Z')),
+      dateUpdated: normalizeToBrightDate(new Date('2026-01-20T10:00:00Z')),
     };
 
     privateProfileData = {
@@ -62,8 +63,8 @@ describe('MemberProfileDocument', () => {
       blockedPeers: [],
       settings: { theme: 'dark', notifications: true },
       activityLog: [],
-      dateCreated: new Date('2026-01-01T00:00:00Z'),
-      dateUpdated: new Date('2026-01-20T10:00:00Z'),
+      dateCreated: normalizeToBrightDate(new Date('2026-01-01T00:00:00Z')),
+      dateUpdated: normalizeToBrightDate(new Date('2026-01-20T10:00:00Z')),
     };
   });
 
@@ -163,7 +164,7 @@ describe('MemberProfileDocument', () => {
       const updates = {
         reputation: 150,
         storageUsed: BigInt(1024 * 1000), // 1MB
-        lastActive: new Date('2026-01-24T12:00:00Z'),
+        lastActive: normalizeToBrightDate(new Date('2026-01-24T12:00:00Z')),
       };
 
       doc.updatePublicData(updates);
@@ -191,14 +192,12 @@ describe('MemberProfileDocument', () => {
     it('should update dateUpdated when updating data', () => {
       const originalDate = doc.getPublicHydrated().dateUpdated;
 
-      // Wait a bit to ensure time difference
-      const newDate = new Date(Date.now() + 100);
-      doc.updatePublicData({ lastActive: newDate });
+      // Update with a new lastActive value
+      const newLastActive = normalizeToBrightDate(new Date(Date.now() + 100));
+      doc.updatePublicData({ lastActive: newLastActive });
 
       const updatedDate = doc.getPublicHydrated().dateUpdated;
-      expect(updatedDate.getTime()).toBeGreaterThanOrEqual(
-        originalDate.getTime(),
-      );
+      expect(updatedDate).toBeGreaterThanOrEqual(originalDate);
     });
   });
 
@@ -300,7 +299,7 @@ describe('MemberProfileDocument', () => {
     });
 
     it('should add activity log entry', () => {
-      const timestamp = new Date('2026-01-24T12:00:00Z');
+      const timestamp = normalizeToBrightDate(new Date('2026-01-24T12:00:00Z'));
       doc.addActivityLogEntry('login', timestamp, { ip: '127.0.0.1' });
 
       const privateData = doc.getPrivateHydrated();
@@ -311,9 +310,9 @@ describe('MemberProfileDocument', () => {
     });
 
     it('should add multiple activity log entries', () => {
-      doc.addActivityLogEntry('login', new Date());
-      doc.addActivityLogEntry('upload', new Date());
-      doc.addActivityLogEntry('download', new Date());
+      doc.addActivityLogEntry('login');
+      doc.addActivityLogEntry('upload');
+      doc.addActivityLogEntry('download');
 
       const privateData = doc.getPrivateHydrated();
       expect(privateData.activityLog.length).toBe(3);

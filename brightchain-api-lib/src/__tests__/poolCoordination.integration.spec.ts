@@ -64,6 +64,7 @@ import {
   ServiceProvider,
   StoreError,
   StoreErrorType,
+  brightDateNow,
 } from '@brightchain/brightchain-lib';
 import { AvailabilityService } from '../lib/availability/availabilityService';
 import { BlockRegistry } from '../lib/availability/blockRegistry';
@@ -89,7 +90,7 @@ function createTestMetadata(
   checksum: string,
   poolId?: PoolId,
 ): IBlockMetadata {
-  const now = new Date();
+  const now = brightDateNow();
   return {
     blockId,
     createdAt: now,
@@ -112,7 +113,7 @@ function createTestBlock(): { block: RawDataBlock; blockId: string } {
   const data = new Uint8Array(BlockSize.Small);
   crypto.getRandomValues(data);
   const checksum = checksumService.calculateChecksum(data);
-  const block = new RawDataBlock(BlockSize.Small, data, new Date(), checksum);
+  const block = new RawDataBlock(BlockSize.Small, data, brightDateNow(), checksum);
   return { block, blockId: checksum.toHex() };
 }
 
@@ -221,8 +222,8 @@ class InMemoryPooledBlockStore implements IPooledBlockStore {
       poolId: pool,
       blockCount,
       totalBytes,
-      createdAt: new Date(),
-      lastAccessedAt: new Date(),
+      createdAt: brightDateNow(),
+      lastAccessedAt: brightDateNow(),
     };
   }
 
@@ -295,7 +296,7 @@ class InMemoryPooledBlockStore implements IPooledBlockStore {
     for (const poolMap of this.pools.values()) {
       const data = poolMap.get(hex);
       if (data) {
-        return new RawDataBlock(BlockSize.Small, data, new Date(), key);
+        return new RawDataBlock(BlockSize.Small, data, brightDateNow(), key);
       }
     }
     throw new StoreError(StoreErrorType.KeyNotFound);
@@ -1265,7 +1266,7 @@ describe('Pool Coordination Integration Tests', () => {
       // Update location for block "abc123" in pool "pool-x" on node-1
       await nodeA.availabilityService.updateLocation('abc123', {
         nodeId: 'node-1',
-        lastSeen: new Date(),
+        lastSeen: brightDateNow(),
         isAuthoritative: true,
         poolId: 'pool-x',
       });
@@ -1273,7 +1274,7 @@ describe('Pool Coordination Integration Tests', () => {
       // Update location for block "abc123" in pool "pool-y" on node-2
       await nodeA.availabilityService.updateLocation('abc123', {
         nodeId: 'node-2',
-        lastSeen: new Date(),
+        lastSeen: brightDateNow(),
         isAuthoritative: true,
         poolId: 'pool-y',
       });
@@ -1329,7 +1330,7 @@ describe('Pool Coordination Integration Tests', () => {
         // Now add a location for the same block in a DIFFERENT pool on node-C
         await nodeA.availabilityService.updateLocation(blockId, {
           nodeId: 'node-C',
-          lastSeen: new Date(),
+          lastSeen: brightDateNow(),
           isAuthoritative: false,
           poolId: 'sigma',
         });

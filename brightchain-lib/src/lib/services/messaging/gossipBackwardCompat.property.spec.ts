@@ -1,3 +1,5 @@
+import { brightDateNow } from '../../utils/brightDateConversions';
+import { normalizeToBrightDate } from '../../utils/brightDateConversions';
 import fc from 'fast-check';
 import {
   BlockAnnouncement,
@@ -37,7 +39,7 @@ describe('Feature: unified-gossip-delivery, Property 3: Backward compatibility',
       type: 'add',
       blockId,
       nodeId,
-      timestamp: new Date(),
+      timestamp: brightDateNow(),
       ttl: config.defaultTtl,
     };
   }
@@ -55,7 +57,7 @@ describe('Feature: unified-gossip-delivery, Property 3: Backward compatibility',
       type: 'remove',
       blockId,
       nodeId,
-      timestamp: new Date(),
+      timestamp: brightDateNow(),
       ttl: config.defaultTtl,
     };
   }
@@ -121,7 +123,7 @@ describe('Feature: unified-gossip-delivery, Property 3: Backward compatibility',
     .record({
       blockId: nonEmptyStringArb.map((s) => bid(s)),
       nodeId: nonEmptyStringArb,
-      timestamp: fc.date(),
+      timestamp: fc.date().map((d) => normalizeToBrightDate(d)),
       ttl: ttlArb,
     })
     .map((base) => ({
@@ -134,7 +136,7 @@ describe('Feature: unified-gossip-delivery, Property 3: Backward compatibility',
     .record({
       blockId: nonEmptyStringArb.map((s) => bid(s)),
       nodeId: nonEmptyStringArb,
-      timestamp: fc.date(),
+      timestamp: fc.date().map((d) => normalizeToBrightDate(d)),
       ttl: ttlArb,
     })
     .map((base) => ({

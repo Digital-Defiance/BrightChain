@@ -13,6 +13,8 @@
 
 import { CommunicationEventType } from '../../enumerations/communication';
 import { ICommunicationMessage } from '../../interfaces/communication';
+import type { BrightDateTimestamp } from '../../types/brightDateTimestamp';
+import { brightDateNow } from '../../utils/brightDateConversions';
 
 // ─── Error classes ──────────────────────────────────────────────────────────
 
@@ -48,7 +50,7 @@ export interface IExplodingMessageEvent {
   contextId: string;
   contextType: 'conversation' | 'group' | 'channel';
   reason: 'time_expired' | 'read_count_exceeded';
-  explodedAt: Date;
+  explodedAt: BrightDateTimestamp;
 }
 
 // ─── Result types ───────────────────────────────────────────────────────────
@@ -110,7 +112,7 @@ export class ExplodingMessageService {
   static setExpiration(
     message: ICommunicationMessage,
     options: {
-      expiresAt?: Date;
+      expiresAt?: BrightDateTimestamp;
       expiresInMs?: number;
       maxReads?: number;
     },
@@ -130,7 +132,7 @@ export class ExplodingMessageService {
     }
 
     if (options.expiresAt !== undefined) {
-      if (options.expiresAt <= new Date()) {
+      if (options.expiresAt <= brightDateNow()) {
         throw new InvalidExpirationError('expiresAt must be in the future');
       }
       message.expiresAt = options.expiresAt;
@@ -142,7 +144,8 @@ export class ExplodingMessageService {
           'expiresInMs must be a positive number',
         );
       }
-      message.expiresAt = new Date(Date.now() + options.expiresInMs);
+      // Convert ms to BrightDate days (86400000 ms/day)
+      message.expiresAt = brightDateNow() + options.expiresInMs / 86400000;
     }
 
     if (options.maxReads !== undefined) {
@@ -184,7 +187,7 @@ export class ExplodingMessageService {
 
     const isFirstRead = !message.readBy.has(memberId);
 
-    message.readBy.set(memberId, new Date());
+    message.readBy.set(memberId, brightDateNow());
 
     if (isFirstRead && message.readCount !== undefined) {
       message.readCount++;
@@ -215,13 +218,13 @@ export class ExplodingMessageService {
    */
   static checkExpiration(
     message: ICommunicationMessage,
-    now?: Date,
+    now?: BrightDateTimestamp,
   ): 'time_expired' | 'read_count_exceeded' | null {
     if (message.exploded) {
       return null; // Already handled
     }
 
-    const currentTime = now ?? new Date();
+    const currentTime = now ?? brightDateNow();
 
     // Check time-based expiration
     if (message.expiresAt && currentTime >= message.expiresAt) {
@@ -263,7 +266,7 @@ export class ExplodingMessageService {
     message.encryptedContent = '';
     message.editHistory = [];
     message.exploded = true;
-    message.explodedAt = new Date();
+    message.explodedAt = brightDateNow();
 
     return {
       type: CommunicationEventType.MESSAGE_EXPLODED,
@@ -290,11 +293,11 @@ export class ExplodingMessageService {
    */
   static deleteExpired(
     messages: ReadonlyArray<ICommunicationMessage>,
-    now?: Date,
+    now?: BrightDateTimestamp,
   ): IExpiredMessagesResult {
     const expired: ICommunicationMessage[] = [];
     const events: IExplodingMessageEvent[] = [];
-    const currentTime = now ?? new Date();
+    const currentTime = now ?? brightDateNow();
 
     for (const message of messages) {
       if (message.exploded) continue;
@@ -341,13 +344,14 @@ export class ExplodingMessageService {
    */
   static getRemainingTime(
     message: ICommunicationMessage,
-    now?: Date,
+    now?: BrightDateTimestamp,
   ): number | null {
     if (!message.expiresAt) return null;
     if (message.exploded) return 0;
 
-    const currentTime = now ?? new Date();
-    const remaining = message.expiresAt.getTime() - currentTime.getTime();
+    const currentTime = now ?? brightDateNow();
+    // Convert BrightDate days difference to milliseconds (86400000 ms/day)
+    const remaining = (message.expiresAt - currentTime) * 86400000;
     return Math.max(0, remaining);
   }
 

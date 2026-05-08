@@ -12,6 +12,7 @@
 import type { PlatformID } from '@digitaldefiance/ecies-lib';
 
 import { DeliveryStatus } from '../../enumerations/messaging/deliveryStatus';
+import type { BrightDateTimestamp } from '../../types/brightDateTimestamp';
 
 /**
  * Delivery status states for tracking email delivery lifecycle.
@@ -77,19 +78,19 @@ export interface IDeliveryReceipt<TID extends PlatformID = string> {
   // ─── Timestamps ────────────────────────────────────────────────────────
 
   /** Timestamp when the email was queued for delivery */
-  queuedAt?: Date;
+  queuedAt?: BrightDateTimestamp;
 
   /** Timestamp when the email blocks were sent/replication initiated */
-  sentAt?: Date;
+  sentAt?: BrightDateTimestamp;
 
   /** Timestamp when delivery was confirmed at the recipient's node */
-  deliveredAt?: Date;
+  deliveredAt?: BrightDateTimestamp;
 
   /** Timestamp when the recipient read the email */
-  readAt?: Date;
+  readAt?: BrightDateTimestamp;
 
   /** Timestamp when delivery failed */
-  failedAt?: Date;
+  failedAt?: BrightDateTimestamp;
 
   // ─── Failure Information ───────────────────────────────────────────────
 

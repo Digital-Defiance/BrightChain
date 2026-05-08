@@ -2402,6 +2402,13 @@ export const ShowcaseGermanStrings: Partial<
   [ShowcaseStrings.PP_S18_OrgName]: 'Digital Defiance',
   [ShowcaseStrings.PP_S18_EmailLabel]: 'E-Mail:',
   [ShowcaseStrings.PP_S18_WebLabel]: 'Web:',
+  [ShowcaseStrings.Slogan_Math_Search_Warrant]:
+    'Mathematik akzeptiert keinen Durchsuchungsbefehl.',
+  [ShowcaseStrings.Slogan_Where_State_Sees_Noise]:
+    'Wo der Staat nur Rauschen sieht, findet das Volk die Wahrheit.',
+  [ShowcaseStrings.Slogan_Building_World_Where_Ideas_Have_No_Borders]:
+    'Wir bauen eine Welt, in der Ideen keine Grenzen kennen und die Wahrheit keinen Besitzer hat.',
+  [ShowcaseStrings.Slogan_Defiance_By_Design]: 'Widerstand durch Design.',
 };
 
 export default ShowcaseGermanStrings;

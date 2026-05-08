@@ -26,6 +26,8 @@ import { BlockEncryptionType } from '../enumerations/blockEncryptionType';
 import { BlockSize } from '../enumerations/blockSize';
 import { ServiceProvider } from '../services/service.provider';
 import { ConstituentBlockListBlock } from './cbl';
+import { brightDateNow } from '../utils/brightDateConversions';
+import type { BrightDateTimestamp } from '../types/brightDateTimestamp';
 
 // Set a longer timeout for all tests in this file
 jest.setTimeout(60000);
@@ -77,7 +79,7 @@ describe('Feature: block-security-hardening, CBL Consistency Property Tests', ()
             // Create CBL header and data
             const addressList = Buffer.concat(blockAddresses);
             const fileDataLength = 1024;
-            const dateCreated = new Date();
+            const dateCreated = brightDateNow();
 
             const { headerData } = cblService.makeCblHeader(
               creator,
@@ -154,7 +156,7 @@ describe('Feature: block-security-hardening, CBL Consistency Property Tests', ()
 
             const { headerData } = cblService.makeCblHeader(
               creator,
-              new Date(),
+              brightDateNow(),
               blockAddresses.length,
               fileDataLength,
               addressList,
@@ -216,7 +218,7 @@ describe('Feature: block-security-hardening, CBL Consistency Property Tests', ()
 
             // Create CBL header and data
             const addressList = Buffer.concat(blockAddresses);
-            const dateCreated = new Date();
+            const dateCreated = brightDateNow();
 
             const { headerData } = cblService.makeCblHeader(
               creator,
@@ -321,7 +323,7 @@ describe('Feature: block-security-hardening, CBL Consistency Property Tests', ()
 
             const { headerData } = cblService.makeCblHeader(
               creator,
-              new Date(),
+              brightDateNow(),
               blockAddresses.length,
               fileDataLength,
               addressList,
@@ -394,7 +396,7 @@ describe('Feature: block-security-hardening, CBL Consistency Property Tests', ()
 
             const { headerData } = cblService.makeCblHeader(
               creator,
-              new Date(),
+              brightDateNow(),
               blockAddresses.length,
               fileDataLength,
               addressList,

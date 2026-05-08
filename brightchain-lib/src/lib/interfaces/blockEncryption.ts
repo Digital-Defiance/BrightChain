@@ -2,6 +2,7 @@
 import { Member } from '@digitaldefiance/ecies-lib';
 import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockType } from '../enumerations/blockType';
+import type { BrightDateTimestamp } from '../types/brightDateTimestamp';
 import { Checksum } from '../types/checksum';
 
 /**
@@ -17,7 +18,7 @@ export interface IEncryptedBlockCreator {
     data: Uint8Array,
     checksum: Checksum,
     creator: Member,
-    dateCreated?: Date,
+    dateCreated?: BrightDateTimestamp,
     lengthBeforeEncryption?: number,
   ): Promise<any>;
 }

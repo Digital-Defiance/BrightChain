@@ -93,8 +93,9 @@ describe('Feature: brightchain-friends-system, FriendsService Property Tests', (
             expect(req.message).toBe(message);
             expect(req._id).toBeDefined();
             expect(req.createdAt).toBeDefined();
-            // Verify ISO timestamp
-            expect(new Date(req.createdAt).toISOString()).toBe(req.createdAt);
+            // Verify createdAt is a valid BrightDateTimestamp (finite number)
+            expect(typeof req.createdAt).toBe('number');
+            expect(isFinite(req.createdAt as unknown as number)).toBe(true);
 
             return true;
           },
@@ -319,11 +320,13 @@ describe('Feature: brightchain-friends-system, FriendsService Property Tests', (
               _id: string;
               memberIdA: string;
               memberIdB: string;
-              createdAt: string;
+              createdAt: number;
             };
             expect(f._id).toBeDefined();
             expect(f.createdAt).toBeDefined();
-            expect(new Date(f.createdAt).toISOString()).toBe(f.createdAt);
+            // Verify createdAt is a valid BrightDateTimestamp (finite number)
+            expect(typeof f.createdAt).toBe('number');
+            expect(isFinite(f.createdAt)).toBe(true);
 
             // Sorted pair
             const [expectedA, expectedB] =

@@ -15,6 +15,8 @@ import { BlockCapacityCalculator } from './blockCapacity.service';
 import { CBLService } from './cblService';
 import { ChecksumService } from './checksum.service';
 import { ServiceProvider } from './service.provider';
+import { brightDateNow, dateToBrightDate, brightDateToDate } from '../utils/brightDateConversions';
+import type { BrightDateTimestamp } from '../types/brightDateTimestamp';
 
 describe('CBLService', () => {
   let creator: Member;
@@ -54,7 +56,7 @@ describe('CBLService', () => {
   function createTestExtendedHeader(cblService: CBLService) {
     return cblService.makeCblHeader(
       creator,
-      new Date(),
+      brightDateNow(),
       1,
       100,
       Buffer.alloc(0),
@@ -89,7 +91,7 @@ describe('CBLService', () => {
   describe('Header Field Access', () => {
     let cblService: CBLService;
     let header: Buffer;
-    const testDate = new Date('2024-01-01T00:00:00Z');
+    const testDate = dateToBrightDate(new Date('2024-01-01T00:00:00Z'));
     const addressCount = 5;
     const dataLength = 1000;
     const tupleSize = 3;
@@ -119,7 +121,8 @@ describe('CBLService', () => {
 
     it('should correctly get date created', () => {
       const date = cblService.getDateCreated(header);
-      expect(date.getTime()).toBe(testDate.getTime());
+      // Compare with tolerance since BrightDate conversion may have small rounding
+      expect(Math.abs(date - testDate)).toBeLessThan(0.001); // < 0.001 days tolerance
     });
 
     it('should correctly get address count', () => {
@@ -178,7 +181,7 @@ describe('CBLService', () => {
     it('should throw error when accessing extended fields on non-extended header', () => {
       const nonExtendedHeader = cblService.makeCblHeader(
         creator,
-        new Date(),
+        brightDateNow(),
         1,
         100,
         Buffer.alloc(0),
@@ -320,7 +323,7 @@ describe('CBLService', () => {
 
       const result = cblService.makeCblHeader(
         creator,
-        new Date(),
+        brightDateNow(),
         addressCount,
         1000,
         addressList,
@@ -376,7 +379,7 @@ describe('CBLService', () => {
       // Create header and combine with address list
       const result = cblService.makeCblHeader(
         creator,
-        new Date(),
+        brightDateNow(),
         addressCount,
         1000,
         addressList,

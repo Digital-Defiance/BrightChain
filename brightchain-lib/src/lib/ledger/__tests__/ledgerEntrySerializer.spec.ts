@@ -1,7 +1,7 @@
 /**
  * Unit tests for LedgerEntrySerializer.
  *
- * @see Requirements 2.1–2.7
+ * @see Requirements 2.1–2.7, 5.1, 5.2
  */
 
 import { SignatureUint8Array } from '@digitaldefiance/ecies-lib';
@@ -11,6 +11,7 @@ import {
 } from '../../errors/ledgerSerializationError';
 import { ILedgerEntry } from '../../interfaces/ledger/ledgerEntry';
 import { ChecksumService } from '../../services/checksum.service';
+import { BrightDateTimestamp } from '../../types/brightDateTimestamp';
 import { Checksum } from '../../types/checksum';
 import { LedgerEntrySerializer } from '../ledgerEntrySerializer';
 
@@ -19,6 +20,21 @@ const _MAGIC = 0x4c454447;
 const HASH_LENGTH = 64;
 const SIGNATURE_LENGTH = 64;
 const MIN_ENTRY_SIZE = 184;
+
+/**
+ * Known BrightDateValue timestamps for testing.
+ *
+ * J2000.0 epoch: 0 (January 1, 2000, 12:00:00 UTC)
+ * Unix epoch:   -10957.5 (January 1, 1970, 00:00:00 UTC)
+ * Approx 2025:  ~9300
+ */
+const KNOWN_TIMESTAMPS = {
+  J2000: 0 as BrightDateTimestamp,
+  UNIX_EPOCH: -10957.5 as BrightDateTimestamp,
+  APPROX_2025: 9296.9375 as BrightDateTimestamp,
+  NEGATIVE: -365250 as BrightDateTimestamp,
+  POSITIVE: 365250 as BrightDateTimestamp,
+};
 
 describe('LedgerEntrySerializer', () => {
   let checksumService: ChecksumService;
@@ -38,7 +54,7 @@ describe('LedgerEntrySerializer', () => {
   function makeEntry(overrides: Partial<ILedgerEntry> = {}): ILedgerEntry {
     return {
       sequenceNumber: 0,
-      timestamp: new Date(1700000000000),
+      timestamp: KNOWN_TIMESTAMPS.APPROX_2025,
       previousEntryHash: null,
       signerPublicKey: new Uint8Array(33).fill(0x02), // compressed pubkey
       payload: new Uint8Array([0xde, 0xad, 0xbe, 0xef]),
@@ -62,7 +78,7 @@ describe('LedgerEntrySerializer', () => {
       const deserialized = serializer.deserialize(serialized);
 
       expect(deserialized.sequenceNumber).toBe(entry.sequenceNumber);
-      expect(deserialized.timestamp.getTime()).toBe(entry.timestamp.getTime());
+      expect(deserialized.timestamp).toBe(entry.timestamp);
       expect(deserialized.previousEntryHash).toBeNull();
       expect(deserialized.signerPublicKey).toEqual(entry.signerPublicKey);
       expect(deserialized.payload).toEqual(entry.payload);
@@ -80,19 +96,63 @@ describe('LedgerEntrySerializer', () => {
       const entry = makeEntry({
         sequenceNumber: 5,
         previousEntryHash: makeChecksum(0xcc),
-        timestamp: new Date(1700001000000),
+        timestamp: KNOWN_TIMESTAMPS.UNIX_EPOCH,
         payload: new Uint8Array([1, 2, 3]),
       });
       const serialized = serializer.serialize(entry);
       const deserialized = serializer.deserialize(serialized);
 
       expect(deserialized.sequenceNumber).toBe(5);
-      expect(deserialized.timestamp.getTime()).toBe(1700001000000);
+      expect(deserialized.timestamp).toBe(KNOWN_TIMESTAMPS.UNIX_EPOCH);
       expect(deserialized.previousEntryHash).not.toBeNull();
       expect(
         deserialized.previousEntryHash!.equals(entry.previousEntryHash!),
       ).toBe(true);
       expect(deserialized.payload).toEqual(new Uint8Array([1, 2, 3]));
+    });
+  });
+
+  // ── Known BrightDateValue timestamps ────────────────────────────────
+
+  describe('known BrightDateValue timestamps are preserved exactly', () => {
+    it('should preserve J2000.0 epoch (0) exactly', () => {
+      const entry = makeEntry({ timestamp: KNOWN_TIMESTAMPS.J2000 });
+      const deserialized = serializer.deserialize(serializer.serialize(entry));
+      expect(deserialized.timestamp).toBe(KNOWN_TIMESTAMPS.J2000);
+    });
+
+    it('should preserve Unix epoch (-10957.5) exactly', () => {
+      const entry = makeEntry({ timestamp: KNOWN_TIMESTAMPS.UNIX_EPOCH });
+      const deserialized = serializer.deserialize(serializer.serialize(entry));
+      expect(deserialized.timestamp).toBe(KNOWN_TIMESTAMPS.UNIX_EPOCH);
+    });
+
+    it('should preserve approximate 2025 value (9296.9375) exactly', () => {
+      const entry = makeEntry({ timestamp: KNOWN_TIMESTAMPS.APPROX_2025 });
+      const deserialized = serializer.deserialize(serializer.serialize(entry));
+      expect(deserialized.timestamp).toBe(KNOWN_TIMESTAMPS.APPROX_2025);
+    });
+
+    it('should preserve large negative BrightDateValue (-365250) exactly', () => {
+      const entry = makeEntry({ timestamp: KNOWN_TIMESTAMPS.NEGATIVE });
+      const deserialized = serializer.deserialize(serializer.serialize(entry));
+      expect(deserialized.timestamp).toBe(KNOWN_TIMESTAMPS.NEGATIVE);
+    });
+
+    it('should preserve large positive BrightDateValue (365250) exactly', () => {
+      const entry = makeEntry({ timestamp: KNOWN_TIMESTAMPS.POSITIVE });
+      const deserialized = serializer.deserialize(serializer.serialize(entry));
+      expect(deserialized.timestamp).toBe(KNOWN_TIMESTAMPS.POSITIVE);
+    });
+  });
+
+  // ── Timestamp field is a number (BrightDateTimestamp) ───────────────
+
+  describe('timestamp field type', () => {
+    it('should deserialize timestamp as a number (BrightDateTimestamp), not a Date', () => {
+      const entry = makeEntry({ timestamp: KNOWN_TIMESTAMPS.APPROX_2025 });
+      const deserialized = serializer.deserialize(serializer.serialize(entry));
+      expect(typeof deserialized.timestamp).toBe('number');
     });
   });
 
@@ -197,6 +257,52 @@ describe('LedgerEntrySerializer', () => {
     });
   });
 
+  // ── Corrupted float64 timestamp data ────────────────────────────────
+
+  describe('corrupted float64 timestamp data', () => {
+    /**
+     * NaN and Infinity are valid IEEE 754 float64 values and will be
+     * deserialized as-is by DataView.getFloat64. The serializer does not
+     * validate the timestamp value — it is the caller's responsibility to
+     * ensure valid BrightDateValues are stored. This test documents the
+     * current behavior.
+     */
+    it('should deserialize NaN timestamp bytes without throwing (NaN is valid float64)', () => {
+      const entry = makeEntry();
+      const serialized = serializer.serialize(entry);
+      const corrupted = new Uint8Array(serialized);
+      // Write NaN (0x7FF8000000000000) at timestamp offset (magic 4 + version 2 + seq 4 = offset 10)
+      const view = new DataView(
+        corrupted.buffer,
+        corrupted.byteOffset,
+        corrupted.byteLength,
+      );
+      // IEEE 754 quiet NaN: 0x7FF8000000000000
+      view.setUint32(10, 0x7ff80000, false);
+      view.setUint32(14, 0x00000000, false);
+
+      const deserialized = serializer.deserialize(corrupted);
+      expect(Number.isNaN(deserialized.timestamp)).toBe(true);
+    });
+
+    it('should deserialize +Infinity timestamp bytes without throwing (Infinity is valid float64)', () => {
+      const entry = makeEntry();
+      const serialized = serializer.serialize(entry);
+      const corrupted = new Uint8Array(serialized);
+      // Write +Infinity (0x7FF0000000000000) at timestamp offset 10
+      const view = new DataView(
+        corrupted.buffer,
+        corrupted.byteOffset,
+        corrupted.byteLength,
+      );
+      view.setUint32(10, 0x7ff00000, false);
+      view.setUint32(14, 0x00000000, false);
+
+      const deserialized = serializer.deserialize(corrupted);
+      expect(deserialized.timestamp).toBe(Infinity);
+    });
+  });
+
   // ── Big-endian byte order for sequenceNumber and timestamp ──────────
 
   describe('big-endian byte order', () => {
@@ -211,11 +317,9 @@ describe('LedgerEntrySerializer', () => {
       expect(serialized[9]).toBe(0x04);
     });
 
-    it('should encode timestamp as uint64 big-endian', () => {
-      // Use a timestamp whose ms value has known byte representation.
-      // 0x0000018B_3E5FC000 = 1700000000000 in decimal
-      const ts = new Date(1700000000000);
-      const entry = makeEntry({ timestamp: ts });
+    it('should encode timestamp as float64 big-endian', () => {
+      // Use J2000.0 = 0.0 — all zero bytes in float64
+      const entry = makeEntry({ timestamp: KNOWN_TIMESTAMPS.J2000 });
       const serialized = serializer.serialize(entry);
 
       // timestamp starts at offset 10 (magic 4 + version 2 + seq 4)
@@ -224,8 +328,21 @@ describe('LedgerEntrySerializer', () => {
         serialized.byteOffset,
         serialized.byteLength,
       );
-      const readMs = view.getBigUint64(10, false); // big-endian
-      expect(readMs).toBe(BigInt(1700000000000));
+      const readValue = view.getFloat64(10, false); // big-endian
+      expect(readValue).toBe(0.0);
+    });
+
+    it('should encode Unix epoch (-10957.5) as float64 big-endian', () => {
+      const entry = makeEntry({ timestamp: KNOWN_TIMESTAMPS.UNIX_EPOCH });
+      const serialized = serializer.serialize(entry);
+
+      const view = new DataView(
+        serialized.buffer,
+        serialized.byteOffset,
+        serialized.byteLength,
+      );
+      const readValue = view.getFloat64(10, false); // big-endian
+      expect(readValue).toBe(-10957.5);
     });
   });
 
@@ -235,7 +352,7 @@ describe('LedgerEntrySerializer', () => {
     it('should produce a hash consistent with serializeForHashing output', () => {
       const partial = {
         sequenceNumber: 0,
-        timestamp: new Date(1700000000000),
+        timestamp: KNOWN_TIMESTAMPS.APPROX_2025,
         previousEntryHash: null,
         signerPublicKey: new Uint8Array(33).fill(0x02),
         payload: new Uint8Array([0xde, 0xad]),
@@ -251,7 +368,7 @@ describe('LedgerEntrySerializer', () => {
     it('should produce the same hash when called twice with the same input', () => {
       const partial = {
         sequenceNumber: 42,
-        timestamp: new Date(1700000000000),
+        timestamp: KNOWN_TIMESTAMPS.UNIX_EPOCH,
         previousEntryHash: makeChecksum(0x11),
         signerPublicKey: new Uint8Array(33).fill(0x03),
         payload: new Uint8Array([1, 2, 3, 4, 5]),

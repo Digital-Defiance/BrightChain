@@ -1,8 +1,11 @@
 import {
   BlockSize,
   blockSizeToSizeString,
+  brightDateNow,
+  brightDateToISO,
   IBlockMetadata,
   IBlockMetadataStore,
+  normalizeToBrightDate,
   ReplicationStatus,
   StoreError,
   StoreErrorType,
@@ -142,12 +145,12 @@ export class DiskBlockMetadataStore implements IBlockMetadataStore {
     return {
       version: METADATA_FILE_VERSION,
       blockId: metadata.blockId,
-      createdAt: metadata.createdAt.toISOString(),
-      expiresAt: metadata.expiresAt ? metadata.expiresAt.toISOString() : null,
+      createdAt: brightDateToISO(metadata.createdAt),
+      expiresAt: metadata.expiresAt !== null ? brightDateToISO(metadata.expiresAt) : null,
       durabilityLevel: metadata.durabilityLevel,
       parityBlockIds: [...metadata.parityBlockIds],
       accessCount: metadata.accessCount,
-      lastAccessedAt: metadata.lastAccessedAt.toISOString(),
+      lastAccessedAt: brightDateToISO(metadata.lastAccessedAt),
       replicationStatus: metadata.replicationStatus,
       targetReplicationFactor: metadata.targetReplicationFactor,
       replicaNodeIds: [...metadata.replicaNodeIds],
@@ -164,13 +167,13 @@ export class DiskBlockMetadataStore implements IBlockMetadataStore {
   private deserializeMetadata(file: BlockMetadataFile): IBlockMetadata {
     return {
       blockId: toStorageKey(file.blockId),
-      createdAt: new Date(file.createdAt),
-      expiresAt: file.expiresAt ? new Date(file.expiresAt) : null,
+      createdAt: normalizeToBrightDate(file.createdAt),
+      expiresAt: file.expiresAt ? normalizeToBrightDate(file.expiresAt) : null,
       durabilityLevel:
         file.durabilityLevel as IBlockMetadata['durabilityLevel'],
       parityBlockIds: [...file.parityBlockIds].map((id) => toStorageKey(id)),
       accessCount: file.accessCount,
-      lastAccessedAt: new Date(file.lastAccessedAt),
+      lastAccessedAt: normalizeToBrightDate(file.lastAccessedAt),
       replicationStatus: file.replicationStatus as ReplicationStatus,
       targetReplicationFactor: file.targetReplicationFactor,
       replicaNodeIds: [...file.replicaNodeIds],
@@ -304,7 +307,7 @@ export class DiskBlockMetadataStore implements IBlockMetadataStore {
    * @returns Array of metadata for expired blocks
    */
   public async findExpired(): Promise<IBlockMetadata[]> {
-    const now = new Date();
+    const now = brightDateNow();
     const expired: IBlockMetadata[] = [];
 
     await this.scanAllMetadata(async (metadata) => {
@@ -351,7 +354,7 @@ export class DiskBlockMetadataStore implements IBlockMetadataStore {
 
     await this.update(blockId, {
       accessCount: existing.accessCount + 1,
-      lastAccessedAt: new Date(),
+      lastAccessedAt: brightDateNow(),
     });
   }
 

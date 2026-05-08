@@ -1,4 +1,6 @@
 import {
+  brightDateNow,
+  brightDateToISO,
   Checksum,
   IAvailabilityService,
   IBlockLocationInfo,
@@ -247,7 +249,7 @@ export class SyncController<
   private locationToInfo(location: ILocationRecord): IBlockLocationInfo {
     return {
       nodeId: location.nodeId,
-      lastSeen: location.lastSeen.toISOString(),
+      lastSeen: brightDateToISO(location.lastSeen),
       latencyMs: location.latencyMs,
       isAuthoritative: location.isAuthoritative,
     };
@@ -313,7 +315,7 @@ export class SyncController<
           // Update location metadata to indicate the block is now at this node
           await availabilityService.updateLocation(blockId, {
             nodeId,
-            lastSeen: new Date(),
+            lastSeen: brightDateNow(),
             isAuthoritative: false,
           });
 

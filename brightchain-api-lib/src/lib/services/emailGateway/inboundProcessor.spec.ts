@@ -23,6 +23,8 @@ import type {
   IGossipService,
 } from '@brightchain/brightchain-lib';
 import {
+  brightDateNow,
+  brightDateToDate,
   createMailbox,
   EmailMessageService,
   EmailParser,
@@ -175,7 +177,7 @@ function makeEmailMetadata(
     to: [createMailbox('alice', 'brightchain.org', 'Alice')],
     messageId: '<inbound-1@example.com>',
     subject: 'Hello from outside',
-    date: new Date(),
+    date: brightDateNow(),
     mimeVersion: '1.0',
     contentType: { type: 'text', subtype: 'plain', parameters: new Map() },
     customHeaders: new Map(),
@@ -774,7 +776,7 @@ describe('InboundProcessor', () => {
       expect(vaultService.createVaultForEmail).toHaveBeenCalledWith(
         metaWithAttachments.messageId,
         metaWithAttachments.subject,
-        metaWithAttachments.date,
+        brightDateToDate(metaWithAttachments.date),
         'user-guid-abc-123-def',
         [
           {

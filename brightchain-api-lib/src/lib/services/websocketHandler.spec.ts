@@ -180,7 +180,7 @@ describe('WebSocketHandler', () => {
       const manifest = {
         nodeId: 'local-node-1',
         blockIds: ['block-1', 'block-2', 'block-3'],
-        generatedAt: new Date(),
+        generatedAt: 9000,
         checksum: 'abc123',
       };
       mockBlockRegistry.exportManifest.mockReturnValue(manifest);

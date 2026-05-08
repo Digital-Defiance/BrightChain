@@ -1,4 +1,4 @@
-import { IEnvironment } from '../../interfaces/environment';
+import { IEnvironment } from '@brightchain/brightchain-react-components';
 
 export const environment: IEnvironment = {
   production: false,

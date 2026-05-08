@@ -8,7 +8,7 @@
  */
 
 import type { BlockId, ICBLIndexEntry } from '@brightchain/brightchain-lib';
-import { CBLVisibility } from '@brightchain/brightchain-lib';
+import { brightDateNow, CBLVisibility, dateToBrightDate } from '@brightchain/brightchain-lib';
 import { CBLIndex } from '../lib/cblIndex';
 import { BrightDb } from '../lib/database';
 import { InMemoryHeadRegistry } from '../lib/headRegistry';
@@ -51,7 +51,7 @@ function makeEntry(
     blockId1: 'block-aaa-111' as BlockId,
     blockId2: 'block-bbb-222' as BlockId,
     blockSize: 256,
-    createdAt: new Date(),
+    createdAt: brightDateNow(),
     visibility: CBLVisibility.Private,
     ...overrides,
   };
@@ -601,7 +601,7 @@ describe('CBLIndex – user query with pagination (Req 6.2)', () => {
           magnetUrl: `magnet:user-page-${i}`,
           createdBy: 'alice',
           visibility: CBLVisibility.Private,
-          createdAt: new Date(2025, 0, i + 1),
+          createdAt: dateToBrightDate(new Date(2025, 0, i + 1)),
         }),
       );
     }

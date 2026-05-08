@@ -1905,18 +1905,29 @@ export const UkrainianStrings: ComponentStrings<BrightChainStringKey> = {
     'Сервіс обмеження швидкості тимчасово недоступний.',
   [BrightChainStrings.Error_PoUW_Middleware_RateLimitDenied]:
     'Сервіс обмеження швидкості недоступний. Запит відхилено.',
+
+  [BrightChainStrings.Date_BrightDateTemplate]: 'BD {BD}',
+
   // ── DatePage ──
   [BrightChainStrings.DatePage_Title]: 'Дата та час',
-  [BrightChainStrings.DatePage_BrightDateEpochLabel]: 'BrightDate (десяткові дні від J2000.0)',
-  [BrightChainStrings.DatePage_HolidaysTitle]: 'Свята та пам\'ятні дати сьогодні',
+  [BrightChainStrings.DatePage_BrightDateEpochLabel]:
+    'BrightDate (десяткові дні від J2000.0)',
+  [BrightChainStrings.DatePage_HolidaysTitle]:
+    "Свята та пам'ятні дати сьогодні",
   [BrightChainStrings.DatePage_AllFormatsTitle]: 'Усі формати дати',
   [BrightChainStrings.DatePage_AboutBrightDateTitle]: 'Про BrightDate',
-  [BrightChainStrings.DatePage_AboutBrightDate_Epoch]: 'BrightDate рахує десяткові дні від епохи J2000.0 (1 січня 2000 року о 12:00:00 UTC). Це та сама епоха, яку використовують астрономи всього світу для небесної механіки.',
-  [BrightChainStrings.DatePage_AboutBrightDate_Fraction]: 'Ціла частина — це кількість днів. Дробова частина — це десятковий час доби. Наприклад: 0,5 = полудень, 0,25 = 06:00, 0,75 = 18:00.',
-  [BrightChainStrings.DatePage_AboutBrightDate_NoTimezones]: 'Без часових поясів, без літнього часу, без двозначності — лише одне число на одній часовій лінії.',
-  [BrightChainStrings.DatePage_Format_BrightDateFull]: 'BrightDate (повна точність)',
-  [BrightChainStrings.DatePage_Format_BrightDateCompact]: 'BrightDate (компактний)',
-  [BrightChainStrings.DatePage_Format_BrightDateStandard]: 'BrightDate (стандартний)',
+  [BrightChainStrings.DatePage_AboutBrightDate_Epoch]:
+    'BrightDate рахує десяткові дні від епохи J2000.0 (1 січня 2000 року о 12:00:00 UTC). Це та сама епоха, яку використовують астрономи всього світу для небесної механіки.',
+  [BrightChainStrings.DatePage_AboutBrightDate_Fraction]:
+    'Ціла частина — це кількість днів. Дробова частина — це десятковий час доби. Наприклад: 0,5 = полудень, 0,25 = 06:00, 0,75 = 18:00.',
+  [BrightChainStrings.DatePage_AboutBrightDate_NoTimezones]:
+    'Без часових поясів, без літнього часу, без двозначності — лише одне число на одній часовій лінії.',
+  [BrightChainStrings.DatePage_Format_BrightDateFull]:
+    'BrightDate (повна точність)',
+  [BrightChainStrings.DatePage_Format_BrightDateCompact]:
+    'BrightDate (компактний)',
+  [BrightChainStrings.DatePage_Format_BrightDateStandard]:
+    'BrightDate (стандартний)',
   [BrightChainStrings.DatePage_Format_ISO8601]: 'ISO 8601',
   [BrightChainStrings.DatePage_Format_UTC]: 'UTC',
   [BrightChainStrings.DatePage_Format_LocalDateTime]: 'Місцева дата та час',
@@ -1925,12 +1936,83 @@ export const UkrainianStrings: ComponentStrings<BrightChainStringKey> = {
   [BrightChainStrings.DatePage_Format_UnixTimestamp]: 'Мітка часу Unix',
   [BrightChainStrings.DatePage_Format_UnixMs]: 'Мілісекунди Unix',
   [BrightChainStrings.DatePage_Format_JulianDate]: 'Юліанська дата',
-  [BrightChainStrings.DatePage_Format_ModifiedJulianDate]: 'Модифікована юліанська дата',
+  [BrightChainStrings.DatePage_Format_ModifiedJulianDate]:
+    'Модифікована юліанська дата',
   [BrightChainStrings.DatePage_Format_DayOfYear]: 'День року',
   [BrightChainStrings.DatePage_Format_ISOWeek]: 'Тиждень ISO',
   [BrightChainStrings.DatePage_Format_RFC2822]: 'RFC 2822',
   [BrightChainStrings.DatePage_HolidayType_Public]: 'Державне свято',
   [BrightChainStrings.DatePage_HolidayType_Bank]: 'Банківське свято',
-  [BrightChainStrings.DatePage_HolidayType_Observance]: 'Пам\'ятна дата',
+  [BrightChainStrings.DatePage_HolidayType_Observance]: "Пам'ятна дата",
   [BrightChainStrings.DatePage_HolidayType_Religious]: 'Релігійне',
+
+  // ── DatePage: Cochrane Easter Egg (Interplanetary Telemetry) ──
+  [BrightChainStrings.DatePage_Telemetry_Title]: 'Міжпланетна телеметрія',
+  [BrightChainStrings.DatePage_Telemetry_Subtitle]:
+    'Поточна одностороння світлова затримка у мілідобах (md)',
+  [BrightChainStrings.DatePage_Telemetry_MoonDelay]: 'Земля → Місяць',
+  [BrightChainStrings.DatePage_Telemetry_MarsDelayMin]:
+    'Земля → Марс (мін)',
+  [BrightChainStrings.DatePage_Telemetry_MarsDelayMax]:
+    'Земля → Марс (макс)',
+  [BrightChainStrings.DatePage_Telemetry_MarsDelayCurrent]:
+    'Земля → Марс (поточна оцінка)',
+  [BrightChainStrings.DatePage_Telemetry_Unit]: 'md',
+  [BrightChainStrings.DatePage_Telemetry_Footer]:
+    'BrightDate створено для світу за межами Земного Стандартного Часу. Один мілідень ≈ 86,4 секунди.',
+
+  // ── PaperKeyTemplate ──
+  [BrightChainStrings.PaperKey_Title]: 'Паперовий ключ BrightChain',
+  [BrightChainStrings.PaperKey_GeneratedTemplate]: 'Створено: {DATE} ({BD})',
+  [BrightChainStrings.PaperKey_SecurityWarning]:
+    'ЗБЕРІГАЙТЕ В БЕЗПЕЦІ. Цей паперовий ключ — єдиний спосіб відновити вашу ідентичність BrightChain. Зберігайте його в безпечному місці. Ніколи не діліться ним.',
+  [BrightChainStrings.PaperKey_WordsAriaLabel]: 'Слова паперового ключа',
+  [BrightChainStrings.PaperKey_QrScanLabel]: 'Скануйте для імпорту:',
+  [BrightChainStrings.PaperKey_QrAlt]: 'QR-код паперового ключа',
+  [BrightChainStrings.PaperKey_SecurityRecommendations]:
+    'Рекомендації з безпеки:',
+  [BrightChainStrings.PaperKey_Tip_Fireproof]:
+    'Зберігайте у вогнетривкому сейфі або банківській комірці',
+  [BrightChainStrings.PaperKey_Tip_Split]:
+    'Розгляньте можливість розподілу між кількома місцями',
+  [BrightChainStrings.PaperKey_Tip_NoDigital]:
+    'Ніколи не зберігайте в цифровому вигляді та не робіть знімок екрана',
+  [BrightChainStrings.PaperKey_Tip_NeverShare]:
+    'Ніколи не діліться з ким-небудь, включаючи підтримку BrightChain',
+  [BrightChainStrings.PaperKey_PrintButton]: 'Друкувати цей шаблон',
+
+  // ── DisputeNotice ──
+  [BrightChainStrings.Dispute_AriaLabelTemplate]: 'Суперечка Joule {ID}',
+  [BrightChainStrings.Dispute_IdTemplate]: 'Суперечка #{ID}',
+  [BrightChainStrings.Dispute_State_Disputed]: 'На розгляді',
+  [BrightChainStrings.Dispute_State_ResolvedFinal]: 'Вирішено (остаточно)',
+  [BrightChainStrings.Dispute_State_ResolvedReplaced]: 'Вирішено (замінено)',
+  [BrightChainStrings.Dispute_Field_Amount]: 'Сума',
+  [BrightChainStrings.Dispute_Field_Opened]: 'Відкрито',
+  [BrightChainStrings.Dispute_Field_Reason]: 'Причина',
+  [BrightChainStrings.Dispute_Field_Resolved]: 'Вирішено',
+  [BrightChainStrings.Dispute_Field_Resolution]: 'Рішення',
+
+  // ── RateTransparency ──
+  [BrightChainStrings.RateTransparency_Loading]: 'Завантаження таблиці тарифів',
+  [BrightChainStrings.RateTransparency_Error]: 'Помилка таблиці тарифів',
+  [BrightChainStrings.RateTransparency_Empty]: 'Таблиця тарифів недоступна.',
+  [BrightChainStrings.RateTransparency_TitleTemplate]:
+    'Таблиця тарифів Joule — Версія {VERSION}',
+  [BrightChainStrings.RateTransparency_EffectiveTemplate]:
+    'Чинна з: {DATE} ({BD})',
+  [BrightChainStrings.RateTransparency_SignedByTemplate]: 'Підписано: {SIGNER}',
+  [BrightChainStrings.RateTransparency_Col_ResourceClass]: 'Клас ресурсу',
+  [BrightChainStrings.RateTransparency_Col_Rate]: 'Тариф',
+  [BrightChainStrings.RateTransparency_Col_PerUnit]: 'За одиницю',
+
+  // ── JouleEventLog ──
+  [BrightChainStrings.JouleEventLog_Loading]: 'Завантаження подій Joule',
+  [BrightChainStrings.JouleEventLog_Error]: 'Помилка журналу подій Joule',
+  [BrightChainStrings.JouleEventLog_Empty]: 'Подій Joule ще не зафіксовано.',
+  [BrightChainStrings.JouleEventLog_AriaLabel]: 'Журнал подій Joule',
+  [BrightChainStrings.JouleEventLog_Col_Time]: 'Час',
+  [BrightChainStrings.JouleEventLog_Col_Kind]: 'Тип',
+  [BrightChainStrings.JouleEventLog_Col_Amount]: 'Сума',
+  [BrightChainStrings.JouleEventLog_Col_Description]: 'Опис',
 };

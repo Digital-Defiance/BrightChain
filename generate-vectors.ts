@@ -4,6 +4,7 @@ import {
   CBLService,
   Checksum,
   ChecksumService,
+  dateToBrightDate,
 } from '@brightchain/brightchain-lib';
 import {
   ECIESService,
@@ -34,7 +35,7 @@ async function generateVectors() {
 
   const { headerData: cblHeader } = cblService.makeCblHeader(
     creator,
-    new Date(1234567890000),
+    dateToBrightDate(new Date(1234567890000)),
     3,
     3072,
     addressList,
@@ -51,7 +52,7 @@ async function generateVectors() {
   // Generate ExtendedCBL block
   const { headerData: ecblHeader } = cblService.makeCblHeader(
     creator,
-    new Date(1234567890000),
+    dateToBrightDate(new Date(1234567890000)),
     2,
     2048,
     addressList.slice(0, 128),

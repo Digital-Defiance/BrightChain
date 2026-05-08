@@ -6,6 +6,8 @@
  * @see Requirements 12.5
  */
 
+import type { BrightDateTimestamp } from '../types/brightDateTimestamp';
+
 /**
  * Metrics for monitoring the BrightTrust system.
  */
@@ -42,7 +44,7 @@ export interface BrightTrustMetrics {
   /** Expiration scheduler metrics */
   expiration: {
     /** Timestamp of last expiration scheduler run, or null if never run */
-    last_run: Date | null;
+    last_run: BrightDateTimestamp | null;
     /** Total identity records expired */
     deleted_total: number;
   };

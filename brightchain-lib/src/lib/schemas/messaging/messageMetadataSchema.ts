@@ -6,6 +6,7 @@ import { TranslatableBrightChainError } from '../../errors/translatableBrightCha
 import type { BlockId } from '../../interfaces/branded/primitives/blockId';
 import { IMessageMetadata } from '../../interfaces/messaging/messageMetadata';
 import { SchemaDefinition } from '../../sharedTypes';
+import { normalizeToBrightDate, brightDateToISO } from '../../utils/brightDateConversions';
 
 /**
  * Schema for message metadata storage.
@@ -67,11 +68,11 @@ export const MessageMetadataSchema: Partial<
   acknowledgments: {
     type: Object,
     required: true,
-    serialize: (value: Map<string, Date>): Record<string, string> =>
+    serialize: (value: Map<string, number>): Record<string, string> =>
       Object.fromEntries(
-        Array.from(value.entries()).map(([k, v]) => [k, v.toISOString()]),
+        Array.from(value.entries()).map(([k, v]) => [k, brightDateToISO(v)]),
       ),
-    hydrate: (value: unknown): Map<string, Date> => {
+    hydrate: (value: unknown): Map<string, number> => {
       if (typeof value !== 'object' || value === null)
         throw new TranslatableBrightChainError(
           BrightChainStrings.Error_MessageMetadataSchema_InvalidAcknowledgementsFormat,
@@ -79,7 +80,7 @@ export const MessageMetadataSchema: Partial<
       return new Map(
         Object.entries(value as Record<string, string>).map(([k, v]) => [
           k,
-          new Date(v),
+          normalizeToBrightDate(v),
         ]),
       );
     },

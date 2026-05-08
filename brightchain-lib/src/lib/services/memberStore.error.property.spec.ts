@@ -31,6 +31,8 @@ import { MemberError } from '../errors/memberError';
 import { BlockStoreFactory } from '../factories/blockStoreFactory';
 import { MemberStore } from './memberStore';
 import { ServiceProvider } from './service.provider';
+import { brightDateNow } from '../utils/brightDateConversions';
+import type { BrightDateTimestamp } from '../types/brightDateTimestamp';
 
 describe('MemberStore Error Handling Property Tests', () => {
   let blockStore: ReturnType<typeof BlockStoreFactory.createMemoryStore>;
@@ -123,7 +125,7 @@ describe('MemberStore Error Handling Property Tests', () => {
             const corruptedBlock = new RawDataBlock(
               BlockSize.Small,
               blockData,
-              new Date(),
+              brightDateNow(),
               checksum,
               BlockType.RawData,
               BlockDataType.PublicMemberData,
@@ -137,7 +139,7 @@ describe('MemberStore Error Handling Property Tests', () => {
             const dummyBlock = new RawDataBlock(
               BlockSize.Small,
               dummyData,
-              new Date(),
+              brightDateNow(),
               dummyChecksum,
               BlockType.RawData,
               BlockDataType.PublicMemberData,
@@ -153,7 +155,7 @@ describe('MemberStore Error Handling Property Tests', () => {
               privateProfileCBL: checksum,
               type: MemberType.User,
               status: MemberStatusType.Active,
-              lastUpdate: new Date(),
+              lastUpdate: brightDateNow(),
               reputation: 0,
             });
 
@@ -224,7 +226,7 @@ describe('MemberStore Error Handling Property Tests', () => {
             const truncatedBlock = new RawDataBlock(
               BlockSize.Small,
               blockData,
-              new Date(),
+              brightDateNow(),
               checksum,
               BlockType.RawData,
               BlockDataType.PublicMemberData,
@@ -238,7 +240,7 @@ describe('MemberStore Error Handling Property Tests', () => {
             const dummyBlock = new RawDataBlock(
               BlockSize.Small,
               dummyData,
-              new Date(),
+              brightDateNow(),
               dummyChecksum,
               BlockType.RawData,
               BlockDataType.PublicMemberData,
@@ -254,7 +256,7 @@ describe('MemberStore Error Handling Property Tests', () => {
               privateProfileCBL: checksum,
               type: MemberType.User,
               status: MemberStatusType.Active,
-              lastUpdate: new Date(),
+              lastUpdate: brightDateNow(),
               reputation: 0,
             });
 
@@ -294,7 +296,7 @@ describe('MemberStore Error Handling Property Tests', () => {
             const emptyBlock = new RawDataBlock(
               BlockSize.Small,
               blockData,
-              new Date(),
+              brightDateNow(),
               checksum,
               BlockType.RawData,
               BlockDataType.PublicMemberData,
@@ -311,7 +313,7 @@ describe('MemberStore Error Handling Property Tests', () => {
               privateProfileCBL: checksum,
               type: MemberType.User,
               status: MemberStatusType.Active,
-              lastUpdate: new Date(),
+              lastUpdate: brightDateNow(),
               reputation: 0,
             });
 
@@ -375,7 +377,7 @@ describe('MemberStore Error Handling Property Tests', () => {
             const block = new RawDataBlock(
               BlockSize.Small,
               blockData,
-              new Date(),
+              brightDateNow(),
               checksum,
               BlockType.RawData,
               BlockDataType.PublicMemberData,
@@ -389,7 +391,7 @@ describe('MemberStore Error Handling Property Tests', () => {
             const dummyBlock = new RawDataBlock(
               BlockSize.Small,
               dummyData,
-              new Date(),
+              brightDateNow(),
               dummyChecksum,
               BlockType.RawData,
               BlockDataType.PublicMemberData,
@@ -404,7 +406,7 @@ describe('MemberStore Error Handling Property Tests', () => {
               privateProfileCBL: undefined,
               type: MemberType.User,
               status: MemberStatusType.Active,
-              lastUpdate: new Date(),
+              lastUpdate: brightDateNow(),
               reputation: 0,
             });
 
@@ -461,7 +463,7 @@ describe('MemberStore Error Handling Property Tests', () => {
             const block = new RawDataBlock(
               BlockSize.Small,
               blockData,
-              new Date(),
+              brightDateNow(),
               checksum,
               BlockType.RawData,
               BlockDataType.PublicMemberData,
@@ -475,7 +477,7 @@ describe('MemberStore Error Handling Property Tests', () => {
             const dummyBlock = new RawDataBlock(
               BlockSize.Small,
               dummyData,
-              new Date(),
+              brightDateNow(),
               dummyChecksum,
               BlockType.RawData,
               BlockDataType.PublicMemberData,
@@ -490,7 +492,7 @@ describe('MemberStore Error Handling Property Tests', () => {
               privateProfileCBL: undefined,
               type: MemberType.User,
               status: MemberStatusType.Active,
-              lastUpdate: new Date(),
+              lastUpdate: brightDateNow(),
               reputation: 0,
             });
 
@@ -547,7 +549,7 @@ describe('MemberStore Error Handling Property Tests', () => {
             const block = new RawDataBlock(
               BlockSize.Small,
               blockData,
-              new Date(),
+              brightDateNow(),
               checksum,
               BlockType.RawData,
               BlockDataType.PublicMemberData,
@@ -561,7 +563,7 @@ describe('MemberStore Error Handling Property Tests', () => {
             const dummyBlock = new RawDataBlock(
               BlockSize.Small,
               dummyData,
-              new Date(),
+              brightDateNow(),
               dummyChecksum,
               BlockType.RawData,
               BlockDataType.PublicMemberData,
@@ -576,7 +578,7 @@ describe('MemberStore Error Handling Property Tests', () => {
               privateProfileCBL: undefined,
               type: MemberType.User,
               status: MemberStatusType.Active,
-              lastUpdate: new Date(),
+              lastUpdate: brightDateNow(),
               reputation: 0,
             });
 
@@ -633,7 +635,7 @@ describe('MemberStore Error Handling Property Tests', () => {
             const block = new RawDataBlock(
               BlockSize.Small,
               blockData,
-              new Date(),
+              brightDateNow(),
               checksum,
               BlockType.RawData,
               BlockDataType.PublicMemberData,
@@ -647,7 +649,7 @@ describe('MemberStore Error Handling Property Tests', () => {
             const dummyBlock = new RawDataBlock(
               BlockSize.Small,
               dummyData,
-              new Date(),
+              brightDateNow(),
               dummyChecksum,
               BlockType.RawData,
               BlockDataType.PublicMemberData,
@@ -662,7 +664,7 @@ describe('MemberStore Error Handling Property Tests', () => {
               privateProfileCBL: undefined,
               type: MemberType.User,
               status: MemberStatusType.Active,
-              lastUpdate: new Date(),
+              lastUpdate: brightDateNow(),
               reputation: 0,
             });
 
@@ -718,7 +720,7 @@ describe('MemberStore Error Handling Property Tests', () => {
             const block = new RawDataBlock(
               BlockSize.Small,
               blockData,
-              new Date(),
+              brightDateNow(),
               checksum,
               BlockType.RawData,
               BlockDataType.PrivateMemberData,
@@ -732,7 +734,7 @@ describe('MemberStore Error Handling Property Tests', () => {
             const dummyBlock = new RawDataBlock(
               BlockSize.Small,
               dummyData,
-              new Date(),
+              brightDateNow(),
               dummyChecksum,
               BlockType.RawData,
               BlockDataType.PublicMemberData,
@@ -747,7 +749,7 @@ describe('MemberStore Error Handling Property Tests', () => {
               privateProfileCBL: checksum,
               type: MemberType.User,
               status: MemberStatusType.Active,
-              lastUpdate: new Date(),
+              lastUpdate: brightDateNow(),
               reputation: 0,
             });
 
@@ -803,7 +805,7 @@ describe('MemberStore Error Handling Property Tests', () => {
             const block = new RawDataBlock(
               BlockSize.Small,
               blockData,
-              new Date(),
+              brightDateNow(),
               checksum,
               BlockType.RawData,
               BlockDataType.PrivateMemberData,
@@ -817,7 +819,7 @@ describe('MemberStore Error Handling Property Tests', () => {
             const dummyBlock = new RawDataBlock(
               BlockSize.Small,
               dummyData,
-              new Date(),
+              brightDateNow(),
               dummyChecksum,
               BlockType.RawData,
               BlockDataType.PublicMemberData,
@@ -832,7 +834,7 @@ describe('MemberStore Error Handling Property Tests', () => {
               privateProfileCBL: checksum,
               type: MemberType.User,
               status: MemberStatusType.Active,
-              lastUpdate: new Date(),
+              lastUpdate: brightDateNow(),
               reputation: 0,
             });
 
@@ -888,7 +890,7 @@ describe('MemberStore Error Handling Property Tests', () => {
             const block = new RawDataBlock(
               BlockSize.Small,
               blockData,
-              new Date(),
+              brightDateNow(),
               checksum,
               BlockType.RawData,
               BlockDataType.PrivateMemberData,
@@ -902,7 +904,7 @@ describe('MemberStore Error Handling Property Tests', () => {
             const dummyBlock = new RawDataBlock(
               BlockSize.Small,
               dummyData,
-              new Date(),
+              brightDateNow(),
               dummyChecksum,
               BlockType.RawData,
               BlockDataType.PublicMemberData,
@@ -917,7 +919,7 @@ describe('MemberStore Error Handling Property Tests', () => {
               privateProfileCBL: checksum,
               type: MemberType.User,
               status: MemberStatusType.Active,
-              lastUpdate: new Date(),
+              lastUpdate: brightDateNow(),
               reputation: 0,
             });
 
@@ -967,7 +969,7 @@ describe('MemberStore Error Handling Property Tests', () => {
             const block = new RawDataBlock(
               BlockSize.Small,
               blockData,
-              new Date(),
+              brightDateNow(),
               checksum,
               BlockType.RawData,
               BlockDataType.PrivateMemberData,
@@ -981,7 +983,7 @@ describe('MemberStore Error Handling Property Tests', () => {
             const dummyBlock = new RawDataBlock(
               BlockSize.Small,
               dummyData,
-              new Date(),
+              brightDateNow(),
               dummyChecksum,
               BlockType.RawData,
               BlockDataType.PublicMemberData,
@@ -996,7 +998,7 @@ describe('MemberStore Error Handling Property Tests', () => {
               privateProfileCBL: checksum,
               type: MemberType.User,
               status: MemberStatusType.Active,
-              lastUpdate: new Date(),
+              lastUpdate: brightDateNow(),
               reputation: 0,
             });
 

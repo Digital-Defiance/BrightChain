@@ -1,3 +1,5 @@
+import type { BrightDateTimestamp } from '../types/brightDateTimestamp';
+
 /**
  * Entry in the secure keyring storage
  *
@@ -14,8 +16,8 @@
  *   encryptedData: new Uint8Array([...]),
  *   iv: new Uint8Array([...]),
  *   salt: new Uint8Array([...]),
- *   created: new Date(),
- *   lastAccessed: new Date()
+ *   created: brightDateNow(),
+ *   lastAccessed: brightDateNow()
  * };
  * ```
  */
@@ -36,11 +38,11 @@ export interface IKeyringEntry {
   salt: Uint8Array;
 
   /** Timestamp when the entry was created */
-  created: Date;
+  created: BrightDateTimestamp;
 
   /**
    * Timestamp when the entry was last accessed (optional)
    * @remarks Updated each time the key is retrieved from the keyring
    */
-  lastAccessed?: Date;
+  lastAccessed?: BrightDateTimestamp;
 }

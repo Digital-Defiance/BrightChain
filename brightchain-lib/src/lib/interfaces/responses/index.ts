@@ -39,3 +39,6 @@ export type * from './storeBlock';
 export type * from './storeCbl';
 export type * from './storeSCBLResponse';
 export type * from './syncRequestResponse';
+
+// BrightDate public API response data
+export type * from './brightDateNowResponse';

@@ -16,6 +16,7 @@ import type {
 } from '@brightchain/brightchain-lib';
 import {
   ContentTransferEncoding,
+  dateToBrightDate,
   createContentType,
   createMailbox,
   DeliveryStatus,
@@ -127,11 +128,11 @@ const arbSubject = fc
   .filter((s) => s.length > 0);
 
 /**
- * Generates a Date with second-level precision (RFC 5322 dates don't carry ms).
+ * Generates a BrightDateTimestamp with second-level precision (RFC 5322 dates don't carry ms).
  */
-const arbDate: fc.Arbitrary<Date> = fc
+const arbDate: fc.Arbitrary<number> = fc
   .integer({ min: 946684800, max: 1893456000 }) // 2000-01-01 to 2030-01-01 (seconds)
-  .map((secs) => new Date(secs * 1000));
+  .map((secs) => dateToBrightDate(new Date(secs * 1000)));
 
 /**
  * Generates a simple text body (ASCII only for clean round-trip).
@@ -236,10 +237,12 @@ function mailboxesEqual(a: IMailbox, b: IMailbox): boolean {
 }
 
 /**
- * Compares two dates at second-level precision (RFC 5322 doesn't carry ms).
+ * Compares two BrightDateTimestamp values at second-level precision (RFC 5322 doesn't carry ms).
+ * BrightDateTimestamp is in decimal days, so 1 second = 1/86400 days.
  */
-function datesEqualToSecond(a: Date, b: Date): boolean {
-  return Math.floor(a.getTime() / 1000) === Math.floor(b.getTime() / 1000);
+function datesEqualToSecond(a: number, b: number): boolean {
+  // Convert to seconds (1 day = 86400 seconds)
+  return Math.floor(a * 86400) === Math.floor(b * 86400);
 }
 
 // ─── Property Tests ─────────────────────────────────────────────────────────

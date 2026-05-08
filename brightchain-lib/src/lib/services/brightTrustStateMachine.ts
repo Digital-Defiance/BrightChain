@@ -62,6 +62,7 @@ import {
 } from './banProposalValidator';
 import { ChecksumService } from './checksum.service';
 import { SealingService } from './sealing.service';
+import { brightDateNow, normalizeToBrightDate } from '../utils/brightDateConversions';
 
 /**
  * Constant-time comparison of two Uint8Array buffers.
@@ -110,7 +111,7 @@ export class BrightTrustStateMachine<TID extends PlatformID = Uint8Array>
     votesLatencyMs: 0,
     redistributionProgress: -1,
     redistributionFailures: 0,
-    expirationLastRun: null as Date | null,
+    expirationLastRun: null as number | null,
     expirationDeletedTotal: 0,
   };
 
@@ -245,8 +246,8 @@ export class BrightTrustStateMachine<TID extends PlatformID = Uint8Array>
           name: `Member-${uint8ArrayToHex(member.idBytes).substring(0, 8)}`,
         },
         isActive: true,
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        createdAt: brightDateNow(),
+        updatedAt: brightDateNow(),
       };
       await this.db.saveMember(brightTrustMember);
     }
@@ -869,8 +870,8 @@ export class BrightTrustStateMachine<TID extends PlatformID = Uint8Array>
       publicKey: member.publicKey,
       metadata,
       isActive: true,
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      createdAt: brightDateNow(),
+      updatedAt: brightDateNow(),
     };
     await this.db.saveMember(brightTrustMember);
 
@@ -1026,7 +1027,7 @@ export class BrightTrustStateMachine<TID extends PlatformID = Uint8Array>
       const updatedMember: IBrightTrustMember<TID> = {
         ...memberRecord,
         isActive: false,
-        updatedAt: new Date(),
+        updatedAt: brightDateNow(),
       };
       await this.db.saveMember(updatedMember);
     }
@@ -1309,7 +1310,7 @@ export class BrightTrustStateMachine<TID extends PlatformID = Uint8Array>
           fullProposal.proposerMemberId as TID,
         ),
       ) as HexString,
-      expiresAt: fullProposal.expiresAt,
+      expiresAt: normalizeToBrightDate(fullProposal.expiresAt),
       requiredThreshold: fullProposal.requiredThreshold,
       attachmentCblId: fullProposal.attachmentCblId as BlockId | undefined,
     };
@@ -2060,7 +2061,7 @@ export class BrightTrustStateMachine<TID extends PlatformID = Uint8Array>
       encryptedData: sealedDoc.encryptedData,
       memberIds,
       sharesRequired: sealedDoc.sharesRequired,
-      createdAt: sealedDoc.dateCreated,
+      createdAt: normalizeToBrightDate(sealedDoc.dateCreated),
     };
   }
 

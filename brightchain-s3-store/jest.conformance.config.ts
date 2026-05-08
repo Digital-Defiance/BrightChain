@@ -29,9 +29,22 @@ export default {
         diagnostics: false,
       },
     ],
+    '^.+\\.js$': [
+      'ts-jest',
+      {
+        tsconfig: {
+          allowJs: true,
+          esModuleInterop: true,
+          module: 'commonjs',
+          moduleResolution: 'node',
+        },
+        diagnostics: false,
+      },
+    ],
   },
   transformIgnorePatterns: [
-    'node_modules/(?!(@noble|@scure|@ethereumjs|uuid)/)',
+    '/node_modules/\\.store/(?!.*(@noble|@scure|@ethereumjs|uuid|@otplib|otplib)-)',
+    '/node_modules/(?!(\\.store|@noble|@scure|@ethereumjs|uuid|@otplib|otplib)/)',
     '/dist/',
     '<rootDir>/../dist/',
   ],
@@ -44,7 +57,7 @@ export default {
     '^@brightchain/brightchain-lib$':
       '<rootDir>/../brightchain-lib/src/index.ts',
     '^@brightchain/brightchain-api-lib$':
-      '<rootDir>/../brightchain-api-lib/src/index.ts',
+      '<rootDir>/src/lib/__tests__/brightchain-api-lib-shim.ts',
     '^@brightchain/node-express-suite$':
       '<rootDir>/../brightchain-node-express-suite/src/index.ts',
     '^@brightchain/db$': '<rootDir>/../brightchain-db/src/index.ts',

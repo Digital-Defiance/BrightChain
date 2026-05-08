@@ -40,6 +40,8 @@ import { ConstituentBlockListBlock } from './cbl';
 import { InMemoryBlockTuple } from './memoryTuple';
 import { RandomBlock } from './random';
 import { RawDataBlock } from './rawData';
+import { brightDateNow } from '../utils/brightDateConversions';
+import type { BrightDateTimestamp } from '../types/brightDateTimestamp';
 
 jest.setTimeout(30000);
 
@@ -223,7 +225,7 @@ describe('CBL Pool Awareness Property Tests', () => {
 
       const { headerData } = cblService.makeCblHeader(
         creator,
-        new Date(),
+        brightDateNow(),
         checksums.length,
         1024, // arbitrary original data length
         addressBytes,
@@ -256,7 +258,7 @@ describe('CBL Pool Awareness Property Tests', () => {
         const data = new Uint8Array(blockSize);
         crypto.getRandomValues(data);
         const checksum = sp.checksumService.calculateChecksum(data);
-        result.push(new RawDataBlock(blockSize, data, new Date(), checksum));
+        result.push(new RawDataBlock(blockSize, data, brightDateNow(), checksum));
       }
       return result;
     }

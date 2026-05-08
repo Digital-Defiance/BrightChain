@@ -5,6 +5,7 @@ import {
   SecureString,
 } from '@digitaldefiance/ecies-lib';
 import { PublicKey } from 'paillier-bigint';
+import type { BrightDateTimestamp } from '../../types/brightDateTimestamp';
 
 /**
  * Hydrated format for member data - after basic type conversion but before operational
@@ -17,8 +18,8 @@ export interface IMemberHydratedData<TID extends PlatformID = Uint8Array> {
   publicKey: Uint8Array;
   votingPublicKey?: PublicKey;
   creatorId: TID;
-  dateCreated: Date;
-  dateUpdated: Date;
+  dateCreated: BrightDateTimestamp;
+  dateUpdated: BrightDateTimestamp;
 }
 
 /**

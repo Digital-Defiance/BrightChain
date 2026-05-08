@@ -5,7 +5,9 @@ import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockSize } from '../enumerations/blockSize';
 import { BlockType } from '../enumerations/blockType';
 import { TranslatableBrightChainError } from '../errors/translatableBrightChainError';
+import type { BrightDateTimestamp } from '../types/brightDateTimestamp';
 import type { ChecksumService } from '../services/checksum.service';
+import { brightDateNow } from '../utils/brightDateConversions';
 import { getGlobalServiceProvider } from '../services/globalServiceProvider';
 import { Checksum } from '../types/checksum';
 import { BaseBlock } from './base';
@@ -20,7 +22,7 @@ export class RandomBlock extends RawDataBlock {
   public constructor(
     blockSize: BlockSize,
     data: Uint8Array,
-    dateCreated?: Date,
+    dateCreated?: BrightDateTimestamp,
     checksum?: Checksum,
     checksumService?: ChecksumService,
   ) {
@@ -46,7 +48,7 @@ export class RandomBlock extends RawDataBlock {
   /**
    * Create a new random block
    */
-  public static new(blockSize: BlockSize, dateCreated?: Date): RandomBlock {
+  public static new(blockSize: BlockSize, dateCreated?: BrightDateTimestamp): RandomBlock {
     const data = randomBytes(blockSize as number);
     return new RandomBlock(blockSize, new Uint8Array(data), dateCreated);
   }
@@ -57,7 +59,7 @@ export class RandomBlock extends RawDataBlock {
   public static reconstitute(
     blockSize: BlockSize,
     data: Uint8Array,
-    dateCreated?: Date,
+    dateCreated?: BrightDateTimestamp,
     checksum?: Checksum,
   ): RandomBlock {
     return new RandomBlock(blockSize, data, dateCreated, checksum);
@@ -161,7 +163,7 @@ export class RandomBlock extends RawDataBlock {
     const Constructor = other.constructor as new (
       blockSize: BlockSize,
       data: Uint8Array,
-      dateCreated: Date,
+      dateCreated: BrightDateTimestamp,
       checksum: Checksum,
       canRead: boolean,
       canPersist: boolean,
@@ -170,7 +172,7 @@ export class RandomBlock extends RawDataBlock {
     return new Constructor(
       this.blockSize,
       result,
-      new Date(),
+      brightDateNow(),
       checksum,
       this.canRead && other.canRead,
       this.canPersist && other.canPersist,

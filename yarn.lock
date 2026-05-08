@@ -2403,64 +2403,64 @@ __metadata:
   dependencies:
     "@azure/identity": "npm:^4.6.0"
     "@azure/storage-blob": "npm:^12.26.0"
-    "@brightchain/brightchain-api-lib": "npm:^0.31.0"
-    "@brightchain/brightchain-lib": "npm:^0.31.0"
+    "@brightchain/brightchain-api-lib": "npm:^0.32.0"
+    "@brightchain/brightchain-lib": "npm:^0.32.0"
     tslib: "npm:^2.3.0"
   languageName: unknown
   linkType: soft
 
-"@brightchain/brightcal-api-lib@npm:^0.31.0, @brightchain/brightcal-api-lib@workspace:brightcal-api-lib":
+"@brightchain/brightcal-api-lib@npm:^0.32.0, @brightchain/brightcal-api-lib@workspace:brightcal-api-lib":
   version: 0.0.0-use.local
   resolution: "@brightchain/brightcal-api-lib@workspace:brightcal-api-lib"
   dependencies:
     tslib: "npm:^2.3.0"
   peerDependencies:
-    "@brightchain/brightcal-lib": ^0.31.0
-    "@brightchain/brightchain-api-lib": ^0.31.0
-    "@brightchain/db": ^0.31.0
+    "@brightchain/brightcal-lib": ^0.32.0
+    "@brightchain/brightchain-api-lib": ^0.32.0
+    "@brightchain/db": ^0.32.0
   languageName: unknown
   linkType: soft
 
-"@brightchain/brightcal-lib@npm:^0.31.0, @brightchain/brightcal-lib@workspace:brightcal-lib":
+"@brightchain/brightcal-lib@npm:^0.32.0, @brightchain/brightcal-lib@workspace:brightcal-lib":
   version: 0.0.0-use.local
   resolution: "@brightchain/brightcal-lib@workspace:brightcal-lib"
   dependencies:
     tslib: "npm:^2.3.0"
   peerDependencies:
-    "@brightchain/brightchain-lib": ^0.31.0
+    "@brightchain/brightchain-lib": ^0.32.0
   languageName: unknown
   linkType: soft
 
-"@brightchain/brightcal-react-components@npm:^0.31.0, @brightchain/brightcal-react-components@workspace:brightcal-react-components":
+"@brightchain/brightcal-react-components@npm:^0.32.0, @brightchain/brightcal-react-components@workspace:brightcal-react-components":
   version: 0.0.0-use.local
   resolution: "@brightchain/brightcal-react-components@workspace:brightcal-react-components"
   dependencies:
     tslib: "npm:^2.3.0"
   peerDependencies:
-    "@brightchain/brightcal-lib": ^0.31.0
-    "@brightchain/brightchain-lib": ^0.31.0
+    "@brightchain/brightcal-lib": ^0.32.0
+    "@brightchain/brightchain-lib": ^0.32.0
     react: ^18.0.0
     react-dom: ^18.0.0
   languageName: unknown
   linkType: soft
 
-"@brightchain/brightchain-api-lib@npm:^0.31.0, @brightchain/brightchain-api-lib@workspace:brightchain-api-lib":
+"@brightchain/brightchain-api-lib@npm:^0.32.0, @brightchain/brightchain-api-lib@workspace:brightchain-api-lib":
   version: 0.0.0-use.local
   resolution: "@brightchain/brightchain-api-lib@workspace:brightchain-api-lib"
   dependencies:
     "@aws-sdk/client-ses": "npm:^3.859.0"
-    "@brightchain/brightchain-identity": "npm:^0.31.0"
-    "@brightchain/brightchain-lib": "npm:^0.31.0"
-    "@brightchain/db": "npm:^0.31.0"
-    "@brightchain/node-express-suite": "npm:^0.31.0"
+    "@brightchain/brightchain-identity": "npm:^0.32.0"
+    "@brightchain/brightchain-lib": "npm:^0.32.0"
+    "@brightchain/db": "npm:^0.32.0"
+    "@brightchain/node-express-suite": "npm:^0.32.0"
     "@digitaldefiance/branded-enum": "npm:0.0.7"
-    "@digitaldefiance/ecies-lib": "npm:5.1.6"
+    "@digitaldefiance/ecies-lib": "npm:5.2.2"
     "@digitaldefiance/enclave-bridge-client": "npm:^1.1.0"
-    "@digitaldefiance/i18n-lib": "npm:4.7.4"
-    "@digitaldefiance/node-ecies-lib": "npm:5.1.6"
-    "@digitaldefiance/node-express-suite": "npm:4.27.2"
+    "@digitaldefiance/i18n-lib": "npm:4.7.5"
+    "@digitaldefiance/node-ecies-lib": "npm:5.2.2"
+    "@digitaldefiance/node-express-suite": "npm:4.28.3"
     "@digitaldefiance/secrets": "npm:^2.0.7"
-    "@digitaldefiance/suite-core-lib": "npm:4.27.4"
+    "@digitaldefiance/suite-core-lib": "npm:4.28.3"
     "@ethereumjs/wallet": "npm:^10.0.0"
     "@faker-js/faker": "npm:^10.4.0"
     "@noble/curves": "npm:^1.9.0"
@@ -2510,15 +2510,15 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@brightchain/brightchain-identity@npm:^0.31.0, @brightchain/brightchain-identity@workspace:brightchain-identity":
+"@brightchain/brightchain-identity@npm:^0.32.0, @brightchain/brightchain-identity@workspace:brightchain-identity":
   version: 0.0.0-use.local
   resolution: "@brightchain/brightchain-identity@workspace:brightchain-identity"
   dependencies:
-    "@digitaldefiance/ecies-lib": "npm:5.1.6"
-    "@digitaldefiance/i18n-lib": "npm:4.7.4"
-    "@digitaldefiance/node-ecies-lib": "npm:5.1.6"
+    "@digitaldefiance/ecies-lib": "npm:5.2.2"
+    "@digitaldefiance/i18n-lib": "npm:4.7.5"
+    "@digitaldefiance/node-ecies-lib": "npm:5.2.2"
   peerDependencies:
-    "@brightchain/brightchain-lib": ^0.31.0
+    "@brightchain/brightchain-lib": ^0.32.0
   languageName: unknown
   linkType: soft
 
@@ -2562,18 +2562,18 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@brightchain/brightchain-lib@npm:^0.31.0, @brightchain/brightchain-lib@workspace:brightchain-lib":
+"@brightchain/brightchain-lib@npm:^0.32.0, @brightchain/brightchain-lib@workspace:brightchain-lib":
   version: 0.0.0-use.local
   resolution: "@brightchain/brightchain-lib@workspace:brightchain-lib"
   dependencies:
-    "@brightchain/brightdate": "npm:0.31.0"
+    "@brightchain/brightdate": "npm:0.32.0"
     "@digitaldefiance/branded-interface": "npm:0.0.5"
     "@digitaldefiance/bzip2-wasm": "npm:^1.1.1"
-    "@digitaldefiance/ecies-lib": "npm:5.1.6"
-    "@digitaldefiance/i18n-lib": "npm:4.7.4"
+    "@digitaldefiance/ecies-lib": "npm:5.2.2"
+    "@digitaldefiance/i18n-lib": "npm:4.7.5"
     "@digitaldefiance/reed-solomon-erasure.wasm": "npm:^1.0.2"
     "@digitaldefiance/secrets": "npm:^2.0.7"
-    "@digitaldefiance/suite-core-lib": "npm:4.27.4"
+    "@digitaldefiance/suite-core-lib": "npm:4.28.3"
     "@ethereumjs/wallet": "npm:^10.0.0"
     "@jest/environment": "npm:^30.3.0"
     "@jest/globals": "npm:^30.3.0"
@@ -2615,14 +2615,14 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@brightchain/brightchain-react-components@npm:^0.31.0, @brightchain/brightchain-react-components@workspace:brightchain-react-components":
+"@brightchain/brightchain-react-components@npm:^0.32.0, @brightchain/brightchain-react-components@workspace:brightchain-react-components":
   version: 0.0.0-use.local
   resolution: "@brightchain/brightchain-react-components@workspace:brightchain-react-components"
   dependencies:
-    "@brightchain/brightchain-lib": "npm:^0.31.0"
-    "@digitaldefiance/ecies-lib": "npm:5.1.6"
-    "@digitaldefiance/express-suite-react-components": "npm:4.28.3"
-    "@digitaldefiance/i18n-lib": "npm:4.7.4"
+    "@brightchain/brightchain-lib": "npm:^0.32.0"
+    "@digitaldefiance/ecies-lib": "npm:5.2.2"
+    "@digitaldefiance/express-suite-react-components": "npm:4.29.1"
+    "@digitaldefiance/i18n-lib": "npm:4.7.5"
     "@fortawesome/fontawesome-svg-core": "npm:^7.2.0"
     "@fortawesome/react-fontawesome": "npm:^3.2.0"
     "@mui/icons-material": "npm:^7.3.7"
@@ -2642,7 +2642,7 @@ __metadata:
   dependencies:
     tslib: "npm:^2.3.0"
   peerDependencies:
-    "@brightchain/brightchain-lib": ">=0.31.0"
+    "@brightchain/brightchain-lib": ">=0.32.0"
   languageName: unknown
   linkType: soft
 
@@ -2654,19 +2654,19 @@ __metadata:
     "@types/react-dom": "npm:^19.2.3"
     tslib: "npm:^2.3.0"
   peerDependencies:
-    "@brightchain/brightchart-lib": ">=0.31.0"
+    "@brightchain/brightchart-lib": ">=0.32.0"
     "@fortawesome/react-fontawesome": ">=3.0.0"
     react: ">=18.0.0"
   languageName: unknown
   linkType: soft
 
-"@brightchain/brightchat-lib@npm:^0.31.0, @brightchain/brightchat-lib@workspace:brightchat-lib":
+"@brightchain/brightchat-lib@npm:^0.32.0, @brightchain/brightchat-lib@workspace:brightchat-lib":
   version: 0.0.0-use.local
   resolution: "@brightchain/brightchat-lib@workspace:brightchat-lib"
   dependencies:
-    "@digitaldefiance/i18n-lib": "npm:4.7.4"
+    "@digitaldefiance/i18n-lib": "npm:4.7.5"
   peerDependencies:
-    "@brightchain/brightchain-lib": ^0.31.0
+    "@brightchain/brightchain-lib": ^0.32.0
   languageName: unknown
   linkType: soft
 
@@ -2675,7 +2675,7 @@ __metadata:
   resolution: "@brightchain/brightchat-react-components@workspace:brightchat-react-components"
   dependencies:
     "@awesome.me/kit-a20d532681": "npm:^1.0.23"
-    "@digitaldefiance/express-suite-react-components": "npm:4.28.3"
+    "@digitaldefiance/express-suite-react-components": "npm:4.29.1"
     "@mui/icons-material": "npm:^7.3.9"
     "@mui/material": "npm:^7.3.9"
     "@types/react": "npm:^19.2.14"
@@ -2686,9 +2686,9 @@ __metadata:
     react-easy-crop: "npm:5.5.7"
     react-router-dom: "npm:^7.14.0"
   peerDependencies:
-    "@brightchain/brightchain-lib": ^0.31.0
-    "@brightchain/brightchat-lib": ^0.31.0
-    "@digitaldefiance/express-suite-react-components": 4.28.3
+    "@brightchain/brightchain-lib": ^0.32.0
+    "@brightchain/brightchat-lib": ^0.32.0
+    "@digitaldefiance/express-suite-react-components": 4.29.1
     "@mui/icons-material": "*"
     "@mui/material": "*"
     react: ^18.0.0
@@ -2697,7 +2697,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@brightchain/brightdate@npm:0.31.0, @brightchain/brightdate@npm:^0.31.0, @brightchain/brightdate@workspace:brightdate":
+"@brightchain/brightdate@npm:0.32.0, @brightchain/brightdate@npm:^0.32.0, @brightchain/brightdate@workspace:brightdate":
   version: 0.0.0-use.local
   resolution: "@brightchain/brightdate@workspace:brightdate"
   dependencies:
@@ -2707,12 +2707,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@brightchain/brighthub-lib@npm:^0.31.0, @brightchain/brighthub-lib@workspace:brighthub-lib":
+"@brightchain/brighthub-lib@npm:^0.32.0, @brightchain/brighthub-lib@workspace:brighthub-lib":
   version: 0.0.0-use.local
   resolution: "@brightchain/brighthub-lib@workspace:brighthub-lib"
   dependencies:
     "@awesome.me/kit-a20d532681": "npm:^1.0.23"
-    "@digitaldefiance/i18n-lib": "npm:4.7.4"
+    "@digitaldefiance/i18n-lib": "npm:4.7.5"
     "@fortawesome/fontawesome-common-types": "npm:^7.2.0"
     "@types/markdown-it": "npm:^14.1.2"
     "@types/sanitize-html": "npm:^2.16.0"
@@ -2733,12 +2733,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@brightchain/brighthub-react-components@npm:^0.31.0, @brightchain/brighthub-react-components@workspace:brighthub-react-components":
+"@brightchain/brighthub-react-components@npm:^0.32.0, @brightchain/brighthub-react-components@workspace:brighthub-react-components":
   version: 0.0.0-use.local
   resolution: "@brightchain/brighthub-react-components@workspace:brighthub-react-components"
   dependencies:
     "@awesome.me/kit-a20d532681": "npm:^1.0.23"
-    "@digitaldefiance/express-suite-react-components": "npm:4.28.3"
+    "@digitaldefiance/express-suite-react-components": "npm:4.29.1"
     "@fortawesome/react-fontawesome": "npm:^3.3.0"
     "@mui/icons-material": "npm:^7.3.9"
     "@mui/material": "npm:^7.3.9"
@@ -2770,8 +2770,8 @@ __metadata:
     ts-jest: "npm:^29.0.0"
     tslib: "npm:^2.3.0"
   peerDependencies:
-    "@brightchain/brightchain-lib": ^0.31.0
-    "@brightchain/brightledger-assets-lib": ^0.31.0
+    "@brightchain/brightchain-lib": ^0.32.0
+    "@brightchain/brightledger-assets-lib": ^0.32.0
     express: ^4.0.0 || ^5.0.0
   languageName: unknown
   linkType: soft
@@ -2787,8 +2787,8 @@ __metadata:
     ts-jest: "npm:^29.0.0"
     tslib: "npm:^2.3.0"
   peerDependencies:
-    "@brightchain/brightchain-lib": ^0.31.0
-    "@digitaldefiance/ecies-lib": ">=5.1.6"
+    "@brightchain/brightchain-lib": ^0.32.0
+    "@digitaldefiance/ecies-lib": 5.2.2
   languageName: unknown
   linkType: soft
 
@@ -2798,8 +2798,8 @@ __metadata:
   dependencies:
     tslib: "npm:^2.3.0"
   peerDependencies:
-    "@brightchain/brightchain-lib": ^0.31.0
-    "@brightchain/brightledger-assets-lib": ^0.31.0
+    "@brightchain/brightchain-lib": ^0.32.0
+    "@brightchain/brightledger-assets-lib": ^0.32.0
     react: ^18.0.0
     react-dom: ^18.0.0
   languageName: unknown
@@ -2809,8 +2809,8 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@brightchain/brightledger-metering-log-lib@workspace:brightledger-metering-log-lib"
   dependencies:
-    "@brightchain/brightchain-lib": "npm:^0.31.0"
-    "@digitaldefiance/ecies-lib": "npm:5.1.6"
+    "@brightchain/brightchain-lib": "npm:^0.32.0"
+    "@digitaldefiance/ecies-lib": "npm:5.2.2"
     "@noble/curves": "npm:^1.9.0"
     "@noble/hashes": "npm:^1.8.0"
     "@types/node": "npm:^22.0.0"
@@ -2820,22 +2820,22 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@brightchain/brightmail-lib@npm:^0.31.0, @brightchain/brightmail-lib@workspace:brightmail-lib":
+"@brightchain/brightmail-lib@npm:^0.32.0, @brightchain/brightmail-lib@workspace:brightmail-lib":
   version: 0.0.0-use.local
   resolution: "@brightchain/brightmail-lib@workspace:brightmail-lib"
   dependencies:
-    "@digitaldefiance/i18n-lib": "npm:4.7.4"
+    "@digitaldefiance/i18n-lib": "npm:4.7.5"
   peerDependencies:
-    "@brightchain/brightchain-lib": ^0.31.0
+    "@brightchain/brightchain-lib": ^0.32.0
   languageName: unknown
   linkType: soft
 
-"@brightchain/brightmail-react-components@npm:^0.31.0, @brightchain/brightmail-react-components@workspace:brightmail-react-components":
+"@brightchain/brightmail-react-components@npm:^0.32.0, @brightchain/brightmail-react-components@workspace:brightmail-react-components":
   version: 0.0.0-use.local
   resolution: "@brightchain/brightmail-react-components@workspace:brightmail-react-components"
   dependencies:
     "@awesome.me/kit-a20d532681": "npm:^1.0.23"
-    "@digitaldefiance/express-suite-react-components": "npm:4.28.3"
+    "@digitaldefiance/express-suite-react-components": "npm:4.29.1"
     "@mui/icons-material": "npm:^7.3.9"
     "@mui/material": "npm:^7.3.9"
     "@tiptap/extension-link": "npm:^3.22.2"
@@ -2849,10 +2849,10 @@ __metadata:
     react-dom: "npm:^19.2.4"
     react-router-dom: "npm:^7.14.0"
   peerDependencies:
-    "@brightchain/brightchain-lib": ^0.31.0
-    "@brightchain/brightdate": ^0.31.0
-    "@brightchain/brightmail-lib": ^0.31.0
-    "@digitaldefiance/express-suite-react-components": 4.28.3
+    "@brightchain/brightchain-lib": ^0.32.0
+    "@brightchain/brightdate": ^0.32.0
+    "@brightchain/brightmail-lib": ^0.32.0
+    "@digitaldefiance/express-suite-react-components": 4.29.1
     "@mui/icons-material": "*"
     "@mui/material": "*"
     react: ^18.0.0
@@ -2861,22 +2861,22 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@brightchain/brightpass-lib@npm:^0.31.0, @brightchain/brightpass-lib@workspace:brightpass-lib":
+"@brightchain/brightpass-lib@npm:^0.32.0, @brightchain/brightpass-lib@workspace:brightpass-lib":
   version: 0.0.0-use.local
   resolution: "@brightchain/brightpass-lib@workspace:brightpass-lib"
   dependencies:
-    "@digitaldefiance/i18n-lib": "npm:4.7.4"
+    "@digitaldefiance/i18n-lib": "npm:4.7.5"
   peerDependencies:
-    "@brightchain/brightchain-lib": ^0.31.0
+    "@brightchain/brightchain-lib": ^0.32.0
   languageName: unknown
   linkType: soft
 
-"@brightchain/brightpass-react-components@npm:^0.31.0, @brightchain/brightpass-react-components@workspace:brightpass-react-components":
+"@brightchain/brightpass-react-components@npm:^0.32.0, @brightchain/brightpass-react-components@workspace:brightpass-react-components":
   version: 0.0.0-use.local
   resolution: "@brightchain/brightpass-react-components@workspace:brightpass-react-components"
   dependencies:
     "@awesome.me/kit-a20d532681": "npm:^1.0.23"
-    "@digitaldefiance/express-suite-react-components": "npm:4.28.3"
+    "@digitaldefiance/express-suite-react-components": "npm:4.29.1"
     "@mui/icons-material": "npm:^7.3.9"
     "@mui/material": "npm:^7.3.9"
     "@types/react": "npm:^19.2.14"
@@ -2888,9 +2888,9 @@ __metadata:
     react-router-dom: "npm:^7.14.0"
     yup: "npm:^1.7.1"
   peerDependencies:
-    "@brightchain/brightchain-lib": ^0.31.0
-    "@digitaldefiance/express-suite-react-components": 4.28.3
-    "@digitaldefiance/i18n-lib": 4.7.4
+    "@brightchain/brightchain-lib": ^0.32.0
+    "@digitaldefiance/express-suite-react-components": 4.29.1
+    "@digitaldefiance/i18n-lib": 4.7.5
     "@mui/icons-material": "*"
     "@mui/material": "*"
     axios: "*"
@@ -2902,7 +2902,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@brightchain/db@npm:^0.31.0, @brightchain/db@workspace:brightchain-db":
+"@brightchain/db@npm:^0.32.0, @brightchain/db@workspace:brightchain-db":
   version: 0.0.0-use.local
   resolution: "@brightchain/db@workspace:brightchain-db"
   dependencies:
@@ -2910,23 +2910,23 @@ __metadata:
     "@types/express": "npm:^5.0.6"
     tslib: "npm:^2.8.1"
   peerDependencies:
-    "@brightchain/brightchain-lib": ^0.31.0
+    "@brightchain/brightchain-lib": ^0.32.0
     "@digitaldefiance/branded-interface": 0.0.5
-    "@digitaldefiance/node-express-suite": 4.27.2
+    "@digitaldefiance/node-express-suite": 4.28.3
     express: ">=5.0.0"
   languageName: unknown
   linkType: soft
 
-"@brightchain/digitalburnbag-api-lib@npm:^0.31.0, @brightchain/digitalburnbag-api-lib@workspace:digitalburnbag-api-lib":
+"@brightchain/digitalburnbag-api-lib@npm:^0.32.0, @brightchain/digitalburnbag-api-lib@workspace:digitalburnbag-api-lib":
   version: 0.0.0-use.local
   resolution: "@brightchain/digitalburnbag-api-lib@workspace:digitalburnbag-api-lib"
   dependencies:
-    "@brightchain/brightchain-lib": "npm:^0.31.0"
-    "@brightchain/digitalburnbag-lib": "npm:^0.31.0"
-    "@digitaldefiance/ecies-lib": "npm:5.1.6"
-    "@digitaldefiance/i18n-lib": "npm:4.7.4"
-    "@digitaldefiance/node-ecies-lib": "npm:5.1.6"
-    "@digitaldefiance/node-express-suite": "npm:4.27.2"
+    "@brightchain/brightchain-lib": "npm:^0.32.0"
+    "@brightchain/digitalburnbag-lib": "npm:^0.32.0"
+    "@digitaldefiance/ecies-lib": "npm:5.2.2"
+    "@digitaldefiance/i18n-lib": "npm:4.7.5"
+    "@digitaldefiance/node-ecies-lib": "npm:5.2.2"
+    "@digitaldefiance/node-express-suite": "npm:4.28.3"
     "@types/express": "npm:^5.0.3"
     "@types/jest": "npm:^30.0.0"
     "@types/node": "npm:^24.1.0"
@@ -2967,7 +2967,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@brightchain/digitalburnbag-lib@npm:^0.31.0, @brightchain/digitalburnbag-lib@workspace:digitalburnbag-lib":
+"@brightchain/digitalburnbag-lib@npm:^0.32.0, @brightchain/digitalburnbag-lib@workspace:digitalburnbag-lib":
   version: 0.0.0-use.local
   resolution: "@brightchain/digitalburnbag-lib@workspace:digitalburnbag-lib"
   dependencies:
@@ -2978,12 +2978,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@brightchain/digitalburnbag-react-components@npm:^0.31.0, @brightchain/digitalburnbag-react-components@workspace:digitalburnbag-react-components":
+"@brightchain/digitalburnbag-react-components@npm:^0.32.0, @brightchain/digitalburnbag-react-components@workspace:digitalburnbag-react-components":
   version: 0.0.0-use.local
   resolution: "@brightchain/digitalburnbag-react-components@workspace:digitalburnbag-react-components"
   peerDependencies:
     "@awesome.me/kit-a20d532681": ^1.0.23
-    "@brightchain/brightchain-lib": ">=0.31.0"
+    "@brightchain/brightchain-lib": ">=0.32.0"
     "@emotion/react": ">=11.0.0"
     "@emotion/styled": ">=11.0.0"
     "@fortawesome/fontawesome-svg-core": ^7.2.0
@@ -3015,8 +3015,8 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@brightchain/digitalburnbag-sync-client@workspace:digitalburnbag-sync-client"
   dependencies:
-    "@brightchain/brightchain-lib": "npm:^0.31.0"
-    "@brightchain/digitalburnbag-lib": "npm:^0.31.0"
+    "@brightchain/brightchain-lib": "npm:^0.32.0"
+    "@brightchain/digitalburnbag-lib": "npm:^0.32.0"
     "@types/better-sqlite3": "npm:^7.6.0"
     "@types/jest": "npm:^30.0.0"
     "@types/node": "npm:^24.1.0"
@@ -3031,16 +3031,16 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@brightchain/node-express-suite@npm:^0.31.0, @brightchain/node-express-suite@workspace:brightchain-node-express-suite":
+"@brightchain/node-express-suite@npm:^0.32.0, @brightchain/node-express-suite@workspace:brightchain-node-express-suite":
   version: 0.0.0-use.local
   resolution: "@brightchain/node-express-suite@workspace:brightchain-node-express-suite"
   dependencies:
     "@digitaldefiance/branded-interface": "npm:0.0.5"
-    "@digitaldefiance/ecies-lib": "npm:5.1.6"
-    "@digitaldefiance/i18n-lib": "npm:4.7.4"
-    "@digitaldefiance/node-ecies-lib": "npm:5.1.6"
-    "@digitaldefiance/node-express-suite": "npm:4.27.2"
-    "@digitaldefiance/suite-core-lib": "npm:4.27.4"
+    "@digitaldefiance/ecies-lib": "npm:5.2.2"
+    "@digitaldefiance/i18n-lib": "npm:4.7.5"
+    "@digitaldefiance/node-ecies-lib": "npm:5.2.2"
+    "@digitaldefiance/node-express-suite": "npm:4.28.3"
+    "@digitaldefiance/suite-core-lib": "npm:4.28.2"
     "@types/bcrypt": "npm:^6.0.0"
     "@types/cors": "npm:^2.8.19"
     "@types/express": "npm:^5.0.6"
@@ -3053,10 +3053,10 @@ __metadata:
     jsonwebtoken: "npm:^9.0.3"
     tslib: "npm:^2.3.0"
   peerDependencies:
-    "@brightchain/brightchain-lib": ^0.31.0
-    "@brightchain/db": ^0.31.0
+    "@brightchain/brightchain-lib": ^0.32.0
+    "@brightchain/db": ^0.32.0
     "@digitaldefiance/branded-interface": 0.0.5
-    "@digitaldefiance/node-express-suite": 4.27.2
+    "@digitaldefiance/node-express-suite": 4.28.3
     bcrypt: ^5.0.0
     jsonwebtoken: ^9.0.0
   languageName: unknown
@@ -3067,8 +3067,8 @@ __metadata:
   resolution: "@brightchain/s3-store@workspace:brightchain-s3-store"
   dependencies:
     "@aws-sdk/client-s3": "npm:^3.700.0"
-    "@brightchain/brightchain-api-lib": "npm:^0.31.0"
-    "@brightchain/brightchain-lib": "npm:^0.31.0"
+    "@brightchain/brightchain-api-lib": "npm:^0.32.0"
+    "@brightchain/brightchain-lib": "npm:^0.32.0"
     tslib: "npm:^2.3.0"
   languageName: unknown
   linkType: soft
@@ -3247,11 +3247,11 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@digitaldefiance/ecies-lib@npm:5.1.6":
-  version: 5.1.6
-  resolution: "@digitaldefiance/ecies-lib@npm:5.1.6"
+"@digitaldefiance/ecies-lib@npm:5.2.2":
+  version: 5.2.2
+  resolution: "@digitaldefiance/ecies-lib@npm:5.2.2"
   dependencies:
-    "@digitaldefiance/i18n-lib": "npm:4.7.4"
+    "@digitaldefiance/i18n-lib": "npm:4.7.5"
     "@ethereumjs/wallet": "npm:^2.0.4"
     "@noble/curves": "npm:^1.9.0"
     "@noble/hashes": "npm:^1.8.0"
@@ -3262,7 +3262,7 @@ __metadata:
     js-sha3: "npm:^0.9.3"
     paillier-bigint: "npm:^3.4.1"
     ts-brand: "npm:^0.2.0"
-  checksum: 10/f5ac29fff43bc001ea5662a716d124e9aed62538f8217443488dece4775caa23bb877c05efe5c4c762b045583b4726c4a40b804c76cf7f93d37fd378e341c5d2
+  checksum: 10/6ef2a8d42d4352ddb123590c4afb0a574c375d23ec450b87c7be27e47d4df7ed47618760ed0eb9779ee33227c05df8e7e5fe7b8d0522eaaf4c96d61db7cff471
   languageName: node
   linkType: hard
 
@@ -3275,12 +3275,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@digitaldefiance/express-suite-react-components@npm:4.28.3":
-  version: 4.28.3
-  resolution: "@digitaldefiance/express-suite-react-components@npm:4.28.3"
+"@digitaldefiance/express-suite-react-components@npm:4.29.1":
+  version: 4.29.1
+  resolution: "@digitaldefiance/express-suite-react-components@npm:4.29.1"
   dependencies:
-    "@digitaldefiance/i18n-lib": "npm:4.7.4"
-    "@digitaldefiance/suite-core-lib": "npm:4.27.4"
+    "@digitaldefiance/i18n-lib": "npm:4.7.5"
+    "@digitaldefiance/suite-core-lib": "npm:4.28.3"
     "@emotion/react": "npm:^11.14.0"
     "@emotion/styled": "npm:^11.14.0"
     "@mui/icons-material": "npm:^7.0.2"
@@ -3297,7 +3297,7 @@ __metadata:
     yup: "npm:^1.6.1"
   peerDependencies:
     react-router-dom: 6.29.0
-  checksum: 10/de5a8ebb7f7b0a7893f59e7f3369ac4e5b5efdc8d4fc6fa1c8fa053f815b9ce86bcc06d9f7fb4837b4d4ad40ce4be4458f2ebdb1e0b79e7d1d0f73a7ec811876
+  checksum: 10/edc72e3173933dc04770f034dd8f503879462cdc67607e6190eb8559a254b6f6cedd4278fbcbf981d398910e7d1e91229017767d6b03618cab63723a406d69f0
   languageName: node
   linkType: hard
 
@@ -3322,9 +3322,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@digitaldefiance/i18n-lib@npm:4.7.4":
-  version: 4.7.4
-  resolution: "@digitaldefiance/i18n-lib@npm:4.7.4"
+"@digitaldefiance/i18n-lib@npm:4.7.5":
+  version: 4.7.5
+  resolution: "@digitaldefiance/i18n-lib@npm:4.7.5"
   dependencies:
     "@digitaldefiance/branded-enum": "npm:0.0.7"
     currency-codes: "npm:^2.2.0"
@@ -3334,16 +3334,16 @@ __metadata:
     tslib: "npm:^2.3.0"
   peerDependencies:
     "@digitaldefiance/branded-interface": ^0.0.5
-  checksum: 10/c8e94fabd6e753e73de704b634d603d482968ee0d07526205940ec1ef6a38abcd9bb417af3d3c575bb9a1b2c7e966e08b76da75051f460fd184493685e9ee811
+  checksum: 10/c2ee9a6a6c16259e461b3cf3f8cc719d240709ab7e0751778dda84cade9d2121a4d2abc3bd750520fb6ddf936acd37b98424cc77d138050fe0871df6c453704c
   languageName: node
   linkType: hard
 
-"@digitaldefiance/node-ecies-lib@npm:5.1.6":
-  version: 5.1.6
-  resolution: "@digitaldefiance/node-ecies-lib@npm:5.1.6"
+"@digitaldefiance/node-ecies-lib@npm:5.2.2":
+  version: 5.2.2
+  resolution: "@digitaldefiance/node-ecies-lib@npm:5.2.2"
   dependencies:
-    "@digitaldefiance/ecies-lib": "npm:5.1.6"
-    "@digitaldefiance/i18n-lib": "npm:4.7.4"
+    "@digitaldefiance/ecies-lib": "npm:5.2.2"
+    "@digitaldefiance/i18n-lib": "npm:4.7.5"
     "@ethereumjs/wallet": "npm:^2.0.4"
     "@noble/curves": "npm:^1.9.0"
     "@noble/hashes": "npm:^1.8.0"
@@ -3355,20 +3355,20 @@ __metadata:
     paillier-bigint: "npm:^3.4.1"
     ts-brand: "npm:^0.2.0"
     uuid: "npm:^13.0.0"
-  checksum: 10/19437e06033cd47bfba973ba8adec38d0b08317506e3968af59645df0595cc5ba0d0403cad9fa33235e5ef4680571a5d7188d192bdff6246a2d4fc31541ff524
+  checksum: 10/2153842861ab5dec76ea629192b432d584b953780e6072ccd9d8351af93f5ed05c30a5a27901af5d7f1422750e1c59e091914f9f5beece7a4e1ff1b1fdf9cb37
   languageName: node
   linkType: hard
 
-"@digitaldefiance/node-express-suite@npm:4.27.2":
-  version: 4.27.2
-  resolution: "@digitaldefiance/node-express-suite@npm:4.27.2"
+"@digitaldefiance/node-express-suite@npm:4.28.3":
+  version: 4.28.3
+  resolution: "@digitaldefiance/node-express-suite@npm:4.28.3"
   dependencies:
     "@digitaldefiance/branded-interface": "npm:^0.0.5"
-    "@digitaldefiance/ecies-lib": "npm:5.1.6"
-    "@digitaldefiance/i18n-lib": "npm:4.7.4"
-    "@digitaldefiance/node-ecies-lib": "npm:5.1.6"
+    "@digitaldefiance/ecies-lib": "npm:5.2.2"
+    "@digitaldefiance/i18n-lib": "npm:4.7.5"
+    "@digitaldefiance/node-ecies-lib": "npm:5.2.2"
     "@digitaldefiance/reed-solomon-erasure.wasm": "npm:^1.0.2"
-    "@digitaldefiance/suite-core-lib": "npm:4.27.4"
+    "@digitaldefiance/suite-core-lib": "npm:4.28.3"
     "@noble/curves": "npm:^1.9.0"
     "@noble/hashes": "npm:^1.8.0"
     argon2: "npm:^0.40.1"
@@ -3385,7 +3385,7 @@ __metadata:
     otplib: "npm:^13.4.0"
     reflect-metadata: "npm:^0.2.2"
     zod: "npm:^3.24.0"
-  checksum: 10/1afb946fa7c40a96e491a5d7963cb97d1529ca68a5c4e26ee47ac001c202b7cfc621c486ceb9a0c82beeb059b200b887560793d8b18eaf8100800a99301e43d7
+  checksum: 10/c3ceb963592019f72157bd528eb32956cbef944d1af8e4f23e315609b679529da0403ce5ad7db770b7dad2195fc54cce68ba58d623940d16684e77a451808132
   languageName: node
   linkType: hard
 
@@ -3408,14 +3408,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@digitaldefiance/suite-core-lib@npm:4.27.4":
-  version: 4.27.4
-  resolution: "@digitaldefiance/suite-core-lib@npm:4.27.4"
+"@digitaldefiance/suite-core-lib@npm:4.28.3":
+  version: 4.28.3
+  resolution: "@digitaldefiance/suite-core-lib@npm:4.28.3"
   dependencies:
     "@digitaldefiance/branded-interface": "npm:^0.0.5"
-    "@digitaldefiance/ecies-lib": "npm:5.1.6"
-    "@digitaldefiance/i18n-lib": "npm:4.7.4"
-  checksum: 10/1313e482119ecd4a4081b3963572c380b7082423fd4aa3a8671316d3c927e2ff692d20f14cbbab254c487976145260863b9bf69212611295a42a33580780b31d
+    "@digitaldefiance/ecies-lib": "npm:5.2.2"
+    "@digitaldefiance/i18n-lib": "npm:4.7.5"
+  checksum: 10/4d4d4776590233433b03023ceb91aaf1a781100e99edaf6a749a47ead19240a9bf09c14861db33b993b19537b214658be37f74c3b430189f8acdac6750fa087c
   languageName: node
   linkType: hard
 
@@ -6509,7 +6509,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@mui/icons-material@npm:^7.0.2, @mui/icons-material@npm:^7.3.7, @mui/icons-material@npm:^7.3.9":
+"@mui/icons-material@npm:7.3.10":
   version: 7.3.10
   resolution: "@mui/icons-material@npm:7.3.10"
   dependencies:
@@ -6548,7 +6548,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@mui/material@npm:^7.0.2, @mui/material@npm:^7.3.7, @mui/material@npm:^7.3.9":
+"@mui/material@npm:7.3.10":
   version: 7.3.10
   resolution: "@mui/material@npm:7.3.10"
   dependencies:
@@ -6624,7 +6624,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@mui/system@npm:^7.0.2, @mui/system@npm:^7.3.10, @mui/system@npm:^7.3.8, @mui/system@npm:^7.3.9":
+"@mui/system@npm:7.3.10":
   version: 7.3.10
   resolution: "@mui/system@npm:7.3.10"
   dependencies:
@@ -15120,10 +15120,10 @@ __metadata:
   resolution: "brightchain-showcase@workspace:showcase"
   dependencies:
     "@awesome.me/kit-a20d532681": "npm:^1.0.23"
-    "@brightchain/brightchain-lib": "npm:^0.31.0"
-    "@brightchain/digitalburnbag-react-components": "npm:^0.31.0"
-    "@digitaldefiance/ecies-lib": "npm:5.1.6"
-    "@digitaldefiance/i18n-lib": "npm:4.7.4"
+    "@brightchain/brightchain-lib": "npm:^0.32.0"
+    "@brightchain/digitalburnbag-react-components": "npm:^0.32.0"
+    "@digitaldefiance/ecies-lib": "npm:5.2.2"
+    "@digitaldefiance/i18n-lib": "npm:4.7.5"
     "@digitaldefiance/reed-solomon-erasure.wasm": "npm:^1.0.2"
     "@esbuild-plugins/node-globals-polyfill": "npm:^0.2.3"
     "@esbuild-plugins/node-modules-polyfill": "npm:^0.2.2"
@@ -15207,36 +15207,36 @@ __metadata:
     "@azure/storage-blob": "npm:^12.26.0"
     "@babel/core": "npm:^7.14.5"
     "@babel/preset-react": "npm:^7.14.5"
-    "@brightchain/brightcal-api-lib": "npm:^0.31.0"
-    "@brightchain/brightcal-lib": "npm:^0.31.0"
-    "@brightchain/brightcal-react-components": "npm:^0.31.0"
-    "@brightchain/brightchain-api-lib": "npm:^0.31.0"
-    "@brightchain/brightchain-lib": "npm:^0.31.0"
-    "@brightchain/brightchain-react-components": "npm:^0.31.0"
-    "@brightchain/brightchat-lib": "npm:^0.31.0"
-    "@brightchain/brightdate": "npm:^0.31.0"
-    "@brightchain/brighthub-lib": "npm:^0.31.0"
-    "@brightchain/brighthub-react-components": "npm:^0.31.0"
-    "@brightchain/brightmail-lib": "npm:^0.31.0"
-    "@brightchain/brightmail-react-components": "npm:^0.31.0"
-    "@brightchain/brightpass-lib": "npm:^0.31.0"
-    "@brightchain/brightpass-react-components": "npm:^0.31.0"
-    "@brightchain/db": "npm:^0.31.0"
-    "@brightchain/digitalburnbag-api-lib": "npm:^0.31.0"
-    "@brightchain/digitalburnbag-lib": "npm:^0.31.0"
-    "@brightchain/digitalburnbag-react-components": "npm:^0.31.0"
+    "@brightchain/brightcal-api-lib": "npm:^0.32.0"
+    "@brightchain/brightcal-lib": "npm:^0.32.0"
+    "@brightchain/brightcal-react-components": "npm:^0.32.0"
+    "@brightchain/brightchain-api-lib": "npm:^0.32.0"
+    "@brightchain/brightchain-lib": "npm:^0.32.0"
+    "@brightchain/brightchain-react-components": "npm:^0.32.0"
+    "@brightchain/brightchat-lib": "npm:^0.32.0"
+    "@brightchain/brightdate": "npm:^0.32.0"
+    "@brightchain/brighthub-lib": "npm:^0.32.0"
+    "@brightchain/brighthub-react-components": "npm:^0.32.0"
+    "@brightchain/brightmail-lib": "npm:^0.32.0"
+    "@brightchain/brightmail-react-components": "npm:^0.32.0"
+    "@brightchain/brightpass-lib": "npm:^0.32.0"
+    "@brightchain/brightpass-react-components": "npm:^0.32.0"
+    "@brightchain/db": "npm:^0.32.0"
+    "@brightchain/digitalburnbag-api-lib": "npm:^0.32.0"
+    "@brightchain/digitalburnbag-lib": "npm:^0.32.0"
+    "@brightchain/digitalburnbag-react-components": "npm:^0.32.0"
     "@digitaldefiance/branded-enum": "npm:0.0.7"
     "@digitaldefiance/branded-interface": "npm:0.0.5"
     "@digitaldefiance/bzip2-wasm": "npm:^1.1.1"
-    "@digitaldefiance/ecies-lib": "npm:5.1.6"
-    "@digitaldefiance/express-suite-react-components": "npm:4.28.3"
+    "@digitaldefiance/ecies-lib": "npm:5.2.2"
+    "@digitaldefiance/express-suite-react-components": "npm:4.29.1"
     "@digitaldefiance/express-suite-test-utils": "npm:^1.1.2"
-    "@digitaldefiance/i18n-lib": "npm:4.7.4"
-    "@digitaldefiance/node-ecies-lib": "npm:5.1.6"
-    "@digitaldefiance/node-express-suite": "npm:4.27.2"
+    "@digitaldefiance/i18n-lib": "npm:4.7.5"
+    "@digitaldefiance/node-ecies-lib": "npm:5.2.2"
+    "@digitaldefiance/node-express-suite": "npm:4.28.3"
     "@digitaldefiance/reed-solomon-erasure.wasm": "npm:^1.0.2"
     "@digitaldefiance/secrets": "npm:^2.0.7"
-    "@digitaldefiance/suite-core-lib": "npm:4.27.4"
+    "@digitaldefiance/suite-core-lib": "npm:4.28.3"
     "@emotion/react": "npm:11.14.0"
     "@emotion/styled": "npm:11.14.1"
     "@eslint/js": "npm:^9.39.4"

@@ -1,6 +1,7 @@
 import { BlockDataType } from '../../../enumerations/blockDataType';
 import { BlockSize } from '../../../enumerations/blockSize';
 import { BlockType } from '../../../enumerations/blockType';
+import type { BrightDateTimestamp } from '../../../types/brightDateTimestamp';
 
 /**
  * IBlockMetadata defines the metadata structure for blocks in the Owner Free Filesystem (OFF).
@@ -53,15 +54,13 @@ export interface IBaseBlockMetadata {
   get lengthWithoutPadding(): number;
 
   /**
-   * Block creation timestamp.
+   * Block creation timestamp as BrightDateValue (decimal days since J2000.0).
    * Used for:
    * 1. Versioning
    * 2. Auditing
    * 3. Lifecycle management
-   *
-   * Stored as ISO string for JSON compatibility
    */
-  get dateCreated(): Date;
+  get dateCreated(): BrightDateTimestamp;
 
   // /**
   //  * Extension point for additional metadata.

@@ -3,6 +3,8 @@ import { BrightChainStrings } from '../../enumerations/brightChainStrings';
 import { DurabilityLevel } from '../../enumerations/durabilityLevel';
 import { ReplicationStatus } from '../../enumerations/replicationStatus';
 import { TranslatableBrightChainError } from '../../errors/translatableBrightChainError';
+import type { BrightDateTimestamp } from '../../types/brightDateTimestamp';
+import { brightDateNow } from '../../utils/brightDateConversions';
 import type { BlockId } from '../branded/primitives/blockId';
 import { IBlockMetadata } from '../storage/blockMetadata';
 import { PoolId, isValidPoolId } from '../storage/pooledBlockStore';
@@ -22,7 +24,7 @@ export interface ILocationRecord {
   /**
    * Timestamp when this node was last confirmed to have the block
    */
-  lastSeen: Date;
+  lastSeen: BrightDateTimestamp;
 
   /**
    * Whether this node holds the authoritative (original) copy
@@ -60,7 +62,7 @@ export interface IBlockMetadataWithLocation extends IBlockMetadata {
   /**
    * When the location information was last updated
    */
-  locationUpdatedAt: Date;
+  locationUpdatedAt: BrightDateTimestamp;
 }
 
 /**
@@ -81,11 +83,11 @@ export function createDefaultLocationMetadata(
     locationRecords: [
       {
         nodeId: localNodeId,
-        lastSeen: new Date(),
+        lastSeen: brightDateNow(),
         isAuthoritative: true,
       },
     ],
-    locationUpdatedAt: new Date(),
+    locationUpdatedAt: brightDateNow(),
   };
 }
 
@@ -94,7 +96,7 @@ export function createDefaultLocationMetadata(
  */
 export interface SerializedLocationRecord {
   nodeId: string;
-  lastSeen: string;
+  lastSeen: number;
   isAuthoritative: boolean;
   latencyMs?: number;
   poolId?: string;
@@ -105,12 +107,12 @@ export interface SerializedLocationRecord {
  */
 export interface SerializedBlockMetadataWithLocation {
   blockId: BlockId;
-  createdAt: string;
-  expiresAt: string | null;
+  createdAt: number;
+  expiresAt: number | null;
   durabilityLevel: string;
   parityBlockIds: string[];
   accessCount: number;
-  lastAccessedAt: string;
+  lastAccessedAt: number;
   replicationStatus: string;
   targetReplicationFactor: number;
   replicaNodeIds: string[];
@@ -118,20 +120,20 @@ export interface SerializedBlockMetadataWithLocation {
   checksum: string;
   availabilityState: AvailabilityState;
   locationRecords: SerializedLocationRecord[];
-  locationUpdatedAt: string;
+  locationUpdatedAt: number;
 }
 
 /**
  * Convert ILocationRecord to JSON-serializable format
  * @param record - The location record to serialize
- * @returns Serialized location record with Date fields as ISO strings
+ * @returns Serialized location record with lastSeen as BrightDateTimestamp number
  */
 export function locationRecordToJSON(
   record: ILocationRecord,
 ): SerializedLocationRecord {
   return {
     nodeId: record.nodeId,
-    lastSeen: record.lastSeen.toISOString(),
+    lastSeen: record.lastSeen,
     isAuthoritative: record.isAuthoritative,
     ...(record.latencyMs !== undefined && { latencyMs: record.latencyMs }),
     ...(record.poolId !== undefined && { poolId: record.poolId }),
@@ -141,7 +143,7 @@ export function locationRecordToJSON(
 /**
  * Convert serialized location record back to ILocationRecord
  * @param serialized - The serialized location record
- * @returns Location record with Date objects
+ * @returns Location record with BrightDateTimestamp values
  * @throws Error if validation fails
  */
 export function locationRecordFromJSON(
@@ -153,7 +155,7 @@ export function locationRecordFromJSON(
       BrightChainStrings.Error_LocationRecord_NodeIdRequired,
     );
   }
-  if (!serialized.lastSeen || typeof serialized.lastSeen !== 'string') {
+  if (typeof serialized.lastSeen !== 'number' || !isFinite(serialized.lastSeen)) {
     throw new TranslatableBrightChainError(
       BrightChainStrings.Error_LocationRecord_LastSeenRequired,
     );
@@ -161,14 +163,6 @@ export function locationRecordFromJSON(
   if (typeof serialized.isAuthoritative !== 'boolean') {
     throw new TranslatableBrightChainError(
       BrightChainStrings.Error_LocationRecord_IsAuthoritativeRequired,
-    );
-  }
-
-  // Validate and parse date
-  const lastSeen = new Date(serialized.lastSeen);
-  if (isNaN(lastSeen.getTime())) {
-    throw new TranslatableBrightChainError(
-      BrightChainStrings.Error_LocationRecord_InvalidLastSeenDate,
     );
   }
 
@@ -195,7 +189,7 @@ export function locationRecordFromJSON(
 
   return {
     nodeId: serialized.nodeId,
-    lastSeen,
+    lastSeen: serialized.lastSeen,
     isAuthoritative: serialized.isAuthoritative,
     ...(serialized.latencyMs !== undefined && {
       latencyMs: serialized.latencyMs,
@@ -209,19 +203,19 @@ export function locationRecordFromJSON(
 /**
  * Convert IBlockMetadataWithLocation to JSON-serializable format
  * @param metadata - The block metadata with location to serialize
- * @returns Serialized metadata with Date fields as ISO strings
+ * @returns Serialized metadata with BrightDateTimestamp numbers
  */
 export function blockMetadataWithLocationToJSON(
   metadata: IBlockMetadataWithLocation,
 ): SerializedBlockMetadataWithLocation {
   return {
     blockId: metadata.blockId,
-    createdAt: metadata.createdAt.toISOString(),
-    expiresAt: metadata.expiresAt ? metadata.expiresAt.toISOString() : null,
+    createdAt: metadata.createdAt,
+    expiresAt: metadata.expiresAt ?? null,
     durabilityLevel: metadata.durabilityLevel,
     parityBlockIds: [...metadata.parityBlockIds],
     accessCount: metadata.accessCount,
-    lastAccessedAt: metadata.lastAccessedAt.toISOString(),
+    lastAccessedAt: metadata.lastAccessedAt,
     replicationStatus: metadata.replicationStatus,
     targetReplicationFactor: metadata.targetReplicationFactor,
     replicaNodeIds: [...metadata.replicaNodeIds],
@@ -229,7 +223,7 @@ export function blockMetadataWithLocationToJSON(
     checksum: metadata.checksum,
     availabilityState: metadata.availabilityState,
     locationRecords: metadata.locationRecords.map(locationRecordToJSON),
-    locationUpdatedAt: metadata.locationUpdatedAt.toISOString(),
+    locationUpdatedAt: metadata.locationUpdatedAt,
   };
 }
 
@@ -248,58 +242,39 @@ export function blockMetadataWithLocationFromJSON(
       BrightChainStrings.Error_Metadata_BlockIdRequired,
     );
   }
-  if (!serialized.createdAt || typeof serialized.createdAt !== 'string') {
+  if (typeof serialized.createdAt !== 'number' || !isFinite(serialized.createdAt)) {
     throw new TranslatableBrightChainError(
       BrightChainStrings.Error_Metadata_CreatedAtRequired,
     );
   }
-  if (
-    !serialized.lastAccessedAt ||
-    typeof serialized.lastAccessedAt !== 'string'
-  ) {
+  if (typeof serialized.lastAccessedAt !== 'number' || !isFinite(serialized.lastAccessedAt)) {
     throw new TranslatableBrightChainError(
       BrightChainStrings.Error_Metadata_LastAccessedAtRequired,
     );
   }
   if (
     !serialized.locationUpdatedAt ||
-    typeof serialized.locationUpdatedAt !== 'string'
+    typeof serialized.locationUpdatedAt !== 'number' ||
+    !isFinite(serialized.locationUpdatedAt)
   ) {
     throw new TranslatableBrightChainError(
       BrightChainStrings.Error_Metadata_LocationUpdatedAtRequired,
     );
   }
 
-  // Validate and parse dates
-  const createdAt = new Date(serialized.createdAt);
-  if (isNaN(createdAt.getTime())) {
-    throw new TranslatableBrightChainError(
-      BrightChainStrings.Error_Metadata_InvalidCreatedAtDate,
-    );
-  }
+  // BrightDateTimestamp fields are stored as plain numbers — no conversion needed
+  const createdAt: BrightDateTimestamp = serialized.createdAt;
+  const lastAccessedAt: BrightDateTimestamp = serialized.lastAccessedAt;
+  const locationUpdatedAt: BrightDateTimestamp = serialized.locationUpdatedAt;
 
-  const lastAccessedAt = new Date(serialized.lastAccessedAt);
-  if (isNaN(lastAccessedAt.getTime())) {
-    throw new TranslatableBrightChainError(
-      BrightChainStrings.Error_Metadata_InvalidLastAccessedAtDate,
-    );
-  }
-
-  const locationUpdatedAt = new Date(serialized.locationUpdatedAt);
-  if (isNaN(locationUpdatedAt.getTime())) {
-    throw new TranslatableBrightChainError(
-      BrightChainStrings.Error_Metadata_InvalidLocationUpdatedAtDate,
-    );
-  }
-
-  let expiresAt: Date | null = null;
-  if (serialized.expiresAt !== null) {
-    expiresAt = new Date(serialized.expiresAt);
-    if (isNaN(expiresAt.getTime())) {
+  let expiresAt: BrightDateTimestamp | null = null;
+  if (serialized.expiresAt !== null && serialized.expiresAt !== undefined) {
+    if (typeof serialized.expiresAt !== 'number' || !isFinite(serialized.expiresAt)) {
       throw new TranslatableBrightChainError(
-        BrightChainStrings.Error_Metadata_InvalidExpiresAtDate,
+        BrightChainStrings.Error_Metadata_CreatedAtRequired,
       );
     }
+    expiresAt = serialized.expiresAt;
   }
 
   // Validate availability state

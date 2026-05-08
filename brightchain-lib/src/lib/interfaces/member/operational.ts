@@ -8,6 +8,7 @@ import {
 } from '@digitaldefiance/ecies-lib';
 import { Wallet } from '@ethereumjs/wallet';
 import { PrivateKey, PublicKey } from 'paillier-bigint';
+import type { BrightDateTimestamp } from '../../types/brightDateTimestamp';
 
 /**
  * Operational interface for member - defines getters and methods
@@ -23,8 +24,8 @@ export interface IMemberOperational {
   get votingPublicKey(): PublicKey;
   get creatorId(): Buffer;
   get guidCreatorId(): GuidV4Uint8Array;
-  get dateCreated(): Date;
-  get dateUpdated(): Date;
+  get dateCreated(): BrightDateTimestamp;
+  get dateUpdated(): BrightDateTimestamp;
 
   // Optional private data getters
   get privateKey(): SecureBuffer | undefined;

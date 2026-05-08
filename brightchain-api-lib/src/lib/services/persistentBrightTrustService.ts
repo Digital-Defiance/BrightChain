@@ -5,9 +5,12 @@ import {
   BrightTrustErrorType,
   BrightTrustMemberMetadata,
   BrightTrustService,
+  brightDateNow,
+  brightDateToISO,
   CanUnlockResult,
   IBlockStore,
   IBrightTrustMember,
+  normalizeToBrightDate,
   SealedDocumentResult,
 } from '@brightchain/brightchain-lib';
 import {
@@ -102,8 +105,8 @@ export class PersistentBrightTrustService<
       publicKey: uint8ArrayToHex(member.publicKey),
       metadata: brightTrustMember.metadata,
       isActive: brightTrustMember.isActive,
-      createdAt: brightTrustMember.createdAt.toISOString(),
-      updatedAt: brightTrustMember.updatedAt.toISOString(),
+      createdAt: brightDateToISO(brightTrustMember.createdAt),
+      updatedAt: brightDateToISO(brightTrustMember.updatedAt),
     };
 
     await this.memberCollection.create(memberDoc);
@@ -123,7 +126,7 @@ export class PersistentBrightTrustService<
     if (members && members.length > 0) {
       const memberDoc = members[0];
       memberDoc.isActive = false;
-      memberDoc.updatedAt = new Date().toISOString();
+      memberDoc.updatedAt = brightDateToISO(brightDateNow());
       if (memberDoc._id) {
         await this.memberCollection.updateOne(
           { _id: memberDoc._id },
@@ -156,8 +159,8 @@ export class PersistentBrightTrustService<
       publicKey: hexToUint8Array(memberDoc.publicKey),
       metadata: memberDoc.metadata,
       isActive: memberDoc.isActive,
-      createdAt: new Date(memberDoc.createdAt),
-      updatedAt: new Date(memberDoc.updatedAt),
+      createdAt: normalizeToBrightDate(memberDoc.createdAt),
+      updatedAt: normalizeToBrightDate(memberDoc.updatedAt),
     };
   }
 
@@ -176,8 +179,8 @@ export class PersistentBrightTrustService<
       publicKey: hexToUint8Array(doc.publicKey),
       metadata: doc.metadata,
       isActive: doc.isActive,
-      createdAt: new Date(doc.createdAt),
-      updatedAt: new Date(doc.updatedAt),
+      createdAt: normalizeToBrightDate(doc.createdAt),
+      updatedAt: normalizeToBrightDate(doc.updatedAt),
     }));
   }
 
@@ -263,7 +266,7 @@ export class PersistentBrightTrustService<
         (hex) => this.enhancedProvider.idFromString(hex) as TID,
       ),
       sharesRequired: docRecord.sharesRequired,
-      createdAt: new Date(docRecord.dateCreated),
+      createdAt: normalizeToBrightDate(docRecord.dateCreated),
       creatorId: this.enhancedProvider.idFromString(docRecord.creatorId) as TID,
     };
   }
@@ -289,7 +292,7 @@ export class PersistentBrightTrustService<
             (hex) => this.enhancedProvider.idFromString(hex) as TID,
           ),
           sharesRequired: docRecord.sharesRequired,
-          createdAt: new Date(docRecord.dateCreated),
+          createdAt: normalizeToBrightDate(docRecord.dateCreated),
           creatorId: this.enhancedProvider.idFromString(
             docRecord.creatorId,
           ) as TID,

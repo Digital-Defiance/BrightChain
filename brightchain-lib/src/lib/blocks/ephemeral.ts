@@ -21,6 +21,8 @@ import {
 import { ChecksumMismatchError } from '../errors/checksumMismatch';
 import { IEphemeralBlock } from '../interfaces/blocks/ephemeral';
 import { logValidationFailure } from '../logging/blockLogger';
+import type { BrightDateTimestamp } from '../types/brightDateTimestamp';
+import { brightDateNow } from '../utils/brightDateConversions';
 import { getGlobalServiceProvider } from '../services/globalServiceProvider';
 import { Checksum } from '../types/checksum';
 import { BaseBlock } from './base';
@@ -62,7 +64,7 @@ export class EphemeralBlock<TID extends PlatformID = Uint8Array>
     data: Uint8Array,
     checksum: Checksum,
     creator: Member<TID>,
-    dateCreated?: Date,
+    dateCreated?: BrightDateTimestamp,
     lengthBeforeEncryption?: number,
     canRead = true,
     canPersist = true,
@@ -82,7 +84,7 @@ export class EphemeralBlock<TID extends PlatformID = Uint8Array>
         dataType,
         lengthBeforeEncryption ?? data.length,
         creator,
-        dateCreated ?? new Date(),
+        dateCreated ?? brightDateNow(),
       );
 
     return new EphemeralBlock<TID>(
@@ -184,7 +186,7 @@ export class EphemeralBlock<TID extends PlatformID = Uint8Array>
   /**
    * The date the block was created
    */
-  public override get dateCreated(): Date {
+  public override get dateCreated(): BrightDateTimestamp {
     return this._dateCreated;
   }
 

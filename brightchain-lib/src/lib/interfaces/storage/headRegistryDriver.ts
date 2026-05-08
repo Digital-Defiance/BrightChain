@@ -11,11 +11,13 @@
  *  - S3HeadRegistryDriver (brightchain-s3-store)    — one object per key
  */
 
+import type { BrightDateTimestamp } from '../../types/brightDateTimestamp';
+
 /** The value stored for a single (dbName, collectionName) head pointer. */
 export interface HeadRecord {
   blockId: string;
-  /** ISO 8601 timestamp for last-writer-wins merge. */
-  timestamp: string;
+  /** BrightDateTimestamp (decimal days since J2000.0) for last-writer-wins merge. */
+  timestamp: BrightDateTimestamp;
   /**
    * Block ID of the previous HeadRecord block written to the block store,
    * forming an immutable audit chain. Optional — set by callers that write

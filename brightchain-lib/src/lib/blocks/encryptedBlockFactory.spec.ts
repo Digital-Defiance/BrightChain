@@ -18,6 +18,7 @@ import { ServiceProvider } from '../services/service.provider';
 import { Checksum } from '../types/checksum';
 import { EncryptedBlock } from './encrypted';
 import { EncryptedBlockFactory } from './encryptedBlockFactory';
+import { dateToBrightDate } from '../utils/brightDateConversions';
 
 // Wrapper class to match factory signature
 class TestEncryptedBlock extends EncryptedBlock<Uint8Array> {
@@ -388,7 +389,7 @@ describe('EncryptedBlockFactory', () => {
         crypto.getRandomValues(data.subarray(creator.idBytes.length));
       }
       const checksum = checksumService.calculateChecksum(data);
-      const testDate = new Date('2024-01-01');
+      const testDate = dateToBrightDate(new Date('2024-01-01'));
 
       // Use EncryptedOwnedDataBlock which is a valid encrypted block type
       const block = await EncryptedBlockFactory.createBlock(

@@ -3,7 +3,7 @@
  *
  * Each factory function takes an IIdProvider<TID> and returns a hydration
  * schema that converts between the stored (all-string) and typed
- * (GuidV4Buffer IDs, Date objects) representations.
+ * (GuidV4Buffer IDs, BrightDateTimestamp numbers) representations.
  */
 
 import type { IHydrationSchema } from '@brightchain/brightchain-lib';
@@ -36,11 +36,11 @@ import { serializeForStorage } from '../utils/serialization';
  */
 export function createRoleHydrationSchema<TID extends PlatformID>(
   idProvider: IIdProvider<TID>,
-): IHydrationSchema<IStoredRole, IRoleBase<TID, Date, string>> {
+): IHydrationSchema<IStoredRole, IRoleBase<TID, number, string>> {
   return {
     hydrate: (stored) => rehydrateRole(stored, idProvider),
     dehydrate: (typed) =>
-      serializeForStorage<IRoleBase<TID, Date, string>, IStoredRole>(typed),
+      serializeForStorage<IRoleBase<TID, number, string>, IStoredRole>(typed),
   };
 }
 
@@ -51,12 +51,12 @@ export function createRoleHydrationSchema<TID extends PlatformID>(
  */
 export function createUserHydrationSchema<TID extends PlatformID>(
   idProvider: IIdProvider<TID>,
-): IHydrationSchema<IStoredUser, IUserBase<TID, Date, string, AccountStatus>> {
+): IHydrationSchema<IStoredUser, IUserBase<TID, number, string, AccountStatus>> {
   return {
     hydrate: (stored) => rehydrateUser(stored, idProvider),
     dehydrate: (typed) =>
       serializeForStorage<
-        IUserBase<TID, Date, string, AccountStatus>,
+        IUserBase<TID, number, string, AccountStatus>,
         IStoredUser
       >(typed),
   };
@@ -69,11 +69,11 @@ export function createUserHydrationSchema<TID extends PlatformID>(
  */
 export function createUserRoleHydrationSchema<TID extends PlatformID>(
   idProvider: IIdProvider<TID>,
-): IHydrationSchema<IStoredUserRole, IUserRoleBase<TID, Date>> {
+): IHydrationSchema<IStoredUserRole, IUserRoleBase<TID, number>> {
   return {
     hydrate: (stored) => rehydrateUserRole(stored, idProvider),
     dehydrate: (typed) =>
-      serializeForStorage<IUserRoleBase<TID, Date>, IStoredUserRole>(typed),
+      serializeForStorage<IUserRoleBase<TID, number>, IStoredUserRole>(typed),
   };
 }
 

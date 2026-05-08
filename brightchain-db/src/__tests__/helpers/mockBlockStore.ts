@@ -12,6 +12,7 @@
 import {
   BlockSize,
   BlockStoreOptions,
+  brightDateNow,
   CBLMagnetComponents,
   CBLStorageResult,
   CBLWhiteningOptions,
@@ -248,7 +249,7 @@ export class MockPooledBlockStore
   }
 
   private recordPut(poolId: PoolId, dataLength: number): void {
-    const now = new Date();
+    const now = brightDateNow();
     const existing = this.poolStatsMap.get(poolId);
     if (existing) {
       existing.blockCount += 1;
@@ -270,14 +271,14 @@ export class MockPooledBlockStore
     if (existing) {
       existing.blockCount -= 1;
       existing.totalBytes -= dataLength;
-      existing.lastAccessedAt = new Date();
+      existing.lastAccessedAt = brightDateNow();
     }
   }
 
   private touchPool(poolId: PoolId): void {
     const existing = this.poolStatsMap.get(poolId);
     if (existing) {
-      existing.lastAccessedAt = new Date();
+      existing.lastAccessedAt = brightDateNow();
     }
   }
 

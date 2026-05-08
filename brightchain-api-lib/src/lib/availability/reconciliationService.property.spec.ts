@@ -115,7 +115,7 @@ function createMockManifestProvider(options: {
     getLocalManifest: () => ({
       nodeId: options.localNodeId,
       blockIds: options.localBlockIds,
-      generatedAt: new Date(),
+      generatedAt: 9000,
       checksum: `checksum-${options.localBlockIds.length}`,
     }),
     getPeerManifest: async (peerId: string): Promise<BlockManifest> => {
@@ -126,7 +126,7 @@ function createMockManifestProvider(options: {
       return {
         nodeId: peerId,
         blockIds: peerData.blockIds,
-        generatedAt: new Date(),
+        generatedAt: 9000,
         checksum: peerData.checksum,
       };
     },

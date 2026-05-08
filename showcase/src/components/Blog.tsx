@@ -16,9 +16,10 @@ interface BlogPostMeta {
 }
 
 // Blog posts will be discovered automatically by Vite's import.meta.glob
-// This picks up all .md files in public/blog/ at build time — no hardcoded list needed.
-const blogPosts = import.meta.glob('/public/blog/*.md', {
-  as: 'raw',
+// This picks up all .md files in src/blog/ at build time — no hardcoded list needed.
+const blogPosts = import.meta.glob('../blog/*.md', {
+  query: '?raw',
+  import: 'default',
   eager: true,
 });
 
@@ -64,7 +65,7 @@ function Blog() {
   const loadBlogPosts = async () => {
     try {
       const postsWithMeta = Object.entries(blogPosts).map(([path, content]) => {
-        // Extract filename from path: /public/blog/2025-12-22-title.md
+        // Extract filename from path: ../blog/2025-12-22-title.md
         const filename = path.split('/').pop() || '';
         const slug = filename.replace(/\.md$/, '');
 

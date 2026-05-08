@@ -13,9 +13,11 @@
  */
 
 import type {
+  BrightDateTimestamp,
   IAclScope,
   IWriteAclAuditLogger,
 } from '@brightchain/brightchain-lib';
+import { brightDateToISO } from '@brightchain/brightchain-lib';
 
 /**
  * Operation types for audit log entries.
@@ -143,7 +145,7 @@ export class WriteAclAuditLogger implements IWriteAclAuditLogger {
   logCapabilityTokenIssued(
     granteePublicKey: string,
     scope: IAclScope,
-    expiresAt: Date,
+    expiresAt: BrightDateTimestamp,
     grantorPublicKey: string,
   ): void {
     this.entries.push({
@@ -151,7 +153,7 @@ export class WriteAclAuditLogger implements IWriteAclAuditLogger {
       operationType: AuditOperationType.CapabilityTokenIssued,
       actorPublicKey: grantorPublicKey,
       targetScope: scope,
-      details: { granteePublicKey, expiresAt: expiresAt.toISOString() },
+      details: { granteePublicKey, expiresAt: brightDateToISO(expiresAt) },
     });
   }
 

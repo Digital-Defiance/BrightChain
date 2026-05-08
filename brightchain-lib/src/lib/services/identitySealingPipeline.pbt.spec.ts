@@ -33,6 +33,7 @@ import { IBrightTrustMember } from '../interfaces/services/brightTrustService';
 import { IdentitySealingPipeline } from './identitySealingPipeline';
 import { SealingService } from './sealing.service';
 import { ServiceProvider } from './service.provider';
+import { brightDateNow } from '../utils/brightDateConversions';
 
 jest.setTimeout(120000);
 
@@ -65,8 +66,8 @@ function createMockDatabase(
       publicKey: m.member.publicKey,
       metadata: { name: m.member.name },
       isActive: true,
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      createdAt: brightDateNow(),
+      updatedAt: brightDateNow(),
     });
   }
 

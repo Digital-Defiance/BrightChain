@@ -2,6 +2,7 @@
  * Common types used throughout BrightDB
  */
 
+import type { BrightDateTimestamp } from '@brightchain/brightchain-lib';
 import type { StoreLock } from './storeLock';
 
 /** A document ID – opaque string */
@@ -186,7 +187,7 @@ export interface ChangeEvent<T = BsonDocument> {
     removedFields?: string[];
   };
   ns: { db: string; coll: string };
-  timestamp: Date;
+  timestamp: BrightDateTimestamp;
 }
 
 /** Listener for change events */
@@ -276,6 +277,13 @@ export interface CollectionOptions {
   idGenerator?: () => string;
   /** Optional store-level lock for cross-platform mutual exclusion */
   storeLock?: StoreLock;
+  /**
+   * Clock function returning the current time as a BrightDateTimestamp.
+   * Defaults to `brightDateNow`. Override in tests to control time, or supply
+   * a custom clock source for production use.
+   * Used for per-document write timestamps, tombstones, and TTL cutoffs.
+   */
+  nowBd?: () => BrightDateTimestamp;
 }
 
 // ═══════════════════════════════════════════════════════
@@ -348,8 +356,8 @@ export interface CursorSession {
   position: number;
   /** Batch size */
   batchSize: number;
-  /** Timestamp of last access */
-  lastAccessed: number;
+  /** BrightDateTimestamp of last access */
+  lastAccessed: BrightDateTimestamp;
   /** Filter used to create this cursor */
   filter: Record<string, unknown>;
   /** Sort used */

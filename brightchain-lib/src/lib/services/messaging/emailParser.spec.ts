@@ -11,6 +11,7 @@ import {
   createContentType,
 } from '../../interfaces/messaging/mimePart';
 import { EmailParser } from './emailParser';
+import { brightDateToDate } from '../../utils/brightDateConversions';
 
 describe('EmailParser', () => {
   let parser: EmailParser;
@@ -1199,10 +1200,11 @@ describe('EmailParser', () => {
 
       const metadata = await parser.parse(raw);
 
-      expect(metadata.date).toBeInstanceOf(Date);
-      expect(metadata.date.getUTCFullYear()).toBe(2025);
-      expect(metadata.date.getUTCMonth()).toBe(1); // February
-      expect(metadata.date.getUTCDate()).toBe(13);
+      expect(typeof metadata.date).toBe('number');
+      const dateObj = brightDateToDate(metadata.date);
+      expect(dateObj.getUTCFullYear()).toBe(2025);
+      expect(dateObj.getUTCMonth()).toBe(1); // February
+      expect(dateObj.getUTCDate()).toBe(13);
     });
 
     it('should parse CC recipients', async () => {

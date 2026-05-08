@@ -6,6 +6,8 @@ import { CblError } from '../errors/cblError';
 import { IVCBLBlock } from '../interfaces/blocks/vcbl';
 import { EntryPropertyRecord } from '../interfaces/brightpass';
 import { ICBLServices } from '../interfaces/services/cblServices';
+import type { BrightDateTimestamp } from '../types/brightDateTimestamp';
+import { dateToBrightDate } from '../utils/brightDateConversions';
 import { VCBLService } from '../services/vcblService';
 import { ExtendedCBL } from './extendedCbl';
 
@@ -103,14 +105,14 @@ export class VCBLBlock<TID extends PlatformID = Uint8Array>
     );
   }
 
-  public get vaultCreatedAt(): Date {
+  public get vaultCreatedAt(): BrightDateTimestamp {
     this.parseVaultData();
-    return this._vaultHeaderData!.createdAt;
+    return dateToBrightDate(this._vaultHeaderData!.createdAt);
   }
 
-  public get vaultModifiedAt(): Date {
+  public get vaultModifiedAt(): BrightDateTimestamp {
     this.parseVaultData();
-    return this._vaultHeaderData!.modifiedAt;
+    return dateToBrightDate(this._vaultHeaderData!.modifiedAt);
   }
 
   public get sharedMemberCount(): number {

@@ -1,3 +1,5 @@
+import { brightDateNow } from '../../utils/brightDateConversions';
+import { normalizeToBrightDate } from '../../utils/brightDateConversions';
 import fc from 'fast-check';
 import {
   BlockAnnouncement,
@@ -75,7 +77,7 @@ describe('Feature: unified-gossip-delivery, Property 6: Message receipt triggers
           type: 'ack',
           blockId: bid(ackMetadata.messageId),
           nodeId: localNodeId,
-          timestamp: new Date(),
+          timestamp: brightDateNow(),
           ttl: config.defaultTtl,
           deliveryAck: ackMetadata,
         };
@@ -124,7 +126,7 @@ describe('Feature: unified-gossip-delivery, Property 6: Message receipt triggers
   const baseAnnouncementFieldsArb = fc.record({
     blockId: nonEmptyStringArb.map((s) => bid(s)),
     nodeId: nonEmptyStringArb,
-    timestamp: fc.date(),
+    timestamp: fc.date().map((d) => normalizeToBrightDate(d)),
     ttl: fc.integer({ min: 1, max: 10 }),
   });
 
@@ -650,7 +652,7 @@ describe('Feature: unified-gossip-delivery, Property 7: Non-local recipients for
             type: 'ack',
             blockId: bid(ackMetadata.messageId),
             nodeId: localNodeId,
-            timestamp: new Date(),
+            timestamp: brightDateNow(),
             ttl: config.defaultTtl,
             deliveryAck: ackMetadata,
           };
@@ -699,7 +701,7 @@ describe('Feature: unified-gossip-delivery, Property 7: Non-local recipients for
   const baseAnnouncementFieldsArb = fc.record({
     blockId: nonEmptyStringArb.map((s) => bid(s)),
     nodeId: nonEmptyStringArb,
-    timestamp: fc.date(),
+    timestamp: fc.date().map((d) => normalizeToBrightDate(d)),
     ttl: fc.integer({ min: 1, max: 10 }),
   });
 

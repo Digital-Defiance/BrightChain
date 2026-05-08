@@ -9,6 +9,7 @@
 
 import { HexString } from '@digitaldefiance/ecies-lib';
 import { ProposalActionType } from '../../enumerations/proposalActionType';
+import type { BrightDateTimestamp } from '../../types/brightDateTimestamp';
 
 /**
  * Display format for presenting a proposal to the operator for voting.
@@ -25,7 +26,7 @@ export interface ProposalDisplay {
   /** ID of the member who submitted the proposal */
   proposerMemberId: HexString;
   /** Timestamp after which the proposal expires */
-  expiresAt: Date;
+  expiresAt: BrightDateTimestamp;
   /** Optional CBL reference for attached documentation */
   attachmentCblId?: string;
   /** Pre-fetched CBL content for operator review */

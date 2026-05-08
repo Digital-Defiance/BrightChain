@@ -1,4 +1,5 @@
 import { DriverBackedHeadRegistry } from '@brightchain/brightchain-lib';
+import { brightDateNow, isoToBrightDate } from '@brightchain/brightchain-lib';
 import { promises as fs } from 'fs';
 import { join } from 'path';
 import { FileHeadRegistryDriver } from './fileHeadRegistryDriver';
@@ -98,7 +99,7 @@ export class PersistentHeadRegistry extends DriverBackedHeadRegistry {
         migrations.push(
           this.getDriver().writeRecord(key, {
             blockId: value,
-            timestamp: new Date(0).toISOString(),
+            timestamp: 0, // J2000 epoch as BrightDateTimestamp
           }),
         );
       } else if (
@@ -108,10 +109,16 @@ export class PersistentHeadRegistry extends DriverBackedHeadRegistry {
         typeof (value as Record<string, unknown>)['blockId'] === 'string'
       ) {
         const entry = value as Record<string, unknown>;
-        const ts =
-          typeof entry['timestamp'] === 'string'
-            ? entry['timestamp']
-            : new Date(0).toISOString();
+        let ts = 0; // default to J2000 epoch
+        if (typeof entry['timestamp'] === 'number') {
+          ts = entry['timestamp'];
+        } else if (typeof entry['timestamp'] === 'string') {
+          try {
+            ts = isoToBrightDate(entry['timestamp']);
+          } catch {
+            ts = 0;
+          }
+        }
         migrations.push(
           this.getDriver().writeRecord(key, {
             blockId: entry['blockId'] as string,

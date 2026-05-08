@@ -78,6 +78,14 @@ jest.mock('@brightchain/brightchain-lib', () => ({
       SECURE_GREEN: '#2e7d32',
     },
   },
+  BrightDateDisplayMode: {
+    Dual: 'dual',
+    BrightDateOnly: 'brightDateOnly',
+    LocaleOnly: 'localeOnly',
+    Hover: 'hover',
+    HoverReverse: 'hoverReverse',
+  },
+  toBrightDateString: () => '9146.438',
   HealthStatus: {
     HEALTHY: 'healthy',
     DEGRADED: 'degraded',

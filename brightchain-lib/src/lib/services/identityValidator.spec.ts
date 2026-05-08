@@ -34,6 +34,7 @@ import { ANONYMOUS_ID } from './identitySealingPipeline';
 import { IdentityValidator } from './identityValidator';
 import { MembershipProofService } from './membershipProofService';
 import { ServiceProvider } from './service.provider';
+import { brightDateNow } from '../utils/brightDateConversions';
 
 jest.setTimeout(60000);
 
@@ -153,8 +154,8 @@ describe('IdentityValidator Unit Tests', () => {
         publicKey: m.publicKey,
         metadata: { name: m.name },
         isActive: true,
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        createdAt: brightDateNow(),
+        updatedAt: brightDateNow(),
         ...overrides,
       });
     }
@@ -348,7 +349,7 @@ describe('IdentityValidator Unit Tests', () => {
         aliasPublicKey: aliasKeyPair.publicKey,
         identityRecoveryRecordId: 'recovery-1' as unknown as GuidV4Uint8Array,
         isActive: true,
-        registeredAt: new Date(),
+        registeredAt: brightDateNow(),
         epochNumber: 1,
       });
 
@@ -463,8 +464,8 @@ describe('IdentityValidator Unit Tests', () => {
         identityRecoveryRecordId:
           'recovery-inactive' as unknown as GuidV4Uint8Array,
         isActive: false,
-        registeredAt: new Date(),
-        deactivatedAt: new Date(),
+        registeredAt: brightDateNow(),
+        deactivatedAt: brightDateNow(),
         epochNumber: 1,
       });
 
@@ -530,7 +531,7 @@ describe('IdentityValidator Unit Tests', () => {
         identityRecoveryRecordId:
           'recovery-banned' as unknown as GuidV4Uint8Array,
         isActive: true,
-        registeredAt: new Date(),
+        registeredAt: brightDateNow(),
         epochNumber: 1,
       });
 

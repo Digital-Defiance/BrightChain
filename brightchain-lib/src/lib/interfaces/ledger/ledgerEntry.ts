@@ -10,6 +10,7 @@
  */
 
 import { PlatformID, SignatureUint8Array } from '@digitaldefiance/ecies-lib';
+import { BrightDateTimestamp } from '../../types/brightDateTimestamp';
 import { Checksum } from '../../types/checksum';
 
 /**
@@ -31,8 +32,8 @@ export interface ILedgerEntry<TID extends PlatformID = Uint8Array> {
   readonly signature: SignatureUint8Array;
   /** Public key identifying the Signer (Req 1.5). */
   readonly signerPublicKey: Uint8Array;
-  /** Timestamp recording when the entry was created (Req 1.6). */
-  readonly timestamp: Date;
+  /** Timestamp recording when the entry was created, as BrightDateValue (decimal days since J2000.0) (Req 1.6). */
+  readonly timestamp: BrightDateTimestamp;
   /** Zero-based position in the chain (Req 1.7). */
   readonly sequenceNumber: number;
   /** Generic marker for DTO compatibility. */

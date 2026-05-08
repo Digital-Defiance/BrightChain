@@ -19,6 +19,7 @@ import type {
 } from '@brightchain/brightchain-lib';
 import {
   BlockSize,
+  brightDateNow,
   initializeBrightChain,
   PooledMemoryBlockStore,
   resetInitialization,
@@ -168,7 +169,7 @@ function makeAclDoc(
   collectionName?: string,
   mode: WriteMode = WriteMode.Restricted,
 ): IAclDocument {
-  const now = new Date();
+  const now = brightDateNow();
   return {
     writeMode: mode,
     authorizedWriters: writers,

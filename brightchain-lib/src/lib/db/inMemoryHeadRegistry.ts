@@ -12,10 +12,12 @@ import type {
   IHeadRegistry,
 } from '../interfaces/storage/headRegistry';
 import type { HeadRecord } from '../interfaces/storage/headRegistryDriver';
+import type { BrightDateTimestamp } from '../types/brightDateTimestamp';
+import { brightDateNow } from '../utils/brightDateConversions';
 
 export class InMemoryHeadRegistry implements IHeadRegistry {
   private readonly heads = new Map<string, string>();
-  private readonly timestamps = new Map<string, Date>();
+  private readonly timestamps = new Map<string, BrightDateTimestamp>();
   private readonly deferred: DeferredHeadUpdate[] = [];
   private readonly changeListeners = new Map<
     string,
@@ -37,7 +39,7 @@ export class InMemoryHeadRegistry implements IHeadRegistry {
   ): Promise<void> {
     const key = this.makeKey(dbName, collectionName);
     this.heads.set(key, blockId);
-    this.timestamps.set(key, new Date());
+    this.timestamps.set(key, brightDateNow());
   }
 
   async removeHead(dbName: string, collectionName: string): Promise<void> {
@@ -60,7 +62,7 @@ export class InMemoryHeadRegistry implements IHeadRegistry {
     return new Map(this.heads);
   }
 
-  getHeadTimestamp(dbName: string, collectionName: string): Date | undefined {
+  getHeadTimestamp(dbName: string, collectionName: string): BrightDateTimestamp | undefined {
     return this.timestamps.get(this.makeKey(dbName, collectionName));
   }
 
@@ -68,13 +70,13 @@ export class InMemoryHeadRegistry implements IHeadRegistry {
     dbName: string,
     collectionName: string,
     blockId: string,
-    timestamp: Date,
+    timestamp: BrightDateTimestamp,
   ): Promise<boolean> {
     const key = this.makeKey(dbName, collectionName);
     const localTimestamp = this.timestamps.get(key);
 
     // If no local head exists, or the remote timestamp is strictly newer, apply
-    if (!localTimestamp || timestamp.getTime() > localTimestamp.getTime()) {
+    if (!localTimestamp || timestamp > localTimestamp) {
       this.heads.set(key, blockId);
       this.timestamps.set(key, timestamp);
       this.notifyHeadChange(key, blockId);
@@ -114,7 +116,7 @@ export class InMemoryHeadRegistry implements IHeadRegistry {
     dbName: string,
     collectionName: string,
     blockId: string,
-    timestamp: Date,
+    timestamp: BrightDateTimestamp,
   ): Promise<void> {
     this.deferred.push({ dbName, collectionName, blockId, timestamp });
   }
@@ -152,7 +154,7 @@ export class InMemoryHeadRegistry implements IHeadRegistry {
       const ts = this.timestamps.get(key);
       result.set(key, {
         blockId,
-        timestamp: ts ? ts.toISOString() : new Date(0).toISOString(),
+        timestamp: ts ?? 0,
       });
     }
     return result;
@@ -171,7 +173,7 @@ export class InMemoryHeadRegistry implements IHeadRegistry {
         dbName,
         collectionName,
         record.blockId,
-        new Date(record.timestamp),
+        record.timestamp,
       );
       if (applied) {
         merged++;

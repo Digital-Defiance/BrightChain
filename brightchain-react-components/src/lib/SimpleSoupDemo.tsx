@@ -8,6 +8,7 @@ import {
   ServiceLocator,
   TUPLE,
   uint8ArrayToHex,
+  brightDateNow,
 } from '@brightchain/brightchain-lib';
 import React, { useCallback, useState } from 'react';
 
@@ -71,7 +72,7 @@ export const SimpleSoupDemo: React.FC = () => {
       // 2. Generate whitener blocks (TUPLE.SIZE - 1 = 3)
       const whiteners: RandomBlock[] = [];
       for (let i = 0; i < TUPLE.SIZE - 1; i++) {
-        const whitener = RandomBlock.new(blockSize, new Date());
+        const whitener = RandomBlock.new(blockSize, brightDateNow());
         whiteners.push(whitener);
 
         // Store whitener in block store
@@ -96,7 +97,7 @@ export const SimpleSoupDemo: React.FC = () => {
       const whitenedBlock = new RawDataBlock(
         blockSize,
         whitenedData,
-        new Date(),
+        brightDateNow(),
       );
       await blockStore.setData(whitenedBlock);
       newRecipe.push(uint8ArrayToHex(whitenedBlock.idChecksum));
@@ -117,7 +118,7 @@ export const SimpleSoupDemo: React.FC = () => {
         }),
       );
 
-      const cblBlock = new RawDataBlock(blockSize, cblData, new Date());
+      const cblBlock = new RawDataBlock(blockSize, cblData, brightDateNow());
       await blockStore.setData(cblBlock);
 
       newCans.push({

@@ -6,6 +6,7 @@ import {
   SecureString,
 } from '@digitaldefiance/ecies-lib';
 import { MemberStatusType } from '../../enumerations/memberStatusType';
+import type { BrightDateTimestamp } from '../../types/brightDateTimestamp';
 import { Checksum } from '../../types/checksum';
 import { IStoredBackupCode } from '../userManagement';
 import { IPasswordWrappedPrivateKey } from './passwordWrappedPrivateKey';
@@ -18,8 +19,8 @@ export interface IPublicMemberData<TID extends PlatformID = Uint8Array> {
   id: TID;
   type: MemberType;
   name: string;
-  dateCreated: Date;
-  dateUpdated: Date;
+  dateCreated: BrightDateTimestamp;
+  dateUpdated: BrightDateTimestamp;
 
   // Public Keys
   publicKey: Uint8Array;
@@ -27,7 +28,7 @@ export interface IPublicMemberData<TID extends PlatformID = Uint8Array> {
 
   // Network Status
   status: MemberStatusType;
-  lastSeen: Date;
+  lastSeen: BrightDateTimestamp;
   reputation: number;
 
   // Storage Metrics
@@ -80,7 +81,7 @@ export interface IPrivateMemberData<TID extends PlatformID = Uint8Array> {
 
   // History
   activityLog: Array<{
-    timestamp: Date;
+    timestamp: BrightDateTimestamp;
     action: string;
     details: Record<string, unknown>;
   }>;
@@ -92,7 +93,7 @@ export interface IPrivateMemberData<TID extends PlatformID = Uint8Array> {
 export interface IMemberReference<TID extends PlatformID = Uint8Array> {
   id: TID;
   type: MemberType;
-  dateVerified: Date;
+  dateVerified: BrightDateTimestamp;
   publicCBL?: Checksum;
 }
 
@@ -107,7 +108,7 @@ export interface IMemberIndexEntry<TID extends PlatformID = Uint8Array> {
   privateProfileCBL?: Checksum;
   type: MemberType;
   status: MemberStatusType;
-  lastUpdate: Date;
+  lastUpdate: BrightDateTimestamp;
   region?: string;
   reputation: number;
   /** Member display name — used to populate the in-memory name→id index. */

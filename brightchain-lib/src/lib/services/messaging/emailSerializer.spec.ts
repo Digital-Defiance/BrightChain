@@ -16,6 +16,7 @@ import {
 } from '../../interfaces/messaging/mimePart';
 import { EmailParser } from './emailParser';
 import { EmailSerializer } from './emailSerializer';
+import { normalizeToBrightDate, brightDateToDate } from '../../utils/brightDateConversions';
 
 describe('EmailSerializer', () => {
   let serializer: EmailSerializer;
@@ -132,32 +133,32 @@ describe('EmailSerializer', () => {
 
   describe('serializeDate', () => {
     it('should serialize a date in RFC 5322 format', () => {
-      const date = new Date('2025-02-13T15:30:00Z');
+      const date = normalizeToBrightDate(new Date('2025-02-13T15:30:00Z'));
       const result = serializer.serializeDate(date);
       expect(result).toBe('Thu, 13 Feb 2025 15:30:00 +0000');
     });
 
     it('should serialize a date at midnight', () => {
-      const date = new Date('2025-01-01T00:00:00Z');
+      const date = normalizeToBrightDate(new Date('2025-01-01T00:00:00Z'));
       const result = serializer.serializeDate(date);
       expect(result).toBe('Wed, 01 Jan 2025 00:00:00 +0000');
     });
 
     it('should serialize a date at end of day', () => {
-      const date = new Date('2025-12-31T23:59:59Z');
+      const date = normalizeToBrightDate(new Date('2025-12-31T23:59:59Z'));
       const result = serializer.serializeDate(date);
       expect(result).toBe('Wed, 31 Dec 2025 23:59:59 +0000');
     });
 
     it('should produce a parseable date string', () => {
-      const original = new Date('2025-06-15T10:30:45Z');
+      const original = normalizeToBrightDate(new Date('2025-06-15T10:30:45Z'));
       const serialized = serializer.serializeDate(original);
       const parsed = new Date(serialized);
-      expect(parsed.getTime()).toBe(original.getTime());
+      expect(parsed.getTime()).toBe(brightDateToDate(original).getTime());
     });
 
     it('should handle invalid date by returning current date string', () => {
-      const result = serializer.serializeDate(new Date('invalid'));
+      const result = serializer.serializeDate(NaN);
       // Should produce a valid date string (current time)
       expect(result).toMatch(
         /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), \d{2} (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) \d{4} \d{2}:\d{2}:\d{2} \+0000$/,

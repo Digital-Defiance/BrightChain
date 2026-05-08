@@ -86,7 +86,7 @@ excerpt: ${excerpt}
       await octokit.rest.repos.createOrUpdateFileContents({
         owner,
         repo,
-        path: `showcase/public/blog/${filename}`,
+        path: `showcase/src/blog/${filename}`,
         message: `Add blog post: ${title}`,
         content: btoa(unescape(encodeURIComponent(markdownContent))),
         branch: 'main',

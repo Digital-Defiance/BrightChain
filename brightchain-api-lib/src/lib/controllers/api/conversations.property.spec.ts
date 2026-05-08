@@ -105,9 +105,9 @@ describe('ConversationService – Property 2: Conversation inbox ordering', () =
           // Verify descending order by lastMessageAt
           for (let i = 0; i < result.items.length - 1; i++) {
             expect(
-              result.items[i].lastMessageAt.getTime(),
+              result.items[i].lastMessageAt,
             ).toBeGreaterThanOrEqual(
-              result.items[i + 1].lastMessageAt.getTime(),
+              result.items[i + 1].lastMessageAt,
             );
           }
         },
@@ -153,8 +153,8 @@ describe('ConversationService – Property 3: Conversation messages chronologica
 
           // Verify chronological order
           for (let i = 0; i < result.items.length - 1; i++) {
-            expect(result.items[i].createdAt.getTime()).toBeLessThanOrEqual(
-              result.items[i + 1].createdAt.getTime(),
+            expect(result.items[i].createdAt).toBeLessThanOrEqual(
+              result.items[i + 1].createdAt,
             );
           }
 

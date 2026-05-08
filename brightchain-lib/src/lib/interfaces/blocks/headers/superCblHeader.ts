@@ -2,6 +2,7 @@ import {
   SignatureUint8Array,
   type PlatformID,
 } from '@digitaldefiance/ecies-lib';
+import type { BrightDateTimestamp } from '../../../types/brightDateTimestamp';
 import { Checksum } from '../../../types/checksum';
 
 /**
@@ -35,9 +36,9 @@ export interface ISuperConstituentBlockListBlockHeader<
   readonly creatorId: TID;
 
   /**
-   * Date the SuperCBL was created
+   * Date the SuperCBL was created (BrightDateValue)
    */
-  readonly dateCreated: Date;
+  readonly dateCreated: BrightDateTimestamp;
 
   /**
    * Number of sub-CBL references in this SuperCBL

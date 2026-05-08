@@ -20,6 +20,8 @@ import { Checksum } from '../types/checksum';
 import { CBLService } from './cblService';
 import { ChecksumService } from './checksum.service';
 import { ServiceProvider } from './service.provider';
+import { brightDateNow, dateToBrightDate } from '../utils/brightDateConversions';
+import type { BrightDateTimestamp } from '../types/brightDateTimestamp';
 
 describe('Binary SuperCBL Format - Property Tests', () => {
   let cblService: CBLService;
@@ -87,7 +89,7 @@ describe('Binary SuperCBL Format - Property Tests', () => {
             originalDataChecksum,
           ) => {
             const member = generateMember();
-            const dateCreated = new Date();
+            const dateCreated = brightDateNow();
 
             // Generate sub-CBL checksums
             const subCblChecksums: Checksum[] = [];
@@ -168,7 +170,7 @@ describe('Binary SuperCBL Format - Property Tests', () => {
           generateChecksum(), // originalDataChecksum
           (subCblCount, originalDataChecksum) => {
             const member = generateMember();
-            const dateCreated = new Date();
+            const dateCreated = brightDateNow();
 
             // Generate sub-CBL checksums
             const subCblChecksums: Checksum[] = [];
@@ -226,7 +228,8 @@ describe('Binary SuperCBL Format - Property Tests', () => {
         fc.property(
           fc
             .date({ min: new Date('2020-01-01'), max: new Date('2030-12-31') })
-            .filter((d) => !isNaN(d.getTime())),
+            .filter((d) => !isNaN(d.getTime()))
+            .map((d) => dateToBrightDate(d)),
           generateChecksum(),
           (dateCreated, originalDataChecksum) => {
             const member = generateMember();
@@ -273,11 +276,11 @@ describe('Binary SuperCBL Format - Property Tests', () => {
               BlockSize.Medium,
             );
 
-            // Verify date is preserved (within 1 second tolerance due to millisecond truncation)
+            // Verify date is preserved (within small tolerance due to BrightDate conversion)
             const timeDiff = Math.abs(
-              parsed.dateCreated.getTime() - dateCreated.getTime(),
+              parsed.dateCreated - dateCreated,
             );
-            expect(timeDiff).toBeLessThan(1000);
+            expect(timeDiff).toBeLessThan(0.001); // < 0.001 days tolerance
           },
         ),
         { numRuns: 50 },
@@ -304,7 +307,7 @@ describe('Binary SuperCBL Format - Property Tests', () => {
           generateChecksum(), // originalDataChecksum
           (subCblCount, totalBlockCount, depth, originalDataChecksum) => {
             const member = generateMember();
-            const dateCreated = new Date();
+            const dateCreated = brightDateNow();
 
             // Generate sub-CBL checksums
             const subCblChecksums: Checksum[] = [];
@@ -361,7 +364,7 @@ describe('Binary SuperCBL Format - Property Tests', () => {
           generateChecksum(), // originalDataChecksum
           (subCblCount, corruptIndex, originalDataChecksum) => {
             const member = generateMember();
-            const dateCreated = new Date();
+            const dateCreated = brightDateNow();
 
             // Generate sub-CBL checksums
             const subCblChecksums: Checksum[] = [];
@@ -434,7 +437,7 @@ describe('Binary SuperCBL Format - Property Tests', () => {
           (subCblCount, originalDataChecksum) => {
             const member = generateMember();
             const wrongMember = generateMember(); // Different member
-            const dateCreated = new Date();
+            const dateCreated = brightDateNow();
 
             // Generate sub-CBL checksums
             const subCblChecksums: Checksum[] = [];
@@ -491,7 +494,7 @@ describe('Binary SuperCBL Format - Property Tests', () => {
           generateChecksum(), // originalDataChecksum
           (subCblCount, byteIndex, originalDataChecksum) => {
             const member = generateMember();
-            const dateCreated = new Date();
+            const dateCreated = brightDateNow();
 
             // Generate sub-CBL checksums
             const subCblChecksums: Checksum[] = [];

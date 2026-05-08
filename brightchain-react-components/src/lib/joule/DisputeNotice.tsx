@@ -8,8 +8,13 @@
  * @requirements joule-resource-credits spec, Req 7.5, 8.1 – 8.4
  */
 
-import { formatJoule, toBrightDateString } from '@brightchain/brightchain-lib';
+import {
+  BrightChainStrings,
+  formatJoule,
+} from '@brightchain/brightchain-lib';
+import { useI18n } from '@digitaldefiance/express-suite-react-components';
 import * as React from 'react';
+import { useFormattedDate } from '../hooks/useFormattedDate';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -50,12 +55,6 @@ export interface DisputeNoticeProps {
 // Helpers
 // ---------------------------------------------------------------------------
 
-const STATE_LABELS: Record<DisputeState, string> = {
-  DISPUTED: 'Under review',
-  RESOLVED_FINAL: 'Resolved (final)',
-  RESOLVED_REPLACED: 'Resolved (superseded)',
-};
-
 function stateClass(state: DisputeState): string {
   switch (state) {
     case 'DISPUTED':
@@ -64,6 +63,17 @@ function stateClass(state: DisputeState): string {
       return 'joule-dispute--final';
     case 'RESOLVED_REPLACED':
       return 'joule-dispute--replaced';
+  }
+}
+
+function stateLabel(state: DisputeState, t: (key: string) => string): string {
+  switch (state) {
+    case 'DISPUTED':
+      return t(BrightChainStrings.Dispute_State_Disputed);
+    case 'RESOLVED_FINAL':
+      return t(BrightChainStrings.Dispute_State_ResolvedFinal);
+    case 'RESOLVED_REPLACED':
+      return t(BrightChainStrings.Dispute_State_ResolvedReplaced);
   }
 }
 
@@ -81,49 +91,59 @@ export const DisputeNotice: React.FC<DisputeNoticeProps> = ({
   className,
   style,
 }) => {
+  const { tBranded: t } = useI18n();
+  const { formatDateTime } = useFormattedDate();
   const baseClass = `joule-dispute ${stateClass(dispute.state)}${className ? ` ${className}` : ''}`;
 
   return (
     <article
       className={baseClass}
       style={style}
-      aria-label={`Joule dispute ${dispute.id}`}
+      aria-label={t(BrightChainStrings.Dispute_AriaLabelTemplate, {
+        ID: dispute.id,
+      })}
     >
       <header className="joule-dispute__header">
-        <span className="joule-dispute__id">Dispute #{dispute.id}</span>
+        <span className="joule-dispute__id">
+          {t(BrightChainStrings.Dispute_IdTemplate, { ID: dispute.id })}
+        </span>
         <span
           className={`joule-dispute__state joule-dispute__state--${dispute.state.toLowerCase()}`}
-          aria-label="Dispute state"
+          aria-label={t(BrightChainStrings.Dispute_State_Disputed)}
         >
-          {STATE_LABELS[dispute.state]}
+          {stateLabel(dispute.state, t)}
         </span>
       </header>
       <dl className="joule-dispute__details">
         <div className="joule-dispute__row">
-          <dt>Amount</dt>
+          <dt>{t(BrightChainStrings.Dispute_Field_Amount)}</dt>
           <dd className="joule-dispute__amount">
             {formatJoule(dispute.microJoules)}
           </dd>
         </div>
         <div className="joule-dispute__row">
-          <dt>Opened</dt>
-          <dd>{new Date(dispute.openedAt).toLocaleString()} (BD {toBrightDateString(new Date(dispute.openedAt), 3)})</dd>
+          <dt>{t(BrightChainStrings.Dispute_Field_Opened)}</dt>
+          <dd>
+            {formatDateTime(new Date(dispute.openedAt))}
+          </dd>
         </div>
         {dispute.reason ? (
           <div className="joule-dispute__row">
-            <dt>Reason</dt>
+            <dt>{t(BrightChainStrings.Dispute_Field_Reason)}</dt>
             <dd>{dispute.reason}</dd>
           </div>
         ) : null}
         {dispute.resolvedAt ? (
           <div className="joule-dispute__row">
-            <dt>Resolved</dt>
-            <dd>{new Date(dispute.resolvedAt).toLocaleString()} (BD {toBrightDateString(new Date(dispute.resolvedAt), 3)})</dd>
+            <dt>{t(BrightChainStrings.Dispute_Field_Resolved)}</dt>
+            <dd>
+              {formatDateTime(new Date(dispute.resolvedAt))}
+            </dd>
           </div>
         ) : null}
         {dispute.resolution ? (
           <div className="joule-dispute__row">
-            <dt>Resolution</dt>
+            <dt>{t(BrightChainStrings.Dispute_Field_Resolution)}</dt>
             <dd>{dispute.resolution}</dd>
           </div>
         ) : null}

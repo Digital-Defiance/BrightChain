@@ -13,6 +13,8 @@ import BlockType from '../enumerations/blockType';
 import { EphemeralBlockMetadata } from '../ephemeralBlockMetadata';
 import { ServiceProvider } from '../services/service.provider';
 import { initializeTestServices } from '../test/service.initializer.helper';
+import { dateToBrightDate } from '../utils/brightDateConversions';
+import type { BrightDateTimestamp } from '../types/brightDateTimestamp';
 
 /**
  * Property-based tests for metadata round-trip serialization
@@ -44,11 +46,12 @@ const arbBlockDataType = fc.constantFrom(
 
 /**
  * Arbitrary for valid dates (constrained to avoid Invalid Date errors)
- * Filter out NaN dates
+ * Filter out NaN dates, converted to BrightDateTimestamp
  */
-const arbDate = fc
+const arbDate: fc.Arbitrary<BrightDateTimestamp> = fc
   .date({ min: new Date('1970-01-01'), max: new Date('2099-12-31') })
-  .filter((d) => !isNaN(d.getTime()));
+  .filter((d) => !isNaN(d.getTime()))
+  .map((d) => dateToBrightDate(d));
 
 describe('Feature: block-security-hardening, Property 6: Block Metadata Round-Trip', () => {
   // Shared test data
@@ -109,9 +112,9 @@ describe('Feature: block-security-hardening, Property 6: Block Metadata Round-Tr
           );
 
           // Date comparison - allow for serialization precision loss
-          const originalTime = new Date(original.dateCreated).getTime();
-          const parsedTime = new Date(parsed.dateCreated).getTime();
-          expect(Math.abs(originalTime - parsedTime)).toBeLessThanOrEqual(1000); // Within 1 second
+          const originalTime = original.dateCreated;
+          const parsedTime = parsed.dateCreated;
+          expect(Math.abs(originalTime - parsedTime)).toBeLessThanOrEqual(1e-6); // Within floating point precision
         },
       ),
       { numRuns: 100 },
@@ -159,9 +162,9 @@ describe('Feature: block-security-hardening, Property 6: Block Metadata Round-Tr
           );
 
           // Date comparison
-          const parsed1Time = new Date(parsed1.dateCreated).getTime();
-          const parsed2Time = new Date(parsed2.dateCreated).getTime();
-          expect(Math.abs(parsed1Time - parsed2Time)).toBeLessThanOrEqual(1000);
+          const parsed1Time = parsed1.dateCreated;
+          const parsed2Time = parsed2.dateCreated;
+          expect(Math.abs(parsed1Time - parsed2Time)).toBeLessThanOrEqual(1e-6);
         },
       ),
       { numRuns: 100 },
@@ -217,9 +220,9 @@ describe('Feature: block-security-hardening, Property 6: Block Metadata Round-Tr
           );
 
           // Date comparison
-          const originalTime = new Date(original.dateCreated).getTime();
-          const parsedTime = new Date(parsed.dateCreated).getTime();
-          expect(Math.abs(originalTime - parsedTime)).toBeLessThanOrEqual(1000);
+          const originalTime = original.dateCreated;
+          const parsedTime = parsed.dateCreated;
+          expect(Math.abs(originalTime - parsedTime)).toBeLessThanOrEqual(1e-6);
         },
       ),
       { numRuns: 100 },
@@ -276,9 +279,9 @@ describe('Feature: block-security-hardening, Property 6: Block Metadata Round-Tr
           );
 
           // Date comparison
-          const parsed1Time = new Date(parsed1.dateCreated).getTime();
-          const parsed2Time = new Date(parsed2.dateCreated).getTime();
-          expect(Math.abs(parsed1Time - parsed2Time)).toBeLessThanOrEqual(1000);
+          const parsed1Time = parsed1.dateCreated;
+          const parsed2Time = parsed2.dateCreated;
+          expect(Math.abs(parsed1Time - parsed2Time)).toBeLessThanOrEqual(1e-6);
         },
       ),
       { numRuns: 100 },

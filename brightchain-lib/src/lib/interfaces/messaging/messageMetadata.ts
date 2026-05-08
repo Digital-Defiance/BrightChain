@@ -3,6 +3,7 @@ import type { PlatformID } from '@digitaldefiance/ecies-lib';
 import { DeliveryStatus } from '../../enumerations/messaging/deliveryStatus';
 import { MessageEncryptionScheme } from '../../enumerations/messaging/messageEncryptionScheme';
 import { MessagePriority } from '../../enumerations/messaging/messagePriority';
+import type { BrightDateTimestamp } from '../../types/brightDateTimestamp';
 import type { BlockId } from '../branded/primitives/blockId';
 import { IBlockMetadata } from '../storage/blockMetadata';
 
@@ -44,7 +45,7 @@ export interface IMessageMetadata<TID extends PlatformID = string>
   deliveryStatus: Map<TID, DeliveryStatus>;
 
   /** Acknowledgment timestamps per recipient */
-  acknowledgments: Map<TID, Date>;
+  acknowledgments: Map<TID, BrightDateTimestamp>;
 
   /** Encryption scheme used */
   encryptionScheme: MessageEncryptionScheme;

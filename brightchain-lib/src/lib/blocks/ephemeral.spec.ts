@@ -19,6 +19,8 @@ import { ChecksumService } from '../services/checksum.service';
 import { ServiceProvider } from '../services/service.provider';
 import { initializeTestServices } from '../test/service.initializer.helper';
 import { EphemeralBlock } from './ephemeral';
+import { brightDateNow } from '../utils/brightDateConversions';
+import type { BrightDateTimestamp } from '../types/brightDateTimestamp';
 
 // Test class that properly implements abstract methods
 class TestEphemeralBlock extends EphemeralBlock {
@@ -28,7 +30,7 @@ class TestEphemeralBlock extends EphemeralBlock {
     data: Uint8Array,
     creator: Member,
     checksum?: Checksum,
-    dateCreated?: Date,
+    dateCreated?: BrightDateTimestamp,
     lengthBeforeEncryption?: number,
     canRead = true,
     canPersist = false,
@@ -36,7 +38,7 @@ class TestEphemeralBlock extends EphemeralBlock {
     const blockSize = BlockSize.Small;
 
     // Validate future dates
-    if (dateCreated && dateCreated > new Date()) {
+    if (dateCreated && dateCreated > brightDateNow()) {
       throw new BlockValidationError(
         BlockValidationErrorType.FutureCreationDate,
       );
@@ -48,7 +50,7 @@ class TestEphemeralBlock extends EphemeralBlock {
       blockDataType,
       lengthBeforeEncryption ?? data.length,
       creator,
-      dateCreated ?? new Date(),
+      dateCreated ?? brightDateNow(),
     );
 
     const finalChecksum =
@@ -84,7 +86,7 @@ describe('EphemeralBlock', () => {
   let creator: IMemberWithMnemonic;
   let checksumService: ChecksumService;
   const defaultBlockSize = BlockSize.Small;
-  const testDate = new Date(Date.now() - 1000); // 1 second ago
+  const testDate = brightDateNow() - 1 / 86400; // 1 second ago in BrightDate units
 
   // Helper functions
   const getEffectiveSize = (size: BlockSize, encrypted = false) =>
@@ -99,7 +101,7 @@ describe('EphemeralBlock', () => {
       data: Uint8Array;
       checksum: Checksum;
       creator: Member;
-      dateCreated: Date;
+      dateCreated: BrightDateTimestamp;
       lengthBeforeEncryption: number;
       canRead: boolean;
       canPersist: boolean;
@@ -287,8 +289,7 @@ describe('EphemeralBlock', () => {
     });
 
     it('should reject future dates', async () => {
-      const futureDate = new Date();
-      futureDate.setDate(futureDate.getDate() + 1);
+      const futureDate = brightDateNow() + 1; // 1 day in the future (BrightDate units)
 
       let error: Error | undefined;
       try {

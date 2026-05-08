@@ -8,6 +8,8 @@ import { ChecksumService } from '../services/checksum.service';
 import { ServiceProvider } from '../services/service.provider';
 import { Checksum } from '../types/checksum';
 import { RawDataBlock } from './rawData';
+import { brightDateNow } from '../utils/brightDateConversions';
+import type { BrightDateTimestamp } from '../types/brightDateTimestamp';
 
 describe('RawDataBlock', () => {
   let checksumService: ChecksumService;
@@ -26,7 +28,7 @@ describe('RawDataBlock', () => {
       blockSize: BlockSize;
       data: Uint8Array;
       checksum: Checksum;
-      dateCreated: Date;
+      dateCreated: BrightDateTimestamp;
       blockType: BlockType;
       blockDataType: BlockDataType;
       canRead: boolean;

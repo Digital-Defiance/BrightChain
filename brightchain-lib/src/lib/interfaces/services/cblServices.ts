@@ -14,6 +14,7 @@ import {
   TypedIdProviderWrapper,
 } from '@digitaldefiance/ecies-lib';
 import { BlockSize } from '../../enumerations/blockSize';
+import type { BrightDateTimestamp } from '../../types/brightDateTimestamp';
 import { Checksum } from '../../types/checksum';
 
 /**
@@ -49,9 +50,9 @@ export interface ICBLServiceCore<TID extends PlatformID = Uint8Array> {
   /**
    * Get the date created from the header
    * @param header - The CBL header data
-   * @returns The date created
+   * @returns The date created as BrightDateValue
    */
-  getDateCreated(header: Uint8Array): Date;
+  getDateCreated(header: Uint8Array): BrightDateTimestamp;
 
   /**
    * Get the creator ID from the header

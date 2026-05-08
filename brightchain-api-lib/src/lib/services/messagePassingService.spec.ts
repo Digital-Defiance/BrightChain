@@ -317,7 +317,7 @@ describe('MessagePassingService', () => {
       expect(mockMetadataStore.recordAcknowledgment).toHaveBeenCalledWith(
         'msg-1',
         'recipient1',
-        expect.any(Date),
+        expect.any(Number),
       );
       expect(mockMetadataStore.updateDeliveryStatus).toHaveBeenCalledWith(
         'msg-1',

@@ -22,6 +22,7 @@ import {
   IFetchQueue,
   IGossipService,
   PoolId,
+  brightDateNow,
 } from '@brightchain/brightchain-lib';
 import fc from 'fast-check';
 import { BlockFetcher } from './blockFetcher';
@@ -341,7 +342,7 @@ describe('Feature: cross-node-eventual-consistency, Property 1: Checksum verific
           const setup = createTestSetup();
           setup.transport.responses.set(blockId, tamperedData);
           setup.availability.locations.set(blockId, [
-            { nodeId, lastSeen: new Date(), isAuthoritative: true },
+            { nodeId, lastSeen: brightDateNow(), isAuthoritative: true },
           ]);
 
           // Act
@@ -409,7 +410,7 @@ describe('Feature: cross-node-eventual-consistency, Property 2: Failover exhaust
           blockId,
           nodeIds.map((nodeId) => ({
             nodeId,
-            lastSeen: new Date(),
+            lastSeen: brightDateNow(),
             isAuthoritative: true,
           })),
         );
@@ -486,7 +487,7 @@ describe('Feature: cross-node-eventual-consistency, Property 3: Successful fetch
           const setup = createTestSetup();
           setup.transport.responses.set(blockId, blockData);
           setup.availability.locations.set(blockId, [
-            { nodeId, lastSeen: new Date(), isAuthoritative: true },
+            { nodeId, lastSeen: brightDateNow(), isAuthoritative: true },
           ]);
 
           // Act
@@ -563,7 +564,7 @@ describe('Feature: cross-node-eventual-consistency, Property 3: Successful fetch
             blockId,
             nodeIds.map((nid) => ({
               nodeId: nid,
-              lastSeen: new Date(),
+              lastSeen: brightDateNow(),
               isAuthoritative: true,
             })),
           );
@@ -648,7 +649,7 @@ describe('Feature: cross-node-eventual-consistency, Property 13: Retry count res
 
           // Register a single node as the only location
           availability.locations.set(blockId, [
-            { nodeId, lastSeen: new Date(), isAuthoritative: true },
+            { nodeId, lastSeen: brightDateNow(), isAuthoritative: true },
           ]);
 
           const config: BlockFetcherConfig = {
@@ -768,12 +769,12 @@ describe('Feature: cross-node-eventual-consistency, Property 14: Node cooldown e
           availability.locations.set(blockId, [
             {
               nodeId: cooledDownNode,
-              lastSeen: new Date(),
+              lastSeen: brightDateNow(),
               isAuthoritative: true,
             },
             {
               nodeId: availableNode,
-              lastSeen: new Date(),
+              lastSeen: brightDateNow(),
               isAuthoritative: true,
             },
           ]);
@@ -843,7 +844,7 @@ describe('Feature: cross-node-eventual-consistency, Property 14: Node cooldown e
           blockId,
           nodeIds.map((nodeId) => ({
             nodeId,
-            lastSeen: new Date(),
+            lastSeen: brightDateNow(),
             isAuthoritative: true,
           })),
         );

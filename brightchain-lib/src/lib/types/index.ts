@@ -45,3 +45,15 @@ export * from './checksum';
  * @see {@link EnumLanguageTranslation}
  */
 export * from './enumTranslation';
+
+/**
+ * BrightDate timestamp type and ITimestamped generic interface.
+ *
+ * Exports:
+ * - BrightDateTimestamp: Canonical timestamp type (decimal days since J2000.0)
+ * - ITimestamped: Generic timestamped interface
+ *
+ * @see {@link BrightDateTimestamp}
+ * @see {@link ITimestamped}
+ */
+export * from './brightDateTimestamp';

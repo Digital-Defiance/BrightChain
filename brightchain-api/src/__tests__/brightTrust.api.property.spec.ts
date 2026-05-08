@@ -16,6 +16,7 @@
 import {
   BrightTrustMemberMetadata,
   BrightTrustService,
+  brightDateToDate,
   initializeBrightChain,
   ServiceLocator,
   ServiceProvider,
@@ -147,7 +148,8 @@ describe('BrightTrust API Round-Trip Property Tests', () => {
             expect(sealResult.documentId).toBeDefined();
             expect(sealResult.memberIds).toEqual(memberIds);
             expect(sealResult.sharesRequired).toBe(2);
-            expect(sealResult.createdAt).toBeInstanceOf(Date);
+            expect(sealResult.createdAt).toBeDefined();
+            expect(brightDateToDate(sealResult.createdAt)).toBeInstanceOf(Date);
 
             // Unseal with 2 members (simulates POST /api/brightTrust/documents/:id/unseal)
             const unsealedDocument = await testService.unsealDocument<
@@ -224,7 +226,8 @@ describe('BrightTrust API Round-Trip Property Tests', () => {
             expect(docInfo!.id).toBe(sealResult.documentId);
             expect(docInfo!.memberIds).toEqual(memberIds);
             expect(docInfo!.sharesRequired).toBe(2);
-            expect(docInfo!.createdAt).toBeInstanceOf(Date);
+            expect(docInfo!.createdAt).toBeDefined();
+            expect(brightDateToDate(docInfo!.createdAt)).toBeInstanceOf(Date);
           },
         ),
         { numRuns: 10 },

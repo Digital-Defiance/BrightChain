@@ -965,6 +965,8 @@ Several areas are identified for future development:
 
 ## 26. Conclusion
 
+> *Where the state sees noise, the people find truth.*
+
 BrightTor demonstrates that an anonymity network can be deeply integrated into a decentralized storage system rather than operating as standalone infrastructure. By encapsulating onion-routed traffic as standard BrightChain blocks and leveraging OFFS tuple whitening for relay-level plausible deniability, BrightTor achieves a property not present in existing anonymity networks: circuit traffic is structurally indistinguishable from regular network activity at the storage, transport, and observation layers.
 
 The dual-mode transport architecture resolves the fundamental tension between indistinguishability and usability. Steganographic mode provides maximum indistinguishability for censorship-resistant communication, while direct relay mode delivers Tor-comparable latency for interactive applications. The originator selects the appropriate mode per-circuit, and circuits can switch modes during their lifetime.
@@ -980,3 +982,5 @@ BrightTor integrates with BrightChain's existing infrastructure through purely a
 ---
 
 *This document is a living specification. Protocol parameters, security mitigations, and architectural decisions may evolve as implementation experience and security analysis provide new insights.*
+
+*Mathematics does not accept a search warrant.*

@@ -6,6 +6,8 @@ import { MessagePriority } from '../../enumerations/messaging/messagePriority';
 import { ReplicationStatus } from '../../enumerations/replicationStatus';
 import type { BlockId } from '../../interfaces/branded/primitives/blockId';
 import { IMessageMetadata } from '../../interfaces/messaging/messageMetadata';
+import { brightDateNow, brightDateToDate } from '../../utils/brightDateConversions';
+import type { BrightDateTimestamp } from '../../types/brightDateTimestamp';
 
 /** Cast a test string to BlockId without validation — for test data only. */
 const bid = (s: string) => s as unknown as BlockId;
@@ -67,13 +69,13 @@ describe('Feature: message-passing-and-events, Property: Full Delivery Detection
           acknowledgments: new Map(),
           encryptionScheme: MessageEncryptionScheme.NONE,
           isCBL: false,
-          createdAt: new Date(),
+          createdAt: brightDateNow(),
           expiresAt: null,
           size: 100,
           durabilityLevel: DurabilityLevel.Ephemeral,
           parityBlockIds: [],
           accessCount: 0,
-          lastAccessedAt: new Date(),
+          lastAccessedAt: brightDateNow(),
           replicationStatus: ReplicationStatus.Pending,
           targetReplicationFactor: 1,
           replicaNodeIds: [],
@@ -99,12 +101,12 @@ describe('Feature: message-passing-and-events, Property: Full Delivery Detection
         fc.array(fc.string({ minLength: 1 }), { minLength: 1, maxLength: 10 }),
         (messageId, senderId, recipients) => {
           const uniqueRecipients = Array.from(new Set(recipients));
-          const acknowledgments = new Map<string, Date>();
+          const acknowledgments = new Map<string, number>();
           const deliveryStatus = new Map<string, DeliveryStatus>();
 
           // All recipients acknowledge
           for (const recipient of uniqueRecipients) {
-            acknowledgments.set(recipient, new Date());
+            acknowledgments.set(recipient, brightDateNow());
             deliveryStatus.set(recipient, DeliveryStatus.Delivered);
           }
 
@@ -118,13 +120,13 @@ describe('Feature: message-passing-and-events, Property: Full Delivery Detection
             acknowledgments,
             encryptionScheme: MessageEncryptionScheme.NONE,
             isCBL: false,
-            createdAt: new Date(),
+            createdAt: brightDateNow(),
             expiresAt: null,
             size: 100,
             durabilityLevel: DurabilityLevel.Ephemeral,
             parityBlockIds: [],
             accessCount: 0,
-            lastAccessedAt: new Date(),
+            lastAccessedAt: brightDateNow(),
             replicationStatus: ReplicationStatus.Pending,
             targetReplicationFactor: 1,
             replicaNodeIds: [],
@@ -154,13 +156,13 @@ describe('Feature: message-passing-and-events, Property: Full Delivery Detection
           const uniqueRecipients = Array.from(new Set(recipients));
           if (uniqueRecipients.length < 2) return;
 
-          const acknowledgments = new Map<string, Date>();
+          const acknowledgments = new Map<string, number>();
           const deliveryStatus = new Map<string, DeliveryStatus>();
 
           // Only some recipients acknowledge
           const numToAck = Math.min(ackCount, uniqueRecipients.length - 1);
           for (let i = 0; i < numToAck; i++) {
-            acknowledgments.set(uniqueRecipients[i], new Date());
+            acknowledgments.set(uniqueRecipients[i], brightDateNow());
             deliveryStatus.set(uniqueRecipients[i], DeliveryStatus.Delivered);
           }
 
@@ -174,13 +176,13 @@ describe('Feature: message-passing-and-events, Property: Full Delivery Detection
             acknowledgments,
             encryptionScheme: MessageEncryptionScheme.NONE,
             isCBL: false,
-            createdAt: new Date(),
+            createdAt: brightDateNow(),
             expiresAt: null,
             size: 100,
             durabilityLevel: DurabilityLevel.Ephemeral,
             parityBlockIds: [],
             accessCount: 0,
-            lastAccessedAt: new Date(),
+            lastAccessedAt: brightDateNow(),
             replicationStatus: ReplicationStatus.Pending,
             targetReplicationFactor: 1,
             replicaNodeIds: [],
@@ -206,12 +208,12 @@ describe('Feature: message-passing-and-events, Property: Full Delivery Detection
         fc.array(fc.string({ minLength: 1 }), { minLength: 1, maxLength: 5 }),
         (messageId, senderId, recipients) => {
           const uniqueRecipients = Array.from(new Set(recipients));
-          const acknowledgments = new Map<string, Date>();
+          const acknowledgments = new Map<string, number>();
           const deliveryStatus = new Map<string, DeliveryStatus>();
 
           // All acknowledge but not all delivered
           for (let i = 0; i < uniqueRecipients.length; i++) {
-            acknowledgments.set(uniqueRecipients[i], new Date());
+            acknowledgments.set(uniqueRecipients[i], brightDateNow());
             deliveryStatus.set(
               uniqueRecipients[i],
               i === 0 ? DeliveryStatus.Announced : DeliveryStatus.Delivered,
@@ -228,13 +230,13 @@ describe('Feature: message-passing-and-events, Property: Full Delivery Detection
             acknowledgments,
             encryptionScheme: MessageEncryptionScheme.NONE,
             isCBL: false,
-            createdAt: new Date(),
+            createdAt: brightDateNow(),
             expiresAt: null,
             size: 100,
             durabilityLevel: DurabilityLevel.Ephemeral,
             parityBlockIds: [],
             accessCount: 0,
-            lastAccessedAt: new Date(),
+            lastAccessedAt: brightDateNow(),
             replicationStatus: ReplicationStatus.Pending,
             targetReplicationFactor: 1,
             replicaNodeIds: [],
@@ -260,10 +262,10 @@ describe('Feature: message-passing-and-events, Property: Full Delivery Detection
         fc.string(),
         fc.string({ minLength: 1 }),
         (messageId, senderId, recipient) => {
-          const acknowledgments = new Map<string, Date>();
+          const acknowledgments = new Map<string, number>();
           const deliveryStatus = new Map<string, DeliveryStatus>();
 
-          acknowledgments.set(recipient, new Date());
+          acknowledgments.set(recipient, brightDateNow());
           deliveryStatus.set(recipient, DeliveryStatus.Delivered);
 
           const metadata: IMessageMetadata = {
@@ -276,13 +278,13 @@ describe('Feature: message-passing-and-events, Property: Full Delivery Detection
             acknowledgments,
             encryptionScheme: MessageEncryptionScheme.NONE,
             isCBL: false,
-            createdAt: new Date(),
+            createdAt: brightDateNow(),
             expiresAt: null,
             size: 100,
             durabilityLevel: DurabilityLevel.Ephemeral,
             parityBlockIds: [],
             accessCount: 0,
-            lastAccessedAt: new Date(),
+            lastAccessedAt: brightDateNow(),
             replicationStatus: ReplicationStatus.Pending,
             targetReplicationFactor: 1,
             replicaNodeIds: [],

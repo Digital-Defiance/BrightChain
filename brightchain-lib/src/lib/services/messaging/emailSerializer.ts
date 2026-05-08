@@ -30,6 +30,8 @@ import {
   type IMimePart,
   ContentTransferEncoding,
 } from '../../interfaces/messaging/mimePart';
+import type { BrightDateTimestamp } from '../../types/brightDateTimestamp';
+import { brightDateToDate } from '../../utils/brightDateConversions';
 
 /** CRLF line ending per RFC 5322 */
 const CRLF = '\r\n';
@@ -290,7 +292,8 @@ export class EmailSerializer {
    * // => 'Thu, 13 Feb 2025 15:30:00 +0000'
    * ```
    */
-  serializeDate(date: Date): string {
+  serializeDate(brightDate: BrightDateTimestamp): string {
+    const date = brightDateToDate(brightDate);
     if (!date || isNaN(date.getTime())) {
       return new Date().toUTCString().replace('GMT', '+0000');
     }

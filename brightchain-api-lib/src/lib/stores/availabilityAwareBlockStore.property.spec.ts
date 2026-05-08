@@ -48,6 +48,7 @@ import {
   ILocationRecord,
   initializeBrightChain,
   IReconciliationService,
+  brightDateNow,
   MessageDeliveryMetadata,
   PendingBlockError,
   PendingSyncItem,
@@ -152,7 +153,7 @@ class MockBlockRegistry implements IBlockRegistry {
     return {
       nodeId: 'test-node',
       blockIds: this.getLocalBlockIds(),
-      generatedAt: new Date(),
+      generatedAt: 9000,
       checksum: 'test-checksum',
     };
   }
@@ -168,7 +169,7 @@ class MockBlockRegistry implements IBlockRegistry {
     return {
       nodeId: 'test-node',
       pools: new Map(),
-      generatedAt: new Date(),
+      generatedAt: 9000,
       checksum: 'test-checksum',
     };
   }
@@ -212,7 +213,7 @@ class MockBlockStore implements IBlockStore {
     if (!data) {
       throw new StoreError(StoreErrorType.KeyNotFound);
     }
-    return new RawDataBlock(BlockSize.Small, data, new Date(), key);
+    return new RawDataBlock(BlockSize.Small, data, brightDateNow(), key);
   }
 
   async setData(
@@ -746,7 +747,7 @@ function createMockBlock(blockId: string, data: Uint8Array): RawDataBlock {
   // A 64-byte checksum needs a 128-character hex string
   const checksumArray = hexToUint8Array(blockId.padEnd(128, '0'));
   const checksum = Checksum.fromUint8Array(checksumArray);
-  return new RawDataBlock(BlockSize.Small, data, new Date(), checksum);
+  return new RawDataBlock(BlockSize.Small, data, brightDateNow(), checksum);
 }
 
 describe('AvailabilityAwareBlockStore Property Tests', () => {
@@ -904,7 +905,7 @@ describe('AvailabilityAwareBlockStore Property Tests', () => {
             registry.addLocal(fullBlockId);
             await availabilityService.updateLocation(fullBlockId, {
               nodeId: localNodeId,
-              lastSeen: new Date(),
+              lastSeen: brightDateNow(),
               isAuthoritative: true,
             });
 
@@ -1103,7 +1104,7 @@ describe('AvailabilityAwareBlockStore Property Tests', () => {
             (item) => item.blockId === fullBlockId && item.type === 'store',
           );
           expect(storeItem).toBeDefined();
-          expect(storeItem?.timestamp).toBeInstanceOf(Date);
+          expect(typeof storeItem?.timestamp).toBe('number');
 
           return true;
         }),
@@ -1142,7 +1143,7 @@ describe('AvailabilityAwareBlockStore Property Tests', () => {
             (item) => item.blockId === fullBlockId && item.type === 'delete',
           );
           expect(deleteItem).toBeDefined();
-          expect(deleteItem?.timestamp).toBeInstanceOf(Date);
+          expect(typeof deleteItem?.timestamp).toBe('number');
 
           return true;
         }),
@@ -1595,7 +1596,7 @@ describe('AvailabilityAwareBlockStore Property Tests', () => {
           // Add a location record so PendingBlockError has locations
           await availabilityService.updateLocation(fullBlockId, {
             nodeId: 'remote-node-1',
-            lastSeen: new Date(),
+            lastSeen: brightDateNow(),
             isAuthoritative: false,
           });
 
@@ -1637,7 +1638,7 @@ describe('AvailabilityAwareBlockStore Property Tests', () => {
           );
           await availabilityService.updateLocation(fullBlockId, {
             nodeId: 'remote-node-1',
-            lastSeen: new Date(),
+            lastSeen: brightDateNow(),
             isAuthoritative: false,
           });
 
@@ -1682,7 +1683,7 @@ describe('AvailabilityAwareBlockStore Property Tests', () => {
           );
           await availabilityService.updateLocation(fullBlockId, {
             nodeId: 'remote-node-1',
-            lastSeen: new Date(),
+            lastSeen: brightDateNow(),
             isAuthoritative: false,
           });
 
@@ -1840,7 +1841,7 @@ describe('AvailabilityAwareBlockStore Property Tests', () => {
           );
           await availabilityService.updateLocation(fullBlockId, {
             nodeId: 'remote-node-1',
-            lastSeen: new Date(),
+            lastSeen: brightDateNow(),
             isAuthoritative: false,
           });
 
@@ -1879,7 +1880,7 @@ describe('AvailabilityAwareBlockStore Property Tests', () => {
           );
           await availabilityService.updateLocation(fullBlockId, {
             nodeId: 'remote-node-1',
-            lastSeen: new Date(),
+            lastSeen: brightDateNow(),
             isAuthoritative: false,
           });
 
@@ -1927,7 +1928,7 @@ describe('AvailabilityAwareBlockStore Property Tests', () => {
           );
           await availabilityService.updateLocation(fullBlockId, {
             nodeId: 'remote-node-1',
-            lastSeen: new Date(),
+            lastSeen: brightDateNow(),
             isAuthoritative: false,
           });
 
@@ -2057,7 +2058,7 @@ describe('AvailabilityAwareBlockStore Property Tests', () => {
             );
             await availabilityService.updateLocation(fullBlockId, {
               nodeId: 'remote-node-1',
-              lastSeen: new Date(),
+              lastSeen: brightDateNow(),
               isAuthoritative: false,
             });
             availabilityService.setPartitionMode(true);
@@ -2104,7 +2105,7 @@ describe('AvailabilityAwareBlockStore Property Tests', () => {
             );
             await availabilityService.updateLocation(fullBlockId, {
               nodeId: 'remote-node-1',
-              lastSeen: new Date(),
+              lastSeen: brightDateNow(),
               isAuthoritative: false,
             });
 

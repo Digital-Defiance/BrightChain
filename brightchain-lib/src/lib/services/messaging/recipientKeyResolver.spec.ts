@@ -3,6 +3,7 @@ import { MessageEncryptionScheme } from '../../enumerations/messaging/messageEnc
 import { EmailError } from '../../errors/messaging/emailError';
 import { IKeyStore, IKeyStoreEntry } from '../../interfaces/messaging/keyStore';
 import { RecipientKeyResolver } from './recipientKeyResolver';
+import { brightDateNow } from '../../utils/brightDateConversions';
 
 /**
  * Unit tests for RecipientKeyResolver.
@@ -20,8 +21,8 @@ function makeEntry(
     id: 'entry-1',
     userId: 'user-1',
     metadata: {} as IKeyStoreEntry['metadata'],
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    createdAt: brightDateNow(),
+    updatedAt: brightDateNow(),
     ...overrides,
   };
 }

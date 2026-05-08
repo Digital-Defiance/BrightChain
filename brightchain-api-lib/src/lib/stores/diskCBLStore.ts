@@ -10,6 +10,7 @@ import {
   Checksum,
   ChecksumService,
   ConstituentBlockListBlock,
+  dateToBrightDate,
   EncryptedBlock,
   EncryptedBlockMetadata,
   getGlobalServiceProvider,
@@ -165,7 +166,7 @@ export class DiskCBLStore<TID extends PlatformID = Uint8Array>
       }
 
       const fileStat = statSync(blockPath);
-      const dateCreated = fileStat.mtime;
+      const dateCreated = dateToBrightDate(fileStat.mtime);
 
       // Check if it's multi-encrypted
       if (

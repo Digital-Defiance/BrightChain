@@ -12,6 +12,8 @@
 
 import {
   BlockSize,
+  brightDateNow,
+  dateToBrightDate,
   DurabilityLevel,
   IBlockMetadata,
   ReplicationStatus,
@@ -57,7 +59,7 @@ const arbReplicationStatus = fc.constantFrom(
 );
 
 /**
- * Generate a valid date within a reasonable range
+ * Generate a valid BrightDateTimestamp within a reasonable range
  * Uses integer timestamps to avoid any edge cases with Date generation
  */
 const arbDate = fc
@@ -65,10 +67,10 @@ const arbDate = fc
     min: new Date('2020-01-01').getTime(),
     max: new Date('2030-12-31').getTime(),
   })
-  .map((timestamp) => new Date(timestamp));
+  .map((timestamp) => dateToBrightDate(new Date(timestamp)));
 
 /**
- * Generate an optional date (either a valid date or null)
+ * Generate an optional BrightDateTimestamp (either a valid timestamp or null)
  */
 const arbOptionalDate = fc.oneof(arbDate, fc.constant(null));
 
@@ -125,24 +127,27 @@ describe('DiskBlockMetadataStore Serialization Property Tests', () => {
             // Verify all fields are preserved
             expect(retrieved).not.toBeNull();
             expect(retrieved!.blockId).toBe(metadata.blockId);
-            expect(retrieved!.createdAt.getTime()).toBe(
-              metadata.createdAt.getTime(),
+            expect(retrieved!.createdAt).toBeCloseTo(
+              metadata.createdAt,
+              3,
             );
 
             if (metadata.expiresAt === null) {
               expect(retrieved!.expiresAt).toBeNull();
             } else {
               expect(retrieved!.expiresAt).not.toBeNull();
-              expect(retrieved!.expiresAt!.getTime()).toBe(
-                metadata.expiresAt.getTime(),
+              expect(retrieved!.expiresAt!).toBeCloseTo(
+                metadata.expiresAt,
+                3,
               );
             }
 
             expect(retrieved!.durabilityLevel).toBe(metadata.durabilityLevel);
             expect(retrieved!.parityBlockIds).toEqual(metadata.parityBlockIds);
             expect(retrieved!.accessCount).toBe(metadata.accessCount);
-            expect(retrieved!.lastAccessedAt.getTime()).toBe(
-              metadata.lastAccessedAt.getTime(),
+            expect(retrieved!.lastAccessedAt).toBeCloseTo(
+              metadata.lastAccessedAt,
+              3,
             );
             expect(retrieved!.replicationStatus).toBe(
               metadata.replicationStatus,
@@ -208,19 +213,21 @@ describe('DiskBlockMetadataStore Serialization Property Tests', () => {
               const retrieved = await iterStore.get(blockId);
 
               expect(retrieved).not.toBeNull();
-              expect(retrieved!.createdAt).toBeInstanceOf(Date);
-              expect(retrieved!.lastAccessedAt).toBeInstanceOf(Date);
-              expect(retrieved!.createdAt.getTime()).toBe(createdAt.getTime());
-              expect(retrieved!.lastAccessedAt.getTime()).toBe(
-                lastAccessedAt.getTime(),
+              expect(typeof retrieved!.createdAt).toBe('number');
+              expect(typeof retrieved!.lastAccessedAt).toBe('number');
+              expect(retrieved!.createdAt).toBeCloseTo(createdAt, 3);
+              expect(retrieved!.lastAccessedAt).toBeCloseTo(
+                lastAccessedAt,
+                3,
               );
 
               if (expiresAt === null) {
                 expect(retrieved!.expiresAt).toBeNull();
               } else {
-                expect(retrieved!.expiresAt).toBeInstanceOf(Date);
-                expect(retrieved!.expiresAt!.getTime()).toBe(
-                  expiresAt.getTime(),
+                expect(typeof retrieved!.expiresAt).toBe('number');
+                expect(retrieved!.expiresAt!).toBeCloseTo(
+                  expiresAt,
+                  3,
                 );
               }
             } finally {
@@ -257,7 +264,7 @@ describe('DiskBlockMetadataStore Serialization Property Tests', () => {
             );
 
             try {
-              const now = new Date();
+              const now = brightDateNow();
               const metadata: IBlockMetadata = {
                 blockId,
                 createdAt: now,
@@ -319,7 +326,7 @@ describe('DiskBlockMetadataStore Serialization Property Tests', () => {
             );
 
             try {
-              const now = new Date();
+              const now = brightDateNow();
               const metadata: IBlockMetadata = {
                 blockId,
                 createdAt: now,

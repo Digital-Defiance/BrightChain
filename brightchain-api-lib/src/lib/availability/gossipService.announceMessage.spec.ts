@@ -131,22 +131,18 @@ describe('GossipService.announceMessage()', () => {
       expect(pending[1].blockId).toBe('block-b');
     });
 
-    it('should set timestamp to a Date', async () => {
+    it('should set timestamp to a BrightDateTimestamp (number)', async () => {
       const peerProvider = new MockPeerProvider('local-node', manyPeers);
       const service = new GossipService(peerProvider, defaultConfig);
 
-      const before = new Date();
+      const before = Date.now();
       await service.announceMessage(['block-1'], normalMetadata);
-      const after = new Date();
+      const after = Date.now();
 
       const pending = service.getPendingAnnouncements();
-      expect(pending[0].timestamp).toBeInstanceOf(Date);
-      expect(pending[0].timestamp.getTime()).toBeGreaterThanOrEqual(
-        before.getTime(),
-      );
-      expect(pending[0].timestamp.getTime()).toBeLessThanOrEqual(
-        after.getTime(),
-      );
+      expect(typeof pending[0].timestamp).toBe('number');
+      // BrightDateTimestamp is a finite number (decimal days since J2000.0)
+      expect(isFinite(pending[0].timestamp)).toBe(true);
     });
 
     it('should attach the messageDelivery metadata to each announcement', async () => {

@@ -11,6 +11,7 @@ import type { ICBLIndexEntry } from '../storage/cblIndex';
 import { CBLVisibility } from '../storage/cblIndex';
 import type { BlockAnnouncement } from './gossipService';
 import { validateBlockAnnouncement } from './gossipService';
+import { brightDateNow } from '../../utils/brightDateConversions';
 
 /** Cast a test string to BlockId without validation — for test data only. */
 const bid = (s: string) => s as unknown as BlockId;
@@ -25,7 +26,7 @@ function makeCBLIndexEntry(
     blockId1: bid('abc123'),
     blockId2: bid('def456'),
     blockSize: 256,
-    createdAt: new Date(),
+    createdAt: brightDateNow(),
     visibility: CBLVisibility.Private,
     sequenceNumber: 1,
     ...overrides,
@@ -40,7 +41,7 @@ function makeBaseAnnouncement(
     type: 'cbl_index_update',
     blockId: bid(''),
     nodeId: 'node-001',
-    timestamp: new Date(),
+    timestamp: brightDateNow(),  // BlockAnnouncement.timestamp migrated in task 9.4
     ttl: 3,
     poolId: 'test-pool',
     cblIndexEntry: makeCBLIndexEntry(),
@@ -135,7 +136,7 @@ describe('validateBlockAnnouncement – cbl_index_delete type (Req 8.6)', () => 
   it('should accept a valid cbl_index_delete announcement', () => {
     const announcement = makeBaseAnnouncement({
       type: 'cbl_index_delete',
-      cblIndexEntry: makeCBLIndexEntry({ deletedAt: new Date() }),
+      cblIndexEntry: makeCBLIndexEntry({ deletedAt: brightDateNow() }),
     });
     expect(validateBlockAnnouncement(announcement)).toBe(true);
   });

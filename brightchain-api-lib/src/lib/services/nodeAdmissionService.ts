@@ -20,6 +20,7 @@ import type {
   PoolJoinApprovalMetadata,
   PoolJoinDenialMetadata,
 } from '@brightchain/brightchain-lib';
+import { brightDateNow } from '@brightchain/brightchain-lib';
 import type { BrightDb } from '@brightchain/db';
 import { sha256 } from '@noble/hashes/sha256';
 import { addNodeToAcl, savePoolSecurity } from './poolSecurityService';
@@ -102,7 +103,7 @@ export class NodeAdmissionService {
       type: 'pool_join_request',
       blockId: '' as BlockId,
       nodeId: this.localNodeId,
-      timestamp: new Date(),
+      timestamp: brightDateNow(),
       ttl: 7, // High TTL — needs to reach admin nodes
       poolJoinRequest: {
         poolId: this.poolName,
@@ -235,7 +236,7 @@ export class NodeAdmissionService {
         type: 'pool_join_approved',
         blockId: '' as BlockId,
         nodeId: this.localNodeId,
-        timestamp: new Date(),
+        timestamp: brightDateNow(),
         ttl: 7,
         poolJoinApproval: approvalMetadata,
       };
@@ -275,7 +276,7 @@ export class NodeAdmissionService {
       type: 'pool_join_denied',
       blockId: '' as BlockId,
       nodeId: this.localNodeId,
-      timestamp: new Date(),
+      timestamp: brightDateNow(),
       ttl: 7,
       poolJoinDenial: denialMetadata,
     };

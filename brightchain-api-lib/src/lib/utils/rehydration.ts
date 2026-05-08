@@ -4,12 +4,13 @@
  *
  * Each stored document has all IDs as hex strings and all dates as ISO-8601
  * strings. Rehydration converts these back to TID (via IIdProvider.idFromString)
- * and Date objects respectively.
+ * and BrightDateTimestamp (number) values respectively.
  *
  * The inverse operation (typed → stored) is handled by
  * BrightChainMemberInitService.serializeForStorage().
  */
 
+import { fromISO } from '@brightchain/brightdate';
 import type { IIdProvider, PlatformID } from '@digitaldefiance/ecies-lib';
 import {
   AccountStatus,
@@ -33,7 +34,7 @@ import type {
 export function rehydrateRole<TID extends PlatformID>(
   stored: IStoredRole,
   idProvider: IIdProvider<TID>,
-): IRoleBase<TID, Date, string> {
+): IRoleBase<TID, number, string> {
   return {
     _id: idProvider.idFromString(stored._id),
     name: stored.name,
@@ -43,10 +44,10 @@ export function rehydrateRole<TID extends PlatformID>(
     system: stored.system,
     createdBy: idProvider.idFromString(stored.createdBy),
     updatedBy: idProvider.idFromString(stored.updatedBy),
-    createdAt: new Date(stored.createdAt),
-    updatedAt: new Date(stored.updatedAt),
+    createdAt: fromISO(stored.createdAt),
+    updatedAt: fromISO(stored.updatedAt),
     ...(stored.deletedAt !== undefined && {
-      deletedAt: new Date(stored.deletedAt),
+      deletedAt: fromISO(stored.deletedAt),
     }),
     ...(stored.deletedBy !== undefined && {
       deletedBy: idProvider.idFromString(stored.deletedBy),
@@ -62,7 +63,7 @@ export function rehydrateRole<TID extends PlatformID>(
 export function rehydrateUser<TID extends PlatformID>(
   stored: IStoredUser,
   idProvider: IIdProvider<TID>,
-): IUserBase<TID, Date, string, AccountStatus> {
+): IUserBase<TID, number, string, AccountStatus> {
   return {
     _id: idProvider.idFromString(stored._id),
     username: stored.username,
@@ -82,14 +83,14 @@ export function rehydrateUser<TID extends PlatformID>(
     currency: stored.currency,
     darkMode: stored.darkMode,
     ...(stored.lastLogin !== undefined && {
-      lastLogin: new Date(stored.lastLogin),
+      lastLogin: fromISO(stored.lastLogin),
     }),
     createdBy: idProvider.idFromString(stored.createdBy),
     updatedBy: idProvider.idFromString(stored.updatedBy),
-    createdAt: new Date(stored.createdAt),
-    updatedAt: new Date(stored.updatedAt),
+    createdAt: fromISO(stored.createdAt),
+    updatedAt: fromISO(stored.updatedAt),
     ...(stored.deletedAt !== undefined && {
-      deletedAt: new Date(stored.deletedAt),
+      deletedAt: fromISO(stored.deletedAt),
     }),
     ...(stored.deletedBy !== undefined && {
       deletedBy: idProvider.idFromString(stored.deletedBy),
@@ -105,17 +106,17 @@ export function rehydrateUser<TID extends PlatformID>(
 export function rehydrateUserRole<TID extends PlatformID>(
   stored: IStoredUserRole,
   idProvider: IIdProvider<TID>,
-): IUserRoleBase<TID, Date> {
+): IUserRoleBase<TID, number> {
   return {
     _id: idProvider.idFromString(stored._id),
     userId: idProvider.idFromString(stored.userId),
     roleId: idProvider.idFromString(stored.roleId),
     createdBy: idProvider.idFromString(stored.createdBy),
     updatedBy: idProvider.idFromString(stored.updatedBy),
-    createdAt: new Date(stored.createdAt),
-    updatedAt: new Date(stored.updatedAt),
+    createdAt: fromISO(stored.createdAt),
+    updatedAt: fromISO(stored.updatedAt),
     ...(stored.deletedAt !== undefined && {
-      deletedAt: new Date(stored.deletedAt),
+      deletedAt: fromISO(stored.deletedAt),
     }),
     ...(stored.deletedBy !== undefined && {
       deletedBy: idProvider.idFromString(stored.deletedBy),

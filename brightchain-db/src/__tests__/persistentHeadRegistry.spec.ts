@@ -6,6 +6,7 @@
  * file-level locking, and graceful handling of corrupt/missing files.
  */
 
+import { brightDateNow, dateToBrightDate } from '@brightchain/brightchain-lib';
 import { promises as fs } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
@@ -303,7 +304,7 @@ describe('PersistentHeadRegistry', () => {
         join(headsDir, 'db2', 'col2.json'),
         JSON.stringify({
           blockId: 'block-b',
-          timestamp: new Date().toISOString(),
+          timestamp: brightDateNow(),
         }),
         'utf-8',
       );

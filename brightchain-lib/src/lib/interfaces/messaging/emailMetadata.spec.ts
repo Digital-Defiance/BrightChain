@@ -15,6 +15,7 @@ import {
   IMimePart,
   IResentHeaderBlock,
 } from './emailMetadata';
+import { normalizeToBrightDate, brightDateNow, brightDateToISO } from '../../utils/brightDateConversions';
 
 /**
  * Helper to create a minimal valid IMailbox.
@@ -72,12 +73,12 @@ function createMinimalEmailMetadata(
   return {
     // IBlockMetadata fields
     blockId: bid('test-block-id'),
-    createdAt: new Date('2024-01-01T00:00:00Z'),
+    createdAt: normalizeToBrightDate(new Date('2024-01-01T00:00:00Z')),
     expiresAt: null,
     durabilityLevel: DurabilityLevel.Standard,
     parityBlockIds: [],
     accessCount: 0,
-    lastAccessedAt: new Date('2024-01-01T00:00:00Z'),
+    lastAccessedAt: normalizeToBrightDate(new Date('2024-01-01T00:00:00Z')),
     replicationStatus: ReplicationStatus.Pending,
     targetReplicationFactor: 1,
     replicaNodeIds: [],
@@ -98,7 +99,7 @@ function createMinimalEmailMetadata(
     from,
     to,
     messageId: '<unique-id-123@example.com>',
-    date: new Date('2024-01-01T12:00:00Z'),
+    date: normalizeToBrightDate(new Date('2024-01-01T12:00:00Z')),
     mimeVersion: '1.0',
     contentType,
     customHeaders: new Map(),
@@ -246,8 +247,8 @@ describe('IEmailMetadata Interface', () => {
   describe('RFC 5322 Date Field (Section 3.6.1)', () => {
     it('should include required Date field', () => {
       const email = createMinimalEmailMetadata();
-      expect(email.date).toBeInstanceOf(Date);
-      expect(email.date.toISOString()).toBe('2024-01-01T12:00:00.000Z');
+      expect(typeof email.date).toBe('number');
+      expect(brightDateToISO(email.date)).toBe('2024-01-01T12:00:00.000Z');
     });
   });
 
@@ -347,9 +348,9 @@ describe('IEmailMetadata Interface', () => {
         recipientId: 'recipient-1',
         recipientNode: 'node-1',
         status: DeliveryStatus.Delivered,
-        queuedAt: new Date('2024-01-01T12:00:00Z'),
-        sentAt: new Date('2024-01-01T12:00:01Z'),
-        deliveredAt: new Date('2024-01-01T12:00:05Z'),
+        queuedAt: normalizeToBrightDate(new Date('2024-01-01T12:00:00Z')),
+        sentAt: normalizeToBrightDate(new Date('2024-01-01T12:00:01Z')),
+        deliveredAt: normalizeToBrightDate(new Date('2024-01-01T12:00:05Z')),
         retryCount: 0,
       };
       const deliveryReceipts = new Map([['recipient-1', receipt]]);
@@ -362,11 +363,11 @@ describe('IEmailMetadata Interface', () => {
 
     it('should include required readReceipts as Map', () => {
       const readReceipts = new Map([
-        ['recipient-1', new Date('2024-01-01T13:00:00Z')],
+        ['recipient-1', normalizeToBrightDate(new Date('2024-01-01T13:00:00Z'))],
       ]);
       const email = createMinimalEmailMetadata({ readReceipts });
       expect(email.readReceipts.size).toBe(1);
-      expect(email.readReceipts.get('recipient-1')).toBeInstanceOf(Date);
+      expect(typeof email.readReceipts.get('recipient-1')).toBe('number');
     });
 
     it('should support empty delivery and read receipts', () => {
@@ -381,7 +382,7 @@ describe('IEmailMetadata Interface', () => {
       const resentBlock: IResentHeaderBlock = {
         resentFrom: createMailbox('forwarder', 'example.com'),
         resentTo: [createMailbox('new-recipient', 'example.com')],
-        resentDate: new Date('2024-01-02T10:00:00Z'),
+        resentDate: normalizeToBrightDate(new Date('2024-01-02T10:00:00Z')),
         resentMessageId: '<resent-123@example.com>',
       };
       const email = createMinimalEmailMetadata({
@@ -400,14 +401,14 @@ describe('IEmailMetadata Interface', () => {
       const firstForward: IResentHeaderBlock = {
         resentFrom: createMailbox('forwarder1', 'example.com'),
         resentTo: [createMailbox('forwarder2', 'example.com')],
-        resentDate: new Date('2024-01-02T10:00:00Z'),
+        resentDate: normalizeToBrightDate(new Date('2024-01-02T10:00:00Z')),
         resentMessageId: '<resent-1@example.com>',
       };
       const secondForward: IResentHeaderBlock = {
         resentFrom: createMailbox('forwarder2', 'example.com'),
         resentTo: [createMailbox('final-recipient', 'example.com')],
         resentCc: [createMailbox('cc-on-forward', 'example.com')],
-        resentDate: new Date('2024-01-03T10:00:00Z'),
+        resentDate: normalizeToBrightDate(new Date('2024-01-03T10:00:00Z')),
         resentMessageId: '<resent-2@example.com>',
       };
       // Most recent forward first
@@ -434,7 +435,7 @@ describe('IEmailMetadata Interface', () => {
       const email = createMinimalEmailMetadata();
       // IBlockMetadata fields
       expect(email.blockId).toBeDefined();
-      expect(email.createdAt).toBeInstanceOf(Date);
+      expect(typeof email.createdAt).toBe('number');
       expect(email.size).toBe(1024);
       expect(email.checksum).toBe('abc123');
 
@@ -493,12 +494,12 @@ describe('IEmailMetadata Interface', () => {
             },
           ],
         ]),
-        readReceipts: new Map([['recipient-1', new Date()]]),
+        readReceipts: new Map([['recipient-1', brightDateNow()]]),
         resentHeaders: [
           {
             resentFrom: createMailbox('forwarder', 'example.com'),
             resentTo: [createMailbox('new-recipient', 'example.com')],
-            resentDate: new Date(),
+            resentDate: brightDateNow(),
             resentMessageId: '<resent@example.com>',
           },
         ],

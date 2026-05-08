@@ -1,6 +1,6 @@
 {
   "name": "@brightchain/brightchain-api-lib",
-  "version": "0.31.0",
+  "version": "0.32.0",
   "main": "./src/index.js",
   "types": "./src/index.d.ts",
   "files": [
@@ -9,15 +9,15 @@
   ],
   "dependencies": {
     "@aws-sdk/client-ses": "^3.859.0",
-    "@brightchain/brightchain-identity": "^0.31.0",
-    "@brightchain/brightchain-lib": "^0.31.0",
-    "@brightchain/db": "^0.31.0",
-    "@brightchain/node-express-suite": "^0.31.0",
+    "@brightchain/brightchain-identity": "^0.32.0",
+    "@brightchain/brightchain-lib": "^0.32.0",
+    "@brightchain/db": "^0.32.0",
+    "@brightchain/node-express-suite": "^0.32.0",
     "@digitaldefiance/branded-enum": "0.0.7",
-    "@digitaldefiance/ecies-lib": "5.1.6",
+    "@digitaldefiance/ecies-lib": "5.2.2",
     "@digitaldefiance/enclave-bridge-client": "^1.1.0",
-    "@digitaldefiance/i18n-lib": "4.7.4",
-    "@digitaldefiance/node-ecies-lib": "5.1.6",
+    "@digitaldefiance/i18n-lib": "4.7.5",
+    "@digitaldefiance/node-ecies-lib": "5.2.2",
     "@ethereumjs/wallet": "^10.0.0",
     "bip39": "^3.1.0",
     "buffer": "^6.0.3",
@@ -38,9 +38,9 @@
     "validator": "^13.15.15"
   },
   "devDependencies": {
-    "@digitaldefiance/node-express-suite": "4.27.2",
+    "@digitaldefiance/node-express-suite": "4.28.3",
     "@digitaldefiance/secrets": "^2.0.7",
-    "@digitaldefiance/suite-core-lib": "4.27.4",
+    "@digitaldefiance/suite-core-lib": "4.28.3",
     "@faker-js/faker": "^10.4.0",
     "@noble/curves": "^1.9.0",
     "@noble/hashes": "^1.8.0",

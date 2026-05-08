@@ -194,7 +194,7 @@ function makeAlias(aliasName: string, isActive = true): AliasRecord<HexString> {
     aliasPublicKey: new Uint8Array([7, 8, 9]),
     identityRecoveryRecordId: makeHexString('recovery1'),
     isActive,
-    registeredAt: new Date('2024-01-01T00:00:00Z'),
+    registeredAt: -10957.5, // Unix epoch as BrightDateTimestamp
     epochNumber: 1,
   };
 }

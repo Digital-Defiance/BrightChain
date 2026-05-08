@@ -17,6 +17,8 @@ import type {
 } from '@brightchain/brightchain-lib';
 import {
   BlockSize,
+  brightDateNow,
+  brightDateToISO,
   initializeBrightChain,
   PooledMemoryBlockStore,
   resetInitialization,
@@ -212,8 +214,8 @@ describe('Remaining BrightDb features e2e', () => {
         aclAdministrators: [adminKeys.publicKey],
         scope: { dbName: 'capdb' },
         version: 1,
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        createdAt: brightDateNow(),
+        updatedAt: brightDateNow(),
         creatorPublicKey: adminKeys.publicKey,
         documentId: 'acl-1',
         creatorSignature: new Uint8Array(64),
@@ -221,9 +223,9 @@ describe('Remaining BrightDb features e2e', () => {
       mgr.setCachedAcl(acl);
 
       // Build token
-      const expiresAt = new Date(Date.now() + 60_000);
+      const expiresAt = brightDateNow() + 60000 / 86400000;
       const granteeHex = Buffer.from(granteeKeys.publicKey).toString('hex');
-      const tokenPayloadMsg = `${granteeHex}:capdb::${expiresAt.toISOString()}`;
+      const tokenPayloadMsg = `${granteeHex}:capdb::${brightDateToISO(expiresAt)}`;
       const tokenPayload = sha256(new TextEncoder().encode(tokenPayloadMsg));
       const grantorSig = await auth.signChallenge(
         tokenPayload,
@@ -263,8 +265,8 @@ describe('Remaining BrightDb features e2e', () => {
         aclAdministrators: [adminKeys.publicKey],
         scope: { dbName: 'expdb' },
         version: 1,
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        createdAt: brightDateNow(),
+        updatedAt: brightDateNow(),
         creatorPublicKey: adminKeys.publicKey,
         documentId: 'acl-1',
         creatorSignature: new Uint8Array(64),
@@ -272,9 +274,9 @@ describe('Remaining BrightDb features e2e', () => {
       mgr.setCachedAcl(acl);
 
       // Already expired
-      const expiresAt = new Date(Date.now() - 1000);
+      const expiresAt = brightDateNow() - 1000 / 86400000;
       const granteeHex = Buffer.from(granteeKeys.publicKey).toString('hex');
-      const msg = `${granteeHex}:expdb::${expiresAt.toISOString()}`;
+      const msg = `${granteeHex}:expdb::${brightDateToISO(expiresAt)}`;
       const payload = sha256(new TextEncoder().encode(msg));
       const sig = await auth.signChallenge(payload, adminKeys.privateKey);
 
@@ -302,17 +304,17 @@ describe('Remaining BrightDb features e2e', () => {
         aclAdministrators: [adminKeys.publicKey], // fakeAdmin is NOT an admin
         scope: { dbName: 'fakedb' },
         version: 1,
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        createdAt: brightDateNow(),
+        updatedAt: brightDateNow(),
         creatorPublicKey: adminKeys.publicKey,
         documentId: 'acl-1',
         creatorSignature: new Uint8Array(64),
       };
       mgr.setCachedAcl(acl);
 
-      const expiresAt = new Date(Date.now() + 60_000);
+      const expiresAt = brightDateNow() + 60000 / 86400000;
       const granteeHex = Buffer.from(granteeKeys.publicKey).toString('hex');
-      const msg = `${granteeHex}:fakedb::${expiresAt.toISOString()}`;
+      const msg = `${granteeHex}:fakedb::${brightDateToISO(expiresAt)}`;
       const payload = sha256(new TextEncoder().encode(msg));
       const sig = await auth.signChallenge(payload, fakeAdmin.privateKey);
 
@@ -352,8 +354,8 @@ describe('Remaining BrightDb features e2e', () => {
         aclAdministrators: [adminKeys.publicKey],
         scope: { dbName: 'encdb' },
         version: 1,
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        createdAt: brightDateNow(),
+        updatedAt: brightDateNow(),
         creatorPublicKey: adminKeys.publicKey,
         documentId: 'acl-1',
         creatorSignature: new Uint8Array(64),
@@ -393,8 +395,8 @@ describe('Remaining BrightDb features e2e', () => {
         aclAdministrators: [adminKeys.publicKey],
         scope: { dbName: 'encdb2' },
         version: 1,
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        createdAt: brightDateNow(),
+        updatedAt: brightDateNow(),
         creatorPublicKey: adminKeys.publicKey,
         documentId: 'acl-1',
         creatorSignature: new Uint8Array(64),
@@ -458,7 +460,7 @@ describe('Remaining BrightDb features e2e', () => {
             blockId1: h1 as any,
             blockId2: h2 as any,
             blockSize: 512,
-            createdAt: new Date(),
+            createdAt: brightDateNow(),
             visibility: CBLVisibility.Public,
           });
         }

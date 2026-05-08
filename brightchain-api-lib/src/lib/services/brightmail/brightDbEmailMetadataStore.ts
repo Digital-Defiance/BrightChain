@@ -21,6 +21,7 @@ import type {
   IInboxQuery,
   IInboxResult,
 } from '@brightchain/brightchain-lib';
+import { brightDateNow, brightDateToISO, normalizeToBrightDate } from '@brightchain/brightchain-lib';
 import type {
   DocumentCollection,
   DocumentRecord,
@@ -87,7 +88,7 @@ function serializeEmail(metadata: IEmailMetadata): EmailDocument {
   if (metadata.readReceipts instanceof Map) {
     const receipts: Record<string, string> = {};
     for (const [k, v] of metadata.readReceipts) {
-      receipts[String(k)] = v instanceof Date ? v.toISOString() : String(v);
+      receipts[String(k)] = typeof v === 'number' ? brightDateToISO(v) : String(v);
     }
     doc['readReceipts'] = receipts;
   }
@@ -108,9 +109,9 @@ function serializeEmail(metadata: IEmailMetadata): EmailDocument {
     doc['deliveryStatus'] = statuses;
   }
 
-  // Convert Date to ISO string
-  if (metadata.date instanceof Date) {
-    doc['date'] = metadata.date.toISOString();
+  // Convert BrightDateTimestamp to ISO string
+  if (typeof metadata.date === 'number') {
+    doc['date'] = brightDateToISO(metadata.date);
   }
 
   // Convert Uint8Array fields to base64
@@ -199,9 +200,9 @@ function deserializeEmail(doc: EmailDocument): IEmailMetadata {
     result.deliveryStatus = map;
   }
 
-  // Reconstitute Date
-  if (result.date && !(result.date instanceof Date)) {
-    result.date = new Date(result.date as string);
+  // Reconstitute BrightDateTimestamp
+  if (result.date && typeof result.date !== 'number') {
+    result.date = normalizeToBrightDate(result.date as string);
   }
 
   // Reconstitute Uint8Array fields
@@ -382,7 +383,7 @@ export class BrightDbEmailMetadataStore implements IEmailMetadataStore {
     // Also update the email's readReceipts
     const email = await this.get(messageId);
     if (email) {
-      email.readReceipts.set(userId, new Date());
+      email.readReceipts.set(userId, brightDateNow());
       await this.update(messageId, {
         readReceipts: email.readReceipts,
       } as Partial<IEmailMetadata>);
@@ -438,7 +439,7 @@ export class BrightDbEmailMetadataStore implements IEmailMetadataStore {
     }
 
     // Sort chronologically
-    threadEmails.sort((a, b) => a.date.getTime() - b.date.getTime());
+    threadEmails.sort((a, b) => a.date - b.date);
     return threadEmails;
   }
 
@@ -538,12 +539,12 @@ export class BrightDbEmailMetadataStore implements IEmailMetadataStore {
     }
 
     if (query.dateFrom) {
-      const from = query.dateFrom.getTime();
-      results = results.filter((e) => e.date.getTime() >= from);
+      const from = normalizeToBrightDate(query.dateFrom);
+      results = results.filter((e) => e.date >= from);
     }
     if (query.dateTo) {
-      const to = query.dateTo.getTime();
-      results = results.filter((e) => e.date.getTime() <= to);
+      const to = normalizeToBrightDate(query.dateTo);
+      results = results.filter((e) => e.date <= to);
     }
 
     if (query.hasAttachments !== undefined) {
@@ -630,7 +631,7 @@ export class BrightDbEmailMetadataStore implements IEmailMetadataStore {
     return [...emails].sort((a, b) => {
       switch (sortBy) {
         case 'date':
-          return dir * (a.date.getTime() - b.date.getTime());
+          return dir * (a.date - b.date);
         case 'sender':
           return dir * a.from.address.localeCompare(b.from.address);
         case 'subject':
@@ -638,7 +639,7 @@ export class BrightDbEmailMetadataStore implements IEmailMetadataStore {
         case 'size':
           return dir * ((a.size ?? 0) - (b.size ?? 0));
         default:
-          return dir * (a.date.getTime() - b.date.getTime());
+          return dir * (a.date - b.date);
       }
     });
   }

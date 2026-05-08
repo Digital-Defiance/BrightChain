@@ -14,6 +14,8 @@ import { initializeBrightChain } from '../init';
 import { ServiceProvider } from '../services/service.provider';
 import { ServiceLocator } from '../services/serviceLocator';
 import { EphemeralBlock } from './ephemeral';
+import { brightDateNow } from '../utils/brightDateConversions';
+import type { BrightDateTimestamp } from '../types/brightDateTimestamp';
 
 /**
  * Property-based tests for block immutability
@@ -66,7 +68,7 @@ describe('Feature: block-security-hardening, Property 9: Block Immutability', ()
             BlockDataType.RawData,
             data.length,
             testMember.member,
-            new Date(),
+            brightDateNow(),
           );
 
           const block = new EphemeralBlock<GuidV4Uint8Array>(
@@ -116,7 +118,7 @@ describe('Feature: block-security-hardening, Property 9: Block Immutability', ()
             BlockDataType.RawData,
             plaintext.length,
             testMember.member,
-            new Date(),
+            brightDateNow(),
           );
 
           const ephemeralBlock = new EphemeralBlock<GuidV4Uint8Array>(
@@ -177,7 +179,7 @@ describe('Feature: block-security-hardening, Property 9: Block Immutability', ()
             BlockDataType.RawData,
             data.length,
             testMember.member,
-            new Date(),
+            brightDateNow(),
           );
 
           const block = new EphemeralBlock<GuidV4Uint8Array>(
@@ -225,7 +227,7 @@ describe('Feature: block-security-hardening, Property 9: Block Immutability', ()
             BlockDataType.RawData,
             data.length,
             testMember.member,
-            new Date(),
+            brightDateNow(),
           );
 
           const block = new EphemeralBlock<GuidV4Uint8Array>(

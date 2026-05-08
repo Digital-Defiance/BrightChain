@@ -111,7 +111,7 @@ export class FileHeadRegistryDriver implements IHeadRegistryDriver {
         'blockId' in parsed &&
         typeof (parsed as Record<string, unknown>)['blockId'] === 'string' &&
         'timestamp' in parsed &&
-        typeof (parsed as Record<string, unknown>)['timestamp'] === 'string'
+        typeof (parsed as Record<string, unknown>)['timestamp'] === 'number'
       ) {
         return parsed as HeadRecord;
       }

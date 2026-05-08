@@ -22,6 +22,7 @@ import type { BlockId } from '../../interfaces/branded/primitives/blockId';
 import type { ICBLIndexEntry } from '../../interfaces/storage/cblIndex';
 import { HeadRegistryGossipTransport } from '../headRegistryGossipTransport';
 import { InMemoryHeadRegistry } from '../inMemoryHeadRegistry';
+import { brightDateNow } from '../../utils/brightDateConversions';
 
 // ── Mock gossip service ──────────────────────────────────────────────────────
 
@@ -129,7 +130,7 @@ function makeHeadUpdateAnnouncement(
   dbName: string,
   collectionName: string,
   blockId: string,
-  timestamp: Date = new Date(),
+  timestamp: number = brightDateNow(),
 ): BlockAnnouncement {
   const headUpdate: HeadUpdateMetadata = { dbName, collectionName };
   return {
@@ -192,7 +193,7 @@ describe('HeadRegistryGossipTransport – inbound head_update handling (Req 7.1)
     // Set local head first with a timestamp that's clearly older
     await registry.setHead('mydb', 'users', 'local-head');
     // Use a remote timestamp that is clearly in the future relative to the local write
-    const remoteTimestamp = new Date(Date.now() + 60_000);
+    const remoteTimestamp = brightDateNow() + 60_000 / 86400000; // 60 seconds in BrightDate units
 
     gossip.simulateAnnouncement(
       makeHeadUpdateAnnouncement(
@@ -216,7 +217,7 @@ describe('HeadRegistryGossipTransport – inbound head_update handling (Req 7.1)
 
     await registry.setHead('mydb', 'users', 'local-head-new');
     // Remote has an older timestamp
-    const oldTimestamp = new Date(Date.now() - 120_000);
+    const oldTimestamp = brightDateNow() - 120_000 / 86400000; // 120 seconds ago in BrightDate units
 
     gossip.simulateAnnouncement(
       makeHeadUpdateAnnouncement('mydb', 'users', 'remote-old', oldTimestamp),
@@ -237,7 +238,7 @@ describe('HeadRegistryGossipTransport – inbound head_update handling (Req 7.1)
       type: 'add',
       blockId: 'some-block' as BlockId,
       nodeId: 'remote-node-1',
-      timestamp: new Date(),
+      timestamp: brightDateNow(),
       ttl: 3,
     });
 
@@ -256,7 +257,7 @@ describe('HeadRegistryGossipTransport – inbound head_update handling (Req 7.1)
       type: 'head_update',
       blockId: 'some-block' as BlockId,
       nodeId: 'remote-node-1',
-      timestamp: new Date(),
+      timestamp: brightDateNow(),
       ttl: 3,
       // headUpdate deliberately omitted
     });
@@ -394,7 +395,7 @@ describe('HeadRegistryGossipTransport – delegation of non-gossip methods', () 
     > = [
       [
         'db:col',
-        { blockId: 'remote-block', timestamp: new Date().toISOString() },
+        { blockId: 'remote-block', timestamp: brightDateNow() },
       ],
     ];
     const result = await transport.mergeSnapshot(snapshot);

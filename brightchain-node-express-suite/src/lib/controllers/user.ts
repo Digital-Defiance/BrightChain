@@ -14,6 +14,7 @@
 
 import {
   BrightDateDisplayMode,
+  brightDateToISO,
   EnergyAccountStore,
   IAuthResponse,
   ILoginRequest,
@@ -458,8 +459,8 @@ export class BrightDbUserController<
               status: profile.publicProfile.status,
               storageQuota: profile.publicProfile.storageQuota?.toString(),
               storageUsed: profile.publicProfile.storageUsed?.toString(),
-              lastActive: profile.publicProfile.lastActive?.toISOString(),
-              dateCreated: profile.publicProfile.dateCreated?.toISOString(),
+              lastActive: profile.publicProfile.lastActive !== undefined ? brightDateToISO(profile.publicProfile.lastActive) : undefined,
+              dateCreated: profile.publicProfile.dateCreated !== undefined ? brightDateToISO(profile.publicProfile.dateCreated) : undefined,
             };
           }
         }
@@ -570,8 +571,8 @@ export class BrightDbUserController<
               status: profile.publicProfile.status,
               storageQuota: profile.publicProfile.storageQuota?.toString(),
               storageUsed: profile.publicProfile.storageUsed?.toString(),
-              lastActive: profile.publicProfile.lastActive?.toISOString(),
-              dateCreated: profile.publicProfile.dateCreated?.toISOString(),
+              lastActive: profile.publicProfile.lastActive !== undefined ? brightDateToISO(profile.publicProfile.lastActive) : undefined,
+              dateCreated: profile.publicProfile.dateCreated !== undefined ? brightDateToISO(profile.publicProfile.dateCreated) : undefined,
             };
           }
         }
@@ -1086,6 +1087,9 @@ export class BrightDbUserController<
           siteLanguage: user.siteLanguage,
           directChallenge: user.directChallenge,
           ...(user.lastLogin && { lastLogin: user.lastLogin }),
+          ...((user as IRequestUserDTO & { brightDateDisplay?: BrightDateDisplayMode }).brightDateDisplay && {
+            brightDateDisplay: (user as IRequestUserDTO & { brightDateDisplay?: BrightDateDisplayMode }).brightDateDisplay,
+          }),
         },
       },
     };

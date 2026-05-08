@@ -41,6 +41,12 @@ jest.mock('@brightchain/brightchain-react-components', () => ({
       {String((props as unknown as Record<string, unknown>).subText || '')}
     </span>
   ),
+  BrightDateDisplaySelector: () => (
+    <div data-testid="bright-date-display-selector" />
+  ),
+  BrightDateProvider: ({ children }: { children?: React.ReactNode }) => (
+    <>{children}</>
+  ),
   BrightPassDemo: () => (
     <div data-testid="brightpass-demo">BrightPassDemo Mock</div>
   ),
@@ -176,6 +182,14 @@ jest.mock('@brightchain/brightchain-lib', () => ({
     BrightPass: 'BrightPass',
     DigitalBurnbag: 'DigitalBurnbag',
   },
+  BrightDateDisplayMode: {
+    Dual: 'dual',
+    BrightDateOnly: 'brightDateOnly',
+    LocaleOnly: 'localeOnly',
+    Hover: 'hover',
+    HoverReverse: 'hoverReverse',
+  },
+  toBrightDateString: () => '9146.438',
 
   CONSTANTS: {
     THEME_COLORS: {

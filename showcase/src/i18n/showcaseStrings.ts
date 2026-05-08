@@ -1690,6 +1690,13 @@ export const ShowcaseStrings = createI18nStringKeys(ShowcaseComponentId, {
   PP_S18_OrgName: 'PP_S18_OrgName',
   PP_S18_EmailLabel: 'PP_S18_EmailLabel',
   PP_S18_WebLabel: 'PP_S18_WebLabel',
+
+  // Slogans
+  Slogan_Math_Search_Warrant: 'Slogan_Math_Search_Warrant',
+  Slogan_Where_State_Sees_Noise: 'Slogan_Where_State_Sees_Noise',
+  Slogan_Building_World_Where_Ideas_Have_No_Borders:
+    'Slogan_Building_World_Where_Ideas_Have_No_Borders',
+  Slogan_Defiance_By_Design: 'Slogan_Defiance_By_Design',
 } as const);
 
 export type ShowcaseStringKey = BrandedStringKeyValue<typeof ShowcaseStrings>;

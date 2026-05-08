@@ -57,8 +57,8 @@ describe('ConversationService.init()', () => {
       id: 'conv-1',
       participants: ['alice', 'bob'] as [string, string],
       encryptedSharedKey: new Map([[0, new Map([['alice', 'key1']])]]),
-      createdAt: new Date(),
-      lastMessageAt: new Date(),
+      createdAt: 9000,
+      lastMessageAt: 9000,
     };
 
     const storageProvider = new MockChatStorageProvider({
@@ -143,8 +143,8 @@ describe('ConversationService.init()', () => {
       id: 'conv-malformed',
       participants: ['alice', 'bob'] as [string, string],
       encryptedSharedKey: null as unknown as Map<number, Map<string, string>>,
-      createdAt: new Date(),
-      lastMessageAt: new Date(),
+      createdAt: 9000,
+      lastMessageAt: 9000,
     };
 
     const storageProvider = new MockChatStorageProvider({
@@ -183,8 +183,8 @@ describe('ConversationService.init()', () => {
         number,
         Map<string, string>
       >,
-      createdAt: new Date(),
-      lastMessageAt: new Date(),
+      createdAt: 9000,
+      lastMessageAt: 9000,
     };
 
     const storageProvider = new MockChatStorageProvider({

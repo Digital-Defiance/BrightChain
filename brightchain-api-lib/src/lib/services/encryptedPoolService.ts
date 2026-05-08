@@ -13,6 +13,7 @@ import {
   type IKeyVersion,
   type IPoolEncryptionConfig,
   type PoolId,
+  brightDateNow,
 } from '@brightchain/brightchain-lib';
 import { PoolEncryptionService } from '../encryption/poolEncryptionService';
 
@@ -48,7 +49,7 @@ export class EncryptedPoolKeyManager {
       adminPublicKey,
     );
 
-    const now = new Date();
+    const now = brightDateNow();
     const keyVersion: IKeyVersion<string> = {
       version: 1,
       createdAt: now,
@@ -197,7 +198,7 @@ export class EncryptedPoolKeyManager {
     // Add new key version
     const newVersion: IKeyVersion<string> = {
       version: this.config.currentKeyVersion + 1,
-      createdAt: new Date(),
+      createdAt: brightDateNow(),
       encryptedKeys,
       active: true,
     };

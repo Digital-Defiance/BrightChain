@@ -4,6 +4,7 @@ import {
   BlockService,
   BlockSize,
   BlockType,
+  brightDateNow,
   EphemeralBlock,
   getGlobalServiceProvider,
   IBlockStore,
@@ -125,7 +126,7 @@ export class AuditLogger<TID extends PlatformID = Uint8Array> {
       paddedData,
       checksum,
       this.systemMember!,
-      new Date(),
+      brightDateNow(),
       dataBuffer.length,
     );
 

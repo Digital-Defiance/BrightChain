@@ -19,6 +19,7 @@ import type {
   IInboxQuery,
   IInboxResult,
 } from './emailMessageService';
+import { brightDateNow, normalizeToBrightDate } from '../../utils/brightDateConversions';
 
 export class InMemoryEmailMetadataStore implements IEmailMetadataStore {
   private readonly emails = new Map<string, IEmailMetadata>();
@@ -139,7 +140,7 @@ export class InMemoryEmailMetadataStore implements IEmailMetadataStore {
     // Also update the email's readReceipts Map so it reflects in API responses
     const email = this.emails.get(messageId);
     if (email) {
-      email.readReceipts.set(userId, new Date());
+      email.readReceipts.set(userId, brightDateNow());
     }
   }
 
@@ -190,7 +191,7 @@ export class InMemoryEmailMetadataStore implements IEmailMetadataStore {
     }
 
     // Sort chronologically
-    threadEmails.sort((a, b) => a.date.getTime() - b.date.getTime());
+    threadEmails.sort((a, b) => a.date - b.date);
     return threadEmails;
   }
 
@@ -261,12 +262,12 @@ export class InMemoryEmailMetadataStore implements IEmailMetadataStore {
 
     // Date range filter
     if (query.dateFrom) {
-      const from = query.dateFrom.getTime();
-      results = results.filter((e) => e.date.getTime() >= from);
+      const from = normalizeToBrightDate(query.dateFrom);
+      results = results.filter((e) => e.date >= from);
     }
     if (query.dateTo) {
-      const to = query.dateTo.getTime();
-      results = results.filter((e) => e.date.getTime() <= to);
+      const to = normalizeToBrightDate(query.dateTo);
+      results = results.filter((e) => e.date <= to);
     }
 
     // Has attachments filter
@@ -348,7 +349,7 @@ export class InMemoryEmailMetadataStore implements IEmailMetadataStore {
     return [...emails].sort((a, b) => {
       switch (sortBy) {
         case 'date':
-          return dir * (a.date.getTime() - b.date.getTime());
+          return dir * (a.date - b.date);
         case 'sender':
           return dir * a.from.address.localeCompare(b.from.address);
         case 'subject':
@@ -356,7 +357,7 @@ export class InMemoryEmailMetadataStore implements IEmailMetadataStore {
         case 'size':
           return dir * ((a.size ?? 0) - (b.size ?? 0));
         default:
-          return dir * (a.date.getTime() - b.date.getTime());
+          return dir * (a.date - b.date);
       }
     });
   }

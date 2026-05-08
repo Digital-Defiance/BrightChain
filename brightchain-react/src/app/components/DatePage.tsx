@@ -1,13 +1,17 @@
 /**
  * DatePage — Displays the current date and time in multiple formats,
- * including BrightDate, and shows known holidays for today.
+ * including BrightDate, and shows known holidays for today using date-holidays.
  */
 
+import { faCalendarClock } from '@awesome.me/kit-a20d532681/icons/classic/regular';
 import {
+  BrightChainStrings,
   nowAsBrightDate,
   toBrightDateString,
 } from '@brightchain/brightchain-lib';
-import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
+import { BrightDate } from '@brightchain/brightchain-react-components';
+import { useI18n } from '@digitaldefiance/express-suite-react-components';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   Box,
   Card,
@@ -16,115 +20,11 @@ import {
   Container,
   Divider,
   Link,
+  Tooltip,
   Typography,
 } from '@mui/material';
+import Holidays from 'date-holidays';
 import { FC, useEffect, useMemo, useState } from 'react';
-
-// ─── Holiday Data ───────────────────────────────────────────────────────────
-
-interface Holiday {
-  name: string;
-  month: number; // 1-indexed
-  day: number;
-  type: 'federal' | 'cultural' | 'international' | 'observance';
-}
-
-/**
- * Known holidays (US federal + major international).
- * Holidays with variable dates (Easter, Thanksgiving, etc.) are computed.
- */
-const FIXED_HOLIDAYS: Holiday[] = [
-  { name: "New Year's Day", month: 1, day: 1, type: 'federal' },
-  { name: 'Martin Luther King Jr. Day', month: 1, day: 0, type: 'federal' },
-  { name: 'Groundhog Day', month: 2, day: 2, type: 'observance' },
-  { name: "Valentine's Day", month: 2, day: 14, type: 'cultural' },
-  { name: "Presidents' Day", month: 2, day: 0, type: 'federal' },
-  {
-    name: "International Women's Day",
-    month: 3,
-    day: 8,
-    type: 'international',
-  },
-  { name: "St. Patrick's Day", month: 3, day: 17, type: 'cultural' },
-  { name: 'Pi Day', month: 3, day: 14, type: 'observance' },
-  { name: 'Earth Day', month: 4, day: 22, type: 'international' },
-  {
-    name: "May Day / International Workers' Day",
-    month: 5,
-    day: 1,
-    type: 'international',
-  },
-  { name: 'Cinco de Mayo', month: 5, day: 5, type: 'cultural' },
-  { name: 'Memorial Day', month: 5, day: 0, type: 'federal' },
-  { name: 'Juneteenth', month: 6, day: 19, type: 'federal' },
-  { name: 'Independence Day', month: 7, day: 4, type: 'federal' },
-  { name: 'Labor Day', month: 9, day: 0, type: 'federal' },
-  { name: "Indigenous Peoples' Day", month: 10, day: 0, type: 'federal' },
-  { name: 'Halloween', month: 10, day: 31, type: 'cultural' },
-  { name: 'Veterans Day', month: 11, day: 11, type: 'federal' },
-  { name: 'Thanksgiving', month: 11, day: 0, type: 'federal' },
-  { name: 'Christmas Eve', month: 12, day: 24, type: 'cultural' },
-  { name: 'Christmas Day', month: 12, day: 25, type: 'federal' },
-  { name: "New Year's Eve", month: 12, day: 31, type: 'cultural' },
-  { name: 'World AIDS Day', month: 12, day: 1, type: 'international' },
-  { name: 'Human Rights Day', month: 12, day: 10, type: 'international' },
-];
-
-/** Get the Nth weekday of a month (e.g., 3rd Monday of January). */
-function getNthWeekday(
-  year: number,
-  month: number,
-  weekday: number,
-  n: number,
-): number {
-  const firstDay = new Date(year, month - 1, 1);
-  let dayOfMonth = 1 + ((weekday - firstDay.getDay() + 7) % 7);
-  dayOfMonth += (n - 1) * 7;
-  return dayOfMonth;
-}
-
-/** Get the last weekday of a month (e.g., last Monday of May). */
-function getLastWeekday(year: number, month: number, weekday: number): number {
-  const lastDay = new Date(year, month, 0).getDate();
-  const lastDate = new Date(year, month - 1, lastDay);
-  const diff = (lastDate.getDay() - weekday + 7) % 7;
-  return lastDay - diff;
-}
-
-/** Compute holidays for a given date, including variable-date ones. */
-function getHolidaysForDate(date: Date): Holiday[] {
-  const year = date.getFullYear();
-  const month = date.getMonth() + 1;
-  const day = date.getDate();
-
-  const matches: Holiday[] = [];
-
-  for (const h of FIXED_HOLIDAYS) {
-    if (h.month !== month) continue;
-
-    if (h.day > 0) {
-      if (h.day === day) matches.push(h);
-    } else {
-      let computedDay = 0;
-      if (h.name === 'Martin Luther King Jr. Day') {
-        computedDay = getNthWeekday(year, 1, 1, 3);
-      } else if (h.name === "Presidents' Day") {
-        computedDay = getNthWeekday(year, 2, 1, 3);
-      } else if (h.name === 'Memorial Day') {
-        computedDay = getLastWeekday(year, 5, 1);
-      } else if (h.name === 'Labor Day') {
-        computedDay = getNthWeekday(year, 9, 1, 1);
-      } else if (h.name === "Indigenous Peoples' Day") {
-        computedDay = getNthWeekday(year, 10, 1, 2);
-      } else if (h.name === 'Thanksgiving') {
-        computedDay = getNthWeekday(year, 11, 4, 4);
-      }
-      if (computedDay === day) matches.push({ ...h, day: computedDay });
-    }
-  }
-
-  return matches;
-}
 
 // ─── Date Format Helpers ────────────────────────────────────────────────────
 
@@ -160,19 +60,83 @@ function isLeapYear(year: number): boolean {
   return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
 }
 
-// ─── Component ──────────────────────────────────────────────────────────────
+// ─── Interplanetary Telemetry Helpers ───────────────────────────────────────
 
-const HOLIDAY_COLORS: Record<
-  Holiday['type'],
-  'primary' | 'secondary' | 'success' | 'info'
+/** Speed of light in km/s */
+const SPEED_OF_LIGHT_KM_S = 299_792.458;
+
+/** Seconds per day */
+const SECONDS_PER_DAY = 86_400;
+
+/** Average Earth–Moon distance in km */
+const MOON_DISTANCE_KM = 384_400;
+
+/** Minimum Earth–Mars distance in km (opposition) */
+const MARS_MIN_DISTANCE_KM = 54_600_000;
+
+/** Maximum Earth–Mars distance in km (conjunction) */
+const MARS_MAX_DISTANCE_KM = 401_000_000;
+
+/**
+ * Convert seconds to millidays.
+ * 1 milliday = 86.4 seconds.
+ */
+function secondsToMillidays(seconds: number): number {
+  return (seconds / SECONDS_PER_DAY) * 1000;
+}
+
+/**
+ * Estimate current Earth–Mars distance using a simplified sinusoidal model.
+ * Mars synodic period ≈ 779.94 days. We approximate the distance as oscillating
+ * between min and max over this period, with a reference opposition date.
+ */
+function estimateMarsDistanceKm(date: Date): number {
+  const SYNODIC_PERIOD_DAYS = 779.94;
+  // Reference opposition: December 8, 2022
+  const referenceOpposition = new Date('2022-12-08T00:00:00Z');
+  const daysSinceOpposition =
+    (date.getTime() - referenceOpposition.getTime()) / (1000 * 60 * 60 * 24);
+  // Phase: 0 at opposition (min distance), π at conjunction (max distance)
+  const phase = (2 * Math.PI * daysSinceOpposition) / SYNODIC_PERIOD_DAYS;
+  const midpoint = (MARS_MIN_DISTANCE_KM + MARS_MAX_DISTANCE_KM) / 2;
+  const amplitude = (MARS_MAX_DISTANCE_KM - MARS_MIN_DISTANCE_KM) / 2;
+  // cos(phase) = 1 at opposition → min distance; cos(phase) = -1 at conjunction → max
+  return midpoint - amplitude * Math.cos(phase);
+}
+
+// ─── Holiday Type → Chip Color ──────────────────────────────────────────────
+
+const HOLIDAY_CHIP_COLORS: Record<
+  string,
+  'primary' | 'secondary' | 'success' | 'info' | 'warning'
 > = {
-  federal: 'primary',
-  cultural: 'secondary',
-  international: 'info',
+  public: 'primary',
+  bank: 'info',
   observance: 'success',
+  school: 'warning',
+  optional: 'secondary',
 };
 
+/**
+ * Map date-holidays type to our i18n string key.
+ */
+function holidayTypeLabel(type: string, t: (key: string) => string): string {
+  switch (type) {
+    case 'public':
+      return t(BrightChainStrings.DatePage_HolidayType_Public);
+    case 'bank':
+      return t(BrightChainStrings.DatePage_HolidayType_Bank);
+    case 'observance':
+      return t(BrightChainStrings.DatePage_HolidayType_Observance);
+    default:
+      return t(BrightChainStrings.DatePage_HolidayType_Observance);
+  }
+}
+
+// ─── Component ──────────────────────────────────────────────────────────────
+
 export const DatePage: FC = () => {
+  const { tBranded: t, currentLanguage } = useI18n();
   const [now, setNow] = useState(new Date());
 
   // Update every second
@@ -181,11 +145,43 @@ export const DatePage: FC = () => {
     return () => clearInterval(interval);
   }, []);
 
-  const holidays = useMemo(() => getHolidaysForDate(now), [now]);
+  // Initialize date-holidays for the user's locale
+  const hd = useMemo(() => {
+    // Map language codes to country codes for date-holidays
+    // Default to US; extend as needed
+    const langToCountry: Record<string, string> = {
+      en: 'US',
+      'en-US': 'US',
+      'en-GB': 'GB',
+      de: 'DE',
+      'de-DE': 'DE',
+      fr: 'FR',
+      'fr-FR': 'FR',
+      es: 'ES',
+      'es-ES': 'ES',
+      ja: 'JP',
+      'ja-JP': 'JP',
+      zh: 'CN',
+      'zh-CN': 'CN',
+      uk: 'UA',
+      'uk-UA': 'UA',
+    };
+    const country = langToCountry[currentLanguage] || 'US';
+    const langCode = currentLanguage?.split('-')[0] || 'en';
+    return new Holidays(country, { languages: [langCode, 'en'] });
+  }, [currentLanguage]);
 
-  const brightDateFull = toBrightDateString(now, 5);
-  const brightDateCompact = toBrightDateString(now, 3);
-  const brightDateNow = nowAsBrightDate(5);
+  // Get holidays for today
+  const holidays = useMemo(() => {
+    const result = hd.isHoliday(now);
+    if (!result) return [];
+    return result;
+  }, [hd, now]);
+
+  // BrightDate values at different precisions
+  const brightDateFull = nowAsBrightDate(8); // sub-millisecond
+  const brightDateStandard = toBrightDateString(now, 5); // ~0.86s
+  const brightDateCompact = toBrightDateString(now, 3); // ~86s
 
   const julianDate = getJulianDate(now);
   const mjd = getModifiedJulianDate(now);
@@ -194,15 +190,53 @@ export const DatePage: FC = () => {
   const isoWeek = getISOWeek(now);
   const daysInYear = isLeapYear(now.getFullYear()) ? 366 : 365;
 
+  // ─── Interplanetary Telemetry (Cochrane Easter Egg) ─────────────────────
+  const moonLightDelaySec = MOON_DISTANCE_KM / SPEED_OF_LIGHT_KM_S;
+  const moonDelayMillidays = secondsToMillidays(moonLightDelaySec);
+
+  const marsMinDelaySec = MARS_MIN_DISTANCE_KM / SPEED_OF_LIGHT_KM_S;
+  const marsMinDelayMillidays = secondsToMillidays(marsMinDelaySec);
+
+  const marsMaxDelaySec = MARS_MAX_DISTANCE_KM / SPEED_OF_LIGHT_KM_S;
+  const marsMaxDelayMillidays = secondsToMillidays(marsMaxDelaySec);
+
+  const marsCurrentDistanceKm = estimateMarsDistanceKm(now);
+  const marsCurrentDelaySec = marsCurrentDistanceKm / SPEED_OF_LIGHT_KM_S;
+  const marsCurrentDelayMillidays = secondsToMillidays(marsCurrentDelaySec);
+
   const formats: Array<{ label: string; value: string }> = [
-    { label: 'BrightDate (full precision)', value: `BD ${brightDateNow}` },
-    { label: 'BrightDate (compact)', value: `BD ${brightDateCompact}` },
-    { label: 'BrightDate (standard)', value: `BD ${brightDateFull}` },
-    { label: 'ISO 8601', value: now.toISOString() },
-    { label: 'UTC', value: now.toUTCString() },
-    { label: 'Local Date & Time', value: now.toLocaleString() },
     {
-      label: 'Local Date',
+      label: t(BrightChainStrings.DatePage_Format_BrightDateFull),
+      value: t(BrightChainStrings.Date_BrightDateTemplate, {
+        BD: brightDateFull,
+      }),
+    },
+    {
+      label: t(BrightChainStrings.DatePage_Format_BrightDateStandard),
+      value: t(BrightChainStrings.Date_BrightDateTemplate, {
+        BD: brightDateStandard,
+      }),
+    },
+    {
+      label: t(BrightChainStrings.DatePage_Format_BrightDateCompact),
+      value: t(BrightChainStrings.Date_BrightDateTemplate, {
+        BD: brightDateCompact,
+      }),
+    },
+    {
+      label: t(BrightChainStrings.DatePage_Format_ISO8601),
+      value: now.toISOString(),
+    },
+    {
+      label: t(BrightChainStrings.DatePage_Format_UTC),
+      value: now.toUTCString(),
+    },
+    {
+      label: t(BrightChainStrings.DatePage_Format_LocalDateTime),
+      value: now.toLocaleString(),
+    },
+    {
+      label: t(BrightChainStrings.DatePage_Format_LocalDate),
       value: now.toLocaleDateString(undefined, {
         weekday: 'long',
         year: 'numeric',
@@ -210,22 +244,46 @@ export const DatePage: FC = () => {
         day: 'numeric',
       }),
     },
-    { label: 'Local Time', value: now.toLocaleTimeString() },
-    { label: 'Unix Timestamp', value: String(unixTs) },
-    { label: 'Unix Milliseconds', value: String(now.getTime()) },
-    { label: 'Julian Date', value: julianDate.toFixed(5) },
-    { label: 'Modified Julian Date', value: mjd.toFixed(5) },
-    { label: 'Day of Year', value: `${dayOfYear} / ${daysInYear}` },
-    { label: 'ISO Week', value: `W${String(isoWeek).padStart(2, '0')}` },
-    { label: 'RFC 2822', value: now.toString() },
+    {
+      label: t(BrightChainStrings.DatePage_Format_LocalTime),
+      value: now.toLocaleTimeString(),
+    },
+    {
+      label: t(BrightChainStrings.DatePage_Format_UnixTimestamp),
+      value: String(unixTs),
+    },
+    {
+      label: t(BrightChainStrings.DatePage_Format_UnixMs),
+      value: String(now.getTime()),
+    },
+    {
+      label: t(BrightChainStrings.DatePage_Format_JulianDate),
+      value: julianDate.toFixed(5),
+    },
+    {
+      label: t(BrightChainStrings.DatePage_Format_ModifiedJulianDate),
+      value: mjd.toFixed(5),
+    },
+    {
+      label: t(BrightChainStrings.DatePage_Format_DayOfYear),
+      value: `${dayOfYear} / ${daysInYear}`,
+    },
+    {
+      label: t(BrightChainStrings.DatePage_Format_ISOWeek),
+      value: `W${String(isoWeek).padStart(2, '0')}`,
+    },
+    {
+      label: t(BrightChainStrings.DatePage_Format_RFC2822),
+      value: now.toString(),
+    },
   ];
 
   return (
     <Container maxWidth="md" sx={{ py: 4 }}>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 3 }}>
-        <CalendarTodayIcon fontSize="large" color="primary" />
+        <FontAwesomeIcon icon={faCalendarClock} color="primary" size="3x" />
         <Typography variant="h4" component="h1">
-          Date &amp; Time
+          {t(BrightChainStrings.DatePage_Title)}
         </Typography>
       </Box>
 
@@ -235,14 +293,14 @@ export const DatePage: FC = () => {
       >
         <CardContent sx={{ textAlign: 'center', py: 4 }}>
           <Typography variant="overline" sx={{ opacity: 0.8 }}>
-            BrightDate (decimal days since J2000.0)
+            {t(BrightChainStrings.DatePage_BrightDateEpochLabel)}
           </Typography>
           <Typography
             variant="h3"
             component="div"
             sx={{ fontFamily: 'monospace', fontWeight: 700 }}
           >
-            BD {brightDateNow}
+            <BrightDate date={now} interval={0} format="full" />
           </Typography>
           <Typography variant="body2" sx={{ mt: 1, opacity: 0.8 }}>
             {now.toLocaleDateString(undefined, {
@@ -262,14 +320,14 @@ export const DatePage: FC = () => {
         <Card sx={{ mb: 3 }}>
           <CardContent>
             <Typography variant="h6" gutterBottom>
-              Today&apos;s Holidays &amp; Observances
+              {t(BrightChainStrings.DatePage_HolidaysTitle)}
             </Typography>
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
               {holidays.map((h) => (
                 <Chip
                   key={h.name}
-                  label={h.name}
-                  color={HOLIDAY_COLORS[h.type]}
+                  label={`${h.name} (${holidayTypeLabel(h.type, t)})`}
+                  color={HOLIDAY_CHIP_COLORS[h.type] || 'default'}
                   variant="outlined"
                 />
               ))}
@@ -282,7 +340,7 @@ export const DatePage: FC = () => {
       <Card>
         <CardContent>
           <Typography variant="h6" gutterBottom>
-            All Date Formats
+            {t(BrightChainStrings.DatePage_AllFormatsTitle)}
           </Typography>
           <Divider sx={{ mb: 2 }} />
           <Box
@@ -323,23 +381,136 @@ export const DatePage: FC = () => {
       <Card sx={{ mt: 3 }}>
         <CardContent>
           <Typography variant="h6" gutterBottom>
-            <Link href="https://github.com/Digital-Defiance/brightdate/blob/main/README.md">
-              About BrightDate
+            <Link
+              href="https://github.com/Digital-Defiance/brightdate/blob/main/README.md"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {t(BrightChainStrings.DatePage_AboutBrightDateTitle)}
             </Link>
           </Typography>
           <Typography variant="body2" color="text.secondary" paragraph>
-            BrightDate counts decimal days since the J2000.0 epoch (January 1,
-            2000 at 12:00:00 UTC). This is the same epoch used by astronomers
-            worldwide for celestial mechanics.
+            {t(BrightChainStrings.DatePage_AboutBrightDate_Epoch)}
           </Typography>
           <Typography variant="body2" color="text.secondary" paragraph>
-            The integer part is the day count. The fractional part is the
-            decimal time of day. For example, 0.5 = noon, 0.25 = 06:00, 0.75 =
-            18:00.
+            {t(BrightChainStrings.DatePage_AboutBrightDate_Fraction)}
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            No time zones, no daylight saving, no ambiguity — just one number on
-            one timeline.
+            {t(BrightChainStrings.DatePage_AboutBrightDate_NoTimezones)}
+          </Typography>
+        </CardContent>
+      </Card>
+
+      {/* Cochrane Easter Egg: Interplanetary Telemetry */}
+      <Card sx={{ mt: 3, border: '1px solid', borderColor: 'divider' }}>
+        <CardContent>
+          <Typography
+            variant="h6"
+            gutterBottom
+            sx={{ fontFamily: 'monospace' }}
+          >
+            🛰️ {t(BrightChainStrings.DatePage_Telemetry_Title)}
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            {t(BrightChainStrings.DatePage_Telemetry_Subtitle)}
+          </Typography>
+          <Divider sx={{ mb: 2 }} />
+          <Box
+            component="dl"
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: { xs: '1fr', sm: '220px 1fr' },
+              gap: 1,
+              mb: 2,
+            }}
+          >
+            {/* Moon */}
+            <Typography
+              component="dt"
+              variant="body2"
+              sx={{ fontWeight: 600, color: 'text.secondary' }}
+            >
+              {t(BrightChainStrings.DatePage_Telemetry_MoonDelay)}
+            </Typography>
+            <Tooltip title={`${moonLightDelaySec.toFixed(2)}s`}>
+              <Typography
+                component="dd"
+                variant="body2"
+                sx={{ m: 0, fontFamily: 'monospace' }}
+              >
+                {moonDelayMillidays.toFixed(4)}{' '}
+                {t(BrightChainStrings.DatePage_Telemetry_Unit)}
+              </Typography>
+            </Tooltip>
+
+            {/* Mars min */}
+            <Typography
+              component="dt"
+              variant="body2"
+              sx={{ fontWeight: 600, color: 'text.secondary' }}
+            >
+              {t(BrightChainStrings.DatePage_Telemetry_MarsDelayMin)}
+            </Typography>
+            <Tooltip title={`${marsMinDelaySec.toFixed(1)}s`}>
+              <Typography
+                component="dd"
+                variant="body2"
+                sx={{ m: 0, fontFamily: 'monospace' }}
+              >
+                {marsMinDelayMillidays.toFixed(4)}{' '}
+                {t(BrightChainStrings.DatePage_Telemetry_Unit)}
+              </Typography>
+            </Tooltip>
+
+            {/* Mars max */}
+            <Typography
+              component="dt"
+              variant="body2"
+              sx={{ fontWeight: 600, color: 'text.secondary' }}
+            >
+              {t(BrightChainStrings.DatePage_Telemetry_MarsDelayMax)}
+            </Typography>
+            <Tooltip title={`${marsMaxDelaySec.toFixed(1)}s`}>
+              <Typography
+                component="dd"
+                variant="body2"
+                sx={{ m: 0, fontFamily: 'monospace' }}
+              >
+                {marsMaxDelayMillidays.toFixed(4)}{' '}
+                {t(BrightChainStrings.DatePage_Telemetry_Unit)}
+              </Typography>
+            </Tooltip>
+
+            {/* Mars current estimate */}
+            <Typography
+              component="dt"
+              variant="body2"
+              sx={{ fontWeight: 600, color: 'text.secondary' }}
+            >
+              {t(BrightChainStrings.DatePage_Telemetry_MarsDelayCurrent)}
+            </Typography>
+            <Tooltip title={`≈ ${marsCurrentDelaySec.toFixed(1)}s`}>
+              <Typography
+                component="dd"
+                variant="body2"
+                sx={{
+                  m: 0,
+                  fontFamily: 'monospace',
+                  fontWeight: 700,
+                  color: 'primary.main',
+                }}
+              >
+                {marsCurrentDelayMillidays.toFixed(4)}{' '}
+                {t(BrightChainStrings.DatePage_Telemetry_Unit)}
+              </Typography>
+            </Tooltip>
+          </Box>
+          <Typography
+            variant="caption"
+            color="text.secondary"
+            sx={{ fontStyle: 'italic' }}
+          >
+            {t(BrightChainStrings.DatePage_Telemetry_Footer)}
           </Typography>
         </CardContent>
       </Card>

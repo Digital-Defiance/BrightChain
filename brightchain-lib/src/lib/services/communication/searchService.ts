@@ -52,7 +52,7 @@ export class SearchService {
 
     // Sort by createdAt descending (newest first)
     results.sort(
-      (a, b) => b.message.createdAt.getTime() - a.message.createdAt.getTime(),
+      (a, b) => b.message.createdAt - a.message.createdAt,
     );
 
     return paginateItems(results, cursor, limit);

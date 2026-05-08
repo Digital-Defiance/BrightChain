@@ -37,6 +37,8 @@ import { ServiceProvider } from '../services/service.provider';
 import { ConstituentBlockListBlock } from './cbl';
 import { CBLBase } from './cblBase';
 import { createBlockHandleFromStore } from './handle';
+import { brightDateNow, brightDateToDate } from '../utils/brightDateConversions';
+import type { BrightDateTimestamp } from '../types/brightDateTimestamp';
 
 // We'll use jest.spyOn in beforeEach to mock validateSignature
 
@@ -67,13 +69,13 @@ class TestCblBlock<
     creator: Member<TID>,
     fileDataLength: number,
     dataAddresses: Array<ChecksumUint8Array>,
-    dateCreated?: Date,
+    dateCreated?: BrightDateTimestamp,
     signature?: SignatureUint8Array,
   ) {
-    dateCreated = dateCreated ?? new Date();
+    dateCreated = dateCreated ?? brightDateNow();
 
     // Validate date is not in the future
-    if (dateCreated > new Date()) {
+    if (dateCreated > brightDateNow()) {
       throw new BlockValidationError(
         BlockValidationErrorType.FutureCreationDate,
       );
@@ -133,7 +135,7 @@ class TestCblBlock<
 
     // Create header components
     const dateCreatedBuffer = new Uint8Array(8);
-    const timeMs = dateCreated.getTime();
+    const timeMs = brightDateToDate(dateCreated).getTime();
     const view = new DataView(dateCreatedBuffer.buffer);
     view.setUint32(0, Math.floor(timeMs / 0x100000000), false); // High 32 bits, big-endian
     view.setUint32(4, timeMs % 0x100000000, false); // Low 32 bits, big-endian
@@ -373,7 +375,7 @@ describe('ConstituentBlockListBlock', () => {
       creator: Member<TID>;
       fileDataLength: number;
       addresses: Array<ChecksumUint8Array>;
-      dateCreated: Date;
+      dateCreated: BrightDateTimestamp;
       signature: SignatureUint8Array;
     }> = {},
   ) =>
@@ -382,7 +384,7 @@ describe('ConstituentBlockListBlock', () => {
       (options.creator || creator) as Member<TID>,
       options.fileDataLength || defaultDataLength,
       options.addresses || dataAddresses,
-      options.dateCreated || new Date(), // Use a new date for each block
+      options.dateCreated || brightDateNow(), // Use a new date for each block
       options.signature,
     );
 
@@ -526,8 +528,7 @@ describe('ConstituentBlockListBlock', () => {
 
   describe('validation', () => {
     it('should reject future dates', () => {
-      const futureDate = new Date();
-      futureDate.setDate(futureDate.getDate() + 1);
+      const futureDate = brightDateNow() + 1; // 1 day in the future (BrightDate units)
 
       expect(() => createTestBlock({ dateCreated: futureDate })).toThrowType(
         BlockValidationError,
@@ -601,7 +602,7 @@ describe('ConstituentBlockListBlock', () => {
 
       // Verify header data is accessible
       expect(block.dateCreated).toBeDefined();
-      expect(block.dateCreated).toBeInstanceOf(Date);
+      expect(typeof block.dateCreated).toBe('number');
       expect(block.creator).toBe(creator);
       expect(block.addresses).toBeDefined();
       expect(block.addresses.length).toBe(dataAddresses.length);
@@ -639,15 +640,14 @@ describe('ConstituentBlockListBlock', () => {
     });
 
     it('should validate date fields', () => {
-      const now = new Date();
+      const now = brightDateNow();
       const block = createTestBlock();
 
       // Verify date is valid and not in the future
       expect(block.dateCreated).toBeDefined();
-      expect(block.dateCreated).toBeInstanceOf(Date);
-      expect(block.dateCreated.getTime()).toBeLessThanOrEqual(
-        now.getTime() + 1000,
-      ); // Allow 1 second tolerance
+      expect(typeof block.dateCreated).toBe('number');
+      // Allow small tolerance (1 second = 1/86400 days ≈ 0.0000116 BrightDate units)
+      expect(block.dateCreated).toBeLessThanOrEqual(now + 1 / 86400);
 
       expect(mockConsoleError).not.toHaveBeenCalled();
     });
@@ -723,7 +723,8 @@ describe('ConstituentBlockListBlock', () => {
       // Verify metadata is preserved
       expect(block.metadata).toBeDefined();
       expect(block.metadata.size).toBe(defaultBlockSize);
-      expect(block.metadata.dateCreated).toBeInstanceOf(Date);
+      expect(block.metadata.dateCreated).toBeDefined();
+      expect(typeof block.metadata.dateCreated).toBe('number');
 
       // Verify addresses are preserved
       expect(block.addresses).toBeDefined();

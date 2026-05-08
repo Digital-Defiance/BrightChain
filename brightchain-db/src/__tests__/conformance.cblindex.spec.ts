@@ -20,6 +20,7 @@ import {
   PooledMemoryBlockStore,
   resetInitialization,
 } from '@brightchain/brightchain-lib';
+import { brightDateNow } from '@brightchain/brightchain-lib';
 import { CBLVisibility } from '@brightchain/brightchain-lib/lib/interfaces/storage/cblIndex';
 import { promises as fs } from 'fs';
 import { tmpdir } from 'os';
@@ -97,7 +98,7 @@ describe('CBLIndex e2e persistence', () => {
         blockId1: id1 as any,
         blockId2: id2 as any,
         blockSize: 512,
-        createdAt: new Date(),
+        createdAt: brightDateNow(),
         visibility: CBLVisibility.Public,
       });
 
@@ -127,7 +128,7 @@ describe('CBLIndex e2e persistence', () => {
         blockId1: id1 as any,
         blockId2: id2 as any,
         blockSize: 512,
-        createdAt: new Date(),
+        createdAt: brightDateNow(),
         visibility: CBLVisibility.Public,
       });
 
@@ -168,7 +169,7 @@ describe('CBLIndex e2e persistence', () => {
         blockId1: id1 as any,
         blockId2: id2 as any,
         blockSize: 512,
-        createdAt: new Date(),
+        createdAt: brightDateNow(),
         visibility: CBLVisibility.Public,
       });
       await idx1.softDelete(magnetUrl);
@@ -212,7 +213,7 @@ describe('CBLIndex e2e persistence', () => {
         blockId1: a1 as any,
         blockId2: a2 as any,
         blockSize: 512,
-        createdAt: new Date(),
+        createdAt: brightDateNow(),
         visibility: CBLVisibility.Private,
       });
       expect(v1.versionNumber).toBe(1);
@@ -224,7 +225,7 @@ describe('CBLIndex e2e persistence', () => {
         blockId1: b1 as any,
         blockId2: b2 as any,
         blockSize: 512,
-        createdAt: new Date(),
+        createdAt: brightDateNow(),
         visibility: CBLVisibility.Private,
       });
       expect(v2.versionNumber).toBe(2);
@@ -273,7 +274,7 @@ describe('CBLIndex e2e persistence', () => {
         blockId1: a1 as any,
         blockId2: a2 as any,
         blockSize: 512,
-        createdAt: new Date(),
+        createdAt: brightDateNow(),
         visibility: CBLVisibility.Public,
         poolId: 'pool-x',
       });
@@ -284,7 +285,7 @@ describe('CBLIndex e2e persistence', () => {
         blockId1: b1 as any,
         blockId2: b2 as any,
         blockSize: 512,
-        createdAt: new Date(),
+        createdAt: brightDateNow(),
         visibility: CBLVisibility.Public,
         poolId: 'pool-y',
       });
@@ -319,7 +320,7 @@ describe('CBLIndex e2e persistence', () => {
           blockId1: id1 as any,
           blockId2: id2 as any,
           blockSize: 512,
-          createdAt: new Date(),
+          createdAt: brightDateNow(),
           visibility: CBLVisibility.Public,
           poolId: 'counted-pool',
         });
@@ -361,7 +362,7 @@ describe('CBLIndex e2e persistence', () => {
         blockId1: id1 as any,
         blockId2: id2 as any,
         blockSize: 512,
-        createdAt: new Date(),
+        createdAt: brightDateNow(),
         visibility: CBLVisibility.Shared,
       });
       await idx1.shareWith(magnetUrl, 'user-123');
@@ -403,7 +404,7 @@ describe('CBLIndex e2e persistence', () => {
         blockId1: a1 as any,
         blockId2: a2 as any,
         blockSize: 512,
-        createdAt: new Date(),
+        createdAt: brightDateNow(),
         visibility: CBLVisibility.Public,
       });
 
@@ -413,7 +414,7 @@ describe('CBLIndex e2e persistence', () => {
         blockId1: b1 as any,
         blockId2: b2 as any,
         blockSize: 512,
-        createdAt: new Date(),
+        createdAt: brightDateNow(),
         visibility: CBLVisibility.Private,
       });
 

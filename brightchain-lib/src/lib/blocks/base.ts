@@ -8,7 +8,9 @@ import { BlockType } from '../enumerations/blockType';
 import { BlockValidationErrorType } from '../enumerations/blockValidationErrorType';
 import { BlockAccessError, BlockValidationError } from '../errors/block';
 import { IBaseBlock } from '../interfaces/blocks/base';
+import type { BrightDateTimestamp } from '../types/brightDateTimestamp';
 import { Checksum } from '../types/checksum';
+import { brightDateNow } from '../utils/brightDateConversions';
 
 /**
  * BaseBlock provides core block functionality.
@@ -50,7 +52,7 @@ export abstract class BaseBlock implements IBaseBlock {
   protected readonly _blockType: BlockType;
   protected readonly _blockDataType: BlockDataType;
   protected readonly _checksum: Checksum;
-  protected readonly _dateCreated: Date;
+  protected readonly _dateCreated: BrightDateTimestamp;
   protected readonly _metadata: BlockMetadata;
   protected readonly _canRead: boolean;
   protected readonly _canPersist: boolean;
@@ -82,9 +84,9 @@ export abstract class BaseBlock implements IBaseBlock {
       );
     }
 
-    // Validate date first
-    const now = new Date();
-    this._dateCreated = metadata ? new Date(metadata?.dateCreated) : now;
+    // Validate date first — no future dates allowed
+    const now = brightDateNow();
+    this._dateCreated = metadata?.dateCreated ?? now;
     if (this._dateCreated > now) {
       throw new BlockValidationError(
         BlockValidationErrorType.FutureCreationDate,
@@ -142,7 +144,7 @@ export abstract class BaseBlock implements IBaseBlock {
   /**
    * When the block was created
    */
-  public get dateCreated(): Date {
+  public get dateCreated(): BrightDateTimestamp {
     return this._dateCreated;
   }
 

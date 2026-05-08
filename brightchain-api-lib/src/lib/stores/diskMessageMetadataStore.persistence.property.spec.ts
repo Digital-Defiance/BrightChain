@@ -1,5 +1,6 @@
 import {
   BlockSize,
+  dateToBrightDate,
   DeliveryStatus,
   DurabilityLevel,
   IMessageMetadata,
@@ -23,7 +24,7 @@ const arbValidDate = fc
     min: new Date('2020-01-01').getTime(),
     max: new Date('2030-12-31').getTime(),
   })
-  .map((timestamp) => new Date(timestamp));
+  .map((timestamp) => dateToBrightDate(new Date(timestamp)));
 
 describe('DiskMessageMetadataStore - Persistence Property Tests', () => {
   let tempDir: string;
@@ -193,8 +194,8 @@ describe('DiskMessageMetadataStore - Persistence Property Tests', () => {
 
             const found = retrieved.find((m) => m.blockId === metadata.blockId);
             expect(found?.acknowledgments.has(recipientIds[0])).toBe(true);
-            expect(found?.acknowledgments.get(recipientIds[0])?.getTime()).toBe(
-              ackTime.getTime(),
+            expect(found?.acknowledgments.get(recipientIds[0])).toBe(
+              ackTime,
             );
           } finally {
             rmSync(iterTempDir, { recursive: true, force: true });

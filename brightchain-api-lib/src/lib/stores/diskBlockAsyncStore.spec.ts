@@ -2,6 +2,7 @@ import {
   BlockDataType,
   BlockSize,
   BlockType,
+  brightDateNow,
   RawDataBlock,
   ServiceProvider,
   StoreError,
@@ -46,7 +47,7 @@ describe('DiskBlockAsyncStore', () => {
       const block = new RawDataBlock(
         blockSize,
         dataBuffer,
-        new Date(),
+        brightDateNow(),
         checksum,
         BlockType.RawData,
         BlockDataType.RawData,
@@ -65,7 +66,7 @@ describe('DiskBlockAsyncStore', () => {
       expect(retrieved.data).toEqual(dataBuffer);
       expect(retrieved.blockSize).toBe(blockSize);
       expect(retrieved.blockType).toBe(BlockType.RawData);
-      expect(retrieved.dateCreated).toBeInstanceOf(Date);
+      expect(retrieved.dateCreated).toBeGreaterThan(0); // BrightDateTimestamp is a positive number
     });
 
     it('should get block handle', async () => {
@@ -77,7 +78,7 @@ describe('DiskBlockAsyncStore', () => {
       const block = new RawDataBlock(
         blockSize,
         dataBuffer,
-        new Date(),
+        brightDateNow(),
         checksum,
         BlockType.RawData,
         BlockDataType.RawData,
@@ -123,7 +124,7 @@ describe('DiskBlockAsyncStore', () => {
       const block = new RawDataBlock(
         BlockSize.Tiny,
         wrongSizeBuffer,
-        new Date(),
+        brightDateNow(),
         checksum,
         BlockType.RawData,
         BlockDataType.RawData,
@@ -145,7 +146,7 @@ describe('DiskBlockAsyncStore', () => {
       const block = new RawDataBlock(
         blockSize,
         dataBuffer,
-        new Date(),
+        brightDateNow(),
         checksum,
         BlockType.RawData,
         BlockDataType.RawData,
@@ -170,7 +171,7 @@ describe('DiskBlockAsyncStore', () => {
       const block1 = new RawDataBlock(
         blockSize,
         buffer1,
-        new Date(),
+        brightDateNow(),
         checksumService.calculateChecksum(buffer1),
         BlockType.RawData,
         BlockDataType.RawData,
@@ -184,7 +185,7 @@ describe('DiskBlockAsyncStore', () => {
       const block2 = new RawDataBlock(
         blockSize,
         buffer2,
-        new Date(),
+        brightDateNow(),
         checksumService.calculateChecksum(buffer2),
         BlockType.RawData,
         BlockDataType.RawData,
@@ -200,7 +201,7 @@ describe('DiskBlockAsyncStore', () => {
       const handle2 = store.get(block2.idChecksum);
 
       // Create metadata for result
-      const destDate = new Date();
+      const destDate = brightDateNow();
       const result = await store.xor([handle1, handle2], {
         dateCreated: destDate,
         size: blockSize,
@@ -218,7 +219,7 @@ describe('DiskBlockAsyncStore', () => {
     });
 
     it('should throw error when XORing empty block list', async () => {
-      const destDate = new Date();
+      const destDate = brightDateNow();
       await expect(
         store.xor([], {
           dateCreated: destDate,

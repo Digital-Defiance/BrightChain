@@ -14,6 +14,7 @@ import type { PlatformID } from '@digitaldefiance/ecies-lib';
 
 import { OutboundDeliveryStatus } from '../../enumerations/messaging/outboundDeliveryStatus';
 import { SpamClassification } from '../../enumerations/messaging/spamClassification';
+import type { BrightDateTimestamp } from '../../types/brightDateTimestamp';
 
 /**
  * An outbound email message queued for external SMTP delivery via the Email Gateway.
@@ -46,13 +47,13 @@ export interface IOutboundEmailMessage<TID extends PlatformID = string> {
   retryCount: number;
 
   /** Timestamp of the next scheduled delivery attempt */
-  nextAttemptAt: Date;
+  nextAttemptAt: BrightDateTimestamp;
 
   /** Current delivery status */
   status: OutboundDeliveryStatus;
 
   /** Timestamp when the message was enqueued */
-  enqueuedAt: Date;
+  enqueuedAt: BrightDateTimestamp;
 
   /** Maximum allowed message size in bytes */
   maxMessageSizeBytes: number;
@@ -82,7 +83,7 @@ export interface IOutboundEmailStatus<TID extends PlatformID = string> {
   retryCount: number;
 
   /** Timestamp of the most recent delivery attempt */
-  lastAttemptAt?: Date;
+  lastAttemptAt?: BrightDateTimestamp;
 
   /** Human-readable reason for delivery failure, if applicable */
   failureReason?: string;
@@ -116,7 +117,7 @@ export interface IBounceNotification<TID extends PlatformID = string> {
   dsnMessage?: string;
 
   /** Timestamp when the bounce was received */
-  timestamp: Date;
+  timestamp: BrightDateTimestamp;
 }
 
 /**
@@ -189,7 +190,7 @@ export interface IInboundEmailResult<TID extends PlatformID = string> {
   authenticationResults: IEmailAuthenticationResult;
 
   /** Timestamp when the message was received by the gateway */
-  receivedAt: Date;
+  receivedAt: BrightDateTimestamp;
 }
 
 /**

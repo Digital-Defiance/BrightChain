@@ -330,7 +330,7 @@ describe('BlockRegistry Property Tests', () => {
 
             expect(manifestBlockSet).toEqual(expectedBlockSet);
             expect(manifest.nodeId).toBe(nodeId);
-            expect(manifest.generatedAt).toBeInstanceOf(Date);
+            expect(typeof manifest.generatedAt).toBe("number");
             expect(typeof manifest.checksum).toBe('string');
             expect(manifest.checksum.length).toBe(64); // SHA-256 hex
 

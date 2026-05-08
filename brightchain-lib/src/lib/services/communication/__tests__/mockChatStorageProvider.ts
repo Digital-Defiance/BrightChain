@@ -158,6 +158,10 @@ const arbDate = fc.date({
   max: new Date('2030-01-01'),
 });
 
+/** Arbitrary for a BrightDateTimestamp (number) within a reasonable range.
+ * J2000.0 epoch: 2020-01-01 ≈ 7305.5, 2030-01-01 ≈ 10957.5 */
+const arbBrightDate = fc.float({ min: 7305.5, max: 10957.5, noNaN: true });
+
 /** Arbitrary for DefaultRole enum values. */
 const arbRole = fc.constantFrom(
   DefaultRole.OWNER,
@@ -216,16 +220,16 @@ export const arbEncryptedSharedKey = (
 const arbGroupMember: fc.Arbitrary<IGroupMember> = fc.record({
   memberId: arbId,
   role: arbRole,
-  joinedAt: arbDate,
-  mutedUntil: fc.option(arbDate, { nil: undefined }),
+  joinedAt: arbBrightDate,
+  mutedUntil: fc.option(arbBrightDate, { nil: undefined }),
 });
 
 /** Arbitrary for IChannelMember. */
 const arbChannelMember: fc.Arbitrary<IChannelMember> = fc.record({
   memberId: arbId,
   role: arbRole,
-  joinedAt: arbDate,
-  mutedUntil: fc.option(arbDate, { nil: undefined }),
+  joinedAt: arbBrightDate,
+  mutedUntil: fc.option(arbBrightDate, { nil: undefined }),
 });
 
 /**
@@ -239,8 +243,8 @@ export const arbConversation: fc.Arbitrary<IConversation> = fc
     participant1: arbId,
     participant2: arbId,
     encryptedSharedKey: arbEncryptedSharedKey(),
-    createdAt: arbDate,
-    lastMessageAt: arbDate,
+    createdAt: arbBrightDate,
+    lastMessageAt: arbBrightDate,
     lastMessagePreview: fc.option(fc.string({ minLength: 0, maxLength: 100 }), {
       nil: undefined,
     }),
@@ -265,8 +269,8 @@ export const arbGroup: fc.Arbitrary<IGroup> = fc.record({
   creatorId: arbId,
   members: fc.array(arbGroupMember, { minLength: 1, maxLength: 10 }),
   encryptedSharedKey: arbEncryptedSharedKey(),
-  createdAt: arbDate,
-  lastMessageAt: arbDate,
+  createdAt: arbBrightDate,
+  lastMessageAt: arbBrightDate,
   pinnedMessageIds: fc.array(arbId, { minLength: 0, maxLength: 5 }),
   promotedFromConversation: fc.option(arbId, { nil: undefined }),
 });
@@ -283,8 +287,8 @@ export const arbChannel: fc.Arbitrary<IChannel> = fc.record({
   visibility: arbVisibility,
   members: fc.array(arbChannelMember, { minLength: 1, maxLength: 10 }),
   encryptedSharedKey: arbEncryptedSharedKey(),
-  createdAt: arbDate,
-  lastMessageAt: arbDate,
+  createdAt: arbBrightDate,
+  lastMessageAt: arbBrightDate,
   pinnedMessageIds: fc.array(arbId, { minLength: 0, maxLength: 5 }),
   historyVisibleToNewMembers: fc.boolean(),
   serverId: fc.option(arbId, { nil: undefined }),
@@ -310,8 +314,8 @@ export const arbServer: fc.Arbitrary<IServer> = fc.record({
     }) as fc.Arbitrary<IServerCategory>,
     { minLength: 0, maxLength: 5 },
   ),
-  createdAt: arbDate,
-  updatedAt: arbDate,
+  createdAt: arbBrightDate,
+  updatedAt: arbBrightDate,
 });
 
 /**
@@ -331,8 +335,8 @@ export const arbMessage = (
     contextId: contextId ? fc.constant(contextId) : arbId,
     senderId: arbId,
     encryptedContent: fc.base64String({ minLength: 1, maxLength: 200 }),
-    createdAt: arbDate,
-    editedAt: fc.option(arbDate, { nil: undefined }),
+    createdAt: arbBrightDate,
+    editedAt: fc.option(arbBrightDate, { nil: undefined }),
     editHistory: fc.constant([]),
     deleted: fc.constant(false),
     deletedBy: fc.option(arbId, { nil: undefined }),
@@ -340,12 +344,12 @@ export const arbMessage = (
     reactions: fc.constant([]),
     keyEpoch: fc.nat({ max: 100 }),
     attachments: fc.constant([]),
-    expiresAt: fc.option(arbDate, { nil: undefined }),
+    expiresAt: fc.option(arbBrightDate, { nil: undefined }),
     maxReads: fc.option(fc.nat({ max: 100 }), { nil: undefined }),
     readCount: fc.option(fc.nat({ max: 100 }), { nil: undefined }),
-    readBy: fc.option(fc.constant(new Map<string, Date>()), { nil: undefined }),
+    readBy: fc.option(fc.constant(new Map<string, number>()), { nil: undefined }),
     exploded: fc.option(fc.boolean(), { nil: undefined }),
-    explodedAt: fc.option(arbDate, { nil: undefined }),
+    explodedAt: fc.option(arbBrightDate, { nil: undefined }),
   });
 
 /**
@@ -356,8 +360,8 @@ export const arbInviteToken: fc.Arbitrary<IInviteToken> = fc.record({
   token: fc.stringMatching(/^[a-zA-Z0-9]{8,32}$/),
   channelId: arbId,
   createdBy: arbId,
-  createdAt: arbDate,
-  expiresAt: arbDate,
+  createdAt: arbBrightDate,
+  expiresAt: arbBrightDate,
   maxUses: fc.integer({ min: 1, max: 1000 }),
   currentUses: fc.nat({ max: 999 }),
 });
@@ -371,8 +375,8 @@ export const arbServerInviteToken: fc.Arbitrary<IServerInviteToken> = fc.record(
     token: fc.stringMatching(/^[a-zA-Z0-9]{8,32}$/),
     serverId: arbId,
     createdBy: arbId,
-    createdAt: arbDate,
-    expiresAt: fc.option(arbDate, { nil: undefined }),
+    createdAt: arbBrightDate,
+    expiresAt: fc.option(arbBrightDate, { nil: undefined }),
     maxUses: fc.option(fc.integer({ min: 1, max: 1000 }), { nil: undefined }),
     currentUses: fc.nat({ max: 999 }),
   },

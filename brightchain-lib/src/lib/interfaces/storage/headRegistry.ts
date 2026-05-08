@@ -1,3 +1,4 @@
+import type { BrightDateTimestamp } from '../../types/brightDateTimestamp';
 import type { IWriteProof } from '../auth/writeProof';
 import type { HeadRecord } from './headRegistryDriver';
 
@@ -15,7 +16,7 @@ export interface DeferredHeadUpdate {
   /** The block ID of the announced head */
   blockId: string;
   /** The timestamp of the announced head (for last-writer-wins) */
-  timestamp: Date;
+  timestamp: BrightDateTimestamp;
 }
 
 /**
@@ -101,7 +102,7 @@ export interface IHeadRegistry {
    *
    * @see Requirements 2.2, 2.3
    */
-  getHeadTimestamp(dbName: string, collectionName: string): Date | undefined;
+  getHeadTimestamp(dbName: string, collectionName: string): BrightDateTimestamp | undefined;
 
   /**
    * Merge a remote head update using last-writer-wins conflict resolution.
@@ -121,7 +122,7 @@ export interface IHeadRegistry {
     dbName: string,
     collectionName: string,
     blockId: string,
-    timestamp: Date,
+    timestamp: BrightDateTimestamp,
     writeProof?: IWriteProof,
   ): Promise<boolean>;
 
@@ -141,7 +142,7 @@ export interface IHeadRegistry {
     dbName: string,
     collectionName: string,
     blockId: string,
-    timestamp: Date,
+    timestamp: BrightDateTimestamp,
   ): Promise<void>;
 
   /**

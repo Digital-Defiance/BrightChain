@@ -11,6 +11,7 @@
 
 import {
   BlockSize,
+  brightDateNow,
   DurabilityLevel,
   initializeBrightChain,
   RawDataBlock,
@@ -72,7 +73,7 @@ describe('DiskBlockAsyncStore Access Tracking Property Tests', () => {
 
             try {
               const block = new RawDataBlock(blockSize, data);
-              const initialTime = new Date();
+              const initialTime = brightDateNow();
 
               // Store the block with ephemeral durability (no FEC needed)
               await store.setData(block, {
@@ -94,8 +95,8 @@ describe('DiskBlockAsyncStore Access Tracking Property Tests', () => {
               const metadata = await store.getMetadata(block.idChecksum);
               expect(metadata).not.toBeNull();
               expect(metadata!.accessCount).toBe(accessCount);
-              expect(metadata!.lastAccessedAt.getTime()).toBeGreaterThanOrEqual(
-                initialTime.getTime(),
+              expect(metadata!.lastAccessedAt).toBeGreaterThanOrEqual(
+                initialTime,
               );
             } finally {
               rmSync(iterTestDir, { recursive: true, force: true });
@@ -194,14 +195,14 @@ describe('DiskBlockAsyncStore Access Tracking Property Tests', () => {
 
               // Get initial lastAccessedAt
               let metadata = await store.getMetadata(block.idChecksum);
-              const initialAccessTime = metadata!.lastAccessedAt.getTime();
+              const initialAccessTime = metadata!.lastAccessedAt;
 
               // Access the block
               await store.getMetadataStore().recordAccess(keyHex);
 
               // Verify lastAccessedAt is updated
               metadata = await store.getMetadata(block.idChecksum);
-              expect(metadata!.lastAccessedAt.getTime()).toBeGreaterThanOrEqual(
+              expect(metadata!.lastAccessedAt).toBeGreaterThanOrEqual(
                 initialAccessTime,
               );
             } finally {

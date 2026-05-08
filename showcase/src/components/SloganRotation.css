@@ -1,0 +1,14 @@
+.hero-badge-slogan {
+  display: inline-block;
+  padding: 0.5rem 1.5rem;
+  background: transparent;
+  border: 2px solid var(--accent-primary);
+  border-radius: 20px;
+  margin-bottom: 2rem;
+}
+
+.badge-text-slogan {
+  color: var(--accent-primary);
+  font-weight: 600;
+  font-size: 0.95rem;
+}

@@ -8,8 +8,13 @@
  * @requirements joule-resource-credits spec, Req 7.3
  */
 
-import { formatJoule, toBrightDateString } from '@brightchain/brightchain-lib';
+import {
+  BrightChainStrings,
+  formatJoule,
+} from '@brightchain/brightchain-lib';
+import { useI18n } from '@digitaldefiance/express-suite-react-components';
 import * as React from 'react';
+import { useFormattedDate } from '../hooks/useFormattedDate';
 
 // ---------------------------------------------------------------------------
 // Props
@@ -52,13 +57,16 @@ export const JouleEventLog: React.FC<JouleEventLogProps> = ({
   loading = false,
   error = null,
 }) => {
+  const { tBranded: t } = useI18n();
+  const { formatDateTime } = useFormattedDate();
+
   if (loading) {
     return (
       <div
         className={`joule-event-log joule-event-log--loading${className ? ` ${className}` : ''}`}
         style={style}
         aria-busy="true"
-        aria-label="Loading Joule events"
+        aria-label={t(BrightChainStrings.JouleEventLog_Loading)}
       >
         <div className="joule-event-log__skeleton" aria-hidden="true" />
       </div>
@@ -71,7 +79,7 @@ export const JouleEventLog: React.FC<JouleEventLogProps> = ({
         className={`joule-event-log joule-event-log--error${className ? ` ${className}` : ''}`}
         style={style}
         role="alert"
-        aria-label="Joule event log error"
+        aria-label={t(BrightChainStrings.JouleEventLog_Error)}
       >
         <span className="joule-event-log__error-message">{error}</span>
       </div>
@@ -83,10 +91,10 @@ export const JouleEventLog: React.FC<JouleEventLogProps> = ({
       <div
         className={`joule-event-log joule-event-log--empty${className ? ` ${className}` : ''}`}
         style={style}
-        aria-label="Joule event log"
+        aria-label={t(BrightChainStrings.JouleEventLog_AriaLabel)}
       >
         <p className="joule-event-log__empty-message">
-          No Joule events recorded yet.
+          {t(BrightChainStrings.JouleEventLog_Empty)}
         </p>
       </div>
     );
@@ -96,21 +104,31 @@ export const JouleEventLog: React.FC<JouleEventLogProps> = ({
     <div
       className={`joule-event-log${className ? ` ${className}` : ''}`}
       style={style}
-      aria-label="Joule event log"
+      aria-label={t(BrightChainStrings.JouleEventLog_AriaLabel)}
     >
       <table className="joule-event-log__table" role="table">
         <thead>
           <tr>
-            <th scope="col">Time</th>
-            <th scope="col">Kind</th>
-            <th scope="col">Amount</th>
-            <th scope="col">Description</th>
+            <th scope="col">
+              {t(BrightChainStrings.JouleEventLog_Col_Time)}
+            </th>
+            <th scope="col">
+              {t(BrightChainStrings.JouleEventLog_Col_Kind)}
+            </th>
+            <th scope="col">
+              {t(BrightChainStrings.JouleEventLog_Col_Amount)}
+            </th>
+            <th scope="col">
+              {t(BrightChainStrings.JouleEventLog_Col_Description)}
+            </th>
           </tr>
         </thead>
         <tbody>
           {events.map((ev) => (
             <tr key={ev.id}>
-              <td>{new Date(ev.timestamp).toLocaleString()} (BD {toBrightDateString(new Date(ev.timestamp), 3)})</td>
+              <td>
+                {formatDateTime(new Date(ev.timestamp))}
+              </td>
               <td>{ev.kind}</td>
               <td className="joule-event-log__amount">
                 {formatJoule(ev.microJoules)}

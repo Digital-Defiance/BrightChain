@@ -8,6 +8,7 @@
 
 import { BlockSize } from '../../enumerations/blockSize';
 import { Checksum } from '../../types/checksum';
+import type { BrightDateTimestamp } from '../../types/brightDateTimestamp';
 import { BlockStoreOptions } from './blockMetadata';
 import { IBlockStore } from './blockStore';
 import type { CBLStorageResult, CBLWhiteningOptions } from './cblWhitening';
@@ -92,9 +93,9 @@ export interface PoolStats {
   /** Total bytes stored in the pool */
   totalBytes: number;
   /** When the pool was first created (first block stored) */
-  createdAt: Date;
+  createdAt: BrightDateTimestamp;
   /** When the pool was last accessed (any read or write) */
-  lastAccessedAt: Date;
+  lastAccessedAt: BrightDateTimestamp;
 }
 
 /** Result of a pool deletion validation check */

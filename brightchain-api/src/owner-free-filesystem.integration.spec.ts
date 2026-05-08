@@ -18,6 +18,7 @@
 
 import {
   BlockSize,
+  brightDateNow,
   MemoryBlockStore,
   RandomBlock,
   RawDataBlock,
@@ -106,7 +107,7 @@ describe('Owner Free Filesystem (OFF) Integration Tests', () => {
       const messageBlock = new RawDataBlock(
         blockSize,
         paddedMessage,
-        new Date(),
+        brightDateNow(),
         messageChecksum,
       );
 
@@ -212,7 +213,7 @@ describe('Owner Free Filesystem (OFF) Integration Tests', () => {
           ServiceLocator.getServiceProvider().checksumService.calculateChecksum(
             chunk,
           );
-        blocks.push(new RawDataBlock(blockSize, chunk, new Date(), checksum));
+        blocks.push(new RawDataBlock(blockSize, chunk, brightDateNow(), checksum));
 
         // Create 3 random blocks for each message block
         const randoms = [
@@ -312,7 +313,7 @@ describe('Owner Free Filesystem (OFF) Integration Tests', () => {
       const messageBlock = new RawDataBlock(
         blockSize,
         paddedSecret,
-        new Date(),
+        brightDateNow(),
         messageChecksum,
       );
 

@@ -12,6 +12,7 @@ import {
   IPublicMemberData,
 } from '../../interfaces/member/memberData';
 import { SchemaDefinition, SerializedValue } from '../../sharedTypes';
+import { normalizeToBrightDate, brightDateToISO } from '../../utils/brightDateConversions';
 
 const isString = (value: unknown): value is string => typeof value === 'string';
 const isStringArray = (value: unknown): value is string[] =>
@@ -195,13 +196,13 @@ export const PrivateMemberSchema: SchemaDefinition<IPrivateMemberData> = {
     required: true,
     serialize: (
       value: Array<{
-        timestamp: Date;
+        timestamp: number;
         action: string;
         details: Record<string, unknown>;
       }>,
     ): SerializedValue[] =>
       value.map((entry) => ({
-        timestamp: entry.timestamp.toISOString(),
+        timestamp: brightDateToISO(entry.timestamp),
         action: entry.action,
         details: Object.fromEntries(
           Object.entries(entry.details).map(([k, v]) => [
@@ -213,7 +214,7 @@ export const PrivateMemberSchema: SchemaDefinition<IPrivateMemberData> = {
     hydrate: (
       value: unknown,
     ): Array<{
-      timestamp: Date;
+      timestamp: number;
       action: string;
       details: Record<string, unknown>;
     }> => {
@@ -223,7 +224,7 @@ export const PrivateMemberSchema: SchemaDefinition<IPrivateMemberData> = {
         );
       }
       return value.map((entry) => ({
-        timestamp: new Date(entry.timestamp),
+        timestamp: normalizeToBrightDate(entry.timestamp),
         action: entry.action,
         details: entry.details,
       }));

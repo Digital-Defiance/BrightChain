@@ -1,6 +1,7 @@
 import type { PlatformID } from '@digitaldefiance/ecies-lib';
 
 import { SpamClassification } from '../../enumerations/messaging/spamClassification';
+import type { BrightDateTimestamp } from '../../types/brightDateTimestamp';
 import { IMailbox } from './emailAddress';
 import { IMessageMetadata } from './messageMetadata';
 import {
@@ -50,7 +51,7 @@ export interface IResentHeaderBlock {
   /** Resent-Bcc: optional blind carbon copy recipients for the forward */
   resentBcc?: IMailbox[];
   /** Resent-Date: date of the forward */
-  resentDate: Date;
+  resentDate: BrightDateTimestamp;
   /** Resent-Message-ID: unique identifier for this forward action */
   resentMessageId: string;
   /** Resent-Sender: optional actual sender if different from Resent-From */
@@ -206,7 +207,7 @@ export interface IEmailMetadata<TID extends PlatformID = string>
    *
    * @see Requirement 1.5
    */
-  date: Date;
+  date: BrightDateTimestamp;
 
   // ─── MIME Headers (RFC 2045) ──────────────────────────────────────────
 
@@ -305,7 +306,7 @@ export interface IEmailMetadata<TID extends PlatformID = string>
    *
    * @see Requirement 12.3
    */
-  readReceipts: Map<TID, Date>;
+  readReceipts: Map<TID, BrightDateTimestamp>;
 
   // ─── Resent Headers for Forwarding (RFC 5322 Section 3.6.6) ───────────
 

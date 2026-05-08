@@ -233,8 +233,8 @@ describe('Feature: api-lib-to-lib-migration, Property 22: Conversation Service C
 
           const updated = service.getConversation(conversation.id);
           expect(updated).toBeDefined();
-          expect(updated!.lastMessageAt.getTime()).toBeGreaterThanOrEqual(
-            initialLastMessageAt.getTime(),
+          expect(updated!.lastMessageAt).toBeGreaterThanOrEqual(
+            initialLastMessageAt,
           );
         },
       ),

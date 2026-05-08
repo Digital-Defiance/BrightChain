@@ -4,6 +4,7 @@ import {
   PlatformID,
 } from '@digitaldefiance/ecies-lib';
 import { MemberStatusType } from '../../enumerations/memberStatusType';
+import type { BrightDateTimestamp } from '../../types/brightDateTimestamp';
 
 /**
  * Metadata for a BrightTrust member
@@ -25,8 +26,8 @@ export interface IBrightTrustMember<TID extends PlatformID = GuidV4Uint8Array> {
   isActive: boolean;
   /** Member status for access control (banned/suspended checks). Defaults to Active. */
   status?: MemberStatusType;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: BrightDateTimestamp;
+  updatedAt: BrightDateTimestamp;
 }
 
 /**
@@ -49,7 +50,7 @@ export interface SealedDocumentResult<
   encryptedData: Uint8Array;
   memberIds: TID[];
   sharesRequired: number;
-  createdAt: Date;
+  createdAt: BrightDateTimestamp;
 }
 
 /**
@@ -62,7 +63,7 @@ export interface BrightTrustDocumentInfo<
   id: TID;
   memberIds: TID[];
   sharesRequired: number;
-  createdAt: Date;
+  createdAt: BrightDateTimestamp;
   creatorId: TID;
 }
 

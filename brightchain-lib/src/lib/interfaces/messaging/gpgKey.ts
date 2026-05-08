@@ -8,6 +8,8 @@
  * @see Requirements 1.1, 1.3, 4.1, 5.3
  */
 
+import type { BrightDateTimestamp } from '../../types/brightDateTimestamp';
+
 /**
  * Metadata for a GPG (OpenPGP) key.
  *
@@ -25,10 +27,10 @@ export interface IGpgKeyMetadata {
   fingerprint: string;
 
   /** Date the key was created */
-  createdAt: Date;
+  createdAt: BrightDateTimestamp;
 
   /** Date the key expires, or null if it does not expire */
-  expiresAt: Date | null;
+  expiresAt: BrightDateTimestamp | null;
 
   /** User ID string in the format "Display Name <email@example.com>" */
   userId: string;

@@ -12,6 +12,7 @@ import { ChecksumService } from './services/checksum.service';
 import { ServiceProvider } from './services/service.provider';
 import { initializeTestServices } from './test/service.initializer.helper';
 import { Checksum } from './types/checksum';
+import { brightDateNow } from './utils/brightDateConversions';
 
 // Mock the CBLBase class to avoid signature validation issues
 jest.mock('./blocks/cblBase', () => {
@@ -68,7 +69,7 @@ describe('CblStream', () => {
 
     const { headerData } = cblService.makeCblHeader(
       creator,
-      new Date(),
+      brightDateNow(),
       addresses.length,
       data.length,
       Buffer.from(addressList),
@@ -109,7 +110,7 @@ describe('CblStream', () => {
       blockSize,
       Buffer.from(data),
       checksumService.calculateChecksum(data),
-      new Date(),
+      brightDateNow(),
       undefined,
       true,
       true,

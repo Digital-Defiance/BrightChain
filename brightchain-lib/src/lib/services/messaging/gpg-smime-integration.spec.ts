@@ -23,6 +23,7 @@ import { EmailEncryptionService } from './emailEncryptionService';
 import { GpgKeyManager } from './gpgKeyManager';
 import { RecipientKeyResolver } from './recipientKeyResolver';
 import { SmimeCertificateManager } from './smimeCertificateManager';
+import { brightDateNow } from '../../utils/brightDateConversions';
 
 // ── Helpers ──────────────────────────────────────────────────────────────
 
@@ -104,8 +105,8 @@ function createInMemoryKeyStore(): IKeyStore & {
         metadata: keyPair.metadata as unknown as
           | IGpgKeyMetadata
           | ISmimeCertificateMetadata,
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        createdAt: brightDateNow(),
+        updatedAt: brightDateNow(),
       };
       _entries.push(entry);
       return entry;
@@ -121,8 +122,8 @@ function createInMemoryKeyStore(): IKeyStore & {
         metadata: metadata as unknown as
           | IGpgKeyMetadata
           | ISmimeCertificateMetadata,
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        createdAt: brightDateNow(),
+        updatedAt: brightDateNow(),
       };
       _entries.push(entry);
       return entry;
@@ -163,8 +164,8 @@ function createInMemoryKeyStore(): IKeyStore & {
         metadata: bundle.metadata as unknown as
           | IGpgKeyMetadata
           | ISmimeCertificateMetadata,
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        createdAt: brightDateNow(),
+        updatedAt: brightDateNow(),
       };
       _entries.push(entry);
       return entry;
@@ -180,8 +181,8 @@ function createInMemoryKeyStore(): IKeyStore & {
         metadata: metadata as unknown as
           | IGpgKeyMetadata
           | ISmimeCertificateMetadata,
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        createdAt: brightDateNow(),
+        updatedAt: brightDateNow(),
       };
       _entries.push(entry);
       return entry;

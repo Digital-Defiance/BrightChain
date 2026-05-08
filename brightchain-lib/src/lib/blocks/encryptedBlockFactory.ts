@@ -11,6 +11,7 @@ import { BlockValidationError } from '../errors/block';
 import { ChecksumMismatchError } from '../errors/checksumMismatch';
 import { ChecksumService } from '../services/checksum.service';
 import { getGlobalServiceProvider } from '../services/globalServiceProvider';
+import type { BrightDateTimestamp } from '../types/brightDateTimestamp';
 import { Checksum } from '../types/checksum';
 import { EncryptedBlock } from './encrypted';
 
@@ -53,7 +54,7 @@ export class EncryptedBlockFactory {
     data: Uint8Array,
     checksum: Checksum,
     creator: Member<TID>,
-    dateCreated?: Date,
+    dateCreated?: BrightDateTimestamp,
     lengthBeforeEncryption?: number,
     canRead = true,
     canPersist = true,

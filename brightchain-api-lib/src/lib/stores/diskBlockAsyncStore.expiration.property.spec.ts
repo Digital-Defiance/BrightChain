@@ -12,6 +12,7 @@
 
 import {
   BlockSize,
+  dateToBrightDate,
   DurabilityLevel,
   initializeBrightChain,
   RawDataBlock,
@@ -88,16 +89,16 @@ describe('DiskBlockAsyncStore Expiration Property Tests', () => {
                 const block = new RawDataBlock(blockSize, spec.data);
                 const blockId = block.idChecksum.toHex();
 
-                let expiresAt: Date | undefined;
+                let expiresAt: number | undefined;
                 let shouldBeExpired = false;
 
                 if (spec.expirationState === -1) {
                   // Expired - set expiration in the past
-                  expiresAt = new Date(now - 1000 * 60); // 1 minute ago
+                  expiresAt = dateToBrightDate(new Date(now - 1000 * 60)); // 1 minute ago
                   shouldBeExpired = true;
                 } else if (spec.expirationState === 1) {
                   // Not expired - set expiration in the future
-                  expiresAt = new Date(now + 1000 * 60 * 60); // 1 hour from now
+                  expiresAt = dateToBrightDate(new Date(now + 1000 * 60 * 60)); // 1 hour from now
                   shouldBeExpired = false;
                 }
                 // expirationState === 0 means no expiration (undefined)
@@ -214,9 +215,9 @@ describe('DiskBlockAsyncStore Expiration Property Tests', () => {
             try {
               const block = new RawDataBlock(blockSize, data);
               const blockId = block.idChecksum.toHex();
-              const expiresAt = new Date(
+              const expiresAt = dateToBrightDate(new Date(
                 Date.now() + hoursInFuture * 60 * 60 * 1000,
-              );
+              ));
 
               await store.setData(block, {
                 durabilityLevel: DurabilityLevel.Ephemeral,
@@ -265,9 +266,9 @@ describe('DiskBlockAsyncStore Expiration Property Tests', () => {
             try {
               const block = new RawDataBlock(blockSize, data);
               const blockId = block.idChecksum.toHex();
-              const expiresAt = new Date(
+              const expiresAt = dateToBrightDate(new Date(
                 Date.now() - hoursInPast * 60 * 60 * 1000,
-              );
+              ));
 
               await store.setData(block, {
                 durabilityLevel: DurabilityLevel.Ephemeral,

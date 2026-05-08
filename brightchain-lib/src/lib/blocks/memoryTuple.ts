@@ -7,6 +7,7 @@ import { MemoryTupleErrorType } from '../enumerations/memoryTupleErrorType';
 import { MemoryTupleError } from '../errors/memoryTupleError';
 import { IBaseBlock } from '../interfaces/blocks/base';
 import { Checksum } from '../types/checksum';
+import { brightDateNow } from '../utils/brightDateConversions';
 import { BaseBlock } from './base';
 import { type BlockHandle } from './handle';
 import { RawDataBlock } from './rawData';
@@ -187,7 +188,7 @@ export class InMemoryBlockTuple<T extends BaseBlock = BaseBlock> {
       return new RawDataBlock(
         this._blockSize,
         result,
-        new Date(),
+        brightDateNow(),
         undefined, // Let constructor calculate checksum
         BlockType.RawData,
         BlockDataType.RawData,

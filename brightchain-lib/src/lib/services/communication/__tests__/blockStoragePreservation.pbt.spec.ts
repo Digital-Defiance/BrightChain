@@ -181,10 +181,10 @@ describe('Feature: brightchat-block-storage-fix, Property 2: Preservation — No
           expect(epoch0Keys.has(memberB)).toBe(true);
 
           // Timestamps are valid dates
-          expect(conv.createdAt).toBeInstanceOf(Date);
-          expect(conv.lastMessageAt).toBeInstanceOf(Date);
-          expect(conv.createdAt.getTime()).toBeLessThanOrEqual(
-            conv.lastMessageAt.getTime(),
+          expect(typeof conv.createdAt).toBe("number");
+          expect(typeof conv.lastMessageAt).toBe("number");
+          expect(conv.createdAt).toBeLessThanOrEqual(
+            conv.lastMessageAt,
           );
         }),
         { numRuns: 30 },
@@ -242,9 +242,9 @@ describe('Feature: brightchat-block-storage-fix, Property 2: Preservation — No
             // Sorted by lastMessageAt descending
             for (let i = 0; i < result.items.length - 1; i++) {
               expect(
-                result.items[i].lastMessageAt.getTime(),
+                result.items[i].lastMessageAt,
               ).toBeGreaterThanOrEqual(
-                result.items[i + 1].lastMessageAt.getTime(),
+                result.items[i + 1].lastMessageAt,
               );
             }
           },
@@ -270,7 +270,7 @@ describe('Feature: brightchat-block-storage-fix, Property 2: Preservation — No
             senderId,
             recipientId,
           );
-          const beforeTime = conv.lastMessageAt.getTime();
+          const beforeTime = conv.lastMessageAt;
 
           const msg = await service.sendMessage(
             senderId,
@@ -280,7 +280,7 @@ describe('Feature: brightchat-block-storage-fix, Property 2: Preservation — No
 
           // lastMessageAt was updated
           const updatedConv = service.getConversation(conv.id);
-          expect(updatedConv!.lastMessageAt.getTime()).toBeGreaterThanOrEqual(
+          expect(updatedConv!.lastMessageAt).toBeGreaterThanOrEqual(
             beforeTime,
           );
 
@@ -385,8 +385,8 @@ describe('Feature: brightchat-block-storage-fix, Property 2: Preservation — No
             expect(epoch0Keys.has(memberId)).toBe(true);
 
             // Timestamps are valid
-            expect(group.createdAt).toBeInstanceOf(Date);
-            expect(group.lastMessageAt).toBeInstanceOf(Date);
+            expect(typeof group.createdAt).toBe("number");
+            expect(typeof group.lastMessageAt).toBe("number");
 
             // pinnedMessageIds starts empty
             expect(group.pinnedMessageIds).toEqual([]);
@@ -670,8 +670,8 @@ describe('Feature: brightchat-block-storage-fix, Property 2: Preservation — No
             );
 
             // Timestamps are valid
-            expect(channel.createdAt).toBeInstanceOf(Date);
-            expect(channel.lastMessageAt).toBeInstanceOf(Date);
+            expect(typeof channel.createdAt).toBe("number");
+            expect(typeof channel.lastMessageAt).toBe("number");
 
             // pinnedMessageIds starts empty
             expect(channel.pinnedMessageIds).toEqual([]);
@@ -835,10 +835,10 @@ describe('Feature: brightchat-block-storage-fix, Property 2: Preservation — No
             expect(invite.createdBy).toBe(creatorId);
             expect(invite.maxUses).toBe(1);
             expect(invite.currentUses).toBe(0);
-            expect(invite.createdAt).toBeInstanceOf(Date);
-            expect(invite.expiresAt).toBeInstanceOf(Date);
-            expect(invite.expiresAt.getTime()).toBeGreaterThan(
-              invite.createdAt.getTime(),
+            expect(typeof invite.createdAt).toBe("number");
+            expect(typeof invite.expiresAt).toBe("number");
+            expect(invite.expiresAt).toBeGreaterThan(
+              invite.createdAt,
             );
 
             // Redeem invite
@@ -1117,7 +1117,7 @@ describe('Feature: brightchat-block-storage-fix, Property 2: Preservation — No
               expect(item.contextType).toBe('group');
               expect(item.contextId).toBe(group.id);
               expect(item.senderId).toBe(creatorId);
-              expect(item.createdAt).toBeInstanceOf(Date);
+              expect(typeof item.createdAt).toBe("number");
               expect(typeof item.keyEpoch).toBe('number');
             }
           },
@@ -1163,7 +1163,7 @@ describe('Feature: brightchat-block-storage-fix, Property 2: Preservation — No
               expect(item.contextType).toBe('channel');
               expect(item.contextId).toBe(channel.id);
               expect(item.senderId).toBe(creatorId);
-              expect(item.createdAt).toBeInstanceOf(Date);
+              expect(typeof item.createdAt).toBe("number");
               expect(typeof item.keyEpoch).toBe('number');
             }
           },

@@ -16,6 +16,7 @@ import {
   BlockHandle,
   BlockSize,
   BlockStoreOptions,
+  brightDateNow,
   BrightenResult,
   CBLMagnetComponents,
   CBLStorageResult,
@@ -478,7 +479,7 @@ export class AvailabilityAwareBlockStore implements IBlockStore {
     // Update location metadata with pool context
     const locationRecord: ILocationRecord = {
       nodeId: this.config.localNodeId,
-      lastSeen: new Date(),
+      lastSeen: brightDateNow(),
       isAuthoritative: true,
       ...(resolvedPoolId ? { poolId: resolvedPoolId } : {}),
     };
@@ -489,7 +490,7 @@ export class AvailabilityAwareBlockStore implements IBlockStore {
       const syncItem: PendingSyncItem = {
         type: 'store',
         blockId,
-        timestamp: new Date(),
+        timestamp: brightDateNow(),
         data: block.data,
       };
       this.reconciliationService.addToPendingSyncQueue(syncItem);
@@ -530,7 +531,7 @@ export class AvailabilityAwareBlockStore implements IBlockStore {
       const syncItem: PendingSyncItem = {
         type: 'delete',
         blockId,
-        timestamp: new Date(),
+        timestamp: brightDateNow(),
       };
       this.reconciliationService.addToPendingSyncQueue(syncItem);
     } else if (this.config.autoAnnounce) {
@@ -592,7 +593,7 @@ export class AvailabilityAwareBlockStore implements IBlockStore {
     // Update location metadata
     const locationRecord: ILocationRecord = {
       nodeId: this.config.localNodeId,
-      lastSeen: new Date(),
+      lastSeen: brightDateNow(),
       isAuthoritative: true,
     };
     await this.availabilityService.updateLocation(blockId, locationRecord);
@@ -602,7 +603,7 @@ export class AvailabilityAwareBlockStore implements IBlockStore {
       const syncItem: PendingSyncItem = {
         type: 'store',
         blockId,
-        timestamp: new Date(),
+        timestamp: brightDateNow(),
         data: new Uint8Array(data),
       };
       this.reconciliationService.addToPendingSyncQueue(syncItem);
@@ -802,7 +803,7 @@ export class AvailabilityAwareBlockStore implements IBlockStore {
     // Update location metadata with pool context
     const locationRecord: ILocationRecord = {
       nodeId,
-      lastSeen: new Date(),
+      lastSeen: brightDateNow(),
       isAuthoritative: false,
       ...(poolId ? { poolId } : {}),
     };
@@ -874,7 +875,7 @@ export class AvailabilityAwareBlockStore implements IBlockStore {
 
     const locationRecord: ILocationRecord = {
       nodeId: this.config.localNodeId,
-      lastSeen: new Date(),
+      lastSeen: brightDateNow(),
       isAuthoritative: true,
     };
     await this.availabilityService.updateLocation(
@@ -963,7 +964,7 @@ export class AvailabilityAwareBlockStore implements IBlockStore {
       // Update location record with new lastSeen timestamp
       const locationRecord: ILocationRecord = {
         nodeId: this.config.localNodeId,
-        lastSeen: new Date(),
+        lastSeen: brightDateNow(),
         isAuthoritative: true,
       };
       await this.availabilityService.updateLocation(blockId, locationRecord);
@@ -1075,7 +1076,7 @@ export class AvailabilityAwareBlockStore implements IBlockStore {
     // Update location metadata for both blocks
     const locationRecord: ILocationRecord = {
       nodeId: this.config.localNodeId,
-      lastSeen: new Date(),
+      lastSeen: brightDateNow(),
       isAuthoritative: true,
     };
     await this.availabilityService.updateLocation(
@@ -1093,12 +1094,12 @@ export class AvailabilityAwareBlockStore implements IBlockStore {
       const syncItem1: PendingSyncItem = {
         type: 'store',
         blockId: result.blockId1,
-        timestamp: new Date(),
+        timestamp: brightDateNow(),
       };
       const syncItem2: PendingSyncItem = {
         type: 'store',
         blockId: result.blockId2,
-        timestamp: new Date(),
+        timestamp: brightDateNow(),
       };
       this.reconciliationService.addToPendingSyncQueue(syncItem1);
       this.reconciliationService.addToPendingSyncQueue(syncItem2);

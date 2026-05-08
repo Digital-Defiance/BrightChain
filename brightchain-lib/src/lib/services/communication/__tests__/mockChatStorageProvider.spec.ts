@@ -89,7 +89,7 @@ describe('Arbitraries generate valid entity shapes', () => {
         expect(conv.participants[0]).not.toBe(conv.participants[1]);
         expect(conv.encryptedSharedKey).toBeInstanceOf(Map);
         expect(conv.encryptedSharedKey.size).toBeGreaterThanOrEqual(1);
-        expect(conv.createdAt).toBeInstanceOf(Date);
+        expect(typeof conv.createdAt).toBe("number");
       }),
       { numRuns: 50 },
     );
@@ -102,7 +102,7 @@ describe('Arbitraries generate valid entity shapes', () => {
         expect(group.name.length).toBeGreaterThan(0);
         expect(group.members.length).toBeGreaterThanOrEqual(1);
         expect(group.encryptedSharedKey).toBeInstanceOf(Map);
-        expect(group.createdAt).toBeInstanceOf(Date);
+        expect(typeof group.createdAt).toBe("number");
       }),
       { numRuns: 50 },
     );
@@ -116,7 +116,7 @@ describe('Arbitraries generate valid entity shapes', () => {
         expect(channel.members.length).toBeGreaterThanOrEqual(1);
         expect(channel.encryptedSharedKey).toBeInstanceOf(Map);
         expect(channel.visibility).toBeDefined();
-        expect(channel.createdAt).toBeInstanceOf(Date);
+        expect(typeof channel.createdAt).toBe("number");
       }),
       { numRuns: 50 },
     );
@@ -129,7 +129,7 @@ describe('Arbitraries generate valid entity shapes', () => {
         expect(server.name.length).toBeGreaterThan(0);
         expect(server.ownerId).toBeDefined();
         expect(server.memberIds.length).toBeGreaterThanOrEqual(1);
-        expect(server.createdAt).toBeInstanceOf(Date);
+        expect(typeof server.createdAt).toBe("number");
       }),
       { numRuns: 50 },
     );
@@ -142,7 +142,7 @@ describe('Arbitraries generate valid entity shapes', () => {
         expect(['conversation', 'group', 'channel']).toContain(msg.contextType);
         expect(msg.contextId).toBeDefined();
         expect(msg.senderId).toBeDefined();
-        expect(msg.createdAt).toBeInstanceOf(Date);
+        expect(typeof msg.createdAt).toBe("number");
         expect(typeof msg.keyEpoch).toBe('number');
       }),
       { numRuns: 50 },
@@ -164,7 +164,7 @@ describe('Arbitraries generate valid entity shapes', () => {
         expect(token.token.length).toBeGreaterThanOrEqual(8);
         expect(token.channelId).toBeDefined();
         expect(token.maxUses).toBeGreaterThanOrEqual(1);
-        expect(token.createdAt).toBeInstanceOf(Date);
+        expect(typeof token.createdAt).toBe("number");
       }),
       { numRuns: 50 },
     );
@@ -175,7 +175,7 @@ describe('Arbitraries generate valid entity shapes', () => {
       fc.property(arbServerInviteToken, (token) => {
         expect(token.token.length).toBeGreaterThanOrEqual(8);
         expect(token.serverId).toBeDefined();
-        expect(token.createdAt).toBeInstanceOf(Date);
+        expect(typeof token.createdAt).toBe("number");
       }),
       { numRuns: 50 },
     );

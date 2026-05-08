@@ -10,6 +10,7 @@ import {
   blockSizeToSizeString,
   BlockStoreOptions,
   BlockType,
+  brightDateNow,
   BrightenResult,
   CBLMagnetComponents,
   CBLService,
@@ -18,6 +19,7 @@ import {
   Checksum,
   createBlockHandle,
   createDefaultBlockMetadata,
+  dateToBrightDate,
   DurabilityLevel,
   FecError,
   FecErrorType,
@@ -260,7 +262,7 @@ export class DiskBlockAsyncStore
 
         // Use file creation time as block creation time
         const stats = await stat(blockPath);
-        const dateCreated = stats.birthtime;
+        const dateCreated = dateToBrightDate(stats.birthtime);
 
         // Record access in metadata
         if (this.metadataStore.has(keyHex)) {
@@ -450,7 +452,7 @@ export class DiskBlockAsyncStore
           const block = new RawDataBlock(
             destBlockMetadata.size,
             writeStream.data,
-            new Date(destBlockMetadata.dateCreated),
+            destBlockMetadata.dateCreated,
             checksumBuffer,
             BlockType.RawData,
             destBlockMetadata.dataType, // Use the metadata's dataType
@@ -687,7 +689,7 @@ export class DiskBlockAsyncStore
 
     for (let i = 0; i < count; i++) {
       const data = new Uint8Array(randomBytes(blockSize));
-      const block = new RawDataBlock(blockSize, data, new Date());
+      const block = new RawDataBlock(blockSize, data, brightDateNow());
       const keyHex = this.keyToHex(block.idChecksum);
       const filePath = this.poolBlockPath(pool, block.idChecksum, blockSize);
 
@@ -1186,8 +1188,8 @@ export class DiskBlockAsyncStore
     validatePoolId(pool);
     let blockCount = 0;
     let totalBytes = 0;
-    let earliest = new Date();
-    let latest = new Date(0);
+    let earliest = brightDateNow();
+    let latest = 0; // BrightDate epoch start
 
     for (const size of this._supportedBlockSizes) {
       const blockSizeString = blockSizeToSizeString(size);
@@ -1202,8 +1204,10 @@ export class DiskBlockAsyncStore
         try {
           const fileStat = await stat(filePath);
           totalBytes += fileStat.size;
-          if (fileStat.birthtime < earliest) earliest = fileStat.birthtime;
-          if (fileStat.mtime > latest) latest = fileStat.mtime;
+          const birthtimeBd = dateToBrightDate(fileStat.birthtime);
+          const mtimeBd = dateToBrightDate(fileStat.mtime);
+          if (birthtimeBd < earliest) earliest = birthtimeBd;
+          if (mtimeBd > latest) latest = mtimeBd;
         } catch {
           /* skip */
         }
@@ -1360,7 +1364,7 @@ export class DiskBlockAsyncStore
       );
       putBlockSize = fitting ?? lengthToClosestBlockSize(data.length);
     }
-    const block = new RawDataBlock(putBlockSize, data, new Date(), keyChecksum);
+    const block = new RawDataBlock(putBlockSize, data, brightDateNow(), keyChecksum);
     await this.setData(block, options);
   }
 
@@ -1900,7 +1904,7 @@ export class DiskBlockAsyncStore
       BlockType.RawData,
       BlockDataType.EphemeralStructuredData,
       blockSize, // lengthWithoutPadding - use full block size for XOR result
-      new Date(),
+      brightDateNow(),
     );
 
     // Perform XOR operation using the existing xor method

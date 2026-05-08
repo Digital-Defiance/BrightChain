@@ -1740,15 +1740,22 @@ export const MandarinStrings: ComponentStrings<BrightChainStringKey> = {
     '速率限制服务暂时不可用。',
   [BrightChainStrings.Error_PoUW_Middleware_RateLimitDenied]:
     '速率限制服务不可用。请求被拒绝。',
+
+  [BrightChainStrings.Date_BrightDateTemplate]: 'BD {BD}',
+
   // ── DatePage ──
   [BrightChainStrings.DatePage_Title]: '日期与时间',
-  [BrightChainStrings.DatePage_BrightDateEpochLabel]: 'BrightDate（自J2000.0以来的十进制天数）',
+  [BrightChainStrings.DatePage_BrightDateEpochLabel]:
+    'BrightDate（自J2000.0以来的十进制天数）',
   [BrightChainStrings.DatePage_HolidaysTitle]: '今日节假日与纪念日',
   [BrightChainStrings.DatePage_AllFormatsTitle]: '所有日期格式',
   [BrightChainStrings.DatePage_AboutBrightDateTitle]: '关于BrightDate',
-  [BrightChainStrings.DatePage_AboutBrightDate_Epoch]: 'BrightDate计算自J2000.0纪元（2000年1月1日12:00:00 UTC）以来的十进制天数。这是全世界天文学家用于天体力学的同一纪元。',
-  [BrightChainStrings.DatePage_AboutBrightDate_Fraction]: '整数部分是天数计数。小数部分是一天中的十进制时间。例如：0.5 = 正午，0.25 = 06:00，0.75 = 18:00。',
-  [BrightChainStrings.DatePage_AboutBrightDate_NoTimezones]: '没有时区，没有夏令时，没有歧义——只是一条时间线上的一个数字。',
+  [BrightChainStrings.DatePage_AboutBrightDate_Epoch]:
+    'BrightDate计算自J2000.0纪元（2000年1月1日12:00:00 UTC）以来的十进制天数。这是全世界天文学家用于天体力学的同一纪元。',
+  [BrightChainStrings.DatePage_AboutBrightDate_Fraction]:
+    '整数部分是天数计数。小数部分是一天中的十进制时间。例如：0.5 = 正午，0.25 = 06:00，0.75 = 18:00。',
+  [BrightChainStrings.DatePage_AboutBrightDate_NoTimezones]:
+    '没有时区，没有夏令时，没有歧义——只是一条时间线上的一个数字。',
   [BrightChainStrings.DatePage_Format_BrightDateFull]: 'BrightDate（完整精度）',
   [BrightChainStrings.DatePage_Format_BrightDateCompact]: 'BrightDate（紧凑）',
   [BrightChainStrings.DatePage_Format_BrightDateStandard]: 'BrightDate（标准）',
@@ -1768,4 +1775,70 @@ export const MandarinStrings: ComponentStrings<BrightChainStringKey> = {
   [BrightChainStrings.DatePage_HolidayType_Bank]: '银行假日',
   [BrightChainStrings.DatePage_HolidayType_Observance]: '纪念日',
   [BrightChainStrings.DatePage_HolidayType_Religious]: '宗教节日',
+
+  // ── DatePage: Cochrane Easter Egg (Interplanetary Telemetry) ──
+  [BrightChainStrings.DatePage_Telemetry_Title]: '行星际遥测',
+  [BrightChainStrings.DatePage_Telemetry_Subtitle]:
+    '当前单向光延迟，以毫日（md）表示',
+  [BrightChainStrings.DatePage_Telemetry_MoonDelay]: '地球 → 月球',
+  [BrightChainStrings.DatePage_Telemetry_MarsDelayMin]:
+    '地球 → 火星（最小）',
+  [BrightChainStrings.DatePage_Telemetry_MarsDelayMax]:
+    '地球 → 火星（最大）',
+  [BrightChainStrings.DatePage_Telemetry_MarsDelayCurrent]:
+    '地球 → 火星（当前估计）',
+  [BrightChainStrings.DatePage_Telemetry_Unit]: 'md',
+  [BrightChainStrings.DatePage_Telemetry_Footer]:
+    'BrightDate专为超越地球标准时间的世界而设计。一毫日 ≈ 86.4秒。',
+
+  // ── PaperKeyTemplate ──
+  [BrightChainStrings.PaperKey_Title]: 'BrightChain 纸质密钥',
+  [BrightChainStrings.PaperKey_GeneratedTemplate]: '生成时间: {DATE} ({BD})',
+  [BrightChainStrings.PaperKey_SecurityWarning]:
+    '请妥善保管。此纸质密钥是恢复您BrightChain身份的唯一方式。请存放在安全的地方。切勿与他人分享。',
+  [BrightChainStrings.PaperKey_WordsAriaLabel]: '纸质密钥词语',
+  [BrightChainStrings.PaperKey_QrScanLabel]: '扫描以导入：',
+  [BrightChainStrings.PaperKey_QrAlt]: '纸质密钥二维码',
+  [BrightChainStrings.PaperKey_SecurityRecommendations]: '安全建议：',
+  [BrightChainStrings.PaperKey_Tip_Fireproof]: '存放在防火保险箱或银行保险柜中',
+  [BrightChainStrings.PaperKey_Tip_Split]: '考虑分散存放在多个位置',
+  [BrightChainStrings.PaperKey_Tip_NoDigital]: '切勿以数字方式存储或截屏',
+  [BrightChainStrings.PaperKey_Tip_NeverShare]:
+    '切勿与任何人分享，包括BrightChain客服',
+  [BrightChainStrings.PaperKey_PrintButton]: '打印此模板',
+
+  // ── DisputeNotice ──
+  [BrightChainStrings.Dispute_AriaLabelTemplate]: 'Joule争议 {ID}',
+  [BrightChainStrings.Dispute_IdTemplate]: '争议 #{ID}',
+  [BrightChainStrings.Dispute_State_Disputed]: '审核中',
+  [BrightChainStrings.Dispute_State_ResolvedFinal]: '已解决（最终）',
+  [BrightChainStrings.Dispute_State_ResolvedReplaced]: '已解决（已替代）',
+  [BrightChainStrings.Dispute_Field_Amount]: '金额',
+  [BrightChainStrings.Dispute_Field_Opened]: '开启时间',
+  [BrightChainStrings.Dispute_Field_Reason]: '原因',
+  [BrightChainStrings.Dispute_Field_Resolved]: '解决时间',
+  [BrightChainStrings.Dispute_Field_Resolution]: '解决方案',
+
+  // ── RateTransparency ──
+  [BrightChainStrings.RateTransparency_Loading]: '正在加载费率表',
+  [BrightChainStrings.RateTransparency_Error]: '费率表错误',
+  [BrightChainStrings.RateTransparency_Empty]: '费率表不可用。',
+  [BrightChainStrings.RateTransparency_TitleTemplate]:
+    'Joule费率表 — 版本 {VERSION}',
+  [BrightChainStrings.RateTransparency_EffectiveTemplate]:
+    '生效日期: {DATE} ({BD})',
+  [BrightChainStrings.RateTransparency_SignedByTemplate]: '签署者: {SIGNER}',
+  [BrightChainStrings.RateTransparency_Col_ResourceClass]: '资源类别',
+  [BrightChainStrings.RateTransparency_Col_Rate]: '费率',
+  [BrightChainStrings.RateTransparency_Col_PerUnit]: '每单位',
+
+  // ── JouleEventLog ──
+  [BrightChainStrings.JouleEventLog_Loading]: '正在加载Joule事件',
+  [BrightChainStrings.JouleEventLog_Error]: 'Joule事件日志错误',
+  [BrightChainStrings.JouleEventLog_Empty]: '尚未记录任何Joule事件。',
+  [BrightChainStrings.JouleEventLog_AriaLabel]: 'Joule事件日志',
+  [BrightChainStrings.JouleEventLog_Col_Time]: '时间',
+  [BrightChainStrings.JouleEventLog_Col_Kind]: '类型',
+  [BrightChainStrings.JouleEventLog_Col_Amount]: '金额',
+  [BrightChainStrings.JouleEventLog_Col_Description]: '描述',
 };

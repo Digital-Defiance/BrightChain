@@ -15,6 +15,7 @@ import {
   AvailabilityServiceConfig,
   AvailabilityState,
   AvailabilityStatistics,
+  brightDateNow,
   DEFAULT_AVAILABILITY_SERVICE_CONFIG,
   EventFilter,
   IAvailabilityService,
@@ -165,7 +166,7 @@ export class AvailabilityService implements IAvailabilityService {
       return [
         {
           nodeId: this.config.localNodeId,
-          lastSeen: new Date(),
+          lastSeen: brightDateNow(),
           isAuthoritative: true,
         },
       ];

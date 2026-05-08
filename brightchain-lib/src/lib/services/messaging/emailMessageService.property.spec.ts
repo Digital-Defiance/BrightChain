@@ -24,6 +24,7 @@ import {
   type IEmailMetadataStore,
 } from './emailMessageService';
 import type { MessageCBLService } from './messageCBLService';
+import { brightDateNow } from '../../utils/brightDateConversions';
 
 // Feature: email-messaging-protocol, Property 3: Message-ID Uniqueness and Format
 
@@ -424,7 +425,7 @@ describe('Property 15: Required Header Auto-Generation', () => {
         async (from, to, subject, textBody) => {
           const { service, storeMock } = createServiceForSendEmail();
 
-          const beforeSend = new Date();
+          const beforeSend = brightDateNow();
 
           const input = {
             from,
@@ -436,22 +437,18 @@ describe('Property 15: Required Header Auto-Generation', () => {
 
           const result = await service.sendEmail(input);
 
-          const afterSend = new Date();
+          const afterSend = brightDateNow();
 
           // Only check stored metadata if the send was successful
           if (result.success && storeMock.mock.calls.length > 0) {
             const storedMetadata = storeMock.mock.calls[0][0];
 
-            // The auto-generated date must be a valid Date instance
-            expect(storedMetadata.date).toBeInstanceOf(Date);
+            // The auto-generated date must be a valid BrightDateTimestamp (number)
+            expect(typeof storedMetadata.date).toBe('number');
 
             // The auto-generated date must be between beforeSend and afterSend
-            expect(storedMetadata.date.getTime()).toBeGreaterThanOrEqual(
-              beforeSend.getTime(),
-            );
-            expect(storedMetadata.date.getTime()).toBeLessThanOrEqual(
-              afterSend.getTime(),
-            );
+            expect(storedMetadata.date).toBeGreaterThanOrEqual(beforeSend);
+            expect(storedMetadata.date).toBeLessThanOrEqual(afterSend);
           }
         },
       ),

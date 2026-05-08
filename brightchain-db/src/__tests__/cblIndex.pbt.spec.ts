@@ -10,7 +10,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import type { BlockId, ICBLIndexEntry } from '@brightchain/brightchain-lib';
-import { CBLVisibility } from '@brightchain/brightchain-lib';
+import { brightDateNow, CBLVisibility, dateToBrightDate } from '@brightchain/brightchain-lib';
 import * as fc from 'fast-check';
 import { CBLIndex } from '../lib/cblIndex';
 import { BrightDb } from '../lib/database';
@@ -117,7 +117,7 @@ function entryArb(blockIds: {
       blockId1: blockIds.blockId1,
       blockId2: blockIds.blockId2,
       blockSize: 256,
-      createdAt: new Date(),
+      createdAt: brightDateNow(),
     }));
 }
 
@@ -177,7 +177,7 @@ describe('CBLIndex Property-Based Tests', () => {
           }
 
           // createdAt must be a Date
-          expect(result.createdAt).toBeInstanceOf(Date);
+          expect(typeof result.createdAt).toBe('number');
         },
       ),
       { numRuns: 100 },
@@ -229,7 +229,7 @@ describe('CBLIndex Property-Based Tests', () => {
               blockId1: ids.blockId1,
               blockId2: ids.blockId2,
               blockSize: 256,
-              createdAt: new Date(),
+              createdAt: brightDateNow(),
               poolId: spec.poolId,
               createdBy: spec.createdBy,
               visibility: spec.visibility,
@@ -333,7 +333,7 @@ describe('CBLIndex Property-Based Tests', () => {
             blockId1: ids.blockId1,
             blockId2: ids.blockId2,
             blockSize: 256,
-            createdAt: new Date(),
+            createdAt: brightDateNow(),
             visibility: CBLVisibility.Private,
           };
 
@@ -397,7 +397,7 @@ describe('CBLIndex Property-Based Tests', () => {
           const deletedEntry = afterIncluded.find((e) => e._id === created._id);
           expect(deletedEntry).toBeDefined();
           expect(deletedEntry!.deletedAt).toBeDefined();
-          expect(deletedEntry!.deletedAt).toBeInstanceOf(Date);
+          expect(typeof deletedEntry!.deletedAt).toBe('number');
 
           // All original fields should still be preserved
           expect(deletedEntry!.magnetUrl).toBe(created.magnetUrl);
@@ -443,7 +443,7 @@ describe('CBLIndex Property-Based Tests', () => {
               blockId1: ids.blockId1,
               blockId2: ids.blockId2,
               blockSize: 256,
-              createdAt: new Date(2025, 0, 1, 0, 0, i),
+              createdAt: dateToBrightDate(new Date(2025, 0, 1, 0, 0, i)),
               visibility: CBLVisibility.Private,
             });
             insertedIds.push(result._id);

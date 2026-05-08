@@ -8,7 +8,7 @@
  */
 
 import type { BlockId } from '@brightchain/brightchain-lib';
-import { CBLVisibility } from '@brightchain/brightchain-lib';
+import { brightDateNow, CBLVisibility, dateToBrightDate } from '@brightchain/brightchain-lib';
 import * as fc from 'fast-check';
 import { CBLIndex } from '../lib/cblIndex';
 import { BrightDb } from '../lib/database';
@@ -109,7 +109,7 @@ describe('CBLIndex Pool Tracking Property-Based Tests', () => {
               blockId1: ids.blockId1,
               blockId2: ids.blockId2,
               blockSize: 256,
-              createdAt: new Date(),
+              createdAt: brightDateNow(),
               poolId: targetPool,
               visibility: CBLVisibility.Private,
             });
@@ -123,7 +123,7 @@ describe('CBLIndex Pool Tracking Property-Based Tests', () => {
               blockId1: ids.blockId1,
               blockId2: ids.blockId2,
               blockSize: 256,
-              createdAt: new Date(),
+              createdAt: brightDateNow(),
               poolId: otherPool,
               visibility: CBLVisibility.Private,
             });
@@ -186,7 +186,7 @@ describe('CBLIndex Pool Tracking Property-Based Tests', () => {
             blockId1: ids.blockId1,
             blockId2: ids.blockId2,
             blockSize: 256,
-            createdAt: new Date(),
+            createdAt: brightDateNow(),
             poolId: poolA,
             visibility: CBLVisibility.Private,
           });
@@ -198,7 +198,7 @@ describe('CBLIndex Pool Tracking Property-Based Tests', () => {
             blockId1: ids.blockId1,
             blockId2: ids.blockId2,
             blockSize: 256,
-            createdAt: new Date(),
+            createdAt: brightDateNow(),
             poolId: poolB,
             visibility: CBLVisibility.Private,
           });

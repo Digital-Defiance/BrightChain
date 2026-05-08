@@ -50,6 +50,8 @@ import {
   type IEmailInput as IValidatorEmailInput,
 } from './emailValidator';
 import type { MessageCBLService } from './messageCBLService';
+import { brightDateNow, normalizeToBrightDate, brightDateToDate } from '../../utils/brightDateConversions';
+import type { BrightDateTimestamp } from '../../types/brightDateTimestamp';
 
 // ─── Configuration Interface ────────────────────────────────────────────────
 
@@ -200,8 +202,8 @@ export interface IEmailInput {
   /** Email subject line (UTF-8) */
   subject?: string;
 
-  /** Origination date. Auto-generated if not provided. */
-  date?: Date;
+  /** Origination date. Auto-generated if not provided. Accepts BrightDateTimestamp, Date, or ISO string. */
+  date?: BrightDateTimestamp | Date | string;
 
   /** Message-ID. Auto-generated if not provided. */
   messageId?: string;
@@ -717,7 +719,7 @@ export class EmailMessageService {
   async sendEmail(email: IEmailInput): Promise<ISendEmailResult> {
     // 1. Auto-generate required headers if missing
     const messageId = email.messageId ?? this.generateMessageId();
-    const date = email.date ?? new Date();
+    const date = email.date != null ? normalizeToBrightDate(email.date) : brightDateNow();
 
     // 2. Adapt service IEmailInput to validator's IEmailInput and validate
     const validatorInput: IValidatorEmailInput = {
@@ -726,7 +728,7 @@ export class EmailMessageService {
       cc: email.cc,
       bcc: email.bcc,
       subject: email.subject,
-      date,
+      date: brightDateToDate(date),
       messageId,
       contentType: email.contentType,
       attachments: email.attachments
@@ -760,7 +762,7 @@ export class EmailMessageService {
 
     // 3. Build IEmailMetadata from the input
     const brightchainMessageId = this.generateMessageId();
-    const now = new Date();
+    const now = brightDateNow();
 
     // Collect all recipient addresses for IMessageMetadata.recipients
     const allRecipientAddresses: string[] = [];
@@ -1268,9 +1270,9 @@ export class EmailMessageService {
    */
   async receiveEmail(email: IEmailInput): Promise<ISendEmailResult> {
     const messageId = email.messageId ?? this.generateMessageId();
-    const date = email.date ?? new Date();
+    const date = email.date != null ? normalizeToBrightDate(email.date) : brightDateNow();
     const brightchainMessageId = this.generateMessageId();
-    const now = new Date();
+    const now = brightDateNow();
 
     const allRecipientAddresses: string[] = [
       ...(email.to ?? []).map((m) => m.address),
@@ -1607,7 +1609,7 @@ export class EmailMessageService {
 
     // 5. Order messages chronologically by Date header (Requirement 10.5)
     const threadEmails = Array.from(found.values());
-    threadEmails.sort((a, b) => a.date.getTime() - b.date.getTime());
+    threadEmails.sort((a, b) => a.date - b.date);
 
     return threadEmails;
   }
@@ -1796,7 +1798,7 @@ export class EmailMessageService {
     const resentHeaderBlock: IResentHeaderBlock = {
       resentFrom: original.from,
       resentTo: forwardTo,
-      resentDate: new Date(),
+      resentDate: brightDateNow(),
       resentMessageId: this.generateMessageId(),
     };
 

@@ -9,6 +9,7 @@
 
 import { CommunicationEventType } from '../../enumerations/communication';
 import { ICommunicationMessage } from '../../interfaces/communication';
+import { brightDateNow } from '../../utils/brightDateConversions';
 import {
   ExplodingMessageService,
   InvalidExpirationError,
@@ -26,7 +27,7 @@ function createMessage(
     contextId: 'conv-1',
     senderId: 'member-1',
     encryptedContent: 'encrypted-content',
-    createdAt: new Date(),
+    createdAt: 9000,
     editHistory: [],
     deleted: false,
     pinned: false,
@@ -43,7 +44,7 @@ describe('ExplodingMessageService', () => {
   describe('setExpiration', () => {
     it('should set time-based expiration with expiresAt', () => {
       const message = createMessage();
-      const future = new Date(Date.now() + 60_000);
+      const future = brightDateNow() + 60000 / 86400000;
 
       ExplodingMessageService.setExpiration(message, { expiresAt: future });
 
@@ -51,17 +52,18 @@ describe('ExplodingMessageService', () => {
     });
 
     it('should set time-based expiration with expiresInMs', () => {
-      const before = Date.now();
+      const before = brightDateNow();
       const message = createMessage();
 
       ExplodingMessageService.setExpiration(message, { expiresInMs: 30_000 });
 
-      const after = Date.now();
+      const after = brightDateNow();
       expect(message.expiresAt).toBeDefined();
-      expect(message.expiresAt!.getTime()).toBeGreaterThanOrEqual(
-        before + 30_000,
+      // expiresAt should be approximately 30s (30000/86400000 days) from now
+      expect(message.expiresAt!).toBeGreaterThanOrEqual(
+        before + 30_000 / 86400000,
       );
-      expect(message.expiresAt!.getTime()).toBeLessThanOrEqual(after + 30_000);
+      expect(message.expiresAt!).toBeLessThanOrEqual(after + 30_000 / 86400000);
     });
 
     it('should set read-count expiration', () => {
@@ -76,7 +78,7 @@ describe('ExplodingMessageService', () => {
 
     it('should support combined time and read-count expiration', () => {
       const message = createMessage();
-      const future = new Date(Date.now() + 60_000);
+      const future = brightDateNow() + 60000 / 86400000;
 
       ExplodingMessageService.setExpiration(message, {
         expiresAt: future,
@@ -97,7 +99,7 @@ describe('ExplodingMessageService', () => {
 
     it('should throw InvalidExpirationError for past expiresAt', () => {
       const message = createMessage();
-      const past = new Date(Date.now() - 1000);
+      const past = brightDateNow() - 1000 / 86400000;
 
       expect(() =>
         ExplodingMessageService.setExpiration(message, { expiresAt: past }),
@@ -219,7 +221,7 @@ describe('ExplodingMessageService', () => {
   describe('checkExpiration', () => {
     it('should return time_expired for past expiresAt', () => {
       const message = createMessage({
-        expiresAt: new Date(Date.now() - 1000),
+        expiresAt: brightDateNow() - 1000 / 86400000,
       });
 
       const result = ExplodingMessageService.checkExpiration(message);
@@ -229,7 +231,7 @@ describe('ExplodingMessageService', () => {
 
     it('should return null for future expiresAt', () => {
       const message = createMessage({
-        expiresAt: new Date(Date.now() + 60_000),
+        expiresAt: brightDateNow() + 60000 / 86400000,
       });
 
       const result = ExplodingMessageService.checkExpiration(message);
@@ -262,7 +264,7 @@ describe('ExplodingMessageService', () => {
     it('should return null for already exploded messages', () => {
       const message = createMessage({
         exploded: true,
-        expiresAt: new Date(Date.now() - 1000),
+        expiresAt: brightDateNow() - 1000 / 86400000,
       });
 
       const result = ExplodingMessageService.checkExpiration(message);
@@ -272,7 +274,7 @@ describe('ExplodingMessageService', () => {
 
     it('should prioritize time expiration over read count', () => {
       const message = createMessage({
-        expiresAt: new Date(Date.now() - 1000),
+        expiresAt: brightDateNow() - 1000 / 86400000,
         maxReads: 5,
         readCount: 10,
       });
@@ -283,10 +285,10 @@ describe('ExplodingMessageService', () => {
     });
 
     it('should accept a custom now parameter', () => {
-      const future = new Date(Date.now() + 60_000);
+      const future = brightDateNow() + 60000 / 86400000;
       const message = createMessage({ expiresAt: future });
 
-      const farFuture = new Date(future.getTime() + 1000);
+      const farFuture = future + 1000 / 86400000;
       const result = ExplodingMessageService.checkExpiration(
         message,
         farFuture,
@@ -299,7 +301,7 @@ describe('ExplodingMessageService', () => {
   describe('explode', () => {
     it('should clear encrypted content', () => {
       const message = createMessage({
-        expiresAt: new Date(Date.now() - 1000),
+        expiresAt: brightDateNow() - 1000 / 86400000,
       });
 
       ExplodingMessageService.explode(message);
@@ -309,8 +311,8 @@ describe('ExplodingMessageService', () => {
 
     it('should clear edit history', () => {
       const message = createMessage({
-        expiresAt: new Date(Date.now() - 1000),
-        editHistory: [{ content: 'old', editedAt: new Date() }],
+        expiresAt: brightDateNow() - 1000 / 86400000,
+        editHistory: [{ content: 'old', editedAt: 9000 }],
       });
 
       ExplodingMessageService.explode(message);
@@ -320,7 +322,7 @@ describe('ExplodingMessageService', () => {
 
     it('should mark message as exploded', () => {
       const message = createMessage({
-        expiresAt: new Date(Date.now() - 1000),
+        expiresAt: brightDateNow() - 1000 / 86400000,
       });
 
       ExplodingMessageService.explode(message);
@@ -331,7 +333,7 @@ describe('ExplodingMessageService', () => {
 
     it('should return an explosion event', () => {
       const message = createMessage({
-        expiresAt: new Date(Date.now() - 1000),
+        expiresAt: brightDateNow() - 1000 / 86400000,
       });
 
       const event = ExplodingMessageService.explode(message);
@@ -356,11 +358,11 @@ describe('ExplodingMessageService', () => {
     it('should find time-expired messages', () => {
       const expired = createMessage({
         id: 'expired-1',
-        expiresAt: new Date(Date.now() - 1000),
+        expiresAt: brightDateNow() - 1000 / 86400000,
       });
       const active = createMessage({
         id: 'active-1',
-        expiresAt: new Date(Date.now() + 60_000),
+        expiresAt: brightDateNow() + 60000 / 86400000,
       });
 
       const result = ExplodingMessageService.deleteExpired([expired, active]);
@@ -388,7 +390,7 @@ describe('ExplodingMessageService', () => {
       const exploded = createMessage({
         id: 'exploded-1',
         exploded: true,
-        expiresAt: new Date(Date.now() - 1000),
+        expiresAt: brightDateNow() - 1000 / 86400000,
       });
 
       const result = ExplodingMessageService.deleteExpired([exploded]);
@@ -399,7 +401,7 @@ describe('ExplodingMessageService', () => {
 
     it('should return empty results for no expired messages', () => {
       const active = createMessage({
-        expiresAt: new Date(Date.now() + 60_000),
+        expiresAt: brightDateNow() + 60000 / 86400000,
       });
 
       const result = ExplodingMessageService.deleteExpired([active]);
@@ -412,7 +414,7 @@ describe('ExplodingMessageService', () => {
   describe('isExplodingMessage', () => {
     it('should return true for time-based expiration', () => {
       const message = createMessage({
-        expiresAt: new Date(Date.now() + 60_000),
+        expiresAt: brightDateNow() + 60000 / 86400000,
       });
 
       expect(ExplodingMessageService.isExplodingMessage(message)).toBe(true);
@@ -434,7 +436,7 @@ describe('ExplodingMessageService', () => {
   describe('getRemainingTime', () => {
     it('should return remaining milliseconds', () => {
       const message = createMessage({
-        expiresAt: new Date(Date.now() + 30_000),
+        expiresAt: brightDateNow() + 30000 / 86400000,
       });
 
       const remaining = ExplodingMessageService.getRemainingTime(message);
@@ -445,7 +447,7 @@ describe('ExplodingMessageService', () => {
 
     it('should return 0 for expired messages', () => {
       const message = createMessage({
-        expiresAt: new Date(Date.now() - 1000),
+        expiresAt: brightDateNow() - 1000 / 86400000,
       });
 
       const remaining = ExplodingMessageService.getRemainingTime(message);
@@ -455,7 +457,7 @@ describe('ExplodingMessageService', () => {
 
     it('should return 0 for exploded messages', () => {
       const message = createMessage({
-        expiresAt: new Date(Date.now() + 60_000),
+        expiresAt: brightDateNow() + 60000 / 86400000,
         exploded: true,
       });
 

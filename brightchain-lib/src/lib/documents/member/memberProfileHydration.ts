@@ -12,6 +12,7 @@ import {
   IPublicMemberProfileStorageData,
 } from '../../interfaces/member/profileStorage';
 import { ServiceProvider } from '../../services/service.provider';
+import { brightDateToISO, normalizeToBrightDate } from '../../utils/brightDateConversions';
 
 /**
  * Hydration schema for converting between storage and hydrated public member profile formats
@@ -36,12 +37,12 @@ export const publicMemberProfileHydrationSchema = <
     return {
       id,
       status: storage.status as MemberStatusType,
-      lastActive: new Date(storage.lastActive),
+      lastActive: normalizeToBrightDate(storage.lastActive),
       reputation: storage.reputation,
       storageQuota: BigInt(storage.storageQuota),
       storageUsed: BigInt(storage.storageUsed),
-      dateCreated: new Date(storage.dateCreated),
-      dateUpdated: new Date(storage.dateUpdated),
+      dateCreated: normalizeToBrightDate(storage.dateCreated),
+      dateUpdated: normalizeToBrightDate(storage.dateUpdated),
     };
   },
 
@@ -64,12 +65,12 @@ export const publicMemberProfileHydrationSchema = <
     return {
       id: idHex,
       status: hydrated.status,
-      lastActive: hydrated.lastActive.toISOString(),
+      lastActive: brightDateToISO(hydrated.lastActive),
       reputation: hydrated.reputation,
       storageQuota: hydrated.storageQuota.toString(),
       storageUsed: hydrated.storageUsed.toString(),
-      dateCreated: hydrated.dateCreated.toISOString(),
-      dateUpdated: hydrated.dateUpdated.toISOString(),
+      dateCreated: brightDateToISO(hydrated.dateCreated),
+      dateUpdated: brightDateToISO(hydrated.dateUpdated),
     };
   },
 });
@@ -130,13 +131,13 @@ export const privateMemberProfileHydrationSchema = <
         };
       })(),
       activityLog: storage.activityLog.map((entry) => ({
-        timestamp: new Date(entry.timestamp),
+        timestamp: normalizeToBrightDate(entry.timestamp),
         action: entry.action,
         details: entry.details ? { ...entry.details } : {},
         metadata: entry.metadata ? { ...entry.metadata } : undefined,
       })),
-      dateCreated: new Date(storage.dateCreated),
-      dateUpdated: new Date(storage.dateUpdated),
+      dateCreated: normalizeToBrightDate(storage.dateCreated),
+      dateUpdated: normalizeToBrightDate(storage.dateUpdated),
     };
   },
 
@@ -211,13 +212,13 @@ export const privateMemberProfileHydrationSchema = <
         ...extraSettings,
       },
       activityLog: hydrated.activityLog.map((entry) => ({
-        timestamp: entry.timestamp.toISOString(),
+        timestamp: brightDateToISO(entry.timestamp),
         action: entry.action,
         details: entry.details ? { ...entry.details } : {},
         metadata: entry.metadata ? { ...entry.metadata } : undefined,
       })),
-      dateCreated: hydrated.dateCreated.toISOString(),
-      dateUpdated: hydrated.dateUpdated.toISOString(),
+      dateCreated: brightDateToISO(hydrated.dateCreated),
+      dateUpdated: brightDateToISO(hydrated.dateUpdated),
     };
   },
 });

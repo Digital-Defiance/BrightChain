@@ -17,6 +17,8 @@ import { initializeTestServices } from '../../test/service.initializer.helper';
 import { RawDataBlock } from '../rawData';
 import { enumerateAttachmentEntries } from './tcblAttachmentUtils';
 import { TcblBuilder } from './tcblBuilder';
+import { brightDateNow } from '../../utils/brightDateConversions';
+import type { BrightDateTimestamp } from '../../types/brightDateTimestamp';
 
 // Mock CBLBase to avoid signature validation issues in tests
 jest.mock('../cblBase', () => {
@@ -182,7 +184,7 @@ describe('enumerateAttachmentEntries', () => {
       const cblService = ServiceProvider.getInstance().cblService;
       const { headerData } = cblService.makeCblHeader(
         creator,
-        new Date(),
+        brightDateNow(),
         0,
         0,
         new Uint8Array(0),

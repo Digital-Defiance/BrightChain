@@ -27,6 +27,7 @@ import { AliasRegistry } from './aliasRegistry';
 import { IdentitySealingPipeline } from './identitySealingPipeline';
 import { SealingService } from './sealing.service';
 import { ServiceProvider } from './service.provider';
+import { brightDateNow } from '../utils/brightDateConversions';
 
 jest.setTimeout(30000);
 
@@ -58,8 +59,8 @@ function createMockDatabase(
       publicKey: m.member.publicKey,
       metadata: { name: m.member.name },
       isActive: true,
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      createdAt: brightDateNow(),
+      updatedAt: brightDateNow(),
     });
   }
 
@@ -219,7 +220,7 @@ describe('AliasRegistry Unit Tests', () => {
       expect(record.aliasPublicKey.length).toBeGreaterThan(0);
       expect(record.identityRecoveryRecordId).toBeDefined();
       expect(record.epochNumber).toBe(1);
-      expect(record.registeredAt).toBeInstanceOf(Date);
+      expect(record.registeredAt).toEqual(expect.any(Number));
       expect(record.deactivatedAt).toBeUndefined();
 
       // Verify alias was saved to database
@@ -304,7 +305,7 @@ describe('AliasRegistry Unit Tests', () => {
       const alias = db.aliases.get('ToDeregister');
       expect(alias).toBeDefined();
       expect(alias!.isActive).toBe(false);
-      expect(alias!.deactivatedAt).toBeInstanceOf(Date);
+      expect(alias!.deactivatedAt).toEqual(expect.any(Number));
     });
 
     it('should throw AliasNotFound for non-existent alias', async () => {

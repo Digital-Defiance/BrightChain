@@ -18,6 +18,8 @@ import { ReplicationStatus } from '../../enumerations/replicationStatus';
 import type { BlockId } from '../../interfaces/branded/primitives/blockId';
 import { IMessageMetadata } from '../../interfaces/messaging/messageMetadata';
 import { MemoryMessageMetadataStore } from './memoryMessageMetadataStore';
+import { brightDateNow, dateToBrightDate } from '../../utils/brightDateConversions';
+import type { BrightDateTimestamp } from '../../types/brightDateTimestamp';
 
 /** Cast a test string to BlockId without validation — for test data only. */
 const bid = (s: string) => s as unknown as BlockId;
@@ -61,7 +63,7 @@ describe('Message Metadata Round-Trip Property Tests', () => {
         fc.date({
           min: new Date(),
           max: new Date(Date.now() + 86400000 * 365),
-        }), // expiresAt
+        }).map((d) => dateToBrightDate(d)), // expiresAt as BrightDateTimestamp
         fc.constantFrom(
           MessageEncryptionScheme.NONE,
           MessageEncryptionScheme.SHARED_KEY,
@@ -81,12 +83,12 @@ describe('Message Metadata Round-Trip Property Tests', () => {
 
           const metadata: IMessageMetadata = {
             blockId: bid(blockId),
-            createdAt: new Date(),
+            createdAt: brightDateNow(),
             expiresAt,
             durabilityLevel: DurabilityLevel.Standard,
             parityBlockIds: [],
             accessCount: 0,
-            lastAccessedAt: new Date(),
+            lastAccessedAt: brightDateNow(),
             replicationStatus: ReplicationStatus.Pending,
             targetReplicationFactor: 3,
             replicaNodeIds: [],
@@ -112,7 +114,7 @@ describe('Message Metadata Round-Trip Property Tests', () => {
           expect(retrieved!.senderId).toBe(senderId);
           expect(retrieved!.recipients).toEqual(recipients);
           expect(retrieved!.priority).toBe(priority);
-          expect(retrieved!.expiresAt?.getTime()).toBe(expiresAt.getTime());
+          expect(retrieved!.expiresAt).toBe(expiresAt);
           expect(retrieved!.encryptionScheme).toBe(encryptionScheme);
         },
       ),

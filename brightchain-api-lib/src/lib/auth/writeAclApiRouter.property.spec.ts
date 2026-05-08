@@ -197,7 +197,7 @@ describe('Feature: brightdb-write-acls, Property 14: API Admin Authentication En
     await fc.assert(
       fc.asyncProperty(arbName, arbEndpoint, async (dbName, endpoint) => {
         const adminKey = makePublicKey(0x42);
-        const { server, close } = createTestApp(dbName, adminKey);
+        const { app, close } = createTestApp(dbName, adminKey);
 
         try {
           // NOTE: Property 14 only checks the "no admin headers → 403" path.
@@ -206,21 +206,23 @@ describe('Feature: brightdb-write-acls, Property 14: API Admin Authentication En
           // (truncated bodies → 400 from body-parser before the route's
           // credential check can run). The route's `extractAdminCredentials`
           // check fires regardless of body presence.
+          // We use request(app) instead of request(server) to let supertest
+          // manage the server lifecycle and avoid port exhaustion under load.
           let res: request.Response;
           switch (endpoint) {
             case 'put-acl':
-              res = await request(server).put(`/acl/${dbName}`);
+              res = await request(app).put(`/acl/${dbName}`);
               break;
             case 'post-writers':
-              res = await request(server).post(`/acl/${dbName}/writers`);
+              res = await request(app).post(`/acl/${dbName}/writers`);
               break;
             case 'delete-writers':
-              res = await request(server).delete(
+              res = await request(app).delete(
                 `/acl/${dbName}/writers/${'bb'.repeat(33)}`,
               );
               break;
             case 'post-tokens':
-              res = await request(server).post(`/acl/${dbName}/tokens`);
+              res = await request(app).post(`/acl/${dbName}/tokens`);
               break;
           }
 

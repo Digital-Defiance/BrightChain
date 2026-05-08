@@ -40,6 +40,7 @@ import {
   ICommunicationEventEmitter,
   NullEventEmitter,
 } from '../../interfaces/events';
+import { brightDateNow } from '../../utils/brightDateConversions';
 import { paginateItems } from '../../utils/pagination';
 import { validateAndPrepareAttachments } from './attachmentUtils';
 import { IKeyEpochState } from './keyEpochManager';
@@ -422,7 +423,7 @@ export class ConversationService {
       }
     }
 
-    const now = new Date();
+    const now = brightDateNow();
     const symmetricKey = this.generateSymmetricKey();
     const participants: [string, string] = [memberA, memberB];
 
@@ -463,7 +464,7 @@ export class ConversationService {
       .filter(
         (c) => c.participants[0] === memberId || c.participants[1] === memberId,
       )
-      .sort((a, b) => b.lastMessageAt.getTime() - a.lastMessageAt.getTime());
+      .sort((a, b) => b.lastMessageAt - a.lastMessageAt);
 
     return paginateItems(memberConversations, cursor, limit);
   }
@@ -584,7 +585,7 @@ export class ConversationService {
       messageContent = blockReference;
     }
 
-    const now = new Date();
+    const now = brightDateNow();
     const message: ICommunicationMessage = {
       id: uuidv4(),
       contextType: 'conversation',

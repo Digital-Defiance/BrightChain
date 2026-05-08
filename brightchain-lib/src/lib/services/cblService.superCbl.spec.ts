@@ -12,6 +12,7 @@ import { faker } from '@faker-js/faker';
 import { BLOCK_HEADER, StructuredBlockType } from '../constants';
 import { BlockSize } from '../enumerations/blockSize';
 import { Checksum } from '../types/checksum';
+import { brightDateNow } from '../utils/brightDateConversions';
 import { CBLService } from './cblService';
 import { ChecksumService } from './checksum.service';
 import { ServiceProvider } from './service.provider';
@@ -38,7 +39,7 @@ describe('Binary SuperCBL Format - Unit Tests', () => {
 
   describe('SuperCBL Header Creation', () => {
     it('should create a valid SuperCBL header with correct magic bytes', () => {
-      const dateCreated = new Date();
+      const dateCreated = brightDateNow();
       const subCblCount = 3;
       const totalBlockCount = 1000;
       const depth = 1;
@@ -77,7 +78,7 @@ describe('Binary SuperCBL Format - Unit Tests', () => {
     });
 
     it('should create a SuperCBL that can be recognized by isSuperCbl', () => {
-      const dateCreated = new Date();
+      const dateCreated = brightDateNow();
       const subCblCount = 3;
       const originalDataChecksum = Checksum.fromUint8Array(
         new Uint8Array(64).fill(0xab),
@@ -117,7 +118,7 @@ describe('Binary SuperCBL Format - Unit Tests', () => {
 
   describe('SuperCBL Signature Validation', () => {
     it('should validate signature for a freshly created SuperCBL', () => {
-      const dateCreated = new Date();
+      const dateCreated = brightDateNow();
       const subCblCount = 3;
       const originalDataChecksum = Checksum.fromUint8Array(
         new Uint8Array(64).fill(0xab),
@@ -163,7 +164,7 @@ describe('Binary SuperCBL Format - Unit Tests', () => {
 
   describe('SuperCBL Parsing', () => {
     it('should parse a SuperCBL header without signature validation', () => {
-      const dateCreated = new Date();
+      const dateCreated = brightDateNow();
       const subCblCount = 3;
       const originalDataChecksum = Checksum.fromUint8Array(
         new Uint8Array(64).fill(0xab),
@@ -207,7 +208,7 @@ describe('Binary SuperCBL Format - Unit Tests', () => {
     });
 
     it('should parse a SuperCBL header with signature validation', () => {
-      const dateCreated = new Date();
+      const dateCreated = brightDateNow();
       const subCblCount = 3;
       const originalDataChecksum = Checksum.fromUint8Array(
         new Uint8Array(64).fill(0xab),

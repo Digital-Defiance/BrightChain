@@ -61,6 +61,7 @@ import { IdentityValidator } from '../services/identityValidator';
 import { MembershipProofService } from '../services/membershipProofService';
 import { SealingService } from '../services/sealing.service';
 import { ServiceProvider } from '../services/service.provider';
+import { brightDateNow } from '../utils/brightDateConversions';
 
 // Mock file-type module
 jest.mock('file-type', () => ({
@@ -551,8 +552,8 @@ describe('BrightTrust Integration Tests', () => {
           },
           isActive: true,
           status: MemberStatusType.Active,
-          createdAt: new Date(),
-          updatedAt: new Date(),
+          createdAt: brightDateNow(),
+          updatedAt: brightDateNow(),
         });
       }
 

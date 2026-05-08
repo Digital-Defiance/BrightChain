@@ -11,6 +11,11 @@
  * Requirements: 2.2, 2.3, 2.4
  */
 
+import {
+  BrightDateTimestamp,
+  brightDateNow,
+  dateToBrightDate,
+} from '@brightchain/brightchain-lib';
 import { promises as fs } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
@@ -36,7 +41,7 @@ describe('HeadRegistry merge and conflict resolution', () => {
     describe('mergeHeadUpdate (last-writer-wins)', () => {
       it('should accept a remote update when no local head exists', async () => {
         const registry = InMemoryHeadRegistry.createIsolated();
-        const ts = new Date('2025-01-15T10:00:00Z');
+        const ts = dateToBrightDate(new Date('2025-01-15T10:00:00Z'));
 
         const applied = await registry.mergeHeadUpdate(
           'mydb',
@@ -52,8 +57,8 @@ describe('HeadRegistry merge and conflict resolution', () => {
 
       it('should accept a remote update with a newer timestamp', async () => {
         const registry = InMemoryHeadRegistry.createIsolated();
-        const oldTs = new Date('2025-01-15T10:00:00Z');
-        const newTs = new Date('2025-01-15T11:00:00Z');
+        const oldTs = dateToBrightDate(new Date('2025-01-15T10:00:00Z'));
+        const newTs = dateToBrightDate(new Date('2025-01-15T11:00:00Z'));
 
         // Set local head with older timestamp
         await registry.mergeHeadUpdate('mydb', 'users', 'local-block', oldTs);
@@ -73,8 +78,8 @@ describe('HeadRegistry merge and conflict resolution', () => {
 
       it('should reject a remote update with an older timestamp', async () => {
         const registry = InMemoryHeadRegistry.createIsolated();
-        const newTs = new Date('2025-01-15T11:00:00Z');
-        const oldTs = new Date('2025-01-15T10:00:00Z');
+        const newTs = dateToBrightDate(new Date('2025-01-15T11:00:00Z'));
+        const oldTs = dateToBrightDate(new Date('2025-01-15T10:00:00Z'));
 
         // Set local head with newer timestamp
         await registry.mergeHeadUpdate('mydb', 'users', 'local-block', newTs);
@@ -94,7 +99,7 @@ describe('HeadRegistry merge and conflict resolution', () => {
 
       it('should reject a remote update with the same timestamp (tie goes to local)', async () => {
         const registry = InMemoryHeadRegistry.createIsolated();
-        const ts = new Date('2025-01-15T10:00:00Z');
+        const ts = dateToBrightDate(new Date('2025-01-15T10:00:00Z'));
 
         await registry.mergeHeadUpdate('mydb', 'users', 'local-block', ts);
 
@@ -115,15 +120,16 @@ describe('HeadRegistry merge and conflict resolution', () => {
         await registry.setHead('mydb', 'users', 'block-1');
 
         const ts = registry.getHeadTimestamp('mydb', 'users');
-        expect(ts).toBeInstanceOf(Date);
+        expect(typeof ts).toBe('number');
         // Timestamp should be recent (within last second)
-        expect(Date.now() - ts!.getTime()).toBeLessThan(1000);
+        const nowTs = brightDateNow();
+        expect(nowTs - ts!).toBeLessThan(0.00002); // ~1.7 seconds in decimal days
       });
 
       it('should handle merges across different collections independently', async () => {
         const registry = InMemoryHeadRegistry.createIsolated();
-        const ts1 = new Date('2025-01-15T10:00:00Z');
-        const ts2 = new Date('2025-01-15T11:00:00Z');
+        const ts1 = dateToBrightDate(new Date('2025-01-15T10:00:00Z'));
+        const ts2 = dateToBrightDate(new Date('2025-01-15T11:00:00Z'));
 
         await registry.mergeHeadUpdate('mydb', 'users', 'users-block', ts1);
         await registry.mergeHeadUpdate('mydb', 'orders', 'orders-block', ts2);
@@ -138,7 +144,7 @@ describe('HeadRegistry merge and conflict resolution', () => {
     describe('deferred updates', () => {
       it('should queue a deferred update', async () => {
         const registry = InMemoryHeadRegistry.createIsolated();
-        const ts = new Date('2025-01-15T10:00:00Z');
+        const ts = dateToBrightDate(new Date('2025-01-15T10:00:00Z'));
 
         await registry.deferHeadUpdate('mydb', 'users', 'missing-block', ts);
 
@@ -154,7 +160,7 @@ describe('HeadRegistry merge and conflict resolution', () => {
 
       it('should apply deferred updates when block becomes available', async () => {
         const registry = InMemoryHeadRegistry.createIsolated();
-        const ts = new Date('2025-01-15T10:00:00Z');
+        const ts = dateToBrightDate(new Date('2025-01-15T10:00:00Z'));
 
         // Defer an update for a block not yet available
         await registry.deferHeadUpdate('mydb', 'users', 'missing-block', ts);
@@ -173,7 +179,7 @@ describe('HeadRegistry merge and conflict resolution', () => {
 
       it('should not apply deferred updates for a different block', async () => {
         const registry = InMemoryHeadRegistry.createIsolated();
-        const ts = new Date('2025-01-15T10:00:00Z');
+        const ts = dateToBrightDate(new Date('2025-01-15T10:00:00Z'));
 
         await registry.deferHeadUpdate('mydb', 'users', 'block-A', ts);
 
@@ -186,8 +192,8 @@ describe('HeadRegistry merge and conflict resolution', () => {
 
       it('should apply multiple deferred updates for the same block', async () => {
         const registry = InMemoryHeadRegistry.createIsolated();
-        const ts1 = new Date('2025-01-15T10:00:00Z');
-        const ts2 = new Date('2025-01-15T11:00:00Z');
+        const ts1 = dateToBrightDate(new Date('2025-01-15T10:00:00Z'));
+        const ts2 = dateToBrightDate(new Date('2025-01-15T11:00:00Z'));
 
         // Two collections waiting for the same block
         await registry.deferHeadUpdate('mydb', 'users', 'shared-block', ts1);
@@ -203,8 +209,8 @@ describe('HeadRegistry merge and conflict resolution', () => {
 
       it('should use last-writer-wins when applying deferred updates against existing heads', async () => {
         const registry = InMemoryHeadRegistry.createIsolated();
-        const localTs = new Date('2025-01-15T12:00:00Z');
-        const deferredTs = new Date('2025-01-15T10:00:00Z');
+        const localTs = dateToBrightDate(new Date('2025-01-15T12:00:00Z'));
+        const deferredTs = dateToBrightDate(new Date('2025-01-15T10:00:00Z'));
 
         // Set a local head with a newer timestamp
         await registry.mergeHeadUpdate('mydb', 'users', 'local-block', localTs);
@@ -226,7 +232,7 @@ describe('HeadRegistry merge and conflict resolution', () => {
 
       it('should clear deferred updates on clear()', async () => {
         const registry = InMemoryHeadRegistry.createIsolated();
-        const ts = new Date('2025-01-15T10:00:00Z');
+        const ts = dateToBrightDate(new Date('2025-01-15T10:00:00Z'));
 
         await registry.deferHeadUpdate('mydb', 'users', 'block-1', ts);
         expect(registry.getDeferredUpdates()).toHaveLength(1);
@@ -274,7 +280,7 @@ describe('HeadRegistry merge and conflict resolution', () => {
     describe('mergeHeadUpdate (last-writer-wins)', () => {
       it('should accept a remote update when no local head exists', async () => {
         const registry = PersistentHeadRegistry.create({ dataDir });
-        const ts = new Date('2025-01-15T10:00:00Z');
+        const ts = dateToBrightDate(new Date('2025-01-15T10:00:00Z'));
 
         const applied = await registry.mergeHeadUpdate(
           'mydb',
@@ -289,8 +295,8 @@ describe('HeadRegistry merge and conflict resolution', () => {
 
       it('should accept a newer timestamp and reject an older one', async () => {
         const registry = PersistentHeadRegistry.create({ dataDir });
-        const oldTs = new Date('2025-01-15T10:00:00Z');
-        const newTs = new Date('2025-01-15T11:00:00Z');
+        const oldTs = dateToBrightDate(new Date('2025-01-15T10:00:00Z'));
+        const newTs = dateToBrightDate(new Date('2025-01-15T11:00:00Z'));
 
         await registry.mergeHeadUpdate('mydb', 'users', 'old-block', oldTs);
         const applied = await registry.mergeHeadUpdate(
@@ -314,7 +320,7 @@ describe('HeadRegistry merge and conflict resolution', () => {
 
       it('should persist merged updates to disk', async () => {
         const reg1 = PersistentHeadRegistry.create({ dataDir });
-        const ts = new Date('2025-01-15T10:00:00Z');
+        const ts = dateToBrightDate(new Date('2025-01-15T10:00:00Z'));
 
         await reg1.mergeHeadUpdate('mydb', 'users', 'merged-block', ts);
 
@@ -340,7 +346,7 @@ describe('HeadRegistry merge and conflict resolution', () => {
         expect(reg2.getHead('mydb', 'users')).toBe('block-1');
         const loadedTs = reg2.getHeadTimestamp('mydb', 'users');
         expect(loadedTs).toBeDefined();
-        expect(loadedTs!.getTime()).toBe(originalTs!.getTime());
+        expect(loadedTs!).toBeCloseTo(originalTs!, 10);
       });
 
       it('should handle legacy format (plain string values) gracefully', async () => {
@@ -356,15 +362,15 @@ describe('HeadRegistry merge and conflict resolution', () => {
         await registry.load();
 
         expect(registry.getHead('mydb', 'users')).toBe('legacy-block');
-        // Legacy entries are assigned epoch timestamp (new Date(0)) during migration
-        expect(registry.getHeadTimestamp('mydb', 'users')).toEqual(new Date(0));
+        // Legacy entries are assigned J2000 epoch (0) during migration
+        expect(registry.getHeadTimestamp('mydb', 'users')).toEqual(0);
       });
     });
 
     describe('deferred updates', () => {
       it('should queue and apply deferred updates', async () => {
         const registry = PersistentHeadRegistry.create({ dataDir });
-        const ts = new Date('2025-01-15T10:00:00Z');
+        const ts = dateToBrightDate(new Date('2025-01-15T10:00:00Z'));
 
         await registry.deferHeadUpdate('mydb', 'users', 'missing-block', ts);
         expect(registry.getDeferredUpdates()).toHaveLength(1);

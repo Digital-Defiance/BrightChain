@@ -7,6 +7,8 @@ nav_order: 3
 
 ## 1. Abstract
 
+> *Where the state sees noise, the people find truth.*
+
 BrightChain is a decentralized application platform and the foundation of BrightStack — a full-stack paradigm for building decentralized applications using BrightChain, Express, React, and Node.js. At its heart is a concept introduced by The Owner Free File System which breaks a file up into source blocks and merges them with blocks of random data using an "exclusive or" operation and discards the source blocks. Added on top of that, we introduce identity/anonymity, voting, reputation, block revocation and expiration, and a confidential BrightTrust. What the Owner Free Filesystem called "whitening", we call "Brightening" and where BrightChain gets its name.
 
 What sets BrightChain apart from other decentralized platforms is BrightDB — a MongoDB-like document database built on top of the Owner-Free Filesystem. BrightDB gives developers a familiar API (`db.collection('users').findOne(...)`) while storing every document as privacy-preserving whitened blocks. This means any developer who has built a MERN-stack app can build a decentralized app with BrightStack, swapping MongoDB for BrightDB and gaining decentralization, privacy, and censorship resistance with minimal code changes.

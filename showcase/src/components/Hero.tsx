@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import { FC, useEffect, useMemo } from 'react';
 import { FaGithub, FaLock, FaNewspaper } from 'react-icons/fa';
 import { GiCookingPot } from 'react-icons/gi';
 import { Link } from 'react-router-dom';
@@ -7,6 +8,7 @@ import { ShowcaseStrings } from '../i18n/showcaseStrings';
 import { AnimatedParticles } from './AnimatedParticles';
 import './Hero.css';
 import { ScrollIndicator } from './ScrollIndicator';
+import { SloganRotation } from './SloganRotation';
 
 interface HeroProps {
   scrollY: number;
@@ -51,6 +53,8 @@ const Hero = ({ scrollY }: HeroProps) => {
             style={{ height: 137 }}
           />
         </motion.h1>
+
+        <SloganRotation />
 
         <motion.p
           className="hero-description"

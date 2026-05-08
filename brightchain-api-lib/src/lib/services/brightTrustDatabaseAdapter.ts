@@ -25,6 +25,7 @@ import {
   RedistributionJournalEntry,
   StatuteOfLimitationsConfig,
   Vote,
+  normalizeToBrightDate,
 } from '@brightchain/brightchain-lib';
 import type { BrightDb, BsonDocument } from '@brightchain/db';
 import {
@@ -212,8 +213,8 @@ function serializeMember<TID extends PlatformID>(
     publicKey: serializeUint8Array(member.publicKey),
     metadata: member.metadata,
     isActive: member.isActive,
-    createdAt: member.createdAt.toISOString(),
-    updatedAt: member.updatedAt.toISOString(),
+    createdAt: member.createdAt,
+    updatedAt: member.updatedAt,
   };
 }
 
@@ -231,8 +232,8 @@ function deserializeMember<TID extends PlatformID>(
     publicKey: deserializeUint8Array(data['publicKey'] as string),
     metadata: data['metadata'] as IBrightTrustMember<TID>['metadata'],
     isActive: data['isActive'] as boolean,
-    createdAt: new Date(data['createdAt'] as string),
-    updatedAt: new Date(data['updatedAt'] as string),
+    createdAt: normalizeToBrightDate(data['createdAt'] as number | string | Date),
+    updatedAt: normalizeToBrightDate(data['updatedAt'] as number | string | Date),
   };
 }
 
@@ -414,8 +415,8 @@ function serializeAlias<TID extends PlatformID>(
       alias.identityRecoveryRecordId,
     ),
     isActive: alias.isActive,
-    registeredAt: alias.registeredAt.toISOString(),
-    deactivatedAt: alias.deactivatedAt?.toISOString(),
+    registeredAt: alias.registeredAt,
+    deactivatedAt: alias.deactivatedAt,
     epochNumber: alias.epochNumber,
   };
 }
@@ -442,9 +443,9 @@ function deserializeAlias<TID extends PlatformID>(
     aliasPublicKey: deserializeUint8Array(data['aliasPublicKey'] as string),
     identityRecoveryRecordId,
     isActive: data['isActive'] as boolean,
-    registeredAt: new Date(data['registeredAt'] as string),
-    deactivatedAt: data['deactivatedAt']
-      ? new Date(data['deactivatedAt'] as string)
+    registeredAt: data['registeredAt'] as number,
+    deactivatedAt: data['deactivatedAt'] !== undefined && data['deactivatedAt'] !== null
+      ? (data['deactivatedAt'] as number)
       : undefined,
     epochNumber: data['epochNumber'] as number,
   };

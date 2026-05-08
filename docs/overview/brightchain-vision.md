@@ -63,6 +63,8 @@ BrightChain is not a "whitepaper project." It is a production-grade TypeScript l
 
 ## The Call to Action
 
+> *Building a world where ideas have no borders and truth has no owner. Defiance by Design.*
+
 We aren't looking for "users"; we are looking for **Founding Citizens**.
 
 1. **Node Operators:** Run a node. Host the soup. Reclaim the utility.

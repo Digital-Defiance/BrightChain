@@ -21,6 +21,7 @@ import type {
 } from '@brightchain/brightchain-lib';
 import {
   BlockSize,
+  brightDateNow,
   createWriteProofPayload,
   getBrightChainIdProvider,
   i18nEngine,
@@ -534,13 +535,13 @@ export class BrightChainMemberInitService<TID extends PlatformID> {
     const idProvider = this._idProvider;
 
     if (!db.hasModel(ROLES_COLLECTION)) {
-      db.model<IStoredRole, IRoleBase<TID, Date, string>>(ROLES_COLLECTION, {
+      db.model<IStoredRole, IRoleBase<TID, number, string>>(ROLES_COLLECTION, {
         schema: ROLE_SCHEMA,
         hydration: createRoleHydrationSchema<TID>(idProvider),
       });
     }
     if (!db.hasModel(USERS_COLLECTION)) {
-      db.model<IStoredUser, IUserBase<TID, Date, string, AccountStatus>>(
+      db.model<IStoredUser, IUserBase<TID, number, string, AccountStatus>>(
         USERS_COLLECTION,
         {
           schema: USER_SCHEMA,
@@ -549,7 +550,7 @@ export class BrightChainMemberInitService<TID extends PlatformID> {
       );
     }
     if (!db.hasModel(USER_ROLES_COLLECTION)) {
-      db.model<IStoredUserRole, IUserRoleBase<TID, Date>>(
+      db.model<IStoredUserRole, IUserRoleBase<TID, number>>(
         USER_ROLES_COLLECTION,
         {
           schema: USER_ROLE_SCHEMA,
@@ -574,8 +575,8 @@ export class BrightChainMemberInitService<TID extends PlatformID> {
   private static buildRoleDocument<TID extends PlatformID>(
     user: IBrightChainUserInitEntry<TID>,
     systemUserId: TID,
-    now: Date,
-  ): IRoleBase<TID, Date, string> {
+    now: number,
+  ): IRoleBase<TID, number, string> {
     return {
       _id: user.roleId,
       name: user.roleName,
@@ -597,8 +598,8 @@ export class BrightChainMemberInitService<TID extends PlatformID> {
   private static buildUserDocument<TID extends PlatformID>(
     user: IBrightChainUserInitEntry<TID>,
     systemUserId: TID,
-    now: Date,
-  ): IUserBase<TID, Date, string, AccountStatus> {
+    now: number,
+  ): IUserBase<TID, number, string, AccountStatus> {
     return {
       _id: user.fullId,
       username: user.username,
@@ -629,8 +630,8 @@ export class BrightChainMemberInitService<TID extends PlatformID> {
   private static buildUserRoleDocument<TID extends PlatformID>(
     user: IBrightChainUserInitEntry<TID>,
     systemUserId: TID,
-    now: Date,
-  ): IUserRoleBase<TID, Date> {
+    now: number,
+  ): IUserRoleBase<TID, number> {
     return {
       _id: user.userRoleId,
       userId: user.fullId,
@@ -659,7 +660,7 @@ export class BrightChainMemberInitService<TID extends PlatformID> {
    * Serialize a typed RBAC document for storage/validation.
    * Delegates to the standalone serializeForStorage utility.
    *
-   * @template T - The input typed document (e.g. IRoleBase<TID, Date, string>)
+   * @template T - The input typed document (e.g. IRoleBase<TID, BrightDateTimestamp, string>)
    * @template TStored - The expected stored output type (e.g. IStoredRole).
    *   When omitted, returns a generic Record.
    */
@@ -735,7 +736,7 @@ export class BrightChainMemberInitService<TID extends PlatformID> {
     );
     const db = this.db;
 
-    const now = new Date();
+    const now = brightDateNow();
     const systemUserId = input.systemUser.fullId;
     const users = [input.systemUser, input.adminUser, input.memberUser];
 
@@ -764,15 +765,15 @@ export class BrightChainMemberInitService<TID extends PlatformID> {
 
     const rolesModelForValidation = db.model<
       IStoredRole,
-      IRoleBase<TID, Date, string>
+      IRoleBase<TID, number, string>
     >(ROLES_COLLECTION);
     const usersModelForValidation = db.model<
       IStoredUser,
-      IUserBase<TID, Date, string, AccountStatus>
+      IUserBase<TID, number, string, AccountStatus>
     >(USERS_COLLECTION);
     const userRolesModelForValidation = db.model<
       IStoredUserRole,
-      IUserRoleBase<TID, Date>
+      IUserRoleBase<TID, number>
     >(USER_ROLES_COLLECTION);
     const mnemonicsModelForValidation = db.model<
       IStoredMnemonic,

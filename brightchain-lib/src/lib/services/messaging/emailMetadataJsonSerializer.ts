@@ -50,12 +50,11 @@ export function serializeEmailMetadataForJson<TID extends string = string>(
   // deliveryReceipts: Map<TID, IDeliveryReceipt<TID>> → Record<string, ...>
   result['deliveryReceipts'] = mapToRecord(email.deliveryReceipts);
 
-  // readReceipts: Map<TID, Date> → Record<string, string>
-  const readObj: Record<string, string> = {};
+  // readReceipts: Map<TID, BrightDateTimestamp> → Record<string, number>
+  const readObj: Record<string, number> = {};
   if (email.readReceipts) {
     for (const [key, val] of email.readReceipts) {
-      readObj[String(key)] =
-        val instanceof Date ? val.toISOString() : String(val);
+      readObj[String(key)] = val;
     }
   }
   result['readReceipts'] = readObj;
@@ -69,9 +68,8 @@ export function serializeEmailMetadataForJson<TID extends string = string>(
     result['encryptedKeys'] = encObj;
   }
 
-  // date: Date → ISO string
-  result['date'] =
-    email.date instanceof Date ? email.date.toISOString() : String(email.date);
+  // date: BrightDateTimestamp → number (already a number)
+  result['date'] = email.date;
 
   return result as IEmailMetadataJson<TID>;
 }

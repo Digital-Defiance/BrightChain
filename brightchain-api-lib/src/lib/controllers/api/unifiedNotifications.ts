@@ -11,7 +11,7 @@
  *   GET /unified-notifications/recent        — merged recent notifications
  */
 
-import { IUnifiedNotificationItem } from '@brightchain/brightchain-lib';
+import { brightDateNow, brightDateToISO, IUnifiedNotificationItem } from '@brightchain/brightchain-lib';
 import { INotificationService } from '@brightchain/brighthub-lib';
 import { INotificationService as IBurnbagNotificationService } from '@brightchain/digitalburnbag-lib';
 import { CoreLanguageCode } from '@digitaldefiance/i18n-lib';
@@ -275,7 +275,7 @@ export class UnifiedNotificationController<
         type: 'email',
         content: email.subject ?? '(no subject)',
         isRead: false,
-        createdAt: email.date?.toISOString() ?? new Date().toISOString(),
+        createdAt: email.date !== undefined ? brightDateToISO(email.date) : brightDateToISO(brightDateNow()),
         clickThroughUrl: `/brightmail/${email.messageId}`,
         actorId: email.from?.address,
       }));

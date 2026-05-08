@@ -3,13 +3,13 @@
  * for blockchain ledger entries.
  *
  * Binary format (hashable content):
- *   sequenceNumber  uint32 BE  (4 bytes)
- *   timestamp       uint64 BE  (8 bytes, ms since epoch)
- *   hasPreviousHash uint8      (0x00 = null, 0x01 = present)
- *   previousHash    0 | 64     (SHA3-512 bytes, present when flag = 0x01)
- *   pubKeyLength    uint32 BE  (4 bytes)
+ *   sequenceNumber  uint32 BE   (4 bytes)
+ *   timestamp       float64 BE  (8 bytes, BrightDateValue decimal days since J2000.0)
+ *   hasPreviousHash uint8       (0x00 = null, 0x01 = present)
+ *   previousHash    0 | 64      (SHA3-512 bytes, present when flag = 0x01)
+ *   pubKeyLength    uint32 BE   (4 bytes)
  *   signerPublicKey variable
- *   payloadLength   uint32 BE  (4 bytes)
+ *   payloadLength   uint32 BE   (4 bytes)
  *   payload         variable
  *
  * Full serialized entry:
@@ -30,6 +30,7 @@ import {
 } from '../errors/ledgerSerializationError';
 import { ILedgerEntry } from '../interfaces/ledger/ledgerEntry';
 import { ChecksumService } from '../services/checksum.service';
+import { BrightDateTimestamp } from '../types/brightDateTimestamp';
 import { Checksum } from '../types/checksum';
 
 /** Magic bytes identifying a ledger entry: "LEDG" in ASCII. */
@@ -93,9 +94,8 @@ export class LedgerEntrySerializer {
     view.setUint32(offset, entry.sequenceNumber, false);
     offset += 4;
 
-    // timestamp — uint64 BE (ms since epoch)
-    const ms = BigInt(entry.timestamp.getTime());
-    view.setBigUint64(offset, ms, false);
+    // timestamp — float64 BE (BrightDateValue: decimal days since J2000.0)
+    view.setFloat64(offset, entry.timestamp, false);
     offset += 8;
 
     // hasPreviousHash flag
@@ -211,9 +211,8 @@ export class LedgerEntrySerializer {
 
     // timestamp
     this.ensureRemaining(data, offset, 8, 'timestamp');
-    const timestampMs = view.getBigUint64(offset, false);
+    const timestamp: BrightDateTimestamp = view.getFloat64(offset, false);
     offset += 8;
-    const timestamp = new Date(Number(timestampMs));
 
     // hasPreviousHash flag
     this.ensureRemaining(data, offset, 1, 'hasPreviousHash');

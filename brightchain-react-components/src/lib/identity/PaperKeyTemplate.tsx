@@ -8,6 +8,11 @@
  */
 
 import {
+  BrightChainStrings,
+  toBrightDateString,
+} from '@brightchain/brightchain-lib';
+import { useI18n } from '@digitaldefiance/express-suite-react-components';
+import {
   Alert,
   Box,
   Button,
@@ -17,7 +22,6 @@ import {
   Typography,
 } from '@mui/material';
 import { FC, useMemo } from 'react';
-import { toBrightDateString } from '@brightchain/brightchain-lib';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -40,6 +44,7 @@ export const PaperKeyTemplate: FC<PaperKeyTemplateProps> = ({
   memberName,
   createdAt,
 }) => {
+  const { tBranded: t } = useI18n();
   const words = useMemo(() => paperKey.split(' ').filter(Boolean), [paperKey]);
 
   const handlePrint = () => {
@@ -58,7 +63,7 @@ export const PaperKeyTemplate: FC<PaperKeyTemplateProps> = ({
       {/* Header */}
       <Box sx={{ textAlign: 'center', mb: 3 }}>
         <Typography variant="h4" gutterBottom>
-          BrightChain Paper Key
+          {t(BrightChainStrings.PaperKey_Title)}
         </Typography>
         {memberName && (
           <Typography variant="subtitle1" color="text.secondary">
@@ -67,7 +72,12 @@ export const PaperKeyTemplate: FC<PaperKeyTemplateProps> = ({
         )}
         {createdAt && (
           <Typography variant="caption" color="text.secondary">
-            Generated: {createdAt.toLocaleDateString()} (BD {toBrightDateString(createdAt, 3)})
+            {t(BrightChainStrings.PaperKey_GeneratedTemplate, {
+              DATE: createdAt.toLocaleDateString(),
+              BD: t(BrightChainStrings.Date_BrightDateTemplate, {
+                BD: toBrightDateString(createdAt, 3),
+              }),
+            })}
           </Typography>
         )}
       </Box>
@@ -76,8 +86,7 @@ export const PaperKeyTemplate: FC<PaperKeyTemplateProps> = ({
 
       {/* Security Warning */}
       <Alert severity="error" sx={{ mb: 3 }}>
-        KEEP THIS SAFE. This paper key is the only way to recover your
-        BrightChain identity. Store it in a secure location. Never share it.
+        {t(BrightChainStrings.PaperKey_SecurityWarning)}
       </Alert>
 
       {/* Word Grid */}
@@ -89,7 +98,7 @@ export const PaperKeyTemplate: FC<PaperKeyTemplateProps> = ({
           mb: 3,
         }}
         role="list"
-        aria-label="Paper key words"
+        aria-label={t(BrightChainStrings.PaperKey_WordsAriaLabel)}
       >
         {words.map((word, idx) => (
           <Chip
@@ -110,12 +119,12 @@ export const PaperKeyTemplate: FC<PaperKeyTemplateProps> = ({
       {qrCodeDataUrl && (
         <Box sx={{ textAlign: 'center', mb: 3 }}>
           <Typography variant="caption" color="text.secondary" sx={{ mb: 1 }}>
-            Scan to import:
+            {t(BrightChainStrings.PaperKey_QrScanLabel)}
           </Typography>
           <Box>
             <img
               src={qrCodeDataUrl}
-              alt="Paper key QR code"
+              alt={t(BrightChainStrings.PaperKey_QrAlt)}
               style={{ maxWidth: 200, border: '1px solid #ccc', padding: 8 }}
             />
           </Box>
@@ -126,27 +135,27 @@ export const PaperKeyTemplate: FC<PaperKeyTemplateProps> = ({
 
       {/* Security Notes */}
       <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-        Security recommendations:
+        {t(BrightChainStrings.PaperKey_SecurityRecommendations)}
       </Typography>
       <Box component="ul" sx={{ pl: 2, mb: 3 }}>
         <li>
           <Typography variant="body2" color="text.secondary">
-            Store in a fireproof safe or safety deposit box
+            {t(BrightChainStrings.PaperKey_Tip_Fireproof)}
           </Typography>
         </li>
         <li>
           <Typography variant="body2" color="text.secondary">
-            Consider splitting across multiple locations
+            {t(BrightChainStrings.PaperKey_Tip_Split)}
           </Typography>
         </li>
         <li>
           <Typography variant="body2" color="text.secondary">
-            Never store digitally or take a screenshot
+            {t(BrightChainStrings.PaperKey_Tip_NoDigital)}
           </Typography>
         </li>
         <li>
           <Typography variant="body2" color="text.secondary">
-            Never share with anyone, including BrightChain support
+            {t(BrightChainStrings.PaperKey_Tip_NeverShare)}
           </Typography>
         </li>
       </Box>
@@ -154,7 +163,7 @@ export const PaperKeyTemplate: FC<PaperKeyTemplateProps> = ({
       {/* Print Button (hidden in print) */}
       <Box sx={{ textAlign: 'center', '@media print': { display: 'none' } }}>
         <Button variant="contained" onClick={handlePrint} size="large">
-          Print This Template
+          {t(BrightChainStrings.PaperKey_PrintButton)}
         </Button>
       </Box>
     </Paper>

@@ -38,22 +38,27 @@ const arbChecksum = fc
   .map((arr) => arr.map((n) => n.toString(16)).join(''));
 
 /**
- * Generate a valid date (not NaN) within a reasonable range
- * Using integer timestamps to avoid fc.date() generating invalid dates
+ * Generate a valid BrightDateTimestamp (decimal days since J2000.0)
+ * within a reasonable range (2020-2025)
  */
-const arbValidDate = fc
+const arbValidBrightDate = fc
   .integer({
     min: new Date('2020-01-01').getTime(),
     max: new Date('2025-12-31').getTime(),
   })
-  .map((timestamp) => new Date(timestamp));
+  .map((timestamp) => {
+    // Convert Unix ms to BrightDateTimestamp (days since J2000.0)
+    // J2000.0 = 2000-01-01T12:00:00Z = 946728000000 ms
+    const J2000_MS = 946728000000;
+    return (timestamp - J2000_MS) / 86400000;
+  });
 
 /**
  * Generate a sync vector entry
  */
 const arbSyncVectorEntry = fc.record({
   peerId: arbPeerId,
-  lastSyncTimestamp: arbValidDate,
+  lastSyncTimestamp: arbValidBrightDate,
   lastManifestChecksum: arbChecksum,
 });
 
@@ -81,13 +86,13 @@ function createMinimalMockProvider(localNodeId: string): IManifestProvider {
     getLocalManifest: () => ({
       nodeId: localNodeId,
       blockIds: [],
-      generatedAt: new Date(),
+      generatedAt: 9000,
       checksum: 'empty-checksum',
     }),
     getPeerManifest: async (peerId: string): Promise<BlockManifest> => ({
       nodeId: peerId,
       blockIds: [],
-      generatedAt: new Date(),
+      generatedAt: 9000,
       checksum: `checksum-${peerId}`,
     }),
     updateBlockLocation: async () => {},
@@ -172,9 +177,10 @@ describe('Sync Vector Property Tests', () => {
               expect(loaded?.lastManifestChecksum).toBe(
                 entry.lastManifestChecksum,
               );
-              // Compare timestamps (allowing for serialization precision loss)
-              expect(loaded?.lastSyncTimestamp.getTime()).toBe(
-                entry.lastSyncTimestamp.getTime(),
+              // Compare timestamps (BrightDateTimestamp is a number, compare directly with tolerance for ISO round-trip)
+              expect(loaded?.lastSyncTimestamp).toBeCloseTo(
+                entry.lastSyncTimestamp,
+                3,
               );
             }
 
@@ -205,7 +211,7 @@ describe('Sync Vector Property Tests', () => {
       await fc.assert(
         fc.asyncProperty(
           arbPeerId,
-          arbValidDate,
+          arbValidBrightDate,
           arbChecksum,
           async (peerId, lastSyncTime, checksum) => {
             const iterTestDir = join(
@@ -219,25 +225,25 @@ describe('Sync Vector Property Tests', () => {
 
             try {
               // Track what timestamp was requested
-              let requestedSinceTimestamp: Date | undefined;
+              let requestedSinceTimestamp: number | undefined;
 
               const mockProvider: IManifestProvider = {
                 getLocalNodeId: () => localNodeId,
                 getLocalManifest: () => ({
                   nodeId: localNodeId,
                   blockIds: [],
-                  generatedAt: new Date(),
+                  generatedAt: 9000,
                   checksum: 'local-checksum',
                 }),
                 getPeerManifest: async (
                   _peerId: string,
-                  sinceTimestamp?: Date,
+                  sinceTimestamp?: number,
                 ): Promise<BlockManifest> => {
                   requestedSinceTimestamp = sinceTimestamp;
                   return {
                     nodeId: _peerId,
                     blockIds: [],
-                    generatedAt: new Date(),
+                    generatedAt: 9000,
                     checksum: `checksum-${_peerId}`,
                   };
                 },
@@ -264,9 +270,7 @@ describe('Sync Vector Property Tests', () => {
 
               // Verify the sync vector timestamp was used
               expect(requestedSinceTimestamp).toBeDefined();
-              expect(requestedSinceTimestamp?.getTime()).toBe(
-                lastSyncTime.getTime(),
-              );
+              expect(requestedSinceTimestamp).toBeCloseTo(lastSyncTime, 3);
 
               return true;
             } finally {
@@ -309,7 +313,7 @@ describe('Sync Vector Property Tests', () => {
                 getLocalManifest: () => ({
                   nodeId: localNodeId,
                   blockIds: [],
-                  generatedAt: new Date(),
+                  generatedAt: 9000,
                   checksum: 'local-checksum',
                 }),
                 getPeerManifest: async (
@@ -317,7 +321,7 @@ describe('Sync Vector Property Tests', () => {
                 ): Promise<BlockManifest> => ({
                   nodeId: _peerId,
                   blockIds: [],
-                  generatedAt: new Date(),
+                  generatedAt: 9000,
                   checksum: peerChecksum,
                 }),
                 updateBlockLocation: async () => {},
@@ -336,7 +340,8 @@ describe('Sync Vector Property Tests', () => {
               );
 
               // Initialize with old sync vector
-              const oldTime = new Date('2020-01-01');
+              // J2000.0 = 2000-01-01T12:00:00Z, 2020-01-01 is ~7305 days after J2000.0
+              const oldTime = 7305.5; // approx BrightDateTimestamp for 2020-01-01
               service.updateSyncVector(peerId, oldTime, 'old-checksum');
 
               const beforeReconcile = Date.now();
@@ -350,10 +355,13 @@ describe('Sync Vector Property Tests', () => {
               const updatedVector = service.getSyncVector(peerId);
               expect(updatedVector).not.toBeNull();
 
-              // Timestamp should be updated to approximately now
-              const updatedTime = updatedVector!.lastSyncTimestamp.getTime();
-              expect(updatedTime).toBeGreaterThanOrEqual(beforeReconcile);
-              expect(updatedTime).toBeLessThanOrEqual(afterReconcile);
+              // Timestamp should be updated to approximately now (as BrightDateTimestamp)
+              const updatedTime = updatedVector!.lastSyncTimestamp;
+              // Convert to Unix ms for comparison
+              const J2000_MS = 946728000000;
+              const updatedMs = J2000_MS + updatedTime * 86400000;
+              expect(updatedMs).toBeGreaterThanOrEqual(beforeReconcile);
+              expect(updatedMs).toBeLessThanOrEqual(afterReconcile + 1000); // 1s tolerance
 
               // Checksum should be updated to peer's checksum
               expect(updatedVector!.lastManifestChecksum).toBe(peerChecksum);
@@ -402,7 +410,9 @@ describe('Sync Vector Property Tests', () => {
             const vector = service.getSyncVector(peerId);
             expect(vector).not.toBeNull();
             expect(vector!.peerId).toBe(peerId);
-            expect(vector!.lastSyncTimestamp.getTime()).toBe(0); // Epoch
+            // Epoch timestamp: normalizeToBrightDate(new Date(0)) = approx -10957.5 (Unix epoch in BrightDate)
+            expect(typeof vector!.lastSyncTimestamp).toBe('number');
+            expect(isFinite(vector!.lastSyncTimestamp)).toBe(true);
             expect(vector!.lastManifestChecksum).toBe('');
 
             return true;

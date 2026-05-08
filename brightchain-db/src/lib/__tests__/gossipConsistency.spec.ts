@@ -14,7 +14,7 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { InMemoryHeadRegistry } from '@brightchain/brightchain-lib';
+import { brightDateNow, InMemoryHeadRegistry } from '@brightchain/brightchain-lib';
 import { MockBlockStore } from '../../__tests__/helpers/mockBlockStore';
 import { Collection, ICollectionHeadRegistry } from '../collection';
 
@@ -44,12 +44,14 @@ function makeCollection(
   dbName: string,
   store: MockBlockStore,
   registry: InMemoryHeadRegistry,
+  nowBd?: () => number,
 ): Collection {
   return new Collection(
     name,
     store as any,
     dbName,
     registry as any as ICollectionHeadRegistry,
+    nowBd ? { nowBd } : undefined,
   );
 }
 
@@ -99,7 +101,7 @@ describe('Gossip consistency – stale read invalidation', () => {
     // setHead and mergeHeadUpdate resolve within the same millisecond.
     const newHead = registry.getHead(DB, COL);
     expect(newHead).toBeDefined();
-    registry.mergeHeadUpdate(DB, COL, newHead!, new Date(Date.now() + 100));
+    registry.mergeHeadUpdate(DB, COL, newHead!, brightDateNow() + 0.0012); // ~100ms in decimal days
 
     await flushAsync();
 
@@ -149,7 +151,7 @@ describe('Gossip consistency – multi-writer convergence', () => {
     // Use a future timestamp so mergeHeadUpdate's strict-newer check always
     // fires regardless of same-millisecond resolution between setHead and the
     // gossip call.  The per-doc LWW still uses docTimestamps, not this value.
-    registryB.mergeHeadUpdate(DB, COL, headA, new Date(Date.now() + 100));
+    registryB.mergeHeadUpdate(DB, COL, headA, brightDateNow() + 0.0012);
     await flushAsync();
 
     // Node B should now see both documents
@@ -162,7 +164,7 @@ describe('Gossip consistency – multi-writer convergence', () => {
     const headBMerged = registryB.getHead(DB, COL)!;
     expect(headBMerged).toBeDefined();
 
-    registryA.mergeHeadUpdate(DB, COL, headBMerged, new Date(Date.now() + 100));
+    registryA.mergeHeadUpdate(DB, COL, headBMerged, brightDateNow() + 0.0012);
     await flushAsync();
 
     // Node A should also see both documents
@@ -196,10 +198,8 @@ describe('Gossip consistency – LWW rejects stale gossip', () => {
 
     const staleRegistry = new InMemoryHeadRegistry();
 
-    // Write old state first (lower timestamp)
-    const staleNode = makeCollection(COL, DB, store, staleRegistry);
-    // Manually control Date.now so that staleNode's write gets a known low ts.
-    jest.spyOn(Date, 'now').mockReturnValueOnce(100);
+    // Write old state first (lower BrightDate timestamp)
+    const staleNode = makeCollection(COL, DB, store, staleRegistry, () => 9000.1);
     await staleNode.insertOne({ _id: 'prod-1', price: 9.99 });
 
     // Capture the stale head
@@ -207,25 +207,20 @@ describe('Gossip consistency – LWW rejects stale gossip', () => {
     expect(staleHead).toBeDefined();
 
     // ── Now write the same doc with a newer timestamp on the live node ────
-    const liveNode = makeCollection(COL, DB, store, registry);
-    jest.spyOn(Date, 'now').mockReturnValueOnce(200);
+    const liveNode = makeCollection(COL, DB, store, registry, () => 9000.2);
     await liveNode.insertOne({ _id: 'prod-1', price: 29.99 });
 
     // Warm up the live node
     await liveNode.find({});
 
     // ── Gossip the stale head to the live registry ────────────────────────
-    // Use a past Date so it's guaranteed to be "old" from the LWW perspective.
-    // Note: LWW comparison is on docTimestamps (Date.now()), not gossip arrival time.
-    registry.mergeHeadUpdate(DB, COL, staleHead, new Date());
+    registry.mergeHeadUpdate(DB, COL, staleHead, brightDateNow());
     await flushAsync();
 
     // ── Live node must retain its newer value ─────────────────────────────
     const docs = await liveNode.find({});
     expect(docs).toHaveLength(1);
     expect((docs[0] as any).price).toBe(29.99);
-
-    jest.restoreAllMocks();
   });
 });
 
@@ -246,35 +241,32 @@ describe('Gossip consistency – tombstone vs live LWW', () => {
     const liveRegistry = new InMemoryHeadRegistry();
 
     // ── Build a "deleter" node that deletes at T=5 ────────────────────────
-    const deleterNode = makeCollection(COL, DB, store, deleteRegistry);
+    let deleterClock = 9000.001;
+    const deleterNode = makeCollection(COL, DB, store, deleteRegistry, () => deleterClock);
     // First insert (needed so there's something to delete)
-    jest.spyOn(Date, 'now').mockReturnValueOnce(1);
     await deleterNode.insertOne({ _id: 'note-1', text: 'initial' });
     await deleterNode.find({}); // load
 
-    // Delete the doc at T=5
-    jest.spyOn(Date, 'now').mockReturnValueOnce(5);
+    // Delete the doc at T=5 (lower BrightDate)
+    deleterClock = 9000.005;
     await deleterNode.deleteOne({ _id: 'note-1' });
 
     const deleteHead = deleteRegistry.getHead(DB, COL)!;
     expect(deleteHead).toBeDefined();
 
     // ── Build a "writer" node that writes at T=10 ─────────────────────────
-    const writerNode = makeCollection(COL, DB, store, liveRegistry);
-    jest.spyOn(Date, 'now').mockReturnValueOnce(10);
+    const writerNode = makeCollection(COL, DB, store, liveRegistry, () => 9000.010);
     await writerNode.insertOne({ _id: 'note-1', text: 'updated' });
     await writerNode.find({}); // load
 
     // ── Gossip the delete (T=5) to the writer node (local write T=10) ─────
-    liveRegistry.mergeHeadUpdate(DB, COL, deleteHead, new Date());
+    liveRegistry.mergeHeadUpdate(DB, COL, deleteHead, brightDateNow());
     await flushAsync();
 
     // Writer's local T=10 write must survive — doc is still present
     const docs = await writerNode.find({});
     expect(docs).toHaveLength(1);
     expect((docs[0] as any).text).toBe('updated');
-
-    jest.restoreAllMocks();
   });
 
   /**
@@ -286,22 +278,22 @@ describe('Gossip consistency – tombstone vs live LWW', () => {
     const liveRegistry = new InMemoryHeadRegistry();
 
     // ── Build a "writer" node that writes at T=10 ─────────────────────────
-    const writerNode = makeCollection(COL, DB, store, liveRegistry);
-    jest.spyOn(Date, 'now').mockReturnValueOnce(10);
+    const writerNode = makeCollection(COL, DB, store, liveRegistry, () => 9000.010);
     await writerNode.insertOne({ _id: 'note-2', text: 'alive' });
     await writerNode.find({}); // load
 
     // ── Build a "deleter" node that inserts then deletes at T=15 ─────────
     // First, sync it with the writer's current state so it knows the doc exists.
     const writerHead = liveRegistry.getHead(DB, COL)!;
-    deleteRegistry.mergeHeadUpdate(DB, COL, writerHead, new Date());
+    deleteRegistry.mergeHeadUpdate(DB, COL, writerHead, brightDateNow());
 
-    const deleterNode = makeCollection(COL, DB, store, deleteRegistry);
+    let deleterClock = 9000.010;
+    const deleterNode = makeCollection(COL, DB, store, deleteRegistry, () => deleterClock);
     await deleterNode.find({}); // load (triggers merge of writer's state)
     await flushAsync();
 
-    // Delete at T=15
-    jest.spyOn(Date, 'now').mockReturnValueOnce(15);
+    // Delete at T=15 (higher BrightDate)
+    deleterClock = 9000.015;
     await deleterNode.deleteOne({ _id: 'note-2' });
 
     const deleteHead = deleteRegistry.getHead(DB, COL)!;
@@ -313,7 +305,7 @@ describe('Gossip consistency – tombstone vs live LWW', () => {
       DB,
       COL,
       deleteHead,
-      new Date(Date.now() + 100),
+      brightDateNow() + 0.0012,
     );
     await flushAsync();
 
@@ -321,6 +313,5 @@ describe('Gossip consistency – tombstone vs live LWW', () => {
     const docs = await writerNode.find({});
     expect(docs).toHaveLength(0);
 
-    jest.restoreAllMocks();
   });
 });

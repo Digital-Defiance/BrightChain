@@ -3,7 +3,7 @@
  *
  * Converts IAclDocument instances to/from JSON strings, handling:
  * - Uint8Array fields ↔ hex string encoding
- * - Date fields ↔ ISO 8601 string encoding
+ * - BrightDateTimestamp fields stored as numbers
  * - All other fields pass through as-is
  *
  * Follows the locationRecordToJSON/locationRecordFromJSON pattern
@@ -14,6 +14,8 @@
  */
 
 import { WriteMode } from '../../enumerations/writeMode';
+import type { BrightDateTimestamp } from '../../types/brightDateTimestamp';
+import { normalizeToBrightDate } from '../../utils/brightDateConversions';
 import { IAclDocument } from './aclDocument';
 import { IAclScope } from './writeAcl';
 
@@ -21,7 +23,7 @@ import { IAclScope } from './writeAcl';
  * JSON-serializable representation of IAclDocument.
  *
  * Uint8Array fields are hex-encoded strings.
- * Date fields are ISO 8601 strings.
+ * BrightDateTimestamp fields are stored as numbers.
  */
 export interface SerializedAclDocument {
   documentId: string;
@@ -30,8 +32,8 @@ export interface SerializedAclDocument {
   aclAdministrators: string[];
   scope: IAclScope;
   version: number;
-  createdAt: string;
-  updatedAt: string;
+  createdAt: number;
+  updatedAt: number;
   creatorPublicKey: string;
   creatorSignature: string;
   previousVersionBlockId?: string;
@@ -56,7 +58,7 @@ function hexToUint8Array(hex: string): Uint8Array {
  *
  * - Uint8Array fields (authorizedWriters, aclAdministrators,
  *   creatorPublicKey, creatorSignature) are hex-encoded.
- * - Date fields (createdAt, updatedAt) are ISO 8601 strings.
+ * - BrightDateTimestamp fields (createdAt, updatedAt) are stored as numbers.
  * - All other fields pass through unchanged.
  *
  * @param doc - The ACL document to serialize
@@ -71,8 +73,8 @@ export function serializeAclDocument(doc: IAclDocument): string {
     aclAdministrators: doc.aclAdministrators.map(uint8ArrayToHex),
     scope: { ...doc.scope },
     version: doc.version,
-    createdAt: doc.createdAt.toISOString(),
-    updatedAt: doc.updatedAt.toISOString(),
+    createdAt: doc.createdAt,
+    updatedAt: doc.updatedAt,
     creatorPublicKey: uint8ArrayToHex(doc.creatorPublicKey),
     creatorSignature: uint8ArrayToHex(doc.creatorSignature),
     ...(doc.previousVersionBlockId !== undefined && {
@@ -86,7 +88,8 @@ export function serializeAclDocument(doc: IAclDocument): string {
  * Deserialize a JSON string into an IAclDocument.
  *
  * - Hex-encoded strings are converted back to Uint8Array.
- * - ISO 8601 strings are converted back to Date objects.
+ * - Timestamp fields are normalized to BrightDateTimestamp via normalizeToBrightDate
+ *   (handles both legacy ISO strings and native numeric BrightDateValues).
  * - All other fields pass through unchanged.
  *
  * @param json - JSON string to deserialize
@@ -97,15 +100,13 @@ export function serializeAclDocument(doc: IAclDocument): string {
 export function deserializeAclDocument(json: string): IAclDocument {
   const parsed: SerializedAclDocument = JSON.parse(json);
 
-  const createdAt = new Date(parsed.createdAt);
-  const updatedAt = new Date(parsed.updatedAt);
-
-  if (isNaN(createdAt.getTime())) {
-    throw new Error('Invalid createdAt date in ACL document');
-  }
-  if (isNaN(updatedAt.getTime())) {
-    throw new Error('Invalid updatedAt date in ACL document');
-  }
+  // Support both legacy ISO string format and new numeric BrightDateTimestamp
+  const createdAt: BrightDateTimestamp = normalizeToBrightDate(
+    parsed.createdAt as unknown as string | number,
+  );
+  const updatedAt: BrightDateTimestamp = normalizeToBrightDate(
+    parsed.updatedAt as unknown as string | number,
+  );
 
   return {
     documentId: parsed.documentId,

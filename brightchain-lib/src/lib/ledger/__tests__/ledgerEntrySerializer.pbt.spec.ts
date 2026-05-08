@@ -16,6 +16,7 @@ import fc from 'fast-check';
 
 import { ILedgerEntry } from '../../interfaces/ledger/ledgerEntry';
 import { ChecksumService } from '../../services/checksum.service';
+import { BrightDateTimestamp } from '../../types/brightDateTimestamp';
 import { Checksum } from '../../types/checksum';
 import { LedgerEntrySerializer } from '../ledgerEntrySerializer';
 
@@ -52,8 +53,13 @@ function arbLedgerEntry(): fc.Arbitrary<ILedgerEntry> {
   return fc
     .record({
       sequenceNumber: fc.integer({ min: 0, max: 0xffffffff }),
-      // Timestamp: use integer ms to avoid sub-ms precision loss
-      timestampMs: fc.integer({ min: 0, max: 2_000_000_000_000 }),
+      // Timestamp: BrightDateValue (decimal days since J2000.0)
+      timestamp: fc.double({
+        min: -365250,
+        max: 365250,
+        noNaN: true,
+        noDefaultInfinity: true,
+      }),
       // Whether this entry has a previous hash (non-genesis)
       hasPrevious: fc.boolean(),
       // 64 random bytes for previousEntryHash (used only when hasPrevious)
@@ -85,7 +91,7 @@ function arbLedgerEntry(): fc.Arbitrary<ILedgerEntry> {
         ? Checksum.fromUint8Array(fields.previousHashBytes)
         : null;
 
-      const timestamp = new Date(fields.timestampMs);
+      const timestamp = fields.timestamp as BrightDateTimestamp;
 
       // Build the partial entry (without entryHash and signature)
       const partial = {
@@ -125,10 +131,8 @@ describe('Feature: block-chain-ledger, Property 1: Serialization Round-Trip', ()
         // sequenceNumber
         expect(deserialized.sequenceNumber).toBe(entry.sequenceNumber);
 
-        // timestamp (to millisecond precision)
-        expect(deserialized.timestamp.getTime()).toBe(
-          entry.timestamp.getTime(),
-        );
+        // timestamp (exact equality for BrightDateValue number)
+        expect(deserialized.timestamp).toBe(entry.timestamp);
 
         // previousEntryHash
         if (entry.previousEntryHash === null) {
@@ -177,7 +181,12 @@ function arbPartialEntry(): fc.Arbitrary<
   return fc
     .record({
       sequenceNumber: fc.integer({ min: 0, max: 0xffffffff }),
-      timestampMs: fc.integer({ min: 0, max: 2_000_000_000_000 }),
+      timestamp: fc.double({
+        min: -365250,
+        max: 365250,
+        noNaN: true,
+        noDefaultInfinity: true,
+      }),
       hasPrevious: fc.boolean(),
       previousHashBytes: fc
         .array(fc.integer({ min: 0, max: 255 }), {
@@ -197,7 +206,7 @@ function arbPartialEntry(): fc.Arbitrary<
       const previousEntryHash = fields.hasPrevious
         ? Checksum.fromUint8Array(fields.previousHashBytes)
         : null;
-      const timestamp = new Date(fields.timestampMs);
+      const timestamp = fields.timestamp as BrightDateTimestamp;
 
       return {
         sequenceNumber: fields.sequenceNumber,

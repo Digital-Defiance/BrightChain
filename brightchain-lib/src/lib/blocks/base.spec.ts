@@ -11,6 +11,8 @@ import { ChecksumService } from '../services/checksum.service';
 import { ServiceProvider } from '../services/service.provider';
 import { Checksum } from '../types/checksum';
 import { BaseBlock } from './base';
+import { brightDateNow } from '../utils/brightDateConversions';
+import type { BrightDateTimestamp } from '../types/brightDateTimestamp';
 
 // Test class that properly implements abstract methods
 class TestBaseBlock extends BaseBlock {
@@ -48,7 +50,7 @@ class TestBaseBlock extends BaseBlock {
     blockDataType: BlockDataType,
     data: Uint8Array,
     checksum?: Checksum,
-    dateCreated?: Date,
+    dateCreated?: BrightDateTimestamp,
     canRead = true,
     canPersist = true,
   ) {
@@ -81,7 +83,7 @@ class TestBaseBlock extends BaseBlock {
       type,
       blockDataType,
       data.length,
-      dateCreated ?? new Date(),
+      dateCreated ?? brightDateNow(),
     );
 
     super(
@@ -174,7 +176,7 @@ describe('BaseBlock', () => {
       dataType: BlockDataType;
       data: Uint8Array;
       checksum: Checksum;
-      dateCreated: Date;
+      dateCreated: BrightDateTimestamp;
       canRead: boolean;
       filename?: string;
       mimetype?: string;
@@ -267,7 +269,7 @@ describe('BaseBlock', () => {
           dataType: BlockDataType;
           data: Uint8Array;
           checksum: Checksum;
-          dateCreated: Date;
+          dateCreated: BrightDateTimestamp;
           canRead: boolean;
           filename?: string;
           mimetype?: string;
@@ -285,7 +287,7 @@ describe('BaseBlock', () => {
               type,
               BlockDataType.RawData,
               0,
-              new Date(),
+              brightDateNow(),
             );
             // Add the required properties to the metadata
             (metadata as unknown as Record<string, unknown>)['filename'] =
@@ -312,7 +314,7 @@ describe('BaseBlock', () => {
               type,
               BlockDataType.RawData,
               0,
-              new Date(),
+              brightDateNow(),
             );
             // Add the required properties to the metadata
             (metadata as unknown as Record<string, unknown>)['recipientCount'] =
@@ -401,8 +403,7 @@ describe('BaseBlock', () => {
     });
 
     it('should reject future dates', () => {
-      const futureDate = new Date();
-      futureDate.setDate(futureDate.getDate() + 1);
+      const futureDate = brightDateNow() + 1; // 1 day in the future (BrightDate units)
 
       expect(() => createTestBlock({ dateCreated: futureDate })).toThrowType(
         BlockValidationError,

@@ -21,6 +21,7 @@ import {
 } from '../../interfaces/messaging/messageSystemConfig';
 import { IBlockStore } from '../../interfaces/storage/blockStore';
 import { Checksum } from '../../types/checksum';
+import { brightDateNow } from '../../utils/brightDateConversions';
 import { CBLService } from '../cblService';
 import { ChecksumService } from '../checksum.service';
 import { TupleStorageService } from '../tupleStorageService';
@@ -94,7 +95,7 @@ export class MessageCBLService<TID extends PlatformID = Uint8Array> {
           blockData = padded;
         }
 
-        const block = new RawDataBlock(blockSize, blockData, new Date());
+        const block = new RawDataBlock(blockSize, blockData, brightDateNow());
         await this.retryOperation(() => this.blockStore.setData(block));
         contentBlockIds.push(asBlockId(block.idChecksum.toHex()));
       }
@@ -102,7 +103,7 @@ export class MessageCBLService<TID extends PlatformID = Uint8Array> {
       const blockIdsArray = this.serializeBlockIds(contentBlockIds);
       const cblHeader = this.cblService.makeCblHeader(
         creator,
-        new Date(),
+        brightDateNow(),
         contentBlockIds.length,
         content.length,
         blockIdsArray,
@@ -128,12 +129,12 @@ export class MessageCBLService<TID extends PlatformID = Uint8Array> {
         const metadata: IMessageMetadata = {
           blockId: messageId as BlockId,
           size: blockSize,
-          createdAt: new Date(),
+          createdAt: brightDateNow(),
           expiresAt: null,
           durabilityLevel: DurabilityLevel.Standard,
           parityBlockIds: [],
           accessCount: 0,
-          lastAccessedAt: new Date(),
+          lastAccessedAt: brightDateNow(),
           replicationStatus: ReplicationStatus.Pending,
           targetReplicationFactor: 0,
           replicaNodeIds: [],

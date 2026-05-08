@@ -11,10 +11,14 @@
 import type { BlockId } from '@brightchain/brightchain-lib';
 import {
   BlockManifest,
+  brightDateNow,
+  brightDateToISO,
   CBLIndexManifest,
+  dateToBrightDate,
   DEFAULT_RECONCILIATION_CONFIG,
   ICBLIndexEntry,
   IReconciliationService,
+  normalizeToBrightDate,
   PendingSyncItem,
   PoolId,
   PoolScopedManifest,
@@ -53,7 +57,7 @@ export interface IManifestProvider {
    */
   getPeerManifest(
     peerId: string,
-    sinceTimestamp?: Date,
+    sinceTimestamp?: number,
     timeoutMs?: number,
   ): Promise<BlockManifest>;
 
@@ -67,7 +71,7 @@ export interface IManifestProvider {
   updateBlockLocation(
     blockId: BlockId,
     nodeId: string,
-    timestamp: Date,
+    timestamp: number,
   ): Promise<void>;
 
   /**
@@ -136,7 +140,7 @@ export interface IManifestProvider {
    */
   getPeerPoolScopedManifest?(
     peerId: string,
-    sinceTimestamp?: Date,
+    sinceTimestamp?: number,
     timeoutMs?: number,
   ): Promise<PoolScopedManifest | undefined>;
 
@@ -176,7 +180,7 @@ export interface IManifestProvider {
   updateBlockLocationWithPool?(
     blockId: BlockId,
     nodeId: string,
-    timestamp: Date,
+    timestamp: number,
     poolId: PoolId,
   ): Promise<void>;
 
@@ -325,7 +329,7 @@ export class ReconciliationService implements IReconciliationService {
     // Emit start event
     this.emitEvent({
       type: 'reconciliation_started',
-      timestamp: new Date(),
+      timestamp: brightDateNow(),
       peerIds,
     });
 
@@ -417,7 +421,7 @@ export class ReconciliationService implements IReconciliationService {
     // Emit completion event
     this.emitEvent({
       type: 'reconciliation_completed',
-      timestamp: new Date(),
+      timestamp: brightDateNow(),
       result,
     });
 
@@ -446,7 +450,7 @@ export class ReconciliationService implements IReconciliationService {
   }> {
     this.emitEvent({
       type: 'peer_reconciliation_started',
-      timestamp: new Date(),
+      timestamp: brightDateNow(),
       peerId,
     });
 
@@ -464,7 +468,7 @@ export class ReconciliationService implements IReconciliationService {
       if (poolScopedResult) {
         this.emitEvent({
           type: 'peer_reconciliation_completed',
-          timestamp: new Date(),
+          timestamp: brightDateNow(),
           peerId,
           blocksDiscovered: poolScopedResult.blocksDiscovered,
         });
@@ -480,7 +484,7 @@ export class ReconciliationService implements IReconciliationService {
 
       this.emitEvent({
         type: 'peer_reconciliation_failed',
-        timestamp: new Date(),
+        timestamp: brightDateNow(),
         peerId,
         error: errorMessage,
       });
@@ -506,7 +510,7 @@ export class ReconciliationService implements IReconciliationService {
    */
   private async tryPoolScopedReconciliation(
     peerId: string,
-    sinceTimestamp?: Date,
+    sinceTimestamp?: number,
   ): Promise<{
     success: boolean;
     blocksDiscovered: number;
@@ -613,7 +617,7 @@ export class ReconciliationService implements IReconciliationService {
         if (localTimestamp && peerTimestamp && peerTimestamp > localTimestamp) {
           this.emitEvent({
             type: 'conflict_resolved',
-            timestamp: new Date(),
+            timestamp: brightDateNow(),
             blockId,
             winningNodeId: peerId,
           });
@@ -707,7 +711,7 @@ export class ReconciliationService implements IReconciliationService {
     }
 
     // Update sync vector
-    this.updateSyncVector(peerId, new Date(), peerManifest.checksum);
+    this.updateSyncVector(peerId, brightDateNow(), peerManifest.checksum);
 
     return {
       success: true,
@@ -728,7 +732,7 @@ export class ReconciliationService implements IReconciliationService {
    */
   private async reconcileWithFlatManifest(
     peerId: string,
-    sinceTimestamp?: Date,
+    sinceTimestamp?: number,
   ): Promise<{
     success: boolean;
     blocksDiscovered: number;
@@ -784,7 +788,7 @@ export class ReconciliationService implements IReconciliationService {
         if (peerTimestamp > localTimestamp) {
           this.emitEvent({
             type: 'conflict_resolved',
-            timestamp: new Date(),
+            timestamp: brightDateNow(),
             blockId,
             winningNodeId: peerId,
           });
@@ -801,11 +805,11 @@ export class ReconciliationService implements IReconciliationService {
     }
 
     // Update sync vector
-    this.updateSyncVector(peerId, new Date(), peerManifest.checksum);
+    this.updateSyncVector(peerId, brightDateNow(), peerManifest.checksum);
 
     this.emitEvent({
       type: 'peer_reconciliation_completed',
-      timestamp: new Date(),
+      timestamp: brightDateNow(),
       peerId,
       blocksDiscovered,
     });
@@ -857,7 +861,7 @@ export class ReconciliationService implements IReconciliationService {
 
               this.emitEvent({
                 type: 'orphan_resolved',
-                timestamp: new Date(),
+                timestamp: brightDateNow(),
                 blockId,
                 sourceNodeId: peerId,
               });
@@ -907,7 +911,7 @@ export class ReconciliationService implements IReconciliationService {
    */
   updateSyncVector(
     peerId: string,
-    timestamp: Date,
+    timestamp: number,
     manifestChecksum: string,
   ): void {
     this.syncVectors.set(peerId, {
@@ -926,7 +930,7 @@ export class ReconciliationService implements IReconciliationService {
     if (!this.syncVectors.has(peerId)) {
       this.syncVectors.set(peerId, {
         peerId,
-        lastSyncTimestamp: new Date(0), // Epoch - will sync everything
+        lastSyncTimestamp: normalizeToBrightDate(new Date(0)), // Epoch - will sync everything
         lastManifestChecksum: '',
       });
     }
@@ -1019,12 +1023,12 @@ export class ReconciliationService implements IReconciliationService {
       version: 1,
       localNodeId: this.manifestProvider.getLocalNodeId(),
       vectors: {},
-      updatedAt: new Date().toISOString(),
+      updatedAt: brightDateToISO(brightDateNow()),
     };
 
     for (const [peerId, entry] of this.syncVectors) {
       data.vectors[peerId] = {
-        lastSyncTimestamp: entry.lastSyncTimestamp.toISOString(),
+        lastSyncTimestamp: brightDateToISO(entry.lastSyncTimestamp),
         lastManifestChecksum: entry.lastManifestChecksum,
       };
     }
@@ -1059,7 +1063,7 @@ export class ReconciliationService implements IReconciliationService {
       for (const [peerId, entry] of Object.entries(data.vectors)) {
         this.syncVectors.set(peerId, {
           peerId,
-          lastSyncTimestamp: new Date(entry.lastSyncTimestamp),
+          lastSyncTimestamp: normalizeToBrightDate(entry.lastSyncTimestamp),
           lastManifestChecksum: entry.lastManifestChecksum,
         });
       }
@@ -1083,10 +1087,10 @@ export class ReconciliationService implements IReconciliationService {
       items: this.pendingSyncQueue.map((item) => ({
         type: item.type,
         blockId: item.blockId,
-        timestamp: item.timestamp.toISOString(),
+        timestamp: brightDateToISO(item.timestamp),
         // Note: data is not persisted to file, only dataPath would be
       })),
-      updatedAt: new Date().toISOString(),
+      updatedAt: brightDateToISO(brightDateNow()),
     };
 
     await this.ensureDirectoryExists(filePath);
@@ -1118,7 +1122,7 @@ export class ReconciliationService implements IReconciliationService {
       this.pendingSyncQueue = data.items.map((item) => ({
         type: item.type,
         blockId: item.blockId as BlockId,
-        timestamp: new Date(item.timestamp),
+        timestamp: normalizeToBrightDate(item.timestamp),
       }));
     } catch (error) {
       throw new Error(

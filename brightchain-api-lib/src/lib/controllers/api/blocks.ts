@@ -2,6 +2,7 @@
 import {
   BlockStoreOptions,
   DurabilityLevel,
+  normalizeToBrightDate,
   StoreError,
   type BlockId,
 } from '@brightchain/brightchain-lib';
@@ -324,7 +325,7 @@ export class BlocksController<
       const blockStoreOptions: BlockStoreOptions | undefined = options
         ? {
             expiresAt: options.expiresAt
-              ? new Date(options.expiresAt)
+              ? normalizeToBrightDate(options.expiresAt)
               : undefined,
             durabilityLevel: options.durabilityLevel as
               | DurabilityLevel

@@ -12,6 +12,7 @@ import { BlockValidationErrorType } from './enumerations/blockValidationErrorTyp
 import { EphemeralBlockMetadata } from './ephemeralBlockMetadata';
 import { BlockValidationError } from './errors/block';
 import { IEncryptedBlockMetadata } from './interfaces/blocks/metadata/encryptedBlockMetadata';
+import type { BrightDateTimestamp } from './types/brightDateTimestamp';
 
 export class EncryptedBlockMetadata<TID extends PlatformID = Uint8Array>
   extends EphemeralBlockMetadata<TID>
@@ -36,7 +37,7 @@ export class EncryptedBlockMetadata<TID extends PlatformID = Uint8Array>
     creator: Member<TID>,
     encryptionType: BlockEncryptionType,
     recipientCount: number,
-    dateCreated?: Date,
+    dateCreated?: BrightDateTimestamp,
   ) {
     if (encryptionType === BlockEncryptionType.None) {
       throw new BlockValidationError(
@@ -87,7 +88,7 @@ export class EncryptedBlockMetadata<TID extends PlatformID = Uint8Array>
       type: this.type,
       dataType: this.dataType,
       lengthWithoutPadding: this.lengthWithoutPadding,
-      dateCreated: this.dateCreated.toISOString(),
+      dateCreated: this.dateCreated, // stored as number (BrightDateValue)
       creator: uint8ArrayToHex(this.creator.idBytes),
       encryptionType: this.encryptionType,
       recipientCount: this.recipientCount,

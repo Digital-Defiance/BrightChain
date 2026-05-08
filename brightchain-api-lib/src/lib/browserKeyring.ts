@@ -8,7 +8,7 @@
 import type { IKeyring } from './keyring.types';
 
 /**
- * Keyring entry stored in localStorage
+ * Keyring entry stored in localStorage (serialized form with number arrays for binary data)
  */
 interface IKeyringEntry {
   id: string;
@@ -16,8 +16,8 @@ interface IKeyringEntry {
   encryptedData: number[];
   iv: number[];
   salt: number[];
-  created: string;
-  lastAccessed?: string;
+  created: string; // ISO 8601 date string
+  lastAccessed?: string; // ISO 8601 date string
 }
 
 /**
@@ -42,8 +42,8 @@ export class BrowserKeyring implements IKeyring {
       encryptedData: Uint8Array;
       iv: Uint8Array;
       salt: Uint8Array;
-      created: Date;
-      lastAccessed?: Date;
+      created: string; // ISO 8601 date string
+      lastAccessed?: string; // ISO 8601 date string
     }
   >;
   private readonly accessLog: Map<string, number>;
@@ -117,7 +117,7 @@ export class BrowserKeyring implements IKeyring {
       encryptedData: new Uint8Array(encryptedData),
       iv,
       salt,
-      created: new Date(),
+      created: new Date().toISOString(),
     });
 
     await this.persistToStorage();
@@ -143,7 +143,7 @@ export class BrowserKeyring implements IKeyring {
         encryptedDataBuffer,
       );
 
-      entry.lastAccessed = new Date();
+      entry.lastAccessed = new Date().toISOString();
       this.logAccess(id);
 
       return new Uint8Array(decryptedData);
@@ -180,8 +180,8 @@ export class BrowserKeyring implements IKeyring {
         encryptedData: Array.from(entry.encryptedData),
         iv: Array.from(entry.iv),
         salt: Array.from(entry.salt),
-        created: entry.created.toISOString(),
-        lastAccessed: entry.lastAccessed?.toISOString(),
+        created: entry.created,
+        lastAccessed: entry.lastAccessed,
       },
     ]);
 
@@ -203,10 +203,8 @@ export class BrowserKeyring implements IKeyring {
           encryptedData: new Uint8Array(entry.encryptedData),
           iv: new Uint8Array(entry.iv),
           salt: new Uint8Array(entry.salt),
-          created: new Date(entry.created),
-          lastAccessed: entry.lastAccessed
-            ? new Date(entry.lastAccessed)
-            : undefined,
+          created: entry.created,
+          lastAccessed: entry.lastAccessed,
         });
       }
     } catch (error) {

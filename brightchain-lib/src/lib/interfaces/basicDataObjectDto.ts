@@ -1,7 +1,8 @@
 import { HexString } from '@digitaldefiance/ecies-lib';
+import type { BrightDateTimestamp } from '../types/brightDateTimestamp';
 import { IBasicObjectDTO } from './basicObjectDto';
 
-export interface IBasicDataObjectDTO extends IBasicObjectDTO<HexString, Date> {
+export interface IBasicDataObjectDTO extends IBasicObjectDTO<HexString, BrightDateTimestamp> {
   /**
    * ID of the data object. checksum of the data.
    */
@@ -13,5 +14,5 @@ export interface IBasicDataObjectDTO extends IBasicObjectDTO<HexString, Date> {
   /**
    * The date this object was created
    */
-  dateCreated: Date;
+  dateCreated: BrightDateTimestamp;
 }

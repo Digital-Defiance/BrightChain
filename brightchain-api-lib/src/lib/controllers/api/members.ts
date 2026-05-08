@@ -1,4 +1,4 @@
-import { MemberStore } from '@brightchain/brightchain-lib';
+import { brightDateToISO, MemberStore } from '@brightchain/brightchain-lib';
 import { IIdProvider } from '@digitaldefiance/ecies-lib';
 import { CoreLanguageCode } from '@digitaldefiance/i18n-lib';
 import { PlatformID } from '@digitaldefiance/node-ecies-lib';
@@ -143,9 +143,9 @@ export class MembersController<
               reputation: publicProfile.reputation,
               storageQuota: publicProfile.storageQuota.toString(),
               storageUsed: publicProfile.storageUsed.toString(),
-              lastActive: publicProfile.lastActive.toISOString(),
-              dateCreated: publicProfile.dateCreated.toISOString(),
-              dateUpdated: publicProfile.dateUpdated.toISOString(),
+              lastActive: publicProfile.lastActive,
+              dateCreated: publicProfile.dateCreated,
+              dateUpdated: publicProfile.dateUpdated,
             }
           : (null as unknown as IMemberPublicProfileResponse),
       } as IMemberProfileResponse;
@@ -163,11 +163,11 @@ export class MembersController<
           settings: privateProfile.settings,
           activityLog: privateProfile.activityLog.map((entry) => ({
             action: entry.action,
-            timestamp: entry.timestamp.toISOString(),
+            timestamp: entry.timestamp,
             details: entry.details,
           })),
-          dateCreated: privateProfile.dateCreated.toISOString(),
-          dateUpdated: privateProfile.dateUpdated.toISOString(),
+          dateCreated: privateProfile.dateCreated,
+          dateUpdated: privateProfile.dateUpdated,
         };
       }
 

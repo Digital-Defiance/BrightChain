@@ -614,3 +614,5 @@ Every rate-limited request becomes an opportunity. Every abusive client becomes 
 ---
 
 *This paper describes the design and analysis of the Proof of Useful Work rate limiting system implemented in the BrightChain platform. The system is open-source software released under Digital Defiance. For implementation details, see the source code in the `brightchain-lib` and `brightchain-api-lib` packages.*
+
+*Defiance by Design.*

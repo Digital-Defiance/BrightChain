@@ -270,9 +270,10 @@ export const ShowcaseAmericanEnglishStrings: ComponentStrings<ShowcaseStringKey>
     [ShowcaseStrings.FAQ_Tech_Q18_AtRest_Label]: 'At-rest enforcement',
     [ShowcaseStrings.FAQ_Tech_Q18_AtRest]:
       'On creation, EmailMessageService encrypts the raw message bytes and stores only the AES-256-GCM ciphertext in encryptedBody. The textBody, htmlBody, and all MIME part bodies are explicitly set to undefined and never written to storage.',
-    [ShowcaseStrings.FAQ_Tech_Q18_Schemes_Label]: 'Four supported encryption schemes',
+    [ShowcaseStrings.FAQ_Tech_Q18_Schemes_Label]:
+      'Four supported encryption schemes',
     [ShowcaseStrings.FAQ_Tech_Q18_Schemes]:
-      'RECIPIENT_KEYS uses ECIES to produce a unique ciphertext per recipient — only the intended recipient\'s private key can decrypt. SHARED_KEY uses a single AES-256-GCM shared secret. S/MIME and GPG are also fully supported for interoperability with existing email infrastructure.',
+      "RECIPIENT_KEYS uses ECIES to produce a unique ciphertext per recipient — only the intended recipient's private key can decrypt. SHARED_KEY uses a single AES-256-GCM shared secret. S/MIME and GPG are also fully supported for interoperability with existing email infrastructure.",
     [ShowcaseStrings.FAQ_Tech_Q18_Purge_Label]: 'Plaintext purge guarantee',
     [ShowcaseStrings.FAQ_Tech_Q18_Purge]:
       'After encryption, textBody, htmlBody, and all parts[].body fields are explicitly set to undefined and never persisted. The encrypted content is stored as encryptedBody alongside encryptionIv and encryptionAuthTag for authenticated decryption. Binary fields are base64-encoded for JSON transport through the REST API.',
@@ -2378,4 +2379,11 @@ export const ShowcaseAmericanEnglishStrings: ComponentStrings<ShowcaseStringKey>
     [ShowcaseStrings.PP_S18_OrgName]: 'Digital Defiance',
     [ShowcaseStrings.PP_S18_EmailLabel]: 'Email:',
     [ShowcaseStrings.PP_S18_WebLabel]: 'Web:',
+    [ShowcaseStrings.Slogan_Math_Search_Warrant]:
+      'Mathematics does not accept a search warrant.',
+    [ShowcaseStrings.Slogan_Where_State_Sees_Noise]:
+      'Where the state sees noise, the people find truth.',
+    [ShowcaseStrings.Slogan_Building_World_Where_Ideas_Have_No_Borders]:
+      'Building a world where ideas have no borders and truth has no owner.',
+    [ShowcaseStrings.Slogan_Defiance_By_Design]: 'Defiance by Design.',
   };

@@ -2,6 +2,7 @@ import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockSize } from '../enumerations/blockSize';
 import { BlockType } from '../enumerations/blockType';
 import { IBaseBlockMetadata } from '../interfaces/blocks/metadata/blockMetadata';
+import type { BrightDateTimestamp } from '../types/brightDateTimestamp';
 
 /**
  * Concrete implementation of IBlockMetadata
@@ -12,7 +13,7 @@ export class BlockMetadata implements IBaseBlockMetadata {
     private readonly _type: BlockType,
     private readonly _dataType: BlockDataType,
     private readonly _lengthWithoutPadding: number,
-    private readonly _dateCreated: Date,
+    private readonly _dateCreated: BrightDateTimestamp,
   ) {}
 
   public get size(): BlockSize {
@@ -31,7 +32,7 @@ export class BlockMetadata implements IBaseBlockMetadata {
     return this._lengthWithoutPadding;
   }
 
-  public get dateCreated(): Date {
-    return new Date(this._dateCreated.getTime());
+  public get dateCreated(): BrightDateTimestamp {
+    return this._dateCreated;
   }
 }

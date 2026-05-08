@@ -4,6 +4,7 @@ import { StoreError } from '../errors/storeError';
 import type { BlockId } from '../interfaces/branded/primitives/blockId';
 import { IBlockMetadata } from '../interfaces/storage/blockMetadata';
 import { IBlockMetadataStore } from '../interfaces/storage/blockMetadataStore';
+import { brightDateNow } from '../utils/brightDateConversions';
 
 /**
  * In-memory implementation of IBlockMetadataStore.
@@ -94,7 +95,7 @@ export class MemoryBlockMetadataStore implements IBlockMetadataStore {
    * @returns Array of metadata for expired blocks
    */
   public async findExpired(): Promise<IBlockMetadata[]> {
-    const now = new Date();
+    const now = brightDateNow();
     const expired: IBlockMetadata[] = [];
 
     for (const meta of this.metadata.values()) {
@@ -139,7 +140,7 @@ export class MemoryBlockMetadataStore implements IBlockMetadataStore {
     }
 
     existing.accessCount += 1;
-    existing.lastAccessedAt = new Date();
+    existing.lastAccessedAt = brightDateNow();
   }
 
   // === Utility Methods ===
@@ -185,9 +186,9 @@ export class MemoryBlockMetadataStore implements IBlockMetadataStore {
   private cloneMetadata(meta: IBlockMetadata): IBlockMetadata {
     return {
       ...meta,
-      createdAt: new Date(meta.createdAt.getTime()),
-      expiresAt: meta.expiresAt ? new Date(meta.expiresAt.getTime()) : null,
-      lastAccessedAt: new Date(meta.lastAccessedAt.getTime()),
+      createdAt: meta.createdAt, // BrightDateTimestamp is a number, no cloning needed
+      expiresAt: meta.expiresAt, // same
+      lastAccessedAt: meta.lastAccessedAt, // same
       parityBlockIds: [...meta.parityBlockIds],
       replicaNodeIds: [...meta.replicaNodeIds],
     };

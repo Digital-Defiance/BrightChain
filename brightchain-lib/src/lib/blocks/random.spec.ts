@@ -5,6 +5,8 @@ import { BlockType } from '../enumerations/blockType';
 import { ChecksumService } from '../services/checksum.service';
 import { ServiceProvider } from '../services/service.provider';
 import { RandomBlock } from './random';
+import { brightDateNow } from '../utils/brightDateConversions';
+import type { BrightDateTimestamp } from '../types/brightDateTimestamp';
 
 describe('RandomBlock', () => {
   let checksumService: ChecksumService;
@@ -34,7 +36,7 @@ describe('RandomBlock', () => {
       const data = new Uint8Array(defaultBlockSize);
       crypto.getRandomValues(data);
       const checksum = checksumService.calculateChecksum(new Uint8Array(data));
-      const dateCreated = new Date();
+      const dateCreated = brightDateNow();
 
       const block = RandomBlock.reconstitute(
         defaultBlockSize,
@@ -127,7 +129,7 @@ describe('RandomBlock', () => {
       const block = new RandomBlock(
         defaultBlockSize,
         data,
-        new Date(),
+        brightDateNow(),
         checksum,
         checksumService,
       );
@@ -143,7 +145,7 @@ describe('RandomBlock', () => {
       const block = new RandomBlock(
         defaultBlockSize,
         data,
-        new Date(),
+        brightDateNow(),
         checksum,
       );
 

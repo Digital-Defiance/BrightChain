@@ -16,6 +16,7 @@ import { ILedgerEntry } from '../../interfaces/ledger/ledgerEntry';
 import { ILedgerSignatureVerifier } from '../../interfaces/ledger/ledgerSignatureVerifier';
 import { ChecksumService } from '../../services/checksum.service';
 import { Checksum } from '../../types/checksum';
+import { normalizeToBrightDate } from '../../utils/brightDateConversions';
 import { IncrementalMerkleTree } from '../incrementalMerkleTree';
 import { LedgerChainValidator } from '../ledgerChainValidator';
 import { LedgerEntrySerializer } from '../ledgerEntrySerializer';
@@ -98,7 +99,7 @@ function arbLedgerChain(maxLength: number): fc.Arbitrary<ILedgerEntry[]> {
 
         const partial = {
           sequenceNumber: i,
-          timestamp: new Date(fields.baseTimestamp + i * 1000),
+          timestamp: normalizeToBrightDate(new Date(fields.baseTimestamp + i * 1000)),
           previousEntryHash,
           signerPublicKey: fields.signerPublicKey,
           payload: fields.payloads[i],
@@ -146,7 +147,7 @@ function arbLedgerChainRange(
 
         const partial = {
           sequenceNumber: i,
-          timestamp: new Date(fields.baseTimestamp + i * 1000),
+          timestamp: normalizeToBrightDate(new Date(fields.baseTimestamp + i * 1000)),
           previousEntryHash,
           signerPublicKey: fields.signerPublicKey,
           payload: fields.payloads[i],

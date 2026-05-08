@@ -26,6 +26,8 @@ import { ConstituentBlockListBlock } from '../cbl';
 import { RawDataBlock } from '../rawData';
 import { TarballConstituentBlockListBlock, isTcbl } from './tcbl';
 import { TcblBuilder } from './tcblBuilder';
+import { brightDateNow } from '../../utils/brightDateConversions';
+import type { BrightDateTimestamp } from '../../types/brightDateTimestamp';
 
 // Mock CBLBase to avoid signature validation issues in tests
 jest.mock('../cblBase', () => {
@@ -191,7 +193,7 @@ describe('TCBL Detection and Polymorphic Handling', () => {
       const cblService = ServiceProvider.getInstance().cblService;
       const header = cblService.makeCblHeader(
         creator,
-        new Date(),
+        brightDateNow(),
         0,
         0,
         new Uint8Array(0),

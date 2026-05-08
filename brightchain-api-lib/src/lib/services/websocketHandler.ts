@@ -3,11 +3,14 @@
  */
 
 import {
+  brightDateNow,
+  brightDateToISO,
   IAvailabilityService,
   IBlockRegistry,
   IDiscoveryProtocol,
   IGossipService,
   IHeartbeatMonitor,
+  normalizeToBrightDate,
 } from '@brightchain/brightchain-lib';
 import { ECIESService } from '@digitaldefiance/node-ecies-lib';
 import {
@@ -251,7 +254,7 @@ export class WebSocketHandler {
       payload: {
         nodeId: manifest.nodeId,
         blockIds: manifest.blockIds,
-        generatedAt: manifest.generatedAt.toISOString(),
+        generatedAt: brightDateToISO(manifest.generatedAt),
         checksum: manifest.checksum,
       },
       timestamp: new Date().toISOString(),
@@ -274,7 +277,7 @@ export class WebSocketHandler {
     // Update location metadata
     await this.availabilityService.updateLocation(blockId, {
       nodeId,
-      lastSeen: new Date(message.timestamp),
+      lastSeen: normalizeToBrightDate(message.timestamp),
       isAuthoritative: true,
     });
 
@@ -283,7 +286,7 @@ export class WebSocketHandler {
       type: 'add',
       blockId,
       nodeId,
-      timestamp: new Date(message.timestamp),
+      timestamp: normalizeToBrightDate(message.timestamp),
       ttl: message.payload.ttl,
     });
   }
@@ -304,7 +307,7 @@ export class WebSocketHandler {
       type: 'remove',
       blockId,
       nodeId,
-      timestamp: new Date(message.timestamp),
+      timestamp: normalizeToBrightDate(message.timestamp),
       ttl: message.payload.ttl,
     });
   }
@@ -352,7 +355,7 @@ export class WebSocketHandler {
       if (announcement.type === 'add') {
         await this.availabilityService.updateLocation(announcement.blockId, {
           nodeId: announcement.nodeId,
-          lastSeen: new Date(message.timestamp),
+          lastSeen: normalizeToBrightDate(message.timestamp),
           isAuthoritative: true,
         });
       } else if (announcement.type === 'remove') {
@@ -369,7 +372,7 @@ export class WebSocketHandler {
         type: announcement.type,
         blockId: announcement.blockId,
         nodeId: announcement.nodeId,
-        timestamp: new Date(message.timestamp),
+        timestamp: normalizeToBrightDate(message.timestamp),
         ttl: announcement.ttl,
         ...(announcement.type === 'add' && announcement.messageDelivery
           ? { messageDelivery: announcement.messageDelivery }

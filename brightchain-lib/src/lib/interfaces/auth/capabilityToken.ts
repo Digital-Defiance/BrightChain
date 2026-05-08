@@ -12,6 +12,7 @@
 
 import { PlatformID } from '@digitaldefiance/ecies-lib';
 import { IAclScope } from './writeAcl';
+import type { BrightDateTimestamp } from '../../types/brightDateTimestamp';
 
 /**
  * Time-limited token granting temporary write access.
@@ -30,7 +31,7 @@ import { IAclScope } from './writeAcl';
 export interface ICapabilityToken<TID extends PlatformID = Uint8Array> {
   granteePublicKey: TID;
   scope: IAclScope;
-  expiresAt: Date;
+  expiresAt: BrightDateTimestamp;
   grantorSignature: Uint8Array;
   grantorPublicKey: TID;
 }

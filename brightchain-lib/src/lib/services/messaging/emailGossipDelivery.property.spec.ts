@@ -901,6 +901,8 @@ import type { BlockAnnouncement } from '../../interfaces/availability/gossipServ
 import type { BlockId } from '../../interfaces/branded/primitives/blockId';
 import { createContentType } from '../../interfaces/messaging/mimePart';
 import { InMemoryEmailMetadataStore } from './inMemoryEmailMetadataStore';
+import { brightDateNow } from '../../utils/brightDateConversions';
+import type { BrightDateTimestamp } from '../../types/brightDateTimestamp';
 
 /** Cast a test string to BlockId without validation — for test data only. */
 const bid = (s: string) => s as unknown as BlockId;
@@ -947,7 +949,7 @@ describe('Feature: unified-gossip-delivery, Property 14: Email Inbox Indexing on
     });
 
     // Construct email metadata as the handler would after fetching blocks
-    const now = new Date();
+    const now = brightDateNow();
     const emailMetadata: IEmailMetadata = {
       // IBlockMetadata fields
       blockId: md.cblBlockId,
@@ -1025,7 +1027,7 @@ describe('Feature: unified-gossip-delivery, Property 14: Email Inbox Indexing on
             type: 'add',
             blockId: bid(cblBlockId),
             nodeId: 'sender-node-001',
-            timestamp: new Date(),
+            timestamp: brightDateNow(),
             ttl: 5,
             messageDelivery: {
               messageId,
@@ -1099,7 +1101,7 @@ describe('Feature: unified-gossip-delivery, Property 14: Email Inbox Indexing on
             type: 'add',
             blockId: bid(cblBlockId),
             nodeId: 'sender-node-001',
-            timestamp: new Date(),
+            timestamp: brightDateNow(),
             ttl: 5,
             messageDelivery: {
               messageId,
@@ -1127,7 +1129,15 @@ describe('Feature: unified-gossip-delivery, Property 14: Email Inbox Indexing on
           }
 
           // Non-local recipients should NOT find the email
+          // (Skip any non-local recipient whose address matches the sender,
+          // since queryInbox also returns emails where the user is the sender)
           for (const nonLocalMailbox of nonLocalMailboxes) {
+            if (
+              nonLocalMailbox.address.toLowerCase() ===
+              senderMailbox.address.toLowerCase()
+            ) {
+              continue;
+            }
             const result = await store.queryInbox(nonLocalMailbox.address, {});
             const found = result.emails.some((e) => e.messageId === messageId);
             expect(found).toBe(false);
@@ -1169,7 +1179,7 @@ describe('Feature: unified-gossip-delivery, Property 14: Email Inbox Indexing on
             type: 'add',
             blockId: bid(cblBlockId),
             nodeId: 'sender-node-001',
-            timestamp: new Date(),
+            timestamp: brightDateNow(),
             ttl: 5,
             messageDelivery: {
               messageId,
@@ -1229,7 +1239,7 @@ describe('Feature: unified-gossip-delivery, Property 14: Email Inbox Indexing on
             type: 'add',
             blockId: bid(blockId),
             nodeId: 'sender-node-001',
-            timestamp: new Date(),
+            timestamp: brightDateNow(),
             ttl: 3,
             // No messageDelivery field
           };
@@ -1292,7 +1302,7 @@ describe('Feature: unified-gossip-delivery, Property 14: Email Inbox Indexing on
             type: 'add',
             blockId: bid(cblBlockId),
             nodeId: 'sender-node-001',
-            timestamp: new Date(),
+            timestamp: brightDateNow(),
             ttl: 5,
             messageDelivery: {
               messageId,

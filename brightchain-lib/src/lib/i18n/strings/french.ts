@@ -1919,18 +1919,28 @@ export const FrenchStrings: ComponentStrings<BrightChainStringKey> = {
     'Service de limitation de débit temporairement indisponible.',
   [BrightChainStrings.Error_PoUW_Middleware_RateLimitDenied]:
     'Service de limitation de débit indisponible. Requête refusée.',
+
+  [BrightChainStrings.Date_BrightDateTemplate]: 'BD {BD}',
+
   // ── DatePage ──
   [BrightChainStrings.DatePage_Title]: 'Date et heure',
-  [BrightChainStrings.DatePage_BrightDateEpochLabel]: 'BrightDate (jours décimaux depuis J2000.0)',
-  [BrightChainStrings.DatePage_HolidaysTitle]: "Fêtes et célébrations du jour",
+  [BrightChainStrings.DatePage_BrightDateEpochLabel]:
+    'BrightDate (jours décimaux depuis J2000.0)',
+  [BrightChainStrings.DatePage_HolidaysTitle]: 'Fêtes et célébrations du jour',
   [BrightChainStrings.DatePage_AllFormatsTitle]: 'Tous les formats de date',
   [BrightChainStrings.DatePage_AboutBrightDateTitle]: 'À propos de BrightDate',
-  [BrightChainStrings.DatePage_AboutBrightDate_Epoch]: "BrightDate compte les jours décimaux depuis l'époque J2000.0 (1er janvier 2000 à 12:00:00 UTC). C'est la même époque utilisée par les astronomes du monde entier pour la mécanique céleste.",
-  [BrightChainStrings.DatePage_AboutBrightDate_Fraction]: "La partie entière est le nombre de jours. La partie fractionnaire est l'heure décimale du jour. Par exemple, 0,5 = midi, 0,25 = 06:00, 0,75 = 18:00.",
-  [BrightChainStrings.DatePage_AboutBrightDate_NoTimezones]: "Pas de fuseaux horaires, pas d'heure d'été, pas d'ambiguïté — juste un nombre sur une ligne temporelle.",
-  [BrightChainStrings.DatePage_Format_BrightDateFull]: 'BrightDate (précision complète)',
-  [BrightChainStrings.DatePage_Format_BrightDateCompact]: 'BrightDate (compact)',
-  [BrightChainStrings.DatePage_Format_BrightDateStandard]: 'BrightDate (standard)',
+  [BrightChainStrings.DatePage_AboutBrightDate_Epoch]:
+    "BrightDate compte les jours décimaux depuis l'époque J2000.0 (1er janvier 2000 à 12:00:00 UTC). C'est la même époque utilisée par les astronomes du monde entier pour la mécanique céleste.",
+  [BrightChainStrings.DatePage_AboutBrightDate_Fraction]:
+    "La partie entière est le nombre de jours. La partie fractionnaire est l'heure décimale du jour. Par exemple, 0,5 = midi, 0,25 = 06:00, 0,75 = 18:00.",
+  [BrightChainStrings.DatePage_AboutBrightDate_NoTimezones]:
+    "Pas de fuseaux horaires, pas d'heure d'été, pas d'ambiguïté — juste un nombre sur une ligne temporelle.",
+  [BrightChainStrings.DatePage_Format_BrightDateFull]:
+    'BrightDate (précision complète)',
+  [BrightChainStrings.DatePage_Format_BrightDateCompact]:
+    'BrightDate (compact)',
+  [BrightChainStrings.DatePage_Format_BrightDateStandard]:
+    'BrightDate (standard)',
   [BrightChainStrings.DatePage_Format_ISO8601]: 'ISO 8601',
   [BrightChainStrings.DatePage_Format_UTC]: 'UTC',
   [BrightChainStrings.DatePage_Format_LocalDateTime]: 'Date et heure locales',
@@ -1939,7 +1949,8 @@ export const FrenchStrings: ComponentStrings<BrightChainStringKey> = {
   [BrightChainStrings.DatePage_Format_UnixTimestamp]: 'Horodatage Unix',
   [BrightChainStrings.DatePage_Format_UnixMs]: 'Millisecondes Unix',
   [BrightChainStrings.DatePage_Format_JulianDate]: 'Date julienne',
-  [BrightChainStrings.DatePage_Format_ModifiedJulianDate]: 'Date julienne modifiée',
+  [BrightChainStrings.DatePage_Format_ModifiedJulianDate]:
+    'Date julienne modifiée',
   [BrightChainStrings.DatePage_Format_DayOfYear]: "Jour de l'année",
   [BrightChainStrings.DatePage_Format_ISOWeek]: 'Semaine ISO',
   [BrightChainStrings.DatePage_Format_RFC2822]: 'RFC 2822',
@@ -1947,4 +1958,79 @@ export const FrenchStrings: ComponentStrings<BrightChainStringKey> = {
   [BrightChainStrings.DatePage_HolidayType_Bank]: 'Jour férié bancaire',
   [BrightChainStrings.DatePage_HolidayType_Observance]: 'Célébration',
   [BrightChainStrings.DatePage_HolidayType_Religious]: 'Religieux',
+
+  // ── DatePage: Cochrane Easter Egg (Interplanetary Telemetry) ──
+  [BrightChainStrings.DatePage_Telemetry_Title]: 'Télémétrie Interplanétaire',
+  [BrightChainStrings.DatePage_Telemetry_Subtitle]:
+    'Délai lumineux unidirectionnel actuel exprimé en millijours (md)',
+  [BrightChainStrings.DatePage_Telemetry_MoonDelay]: 'Terre → Lune',
+  [BrightChainStrings.DatePage_Telemetry_MarsDelayMin]:
+    'Terre → Mars (min)',
+  [BrightChainStrings.DatePage_Telemetry_MarsDelayMax]:
+    'Terre → Mars (max)',
+  [BrightChainStrings.DatePage_Telemetry_MarsDelayCurrent]:
+    'Terre → Mars (est. actuelle)',
+  [BrightChainStrings.DatePage_Telemetry_Unit]: 'md',
+  [BrightChainStrings.DatePage_Telemetry_Footer]:
+    'BrightDate est conçu pour un monde au-delà du Temps Standard Terrestre. Un millijour ≈ 86,4 secondes.',
+
+  // ── PaperKeyTemplate ──
+  [BrightChainStrings.PaperKey_Title]: 'Clé papier BrightChain',
+  [BrightChainStrings.PaperKey_GeneratedTemplate]: 'Généré : {DATE} ({BD})',
+  [BrightChainStrings.PaperKey_SecurityWarning]:
+    'CONSERVEZ CECI EN SÉCURITÉ. Cette clé papier est le seul moyen de récupérer votre identité BrightChain. Rangez-la dans un endroit sûr. Ne la partagez jamais.',
+  [BrightChainStrings.PaperKey_WordsAriaLabel]: 'Mots de la clé papier',
+  [BrightChainStrings.PaperKey_QrScanLabel]: 'Scanner pour importer :',
+  [BrightChainStrings.PaperKey_QrAlt]: 'Code QR de la clé papier',
+  [BrightChainStrings.PaperKey_SecurityRecommendations]:
+    'Recommandations de sécurité :',
+  [BrightChainStrings.PaperKey_Tip_Fireproof]:
+    'Rangez dans un coffre ignifuge ou un coffre-fort bancaire',
+  [BrightChainStrings.PaperKey_Tip_Split]:
+    'Envisagez de répartir entre plusieurs emplacements',
+  [BrightChainStrings.PaperKey_Tip_NoDigital]:
+    "Ne stockez jamais numériquement et ne faites pas de capture d'écran",
+  [BrightChainStrings.PaperKey_Tip_NeverShare]:
+    'Ne partagez jamais avec quiconque, y compris le support BrightChain',
+  [BrightChainStrings.PaperKey_PrintButton]: 'Imprimer ce modèle',
+
+  // ── DisputeNotice ──
+  [BrightChainStrings.Dispute_AriaLabelTemplate]: 'Litige Joule {ID}',
+  [BrightChainStrings.Dispute_IdTemplate]: 'Litige #{ID}',
+  [BrightChainStrings.Dispute_State_Disputed]: "En cours d'examen",
+  [BrightChainStrings.Dispute_State_ResolvedFinal]: 'Résolu (final)',
+  [BrightChainStrings.Dispute_State_ResolvedReplaced]: 'Résolu (remplacé)',
+  [BrightChainStrings.Dispute_Field_Amount]: 'Montant',
+  [BrightChainStrings.Dispute_Field_Opened]: 'Ouvert',
+  [BrightChainStrings.Dispute_Field_Reason]: 'Motif',
+  [BrightChainStrings.Dispute_Field_Resolved]: 'Résolu',
+  [BrightChainStrings.Dispute_Field_Resolution]: 'Résolution',
+
+  // ── RateTransparency ──
+  [BrightChainStrings.RateTransparency_Loading]:
+    'Chargement du tableau des tarifs',
+  [BrightChainStrings.RateTransparency_Error]: 'Erreur du tableau des tarifs',
+  [BrightChainStrings.RateTransparency_Empty]:
+    'Tableau des tarifs non disponible.',
+  [BrightChainStrings.RateTransparency_TitleTemplate]:
+    'Tableau des tarifs Joule — Version {VERSION}',
+  [BrightChainStrings.RateTransparency_EffectiveTemplate]:
+    'En vigueur : {DATE} ({BD})',
+  [BrightChainStrings.RateTransparency_SignedByTemplate]:
+    'Signé par : {SIGNER}',
+  [BrightChainStrings.RateTransparency_Col_ResourceClass]:
+    'Classe de ressource',
+  [BrightChainStrings.RateTransparency_Col_Rate]: 'Tarif',
+  [BrightChainStrings.RateTransparency_Col_PerUnit]: 'Par unité',
+
+  // ── JouleEventLog ──
+  [BrightChainStrings.JouleEventLog_Loading]: 'Chargement des événements Joule',
+  [BrightChainStrings.JouleEventLog_Error]:
+    'Erreur du journal des événements Joule',
+  [BrightChainStrings.JouleEventLog_Empty]: 'Aucun événement Joule enregistré.',
+  [BrightChainStrings.JouleEventLog_AriaLabel]: 'Journal des événements Joule',
+  [BrightChainStrings.JouleEventLog_Col_Time]: 'Heure',
+  [BrightChainStrings.JouleEventLog_Col_Kind]: 'Type',
+  [BrightChainStrings.JouleEventLog_Col_Amount]: 'Montant',
+  [BrightChainStrings.JouleEventLog_Col_Description]: 'Description',
 };

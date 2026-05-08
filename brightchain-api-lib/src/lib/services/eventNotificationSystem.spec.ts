@@ -240,7 +240,7 @@ describe('EventNotificationSystem', () => {
       system.emit(MessageEventType.MESSAGE_STORED, metadata);
 
       const history = system.getEventHistory();
-      expect(history[0].timestamp).toBeInstanceOf(Date);
+      expect(typeof history[0].timestamp).toBe("number");
     });
   });
 

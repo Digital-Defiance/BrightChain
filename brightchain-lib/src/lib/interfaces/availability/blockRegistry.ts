@@ -9,6 +9,7 @@
 
 import type { BlockId } from '../branded/primitives/blockId';
 import { PoolId } from '../storage/pooledBlockStore';
+import type { BrightDateTimestamp } from '../../types/brightDateTimestamp';
 
 /**
  * Bloom filter for efficient block existence queries.
@@ -69,7 +70,7 @@ export interface BlockManifest {
   /**
    * Timestamp when the manifest was generated
    */
-  generatedAt: Date;
+  generatedAt: BrightDateTimestamp;
 
   /**
    * Checksum of the manifest for integrity verification.
@@ -104,7 +105,7 @@ export interface PoolScopedManifest {
   /** Block IDs grouped by pool */
   pools: Map<PoolId, BlockId[]>;
   /** Timestamp when the manifest was generated */
-  generatedAt: Date;
+  generatedAt: BrightDateTimestamp;
   /** Checksum of the manifest for integrity verification */
   checksum: string;
 }

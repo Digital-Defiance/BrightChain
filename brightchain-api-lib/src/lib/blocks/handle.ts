@@ -9,6 +9,7 @@ import {
   BlockType,
   Checksum,
   ChecksumMismatchError,
+  dateToBrightDate,
   RawDataBlock,
   ServiceProvider,
 } from '@brightchain/brightchain-lib';
@@ -81,8 +82,8 @@ export function createBlockHandle<T extends BaseBlock>(
   // Create a basic instance of T
   // This uses a temporary empty buffer since we'll load data on demand
   // Use a date slightly in the past to avoid timing issues with validation
-  const creationDate = new Date(
-    Math.min(stats.birthtime.getTime(), Date.now() - 1000),
+  const creationDate = dateToBrightDate(
+    new Date(Math.min(stats.birthtime.getTime(), Date.now() - 1000)),
   );
   const instance = new blockConstructor(
     blockSize,
@@ -188,7 +189,7 @@ export function createBlockHandle<T extends BaseBlock>(
         BlockType.Handle,
         BlockDataType.RawData,
         stats.size,
-        new Date(stats.birthtime),
+        dateToBrightDate(stats.birthtime),
       );
     },
     enumerable: true,

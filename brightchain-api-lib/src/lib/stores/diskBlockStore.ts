@@ -5,6 +5,7 @@ import {
   BlockSize,
   blockSizeToSizeString,
   BlockStoreOptions,
+  brightDateNow,
   BrightenResult,
   CBLMagnetComponents,
   CBLStorageResult,
@@ -1049,7 +1050,7 @@ export class DiskBlockStore implements IBlockStore {
     const meta = await this.readMetadata(keyHex);
     if (meta) {
       meta.accessCount += 1;
-      meta.lastAccessedAt = new Date();
+      meta.lastAccessedAt = brightDateNow();
       await this.writeMetadata(keyHex, meta);
     }
   }

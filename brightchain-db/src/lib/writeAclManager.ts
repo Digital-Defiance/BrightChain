@@ -25,6 +25,8 @@ import {
   LastAdministratorError,
   WriteMode,
   WriterNotInPoolError,
+  brightDateNow,
+  brightDateToISO,
   createWriteProofPayload,
 } from '@brightchain/brightchain-lib';
 import { sha256 } from '@noble/hashes/sha256';
@@ -280,8 +282,8 @@ export class WriteAclManager implements IWriteAclService {
    * @see Requirements 6.3, 6.4, 6.5
    */
   async verifyCapabilityToken(token: ICapabilityToken): Promise<boolean> {
-    // Step 1: Check expiration
-    if (new Date() >= token.expiresAt) {
+    // Step 1: Check expiration — numeric comparison on BrightDateTimestamp
+    if (brightDateNow() >= token.expiresAt) {
       return false;
     }
 
@@ -464,7 +466,7 @@ export class WriteAclManager implements IWriteAclService {
             (w) => !this.keysEqual(w, removedMemberKey),
           ),
           version: acl.version + 1,
-          updatedAt: new Date(),
+          updatedAt: brightDateNow(),
         };
         this.aclCache.set(key, updatedAcl);
         modifiedKeys.push(key);
@@ -646,7 +648,7 @@ export class WriteAclManager implements IWriteAclService {
     );
 
     const newVersion = currentAcl.version + 1;
-    const now = new Date();
+    const now = brightDateNow();
     const updatedAcl: IAclDocument = {
       ...currentAcl,
       authorizedWriters: alreadyExists
@@ -702,7 +704,7 @@ export class WriteAclManager implements IWriteAclService {
     );
 
     const newVersion = currentAcl.version + 1;
-    const now = new Date();
+    const now = brightDateNow();
     const updatedAcl: IAclDocument = {
       ...currentAcl,
       authorizedWriters: currentAcl.authorizedWriters.filter(
@@ -763,7 +765,7 @@ export class WriteAclManager implements IWriteAclService {
     );
 
     const newVersion = currentAcl.version + 1;
-    const now = new Date();
+    const now = brightDateNow();
     const updatedAcl: IAclDocument = {
       ...currentAcl,
       aclAdministrators: alreadyExists
@@ -827,7 +829,7 @@ export class WriteAclManager implements IWriteAclService {
     }
 
     const newVersion = currentAcl.version + 1;
-    const now = new Date();
+    const now = brightDateNow();
     const updatedAcl: IAclDocument = {
       ...currentAcl,
       aclAdministrators: currentAcl.aclAdministrators.filter(
@@ -910,7 +912,7 @@ export class WriteAclManager implements IWriteAclService {
     }
 
     // Create a default Restricted ACL with the requesting admin as sole admin
-    const now = new Date();
+    const now = brightDateNow();
     const defaultAcl: IAclDocument = {
       documentId: '',
       writeMode: WriteMode.Restricted,
@@ -959,7 +961,7 @@ export class WriteAclManager implements IWriteAclService {
   private createCapabilityTokenPayload(token: ICapabilityToken): Uint8Array {
     const granteeHex = Buffer.from(token.granteePublicKey).toString('hex');
     const collName = token.scope.collectionName ?? '';
-    const message = `${granteeHex}:${token.scope.dbName}:${collName}:${token.expiresAt.toISOString()}`;
+    const message = `${granteeHex}:${token.scope.dbName}:${collName}:${brightDateToISO(token.expiresAt)}`;
     const encoded = new TextEncoder().encode(message);
     return sha256(encoded);
   }

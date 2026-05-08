@@ -16,6 +16,8 @@ import { TupleError } from '../errors/tupleError';
 import { ChecksumService } from './checksum.service';
 import { ServiceProvider } from './service.provider';
 import { TupleService } from './tuple.service';
+import { brightDateNow } from '../utils/brightDateConversions';
+import type { BrightDateTimestamp } from '../types/brightDateTimestamp';
 
 describe('TupleService', () => {
   let creator: Member;
@@ -168,7 +170,7 @@ describe('TupleService', () => {
         paddedData,
         checksumService.calculateChecksum(paddedData),
         creator,
-        new Date(),
+        brightDateNow(),
         sourceData.length, // Pass the original data length
       );
 
@@ -223,7 +225,7 @@ describe('TupleService', () => {
         paddedData,
         checksum,
         creator,
-        new Date(),
+        brightDateNow(),
         originalData.length, // Pass the original data length
       );
 

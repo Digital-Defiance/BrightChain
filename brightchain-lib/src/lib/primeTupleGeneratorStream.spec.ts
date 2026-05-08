@@ -9,6 +9,8 @@ import { StreamError } from './errors/streamError';
 import { PrimeTupleGeneratorStream } from './primeTupleGeneratorStream';
 import { ChecksumService } from './services/checksum.service';
 import { ServiceProvider } from './services/service.provider';
+import { brightDateNow } from './utils/brightDateConversions';
+import type { BrightDateTimestamp } from './types/brightDateTimestamp';
 
 // Mock modules - remove the non-existent Member mock
 // jest.mock('./Member');
@@ -44,7 +46,7 @@ describe('PrimeTupleGeneratorStream', () => {
       blockSize,
       dataBuffer,
       checksumService.calculateChecksum(dataBuffer),
-      new Date(),
+      brightDateNow(),
       true,
       true,
     );

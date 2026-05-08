@@ -1,6 +1,7 @@
 import { describe, expect, it } from '@jest/globals';
 import { DeliveryStatus } from '../../enumerations/messaging/deliveryStatus';
 import { EmailDeliveryStatus, IDeliveryReceipt } from './emailDelivery';
+import { normalizeToBrightDate } from '../../utils/brightDateConversions';
 
 describe('EmailDeliveryStatus Enum (deprecated)', () => {
   it('should define all required delivery status states', () => {
@@ -73,52 +74,52 @@ describe('IDeliveryReceipt Interface', () => {
 
   describe('Optional timestamp fields', () => {
     it('should support queuedAt timestamp', () => {
-      const queuedAt = new Date('2024-01-01T12:00:00Z');
+      const queuedAt = normalizeToBrightDate(new Date('2024-01-01T12:00:00Z'));
       const receipt = createMinimalReceipt({
         status: DeliveryStatus.Pending,
         queuedAt,
       });
-      expect(receipt.queuedAt).toBeInstanceOf(Date);
+      expect(typeof receipt.queuedAt).toBe('number');
       expect(receipt.queuedAt).toEqual(queuedAt);
     });
 
     it('should support sentAt timestamp', () => {
-      const sentAt = new Date('2024-01-01T12:00:01Z');
+      const sentAt = normalizeToBrightDate(new Date('2024-01-01T12:00:01Z'));
       const receipt = createMinimalReceipt({
         status: DeliveryStatus.Announced,
         sentAt,
       });
-      expect(receipt.sentAt).toBeInstanceOf(Date);
+      expect(typeof receipt.sentAt).toBe('number');
       expect(receipt.sentAt).toEqual(sentAt);
     });
 
     it('should support deliveredAt timestamp', () => {
-      const deliveredAt = new Date('2024-01-01T12:00:05Z');
+      const deliveredAt = normalizeToBrightDate(new Date('2024-01-01T12:00:05Z'));
       const receipt = createMinimalReceipt({
         status: DeliveryStatus.Delivered,
         deliveredAt,
       });
-      expect(receipt.deliveredAt).toBeInstanceOf(Date);
+      expect(typeof receipt.deliveredAt).toBe('number');
       expect(receipt.deliveredAt).toEqual(deliveredAt);
     });
 
     it('should support readAt timestamp', () => {
-      const readAt = new Date('2024-01-01T13:00:00Z');
+      const readAt = normalizeToBrightDate(new Date('2024-01-01T13:00:00Z'));
       const receipt = createMinimalReceipt({
         status: DeliveryStatus.Read,
         readAt,
       });
-      expect(receipt.readAt).toBeInstanceOf(Date);
+      expect(typeof receipt.readAt).toBe('number');
       expect(receipt.readAt).toEqual(readAt);
     });
 
     it('should support failedAt timestamp', () => {
-      const failedAt = new Date('2024-01-01T12:05:00Z');
+      const failedAt = normalizeToBrightDate(new Date('2024-01-01T12:05:00Z'));
       const receipt = createMinimalReceipt({
         status: DeliveryStatus.Failed,
         failedAt,
       });
-      expect(receipt.failedAt).toBeInstanceOf(Date);
+      expect(typeof receipt.failedAt).toBe('number');
       expect(receipt.failedAt).toEqual(failedAt);
     });
 
@@ -160,9 +161,9 @@ describe('IDeliveryReceipt Interface', () => {
     it('should represent a successful delivery lifecycle', () => {
       const receipt = createMinimalReceipt({
         status: DeliveryStatus.Delivered,
-        queuedAt: new Date('2024-01-01T12:00:00Z'),
-        sentAt: new Date('2024-01-01T12:00:01Z'),
-        deliveredAt: new Date('2024-01-01T12:00:05Z'),
+        queuedAt: normalizeToBrightDate(new Date('2024-01-01T12:00:00Z')),
+        sentAt: normalizeToBrightDate(new Date('2024-01-01T12:00:01Z')),
+        deliveredAt: normalizeToBrightDate(new Date('2024-01-01T12:00:05Z')),
         retryCount: 0,
       });
       expect(receipt.status).toBe(DeliveryStatus.Delivered);
@@ -173,9 +174,9 @@ describe('IDeliveryReceipt Interface', () => {
     it('should represent a failed delivery with retry info', () => {
       const receipt = createMinimalReceipt({
         status: DeliveryStatus.Failed,
-        queuedAt: new Date('2024-01-01T12:00:00Z'),
-        sentAt: new Date('2024-01-01T12:00:01Z'),
-        failedAt: new Date('2024-01-01T12:05:00Z'),
+        queuedAt: normalizeToBrightDate(new Date('2024-01-01T12:00:00Z')),
+        sentAt: normalizeToBrightDate(new Date('2024-01-01T12:00:01Z')),
+        failedAt: normalizeToBrightDate(new Date('2024-01-01T12:05:00Z')),
         failureReason: 'Replication failed after max retries',
         failureCode: 'REPLICATION_FAILED',
         retryCount: 3,
@@ -190,9 +191,9 @@ describe('IDeliveryReceipt Interface', () => {
     it('should represent a bounced delivery', () => {
       const receipt = createMinimalReceipt({
         status: DeliveryStatus.Bounced,
-        queuedAt: new Date('2024-01-01T12:00:00Z'),
-        sentAt: new Date('2024-01-01T12:00:01Z'),
-        failedAt: new Date('2024-01-01T12:00:02Z'),
+        queuedAt: normalizeToBrightDate(new Date('2024-01-01T12:00:00Z')),
+        sentAt: normalizeToBrightDate(new Date('2024-01-01T12:00:01Z')),
+        failedAt: normalizeToBrightDate(new Date('2024-01-01T12:00:02Z')),
         failureReason: 'Recipient rejected the message',
         failureCode: 'RECIPIENT_REJECTED',
         retryCount: 0,
@@ -204,10 +205,10 @@ describe('IDeliveryReceipt Interface', () => {
     it('should represent a read receipt', () => {
       const receipt = createMinimalReceipt({
         status: DeliveryStatus.Read,
-        queuedAt: new Date('2024-01-01T12:00:00Z'),
-        sentAt: new Date('2024-01-01T12:00:01Z'),
-        deliveredAt: new Date('2024-01-01T12:00:05Z'),
-        readAt: new Date('2024-01-01T13:00:00Z'),
+        queuedAt: normalizeToBrightDate(new Date('2024-01-01T12:00:00Z')),
+        sentAt: normalizeToBrightDate(new Date('2024-01-01T12:00:01Z')),
+        deliveredAt: normalizeToBrightDate(new Date('2024-01-01T12:00:05Z')),
+        readAt: normalizeToBrightDate(new Date('2024-01-01T13:00:00Z')),
         retryCount: 0,
       });
       expect(receipt.status).toBe(DeliveryStatus.Read);

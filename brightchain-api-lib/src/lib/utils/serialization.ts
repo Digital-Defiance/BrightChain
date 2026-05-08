@@ -3,10 +3,18 @@
  * to their stored (all-string) representation for BrightDB.
  *
  * Converts GUID values (GuidV4Buffer / GuidUint8Array) to short hex strings,
- * BSON ObjectId values to hex strings, Date values to ISO strings, and plain
- * Buffers to hex strings.
+ * BSON ObjectId values to hex strings, Date values to ISO strings,
+ * BrightDateTimestamp (number) values to ISO strings, and plain Buffers to hex strings.
  * This is the inverse of the rehydration functions in ./rehydration.ts.
  */
+
+import { toISO } from '@brightchain/brightdate';
+
+/** Known timestamp field names that should be serialized as ISO strings. */
+const TIMESTAMP_FIELDS = new Set([
+  'createdAt', 'updatedAt', 'deletedAt', 'lastLogin', 'lastActive',
+  'dateCreated', 'dateUpdated',
+]);
 
 /**
  * Type guard: does this value have an `asShortHexGuid` string property?
@@ -27,6 +35,7 @@ function hasShortHexGuid(value: unknown): value is { asShortHexGuid: string } {
  *
  * Converts:
  *  - Date → ISO-8601 string
+ *  - BrightDateTimestamp (number) in known timestamp fields → ISO-8601 string
  *  - GuidV4Buffer / GuidUint8Array (has asShortHexGuid) → 32-char short hex GUID string
  *  - Plain Buffer → hex string
  *  - Object with toHexString() (e.g. BSON ObjectId) → hex string via toHexString()
@@ -43,6 +52,9 @@ export function serializeForStorage<
   for (const [key, value] of Object.entries(doc)) {
     if (value instanceof Date) {
       result[key] = value.toISOString();
+    } else if (typeof value === 'number' && TIMESTAMP_FIELDS.has(key)) {
+      // BrightDateTimestamp fields — convert to ISO string for storage
+      result[key] = toISO(value);
     } else if (hasShortHexGuid(value)) {
       // GuidV4Buffer (Buffer subclass) or GuidUint8Array (Uint8Array subclass)
       // — use the 32-char no-dashes hex form the schema expects

@@ -11,6 +11,7 @@
 
 import type { HexString } from '@digitaldefiance/ecies-lib';
 import { ProposalActionType } from '../../enumerations/proposalActionType';
+import type { BrightDateTimestamp } from '../../types/brightDateTimestamp';
 import type { BlockId } from '../branded/primitives/blockId';
 import type { ICBLIndexEntry } from '../storage/cblIndex';
 import { PoolId, isValidPoolId } from '../storage/pooledBlockStore';
@@ -131,7 +132,7 @@ export interface BrightTrustProposalMetadata {
   proposerMemberId: HexString;
 
   /** Timestamp after which the proposal expires */
-  expiresAt: Date;
+  expiresAt: BrightDateTimestamp;
 
   /** Number of approve votes required for the proposal to pass */
   requiredThreshold: number;
@@ -293,7 +294,7 @@ export interface BlockAnnouncement {
   /**
    * Timestamp when the announcement was created
    */
-  timestamp: Date;
+  timestamp: BrightDateTimestamp;
 
   /**
    * Time-to-live: number of hops remaining before the announcement expires.

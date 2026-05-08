@@ -18,7 +18,7 @@ import {
   Typography,
 } from '@mui/material';
 import { FC, useState } from 'react';
-import { toBrightDateString } from '@brightchain/brightchain-lib';
+import { useFormattedDate } from '../hooks/useFormattedDate';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -50,6 +50,7 @@ export const ProfileSettings: FC<ProfileSettingsProps> = ({
   onRevoke,
   onTogglePrivacy,
 }) => {
+  const { formatDate } = useFormattedDate();
   const [revoking, setRevoking] = useState<string | null>(null);
   const [error, setError] = useState('');
 
@@ -123,7 +124,7 @@ export const ProfileSettings: FC<ProfileSettingsProps> = ({
                   )}
                 </Box>
               }
-              secondary={`Linked ${new Date(account.createdAt).toLocaleDateString()} (BD ${toBrightDateString(account.createdAt, 3)})`}
+              secondary={`Linked ${formatDate(account.createdAt)}`}
             />
             <Button
               size="small"

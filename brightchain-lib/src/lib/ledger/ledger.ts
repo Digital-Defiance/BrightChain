@@ -43,6 +43,7 @@ import { IProofVerificationResult } from '../interfaces/ledger/proofVerification
 import { IBlockStore } from '../interfaces/storage/blockStore';
 import { ChecksumService } from '../services/checksum.service';
 import { Checksum } from '../types/checksum';
+import { brightDateNow } from '../utils/brightDateConversions';
 import { padToBlockSize, unpadCblData } from '../utils/xorUtils';
 import { AuthorizedSignerSet } from './authorizedSignerSet';
 import { GovernancePayloadSerializer } from './governancePayloadSerializer';
@@ -454,7 +455,7 @@ export class Ledger {
   ): Promise<Checksum> {
     const sequenceNumber = this._length;
     const previousEntryHash = this._headEntryHash;
-    const timestamp = new Date();
+    const timestamp = brightDateNow();
 
     // 1. Compute entryHash
     const partial = {

@@ -12,6 +12,7 @@
 
 import {
   BlockSize,
+  dateToBrightDate,
   DurabilityLevel,
   initializeBrightChain,
   RawDataBlock,
@@ -74,7 +75,7 @@ describe('DiskBlockAsyncStore Cleanup Property Tests', () => {
               const blockId = block.idChecksum.toHex();
 
               // Store with past expiration
-              const expiresAt = new Date(Date.now() - 1000 * 60); // 1 minute ago
+              const expiresAt = dateToBrightDate(new Date(Date.now() - 1000 * 60)); // 1 minute ago
               await store.setData(block, {
                 durabilityLevel: DurabilityLevel.Ephemeral,
                 expiresAt,
@@ -135,7 +136,7 @@ describe('DiskBlockAsyncStore Cleanup Property Tests', () => {
               const blockId = block.idChecksum.toHex();
 
               // Store with past expiration
-              const expiresAt = new Date(Date.now() - 1000 * 60); // 1 minute ago
+              const expiresAt = dateToBrightDate(new Date(Date.now() - 1000 * 60)); // 1 minute ago
               await store.setData(block, {
                 durabilityLevel: DurabilityLevel.Ephemeral,
                 expiresAt,
@@ -216,8 +217,8 @@ describe('DiskBlockAsyncStore Cleanup Property Tests', () => {
                 const blockId = block.idChecksum.toHex();
 
                 const expiresAt = spec.isExpired
-                  ? new Date(now - 1000 * 60) // 1 minute ago
-                  : new Date(now + 1000 * 60 * 60); // 1 hour from now
+                  ? dateToBrightDate(new Date(now - 1000 * 60)) // 1 minute ago
+                  : dateToBrightDate(new Date(now + 1000 * 60 * 60)); // 1 hour from now
 
                 await store.setData(block, {
                   durabilityLevel: DurabilityLevel.Ephemeral,
@@ -300,7 +301,7 @@ describe('DiskBlockAsyncStore Cleanup Property Tests', () => {
                 seenBlockIds.add(blockId);
 
                 // All blocks are expired
-                const expiresAt = new Date(now - 1000 * 60);
+                const expiresAt = dateToBrightDate(new Date(now - 1000 * 60));
 
                 await store.setData(block, {
                   durabilityLevel: DurabilityLevel.Ephemeral,

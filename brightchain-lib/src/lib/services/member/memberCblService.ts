@@ -16,6 +16,7 @@ import { StoreError } from '../../errors/storeError';
 import { translate } from '../../i18n';
 import { IBlockStore } from '../../interfaces/storage/blockStore';
 import { Checksum } from '../../types/checksum';
+import { brightDateNow } from '../../utils/brightDateConversions';
 import { ServiceProvider } from '../service.provider';
 
 /**
@@ -77,7 +78,7 @@ export class MemberCblService<TID extends PlatformID = Uint8Array> {
         const block = new RawDataBlock(
           blockSize,
           paddedChunk,
-          new Date(),
+          brightDateNow(),
           checksum,
           BlockType.RawData,
           BlockDataType.PublicMemberData,
@@ -148,7 +149,7 @@ export class MemberCblService<TID extends PlatformID = Uint8Array> {
           const dummyBlock = new RawDataBlock(
             blockSize,
             dummyData,
-            new Date(),
+            brightDateNow(),
             dummyChecksum,
             BlockType.RawData,
             BlockDataType.PublicMemberData,
@@ -189,7 +190,7 @@ export class MemberCblService<TID extends PlatformID = Uint8Array> {
           BlockType.RawData,
           BlockDataType.PublicMemberData,
           memberData.length,
-          new Date(),
+          brightDateNow(),
         );
 
         // XOR the tuple and store result - this creates the whitened block
@@ -224,7 +225,7 @@ export class MemberCblService<TID extends PlatformID = Uint8Array> {
       const { headerData } =
         ServiceProvider.getInstance<TID>().cblService.makeCblHeader(
           creator,
-          new Date(),
+          brightDateNow(),
           addresses.length,
           memberData.length,
           addressesArray,
@@ -334,7 +335,7 @@ export class MemberCblService<TID extends PlatformID = Uint8Array> {
           BlockType.RawData,
           BlockDataType.PublicMemberData,
           Number(cbl.originalDataLength),
-          new Date(),
+          brightDateNow(),
         );
 
         const xoredBlock = await tuple.xor(this.blockStore, metadata);

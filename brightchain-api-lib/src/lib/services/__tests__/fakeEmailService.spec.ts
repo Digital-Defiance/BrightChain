@@ -324,6 +324,8 @@ describe('FakeEmailService – Property Tests', () => {
                 // produce transient mismatches (e.g. 404, 400, socket
                 // hang up) due to socket recycling. Test-infra artifact.
                 if (
+                  err.message?.includes('ECONNRESET') ||
+                  err.message?.includes('ECONNREFUSED') ||
                   err.message?.includes('socket hang up') ||
                   err.message?.includes('got 404') ||
                   err.message?.includes('got 400') ||
@@ -333,8 +335,7 @@ describe('FakeEmailService – Property Tests', () => {
                 }
               }
               throw err;
-            }
-          },
+            }          },
         ),
         { numRuns: 30 },
       );

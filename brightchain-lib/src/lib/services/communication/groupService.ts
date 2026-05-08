@@ -42,6 +42,7 @@ import {
   NullEventEmitter,
 } from '../../interfaces/events';
 import { paginateItems } from '../../utils/pagination';
+import { brightDateNow } from '../../utils/brightDateConversions';
 import { validateAndPrepareAttachments } from './attachmentUtils';
 import { IKeyEpochState } from './keyEpochManager';
 import { MessageOperationsService } from './messageOperationsService';
@@ -456,7 +457,7 @@ export class GroupService {
     creatorId: string,
     memberIds: string[],
   ): Promise<IGroup> {
-    const now = new Date();
+    const now = brightDateNow();
     const allMemberIds = [
       creatorId,
       ...memberIds.filter((id) => id !== creatorId),
@@ -608,7 +609,7 @@ export class GroupService {
       messageContent = blockReference;
     }
 
-    const now = new Date();
+    const now = brightDateNow();
     const message: ICommunicationMessage = {
       id: uuidv4(),
       contextType: 'group',
@@ -714,7 +715,7 @@ export class GroupService {
     this.assertIsMember(group, requesterId);
     this.assertPermission(requesterId, groupId, Permission.MANAGE_MEMBERS);
 
-    const now = new Date();
+    const now = brightDateNow();
     const state = this.keyEpochStates.get(groupId);
 
     for (const memberId of memberIds) {
@@ -850,12 +851,12 @@ export class GroupService {
       // Push old block reference to edit history
       message.editHistory.push({
         content: message.encryptedContent,
-        editedAt: new Date(),
+        editedAt: brightDateNow(),
       });
 
       // Update encryptedContent to new block reference
       message.encryptedContent = blockReference;
-      message.editedAt = new Date();
+      message.editedAt = brightDateNow();
 
       // Persist edited message to storage provider if available
       if (this.groupMessageCollection) {

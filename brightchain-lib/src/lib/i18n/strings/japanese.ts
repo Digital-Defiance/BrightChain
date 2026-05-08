@@ -1808,17 +1808,25 @@ export const JapaneseStrings: ComponentStrings<BrightChainStringKey> = {
     'レート制限サービスが一時的に利用できません。',
   [BrightChainStrings.Error_PoUW_Middleware_RateLimitDenied]:
     'レート制限サービスが利用できません。リクエストが拒否されました。',
+
+  [BrightChainStrings.Date_BrightDateTemplate]: 'BD {BD}',
+
   // ── DatePage ──
   [BrightChainStrings.DatePage_Title]: '日付と時刻',
-  [BrightChainStrings.DatePage_BrightDateEpochLabel]: 'BrightDate（J2000.0からの10進日数）',
+  [BrightChainStrings.DatePage_BrightDateEpochLabel]:
+    'BrightDate（J2000.0からの10進日数）',
   [BrightChainStrings.DatePage_HolidaysTitle]: '本日の祝日・記念日',
   [BrightChainStrings.DatePage_AllFormatsTitle]: 'すべての日付形式',
   [BrightChainStrings.DatePage_AboutBrightDateTitle]: 'BrightDateについて',
-  [BrightChainStrings.DatePage_AboutBrightDate_Epoch]: 'BrightDateはJ2000.0エポック（2000年1月1日 12:00:00 UTC）からの10進日数を数えます。これは世界中の天文学者が天体力学に使用するのと同じエポックです。',
-  [BrightChainStrings.DatePage_AboutBrightDate_Fraction]: '整数部分は日数です。小数部分は1日の10進時刻です。例：0.5 = 正午、0.25 = 06:00、0.75 = 18:00。',
-  [BrightChainStrings.DatePage_AboutBrightDate_NoTimezones]: 'タイムゾーンなし、夏時間なし、曖昧さなし — 一つのタイムライン上の一つの数字だけ。',
+  [BrightChainStrings.DatePage_AboutBrightDate_Epoch]:
+    'BrightDateはJ2000.0エポック（2000年1月1日 12:00:00 UTC）からの10進日数を数えます。これは世界中の天文学者が天体力学に使用するのと同じエポックです。',
+  [BrightChainStrings.DatePage_AboutBrightDate_Fraction]:
+    '整数部分は日数です。小数部分は1日の10進時刻です。例：0.5 = 正午、0.25 = 06:00、0.75 = 18:00。',
+  [BrightChainStrings.DatePage_AboutBrightDate_NoTimezones]:
+    'タイムゾーンなし、夏時間なし、曖昧さなし — 一つのタイムライン上の一つの数字だけ。',
   [BrightChainStrings.DatePage_Format_BrightDateFull]: 'BrightDate（完全精度）',
-  [BrightChainStrings.DatePage_Format_BrightDateCompact]: 'BrightDate（コンパクト）',
+  [BrightChainStrings.DatePage_Format_BrightDateCompact]:
+    'BrightDate（コンパクト）',
   [BrightChainStrings.DatePage_Format_BrightDateStandard]: 'BrightDate（標準）',
   [BrightChainStrings.DatePage_Format_ISO8601]: 'ISO 8601',
   [BrightChainStrings.DatePage_Format_UTC]: 'UTC',
@@ -1836,4 +1844,74 @@ export const JapaneseStrings: ComponentStrings<BrightChainStringKey> = {
   [BrightChainStrings.DatePage_HolidayType_Bank]: '銀行休業日',
   [BrightChainStrings.DatePage_HolidayType_Observance]: '記念日',
   [BrightChainStrings.DatePage_HolidayType_Religious]: '宗教的',
+
+  // ── DatePage: Cochrane Easter Egg (Interplanetary Telemetry) ──
+  [BrightChainStrings.DatePage_Telemetry_Title]: '惑星間テレメトリー',
+  [BrightChainStrings.DatePage_Telemetry_Subtitle]:
+    '現在の片道光遅延（ミリデイ単位、md）',
+  [BrightChainStrings.DatePage_Telemetry_MoonDelay]: '地球 → 月',
+  [BrightChainStrings.DatePage_Telemetry_MarsDelayMin]:
+    '地球 → 火星（最小）',
+  [BrightChainStrings.DatePage_Telemetry_MarsDelayMax]:
+    '地球 → 火星（最大）',
+  [BrightChainStrings.DatePage_Telemetry_MarsDelayCurrent]:
+    '地球 → 火星（現在の推定）',
+  [BrightChainStrings.DatePage_Telemetry_Unit]: 'md',
+  [BrightChainStrings.DatePage_Telemetry_Footer]:
+    'BrightDateは地球標準時を超えた世界のために設計されています。1ミリデイ ≈ 86.4秒。',
+
+  // ── PaperKeyTemplate ──
+  [BrightChainStrings.PaperKey_Title]: 'BrightChain ペーパーキー',
+  [BrightChainStrings.PaperKey_GeneratedTemplate]: '生成日: {DATE} ({BD})',
+  [BrightChainStrings.PaperKey_SecurityWarning]:
+    '安全に保管してください。このペーパーキーはBrightChainのIDを復元する唯一の方法です。安全な場所に保管してください。絶対に共有しないでください。',
+  [BrightChainStrings.PaperKey_WordsAriaLabel]: 'ペーパーキーの単語',
+  [BrightChainStrings.PaperKey_QrScanLabel]: 'スキャンしてインポート：',
+  [BrightChainStrings.PaperKey_QrAlt]: 'ペーパーキーQRコード',
+  [BrightChainStrings.PaperKey_SecurityRecommendations]:
+    'セキュリティの推奨事項：',
+  [BrightChainStrings.PaperKey_Tip_Fireproof]: '耐火金庫または貸金庫に保管する',
+  [BrightChainStrings.PaperKey_Tip_Split]:
+    '複数の場所に分散して保管することを検討する',
+  [BrightChainStrings.PaperKey_Tip_NoDigital]:
+    'デジタルで保存したりスクリーンショットを撮ったりしない',
+  [BrightChainStrings.PaperKey_Tip_NeverShare]:
+    'BrightChainサポートを含め、誰とも共有しない',
+  [BrightChainStrings.PaperKey_PrintButton]: 'このテンプレートを印刷',
+
+  // ── DisputeNotice ──
+  [BrightChainStrings.Dispute_AriaLabelTemplate]: 'Joule紛争 {ID}',
+  [BrightChainStrings.Dispute_IdTemplate]: '紛争 #{ID}',
+  [BrightChainStrings.Dispute_State_Disputed]: '審査中',
+  [BrightChainStrings.Dispute_State_ResolvedFinal]: '解決済み（最終）',
+  [BrightChainStrings.Dispute_State_ResolvedReplaced]: '解決済み（置換）',
+  [BrightChainStrings.Dispute_Field_Amount]: '金額',
+  [BrightChainStrings.Dispute_Field_Opened]: '開始日',
+  [BrightChainStrings.Dispute_Field_Reason]: '理由',
+  [BrightChainStrings.Dispute_Field_Resolved]: '解決日',
+  [BrightChainStrings.Dispute_Field_Resolution]: '解決内容',
+
+  // ── RateTransparency ──
+  [BrightChainStrings.RateTransparency_Loading]: '料金表を読み込み中',
+  [BrightChainStrings.RateTransparency_Error]: '料金表エラー',
+  [BrightChainStrings.RateTransparency_Empty]: '料金表は利用できません。',
+  [BrightChainStrings.RateTransparency_TitleTemplate]:
+    'Joule料金表 — バージョン {VERSION}',
+  [BrightChainStrings.RateTransparency_EffectiveTemplate]:
+    '発効日: {DATE} ({BD})',
+  [BrightChainStrings.RateTransparency_SignedByTemplate]: '署名者: {SIGNER}',
+  [BrightChainStrings.RateTransparency_Col_ResourceClass]: 'リソースクラス',
+  [BrightChainStrings.RateTransparency_Col_Rate]: '料金',
+  [BrightChainStrings.RateTransparency_Col_PerUnit]: '単位あたり',
+
+  // ── JouleEventLog ──
+  [BrightChainStrings.JouleEventLog_Loading]: 'Jouleイベントを読み込み中',
+  [BrightChainStrings.JouleEventLog_Error]: 'Jouleイベントログエラー',
+  [BrightChainStrings.JouleEventLog_Empty]:
+    'Jouleイベントはまだ記録されていません。',
+  [BrightChainStrings.JouleEventLog_AriaLabel]: 'Jouleイベントログ',
+  [BrightChainStrings.JouleEventLog_Col_Time]: '時刻',
+  [BrightChainStrings.JouleEventLog_Col_Kind]: '種類',
+  [BrightChainStrings.JouleEventLog_Col_Amount]: '金額',
+  [BrightChainStrings.JouleEventLog_Col_Description]: '説明',
 };

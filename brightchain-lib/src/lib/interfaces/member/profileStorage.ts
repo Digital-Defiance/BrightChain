@@ -1,4 +1,5 @@
 import { MemberStatusType } from '../../enumerations/memberStatusType';
+import type { BrightDateTimestamp } from '../../types/brightDateTimestamp';
 import { IStoredBackupCode } from '../userManagement';
 import { IPasswordWrappedPrivateKey } from './passwordWrappedPrivateKey';
 
@@ -79,12 +80,12 @@ export interface IPrivateMemberProfileStorageData {
 export interface IPublicMemberProfileHydratedData<TID = Uint8Array> {
   id: TID;
   status: MemberStatusType;
-  lastActive: Date;
+  lastActive: BrightDateTimestamp;
   reputation: number;
   storageQuota: bigint;
   storageUsed: bigint;
-  dateCreated: Date;
-  dateUpdated: Date;
+  dateCreated: BrightDateTimestamp;
+  dateUpdated: BrightDateTimestamp;
 }
 
 /**
@@ -109,11 +110,11 @@ export interface IPrivateMemberProfileHydratedData<TID = Uint8Array> {
     [key: string]: unknown;
   };
   activityLog: Array<{
-    timestamp: Date;
+    timestamp: BrightDateTimestamp;
     action: string;
     details?: Record<string, unknown>;
     metadata?: Record<string, unknown>;
   }>;
-  dateCreated: Date;
-  dateUpdated: Date;
+  dateCreated: BrightDateTimestamp;
+  dateUpdated: BrightDateTimestamp;
 }

@@ -8,6 +8,7 @@ import { SystemKeyringErrorType } from './enumerations/systemKeyringErrorType';
 import { SystemKeyringError } from './errors/systemKeyringError';
 import { translate } from './i18n';
 import { IKeyringEntry } from './interfaces/keyringEntry';
+import { brightDateNow, normalizeToBrightDate } from './utils/brightDateConversions';
 
 export class BrowserKeyring {
   private static instance: BrowserKeyring;
@@ -85,7 +86,7 @@ export class BrowserKeyring {
       encryptedData: new Uint8Array(encryptedData),
       iv,
       salt,
-      created: new Date(),
+      created: brightDateNow(),
     };
 
     this.keys.set(id, entry);
@@ -114,7 +115,7 @@ export class BrowserKeyring {
         encryptedDataBuffer,
       );
 
-      entry.lastAccessed = new Date();
+      entry.lastAccessed = brightDateNow();
       this.logAccess(id);
 
       return new Uint8Array(decryptedData);
@@ -168,9 +169,9 @@ export class BrowserKeyring {
           encryptedData: new Uint8Array(entry.encryptedData),
           iv: new Uint8Array(entry.iv),
           salt: new Uint8Array(entry.salt),
-          created: new Date(entry.created),
+          created: normalizeToBrightDate(entry.created),
           lastAccessed: entry.lastAccessed
-            ? new Date(entry.lastAccessed)
+            ? normalizeToBrightDate(entry.lastAccessed)
             : undefined,
         });
       }

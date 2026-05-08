@@ -12,6 +12,7 @@
 
 import {
   BlockAnnouncement,
+  brightDateToDate,
   BrightTrustProposalMetadata,
   BrightTrustVoteMetadata,
   IBrightTrustDatabase,
@@ -236,10 +237,7 @@ export class BrightTrustGossipHandler<TID extends PlatformID = Uint8Array> {
       description: metadata.description,
       actionType: metadata.actionType as ProposalActionType,
       actionPayload,
-      expiresAt:
-        metadata.expiresAt instanceof Date
-          ? metadata.expiresAt
-          : new Date(metadata.expiresAt),
+      expiresAt: brightDateToDate(metadata.expiresAt),
       attachmentCblId: metadata.attachmentCblId,
     };
   }

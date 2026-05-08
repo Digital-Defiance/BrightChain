@@ -12,6 +12,7 @@ import type { BlockId } from '@brightchain/brightchain-lib';
 import {
   AnnouncementHandler,
   BlockAnnouncement,
+  brightDateNow,
   BrightTrustProposalMetadata,
   BrightTrustVoteMetadata,
   DeliveryAckMetadata,
@@ -214,7 +215,7 @@ export class GossipService implements IGossipService {
       type: 'add',
       blockId,
       nodeId: this.peerProvider.getLocalNodeId(),
-      timestamp: new Date(),
+      timestamp: brightDateNow(),
       ttl: this.config.defaultTtl,
       ...(poolId && { poolId }),
     };
@@ -234,7 +235,7 @@ export class GossipService implements IGossipService {
       type: 'remove',
       blockId,
       nodeId: this.peerProvider.getLocalNodeId(),
-      timestamp: new Date(),
+      timestamp: brightDateNow(),
       ttl: this.config.defaultTtl,
       ...(poolId && { poolId }),
     };
@@ -255,7 +256,7 @@ export class GossipService implements IGossipService {
       blockId: '' as BlockId,
       poolId,
       nodeId: this.peerProvider.getLocalNodeId(),
-      timestamp: new Date(),
+      timestamp: brightDateNow(),
       ttl: this.config.defaultTtl,
     };
 
@@ -281,7 +282,7 @@ export class GossipService implements IGossipService {
       blockId: '' as BlockId,
       poolId,
       nodeId: this.peerProvider.getLocalNodeId(),
-      timestamp: new Date(),
+      timestamp: brightDateNow(),
       ttl: this.config.defaultTtl,
       poolAnnouncement: metadata,
     };
@@ -302,7 +303,7 @@ export class GossipService implements IGossipService {
       blockId: '' as BlockId,
       poolId,
       nodeId: this.peerProvider.getLocalNodeId(),
-      timestamp: new Date(),
+      timestamp: brightDateNow(),
       ttl: this.config.defaultTtl,
     };
 
@@ -323,7 +324,7 @@ export class GossipService implements IGossipService {
       poolId: entry.poolId ?? ('default' as PoolId),
       cblIndexEntry: entry,
       nodeId: this.peerProvider.getLocalNodeId(),
-      timestamp: new Date(),
+      timestamp: brightDateNow(),
       ttl: this.config.defaultTtl,
     };
 
@@ -344,7 +345,7 @@ export class GossipService implements IGossipService {
       poolId: entry.poolId ?? ('default' as PoolId),
       cblIndexEntry: entry,
       nodeId: this.peerProvider.getLocalNodeId(),
-      timestamp: new Date(),
+      timestamp: brightDateNow(),
       ttl: this.config.defaultTtl,
     };
 
@@ -375,7 +376,7 @@ export class GossipService implements IGossipService {
       type: 'head_update',
       blockId,
       nodeId: this.peerProvider.getLocalNodeId(),
-      timestamp: new Date(),
+      timestamp: brightDateNow(),
       ttl: this.config.defaultTtl,
       headUpdate: {
         dbName,
@@ -405,7 +406,7 @@ export class GossipService implements IGossipService {
       type: 'acl_update',
       blockId: aclBlockId,
       nodeId: this.peerProvider.getLocalNodeId(),
-      timestamp: new Date(),
+      timestamp: brightDateNow(),
       ttl: this.config.defaultTtl,
       poolId,
       aclBlockId,
@@ -1006,7 +1007,7 @@ export class GossipService implements IGossipService {
         type: 'add',
         blockId: blockId as unknown as BlockId,
         nodeId: this.peerProvider.getLocalNodeId(),
-        timestamp: new Date(),
+        timestamp: brightDateNow(),
         ttl,
         messageDelivery: metadata,
       };
@@ -1027,7 +1028,7 @@ export class GossipService implements IGossipService {
       type: 'ack',
       blockId: ack.messageId as unknown as BlockId,
       nodeId: this.peerProvider.getLocalNodeId(),
-      timestamp: new Date(),
+      timestamp: brightDateNow(),
       ttl: this.config.defaultTtl,
       deliveryAck: ack,
     };
@@ -1091,7 +1092,7 @@ export class GossipService implements IGossipService {
       type: 'brightTrust_proposal',
       blockId: metadata.proposalId as unknown as BlockId,
       nodeId: this.peerProvider.getLocalNodeId(),
-      timestamp: new Date(),
+      timestamp: brightDateNow(),
       ttl: this.config.messagePriority.high.ttl,
       brightTrustProposal: metadata,
     };
@@ -1113,7 +1114,7 @@ export class GossipService implements IGossipService {
       type: 'brightTrust_vote',
       blockId: metadata.proposalId as unknown as BlockId,
       nodeId: this.peerProvider.getLocalNodeId(),
-      timestamp: new Date(),
+      timestamp: brightDateNow(),
       ttl: this.config.messagePriority.high.ttl,
       brightTrustVote: metadata,
     };

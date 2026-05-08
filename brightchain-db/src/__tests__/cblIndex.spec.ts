@@ -9,7 +9,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import type { BlockId, ICBLIndexEntry } from '@brightchain/brightchain-lib';
-import { CBLVisibility } from '@brightchain/brightchain-lib';
+import { brightDateNow, CBLVisibility, dateToBrightDate } from '@brightchain/brightchain-lib';
 import { CBLIndex } from '../lib/cblIndex';
 import { BrightDb } from '../lib/database';
 import { InMemoryHeadRegistry } from '../lib/headRegistry';
@@ -51,7 +51,7 @@ function makeEntry(
     blockId1: 'block-aaa-111' as BlockId,
     blockId2: 'block-bbb-222' as BlockId,
     blockSize: 256,
-    createdAt: new Date(),
+    createdAt: brightDateNow(),
     visibility: CBLVisibility.Private,
     ...overrides,
   };
@@ -318,7 +318,7 @@ describe('CBLIndex – query', () => {
           blockId1,
           blockId2,
           magnetUrl: `magnet:page-${i}`,
-          createdAt: new Date(2025, 0, i + 1),
+          createdAt: dateToBrightDate(new Date(2025, 0, i + 1)),
         }),
       );
     }
@@ -353,7 +353,7 @@ describe('CBLIndex – query', () => {
         blockId1,
         blockId2,
         magnetUrl: 'magnet:late',
-        createdAt: new Date(2025, 6, 1),
+        createdAt: dateToBrightDate(new Date(2025, 6, 1)),
       }),
     );
     await index.addEntry(
@@ -361,7 +361,7 @@ describe('CBLIndex – query', () => {
         blockId1,
         blockId2,
         magnetUrl: 'magnet:early',
-        createdAt: new Date(2025, 0, 1),
+        createdAt: dateToBrightDate(new Date(2025, 0, 1)),
       }),
     );
 
@@ -392,7 +392,8 @@ describe('CBLIndex – softDelete', () => {
     const results = await index.query({ includeDeleted: true });
     const deleted = results.find((e) => e.magnetUrl === magnetUrl);
     expect(deleted).toBeDefined();
-    expect(deleted!.deletedAt).toBeInstanceOf(Date);
+    expect(deleted!.deletedAt).toBeDefined();
+    expect(typeof deleted!.deletedAt).toBe('number');
   });
 });
 

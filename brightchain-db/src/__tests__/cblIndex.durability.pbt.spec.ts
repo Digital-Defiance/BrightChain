@@ -16,7 +16,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import type { BlockId, ICBLIndexEntry } from '@brightchain/brightchain-lib';
-import { CBLVisibility } from '@brightchain/brightchain-lib';
+import { brightDateNow, CBLVisibility, dateToBrightDate } from '@brightchain/brightchain-lib';
 import * as fc from 'fast-check';
 import { CBLIndex } from '../lib/cblIndex';
 import { BrightDb } from '../lib/database';
@@ -137,7 +137,7 @@ describe('CBLIndex Durability Property-Based Tests', () => {
               blockId1: ids.blockId1,
               blockId2: ids.blockId2,
               blockSize: 256,
-              createdAt: new Date(2025, 0, 1, 0, 0, i),
+              createdAt: dateToBrightDate(new Date(2025, 0, 1, 0, 0, i)),
               visibility: visibilities[i],
               metadata: metadatas[i],
             });
@@ -205,7 +205,7 @@ describe('CBLIndex Durability Property-Based Tests', () => {
             blockId1: ids.blockId1,
             blockId2: ids.blockId2,
             blockSize: 256,
-            createdAt: new Date(),
+            createdAt: brightDateNow(),
             visibility: CBLVisibility.Private,
           });
           expect(nextEntry.sequenceNumber).toBe(count + 1);
@@ -246,7 +246,7 @@ describe('CBLIndex Durability Property-Based Tests', () => {
               blockId1: ids.blockId1,
               blockId2: ids.blockId2,
               blockSize: 256,
-              createdAt: new Date(2025, 0, 1, 0, 0, i),
+              createdAt: dateToBrightDate(new Date(2025, 0, 1, 0, 0, i)),
               visibility: CBLVisibility.Private,
             });
             sequenceNumbers.push(entry.sequenceNumber);

@@ -24,6 +24,7 @@ import {
   IPooledBlockStore,
   PoolId,
   PoolMismatchError,
+  brightDateNow,
 } from '@brightchain/brightchain-lib';
 import { sha3_512 } from '@noble/hashes/sha3';
 import { BlockFetcher } from './blockFetcher';
@@ -357,7 +358,7 @@ function registerBlock(
   const blockId = computeBlockId(data);
   setup.transport.responses.set(blockId, data);
   setup.availability.locations.set(blockId, [
-    { nodeId, lastSeen: new Date(), isAuthoritative: true },
+    { nodeId, lastSeen: brightDateNow(), isAuthoritative: true },
   ]);
   return blockId;
 }
@@ -399,7 +400,7 @@ describe('BlockFetcher', () => {
       const wrongData = makeBlockData(99);
       setup.transport.responses.set(blockId, wrongData);
       setup.availability.locations.set(blockId, [
-        { nodeId: 'node-1', lastSeen: new Date(), isAuthoritative: true },
+        { nodeId: 'node-1', lastSeen: brightDateNow(), isAuthoritative: true },
       ]);
 
       const result = await setup.fetcher.fetchBlock(blockId);
@@ -600,7 +601,7 @@ describe('BlockFetcher', () => {
       // Return wrong data to trigger checksum mismatch
       setup.transport.responses.set(blockId, makeBlockData(99));
       setup.availability.locations.set(blockId, [
-        { nodeId: 'bad-node', lastSeen: new Date(), isAuthoritative: true },
+        { nodeId: 'bad-node', lastSeen: brightDateNow(), isAuthoritative: true },
       ]);
 
       await setup.fetcher.fetchBlock(blockId);
@@ -616,7 +617,7 @@ describe('BlockFetcher', () => {
       // Also add a second node
       setup.availability.locations.get(blockId)?.push({
         nodeId: 'node-2',
-        lastSeen: new Date(),
+        lastSeen: brightDateNow(),
         isAuthoritative: false,
       });
 

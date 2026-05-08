@@ -1,4 +1,5 @@
 import { IRoleDTO, IRoleFrontendObject } from '@digitaldefiance/suite-core-lib';
+import type { BrightDateTimestamp } from '@brightchain/brightchain-lib';
 import type { DefaultBackendIdType } from '../types/backend-id';
 import { IRoleBackendObject } from './backend-objects/role';
 
@@ -15,7 +16,7 @@ export interface IRequestUser<
     | Array<IRoleFrontendObject>
     | Array<IRoleBackendObject> = Array<IRoleDTO>,
   S extends StringLanguage | string = string,
-  D extends Date | string = string,
+  D = BrightDateTimestamp,
 > {
   /**
    * The ID of the user

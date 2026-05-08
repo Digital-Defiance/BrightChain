@@ -6,6 +6,8 @@ import {
   IMessageMetadata,
   PresenceStatus,
 } from '@brightchain/brightchain-lib';
+import type { BrightDateTimestamp } from '@brightchain/brightchain-lib';
+import { brightDateNow } from '@brightchain/brightchain-lib';
 
 export enum MessageEventType {
   MESSAGE_STORED = 'message:stored',
@@ -32,13 +34,13 @@ export type EventType =
 
 export interface IMessageEvent {
   type: MessageEventType;
-  timestamp: Date;
+  timestamp: BrightDateTimestamp;
   metadata: IMessageMetadata;
 }
 
 export interface IBlockAvailabilityEvent {
   type: BlockEventType.AVAILABILITY_CHANGED;
-  timestamp: Date;
+  timestamp: BrightDateTimestamp;
   data: {
     blockId: string;
     oldState: AvailabilityState;
@@ -48,7 +50,7 @@ export interface IBlockAvailabilityEvent {
 
 export interface IBlockReplicatedEvent {
   type: BlockEventType.REPLICATED;
-  timestamp: Date;
+  timestamp: BrightDateTimestamp;
   data: {
     blockId: string;
     targetNodeId: string;
@@ -59,7 +61,7 @@ export interface IBlockReplicatedEvent {
 
 export interface IPartitionEnteredEvent {
   type: PartitionEventType.PARTITION_ENTERED;
-  timestamp: Date;
+  timestamp: BrightDateTimestamp;
   data: {
     disconnectedPeers: string[];
   };
@@ -67,7 +69,7 @@ export interface IPartitionEnteredEvent {
 
 export interface IPartitionExitedEvent {
   type: PartitionEventType.PARTITION_EXITED;
-  timestamp: Date;
+  timestamp: BrightDateTimestamp;
   data: {
     reconnectedPeers: string[];
   };
@@ -185,7 +187,7 @@ export class EventNotificationSystem {
   emit(type: MessageEventType, metadata: IMessageMetadata): void {
     const event: IMessageEvent = {
       type,
-      timestamp: new Date(),
+      timestamp: brightDateNow(),
       metadata,
     };
 
@@ -204,7 +206,7 @@ export class EventNotificationSystem {
   ): void {
     const event: IBlockAvailabilityEvent = {
       type: BlockEventType.AVAILABILITY_CHANGED,
-      timestamp: new Date(),
+      timestamp: brightDateNow(),
       data: {
         blockId,
         oldState,
@@ -228,7 +230,7 @@ export class EventNotificationSystem {
   ): void {
     const event: IBlockReplicatedEvent = {
       type: BlockEventType.REPLICATED,
-      timestamp: new Date(),
+      timestamp: brightDateNow(),
       data: {
         blockId,
         targetNodeId,
@@ -248,7 +250,7 @@ export class EventNotificationSystem {
   emitPartitionEntered(disconnectedPeers: string[]): void {
     const event: IPartitionEnteredEvent = {
       type: PartitionEventType.PARTITION_ENTERED,
-      timestamp: new Date(),
+      timestamp: brightDateNow(),
       data: {
         disconnectedPeers,
       },
@@ -265,7 +267,7 @@ export class EventNotificationSystem {
   emitPartitionExited(reconnectedPeers: string[]): void {
     const event: IPartitionExitedEvent = {
       type: PartitionEventType.PARTITION_EXITED,
-      timestamp: new Date(),
+      timestamp: brightDateNow(),
       data: {
         reconnectedPeers,
       },
@@ -289,7 +291,7 @@ export class EventNotificationSystem {
   ): void {
     const event: CommunicationEvent = {
       type: CommunicationEventType.MESSAGE_SENT,
-      timestamp: new Date(),
+      timestamp: brightDateNow(),
       contextType,
       contextId,
       data: { messageId, senderId },
@@ -310,7 +312,7 @@ export class EventNotificationSystem {
   ): void {
     const event: CommunicationEvent = {
       type: CommunicationEventType.MESSAGE_DELETED,
-      timestamp: new Date(),
+      timestamp: brightDateNow(),
       contextType,
       contextId,
       data: { messageId, deletedBy },
@@ -333,7 +335,7 @@ export class EventNotificationSystem {
   ): void {
     const event: CommunicationEvent = {
       type: eventType,
-      timestamp: new Date(),
+      timestamp: brightDateNow(),
       contextType,
       contextId,
       data: { memberId },
@@ -354,7 +356,7 @@ export class EventNotificationSystem {
   ): void {
     const event: CommunicationEvent = {
       type: CommunicationEventType.PRESENCE_CHANGED,
-      timestamp: new Date(),
+      timestamp: brightDateNow(),
       contextType,
       contextId,
       data: { memberId, status },
@@ -380,7 +382,7 @@ export class EventNotificationSystem {
   ): void {
     const event: CommunicationEvent = {
       type: eventType,
-      timestamp: new Date(),
+      timestamp: brightDateNow(),
       contextType,
       contextId,
       data: { messageId, memberId, emoji, reactionId },
@@ -401,7 +403,7 @@ export class EventNotificationSystem {
   ): void {
     const event: CommunicationEvent = {
       type: CommunicationEventType.MESSAGE_EDITED,
-      timestamp: new Date(),
+      timestamp: brightDateNow(),
       contextType,
       contextId,
       data: { messageId, memberId },
@@ -425,7 +427,7 @@ export class EventNotificationSystem {
   ): void {
     const event: CommunicationEvent = {
       type: eventType,
-      timestamp: new Date(),
+      timestamp: brightDateNow(),
       contextType,
       contextId,
       data: { messageId, memberId },
@@ -445,7 +447,7 @@ export class EventNotificationSystem {
   ): void {
     const event: CommunicationEvent = {
       type: CommunicationEventType.MEMBER_JOINED,
-      timestamp: new Date(),
+      timestamp: brightDateNow(),
       contextType,
       contextId,
       data: { memberId },
@@ -465,7 +467,7 @@ export class EventNotificationSystem {
   ): void {
     const event: CommunicationEvent = {
       type: CommunicationEventType.MEMBER_LEFT,
-      timestamp: new Date(),
+      timestamp: brightDateNow(),
       contextType,
       contextId,
       data: { memberId },
@@ -486,7 +488,7 @@ export class EventNotificationSystem {
   ): void {
     const event: CommunicationEvent = {
       type: CommunicationEventType.MEMBER_KICKED,
-      timestamp: new Date(),
+      timestamp: brightDateNow(),
       contextType,
       contextId,
       data: { memberId, kickedBy },
@@ -508,7 +510,7 @@ export class EventNotificationSystem {
   ): void {
     const event: CommunicationEvent = {
       type: CommunicationEventType.MEMBER_MUTED,
-      timestamp: new Date(),
+      timestamp: brightDateNow(),
       contextType,
       contextId,
       data: { memberId, mutedBy, durationMs },
@@ -529,7 +531,7 @@ export class EventNotificationSystem {
   ): void {
     const event: CommunicationEvent = {
       type: CommunicationEventType.GROUP_CREATED,
-      timestamp: new Date(),
+      timestamp: brightDateNow(),
       contextType: 'group',
       contextId,
       data: { groupId, creatorId, memberIds },
@@ -549,7 +551,7 @@ export class EventNotificationSystem {
   ): void {
     const event: CommunicationEvent = {
       type: CommunicationEventType.CHANNEL_UPDATED,
-      timestamp: new Date(),
+      timestamp: brightDateNow(),
       contextType: 'channel',
       contextId,
       data: { channelId, updatedBy },
@@ -562,9 +564,11 @@ export class EventNotificationSystem {
    * Get event history
    */
   getEventHistory(filter?: IEventFilter, limit = 100): SystemEvent[] {
-    const cutoff = Date.now() - this.retentionMs;
+    // retentionMs is in milliseconds; convert to BrightDate days (86400000 ms/day)
+    const retentionDays = this.retentionMs / 86400000;
+    const cutoff = brightDateNow() - retentionDays;
     return this.eventHistory
-      .filter((e) => e.timestamp.getTime() > cutoff)
+      .filter((e) => e.timestamp > cutoff)
       .filter((e) => !filter || this.matchesFilter(e, filter))
       .slice(-limit);
   }

@@ -63,6 +63,7 @@ import { createAdminEmailRouter } from './adminEmailRouter';
 import { createTestEmailRouter } from './testEmailRouter';
 
 import { BrightTrustController } from '../controllers/api/brightTrust';
+import { BrightDateNowController } from '../controllers/api/brightdateNow';
 import { CBLController } from '../controllers/api/cbl';
 import { ChannelController } from '../controllers/api/channels';
 import { ConversationController } from '../controllers/api/conversations';
@@ -94,6 +95,7 @@ import { UserSearchController } from '../controllers/api/userSearch';
 import { IBrightChainApplication } from '../interfaces';
 import { RateTableCache } from '../joule/rateTableCache';
 import { requireAuthWithRoles } from '../middlewares/authentication';
+import { createBrightDateRateLimiter } from '../middlewares/brightdate-rate-limiter';
 import { EventNotificationSystem } from '../services/eventNotificationSystem';
 import { MessagePassingService } from '../services/messagePassingService';
 import { StagingCleanupScheduler, StagingService } from '../services/staging';
@@ -154,6 +156,7 @@ export class ApiRouter<
   private readonly adminMailController: AdminMailController<TID>;
   private readonly adminJouleController: AdminJouleController<TID>;
   private readonly jouleRateTableController: JouleRateTableController<TID>;
+  private readonly brightdateNowController: BrightDateNowController<TID>;
   private readonly jouleMemberController: JouleMemberController<TID>;
   private readonly jouleOperatorController: JouleOperatorController<TID>;
   private readonly brightchartRouter: BrightChartRouter<TID>;
@@ -236,6 +239,9 @@ export class ApiRouter<
 
     // Joule resource-credit rate table (public)
     this.jouleRateTableController = new JouleRateTableController(application);
+
+    // BrightDate public time endpoint
+    this.brightdateNowController = new BrightDateNowController(application);
 
     // Joule member-scoped endpoints (authenticated)
     this.jouleMemberController = new JouleMemberController(application);
@@ -427,6 +433,13 @@ export class ApiRouter<
     this.router.use('/i18n', this.i18nController.router);
     this.router.use('/energy', this.energyController.router);
     this.router.use('/health', this.healthController.router);
+
+    // Public BrightDate time endpoint — no auth required, rate-limited by IP
+    this.router.use(
+      '/brightdate',
+      createBrightDateRateLimiter(),
+      this.brightdateNowController.router,
+    );
 
     // Public block explorer — no auth required
     this.router.use('/explorer', this.blockExplorerController.router);

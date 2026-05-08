@@ -10,7 +10,9 @@
 import {
   HeadRegistryGossipTransport,
   IBlockStore,
+  brightDateNow,
   isPooledBlockStore,
+  type BrightDateTimestamp,
   type IGossipService,
   type INodeAuthenticator,
   type IWriteAclAuditLogger,
@@ -80,6 +82,14 @@ export interface BrightDbOptions {
   antiEntropyIntervalMs?: number;
 
   /**
+   * Clock function returning the current time as a BrightDateTimestamp.
+   * Defaults to `brightDateNow`. Override in tests to control time, or supply
+   * a custom clock source for production use.
+   * Forwarded to all Collection instances created by this database.
+   */
+  nowBd?: () => BrightDateTimestamp;
+
+  /**
    * Optional callback invoked after each successful write operation.
    * Used by the audit ledger to record writes without modifying Collection internals.
    *
@@ -119,6 +129,8 @@ export class BrightDb {
   private readonly models = new Map<string, Model<any, any>>();
   /** Store-level lock for cross-platform write serialization */
   private readonly storeLock?: StoreLock;
+  /** Clock function for per-document timestamps, forwarded to all collections */
+  private readonly nowBd?: () => BrightDateTimestamp;
 
   constructor(blockStore: IBlockStore, options?: BrightDbOptions) {
     // Wrap the store in a PooledStoreAdapter when poolId is provided
@@ -182,6 +194,7 @@ export class BrightDb {
     if (options?.dataDir) {
       this.storeLock = new StoreLock(options.dataDir);
     }
+    this.nowBd = options?.nowBd;
   }
 
   /**
@@ -247,8 +260,8 @@ export class BrightDb {
     options?: CollectionOptions,
   ): Collection<T> {
     if (!this.collections.has(name)) {
-      const collOptions = this.storeLock
-        ? { ...options, storeLock: this.storeLock }
+      const collOptions = this.storeLock || this.nowBd
+        ? { ...options, storeLock: this.storeLock, nowBd: this.nowBd }
         : options;
       const coll = new Collection<T>(
         name,
@@ -468,7 +481,7 @@ export class BrightDb {
     const cursor: CursorSession = {
       ...params,
       id,
-      lastAccessed: Date.now(),
+      lastAccessed: (this.nowBd ?? brightDateNow)(),
     };
     this.cursorSessions.set(id, cursor);
     return cursor;
@@ -481,11 +494,13 @@ export class BrightDb {
   getCursorSession(cursorId: string): CursorSession | null {
     const cursor = this.cursorSessions.get(cursorId);
     if (!cursor) return null;
-    if (Date.now() - cursor.lastAccessed > this.cursorTimeoutMs) {
+    const now = (this.nowBd ?? brightDateNow)();
+    const timeoutDays = this.cursorTimeoutMs / 86_400_000;
+    if (now - cursor.lastAccessed > timeoutDays) {
       this.cursorSessions.delete(cursorId);
       return null;
     }
-    cursor.lastAccessed = Date.now();
+    cursor.lastAccessed = now;
     return cursor;
   }
 
@@ -512,9 +527,10 @@ export class BrightDb {
    * Clean up expired cursor sessions.
    */
   private cleanExpiredCursors(): void {
-    const now = Date.now();
+    const now = (this.nowBd ?? brightDateNow)();
+    const timeoutDays = this.cursorTimeoutMs / 86_400_000;
     for (const [id, cursor] of this.cursorSessions.entries()) {
-      if (now - cursor.lastAccessed > this.cursorTimeoutMs) {
+      if (now - cursor.lastAccessed > timeoutDays) {
         this.cursorSessions.delete(id);
       }
     }

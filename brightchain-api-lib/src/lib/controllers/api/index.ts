@@ -5,6 +5,7 @@ export * from './adminMail';
 export * from './adminPass';
 export * from './adminUser';
 export * from './blocks';
+export * from './brightdateNow';
 export * from './brighthub';
 export * from './brightpass';
 export * from './brightTrust';

@@ -17,6 +17,8 @@ import { TupleError } from '../errors/tupleError';
 import { initializeBrightChain, resetInitialization } from '../init';
 import { ServiceProvider } from './service.provider';
 import { TupleService } from './tuple.service';
+import { brightDateNow } from '../utils/brightDateConversions';
+import type { BrightDateTimestamp } from '../types/brightDateTimestamp';
 
 jest.setTimeout(60000);
 
@@ -30,7 +32,7 @@ interface PoolAwareMetadata {
   type: BlockType;
   dataType: BlockDataType;
   lengthWithoutPadding: number;
-  dateCreated: Date;
+  dateCreated: BrightDateTimestamp;
   poolId: string;
 }
 

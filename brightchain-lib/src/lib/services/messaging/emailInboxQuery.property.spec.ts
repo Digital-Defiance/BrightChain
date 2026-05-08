@@ -26,6 +26,8 @@ import {
 import type { IEmailMetadata } from '../../interfaces/messaging/emailMetadata';
 import { createContentType } from '../../interfaces/messaging/mimePart';
 import { InMemoryEmailMetadataStore } from './inMemoryEmailMetadataStore';
+import { brightDateNow } from '../../utils/brightDateConversions';
+import type { BrightDateTimestamp } from '../../types/brightDateTimestamp';
 
 /** Cast a test string to BlockId without validation — for test data only. */
 const bid = (s: string) => s as unknown as BlockId;
@@ -55,7 +57,7 @@ function buildEmail(
   to: IMailbox[],
   cc: IMailbox[],
   bcc: IMailbox[],
-  date: Date,
+  date: BrightDateTimestamp,
 ): IEmailMetadata {
   const allRecipients = [...to, ...cc, ...bcc].map((m) => m.address);
   return {
@@ -128,7 +130,7 @@ describe('Property 12: Inbox Query Correctness', () => {
             [user, ...extras],
             [],
             [],
-            new Date(),
+            brightDateNow(),
           );
           await store.store(email);
 
@@ -160,7 +162,7 @@ describe('Property 12: Inbox Query Correctness', () => {
           [toRecipient],
           [user],
           [],
-          new Date(),
+          brightDateNow(),
         );
         await store.store(email);
 
@@ -191,7 +193,7 @@ describe('Property 12: Inbox Query Correctness', () => {
           [toRecipient],
           [],
           [user],
-          new Date(),
+          brightDateNow(),
         );
         await store.store(email);
 
@@ -232,7 +234,7 @@ describe('Property 12: Inbox Query Correctness', () => {
             filteredRecipients,
             [],
             [],
-            new Date(),
+            brightDateNow(),
           );
           await store.store(email);
 

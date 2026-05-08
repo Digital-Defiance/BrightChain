@@ -28,6 +28,7 @@ import {
   BlockDataType,
   BlockSize,
   BlockType,
+  brightDateNow,
   Checksum,
   MemoryBlockStore,
   RandomBlock,
@@ -119,7 +120,7 @@ describe('Complete Ingestion & Reconstruction Workflow', () => {
       const sourceBlock = new RawDataBlock(
         blockSize,
         paddedSource,
-        new Date(),
+        brightDateNow(),
         sourceChecksum,
         BlockType.RawData,
         BlockDataType.RawData,
@@ -302,7 +303,7 @@ describe('Complete Ingestion & Reconstruction Workflow', () => {
         const sourceBlock = new RawDataBlock(
           blockSize,
           chunk,
-          new Date(),
+          brightDateNow(),
           _sourceChecksum,
         );
 

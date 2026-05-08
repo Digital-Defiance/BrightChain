@@ -1,4 +1,5 @@
 import { IUserRoleBase } from '@digitaldefiance/suite-core-lib';
+import type { BrightDateTimestamp } from '@brightchain/brightchain-lib';
 import { DefaultBackendIdType } from '../../shared-types';
 
-export type IUserRoleBackend = IUserRoleBase<DefaultBackendIdType, Date>;
+export type IUserRoleBackend = IUserRoleBase<DefaultBackendIdType, BrightDateTimestamp>;

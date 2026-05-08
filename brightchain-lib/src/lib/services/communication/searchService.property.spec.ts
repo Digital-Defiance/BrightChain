@@ -392,8 +392,8 @@ describe('Feature: api-lib-to-lib-migration, Property 25: Search Service Cross-C
 
           // Verify descending order by createdAt
           for (let i = 1; i < results.items.length; i++) {
-            const prev = results.items[i - 1].message.createdAt.getTime();
-            const curr = results.items[i].message.createdAt.getTime();
+            const prev = results.items[i - 1].message.createdAt;
+            const curr = results.items[i].message.createdAt;
             expect(prev).toBeGreaterThanOrEqual(curr);
           }
         },

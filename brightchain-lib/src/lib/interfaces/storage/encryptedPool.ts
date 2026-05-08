@@ -10,6 +10,7 @@
  */
 
 import { PoolId } from './pooledBlockStore';
+import type { BrightDateTimestamp } from '../../types/brightDateTimestamp';
 
 /**
  * Encryption modes for pool storage.
@@ -40,7 +41,7 @@ export interface IEncryptedPoolOptions {
  */
 export interface IKeyVersion<TNodeId = string> {
   version: number;
-  createdAt: Date;
+  createdAt: BrightDateTimestamp;
   /** For pool-shared: the symmetric key encrypted per-member */
   encryptedKeys?: Array<{
     nodeId: TNodeId;

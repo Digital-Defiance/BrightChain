@@ -10,6 +10,8 @@
 import {
   CBLVisibility,
   isPooledBlockStore,
+  brightDateNow,
+  type BrightDateTimestamp,
   type BlockId,
   type CBLIndexManifest,
   type CBLIndexManifestEntry,
@@ -391,7 +393,7 @@ export class CBLIndex {
               blockId2: hash as unknown as BlockId, // placeholder
               blockSize: data.length,
               poolId: pool,
-              createdAt: new Date(),
+              createdAt: brightDateNow(),
               visibility: CBLVisibility.Private,
               sequenceNumber: this.sequenceCounter,
             };
@@ -517,7 +519,7 @@ export class CBLIndex {
    */
   async softDelete(magnetUrl: string): Promise<void> {
     await this.collection.updateOne({ magnetUrl } as CBLFilter, {
-      $set: { deletedAt: new Date() },
+      $set: { deletedAt: brightDateNow() },
     });
     await this.generateParityForHead();
     await this.trackMutationForAutoSnapshot();
@@ -689,11 +691,13 @@ export class CBLIndex {
 
     // 5. Insert all entries from the snapshot
     if (snapshotData.entries.length > 0) {
-      // Restore Date objects from JSON strings
+      // Restore BrightDateTimestamp values from JSON (already numbers, no conversion needed)
       const restoredEntries = snapshotData.entries.map((entry) => ({
         ...entry,
-        createdAt: new Date(entry.createdAt),
-        deletedAt: entry.deletedAt ? new Date(entry.deletedAt) : undefined,
+        createdAt: typeof entry.createdAt === 'number' ? entry.createdAt : 0,
+        deletedAt: entry.deletedAt !== undefined
+          ? (typeof entry.deletedAt === 'number' ? entry.deletedAt : undefined)
+          : undefined,
       }));
       await this.collection.insertMany(restoredEntries);
     }
@@ -877,7 +881,7 @@ export class CBLIndex {
    *
    * @see Requirements 8.6
    */
-  async mergeSoftDelete(magnetUrl: string, deletedAt: Date): Promise<void> {
+  async mergeSoftDelete(magnetUrl: string, deletedAt: BrightDateTimestamp): Promise<void> {
     const existing = await this.collection.findOne({
       magnetUrl,
     } as CBLFilter);
@@ -930,7 +934,7 @@ export class CBLIndex {
       poolId,
       nodeId,
       entries: manifestEntries,
-      generatedAt: new Date(),
+      generatedAt: brightDateNow(),
     };
   }
 

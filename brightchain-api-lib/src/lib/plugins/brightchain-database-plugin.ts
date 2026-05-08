@@ -14,6 +14,7 @@ import type {
   IMemberIndexDocument,
 } from '@brightchain/brightchain-lib';
 import {
+  brightDateNow,
   Checksum,
   EnergyAccountStore,
   MemberStatusType,
@@ -491,7 +492,7 @@ export class BrightChainDatabasePlugin<
             privateCBL: sentinelChecksum,
             type: entry.type,
             status: MemberStatusType.Active,
-            lastUpdate: new Date(),
+            lastUpdate: brightDateNow(),
             reputation: 0,
             name: entry.username,
             email: entry.email,

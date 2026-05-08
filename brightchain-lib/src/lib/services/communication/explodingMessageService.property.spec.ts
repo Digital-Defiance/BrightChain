@@ -9,6 +9,7 @@
 
 import * as fc from 'fast-check';
 import { ICommunicationMessage } from '../../interfaces/communication';
+import { brightDateNow } from '../../utils/brightDateConversions';
 import { ExplodingMessageService } from './explodingMessageService';
 
 // ─── Test helpers ───────────────────────────────────────────────────────────
@@ -22,7 +23,7 @@ function createMessage(
     contextId: 'conv-pbt',
     senderId: 'member-pbt',
     encryptedContent: 'encrypted-content',
-    createdAt: new Date(),
+    createdAt: 9000,
     editHistory: [],
     deleted: false,
     pinned: false,
@@ -41,7 +42,7 @@ describe('ExplodingMessageService - Property Tests', () => {
       fc.assert(
         fc.property(fc.integer({ min: 1, max: 1_000_000 }), (msInPast) => {
           const message = createMessage({
-            expiresAt: new Date(Date.now() - msInPast),
+            expiresAt: brightDateNow() - msInPast / 86400000,
           });
 
           const result = ExplodingMessageService.checkExpiration(message);
@@ -57,7 +58,7 @@ describe('ExplodingMessageService - Property Tests', () => {
           fc.integer({ min: 1000, max: 10_000_000 }),
           (msInFuture) => {
             const message = createMessage({
-              expiresAt: new Date(Date.now() + msInFuture),
+              expiresAt: brightDateNow() + msInFuture / 86400000,
             });
 
             const result = ExplodingMessageService.checkExpiration(message);
@@ -74,7 +75,7 @@ describe('ExplodingMessageService - Property Tests', () => {
           fc.integer({ min: -1_000_000, max: 10_000_000 }),
           (msOffset) => {
             const message = createMessage({
-              expiresAt: new Date(Date.now() + msOffset),
+              expiresAt: brightDateNow() + msOffset / 86400000,
             });
 
             const remaining = ExplodingMessageService.getRemainingTime(message);
@@ -91,7 +92,7 @@ describe('ExplodingMessageService - Property Tests', () => {
           fc.integer({ min: 1000, max: 10_000_000 }),
           (msInFuture) => {
             const message = createMessage({
-              expiresAt: new Date(Date.now() + msInFuture),
+              expiresAt: brightDateNow() + msInFuture / 86400000,
               exploded: true,
             });
 

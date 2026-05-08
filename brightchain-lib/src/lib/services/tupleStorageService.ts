@@ -25,6 +25,7 @@ import { TranslatableBrightChainError } from '../errors/translatableBrightChainE
 import { BlockStoreOptions } from '../interfaces/storage/blockMetadata';
 import { IBlockStore } from '../interfaces/storage/blockStore';
 import { Checksum } from '../types/checksum';
+import { brightDateNow } from '../utils/brightDateConversions';
 
 /**
  * Result of storing data as a TUPLE
@@ -85,9 +86,9 @@ export class TupleStorageService {
     }
 
     // Store all three blocks
-    const dataBlock = new RawDataBlock(blockSize, storedData, new Date());
-    const rand1Block = new RawDataBlock(blockSize, randomizer1, new Date());
-    const rand2Block = new RawDataBlock(blockSize, randomizer2, new Date());
+    const dataBlock = new RawDataBlock(blockSize, storedData, brightDateNow());
+    const rand1Block = new RawDataBlock(blockSize, randomizer1, brightDateNow());
+    const rand2Block = new RawDataBlock(blockSize, randomizer2, brightDateNow());
 
     await this.blockStore.setData(dataBlock, options);
     await this.blockStore.setData(rand1Block, options);

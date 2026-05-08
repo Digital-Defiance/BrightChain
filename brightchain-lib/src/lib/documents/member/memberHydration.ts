@@ -11,6 +11,8 @@ import { IHydrationSchema } from '../../interfaces/document/base';
 import { IMemberHydratedData } from '../../interfaces/member/hydrated';
 import { IMemberStorageData } from '../../interfaces/member/storage';
 import { ServiceProvider } from '../../services/service.provider';
+import { normalizeToBrightDate } from '../../utils/brightDateConversions';
+import { brightDateToISO } from '../../utils/brightDateConversions';
 
 /**
  * Hydration schema for converting between storage and hydrated member formats
@@ -43,8 +45,8 @@ export const memberHydrationSchema = <
       publicKey,
       votingPublicKey,
       creatorId,
-      dateCreated: new Date(storage.dateCreated),
-      dateUpdated: new Date(storage.dateUpdated),
+      dateCreated: normalizeToBrightDate(storage.dateCreated),
+      dateUpdated: normalizeToBrightDate(storage.dateUpdated),
     };
   },
 
@@ -83,8 +85,8 @@ export const memberHydrationSchema = <
       publicKey: uint8ArrayToBase64(hydrated.publicKey),
       votingPublicKey: votingPublicKeyHex,
       creatorId: creatorIdString,
-      dateCreated: hydrated.dateCreated.toISOString(),
-      dateUpdated: hydrated.dateUpdated.toISOString(),
+      dateCreated: brightDateToISO(hydrated.dateCreated),
+      dateUpdated: brightDateToISO(hydrated.dateUpdated),
     };
   },
 });

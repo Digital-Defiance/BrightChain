@@ -15,6 +15,7 @@ import type {
   IPaginatedResult,
   IPaginationOptions,
 } from '../interfaces/friends';
+import { brightDateNow } from '../utils/brightDateConversions';
 
 describe('Friends system types', () => {
   // ── Enum value checks ──────────────────────────────────────────────
@@ -171,7 +172,7 @@ describe('Friends system types', () => {
         requesterId: 'user-a',
         recipientId: 'user-b',
         status: FriendRequestStatus.Pending,
-        createdAt: new Date().toISOString(),
+        createdAt: brightDateNow(),
       };
       expect(request.status).toBe(FriendRequestStatus.Pending);
       expect(request.message).toBeUndefined();
@@ -184,7 +185,7 @@ describe('Friends system types', () => {
         recipientId: 'user-b',
         message: 'Hey, let us be friends!',
         status: FriendRequestStatus.Pending,
-        createdAt: new Date().toISOString(),
+        createdAt: brightDateNow(),
       };
       expect(request.message).toBe('Hey, let us be friends!');
     });

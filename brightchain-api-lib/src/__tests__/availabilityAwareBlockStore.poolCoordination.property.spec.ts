@@ -43,6 +43,7 @@ import {
   initializeBrightChain,
   IPooledBlockStore,
   IReconciliationService,
+  brightDateNow,
   ListOptions,
   LocationQueryResult,
   MessageDeliveryMetadata,
@@ -219,8 +220,8 @@ class MockPooledBlockStore implements IPooledBlockStore {
       poolId: pool,
       blockCount: blocks?.size ?? 0,
       totalBytes: 0,
-      createdAt: new Date(),
-      lastAccessedAt: new Date(),
+      createdAt: brightDateNow(),
+      lastAccessedAt: brightDateNow(),
     };
   }
 
@@ -295,7 +296,7 @@ class MockPooledBlockStore implements IPooledBlockStore {
     const keyHex = key.toHex();
     const data = this.blocks.get(keyHex);
     if (!data) throw new StoreError(StoreErrorType.KeyNotFound);
-    return new RawDataBlock(BlockSize.Small, data, new Date(), key);
+    return new RawDataBlock(BlockSize.Small, data, brightDateNow(), key);
   }
 
   async setData(
@@ -343,12 +344,12 @@ class MockPooledBlockStore implements IPooledBlockStore {
       if (blockIds.has(keyHex)) {
         return {
           blockId: keyHex,
-          createdAt: new Date(),
+          createdAt: brightDateNow(),
           expiresAt: null,
           durabilityLevel: DurabilityLevel.Standard,
           parityBlockIds: [],
           accessCount: 0,
-          lastAccessedAt: new Date(),
+          lastAccessedAt: brightDateNow(),
           replicationStatus: ReplicationStatus.Pending,
           targetReplicationFactor: 0,
           replicaNodeIds: [],
@@ -531,7 +532,7 @@ class MockPoolAwareBlockRegistry implements IBlockRegistry {
     return {
       nodeId: 'test-node',
       blockIds: this.getLocalBlockIds(),
-      generatedAt: new Date(),
+      generatedAt: 9000,
       checksum: 'test-checksum',
     };
   }
@@ -554,7 +555,7 @@ class MockPoolAwareBlockRegistry implements IBlockRegistry {
     return {
       nodeId: 'test-node',
       pools,
-      generatedAt: new Date(),
+      generatedAt: 9000,
       checksum: 'test-checksum',
     };
   }
@@ -1141,7 +1142,7 @@ describe('AvailabilityAwareBlockStore Pool Coordination Property Tests', () => {
       const data = new Uint8Array(BlockSize.Small);
       crypto.getRandomValues(data);
       const checksum = checksumService.calculateChecksum(data);
-      return new RawDataBlock(BlockSize.Small, data, new Date(), checksum);
+      return new RawDataBlock(BlockSize.Small, data, brightDateNow(), checksum);
     }
 
     it('should throw PoolDeletionTombstoneError when storing a block in a tombstoned pool', async () => {
@@ -1155,12 +1156,12 @@ describe('AvailabilityAwareBlockStore Pool Coordination Property Tests', () => {
           // Pre-seed the block's metadata so getMetadata returns poolId
           innerStore.metadataOverrides.set(blockId, {
             blockId,
-            createdAt: new Date(),
+            createdAt: brightDateNow(),
             expiresAt: null,
             durabilityLevel: DurabilityLevel.Standard,
             parityBlockIds: [],
             accessCount: 0,
-            lastAccessedAt: new Date(),
+            lastAccessedAt: brightDateNow(),
             replicationStatus: ReplicationStatus.Pending,
             targetReplicationFactor: 0,
             replicaNodeIds: [],
@@ -1195,12 +1196,12 @@ describe('AvailabilityAwareBlockStore Pool Coordination Property Tests', () => {
           // Pre-seed the block's metadata so getMetadata returns poolId
           innerStore.metadataOverrides.set(blockId, {
             blockId,
-            createdAt: new Date(),
+            createdAt: brightDateNow(),
             expiresAt: null,
             durabilityLevel: DurabilityLevel.Standard,
             parityBlockIds: [],
             accessCount: 0,
-            lastAccessedAt: new Date(),
+            lastAccessedAt: brightDateNow(),
             replicationStatus: ReplicationStatus.Pending,
             targetReplicationFactor: 0,
             replicaNodeIds: [],
@@ -1233,12 +1234,12 @@ describe('AvailabilityAwareBlockStore Pool Coordination Property Tests', () => {
           // Pre-seed the block's metadata so getMetadata returns poolId
           innerStore.metadataOverrides.set(blockId, {
             blockId,
-            createdAt: new Date(),
+            createdAt: brightDateNow(),
             expiresAt: null,
             durabilityLevel: DurabilityLevel.Standard,
             parityBlockIds: [],
             accessCount: 0,
-            lastAccessedAt: new Date(),
+            lastAccessedAt: brightDateNow(),
             replicationStatus: ReplicationStatus.Pending,
             targetReplicationFactor: 0,
             replicaNodeIds: [],
@@ -1284,7 +1285,7 @@ describe('AvailabilityAwareBlockStore Pool Coordination Property Tests', () => {
       const data = new Uint8Array(BlockSize.Small);
       crypto.getRandomValues(data);
       const checksum = checksumService.calculateChecksum(data);
-      return new RawDataBlock(BlockSize.Small, data, new Date(), checksum);
+      return new RawDataBlock(BlockSize.Small, data, brightDateNow(), checksum);
     }
 
     it('should set poolId on the location record when storing a block with pool context', async () => {
@@ -1299,12 +1300,12 @@ describe('AvailabilityAwareBlockStore Pool Coordination Property Tests', () => {
           // Pre-seed metadata so getMetadata returns the poolId
           innerStore.metadataOverrides.set(blockId, {
             blockId,
-            createdAt: new Date(),
+            createdAt: brightDateNow(),
             expiresAt: null,
             durabilityLevel: DurabilityLevel.Standard,
             parityBlockIds: [],
             accessCount: 0,
-            lastAccessedAt: new Date(),
+            lastAccessedAt: brightDateNow(),
             replicationStatus: ReplicationStatus.Pending,
             targetReplicationFactor: 0,
             replicaNodeIds: [],
@@ -1372,12 +1373,12 @@ describe('AvailabilityAwareBlockStore Pool Coordination Property Tests', () => {
             // Pre-seed metadata with the pool context
             innerStore.metadataOverrides.set(blockId, {
               blockId,
-              createdAt: new Date(),
+              createdAt: brightDateNow(),
               expiresAt: null,
               durabilityLevel: DurabilityLevel.Standard,
               parityBlockIds: [],
               accessCount: 0,
-              lastAccessedAt: new Date(),
+              lastAccessedAt: brightDateNow(),
               replicationStatus: ReplicationStatus.Pending,
               targetReplicationFactor: 0,
               replicaNodeIds: [],
@@ -1435,7 +1436,7 @@ describe('AvailabilityAwareBlockStore Pool Coordination Property Tests', () => {
       const data = new Uint8Array(BlockSize.Small);
       crypto.getRandomValues(data);
       const checksum = checksumService.calculateChecksum(data);
-      return new RawDataBlock(BlockSize.Small, data, new Date(), checksum);
+      return new RawDataBlock(BlockSize.Small, data, brightDateNow(), checksum);
     }
 
     it('should announce the block with the correct poolId so receivers store it in the right pool', async () => {
@@ -1450,12 +1451,12 @@ describe('AvailabilityAwareBlockStore Pool Coordination Property Tests', () => {
           // Pre-seed metadata so getMetadata returns the poolId
           innerStore.metadataOverrides.set(blockId, {
             blockId,
-            createdAt: new Date(),
+            createdAt: brightDateNow(),
             expiresAt: null,
             durabilityLevel: DurabilityLevel.Standard,
             parityBlockIds: [],
             accessCount: 0,
-            lastAccessedAt: new Date(),
+            lastAccessedAt: brightDateNow(),
             replicationStatus: ReplicationStatus.Pending,
             targetReplicationFactor: 0,
             replicaNodeIds: [],
@@ -1519,12 +1520,12 @@ describe('AvailabilityAwareBlockStore Pool Coordination Property Tests', () => {
 
             innerStore.metadataOverrides.set(blockId, {
               blockId,
-              createdAt: new Date(),
+              createdAt: brightDateNow(),
               expiresAt: null,
               durabilityLevel: DurabilityLevel.Standard,
               parityBlockIds: [],
               accessCount: 0,
-              lastAccessedAt: new Date(),
+              lastAccessedAt: brightDateNow(),
               replicationStatus: ReplicationStatus.Pending,
               targetReplicationFactor: 0,
               replicaNodeIds: [],
@@ -1619,7 +1620,7 @@ describe('AvailabilityAwareBlockStore Pool Coordination Property Tests', () => {
       const data = new Uint8Array(BlockSize.Small);
       crypto.getRandomValues(data);
       const checksum = checksumService.calculateChecksum(data);
-      return new RawDataBlock(BlockSize.Small, data, new Date(), checksum);
+      return new RawDataBlock(BlockSize.Small, data, brightDateNow(), checksum);
     }
 
     it('should count only nodes with matching poolId toward pool replication', async () => {
@@ -1636,12 +1637,12 @@ describe('AvailabilityAwareBlockStore Pool Coordination Property Tests', () => {
           // so the block is considered under-replicated
           innerStore.metadataOverrides.set(blockId, {
             blockId,
-            createdAt: new Date(),
+            createdAt: brightDateNow(),
             expiresAt: null,
             durabilityLevel: DurabilityLevel.Standard,
             parityBlockIds: [],
             accessCount: 0,
-            lastAccessedAt: new Date(),
+            lastAccessedAt: brightDateNow(),
             replicationStatus: ReplicationStatus.Pending,
             targetReplicationFactor: scenario.targetReplicationFactor,
             replicaNodeIds: [],
@@ -1658,7 +1659,7 @@ describe('AvailabilityAwareBlockStore Pool Coordination Property Tests', () => {
           for (const nodeId of scenario.targetPoolNodes) {
             await availabilityService.updateLocation(blockId, {
               nodeId,
-              lastSeen: new Date(),
+              lastSeen: brightDateNow(),
               isAuthoritative: false,
               poolId: scenario.targetPool,
             });
@@ -1674,7 +1675,7 @@ describe('AvailabilityAwareBlockStore Pool Coordination Property Tests', () => {
             const compositeNodeId = `${nodeId}-other-${i}`;
             await availabilityService.updateLocation(blockId, {
               nodeId: compositeNodeId,
-              lastSeen: new Date(),
+              lastSeen: brightDateNow(),
               isAuthoritative: false,
               poolId: otherPool,
             });
@@ -1738,12 +1739,12 @@ describe('AvailabilityAwareBlockStore Pool Coordination Property Tests', () => {
 
           innerStore.metadataOverrides.set(blockId, {
             blockId,
-            createdAt: new Date(),
+            createdAt: brightDateNow(),
             expiresAt: null,
             durabilityLevel: DurabilityLevel.Standard,
             parityBlockIds: [],
             accessCount: 0,
-            lastAccessedAt: new Date(),
+            lastAccessedAt: brightDateNow(),
             replicationStatus: ReplicationStatus.Pending,
             targetReplicationFactor: targetFactor,
             replicaNodeIds: [],
@@ -1758,7 +1759,7 @@ describe('AvailabilityAwareBlockStore Pool Coordination Property Tests', () => {
           for (const nodeId of scenario.targetPoolNodes) {
             await availabilityService.updateLocation(blockId, {
               nodeId,
-              lastSeen: new Date(),
+              lastSeen: brightDateNow(),
               isAuthoritative: false,
               poolId: scenario.targetPool,
             });
@@ -1772,7 +1773,7 @@ describe('AvailabilityAwareBlockStore Pool Coordination Property Tests', () => {
             const compositeNodeId = `${nodeId}-other-${i}`;
             await availabilityService.updateLocation(blockId, {
               nodeId: compositeNodeId,
-              lastSeen: new Date(),
+              lastSeen: brightDateNow(),
               isAuthoritative: false,
               poolId: otherPool,
             });
@@ -1813,12 +1814,12 @@ describe('AvailabilityAwareBlockStore Pool Coordination Property Tests', () => {
 
             innerStore.metadataOverrides.set(blockId, {
               blockId,
-              createdAt: new Date(),
+              createdAt: brightDateNow(),
               expiresAt: null,
               durabilityLevel: DurabilityLevel.Standard,
               parityBlockIds: [],
               accessCount: 0,
-              lastAccessedAt: new Date(),
+              lastAccessedAt: brightDateNow(),
               replicationStatus: ReplicationStatus.Pending,
               targetReplicationFactor: targetFactor,
               replicaNodeIds: [],
@@ -1834,14 +1835,14 @@ describe('AvailabilityAwareBlockStore Pool Coordination Property Tests', () => {
             // uses distinct nodes)
             await availabilityService.updateLocation(blockId, {
               nodeId,
-              lastSeen: new Date(),
+              lastSeen: brightDateNow(),
               isAuthoritative: false,
               poolId,
             });
             // Update again with a newer timestamp — should overwrite, not add
             await availabilityService.updateLocation(blockId, {
               nodeId,
-              lastSeen: new Date(),
+              lastSeen: brightDateNow(),
               isAuthoritative: true,
               poolId,
             });

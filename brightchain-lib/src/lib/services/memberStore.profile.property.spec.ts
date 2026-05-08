@@ -38,6 +38,8 @@ import {
 } from '../interfaces/member/profileStorage';
 import { MemberStore } from './memberStore';
 import { ServiceProvider } from './service.provider';
+import { brightDateNow } from '../utils/brightDateConversions';
+import type { BrightDateTimestamp } from '../types/brightDateTimestamp';
 
 describe('MemberStore Profile CBL Round-Trip Property Tests', () => {
   let blockStore: ReturnType<typeof BlockStoreFactory.createMemoryStore>;
@@ -108,9 +110,9 @@ describe('MemberStore Profile CBL Round-Trip Property Tests', () => {
                 reputation,
                 storageQuota,
                 storageUsed,
-                lastActive: new Date(),
-                dateCreated: new Date(),
-                dateUpdated: new Date(),
+                lastActive: brightDateNow(),
+                dateCreated: brightDateNow(),
+                dateUpdated: brightDateNow(),
               };
 
             const schema =
@@ -128,14 +130,14 @@ describe('MemberStore Profile CBL Round-Trip Property Tests', () => {
             expect(roundTripped.reputation).toBe(originalData.reputation);
             expect(roundTripped.storageQuota).toBe(originalData.storageQuota);
             expect(roundTripped.storageUsed).toBe(originalData.storageUsed);
-            expect(roundTripped.dateCreated.getTime()).toBe(
-              originalData.dateCreated.getTime(),
+            expect(roundTripped.dateCreated).toBe(
+              originalData.dateCreated,
             );
-            expect(roundTripped.dateUpdated.getTime()).toBe(
-              originalData.dateUpdated.getTime(),
+            expect(roundTripped.dateUpdated).toBe(
+              originalData.dateUpdated,
             );
-            expect(roundTripped.lastActive.getTime()).toBe(
-              originalData.lastActive.getTime(),
+            expect(roundTripped.lastActive).toBe(
+              originalData.lastActive,
             );
 
             return true;
@@ -187,7 +189,7 @@ describe('MemberStore Profile CBL Round-Trip Property Tests', () => {
             const activityLog = Array.from(
               { length: activityCount },
               (_, i) => ({
-                timestamp: new Date(Date.now() - i * 1000),
+                timestamp: brightDateNow() - i * (1 / 86400), // subtract i seconds in BrightDate units
                 action: `action${i}`,
                 details: { index: i },
                 metadata: { source: 'test' },
@@ -205,8 +207,8 @@ describe('MemberStore Profile CBL Round-Trip Property Tests', () => {
                   preferredRegions: ['us-east', 'eu-west'],
                 },
                 activityLog,
-                dateCreated: new Date(),
-                dateUpdated: new Date(),
+                dateCreated: brightDateNow(),
+                dateUpdated: brightDateNow(),
               };
 
             const schema =
@@ -225,11 +227,11 @@ describe('MemberStore Profile CBL Round-Trip Property Tests', () => {
             expect(roundTripped.settings.autoReplication).toBe(true);
             expect(roundTripped.settings.minRedundancy).toBe(3);
             expect(roundTripped.activityLog).toHaveLength(activityCount);
-            expect(roundTripped.dateCreated.getTime()).toBe(
-              originalData.dateCreated.getTime(),
+            expect(roundTripped.dateCreated).toBe(
+              originalData.dateCreated,
             );
-            expect(roundTripped.dateUpdated.getTime()).toBe(
-              originalData.dateUpdated.getTime(),
+            expect(roundTripped.dateUpdated).toBe(
+              originalData.dateUpdated,
             );
 
             return true;
@@ -262,9 +264,9 @@ describe('MemberStore Profile CBL Round-Trip Property Tests', () => {
                 reputation,
                 storageQuota: BigInt(1024 * 1024 * 100),
                 storageUsed: BigInt(0),
-                lastActive: new Date(),
-                dateCreated: new Date(),
-                dateUpdated: new Date(),
+                lastActive: brightDateNow(),
+                dateCreated: brightDateNow(),
+                dateUpdated: brightDateNow(),
               };
 
             const privateProfileData: IPrivateMemberProfileHydratedData<GuidV4Uint8Array> =
@@ -274,8 +276,8 @@ describe('MemberStore Profile CBL Round-Trip Property Tests', () => {
                 blockedPeers: [],
                 settings: { autoReplication: true },
                 activityLog: [],
-                dateCreated: new Date(),
-                dateUpdated: new Date(),
+                dateCreated: brightDateNow(),
+                dateUpdated: brightDateNow(),
               };
 
             // Dehydrate to storage format
@@ -332,7 +334,7 @@ describe('MemberStore Profile CBL Round-Trip Property Tests', () => {
             const publicBlock = new RawDataBlock(
               BlockSize.Small,
               publicData,
-              new Date(),
+              brightDateNow(),
               publicChecksum,
               BlockType.RawData,
               BlockDataType.PublicMemberData,
@@ -341,7 +343,7 @@ describe('MemberStore Profile CBL Round-Trip Property Tests', () => {
             const privateBlock = new RawDataBlock(
               BlockSize.Small,
               privateData,
-              new Date(),
+              brightDateNow(),
               privateChecksum,
               BlockType.RawData,
               BlockDataType.PrivateMemberData,
@@ -357,7 +359,7 @@ describe('MemberStore Profile CBL Round-Trip Property Tests', () => {
             const dummyIdentityBlock = new RawDataBlock(
               BlockSize.Small,
               dummyIdentityData,
-              new Date(),
+              brightDateNow(),
               dummyIdentityChecksum,
               BlockType.RawData,
               BlockDataType.PublicMemberData,
@@ -373,7 +375,7 @@ describe('MemberStore Profile CBL Round-Trip Property Tests', () => {
               privateProfileCBL: privateChecksum,
               type: MemberType.User,
               status: MemberStatusType.Active,
-              lastUpdate: new Date(),
+              lastUpdate: brightDateNow(),
               reputation: 0,
             });
 

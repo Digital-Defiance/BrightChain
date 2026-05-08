@@ -12,6 +12,7 @@ import {
   CommunicationEventType,
   PresenceStatus,
 } from '../enumerations/communication';
+import type { BrightDateTimestamp } from '../types/brightDateTimestamp';
 
 /**
  * Context type for communication events — identifies whether the event
@@ -24,7 +25,7 @@ export type CommunicationContextType = 'conversation' | 'group' | 'channel';
  */
 export interface ICommunicationEventBase {
   type: CommunicationEventType;
-  timestamp: Date;
+  timestamp: BrightDateTimestamp;
   contextType: CommunicationContextType;
   contextId: string;
 }

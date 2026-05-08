@@ -11,6 +11,7 @@
 import fc from 'fast-check';
 import { DefaultRole } from '../../enumerations/communication';
 import { ICommunicationMessage } from '../../interfaces/communication';
+import { brightDateNow } from '../../utils/brightDateConversions';
 import {
   IPinnableContext,
   MessageAuthorError,
@@ -62,7 +63,7 @@ function makeMessage(
     contextId,
     senderId,
     encryptedContent: content,
-    createdAt: new Date(),
+    createdAt: 9000,
     editHistory: [],
     deleted: false,
     pinned: false,
@@ -104,7 +105,7 @@ describe('Feature: api-lib-to-lib-migration, Property 18: Message Edit History P
           );
           const messages = [message];
 
-          const before = Date.now();
+          const before = brightDateNow();
           const result = service.editMessage(
             messages,
             messageId,
@@ -113,7 +114,7 @@ describe('Feature: api-lib-to-lib-migration, Property 18: Message Edit History P
             (id) => new MessageNotFoundError(id),
             () => new MessageAuthorError(),
           );
-          const after = Date.now();
+          const after = brightDateNow();
 
           // New content is set
           expect(result.encryptedContent).toBe(newContent);
@@ -124,8 +125,8 @@ describe('Feature: api-lib-to-lib-migration, Property 18: Message Edit History P
 
           // editedAt is set to a recent timestamp
           expect(result.editedAt).toBeDefined();
-          expect(result.editedAt!.getTime()).toBeGreaterThanOrEqual(before);
-          expect(result.editedAt!.getTime()).toBeLessThanOrEqual(after);
+          expect(result.editedAt!).toBeGreaterThanOrEqual(before);
+          expect(result.editedAt!).toBeLessThanOrEqual(after);
         },
       ),
       { numRuns: 100 },
@@ -597,7 +598,7 @@ describe('Feature: api-lib-to-lib-migration, Property 21: Message Reaction Manag
           expect(reaction).toBeDefined();
           expect(reaction!.emoji).toBe(emoji);
           expect(reaction!.memberId).toBe(memberId);
-          expect(reaction!.createdAt).toBeInstanceOf(Date);
+          expect(reaction!.createdAt).toBeGreaterThan(0);
         },
       ),
       { numRuns: 100 },

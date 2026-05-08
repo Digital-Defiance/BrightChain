@@ -34,6 +34,8 @@ import {
 } from '../../interfaces/messaging/mimePart';
 import { EmailParser } from './emailParser';
 import { EmailSerializer } from './emailSerializer';
+import { brightDateNow, normalizeToBrightDate } from '../../utils/brightDateConversions';
+import type { BrightDateTimestamp } from '../../types/brightDateTimestamp';
 
 /** Cast a test string to BlockId without validation — for test data only. */
 const bid = (s: string) => s as unknown as BlockId;
@@ -142,7 +144,7 @@ const arbMessageId: fc.Arbitrary<string> = fc
  * Generator for a valid date (within a reasonable range).
  * Truncates to seconds since email dates don't preserve milliseconds.
  */
-const arbDate: fc.Arbitrary<Date> = fc
+const arbDate: fc.Arbitrary<BrightDateTimestamp> = fc
   .date({
     min: new Date('2000-01-01T00:00:00Z'),
     max: new Date('2030-12-31T23:59:59Z'),
@@ -150,7 +152,8 @@ const arbDate: fc.Arbitrary<Date> = fc
   .filter((d: Date) => !isNaN(d.getTime()))
   .map((d: Date) => {
     // Truncate to seconds (email dates don't preserve milliseconds)
-    return new Date(Math.floor(d.getTime() / 1000) * 1000);
+    const truncated = new Date(Math.floor(d.getTime() / 1000) * 1000);
+    return normalizeToBrightDate(truncated);
   });
 
 /**
@@ -325,7 +328,7 @@ const arbEmailMetadata: fc.Arbitrary<IEmailMetadata> = fc
   )
   .map(
     ([from, to, cc, messageId, date, subject, body, inReplyTo, references]) => {
-      const now = new Date();
+      const now = brightDateNow();
       const metadata: IEmailMetadata = {
         // IBlockMetadata fields
         blockId: bid(messageId),
@@ -347,7 +350,7 @@ const arbEmailMetadata: fc.Arbitrary<IEmailMetadata> = fc
         recipients: to.map((r: IMailbox) => r.address),
         priority: MessagePriority.NORMAL,
         deliveryStatus: new Map<string, DeliveryStatus>(),
-        acknowledgments: new Map<string, Date>(),
+        acknowledgments: new Map<string, number>(),
         encryptionScheme: MessageEncryptionScheme.NONE,
         isCBL: false,
 
@@ -507,11 +510,10 @@ describe('Email Round-Trip Property Tests', () => {
           );
 
           // 5. date is equivalent (same timestamp, within 1 second tolerance)
-          const originalTimestamp = Math.floor(original.date.getTime() / 1000);
-          const parsedTimestamp = Math.floor(parsed.date.getTime() / 1000);
+          // BrightDateTimestamp is in decimal days; 1 second = 1/86400 days ≈ 0.0000116
           expect(
-            Math.abs(originalTimestamp - parsedTimestamp),
-          ).toBeLessThanOrEqual(1);
+            Math.abs(original.date - parsed.date),
+          ).toBeLessThanOrEqual(1 / 86400);
 
           // 6. cc addresses match (if present)
           if (original.cc && original.cc.length > 0) {
@@ -558,11 +560,11 @@ describe('Email Round-Trip Property Tests', () => {
             from: IMailbox,
             to: IMailbox[],
             messageId: string,
-            date: Date,
+            date: BrightDateTimestamp,
             subject: string | undefined,
             body: { parts: IMimePart[]; contentType: IContentType },
           ) => {
-            const now = new Date();
+            const now = brightDateNow();
             const original: IEmailMetadata = {
               blockId: bid(messageId),
               createdAt: now,
@@ -581,7 +583,7 @@ describe('Email Round-Trip Property Tests', () => {
               recipients: to.map((r: IMailbox) => r.address),
               priority: MessagePriority.NORMAL,
               deliveryStatus: new Map<string, DeliveryStatus>(),
-              acknowledgments: new Map<string, Date>(),
+              acknowledgments: new Map<string, number>(),
               encryptionScheme: MessageEncryptionScheme.NONE,
               isCBL: false,
               from,
@@ -643,12 +645,12 @@ describe('Email Round-Trip Property Tests', () => {
             from: IMailbox,
             to: IMailbox[],
             messageId: string,
-            date: Date,
+            date: BrightDateTimestamp,
             inReplyTo: string,
             references: string[],
             body: { parts: IMimePart[]; contentType: IContentType },
           ) => {
-            const now = new Date();
+            const now = brightDateNow();
             const original: IEmailMetadata = {
               blockId: bid(messageId),
               createdAt: now,
@@ -667,7 +669,7 @@ describe('Email Round-Trip Property Tests', () => {
               recipients: to.map((r: IMailbox) => r.address),
               priority: MessagePriority.NORMAL,
               deliveryStatus: new Map<string, DeliveryStatus>(),
-              acknowledgments: new Map<string, Date>(),
+              acknowledgments: new Map<string, number>(),
               encryptionScheme: MessageEncryptionScheme.NONE,
               isCBL: false,
               from,

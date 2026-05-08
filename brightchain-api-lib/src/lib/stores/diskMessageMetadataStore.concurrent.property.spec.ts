@@ -1,5 +1,6 @@
 import {
   BlockSize,
+  brightDateNow,
   DeliveryStatus,
   DurabilityLevel,
   IMessageMetadata,
@@ -37,12 +38,12 @@ describe('DiskMessageMetadataStore - Concurrent Access Property Tests', () => {
     recipients: string[],
   ): IMessageMetadata => ({
     blockId,
-    createdAt: new Date(),
+    createdAt: brightDateNow(),
     expiresAt: null,
     durabilityLevel: DurabilityLevel.Standard,
     parityBlockIds: [],
     accessCount: 0,
-    lastAccessedAt: new Date(),
+    lastAccessedAt: brightDateNow(),
     replicationStatus: ReplicationStatus.Pending,
     targetReplicationFactor: 3,
     replicaNodeIds: [],
@@ -185,7 +186,7 @@ describe('DiskMessageMetadataStore - Concurrent Access Property Tests', () => {
             );
             await iterStore.storeMessageMetadata(metadata);
 
-            const ackTime = new Date();
+            const ackTime = brightDateNow();
             // Update sequentially to avoid race conditions
             for (const recipientId of uniqueRecipients) {
               await iterStore.recordAcknowledgment(

@@ -1,4 +1,5 @@
 import { PlatformID } from '@digitaldefiance/ecies-lib';
+import type { BrightDateTimestamp } from '../../types/brightDateTimestamp';
 import { EntryPropertyRecord } from '../brightpass';
 import { IExtendedConstituentBlockListBlock } from './extendedCbl';
 
@@ -7,8 +8,8 @@ export interface IVCBLBlock<TID extends PlatformID = Uint8Array>
   get vaultName(): string;
   get vaultNameLength(): number;
   get ownerMemberId(): TID;
-  get vaultCreatedAt(): Date;
-  get vaultModifiedAt(): Date;
+  get vaultCreatedAt(): BrightDateTimestamp;
+  get vaultModifiedAt(): BrightDateTimestamp;
   get sharedMemberCount(): number;
   get sharedMemberIds(): TID[];
   get propertyRecordCount(): number;

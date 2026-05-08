@@ -10,6 +10,8 @@
  * Requirements: 1.1, 1.2
  */
 
+import type { BrightDateTimestamp } from '../../types/brightDateTimestamp';
+
 /**
  * Represents a category within a Server for organizing channels.
  * Categories group related channels together (e.g., "Text Channels", "Voice Channels").
@@ -37,8 +39,8 @@ export interface IServer<TId = string, TData = string> {
   memberIds: TId[];
   channelIds: TId[];
   categories: IServerCategory<TId>[];
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: BrightDateTimestamp;
+  updatedAt: BrightDateTimestamp;
 }
 
 /**
@@ -48,8 +50,8 @@ export interface IServerInviteToken<TId = string> {
   token: string;
   serverId: TId;
   createdBy: TId;
-  createdAt: Date;
-  expiresAt?: Date;
+  createdAt: BrightDateTimestamp;
+  expiresAt?: BrightDateTimestamp;
   maxUses?: number;
   currentUses: number;
 }

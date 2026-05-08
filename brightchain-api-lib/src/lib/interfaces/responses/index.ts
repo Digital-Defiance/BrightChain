@@ -1,4 +1,5 @@
 export type * from './api-admin-dashboard-response';
+export type * from './api-brightdate-now-response';
 export type * from './api-backup-codes-response';
 export type * from './api-challenge-response';
 export type * from './api-code-count-response';

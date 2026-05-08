@@ -135,3 +135,13 @@ export {
   toBrightDatePrefixed,
   toBrightDateString,
 } from './lib/utils/brightDateFormatting';
+
+// BrightDate conversion utilities (browser-safe)
+export {
+  brightDateNow,
+  brightDateToDate,
+  brightDateToISO,
+  dateToBrightDate,
+  isoToBrightDate,
+  normalizeToBrightDate,
+} from './lib/utils/brightDateConversions';

@@ -15,6 +15,7 @@ import type {
   IWriteProof,
 } from '@brightchain/brightchain-lib';
 import {
+  brightDateNow,
   createWriteProofPayload,
   InMemoryHeadRegistry,
   WriteAuthorizationError,
@@ -106,8 +107,8 @@ function makeAclDocument(
     aclAdministrators: overrides.aclAdministrators ?? [makePublicKey(0xff)],
     scope: overrides.scope,
     version: overrides.version ?? 1,
-    createdAt: overrides.createdAt ?? new Date(),
-    updatedAt: overrides.updatedAt ?? new Date(),
+    createdAt: overrides.createdAt ?? 9000,
+    updatedAt: overrides.updatedAt ?? 9000,
     creatorPublicKey: overrides.creatorPublicKey ?? makePublicKey(0x01),
     creatorSignature: overrides.creatorSignature ?? new Uint8Array(64),
     previousVersionBlockId: overrides.previousVersionBlockId,
@@ -279,7 +280,7 @@ describe('Feature: brightdb-write-acls, Property 4: Restricted Mode Write Author
                   dbName,
                   collName,
                   blockId,
-                  new Date(Date.now() + 10000),
+                  brightDateNow() + 0.116,
                   proof,
                 );
                 break;
@@ -344,7 +345,7 @@ describe('Feature: brightdb-write-acls, Property 4: Restricted Mode Write Author
                   dbName,
                   collName,
                   blockId,
-                  new Date(Date.now() + 10000),
+                  brightDateNow() + 0.116,
                 );
                 break;
             }
@@ -409,7 +410,7 @@ describe('Feature: brightdb-write-acls, Property 5: Open Mode Accepts All Writes
                   dbName,
                   collName,
                   blockId,
-                  new Date(Date.now() + 10000),
+                  brightDateNow() + 0.116,
                 );
                 break;
             }
@@ -543,7 +544,7 @@ describe('Feature: brightdb-write-acls, Property 6: Owner Only Mode Restricts to
                   dbName,
                   collName,
                   blockId,
-                  new Date(Date.now() + 10000),
+                  brightDateNow() + 0.116,
                   proof,
                 );
                 break;

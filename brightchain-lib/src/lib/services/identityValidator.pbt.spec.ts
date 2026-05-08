@@ -29,6 +29,7 @@ import { IBrightTrustMember } from '../interfaces/services/brightTrustService';
 import { IdentityValidator } from './identityValidator';
 import { MembershipProofService } from './membershipProofService';
 import { ServiceProvider } from './service.provider';
+import { brightDateNow } from '../utils/brightDateConversions';
 
 jest.setTimeout(120000);
 
@@ -179,8 +180,8 @@ describe('IdentityValidator Property-Based Tests', () => {
               publicKey: claimed.member.publicKey,
               metadata: { name: claimed.member.name },
               isActive: true,
-              createdAt: new Date(),
-              updatedAt: new Date(),
+              createdAt: brightDateNow(),
+              updatedAt: brightDateNow(),
             });
 
             const db = createMockDatabase(memberLookup);
@@ -242,8 +243,8 @@ describe('IdentityValidator Property-Based Tests', () => {
               publicKey: m.member.publicKey,
               metadata: { name: m.member.name },
               isActive: true,
-              createdAt: new Date(),
-              updatedAt: new Date(),
+              createdAt: brightDateNow(),
+              updatedAt: brightDateNow(),
             });
 
             const db = createMockDatabase(memberLookup);

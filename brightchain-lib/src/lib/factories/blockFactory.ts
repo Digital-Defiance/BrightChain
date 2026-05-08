@@ -8,6 +8,8 @@ import { BlockSize } from '../enumerations/blockSize';
 import { BlockType } from '../enumerations/blockType';
 import { EphemeralBlockMetadata } from '../ephemeralBlockMetadata';
 import { ChecksumService } from '../services/checksum.service';
+import type { BrightDateTimestamp } from '../types/brightDateTimestamp';
+import { brightDateNow } from '../utils/brightDateConversions';
 import { Checksum } from '../types/checksum';
 
 /**
@@ -20,7 +22,7 @@ export class BlockFactory<TID extends PlatformID = Uint8Array> {
   createRawDataBlock(
     blockSize: BlockSize,
     data: Uint8Array,
-    dateCreated?: Date,
+    dateCreated?: BrightDateTimestamp,
     checksum?: Checksum,
     blockType: BlockType = BlockType.RawData,
     canRead = true,
@@ -48,7 +50,7 @@ export class BlockFactory<TID extends PlatformID = Uint8Array> {
     return new RandomBlock(
       blockSize,
       data,
-      new Date(),
+      brightDateNow(),
       checksum,
       this.checksumService,
     );
@@ -68,7 +70,7 @@ export class BlockFactory<TID extends PlatformID = Uint8Array> {
       blockSize,
       result,
       checksum,
-      new Date(),
+      brightDateNow(),
       true,
       true,
       this.checksumService,
@@ -79,7 +81,7 @@ export class BlockFactory<TID extends PlatformID = Uint8Array> {
     blockSize: BlockSize,
     data: Uint8Array,
     creator: Member<TID>,
-    dateCreated: Date = new Date(),
+    dateCreated: BrightDateTimestamp = brightDateNow(),
     blockType: BlockType = BlockType.EphemeralOwnedDataBlock,
     blockDataType: BlockDataType = BlockDataType.EphemeralStructuredData,
     canRead = true,

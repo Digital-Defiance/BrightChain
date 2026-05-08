@@ -48,17 +48,10 @@ describe('Feature: brightdb-write-acls, Property 1: ACL Document Serialization R
   const arbSignature = fc.uint8Array({ minLength: 1, maxLength: 72 });
 
   /**
-   * Arbitrary Date with millisecond precision.
-   * Constrained to valid ISO date range to avoid NaN after round-trip.
-   * Dates are floored to millisecond precision since ISO serialization
-   * only preserves milliseconds.
+   * Arbitrary BrightDateTimestamp (number) within a reasonable range.
+   * J2000.0 epoch: 2000-01-01 ≈ 0, 2099-12-31 ≈ 36524
    */
-  const arbDate = fc
-    .integer({
-      min: new Date('2000-01-01T00:00:00.000Z').getTime(),
-      max: new Date('2099-12-31T23:59:59.999Z').getTime(),
-    })
-    .map((ms) => new Date(ms));
+  const arbBrightDate = fc.float({ min: 0, max: 36524, noNaN: true });
 
   /** Arbitrary IAclDocument */
   const arbAclDocument: fc.Arbitrary<IAclDocument> = fc.record({
@@ -68,8 +61,8 @@ describe('Feature: brightdb-write-acls, Property 1: ACL Document Serialization R
     aclAdministrators: fc.array(arbPublicKey, { minLength: 1, maxLength: 5 }),
     scope: arbAclScope,
     version: fc.nat({ max: 1000 }),
-    createdAt: arbDate,
-    updatedAt: arbDate,
+    createdAt: arbBrightDate,
+    updatedAt: arbBrightDate,
     creatorPublicKey: arbPublicKey,
     creatorSignature: arbSignature,
     previousVersionBlockId: fc.option(
@@ -97,9 +90,9 @@ describe('Feature: brightdb-write-acls, Property 1: ACL Document Serialization R
     if (original.documentId !== roundTripped.documentId) return false;
     if (original.writeMode !== roundTripped.writeMode) return false;
     if (original.version !== roundTripped.version) return false;
-    if (original.createdAt.getTime() !== roundTripped.createdAt.getTime())
+    if (original.createdAt !== roundTripped.createdAt)
       return false;
-    if (original.updatedAt.getTime() !== roundTripped.updatedAt.getTime())
+    if (original.updatedAt !== roundTripped.updatedAt)
       return false;
 
     // Scope
@@ -215,21 +208,15 @@ describe('Feature: brightdb-write-acls, Property 2: Capability Token Serializati
   const arbSignature = fc.uint8Array({ minLength: 1, maxLength: 72 });
 
   /**
-   * Arbitrary Date with millisecond precision.
-   * Constrained to valid ISO date range to avoid NaN after round-trip.
+   * Arbitrary BrightDateTimestamp (number) within a reasonable range.
    */
-  const arbDate = fc
-    .integer({
-      min: new Date('2000-01-01T00:00:00.000Z').getTime(),
-      max: new Date('2099-12-31T23:59:59.999Z').getTime(),
-    })
-    .map((ms) => new Date(ms));
+  const arbBrightDate = fc.float({ min: 0, max: 36524, noNaN: true });
 
   /** Arbitrary ICapabilityToken */
   const arbCapabilityToken: fc.Arbitrary<ICapabilityToken> = fc.record({
     granteePublicKey: arbPublicKey,
     scope: arbAclScope,
-    expiresAt: arbDate,
+    expiresAt: arbBrightDate,
     grantorSignature: arbSignature,
     grantorPublicKey: arbPublicKey,
   });
@@ -278,8 +265,8 @@ describe('Feature: brightdb-write-acls, Property 2: Capability Token Serializati
     if (original.scope.collectionName !== roundTripped.scope.collectionName)
       return false;
 
-    // Date field
-    if (original.expiresAt.getTime() !== roundTripped.expiresAt.getTime())
+    // BrightDateTimestamp field (exact equality)
+    if (original.expiresAt !== roundTripped.expiresAt)
       return false;
 
     return true;

@@ -9,7 +9,9 @@ import { Readable } from '../browserStream';
 import { TUPLE } from '../constants';
 import { BlockEncryptionType } from '../enumerations/blockEncryptionType';
 import { BlockSize } from '../enumerations/blockSize';
+import type { BrightDateTimestamp } from '../types/brightDateTimestamp';
 import { Checksum } from '../types/checksum';
+import { brightDateNow } from '../utils/brightDateConversions';
 import type { CBLService } from './cblService';
 import type { ChecksumService } from './checksum.service';
 import { getGlobalServiceProvider } from './globalServiceProvider';
@@ -97,7 +99,7 @@ export class CopyOnWriteService<TID extends PlatformID = Uint8Array> {
     persistTuple: (tuple: InMemoryBlockTuple) => Promise<void>,
     options?: CopyOnWriteOptions,
   ): Promise<CopyOnWriteResult<TID>> {
-    const now = new Date();
+    const now = brightDateNow();
     const tupleSize = originalCbl.tupleSize;
     const originalAddresses = originalCbl.addresses;
     const blockSizeBytes = blockSize as number;
@@ -291,7 +293,7 @@ export class CopyOnWriteService<TID extends PlatformID = Uint8Array> {
     whitenedBlockSource: () => WhitenedBlock | undefined,
     randomBlockSource: () => RandomBlock,
     persistTuple: (tuple: InMemoryBlockTuple) => Promise<void>,
-    dateCreated: Date,
+    dateCreated: BrightDateTimestamp,
   ): Promise<Checksum[]> {
     // Gather whitener/random blocks for the tuple (tupleSize - 1 blocks)
     const companions: (WhitenedBlock | RandomBlock)[] = [];

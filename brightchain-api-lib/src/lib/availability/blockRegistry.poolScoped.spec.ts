@@ -123,7 +123,7 @@ describe('BlockRegistry pool-scoped support', () => {
       const manifest = registry.exportPoolScopedManifest();
       expect(manifest.pools.size).toBe(0);
       expect(manifest.nodeId).toBe('test-node');
-      expect(manifest.generatedAt).toBeInstanceOf(Date);
+      expect(typeof manifest.generatedAt).toBe("number");
       expect(manifest.checksum).toBeDefined();
     });
 

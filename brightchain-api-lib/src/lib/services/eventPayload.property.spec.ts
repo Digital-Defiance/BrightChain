@@ -1,4 +1,5 @@
 import {
+  brightDateNow,
   DeliveryStatus,
   DurabilityLevel,
   IMessageMetadata,
@@ -146,15 +147,15 @@ describe('Feature: message-passing-and-events, Property: Event Payload Completen
             checksum: '',
           };
 
-          const beforeEmit = Date.now();
+          const beforeEmit = brightDateNow();
           system.emit(eventType, metadata);
-          const afterEmit = Date.now();
+          const afterEmit = brightDateNow();
 
           const sentData = (mockWs.send as jest.Mock).mock.calls[0][0];
           const event = JSON.parse(sentData);
 
           expect(event.timestamp).toBeDefined();
-          const eventTime = new Date(event.timestamp).getTime();
+          const eventTime = event.timestamp as number;
           expect(eventTime).toBeGreaterThanOrEqual(beforeEmit);
           expect(eventTime).toBeLessThanOrEqual(afterEmit);
         },

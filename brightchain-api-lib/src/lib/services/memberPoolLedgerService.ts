@@ -17,6 +17,7 @@
 
 import {
   BlockSize,
+  brightDateNow,
   ChecksumService,
   GovernancePayloadSerializer,
   Ledger,
@@ -235,7 +236,7 @@ export function createLedgerEntryAnnouncement(
     type: 'ledger_entry',
     blockId: '' as import('@brightchain/brightchain-lib').BlockId,
     nodeId,
-    timestamp: new Date(),
+    timestamp: brightDateNow(),
     ttl: 5,
     ledgerEntry: {
       ledgerId,

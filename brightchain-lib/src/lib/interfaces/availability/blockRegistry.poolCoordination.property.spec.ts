@@ -68,7 +68,7 @@ class InMemoryBlockRegistry implements IBlockRegistry {
     return {
       nodeId: this.nodeId,
       blockIds: this.getLocalBlockIds(),
-      generatedAt: new Date(),
+      generatedAt: 9000,
       checksum: 'test-checksum',
     };
   }
@@ -109,7 +109,7 @@ class InMemoryBlockRegistry implements IBlockRegistry {
     return {
       nodeId: this.nodeId,
       pools,
-      generatedAt: new Date(),
+      generatedAt: 9000,
       checksum: 'test-checksum',
     };
   }

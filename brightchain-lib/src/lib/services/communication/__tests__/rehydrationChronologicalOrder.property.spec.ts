@@ -28,7 +28,7 @@ import { arbMessage } from './mockChatStorageProvider';
 const arbValidMessage = (
   contextId?: string,
 ): fc.Arbitrary<ICommunicationMessage> =>
-  arbMessage(contextId).filter((m) => !isNaN(m.createdAt.getTime()));
+  arbMessage(contextId).filter((m) => !isNaN(m.createdAt));
 
 describe('Feature: brightchat-persistence-rehydration, Property 3: Message chronological ordering', () => {
   /**
@@ -46,8 +46,8 @@ describe('Feature: brightchat-persistence-rehydration, Property 3: Message chron
 
           for (const [, group] of result) {
             for (let i = 0; i < group.length - 1; i++) {
-              expect(group[i].createdAt.getTime()).toBeLessThanOrEqual(
-                group[i + 1].createdAt.getTime(),
+              expect(group[i].createdAt).toBeLessThanOrEqual(
+                group[i + 1].createdAt,
               );
             }
           }
@@ -74,8 +74,8 @@ describe('Feature: brightchat-persistence-rehydration, Property 3: Message chron
           expect(group.length).toBe(messages.length);
 
           for (let i = 0; i < group.length - 1; i++) {
-            expect(group[i].createdAt.getTime()).toBeLessThanOrEqual(
-              group[i + 1].createdAt.getTime(),
+            expect(group[i].createdAt).toBeLessThanOrEqual(
+              group[i + 1].createdAt,
             );
           }
         },
@@ -112,8 +112,8 @@ describe('Feature: brightchat-persistence-rehydration, Property 3: Message chron
             expect(group).toBeDefined();
 
             for (let i = 0; i < group.length - 1; i++) {
-              expect(group[i].createdAt.getTime()).toBeLessThanOrEqual(
-                group[i + 1].createdAt.getTime(),
+              expect(group[i].createdAt).toBeLessThanOrEqual(
+                group[i + 1].createdAt,
               );
             }
           }

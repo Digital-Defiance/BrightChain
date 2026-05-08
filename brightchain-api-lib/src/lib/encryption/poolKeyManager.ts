@@ -15,6 +15,7 @@ import type {
   IKeyVersion,
   IPoolEncryptionConfig,
 } from '@brightchain/brightchain-lib';
+import { brightDateNow } from '@brightchain/brightchain-lib';
 import * as crypto from 'crypto';
 import { DecryptionError, KeyVersionNotFoundError } from './errors';
 import { PoolEncryptionService } from './poolEncryptionService';
@@ -49,7 +50,7 @@ export class PoolKeyManager {
 
     const keyVersion: IKeyVersion = {
       version: 1,
-      createdAt: new Date(),
+      createdAt: brightDateNow(),
       encryptedKeys,
       active: true,
     };
@@ -85,7 +86,7 @@ export class PoolKeyManager {
 
     const keyVersion: IKeyVersion = {
       version: newVersion,
-      createdAt: new Date(),
+      createdAt: brightDateNow(),
       encryptedKeys,
       active: true,
     };

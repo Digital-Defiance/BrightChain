@@ -5,7 +5,9 @@ import { BlockSize } from '../enumerations/blockSize';
 import { BlockType } from '../enumerations/blockType';
 import { WhitenedErrorType } from '../enumerations/whitenedErrorType';
 import { WhitenedError } from '../errors/whitenedError';
+import type { BrightDateTimestamp } from '../types/brightDateTimestamp';
 import type { ChecksumService } from '../services/checksum.service';
+import { brightDateNow } from '../utils/brightDateConversions';
 import { getGlobalServiceProvider } from '../services/globalServiceProvider';
 import { Checksum } from '../types/checksum';
 import { BaseBlock } from './base';
@@ -23,7 +25,7 @@ export class WhitenedBlock extends RawDataBlock {
     blockSize: BlockSize,
     data: Uint8Array,
     checksum?: Checksum,
-    dateCreated?: Date,
+    dateCreated?: BrightDateTimestamp,
     canRead = true,
     canPersist = true,
     checksumService?: ChecksumService,
@@ -152,7 +154,7 @@ export class WhitenedBlock extends RawDataBlock {
     const Constructor = other.constructor as new (
       blockSize: BlockSize,
       data: Uint8Array,
-      dateCreated: Date,
+      dateCreated: BrightDateTimestamp,
       checksum: Checksum,
       canRead: boolean,
       canPersist: boolean,
@@ -161,7 +163,7 @@ export class WhitenedBlock extends RawDataBlock {
     return new Constructor(
       this.blockSize,
       result,
-      new Date(),
+      brightDateNow(),
       checksum,
       this.canRead && other.canRead,
       this.canPersist && other.canPersist,
@@ -200,7 +202,7 @@ export class WhitenedBlock extends RawDataBlock {
     const checksum =
       getGlobalServiceProvider().checksumService.calculateChecksum(result);
 
-    return new WhitenedBlock(blockSize, result, checksum, new Date());
+    return new WhitenedBlock(blockSize, result, checksum, brightDateNow());
   }
 
   /**
@@ -210,7 +212,7 @@ export class WhitenedBlock extends RawDataBlock {
     blockSize: BlockSize,
     data: Uint8Array,
     checksum?: Checksum,
-    dateCreated?: Date,
+    dateCreated?: BrightDateTimestamp,
     lengthWithoutPadding?: number,
     canRead = true,
     canPersist = true,
@@ -225,7 +227,7 @@ export class WhitenedBlock extends RawDataBlock {
       BlockType.OwnerFreeWhitenedBlock,
       BlockDataType.RawData,
       lengthWithoutPadding ?? data.length,
-      dateCreated ?? new Date(),
+      dateCreated ?? brightDateNow(),
     );
 
     // Create block with padded data and preserve padding

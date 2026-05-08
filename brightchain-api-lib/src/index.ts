@@ -36,6 +36,7 @@ export * from './lib/routers/index.js';
 export * from './lib/availability/index.js';
 export * from './lib/blockFetch/index.js';
 export * from './lib/utils/errorResponse';
+export * from './lib/utils/normalizeRequestTimestamps';
 
 // Validation utilities
 export * from './lib/validation/userValidation';
@@ -48,6 +49,9 @@ export type {
 
 // Auth exports
 export * from './lib/auth/index.js';
+
+// Session exports
+export * from './lib/session/index.js';
 
 // Encryption exports
 export * from './lib/encryption/index.js';

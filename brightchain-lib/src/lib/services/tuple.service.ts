@@ -21,6 +21,7 @@ import { IEphemeralBlock } from '../interfaces/blocks/ephemeral';
 import { PoolId } from '../interfaces/storage/pooledBlockStore';
 import { PrimeTupleGeneratorStream } from '../primeTupleGeneratorStream';
 import { Validator } from '../utils/validator';
+import { brightDateNow } from '../utils/brightDateConversions';
 import { CBLService } from './cblService';
 import { ChecksumService } from './checksum.service';
 import { getGlobalServiceProvider } from './globalServiceProvider';
@@ -206,7 +207,7 @@ export class TupleService<TID extends PlatformID = Uint8Array> {
       const xoredData = XorService.xorMultiple(arraysToXor);
 
       // Create whitened block with preserved length metadata
-      const now = new Date();
+      const now = brightDateNow();
       // Access metadata safely - it may not exist on all block types
       const lengthWithoutPadding =
         'metadata' in sourceBlock
@@ -336,7 +337,7 @@ export class TupleService<TID extends PlatformID = Uint8Array> {
 
       // Create owned data block with preserved length metadata
       const checksum = this.checksumService.calculateChecksum(result);
-      const now = new Date();
+      const now = brightDateNow();
       const lengthWithoutPadding =
         primeWhitenedBlock.metadata?.lengthWithoutPadding;
       if (!lengthWithoutPadding) {
@@ -459,7 +460,7 @@ export class TupleService<TID extends PlatformID = Uint8Array> {
     persistTuple: (tuple: InMemoryBlockTuple) => Promise<void>,
     poolOptions?: TuplePoolOptions,
   ): Promise<InMemoryBlockTuple> {
-    const now = new Date();
+    const now = brightDateNow();
     // Validate required parameters
     Validator.validateRequired(
       creator,
@@ -646,7 +647,7 @@ export class TupleService<TID extends PlatformID = Uint8Array> {
     persistTuple: (tuple: InMemoryBlockTuple) => Promise<void>,
     poolOptions?: TuplePoolOptions,
   ): Promise<InMemoryBlockTuple> {
-    const dateCreated = new Date();
+    const dateCreated = brightDateNow();
     // Validate required parameters
     Validator.validateRequired(
       creator,
@@ -758,7 +759,7 @@ export class TupleService<TID extends PlatformID = Uint8Array> {
         cbl.data,
         checksum,
         creator,
-        new Date(),
+        brightDateNow(),
         cbl.data.length,
       );
 

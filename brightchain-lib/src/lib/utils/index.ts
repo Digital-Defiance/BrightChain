@@ -201,3 +201,58 @@ export * from './sortPair';
  * @see {@link brightDateFormatting}
  */
 export * from './brightDateFormatting';
+
+/**
+ * BrightDate Now Data — computes the full response payload for the
+ * public /brightdate/now API endpoint.
+ *
+ * @see {@link brightDateNowData}
+ */
+export * from './brightDateNowData';
+
+// ============================================================================
+// BrightDate Conversion Utilities
+// ============================================================================
+/**
+ * BrightDate conversion utilities between BrightDateValue and traditional dates.
+ *
+ * Provides functions for:
+ * - Converting BrightDateValue to/from JavaScript Date
+ * - Converting BrightDateValue to/from ISO 8601 strings
+ * - Normalizing external timestamp inputs to BrightDateValue
+ * - Generating the current timestamp as BrightDateValue
+ *
+ * @see {@link brightDateConversions}
+ */
+export * from './brightDateConversions';
+
+// ============================================================================
+// BrightDate Comparison Utilities
+// ============================================================================
+/**
+ * BrightDate comparison utilities for sorting and range checks.
+ *
+ * Provides functions for:
+ * - Sorting BrightDateValues (Array.sort-compatible comparator)
+ * - Checking if a BrightDateValue falls within an inclusive range
+ *
+ * @see {@link brightDateComparison}
+ */
+export * from './brightDateComparison';
+
+// ============================================================================
+// BrightDate JSON Serialization Utilities
+// ============================================================================
+/**
+ * BrightDate JSON replacer and reviver for type-safe serialization.
+ *
+ * Provides:
+ * - `BRIGHT_DATE_FIELDS` — set of all known timestamp field names
+ * - `brightDateReplacer` — JSON replacer that annotates BrightDateValue fields
+ *   as `{ __bd__: value }` to distinguish them from other numeric fields
+ * - `brightDateReviver` — JSON reviver that reconstructs BrightDateValue fields
+ *   from annotated JSON objects
+ *
+ * @see {@link brightDateJson}
+ */
+export * from './brightDateJson';

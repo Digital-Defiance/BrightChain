@@ -4,6 +4,7 @@ import BlockDataType from './enumerations/blockDataType';
 import { BlockSize } from './enumerations/blockSize';
 import BlockType from './enumerations/blockType';
 import { IExtendedCblBlockMetadata } from './interfaces/blocks/metadata/extendedCblBlockMetadata';
+import type { BrightDateTimestamp } from './types/brightDateTimestamp';
 
 export class ExtendedCblBlockMetadata<TID extends PlatformID = Uint8Array>
   extends CblBlockMetadata<TID>
@@ -27,7 +28,7 @@ export class ExtendedCblBlockMetadata<TID extends PlatformID = Uint8Array>
     fileName: string,
     mimeType: string,
     creator: Member<TID>,
-    dateCreated?: Date,
+    dateCreated?: BrightDateTimestamp,
   ) {
     super(
       size,

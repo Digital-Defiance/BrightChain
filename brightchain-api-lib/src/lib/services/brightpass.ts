@@ -44,8 +44,10 @@ import {
   VCBLBlock,
   VCBLService,
   type BlockId,
+  type BrightDateTimestamp,
   type IChatCollection,
 } from '@brightchain/brightchain-lib';
+import { brightDateNow } from '@brightchain/brightchain-lib';
 import { Member, PlatformID } from '@digitaldefiance/ecies-lib';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -84,9 +86,9 @@ interface VaultIndexEntry {
   /** Members this vault is shared with */
   sharedWith: string[];
   /** Vault creation timestamp */
-  createdAt: Date;
+  createdAt: BrightDateTimestamp;
   /** Last update timestamp */
-  updatedAt: Date;
+  updatedAt: BrightDateTimestamp;
   /** Entry count for quick access */
   entryCount: number;
   /** VCBL block ID in the block store */
@@ -389,7 +391,7 @@ export class BrightPassService<TID extends PlatformID = Uint8Array> {
       indexEntry.vaultMnemonic = newMnemonic;
       indexEntry.vaultSeed = newSeed;
       indexEntry.vaultKey = newVaultKey;
-      indexEntry.updatedAt = vault.metadata.updatedAt;
+      indexEntry.updatedAt = brightDateNow();
     }
 
     // Invalidate any existing emergency shares (they used the old key)
@@ -582,6 +584,7 @@ export class BrightPassService<TID extends PlatformID = Uint8Array> {
       await this.hashMasterPasswordAsync(masterPassword);
 
     const now = new Date();
+    const nowBd = brightDateNow();
 
     // Create VCBL using VCBLService if available (Req 3.1, 3.2)
     let vcblChecksum: Checksum | null = null;
@@ -654,8 +657,8 @@ export class BrightPassService<TID extends PlatformID = Uint8Array> {
       vaultMnemonic,
       vaultSeed,
       sharedWith: [],
-      createdAt: now,
-      updatedAt: now,
+      createdAt: nowBd,
+      updatedAt: nowBd,
       entryCount: 0,
       vcblBlockId,
     };
@@ -869,6 +872,7 @@ export class BrightPassService<TID extends PlatformID = Uint8Array> {
 
     // Assign ID and timestamps if not present
     const now = new Date();
+    const nowBd = brightDateNow();
     const id = entry.id || uuidv4();
     const createdAt = entry.createdAt ? new Date(entry.createdAt) : now;
     const updatedAt = entry.updatedAt ? new Date(entry.updatedAt) : now;
@@ -921,7 +925,7 @@ export class BrightPassService<TID extends PlatformID = Uint8Array> {
     const indexEntry = this.vaultIndex.get(vaultId);
     if (indexEntry) {
       indexEntry.entryCount = vault.metadata.entryCount;
-      indexEntry.updatedAt = now;
+      indexEntry.updatedAt = nowBd;
     }
 
     // Update VCBL in block store if VCBLService is available (Req 2.2)
@@ -1209,7 +1213,7 @@ export class BrightPassService<TID extends PlatformID = Uint8Array> {
     const indexEntry = this.vaultIndex.get(vaultId);
     if (indexEntry) {
       indexEntry.entryCount = vault.metadata.entryCount;
-      indexEntry.updatedAt = vault.metadata.updatedAt;
+      indexEntry.updatedAt = brightDateNow();
     }
 
     // Update VCBL in block store (Req 2.4)
@@ -1305,7 +1309,7 @@ export class BrightPassService<TID extends PlatformID = Uint8Array> {
 
     vault.metadata.updatedAt = new Date();
     if (indexEntry) {
-      indexEntry.updatedAt = vault.metadata.updatedAt;
+      indexEntry.updatedAt = brightDateNow();
     }
 
     await vault.auditLogger.log({
@@ -1377,7 +1381,7 @@ export class BrightPassService<TID extends PlatformID = Uint8Array> {
     if (indexEntry) {
       indexEntry.vaultMnemonic = newMnemonic;
       indexEntry.vaultSeed = newSeed;
-      indexEntry.updatedAt = vault.metadata.updatedAt;
+      indexEntry.updatedAt = brightDateNow();
     }
 
     await vault.auditLogger.log({

@@ -1,5 +1,6 @@
 import { Member, type PlatformID } from '@digitaldefiance/ecies-lib';
 import BlockType from '../../enumerations/blockType';
+import type { BrightDateTimestamp } from '../../types/brightDateTimestamp';
 import { IBaseBlock } from './base';
 
 // Forward declaration to avoid circular dependency
@@ -11,13 +12,13 @@ export interface IEncryptedBlockBase<TID extends PlatformID = Uint8Array>
 export interface IEphemeralBlock<TID extends PlatformID = Uint8Array>
   extends IBaseBlock {
   /**
-   * Block creation timestamp.
+   * Block creation timestamp as BrightDateValue (decimal days since J2000.0).
    * Used for:
    * 1. Version tracking
    * 2. Audit trails
    * 3. Lifecycle management
    */
-  get dateCreated(): Date;
+  get dateCreated(): BrightDateTimestamp;
 
   /**
    * Original data length before processing.

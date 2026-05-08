@@ -2326,6 +2326,13 @@ export const ShowcaseJapaneseStrings: Partial<
   [ShowcaseStrings.PP_S18_OrgName]: 'Digital Defiance',
   [ShowcaseStrings.PP_S18_EmailLabel]: 'メール：',
   [ShowcaseStrings.PP_S18_WebLabel]: 'ウェブ：',
+  [ShowcaseStrings.Slogan_Math_Search_Warrant]:
+    '数学は捜索令状を受け付けない。',
+  [ShowcaseStrings.Slogan_Where_State_Sees_Noise]:
+    '国家がノイズを見る場所に、人々は真実を見出す。',
+  [ShowcaseStrings.Slogan_Building_World_Where_Ideas_Have_No_Borders]:
+    '思想に国境はなく、真実には所有者がいない世界を築く。',
+  [ShowcaseStrings.Slogan_Defiance_By_Design]: '設計による抵抗。',
 };
 
 export default ShowcaseJapaneseStrings;

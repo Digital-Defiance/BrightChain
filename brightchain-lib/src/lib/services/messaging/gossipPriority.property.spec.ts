@@ -1,3 +1,4 @@
+import { brightDateNow } from '../../utils/brightDateConversions';
 import fc from 'fast-check';
 import {
   BlockAnnouncement,
@@ -56,7 +57,7 @@ describe('Feature: unified-gossip-delivery, Property 5: Priority-based fanout an
       type: 'add',
       blockId: bid(blockId),
       nodeId: 'local-node',
-      timestamp: new Date(),
+      timestamp: brightDateNow(),
       ttl: config.defaultTtl,
     };
   }
@@ -74,7 +75,7 @@ describe('Feature: unified-gossip-delivery, Property 5: Priority-based fanout an
       type: 'add' as const,
       blockId,
       nodeId: 'local-node',
-      timestamp: new Date(),
+      timestamp: brightDateNow(),
       ttl: priorityConfig.ttl,
       messageDelivery: metadata,
     }));

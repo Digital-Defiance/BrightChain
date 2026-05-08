@@ -8,6 +8,8 @@
  * @see Requirements 6.1, 6.3, 7.1, 8.1, 9.2
  */
 
+import type { BrightDateTimestamp } from '../../types/brightDateTimestamp';
+
 /**
  * Metadata for an S/MIME X.509 certificate.
  *
@@ -28,10 +30,10 @@ export interface ISmimeCertificateMetadata {
   serialNumber: string;
 
   /** Date the certificate becomes valid */
-  validFrom: Date;
+  validFrom: BrightDateTimestamp;
 
   /** Date the certificate expires */
-  validTo: Date;
+  validTo: BrightDateTimestamp;
 
   /** Email addresses associated with the certificate (from Subject Alternative Name) */
   emailAddresses: string[];

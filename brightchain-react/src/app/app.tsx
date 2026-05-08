@@ -1,5 +1,8 @@
 import { faComment } from '@awesome.me/kit-a20d532681/icons/chisel/regular';
-import { faBookMedical } from '@awesome.me/kit-a20d532681/icons/classic/regular';
+import {
+  faBookMedical,
+  faCalendarClock,
+} from '@awesome.me/kit-a20d532681/icons/classic/regular';
 import {
   faBird,
   faEnvelope,
@@ -23,6 +26,7 @@ import {
   BrightChainSoupDemo,
   BrightChainSubLogo,
   BrightDateDisplaySelector,
+  BrightDateProvider,
   BrightPassDemo,
   DatabaseDemo,
   IdentityDemo,
@@ -97,6 +101,7 @@ import {
   SuiteCoreComponentId,
   SuiteCoreStringKey,
   SuiteCoreStringKeyValue,
+  type IRequestUserDTO,
 } from '@digitaldefiance/suite-core-lib';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import BarChartIcon from '@mui/icons-material/BarChart';
@@ -377,7 +382,8 @@ const App: FC = () => {
           stringKey={SuiteCoreStringKey.Common_SiteTemplate}
           vars={{ Site: CoreConstants.Site }}
         />
-        <AppThemeProvider customTheme={createAppTheme}>
+        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+        <AppThemeProvider customTheme={createAppTheme as any}>
           <CssBaseline />
           <AuthProviderWithNavigation>
             <InnerApp />
@@ -391,6 +397,7 @@ const App: FC = () => {
 const INITIAL_INDEX_PRIORITY = 15;
 const InnerApp: FC = () => {
   const { tBranded: t } = useI18n();
+  const navigate = useNavigate();
   const { userData } = useAuth();
   const api = useAuthenticatedApi();
   const chatApi = useChatApi();
@@ -458,6 +465,7 @@ const InnerApp: FC = () => {
   const hubMenu = createMenuType(String(IncludeOnMenu.BrightHubMenu));
   const mailMenu = createMenuType(String(IncludeOnMenu.BrightMailMenu));
   const passMenu = createMenuType(String(IncludeOnMenu.BrightPassMenu));
+  const dateMenu = createMenuType(String(IncludeOnMenu.BrightDateMenu));
   const brightMailMenuConfig: IMenuConfig = {
     menuType: mailMenu,
     menuIcon: <FontAwesomeIcon icon={faEnvelope} />,
@@ -773,6 +781,17 @@ const InnerApp: FC = () => {
   };
   indexPriority += 100;
 
+  const brightDateMenuConfig: IMenuConfig = {
+    menuType: dateMenu,
+    menuIcon: <FontAwesomeIcon icon={faCalendarClock} />,
+    priority: indexPriority,
+    options: [],
+    action: () => {
+      navigate('/date');
+    },
+  };
+  indexPriority += 100;
+
   const featureMenuMap: [BrightChainFeatures, IMenuConfig][] = [
     [BrightChainFeatures.DigitalBurnbag, digitalBurnbagMenuConfig],
     [BrightChainFeatures.BrightMail, brightMailMenuConfig],
@@ -784,6 +803,7 @@ const InnerApp: FC = () => {
 
   const enabledFeatures = new Set(getEnabledFeatures());
   const menuConfigs = [
+    brightDateMenuConfig,
     ...featureMenuMap
       .filter(([feature]) => enabledFeatures.has(feature))
       .map(([, config]) => config),
@@ -792,6 +812,16 @@ const InnerApp: FC = () => {
   indexPriority += 10;
 
   return (
+    <BrightDateProvider
+      initialMode={
+        ((userData as IRequestUserDTO & { brightDateDisplay?: BrightDateDisplayMode } | null)
+          ?.brightDateDisplay as BrightDateDisplayMode) ?? BrightDateDisplayMode.Dual
+      }
+      onModeChange={(mode) => {
+        // Persist to API (best-effort)
+        api.post('/user/settings', { brightDateDisplay: mode }).catch(() => {});
+      }}
+    >
     <MenuProvider menuConfigs={menuConfigs}>
       <GoogleAnalytics
         measurementId={environment.gtag}
@@ -1080,6 +1110,7 @@ const InnerApp: FC = () => {
         <AppFooter />
       </Box>
     </MenuProvider>
+    </BrightDateProvider>
   );
 };
 

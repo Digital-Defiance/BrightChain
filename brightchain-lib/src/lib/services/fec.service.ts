@@ -10,6 +10,7 @@ import { BrightChainStrings } from '../enumerations/brightChainStrings';
 import { FecErrorType } from '../enumerations/fecErrorType';
 import { FecError } from '../errors/fecError';
 import { translate } from '../i18n';
+import { brightDateNow } from '../utils/brightDateConversions';
 import { Validator } from '../utils/validator';
 
 /**
@@ -383,7 +384,7 @@ export class FecService {
       return new RawDataBlock(
         damagedBlock.blockSize,
         recoveredBlock,
-        new Date(),
+        brightDateNow(),
         undefined, // Let constructor calculate checksum
         BlockType.RawData,
         BlockDataType.RawData,

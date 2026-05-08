@@ -44,8 +44,8 @@ describe('ServerService — unit tests', () => {
       expect(server.iconUrl).toBe('https://example.com/icon.png');
       expect(server.ownerId).toBe(ownerId);
       expect(server.memberIds).toEqual([ownerId]);
-      expect(server.createdAt).toBeInstanceOf(Date);
-      expect(server.updatedAt).toBeInstanceOf(Date);
+      expect(typeof server.createdAt).toBe('number');
+      expect(typeof server.updatedAt).toBe('number');
 
       // Default category
       expect(server.categories).toHaveLength(1);
@@ -116,9 +116,7 @@ describe('ServerService — unit tests', () => {
 
       expect(updated.name).toBe('Updated');
       expect(updated.iconUrl).toBe('https://example.com/new-icon.png');
-      expect(updated.updatedAt.getTime()).toBeGreaterThanOrEqual(
-        server.updatedAt.getTime(),
-      );
+      expect(updated.updatedAt).toBeGreaterThanOrEqual(server.updatedAt);
     });
 
     // ── 6. updateServer by non-owner member ───────────────────────────────

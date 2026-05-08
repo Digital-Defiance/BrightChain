@@ -6,6 +6,7 @@ import {
   MessageDeliveryMetadata,
   validateBlockAnnouncement,
 } from './gossipService';
+import { normalizeToBrightDate } from '../../utils/brightDateConversions';
 
 const bid = (s: string) => s as unknown as BlockId;
 
@@ -51,7 +52,7 @@ describe('Feature: cross-node-pool-coordination, Property 3: Announcement valida
   const baseAnnouncementFieldsArb = fc.record({
     blockId: nonEmptyStringArb.map((s) => bid(s)),
     nodeId: nonEmptyStringArb,
-    timestamp: fc.date(),
+    timestamp: fc.date().map((d) => normalizeToBrightDate(d)),
     ttl: fc.integer({ min: 1, max: 10 }),
   });
 

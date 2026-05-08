@@ -9,6 +9,7 @@
  */
 
 import type { BlockId } from '../branded/primitives/blockId';
+import type { BrightDateTimestamp } from '../../types/brightDateTimestamp';
 import { PoolId } from '../storage/pooledBlockStore';
 
 /**
@@ -26,7 +27,7 @@ export interface SyncVectorEntry {
   /**
    * Timestamp of the last successful synchronization with this peer
    */
-  lastSyncTimestamp: Date;
+  lastSyncTimestamp: BrightDateTimestamp;
 
   /**
    * Checksum of the last manifest received from this peer
@@ -57,7 +58,7 @@ export interface PendingSyncItem {
   /**
    * Timestamp when the operation occurred
    */
-  timestamp: Date;
+  timestamp: BrightDateTimestamp;
 
   /**
    * Optional block data for store operations
@@ -208,35 +209,35 @@ export type ReconciliationEventHandler = (event: ReconciliationEvent) => void;
  * Events emitted during reconciliation.
  */
 export type ReconciliationEvent =
-  | { type: 'reconciliation_started'; timestamp: Date; peerIds: string[] }
-  | { type: 'peer_reconciliation_started'; timestamp: Date; peerId: string }
+  | { type: 'reconciliation_started'; timestamp: BrightDateTimestamp; peerIds: string[] }
+  | { type: 'peer_reconciliation_started'; timestamp: BrightDateTimestamp; peerId: string }
   | {
       type: 'peer_reconciliation_completed';
-      timestamp: Date;
+      timestamp: BrightDateTimestamp;
       peerId: string;
       blocksDiscovered: number;
     }
   | {
       type: 'peer_reconciliation_failed';
-      timestamp: Date;
+      timestamp: BrightDateTimestamp;
       peerId: string;
       error: string;
     }
   | {
       type: 'orphan_resolved';
-      timestamp: Date;
+      timestamp: BrightDateTimestamp;
       blockId: BlockId;
       sourceNodeId: string;
     }
   | {
       type: 'conflict_resolved';
-      timestamp: Date;
+      timestamp: BrightDateTimestamp;
       blockId: BlockId;
       winningNodeId: string;
     }
   | {
       type: 'reconciliation_completed';
-      timestamp: Date;
+      timestamp: BrightDateTimestamp;
       result: ReconciliationResult;
     };
 
@@ -268,7 +269,7 @@ export interface CBLIndexManifest {
   /** CBL index entries in this pool */
   entries: CBLIndexManifestEntry[];
   /** When this manifest was generated */
-  generatedAt: Date;
+  generatedAt: BrightDateTimestamp;
 }
 
 /**
@@ -319,7 +320,7 @@ export interface IReconciliationService {
    */
   updateSyncVector(
     peerId: string,
-    timestamp: Date,
+    timestamp: BrightDateTimestamp,
     manifestChecksum: string,
   ): void;
 

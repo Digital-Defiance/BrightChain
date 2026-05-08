@@ -18,6 +18,7 @@ import { StreamErrorType } from './enumerations/streamErrorType';
 import { StreamError } from './errors/streamError';
 import { TranslatableBrightChainError } from './errors/translatableBrightChainError';
 import { getGlobalServiceProvider } from './services/globalServiceProvider';
+import { brightDateNow } from './utils/brightDateConversions';
 
 /**
  * PrimeTupleGeneratorStream transforms input data into tuples of blocks.
@@ -134,7 +135,7 @@ export class PrimeTupleGeneratorStream<
         blockData,
         checksum,
         this.creator,
-        new Date(),
+        brightDateNow(),
         blockData.length,
       );
 

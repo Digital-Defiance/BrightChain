@@ -29,6 +29,7 @@ import {
   NullEventEmitter,
 } from '../../interfaces/events';
 import { paginateItems } from '../../utils/pagination';
+import { brightDateNow } from '../../utils/brightDateConversions';
 import { ChannelService } from './channelService';
 
 // ─── Error classes ──────────────────────────────────────────────────────────
@@ -211,7 +212,7 @@ export class ServerService {
   ): Promise<IServer> {
     this.validateServerName(params.name);
 
-    const now = new Date();
+    const now = brightDateNow();
     const serverId = uuidv4();
     const categoryId = uuidv4();
 
@@ -270,7 +271,7 @@ export class ServerService {
       server.iconVaultContainerId = update.iconVaultContainerId;
     if (update.categories !== undefined) server.categories = update.categories;
 
-    server.updatedAt = new Date();
+    server.updatedAt = brightDateNow();
     await this.persistServer(server);
     return server;
   }
@@ -303,15 +304,7 @@ export class ServerService {
       s.memberIds.includes(memberId),
     );
     memberServers.sort((a, b) => {
-      const aTime =
-        a.createdAt instanceof Date
-          ? a.createdAt.getTime()
-          : new Date(a.createdAt as unknown as string).getTime();
-      const bTime =
-        b.createdAt instanceof Date
-          ? b.createdAt.getTime()
-          : new Date(b.createdAt as unknown as string).getTime();
-      return bTime - aTime;
+      return b.createdAt - a.createdAt;
     });
 
     return paginateItems(
@@ -345,7 +338,7 @@ export class ServerService {
           await this.channelService.addMemberToChannel(channelId, memberId);
         }
       }
-      server.updatedAt = new Date();
+      server.updatedAt = brightDateNow();
       await this.persistServer(server);
     }
 
@@ -366,7 +359,7 @@ export class ServerService {
       await this.channelService.removeMemberFromChannel(channelId, memberId);
     }
 
-    server.updatedAt = new Date();
+    server.updatedAt = brightDateNow();
     await this.persistServer(server);
     this.eventEmitter.emitServerMemberRemoved(serverId, memberId);
   }
@@ -384,14 +377,14 @@ export class ServerService {
       throw new NotServerMemberError();
     }
 
-    const now = new Date();
+    const now = brightDateNow();
     const invite: IServerInviteToken = {
       token: uuidv4(),
       serverId,
       createdBy: userId,
       createdAt: now,
       expiresAt: params.expiresInMs
-        ? new Date(now.getTime() + params.expiresInMs)
+        ? now + params.expiresInMs / 86400000 // convert ms to days for BrightDate
         : undefined,
       maxUses: params.maxUses,
       currentUses: 0,
@@ -411,7 +404,7 @@ export class ServerService {
     if (!invite) throw new ServerInviteNotFoundError(token);
     if (invite.serverId !== serverId)
       throw new ServerInviteNotFoundError(token);
-    if (invite.expiresAt && new Date() >= invite.expiresAt)
+    if (invite.expiresAt && brightDateNow() >= invite.expiresAt)
       throw new ServerInviteExpiredError();
     if (invite.maxUses !== undefined && invite.currentUses >= invite.maxUses)
       throw new ServerInviteExpiredError();
@@ -423,7 +416,7 @@ export class ServerService {
     }
 
     server.memberIds.push(userId);
-    server.updatedAt = new Date();
+    server.updatedAt = brightDateNow();
 
     for (const channelId of server.channelIds) {
       await this.channelService.addMemberToChannel(channelId, userId);
@@ -470,7 +463,7 @@ export class ServerService {
       targetCategory.channelIds.push(channel.id);
     }
 
-    server.updatedAt = new Date();
+    server.updatedAt = brightDateNow();
     await this.persistServer(server);
 
     this.eventEmitter.emitServerChannelCreated(
@@ -500,7 +493,7 @@ export class ServerService {
       );
     }
 
-    server.updatedAt = new Date();
+    server.updatedAt = brightDateNow();
     await this.persistServer(server);
     this.eventEmitter.emitServerChannelDeleted(serverId, channelId);
   }

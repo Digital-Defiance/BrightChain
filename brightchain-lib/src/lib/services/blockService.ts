@@ -31,6 +31,8 @@ import { Checksum } from '../types/checksum';
 
 import { IUniversalBlockStore } from '../interfaces/storage/universalBlockStore';
 import { getGlobalServiceProvider } from '../services/globalServiceProvider';
+import type { BrightDateTimestamp } from '../types/brightDateTimestamp';
+import { brightDateNow } from '../utils/brightDateConversions';
 import { Validator } from '../utils/validator';
 import { XorService } from './xor';
 
@@ -598,10 +600,10 @@ export class BlockService<TID extends PlatformID = Uint8Array> {
   public generateWhiteners(
     blockSize: BlockSize,
     count: number,
-    dateCreated?: Date,
+    dateCreated?: BrightDateTimestamp,
   ): RandomBlock[] {
     if (dateCreated === undefined) {
-      dateCreated = new Date();
+      dateCreated = brightDateNow();
     }
 
     const whiteners: RandomBlock[] = [];
@@ -641,10 +643,10 @@ export class BlockService<TID extends PlatformID = Uint8Array> {
     creator: Member<TID>,
     recipient?: Member<TID>,
     fileName?: string,
-    dateCreated?: Date,
+    dateCreated?: BrightDateTimestamp,
   ): Promise<ConstituentBlockListBlock<TID> | ExtendedCBL<TID>> {
     if (dateCreated === undefined) {
-      dateCreated = new Date();
+      dateCreated = brightDateNow();
     }
 
     const blockSize = this.getBlockSizeForData(fileData.length);
@@ -772,7 +774,7 @@ export class BlockService<TID extends PlatformID = Uint8Array> {
     // Create CBL header
     const header = getGlobalServiceProvider<TID>().cblService.makeCblHeader(
       creator,
-      new Date(),
+      brightDateNow(),
       blockIDs.length,
       originalDataLength,
       blockIdsArray,

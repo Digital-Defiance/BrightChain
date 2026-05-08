@@ -44,6 +44,17 @@ const arbDate = fc
   .filter((date) => !isNaN(date.getTime()));
 
 /**
+ * Generate a valid BrightDateTimestamp (decimal days since J2000.0)
+ * Range covers 2020-01-01 to 2030-12-31 approximately
+ */
+const arbBrightDate = fc.double({
+  min: 7305,   // approx 2020-01-01
+  max: 11323,  // approx 2030-12-31
+  noNaN: true,
+  noDefaultInfinity: true,
+});
+
+/**
  * Generate a valid latency value (0-5000ms)
  */
 const arbLatency = fc.integer({ min: 0, max: 5000 });
@@ -53,7 +64,7 @@ const arbLatency = fc.integer({ min: 0, max: 5000 });
  */
 const arbLocationRecord: fc.Arbitrary<ILocationRecord> = fc.record({
   nodeId: arbNodeId,
-  lastSeen: arbDate,
+  lastSeen: arbBrightDate,
   isAuthoritative: fc.boolean(),
   latencyMs: fc.option(arbLatency, { nil: undefined }),
 });
@@ -112,12 +123,12 @@ const arbReplicationStatus = fc.constantFrom(
 const arbBlockMetadataWithLocation: fc.Arbitrary<IBlockMetadataWithLocation> =
   fc.record({
     blockId: arbBlockId,
-    createdAt: arbDate,
-    expiresAt: fc.option(arbDate, { nil: null }),
+    createdAt: arbBrightDate,
+    expiresAt: fc.option(arbBrightDate, { nil: null }),
     durabilityLevel: arbDurabilityLevel,
     parityBlockIds: fc.array(arbBlockId, { minLength: 0, maxLength: 5 }),
     accessCount: fc.integer({ min: 0, max: 10000 }),
-    lastAccessedAt: arbDate,
+    lastAccessedAt: arbBrightDate,
     replicationStatus: arbReplicationStatus,
     targetReplicationFactor: fc.integer({ min: 0, max: 10 }),
     replicaNodeIds: fc.array(arbNodeId, { minLength: 0, maxLength: 10 }),
@@ -128,7 +139,7 @@ const arbBlockMetadataWithLocation: fc.Arbitrary<IBlockMetadataWithLocation> =
       minLength: 0,
       maxLength: 10,
     }),
-    locationUpdatedAt: arbDate,
+    locationUpdatedAt: arbBrightDate,
   });
 
 describe('Location Metadata Serialization Property Tests', () => {
@@ -152,8 +163,8 @@ describe('Location Metadata Serialization Property Tests', () => {
 
           // Verify all fields are preserved
           expect(deserialized.nodeId).toBe(record.nodeId);
-          expect(deserialized.lastSeen.getTime()).toBe(
-            record.lastSeen.getTime(),
+          expect(deserialized.lastSeen).toBe(
+            record.lastSeen,
           );
           expect(deserialized.isAuthoritative).toBe(record.isAuthoritative);
 
@@ -181,12 +192,8 @@ describe('Location Metadata Serialization Property Tests', () => {
 
           // Verify base IBlockMetadata fields
           expect(deserialized.blockId).toBe(metadata.blockId);
-          expect(deserialized.createdAt.getTime()).toBe(
-            metadata.createdAt.getTime(),
-          );
-          expect(deserialized.lastAccessedAt.getTime()).toBe(
-            metadata.lastAccessedAt.getTime(),
-          );
+          expect(deserialized.createdAt).toBe(metadata.createdAt);
+          expect(deserialized.lastAccessedAt).toBe(metadata.lastAccessedAt);
           expect(deserialized.durabilityLevel).toBe(metadata.durabilityLevel);
           expect(deserialized.accessCount).toBe(metadata.accessCount);
           expect(deserialized.replicationStatus).toBe(
@@ -202,9 +209,7 @@ describe('Location Metadata Serialization Property Tests', () => {
           if (metadata.expiresAt === null) {
             expect(deserialized.expiresAt).toBeNull();
           } else {
-            expect(deserialized.expiresAt?.getTime()).toBe(
-              metadata.expiresAt.getTime(),
-            );
+            expect(deserialized.expiresAt).toBe(metadata.expiresAt);
           }
 
           // Verify arrays
@@ -215,8 +220,8 @@ describe('Location Metadata Serialization Property Tests', () => {
           expect(deserialized.availabilityState).toBe(
             metadata.availabilityState,
           );
-          expect(deserialized.locationUpdatedAt.getTime()).toBe(
-            metadata.locationUpdatedAt.getTime(),
+          expect(deserialized.locationUpdatedAt).toBe(
+            metadata.locationUpdatedAt,
           );
 
           // Verify location records
@@ -229,8 +234,8 @@ describe('Location Metadata Serialization Property Tests', () => {
             const deserializedRecord = deserialized.locationRecords[i];
 
             expect(deserializedRecord.nodeId).toBe(originalRecord.nodeId);
-            expect(deserializedRecord.lastSeen.getTime()).toBe(
-              originalRecord.lastSeen.getTime(),
+            expect(deserializedRecord.lastSeen).toBe(
+              originalRecord.lastSeen,
             );
             expect(deserializedRecord.isAuthoritative).toBe(
               originalRecord.isAuthoritative,
@@ -255,12 +260,12 @@ describe('Location Metadata Serialization Property Tests', () => {
       // Test with empty location records
       const metadataWithEmptyRecords: IBlockMetadataWithLocation = {
         blockId: bid('abc123'),
-        createdAt: new Date('2024-01-01'),
+        createdAt: 8766.0, // approx 2024-01-01 as BrightDateTimestamp
         expiresAt: null,
         durabilityLevel: DurabilityLevel.Standard,
         parityBlockIds: [],
         accessCount: 0,
-        lastAccessedAt: new Date('2024-01-01'),
+        lastAccessedAt: 8766.0,
         replicationStatus: ReplicationStatus.Pending,
         targetReplicationFactor: 0,
         replicaNodeIds: [],
@@ -268,7 +273,7 @@ describe('Location Metadata Serialization Property Tests', () => {
         checksum: 'def456',
         availabilityState: AvailabilityState.Local,
         locationRecords: [],
-        locationUpdatedAt: new Date('2024-01-01'),
+        locationUpdatedAt: 8766.0, // approx 2024-01-01 as BrightDateTimestamp
       };
 
       const serialized = blockMetadataWithLocationToJSON(
@@ -285,16 +290,16 @@ describe('Location Metadata Serialization Property Tests', () => {
       expect(() => {
         locationRecordFromJSON({
           nodeId: 'node-1',
-          lastSeen: '2024-01-01T00:00:00.000Z',
+          lastSeen: 8766.0,
           // Missing isAuthoritative
         } as unknown as any);
       }).toThrow(TranslatableBrightChainError);
 
-      // Invalid date format
+      // Invalid lastSeen (NaN)
       expect(() => {
         locationRecordFromJSON({
           nodeId: 'node-1',
-          lastSeen: 'not-a-date',
+          lastSeen: NaN,
           isAuthoritative: true,
         });
       }).toThrow(TranslatableBrightChainError);
@@ -303,7 +308,7 @@ describe('Location Metadata Serialization Property Tests', () => {
       expect(() => {
         locationRecordFromJSON({
           nodeId: 'node-1',
-          lastSeen: '2024-01-01T00:00:00.000Z',
+          lastSeen: 8766.0,
           isAuthoritative: true,
           latencyMs: -100,
         });
@@ -313,12 +318,12 @@ describe('Location Metadata Serialization Property Tests', () => {
       expect(() => {
         blockMetadataWithLocationFromJSON({
           blockId: bid('abc123'),
-          createdAt: '2024-01-01T00:00:00.000Z',
+          createdAt: 9296.9375,
           expiresAt: null,
           durabilityLevel: DurabilityLevel.Standard,
           parityBlockIds: [],
           accessCount: 0,
-          lastAccessedAt: '2024-01-01T00:00:00.000Z',
+          lastAccessedAt: 9296.9375,
           replicationStatus: ReplicationStatus.Pending,
           targetReplicationFactor: 0,
           replicaNodeIds: [],
@@ -326,7 +331,7 @@ describe('Location Metadata Serialization Property Tests', () => {
           checksum: 'def456',
           availabilityState: 'invalid-state' as unknown as AvailabilityState,
           locationRecords: [],
-          locationUpdatedAt: '2024-01-01T00:00:00.000Z',
+          locationUpdatedAt: 8766.0,
         });
       }).toThrow(TranslatableBrightChainError);
     });

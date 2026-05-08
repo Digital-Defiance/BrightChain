@@ -111,9 +111,9 @@ describe('MemberStore Integration Tests - End-to-End Member Lifecycle', () => {
         BigInt(1024 * 1024 * 100),
       );
       expect(profile.publicProfile!.storageUsed).toBe(BigInt(0));
-      expect(profile.publicProfile!.dateCreated).toBeInstanceOf(Date);
-      expect(profile.publicProfile!.dateUpdated).toBeInstanceOf(Date);
-      expect(profile.publicProfile!.lastActive).toBeInstanceOf(Date);
+      expect(typeof profile.publicProfile!.dateCreated).toBe('number');
+      expect(typeof profile.publicProfile!.dateUpdated).toBe('number');
+      expect(typeof profile.publicProfile!.lastActive).toBe('number');
 
       // Verify private profile fields
       expect(profile.privateProfile).not.toBeNull();
@@ -127,8 +127,8 @@ describe('MemberStore Integration Tests - End-to-End Member Lifecycle', () => {
         memberData.settings!.minRedundancy,
       );
       expect(profile.privateProfile!.activityLog).toEqual([]);
-      expect(profile.privateProfile!.dateCreated).toBeInstanceOf(Date);
-      expect(profile.privateProfile!.dateUpdated).toBeInstanceOf(Date);
+      expect(typeof profile.privateProfile!.dateCreated).toBe('number');
+      expect(typeof profile.privateProfile!.dateUpdated).toBe('number');
     });
 
     it('should handle multiple members with distinct data', async () => {

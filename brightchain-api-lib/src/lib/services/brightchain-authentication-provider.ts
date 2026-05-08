@@ -13,6 +13,8 @@
  */
 
 import {
+  BrightDateDisplayMode,
+  brightDateToISO,
   EmailString,
   MemberStatusType,
   MemberStore,
@@ -173,7 +175,7 @@ export class BrightChainAuthenticationProvider<
         email: member.email.toString(),
         siteLanguage: settings['siteLanguage'] as TLanguage | undefined,
         timezone: (settings['timezone'] as string) ?? 'UTC',
-        lastLogin: publicProfile?.lastActive?.toISOString(),
+        lastLogin: publicProfile?.lastActive !== undefined ? brightDateToISO(publicProfile.lastActive) : undefined,
         // Carry the full Member object through so the middleware can
         // attach it to req.member without a redundant MemberStore lookup.
         member: member as unknown as Member<TID>,
@@ -417,7 +419,13 @@ export class BrightChainAuthenticationProvider<
           (dbSettings['directChallenge'] as boolean) ??
           (settings['directChallenge'] as boolean) ??
           false,
-        lastLogin: publicProfile?.lastActive?.toISOString(),
+        lastLogin: publicProfile?.lastActive !== undefined ? brightDateToISO(publicProfile.lastActive) : undefined,
+        ...(dbSettings['brightDateDisplay']
+          ? {
+              brightDateDisplay:
+                dbSettings['brightDateDisplay'] as BrightDateDisplayMode,
+            }
+          : {}),
         member,
       };
       return dto;
@@ -458,6 +466,7 @@ export class BrightChainAuthenticationProvider<
         darkMode?: boolean;
         currency?: string;
         lastLogin?: string;
+        brightDateDisplay?: string;
       }>(SchemaCollection.User);
 
       // Try short hex (no dashes) first, then dashed UUID form
@@ -569,6 +578,10 @@ export class BrightChainAuthenticationProvider<
         currency: userDoc.currency ?? 'USD',
         directChallenge: userDoc.directChallenge ?? false,
         lastLogin: userDoc.lastLogin,
+        ...(userDoc.brightDateDisplay && {
+          brightDateDisplay:
+            userDoc.brightDateDisplay as unknown as BrightDateDisplayMode,
+        }),
       };
     } catch {
       return null;

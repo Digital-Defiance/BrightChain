@@ -5,6 +5,7 @@ import {
   locationRecordFromJSON,
   locationRecordToJSON,
 } from './locationRecord';
+import { normalizeToBrightDate } from '../../utils/brightDateConversions';
 
 /**
  * Property tests for ILocationRecord poolId round-trip serialization
@@ -30,7 +31,8 @@ describe('Feature: cross-node-pool-coordination, Property 12: Location record po
   /** Generates a valid Date (avoiding edge cases that break ISO serialization) */
   const validDateArb = fc
     .date({ min: new Date('2000-01-01'), max: new Date('2100-01-01') })
-    .filter((d) => !isNaN(d.getTime()));
+    .filter((d) => !isNaN(d.getTime()))
+    .map((d) => normalizeToBrightDate(d));
 
   /** Generates a valid optional latencyMs (non-negative number) */
   const latencyMsArb = fc.option(
@@ -113,9 +115,7 @@ describe('Feature: cross-node-pool-coordination, Property 12: Location record po
         const deserialized = locationRecordFromJSON(serialized);
 
         expect(deserialized.nodeId).toBe(record.nodeId);
-        expect(deserialized.lastSeen.toISOString()).toBe(
-          record.lastSeen.toISOString(),
-        );
+        expect(deserialized.lastSeen).toBe(record.lastSeen);
         expect(deserialized.isAuthoritative).toBe(record.isAuthoritative);
         expect(deserialized.latencyMs).toBe(record.latencyMs);
         expect(deserialized.poolId).toBe(record.poolId);
@@ -211,7 +211,8 @@ describe('Feature: cross-node-pool-coordination, Property 13: Distinct location 
   /** Generates a valid Date */
   const validDateArb = fc
     .date({ min: new Date('2000-01-01'), max: new Date('2100-01-01') })
-    .filter((d) => !isNaN(d.getTime()));
+    .filter((d) => !isNaN(d.getTime()))
+    .map((d) => normalizeToBrightDate(d));
 
   /**
    * Generates a scenario with two distinct pools and two distinct nodes.

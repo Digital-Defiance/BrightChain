@@ -6,6 +6,7 @@
 
 import type { PlatformID } from '@digitaldefiance/ecies-lib';
 import { IUserRoleBase } from '@digitaldefiance/suite-core-lib';
+import type { BrightDateTimestamp } from '../../types/brightDateTimestamp';
 import { BaseDocument } from './base';
 
 /**
@@ -15,4 +16,4 @@ import { BaseDocument } from './base';
  * @template TID Platform-specific ID type (Buffer, ObjectId, etc.)
  */
 export type UserRoleDocument<TID extends PlatformID = Uint8Array> =
-  BaseDocument<IUserRoleBase<TID, Date>, TID>;
+  BaseDocument<IUserRoleBase<TID, BrightDateTimestamp>, TID>;

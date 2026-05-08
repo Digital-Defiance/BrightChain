@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   AuditLogService,
+  brightDateToISO,
   BrightTrustDocumentInfo,
   BrightTrustError,
   BrightTrustMemberMetadata,
@@ -238,8 +239,8 @@ function serializeMember<TID extends PlatformID>(
     publicKey: Buffer.from(member.publicKey).toString('hex'),
     metadata: member.metadata,
     isActive: member.isActive,
-    createdAt: member.createdAt.toISOString(),
-    updatedAt: member.updatedAt.toISOString(),
+    createdAt: brightDateToISO(member.createdAt),
+    updatedAt: brightDateToISO(member.updatedAt),
   };
 }
 
@@ -801,7 +802,7 @@ export class BrightTrustController<
             ),
           ),
           sharesRequired: result.sharesRequired,
-          createdAt: result.createdAt.toISOString(),
+          createdAt: brightDateToISO(result.createdAt),
         },
       };
     } catch (_error) {

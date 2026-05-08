@@ -72,9 +72,16 @@ export class CloudHeadRegistryDriver implements IHeadRegistryDriver {
       'blockId' in parsed &&
       typeof (parsed as Record<string, unknown>)['blockId'] === 'string' &&
       'timestamp' in parsed &&
-      typeof (parsed as Record<string, unknown>)['timestamp'] === 'string'
+      (typeof (parsed as Record<string, unknown>)['timestamp'] === 'number' ||
+        typeof (parsed as Record<string, unknown>)['timestamp'] === 'string')
     ) {
-      return parsed as HeadRecord;
+      const record = parsed as Record<string, unknown>;
+      // Normalise legacy string timestamps to numbers (BrightDateTimestamp)
+      if (typeof record['timestamp'] === 'string') {
+        const ts = parseFloat(record['timestamp'] as string);
+        record['timestamp'] = isNaN(ts) ? 0 : ts;
+      }
+      return record as unknown as HeadRecord;
     }
     return null;
   }

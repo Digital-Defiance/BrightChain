@@ -24,6 +24,8 @@ import { ChecksumService } from '../services/checksum.service';
 import { ServiceProvider } from '../services/service.provider';
 import { Checksum } from '../types/checksum';
 import { EncryptedBlock } from './encrypted';
+import { brightDateNow } from '../utils/brightDateConversions';
+import type { BrightDateTimestamp } from '../types/brightDateTimestamp';
 
 class TestEncryptedBlock extends EncryptedBlock<Uint8Array> {
   public static override async from<TID extends PlatformID = Uint8Array>(
@@ -33,7 +35,7 @@ class TestEncryptedBlock extends EncryptedBlock<Uint8Array> {
     data: Uint8Array,
     checksum: Checksum,
     creator: Member<TID>,
-    dateCreated?: Date,
+    dateCreated?: BrightDateTimestamp,
     lengthBeforeEncryption?: number,
     canRead = true,
     canPersist = true,
@@ -60,7 +62,7 @@ class TestEncryptedBlock extends EncryptedBlock<Uint8Array> {
       BlockDataType.EncryptedData,
       lengthBeforeEncryption ?? data.length,
       creator,
-      dateCreated ?? new Date(),
+      dateCreated ?? brightDateNow(),
     );
 
     const metadata = EncryptedBlockMetadata.fromEphemeralBlockMetadata(
@@ -86,7 +88,7 @@ describe('EncryptedBlock', () => {
   let creator: Member<Uint8Array>;
   let checksumService: ChecksumService;
   const defaultBlockSize = BlockSize.Message;
-  const testDate = new Date(Date.now() - 1000);
+  const testDate = brightDateNow() - 1 / 86400; // 1 second ago in BrightDate units
 
   beforeAll(() => {
     // Initialize BrightChain with browser-compatible configuration first

@@ -19,6 +19,8 @@ import {
   LastAdministratorError,
   WriteMode,
   WriterNotInPoolError,
+  brightDateNow,
+  brightDateToISO,
 } from '@brightchain/brightchain-lib';
 import { sha256 } from '@noble/hashes/sha256';
 import fc from 'fast-check';
@@ -115,8 +117,8 @@ function makeAclDocument(
     aclAdministrators: overrides.aclAdministrators ?? [makePublicKey(0xff)],
     scope: overrides.scope,
     version: overrides.version ?? 1,
-    createdAt: overrides.createdAt ?? new Date(),
-    updatedAt: overrides.updatedAt ?? new Date(),
+    createdAt: overrides.createdAt ?? 9000,
+    updatedAt: overrides.updatedAt ?? 9000,
     creatorPublicKey: overrides.creatorPublicKey ?? makePublicKey(0x01),
     creatorSignature: overrides.creatorSignature ?? new Uint8Array(64),
     previousVersionBlockId: overrides.previousVersionBlockId,
@@ -608,14 +610,14 @@ describe('Feature: brightdb-write-acls, Property 11: Capability Token Temporal V
 
           // Build token
           const expiresAt = isExpired
-            ? new Date(Date.now() - 60000) // expired
-            : new Date(Date.now() + 60000); // valid
+            ? brightDateNow() - 60000 / 86400000 // expired
+            : brightDateNow() + 60000 / 86400000; // valid
 
           const tokenDbName = isScopeMatch ? dbName : dbName + '_other';
 
           // Compute the token payload to create a valid grantor signature
           const granteeHex = Buffer.from(granteeKey).toString('hex');
-          const message = `${granteeHex}:${tokenDbName}::${expiresAt.toISOString()}`;
+          const message = `${granteeHex}:${tokenDbName}::${brightDateToISO(expiresAt)}`;
           const payloadHash = sha256(new TextEncoder().encode(message));
 
           const token: ICapabilityToken = {
@@ -669,9 +671,9 @@ describe('Feature: brightdb-write-acls, Property 11: Capability Token Temporal V
           await manager.setAcl(acl, aclSig, adminKey);
 
           // Build a valid (non-expired, matching scope) token but with non-admin grantor
-          const expiresAt = new Date(Date.now() + 60000);
+          const expiresAt = brightDateNow() + 60000 / 86400000;
           const granteeHex = Buffer.from(granteeKey).toString('hex');
-          const message = `${granteeHex}:${dbName}::${expiresAt.toISOString()}`;
+          const message = `${granteeHex}:${dbName}::${brightDateToISO(expiresAt)}`;
           const payloadHash = sha256(new TextEncoder().encode(message));
 
           const token: ICapabilityToken = {

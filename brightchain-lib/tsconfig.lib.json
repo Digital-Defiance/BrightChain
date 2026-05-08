@@ -7,7 +7,11 @@
     "composite": true,
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
-    "types": ["node"]
+    "types": ["node"],
+    "paths": {
+      "@brightchain/brightdate": ["../dist/brightdate/src/index.d.ts"],
+      "@brightchain/brightdate/*": ["../dist/brightdate/src/*"]
+    }
   },
   "include": ["src/**/*.ts"],
   "exclude": ["jest.config.ts", "src/**/*.spec.ts", "src/**/*.test.ts"]

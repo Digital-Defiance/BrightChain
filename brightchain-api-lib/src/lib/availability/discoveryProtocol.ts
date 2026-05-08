@@ -10,6 +10,7 @@
 import type { BlockId } from '@brightchain/brightchain-lib';
 import {
   BloomFilter,
+  brightDateNow,
   CBLMetadataSearchHit,
   CBLMetadataSearchQuery,
   CBLMetadataSearchResult,
@@ -426,7 +427,7 @@ export class DiscoveryProtocol implements IDiscoveryProtocol {
       if (result.hasBlock && !result.error) {
         locations.push({
           nodeId: result.peerId,
-          lastSeen: new Date(),
+          lastSeen: brightDateNow(),
           isAuthoritative: false, // Remote copies are not authoritative
           latencyMs: result.latencyMs,
         });

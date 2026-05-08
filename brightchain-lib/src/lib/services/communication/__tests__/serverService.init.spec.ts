@@ -19,6 +19,7 @@ import {
   MockChatCollection,
   MockChatStorageProvider,
 } from './mockChatStorageProvider';
+import { brightDateNow } from '../../../utils/brightDateConversions';
 
 /** Create a minimal ChannelService for ServerService construction. */
 function createChannelService(): ChannelService {
@@ -44,8 +45,8 @@ describe('ServerService.init()', () => {
       memberIds: ['alice', 'bob'],
       channelIds: [],
       categories: [],
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      createdAt: brightDateNow(),
+      updatedAt: brightDateNow(),
     };
 
     const storageProvider = new MockChatStorageProvider({

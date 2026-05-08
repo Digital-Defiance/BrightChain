@@ -17,22 +17,30 @@
  */
 
 import { BrightDate } from '@brightchain/brightdate';
-import type { Precision } from '@brightchain/brightdate';
+import type { BrightDateValue, Precision } from '@brightchain/brightdate';
 import { BrightDateDisplayMode } from '../enumerations/brightDateDisplayMode';
+
+/**
+ * Normalise a BrightDateTimestamp (number), Date, or ISO string to a Date.
+ */
+function toDateFromInput(date: BrightDateValue | Date | string): Date {
+  if (typeof date === 'number') return BrightDate.fromValue(date).toDate();
+  return typeof date === 'string' ? new Date(date) : date;
+}
 
 /**
  * Format a date as a BrightDate string.
  *
- * @param date - A Date object or ISO date string
+ * @param date - A BrightDateTimestamp (number), Date object, or ISO date string
  * @param precision - Decimal places (default: 5, gives ~0.86 second resolution)
  * @returns BrightDate string, e.g. "9146.43750", or empty string if invalid
  */
 export function toBrightDateString(
-  date: Date | string,
+  date: BrightDateValue | Date | string,
   precision: number = 5,
 ): string {
   try {
-    const d = typeof date === 'string' ? new Date(date) : date;
+    const d = toDateFromInput(date);
     if (isNaN(d.getTime())) return '';
     const bd = BrightDate.fromDate(d, {
       precision: precision as Precision,
@@ -46,12 +54,12 @@ export function toBrightDateString(
 /**
  * Format a date as a prefixed BrightDate string.
  *
- * @param date - A Date object or ISO date string
+ * @param date - A BrightDateTimestamp (number), Date object, or ISO date string
  * @param precision - Decimal places (default: 5)
  * @returns Prefixed string, e.g. "BD:9146.43750", or empty string if invalid
  */
 export function toBrightDatePrefixed(
-  date: Date | string,
+  date: BrightDateValue | Date | string,
   precision: number = 5,
 ): string {
   const bd = toBrightDateString(date, precision);
@@ -61,16 +69,13 @@ export function toBrightDatePrefixed(
 /**
  * Format a date in dual-display mode: locale string + BrightDate.
  *
- * This is the primary display format for BrightChain — showing both
- * traditional and BrightDate representations side by side.
- *
- * @param date - A Date object or ISO date string
+ * @param date - A BrightDateTimestamp (number), Date object, or ISO date string
  * @param localeStr - The already-formatted locale date string
  * @param precision - BrightDate decimal places (default: 5)
  * @returns Dual string, e.g. "Jan 15, 2025 (BD 9146.43750)"
  */
 export function formatDualDate(
-  date: Date | string,
+  date: BrightDateValue | Date | string,
   localeStr: string,
   precision: number = 5,
 ): string {
@@ -83,22 +88,22 @@ export function formatDualDate(
  * Format a date as a compact BrightDate for space-constrained UIs.
  * Uses 3 decimal places (~86 second resolution).
  *
- * @param date - A Date object or ISO date string
+ * @param date - A BrightDateTimestamp (number), Date object, or ISO date string
  * @returns Compact string, e.g. "BD:9146.438"
  */
-export function toBrightDateCompact(date: Date | string): string {
+export function toBrightDateCompact(date: BrightDateValue | Date | string): string {
   return toBrightDatePrefixed(date, 3);
 }
 
 /**
  * Format a date as a log-friendly BrightDate string.
  *
- * @param date - A Date object or ISO date string
+ * @param date - A BrightDateTimestamp (number), Date object, or ISO date string
  * @returns Log string, e.g. "[9146.43750]"
  */
-export function toBrightDateLog(date: Date | string): string {
+export function toBrightDateLog(date: BrightDateValue | Date | string): string {
   try {
-    const d = typeof date === 'string' ? new Date(date) : date;
+    const d = toDateFromInput(date);
     if (isNaN(d.getTime())) return '';
     const bd = BrightDate.fromDate(d);
     return bd.toLogString();
@@ -150,7 +155,7 @@ export function nowAsBrightDate(precision: number = 5): string {
  * ```
  */
 export function formatDateByMode(
-  date: Date | string,
+  date: BrightDateValue | Date | string,
   localeStr: string,
   mode: BrightDateDisplayMode = BrightDateDisplayMode.Dual,
   precision: number = 3,
@@ -189,7 +194,7 @@ export function formatDateByMode(
  * @returns Tooltip string, or empty string if mode doesn't use tooltips
  */
 export function getDateTooltip(
-  date: Date | string,
+  date: BrightDateValue | Date | string,
   mode: BrightDateDisplayMode,
   localeStr?: string,
   precision: number = 3,
@@ -215,7 +220,7 @@ export function getDateTooltip(
  * @returns Tooltip string, e.g. "BD 9146.438", or empty string if invalid
  */
 export function getBrightDateTooltip(
-  date: Date | string,
+  date: BrightDateValue | Date | string,
   precision: number = 3,
 ): string {
   const bd = toBrightDateString(date, precision);

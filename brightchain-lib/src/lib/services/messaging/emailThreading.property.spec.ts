@@ -30,6 +30,8 @@ import {
   type IReplyInput,
 } from './emailMessageService';
 import type { MessageCBLService } from './messageCBLService';
+import { brightDateNow } from '../../utils/brightDateConversions';
+import type { BrightDateTimestamp } from '../../types/brightDateTimestamp';
 
 // Feature: email-messaging-protocol, Property 7: Threading Consistency
 
@@ -75,7 +77,7 @@ const arbReferences: fc.Arbitrary<string[]> = fc.array(arbMessageId, {
 const bid = (s: string) => s as unknown as BlockId;
 
 function buildMockMetadata(overrides: Partial<IEmailMetadata>): IEmailMetadata {
-  const now = new Date();
+  const now = brightDateNow();
   const from = createMailbox('sender', 'example.com');
   const to = [createMailbox('recipient', 'example.com')];
   return {

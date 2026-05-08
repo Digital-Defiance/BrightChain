@@ -6,6 +6,8 @@ nav_order: 0
 
 # BrightChain Documentation
 
+> *Mathematics does not accept a search warrant. Where the state sees noise, the people find truth.*
+
 Welcome to the BrightChain documentation. This index organizes all project documents by topic so you can quickly find what you need.
 
 > For hands-on guides, start with the [Walkthroughs](/docs/walkthroughs).

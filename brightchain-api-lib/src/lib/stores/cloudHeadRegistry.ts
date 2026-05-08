@@ -13,8 +13,13 @@
  * provides the ICloudObjectIO primitives.
  */
 import type {
+  BrightDateTimestamp,
   DeferredHeadUpdate,
   IHeadRegistry,
+} from '@brightchain/brightchain-lib';
+import {
+  brightDateNow,
+  normalizeToBrightDate,
 } from '@brightchain/brightchain-lib';
 import type { HeadRecord } from '@brightchain/brightchain-lib/lib/interfaces/storage/headRegistryDriver';
 
@@ -34,12 +39,12 @@ const REGISTRY_KEY = '__brightchain_head_registry.json';
 
 interface RegistryEntry {
   blockId: string;
-  timestamp?: string;
+  timestamp?: string | number;
 }
 
 export class CloudHeadRegistry implements IHeadRegistry {
   private readonly heads = new Map<string, string>();
-  private readonly timestamps = new Map<string, Date>();
+  private readonly timestamps = new Map<string, BrightDateTimestamp>();
   private readonly deferred: DeferredHeadUpdate[] = [];
   private readonly changeListeners = new Map<
     string,
@@ -66,7 +71,7 @@ export class CloudHeadRegistry implements IHeadRegistry {
   ): Promise<void> {
     const key = this.makeKey(dbName, collectionName);
     this.heads.set(key, blockId);
-    this.timestamps.set(key, new Date());
+    this.timestamps.set(key, brightDateNow());
     await this.flush();
   }
 
@@ -114,8 +119,8 @@ export class CloudHeadRegistry implements IHeadRegistry {
         ) {
           const entry = value as RegistryEntry;
           this.heads.set(key, entry.blockId);
-          if (entry.timestamp) {
-            this.timestamps.set(key, new Date(entry.timestamp));
+          if (entry.timestamp !== undefined) {
+            this.timestamps.set(key, normalizeToBrightDate(entry.timestamp as string | number));
           }
         }
       }
@@ -136,7 +141,7 @@ export class CloudHeadRegistry implements IHeadRegistry {
     return new Map(this.heads);
   }
 
-  getHeadTimestamp(dbName: string, collectionName: string): Date | undefined {
+  getHeadTimestamp(dbName: string, collectionName: string): BrightDateTimestamp | undefined {
     return this.timestamps.get(this.makeKey(dbName, collectionName));
   }
 
@@ -144,12 +149,12 @@ export class CloudHeadRegistry implements IHeadRegistry {
     dbName: string,
     collectionName: string,
     blockId: string,
-    timestamp: Date,
+    timestamp: BrightDateTimestamp,
   ): Promise<boolean> {
     const key = this.makeKey(dbName, collectionName);
     const localTimestamp = this.timestamps.get(key);
 
-    if (!localTimestamp || timestamp.getTime() > localTimestamp.getTime()) {
+    if (!localTimestamp || timestamp > localTimestamp) {
       this.heads.set(key, blockId);
       this.timestamps.set(key, timestamp);
       this.notifyHeadChange(key, blockId);
@@ -190,7 +195,7 @@ export class CloudHeadRegistry implements IHeadRegistry {
       const ts = this.timestamps.get(key);
       result.set(key, {
         blockId,
-        timestamp: ts ? ts.toISOString() : new Date(0).toISOString(),
+        timestamp: ts ?? 0,
       });
     }
     return result;
@@ -209,7 +214,7 @@ export class CloudHeadRegistry implements IHeadRegistry {
         dbName,
         collectionName,
         record.blockId,
-        new Date(record.timestamp),
+        record.timestamp,
       );
       if (applied) {
         merged++;
@@ -224,7 +229,7 @@ export class CloudHeadRegistry implements IHeadRegistry {
     dbName: string,
     collectionName: string,
     blockId: string,
-    timestamp: Date,
+    timestamp: BrightDateTimestamp,
   ): Promise<void> {
     this.deferred.push({ dbName, collectionName, blockId, timestamp });
   }
@@ -263,7 +268,7 @@ export class CloudHeadRegistry implements IHeadRegistry {
       const ts = this.timestamps.get(key);
       data[key] = {
         blockId,
-        ...(ts ? { timestamp: ts.toISOString() } : {}),
+        ...(ts !== undefined ? { timestamp: ts } : {}),
       };
     }
     const json = JSON.stringify(data, null, 2);

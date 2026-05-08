@@ -18,6 +18,7 @@ import {
   initializeBrightChain,
   PooledMemoryBlockStore,
   resetInitialization,
+  brightDateNow,
   WriteMode,
 } from '@brightchain/brightchain-lib';
 import { sha256 } from '@noble/hashes/sha256';
@@ -132,7 +133,7 @@ function makeAclDoc(
   version = 1,
   mode = WriteMode.Restricted,
 ): IAclDocument {
-  const now = new Date();
+  const now = brightDateNow();
   return {
     writeMode: mode,
     authorizedWriters: writers,

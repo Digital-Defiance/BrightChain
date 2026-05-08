@@ -8,6 +8,8 @@ import {
   MessageQuery,
   MessageQueryOptions,
 } from '../../interfaces/messaging/messageMetadataStore';
+import type { BrightDateTimestamp } from '../../types/brightDateTimestamp';
+import { normalizeToBrightDate } from '../../utils/brightDateConversions';
 import { MemoryBlockMetadataStore } from '../memoryBlockMetadataStore';
 
 /**
@@ -50,8 +52,8 @@ export class MemoryMessageMetadataStore
       if (recipientId && !meta.recipients.includes(recipientId)) continue;
       if (senderId && meta.senderId !== senderId) continue;
       if (messageType && meta.messageType !== messageType) continue;
-      if (startDate && meta.createdAt < startDate) continue;
-      if (endDate && meta.createdAt > endDate) continue;
+      if (startDate && meta.createdAt < normalizeToBrightDate(startDate)) continue;
+      if (endDate && meta.createdAt > normalizeToBrightDate(endDate)) continue;
       if (priority !== undefined && meta.priority !== priority) continue;
 
       results.push(this.cloneMessageMetadata(meta));
@@ -80,7 +82,7 @@ export class MemoryMessageMetadataStore
   async recordAcknowledgment(
     messageId: string,
     recipientId: string,
-    timestamp: Date,
+    timestamp: BrightDateTimestamp,
   ): Promise<void> {
     const meta = this.messageMetadata.get(messageId);
     if (!meta)
@@ -110,8 +112,8 @@ export class MemoryMessageMetadataStore
 
     for (const meta of this.messageMetadata.values()) {
       if (!meta.recipients.includes(recipientId)) continue;
-      if (startDate && meta.createdAt < startDate) continue;
-      if (endDate && meta.createdAt > endDate) continue;
+      if (startDate && meta.createdAt < normalizeToBrightDate(startDate)) continue;
+      if (endDate && meta.createdAt > normalizeToBrightDate(endDate)) continue;
       if (messageType && meta.messageType !== messageType) continue;
       if (priority !== undefined && meta.priority !== priority) continue;
 
@@ -137,8 +139,8 @@ export class MemoryMessageMetadataStore
 
     for (const meta of this.messageMetadata.values()) {
       if (meta.senderId !== senderId) continue;
-      if (startDate && meta.createdAt < startDate) continue;
-      if (endDate && meta.createdAt > endDate) continue;
+      if (startDate && meta.createdAt < normalizeToBrightDate(startDate)) continue;
+      if (endDate && meta.createdAt > normalizeToBrightDate(endDate)) continue;
       if (messageType && meta.messageType !== messageType) continue;
       if (priority !== undefined && meta.priority !== priority) continue;
 
@@ -151,19 +153,14 @@ export class MemoryMessageMetadataStore
   private cloneMessageMetadata(meta: IMessageMetadata): IMessageMetadata {
     return {
       ...meta,
-      createdAt: new Date(meta.createdAt.getTime()),
-      expiresAt: meta.expiresAt ? new Date(meta.expiresAt.getTime()) : null,
-      lastAccessedAt: new Date(meta.lastAccessedAt.getTime()),
+      createdAt: meta.createdAt, // BrightDateTimestamp is a number, no cloning needed
+      expiresAt: meta.expiresAt, // same
+      lastAccessedAt: meta.lastAccessedAt, // same
       parityBlockIds: [...meta.parityBlockIds],
       replicaNodeIds: [...meta.replicaNodeIds],
       recipients: [...meta.recipients],
       deliveryStatus: new Map(meta.deliveryStatus),
-      acknowledgments: new Map(
-        Array.from(meta.acknowledgments.entries()).map(([k, v]) => [
-          k,
-          new Date(v.getTime()),
-        ]),
-      ),
+      acknowledgments: new Map(meta.acknowledgments),
       cblBlockIds: meta.cblBlockIds ? [...meta.cblBlockIds] : undefined,
     };
   }

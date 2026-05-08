@@ -16,6 +16,8 @@ import {
   ICommunicationMessage,
   InvalidExpirationError,
   MessageAlreadyExplodedError,
+  brightDateToISO,
+  normalizeToBrightDate,
   type IExplodeMessageResponse,
   type IGetExpirationInfoResponse,
   type IGetExpiredResponse,
@@ -285,7 +287,7 @@ export class ExplodingMessagesController<
       }
 
       ExplodingMessageService.setExpiration(message, {
-        expiresAt: expiresAt ? new Date(expiresAt) : undefined,
+        expiresAt: expiresAt ? normalizeToBrightDate(expiresAt) : undefined,
         expiresInMs,
         maxReads,
       });
@@ -296,7 +298,7 @@ export class ExplodingMessagesController<
           status: 'success',
           data: {
             messageId: id,
-            expiresAt: message.expiresAt?.toISOString(),
+            expiresAt: message.expiresAt !== undefined ? brightDateToISO(message.expiresAt) : undefined,
             maxReads: message.maxReads,
           },
           message: 'Expiration set successfully',
@@ -419,7 +421,7 @@ export class ExplodingMessagesController<
           data: {
             messageId: id,
             exploded: true,
-            explodedAt: event.explodedAt.toISOString(),
+            explodedAt: brightDateToISO(event.explodedAt),
           },
           message: 'Message exploded',
         } satisfies IExplodeMessageResponse,
@@ -457,7 +459,7 @@ export class ExplodingMessagesController<
           data: {
             messageId: id,
             isExploding: ExplodingMessageService.isExplodingMessage(message),
-            expiresAt: message.expiresAt?.toISOString(),
+            expiresAt: message.expiresAt !== undefined ? brightDateToISO(message.expiresAt) : undefined,
             maxReads: message.maxReads,
             readCount: message.readCount,
             remainingTimeMs: ExplodingMessageService.getRemainingTime(message),

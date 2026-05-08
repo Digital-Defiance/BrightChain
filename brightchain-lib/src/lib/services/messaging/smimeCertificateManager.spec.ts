@@ -11,6 +11,7 @@ import * as x509 from '@peculiar/x509';
 import { EmailErrorType } from '../../enumerations/messaging/emailErrorType';
 import { EmailError } from '../../errors/messaging/emailError';
 import { SmimeCertificateManager } from './smimeCertificateManager';
+import { brightDateToDate } from '../../utils/brightDateConversions';
 
 /**
  * Helper to generate a self-signed RSA certificate and private key for testing.
@@ -150,8 +151,8 @@ describe('SmimeCertificateManager — certificate import/export/validation', () 
       expect(metadata.subject).toContain('CN=Import Test User');
       expect(metadata.issuer).toBeDefined();
       expect(metadata.serialNumber).toBeDefined();
-      expect(metadata.validFrom).toBeInstanceOf(Date);
-      expect(metadata.validTo).toBeInstanceOf(Date);
+      expect(typeof metadata.validFrom).toBe('number');
+      expect(typeof metadata.validTo).toBe('number');
       expect(metadata.fingerprint).toBeDefined();
       expect(metadata.fingerprint.length).toBeGreaterThan(0);
       expect(metadata.isExpired).toBe(false);
@@ -200,8 +201,8 @@ describe('SmimeCertificateManager — certificate import/export/validation', () 
 
       expect(metadata.subject).toContain('CN=Import Test User');
       expect(metadata.serialNumber).toBeDefined();
-      expect(metadata.validFrom).toBeInstanceOf(Date);
-      expect(metadata.validTo).toBeInstanceOf(Date);
+      expect(typeof metadata.validFrom).toBe('number');
+      expect(typeof metadata.validTo).toBe('number');
       expect(metadata.isExpired).toBe(false);
     }, 30000);
 
@@ -301,7 +302,7 @@ describe('SmimeCertificateManager — certificate import/export/validation', () 
 
       expect(metadata.isExpired).toBe(true);
       expect(metadata.subject).toContain('CN=Expired User');
-      expect(metadata.validTo.getTime()).toBeLessThan(Date.now());
+      expect(brightDateToDate(metadata.validTo).getTime()).toBeLessThan(Date.now());
     }, 30000);
   });
 

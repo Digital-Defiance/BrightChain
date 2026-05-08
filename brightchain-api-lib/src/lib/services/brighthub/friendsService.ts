@@ -18,11 +18,13 @@ import type {
 } from '@brightchain/brightchain-lib';
 import {
   FriendRequestStatus,
+  brightDateNow,
   FriendsErrorCode,
   FriendshipStatus,
   FriendsServiceError,
   sortPair,
 } from '@brightchain/brightchain-lib';
+import type { BrightDateTimestamp } from '@brightchain/brightchain-lib';
 import { randomUUID } from 'crypto';
 
 // ── Database record types ──────────────────────────────────────────────
@@ -31,7 +33,7 @@ interface FriendshipRecord {
   _id: string;
   memberIdA: string;
   memberIdB: string;
-  createdAt: string;
+  createdAt: BrightDateTimestamp;
 }
 
 interface FriendRequestRecord {
@@ -40,7 +42,7 @@ interface FriendRequestRecord {
   recipientId: string;
   message?: string;
   status: string;
-  createdAt: string;
+  createdAt: BrightDateTimestamp;
 }
 
 // ── Collection / Application interfaces (same as UserProfileService) ───
@@ -181,7 +183,7 @@ export class FriendsService implements IFriendsService {
         .exec();
 
       // Create the new request as accepted too
-      const now = new Date().toISOString();
+      const now = brightDateNow();
       const newRequest: FriendRequestRecord = {
         _id: randomUUID(),
         requesterId,
@@ -209,13 +211,13 @@ export class FriendsService implements IFriendsService {
       return {
         success: true,
         autoAccepted: true,
-        friendship: friendship as IBaseFriendship<string>,
+        friendship: friendship as unknown as IBaseFriendship<string>,
         friendRequest: newRequest as IBaseFriendRequest<string>,
       };
     }
 
     // 6. Normal case: create pending request
-    const now = new Date().toISOString();
+    const now = brightDateNow();
     const friendRequest: FriendRequestRecord = {
       _id: randomUUID(),
       requesterId,
@@ -266,7 +268,7 @@ export class FriendsService implements IFriendsService {
       _id: randomUUID(),
       memberIdA,
       memberIdB,
-      createdAt: new Date().toISOString(),
+      createdAt: brightDateNow(),
     };
     await this.friendshipsCollection.create(friendship);
 
@@ -371,7 +373,7 @@ export class FriendsService implements IFriendsService {
     );
 
     const totalCount = all.length;
-    const items = all.slice(0, limit) as IBaseFriendship<string>[];
+    const items = all.slice(0, limit) as unknown as IBaseFriendship<string>[];
 
     return {
       items,

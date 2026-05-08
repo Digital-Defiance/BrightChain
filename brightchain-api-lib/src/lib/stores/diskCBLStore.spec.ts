@@ -2,6 +2,7 @@ import {
   BlockEncryptionType,
   BlockSize,
   BlockType,
+  brightDateNow,
   CBLService,
   CblError,
   CblErrorType,
@@ -63,7 +64,7 @@ describe('DiskCBLStore', () => {
   describe('Basic Operations', () => {
     it('should store and retrieve plain CBL', async () => {
       // Create test data
-      const dateCreated = new Date();
+      const dateCreated = brightDateNow();
 
       // Calculate the maximum number of addresses that can fit in the block
       const maxAddresses = cblService.calculateCBLAddressCapacity(
@@ -148,7 +149,7 @@ describe('DiskCBLStore', () => {
 
     it('should get CBL addresses', async () => {
       // Create test data
-      const dateCreated = new Date();
+      const dateCreated = brightDateNow();
 
       // Calculate the maximum number of addresses that can fit in the block
       const maxAddresses = cblService.calculateCBLAddressCapacity(
@@ -242,7 +243,7 @@ describe('DiskCBLStore', () => {
 
     it('should throw error when storing CBL that already exists', async () => {
       // Create test data
-      const dateCreated = new Date();
+      const dateCreated = brightDateNow();
 
       // Calculate the maximum number of addresses that can fit in the block
       const maxAddresses = cblService.calculateCBLAddressCapacity(
@@ -306,7 +307,7 @@ describe('DiskCBLStore', () => {
 
     it('should throw error when storing CBL without active user or creator', async () => {
       // Create a properly signed CBL first
-      const dateCreated = new Date();
+      const dateCreated = brightDateNow();
 
       // Calculate the maximum number of addresses that can fit in the block
       const maxAddresses = cblService.calculateCBLAddressCapacity(

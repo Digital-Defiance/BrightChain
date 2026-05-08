@@ -2160,6 +2160,12 @@ export const ShowcaseMandarinStrings: Partial<
   [ShowcaseStrings.PP_S18_OrgName]: 'Digital Defiance',
   [ShowcaseStrings.PP_S18_EmailLabel]: '电子邮件：',
   [ShowcaseStrings.PP_S18_WebLabel]: '网站：',
+  [ShowcaseStrings.Slogan_Math_Search_Warrant]: '数学不接受搜查令。',
+  [ShowcaseStrings.Slogan_Where_State_Sees_Noise]:
+    '国家看到的只是噪音，人民发现的却是真理。',
+  [ShowcaseStrings.Slogan_Building_World_Where_Ideas_Have_No_Borders]:
+    '构建一个思想无国界、真理无主人的世界。',
+  [ShowcaseStrings.Slogan_Defiance_By_Design]: '设计即反抗。',
 };
 
 export default ShowcaseMandarinStrings;

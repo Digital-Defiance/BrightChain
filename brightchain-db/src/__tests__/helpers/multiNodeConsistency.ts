@@ -23,6 +23,7 @@
  */
 
 import {
+  brightDateNow,
   initializeBrightChain,
   PooledMemoryBlockStore,
   resetInitialization,
@@ -87,7 +88,7 @@ async function gossipAtoB(
     dbName,
     collectionName,
     head,
-    new Date(Date.now() + 100),
+    brightDateNow() + 0.0012,
   );
   await flushAsync();
 }
@@ -98,16 +99,14 @@ async function snapshotSync(
   registryB: IHeadRegistry,
 ): Promise<void> {
   const snapshot = registryA.exportSnapshot();
-  // Bump every timestamp by 100 ms so the LWW check always fires for updates
+  // Bump every timestamp by a small amount so the LWW check always fires for updates
   const bumped: Array<
-    readonly [string, { blockId: string; timestamp: string }]
+    readonly [string, { blockId: string; timestamp: number }]
   > = [...snapshot].map(([key, rec]) => [
     key,
     {
       blockId: rec.blockId,
-      timestamp: new Date(
-        new Date(rec.timestamp).getTime() + 100,
-      ).toISOString(),
+      timestamp: rec.timestamp + 0.0012, // ~100ms in decimal days
     },
   ]);
   await registryB.mergeSnapshot(bumped);
@@ -237,7 +236,7 @@ export function runMultiNodeConsistency(factory: MultiNodeFactory): void {
       await nodeA.collection(COL).find({}); // warm up
 
       // Gossip stale head with a timestamp that is OLDER than what nodeA has
-      await regA.mergeHeadUpdate(DB, COL, staleHead, new Date(50));
+      await regA.mergeHeadUpdate(DB, COL, staleHead, brightDateNow() - 0.001);
       await flushAsync();
 
       const docs = await nodeA.collection(COL).find({});
@@ -317,7 +316,7 @@ export function runMultiNodeConsistency(factory: MultiNodeFactory): void {
 
       // Gossip the OLD delete (T=5) into the writer's registry.
       // Use a stale arrival timestamp so LWW for the head itself uses a past time.
-      await regWriter.mergeHeadUpdate(DB, COL, deleteHead, new Date(50));
+      await regWriter.mergeHeadUpdate(DB, COL, deleteHead, brightDateNow() - 0.001);
       await flushAsync();
 
       // Writer's T=10 insert must survive

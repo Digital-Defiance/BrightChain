@@ -16,6 +16,11 @@ import type {
   IWriteAclAuditLogger,
   IWriteAclService,
 } from '@brightchain/brightchain-lib';
+import {
+  brightDateNow,
+  brightDateToISO,
+  normalizeToBrightDate,
+} from '@brightchain/brightchain-lib';
 import { Request, Response, Router } from 'express';
 
 /**
@@ -505,11 +510,11 @@ function parseAclFromRequest(
     scope: { dbName, collectionName },
     version: (body['version'] as number) ?? 1,
     createdAt: body['createdAt']
-      ? new Date(body['createdAt'] as string)
-      : new Date(),
+      ? normalizeToBrightDate(body['createdAt'] as string | number)
+      : brightDateNow(),
     updatedAt: body['updatedAt']
-      ? new Date(body['updatedAt'] as string)
-      : new Date(),
+      ? normalizeToBrightDate(body['updatedAt'] as string | number)
+      : brightDateNow(),
     creatorPublicKey: body['creatorPublicKey']
       ? Uint8Array.from(Buffer.from(body['creatorPublicKey'] as string, 'hex'))
       : new Uint8Array(0),
@@ -533,8 +538,8 @@ function parseCapabilityTokenFromRequest(
       Buffer.from((body['granteePublicKey'] as string) ?? '', 'hex'),
     ),
     scope: { dbName, collectionName },
-    expiresAt: new Date(
-      (body['expiresAt'] as string) ?? new Date().toISOString(),
+    expiresAt: normalizeToBrightDate(
+      (body['expiresAt'] as string | number) ?? brightDateNow(),
     ),
     grantorSignature: Uint8Array.from(
       Buffer.from((body['grantorSignature'] as string) ?? '', 'hex'),
@@ -560,8 +565,8 @@ function serializeAclForResponse(
     ),
     scope: aclDoc.scope,
     version: aclDoc.version,
-    createdAt: aclDoc.createdAt.toISOString(),
-    updatedAt: aclDoc.updatedAt.toISOString(),
+    createdAt: brightDateToISO(aclDoc.createdAt),
+    updatedAt: brightDateToISO(aclDoc.updatedAt),
     creatorPublicKey: Buffer.from(aclDoc.creatorPublicKey).toString('hex'),
     creatorSignature: Buffer.from(aclDoc.creatorSignature).toString('hex'),
     previousVersionBlockId: aclDoc.previousVersionBlockId,
@@ -575,7 +580,7 @@ function serializeTokenForResponse(
   return {
     granteePublicKey: Buffer.from(token.granteePublicKey).toString('hex'),
     scope: token.scope,
-    expiresAt: token.expiresAt.toISOString(),
+    expiresAt: brightDateToISO(token.expiresAt),
     grantorSignature: Buffer.from(token.grantorSignature).toString('hex'),
     grantorPublicKey: Buffer.from(token.grantorPublicKey).toString('hex'),
   };

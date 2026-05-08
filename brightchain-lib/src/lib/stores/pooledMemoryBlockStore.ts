@@ -36,6 +36,7 @@ import { CBLService } from '../services/cblService';
 import { getGlobalServiceProvider } from '../services/globalServiceProvider';
 import { XorService } from '../services/xor';
 import { Checksum } from '../types/checksum';
+import { brightDateNow } from '../utils/brightDateConversions';
 import { padToBlockSize, unpadCblData, xorArrays } from '../utils/xorUtils';
 import { MemoryBlockMetadataStore } from './memoryBlockMetadataStore';
 import { MemoryBlockStore } from './memoryBlockStore';
@@ -94,7 +95,7 @@ export class PooledMemoryBlockStore
    * Update pool statistics after a block is added.
    */
   private recordPut(poolId: PoolId, dataLength: number): void {
-    const now = new Date();
+    const now = brightDateNow();
     const existing = this.poolStatsMap.get(poolId);
     if (existing) {
       existing.blockCount += 1;
@@ -119,7 +120,7 @@ export class PooledMemoryBlockStore
     if (existing) {
       existing.blockCount -= 1;
       existing.totalBytes -= dataLength;
-      existing.lastAccessedAt = new Date();
+      existing.lastAccessedAt = brightDateNow();
     }
   }
 
@@ -129,7 +130,7 @@ export class PooledMemoryBlockStore
   private touchPool(poolId: PoolId): void {
     const existing = this.poolStatsMap.get(poolId);
     if (existing) {
-      existing.lastAccessedAt = new Date();
+      existing.lastAccessedAt = brightDateNow();
     }
   }
 
@@ -265,8 +266,8 @@ export class PooledMemoryBlockStore
     }
     return {
       ...stats,
-      createdAt: new Date(stats.createdAt.getTime()),
-      lastAccessedAt: new Date(stats.lastAccessedAt.getTime()),
+      createdAt: stats.createdAt,
+      lastAccessedAt: stats.lastAccessedAt,
     };
   }
 

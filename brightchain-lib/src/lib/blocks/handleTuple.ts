@@ -10,6 +10,7 @@ import { IBaseBlockMetadata } from '../interfaces/blocks/metadata/blockMetadata'
 import { PoolId } from '../interfaces/storage/pooledBlockStore';
 import { getGlobalServiceProvider } from '../services/globalServiceProvider';
 import { Checksum } from '../types/checksum';
+import { brightDateNow } from '../utils/brightDateConversions';
 import { BaseBlock } from './base';
 import { BlockHandle } from './handle';
 import { RawDataBlock } from './rawData';
@@ -190,9 +191,7 @@ export class BlockHandleTuple<T extends BaseBlock = BaseBlock> {
     const block = new RawDataBlock(
       this.handles[0].blockSize,
       result,
-      destBlockMetadata.dateCreated
-        ? new Date(destBlockMetadata.dateCreated)
-        : new Date(),
+      destBlockMetadata.dateCreated ?? brightDateNow(),
       checksum,
       BlockType.RawData,
       BlockDataType.RawData,

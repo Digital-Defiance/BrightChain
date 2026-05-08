@@ -30,6 +30,7 @@ import type {
   IHeadRegistry,
 } from '../interfaces/storage/headRegistry';
 import type { HeadRecord } from '../interfaces/storage/headRegistryDriver';
+import type { BrightDateTimestamp } from '../types/brightDateTimestamp';
 
 export class HeadRegistryGossipTransport implements IHeadRegistry {
   private readonly inner: IHeadRegistry;
@@ -47,7 +48,7 @@ export class HeadRegistryGossipTransport implements IHeadRegistry {
       if (ann.type !== 'head_update' || !ann.headUpdate) return;
       const { dbName, collectionName } = ann.headUpdate;
       const blockId = String(ann.blockId);
-      const timestamp = ann.timestamp; // already a Date
+      const timestamp: BrightDateTimestamp = ann.timestamp; // already BrightDateTimestamp
       // Best-effort inbound merge — do not let gossip errors surface.
       this.inner
         .mergeHeadUpdate(dbName, collectionName, blockId, timestamp)
@@ -166,7 +167,7 @@ export class HeadRegistryGossipTransport implements IHeadRegistry {
     return this.inner.getAllHeads();
   }
 
-  getHeadTimestamp(dbName: string, collectionName: string): Date | undefined {
+  getHeadTimestamp(dbName: string, collectionName: string): BrightDateTimestamp | undefined {
     return this.inner.getHeadTimestamp(dbName, collectionName);
   }
 
@@ -174,7 +175,7 @@ export class HeadRegistryGossipTransport implements IHeadRegistry {
     dbName: string,
     collectionName: string,
     blockId: string,
-    timestamp: Date,
+    timestamp: BrightDateTimestamp,
     writeProof?: IWriteProof,
   ): Promise<boolean> {
     return this.inner.mergeHeadUpdate(
@@ -190,7 +191,7 @@ export class HeadRegistryGossipTransport implements IHeadRegistry {
     dbName: string,
     collectionName: string,
     blockId: string,
-    timestamp: Date,
+    timestamp: BrightDateTimestamp,
   ): Promise<void> {
     return this.inner.deferHeadUpdate(
       dbName,

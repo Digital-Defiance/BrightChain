@@ -40,6 +40,7 @@ import { Vote } from '../interfaces/vote';
 import { BrightTrustStateMachine } from './brightTrustStateMachine';
 import { SealingService } from './sealing.service';
 import { ServiceProvider } from './service.provider';
+import { brightDateNow } from '../utils/brightDateConversions';
 
 // Handle both ESM default export and CommonJS module.exports patterns
 const secretsLib =
@@ -972,8 +973,8 @@ describe('BrightTrustStateMachine Property-Based Tests', () => {
                 publicKey: m.publicKey,
                 metadata: { name: `Member` },
                 isActive: true,
-                createdAt: new Date(),
-                updatedAt: new Date(),
+                createdAt: brightDateNow(),
+                updatedAt: brightDateNow(),
               }));
             (mockDb.listActiveMembers as jest.Mock).mockResolvedValue(
               fakeActiveMembers,
@@ -1072,8 +1073,8 @@ describe('BrightTrustStateMachine Property-Based Tests', () => {
                 publicKey: m.publicKey,
                 metadata: { name: `Member` },
                 isActive: true,
-                createdAt: new Date(),
-                updatedAt: new Date(),
+                createdAt: brightDateNow(),
+                updatedAt: brightDateNow(),
               }));
             (mockDb.listActiveMembers as jest.Mock).mockResolvedValue(
               fakeActiveMembers,
@@ -1150,8 +1151,8 @@ describe('BrightTrustStateMachine Property-Based Tests', () => {
                 publicKey: m.publicKey,
                 metadata: { name: `Member` },
                 isActive: true,
-                createdAt: new Date(),
-                updatedAt: new Date(),
+                createdAt: brightDateNow(),
+                updatedAt: brightDateNow(),
               }));
             (mockDb.listActiveMembers as jest.Mock).mockResolvedValue(
               fakeActiveMembers,

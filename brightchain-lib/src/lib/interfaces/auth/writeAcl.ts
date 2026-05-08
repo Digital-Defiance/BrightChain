@@ -10,6 +10,7 @@
 
 import { PlatformID } from '@digitaldefiance/ecies-lib';
 import { WriteMode } from '../../enumerations/writeMode';
+import type { BrightDateTimestamp } from '../../types/brightDateTimestamp';
 
 /**
  * Scope at which a Write ACL applies.
@@ -40,7 +41,7 @@ export interface IWriteAcl<TID extends PlatformID = Uint8Array> {
   aclAdministrators: TID[];
   scope: IAclScope;
   version: number;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: BrightDateTimestamp;
+  updatedAt: BrightDateTimestamp;
   creatorPublicKey: TID;
 }

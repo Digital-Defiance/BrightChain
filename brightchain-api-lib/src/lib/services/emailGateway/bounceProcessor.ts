@@ -26,6 +26,7 @@ import type {
   IGossipService,
 } from '@brightchain/brightchain-lib';
 import {
+  brightDateNow,
   DeliveryStatus,
   EmailMessageService,
 } from '@brightchain/brightchain-lib';
@@ -174,7 +175,7 @@ export class BounceProcessor
         bounceType: 'permanent',
         failureReason,
         dsnMessage: dsnText,
-        timestamp: new Date(),
+        timestamp: brightDateNow(),
       });
     }
     // Transient bounces are logged but not acted upon — the retry logic
@@ -453,7 +454,7 @@ export class BounceProcessor
           if (receipt) {
             receipt.status = DeliveryStatus.Failed;
             receipt.failureReason = failureReason;
-            receipt.failedAt = new Date();
+            receipt.failedAt = brightDateNow();
           }
         }
 

@@ -18,6 +18,7 @@ import {
 } from '../interfaces/storage/cblWhitening';
 import type { IHeadRegistry } from '../interfaces/storage/headRegistry';
 import { Checksum } from '../types/checksum';
+import { brightDateNow } from '../utils/brightDateConversions';
 import { MemoryBlockStore } from './memoryBlockStore';
 
 type BlockId = string | Checksum;
@@ -57,7 +58,7 @@ export class MemoryBlockStoreAdapter implements IBlockStore {
   ): Promise<void> {
     const id = normalizeId(blockId);
     const validated = validateSize(data, this.blockSize);
-    const block = new RawDataBlock(this.blockSize, validated, new Date(), id);
+    const block = new RawDataBlock(this.blockSize, validated, brightDateNow(), id);
     await this.store.setData(block, options);
   }
 

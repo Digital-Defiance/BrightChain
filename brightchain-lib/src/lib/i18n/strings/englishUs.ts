@@ -1903,12 +1903,13 @@ export const AmericanEnglishStrings: ComponentStrings<BrightChainStringKey> = {
   [BrightChainStrings.Error_PoUW_Middleware_RateLimitDenied]:
     'Rate limiting service unavailable. Request denied.',
 
+  [BrightChainStrings.Date_BrightDateTemplate]: 'BD {BD}',
+
   // ── DatePage ──
   [BrightChainStrings.DatePage_Title]: 'Date & Time',
   [BrightChainStrings.DatePage_BrightDateEpochLabel]:
     'BrightDate (decimal days since J2000.0)',
-  [BrightChainStrings.DatePage_HolidaysTitle]:
-    "Today's Holidays & Observances",
+  [BrightChainStrings.DatePage_HolidaysTitle]: "Today's Holidays & Observances",
   [BrightChainStrings.DatePage_AllFormatsTitle]: 'All Date Formats',
   [BrightChainStrings.DatePage_AboutBrightDateTitle]: 'About BrightDate',
   [BrightChainStrings.DatePage_AboutBrightDate_Epoch]:
@@ -1940,6 +1941,76 @@ export const AmericanEnglishStrings: ComponentStrings<BrightChainStringKey> = {
   [BrightChainStrings.DatePage_HolidayType_Bank]: 'Bank Holiday',
   [BrightChainStrings.DatePage_HolidayType_Observance]: 'Observance',
   [BrightChainStrings.DatePage_HolidayType_Religious]: 'Religious',
+
+  // ── DatePage: Cochrane Easter Egg (Interplanetary Telemetry) ──
+  [BrightChainStrings.DatePage_Telemetry_Title]: 'Interplanetary Telemetry',
+  [BrightChainStrings.DatePage_Telemetry_Subtitle]:
+    'Current one-way light-delay expressed in millidays (md)',
+  [BrightChainStrings.DatePage_Telemetry_MoonDelay]: 'Earth → Moon',
+  [BrightChainStrings.DatePage_Telemetry_MarsDelayMin]: 'Earth → Mars (min)',
+  [BrightChainStrings.DatePage_Telemetry_MarsDelayMax]: 'Earth → Mars (max)',
+  [BrightChainStrings.DatePage_Telemetry_MarsDelayCurrent]:
+    'Earth → Mars (current est.)',
+  [BrightChainStrings.DatePage_Telemetry_Unit]: 'md',
+  [BrightChainStrings.DatePage_Telemetry_Footer]:
+    'BrightDate is designed for a world beyond Earth-Standard Time. One milliday ≈ 86.4 seconds.',
+
+  // ── PaperKeyTemplate ──
+  [BrightChainStrings.PaperKey_Title]: 'BrightChain Paper Key',
+  [BrightChainStrings.PaperKey_GeneratedTemplate]: 'Generated: {DATE} ({BD})',
+  [BrightChainStrings.PaperKey_SecurityWarning]:
+    'KEEP THIS SAFE. This paper key is the only way to recover your BrightChain identity. Store it in a secure location. Never share it.',
+  [BrightChainStrings.PaperKey_WordsAriaLabel]: 'Paper key words',
+  [BrightChainStrings.PaperKey_QrScanLabel]: 'Scan to import:',
+  [BrightChainStrings.PaperKey_QrAlt]: 'Paper key QR code',
+  [BrightChainStrings.PaperKey_SecurityRecommendations]:
+    'Security recommendations:',
+  [BrightChainStrings.PaperKey_Tip_Fireproof]:
+    'Store in a fireproof safe or safety deposit box',
+  [BrightChainStrings.PaperKey_Tip_Split]:
+    'Consider splitting across multiple locations',
+  [BrightChainStrings.PaperKey_Tip_NoDigital]:
+    'Never store digitally or take a screenshot',
+  [BrightChainStrings.PaperKey_Tip_NeverShare]:
+    'Never share with anyone, including BrightChain support',
+  [BrightChainStrings.PaperKey_PrintButton]: 'Print This Template',
+
+  // ── DisputeNotice ──
+  [BrightChainStrings.Dispute_AriaLabelTemplate]: 'Joule dispute {ID}',
+  [BrightChainStrings.Dispute_IdTemplate]: 'Dispute #{ID}',
+  [BrightChainStrings.Dispute_State_Disputed]: 'Under review',
+  [BrightChainStrings.Dispute_State_ResolvedFinal]: 'Resolved (final)',
+  [BrightChainStrings.Dispute_State_ResolvedReplaced]:
+    'Resolved (superseded)',
+  [BrightChainStrings.Dispute_Field_Amount]: 'Amount',
+  [BrightChainStrings.Dispute_Field_Opened]: 'Opened',
+  [BrightChainStrings.Dispute_Field_Reason]: 'Reason',
+  [BrightChainStrings.Dispute_Field_Resolved]: 'Resolved',
+  [BrightChainStrings.Dispute_Field_Resolution]: 'Resolution',
+
+  // ── RateTransparency ──
+  [BrightChainStrings.RateTransparency_Loading]: 'Loading rate table',
+  [BrightChainStrings.RateTransparency_Error]: 'Rate table error',
+  [BrightChainStrings.RateTransparency_Empty]: 'Rate table not available.',
+  [BrightChainStrings.RateTransparency_TitleTemplate]:
+    'Joule Rate Table — Version {VERSION}',
+  [BrightChainStrings.RateTransparency_EffectiveTemplate]:
+    'Effective: {DATE} ({BD})',
+  [BrightChainStrings.RateTransparency_SignedByTemplate]:
+    'Signed by: {SIGNER}',
+  [BrightChainStrings.RateTransparency_Col_ResourceClass]: 'Resource class',
+  [BrightChainStrings.RateTransparency_Col_Rate]: 'Rate',
+  [BrightChainStrings.RateTransparency_Col_PerUnit]: 'Per unit',
+
+  // ── JouleEventLog ──
+  [BrightChainStrings.JouleEventLog_Loading]: 'Loading Joule events',
+  [BrightChainStrings.JouleEventLog_Error]: 'Joule event log error',
+  [BrightChainStrings.JouleEventLog_Empty]: 'No Joule events recorded yet.',
+  [BrightChainStrings.JouleEventLog_AriaLabel]: 'Joule event log',
+  [BrightChainStrings.JouleEventLog_Col_Time]: 'Time',
+  [BrightChainStrings.JouleEventLog_Col_Kind]: 'Kind',
+  [BrightChainStrings.JouleEventLog_Col_Amount]: 'Amount',
+  [BrightChainStrings.JouleEventLog_Col_Description]: 'Description',
 };
 
 export default AmericanEnglishStrings;

@@ -18,10 +18,12 @@ import type {
   HeadRecord,
   IHeadRegistryDriver,
 } from '../interfaces/storage/headRegistryDriver';
+import type { BrightDateTimestamp } from '../types/brightDateTimestamp';
+import { brightDateNow, dateToBrightDate } from '../utils/brightDateConversions';
 
 export class DriverBackedHeadRegistry implements IHeadRegistry {
   private readonly heads = new Map<string, string>();
-  private readonly timestamps = new Map<string, Date>();
+  private readonly timestamps = new Map<string, BrightDateTimestamp>();
   private readonly deferred: DeferredHeadUpdate[] = [];
   private readonly changeListeners = new Map<
     string,
@@ -48,12 +50,12 @@ export class DriverBackedHeadRegistry implements IHeadRegistry {
     _writeProof?: IWriteProof,
   ): Promise<void> {
     const key = this.makeKey(dbName, collectionName);
-    const ts = new Date();
+    const ts = brightDateNow();
     this.heads.set(key, blockId);
     this.timestamps.set(key, ts);
     await this.driver.writeRecord(key, {
       blockId,
-      timestamp: ts.toISOString(),
+      timestamp: ts,
     });
   }
 
@@ -87,7 +89,7 @@ export class DriverBackedHeadRegistry implements IHeadRegistry {
     for (const { k, r } of records) {
       if (r) {
         this.heads.set(k, r.blockId);
-        this.timestamps.set(k, new Date(r.timestamp));
+        this.timestamps.set(k, r.timestamp);
       }
     }
   }
@@ -96,7 +98,7 @@ export class DriverBackedHeadRegistry implements IHeadRegistry {
     return new Map(this.heads);
   }
 
-  getHeadTimestamp(dbName: string, collectionName: string): Date | undefined {
+  getHeadTimestamp(dbName: string, collectionName: string): BrightDateTimestamp | undefined {
     return this.timestamps.get(this.makeKey(dbName, collectionName));
   }
 
@@ -104,16 +106,16 @@ export class DriverBackedHeadRegistry implements IHeadRegistry {
     dbName: string,
     collectionName: string,
     blockId: string,
-    timestamp: Date,
+    timestamp: BrightDateTimestamp,
   ): Promise<boolean> {
     const key = this.makeKey(dbName, collectionName);
     const localTs = this.timestamps.get(key);
-    if (!localTs || timestamp.getTime() > localTs.getTime()) {
+    if (!localTs || timestamp > localTs) {
       this.heads.set(key, blockId);
       this.timestamps.set(key, timestamp);
       await this.driver.writeRecord(key, {
         blockId,
-        timestamp: timestamp.toISOString(),
+        timestamp,
       });
       this.notifyHeadChange(key, blockId);
       return true;
@@ -150,7 +152,7 @@ export class DriverBackedHeadRegistry implements IHeadRegistry {
     dbName: string,
     collectionName: string,
     blockId: string,
-    timestamp: Date,
+    timestamp: BrightDateTimestamp,
   ): Promise<void> {
     this.deferred.push({ dbName, collectionName, blockId, timestamp });
   }
@@ -186,7 +188,7 @@ export class DriverBackedHeadRegistry implements IHeadRegistry {
       const ts = this.timestamps.get(key);
       result.set(key, {
         blockId,
-        timestamp: ts ? ts.toISOString() : new Date(0).toISOString(),
+        timestamp: ts ?? 0,
       });
     }
     return result;
@@ -205,7 +207,7 @@ export class DriverBackedHeadRegistry implements IHeadRegistry {
         dbName,
         collectionName,
         record.blockId,
-        new Date(record.timestamp),
+        record.timestamp,
       );
       if (applied) {
         merged++;

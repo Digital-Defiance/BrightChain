@@ -10,6 +10,7 @@ import {
   type SignatureUint8Array,
 } from '@digitaldefiance/ecies-lib';
 import { ChecksumService } from '../../services/checksum.service';
+import { brightDateNow } from '../../utils/brightDateConversions';
 import { EciesSignatureVerifier } from '../eciesSignatureVerifier';
 import { LedgerEntrySerializer } from '../ledgerEntrySerializer';
 
@@ -36,7 +37,7 @@ describe('EciesSignatureVerifier integration', () => {
   it('should verify a signature produced by Member.sign over an entryHash', () => {
     const partial = {
       sequenceNumber: 0,
-      timestamp: new Date(),
+      timestamp: brightDateNow(),
       previousEntryHash: null,
       signerPublicKey: member.publicKey,
       payload: new Uint8Array([0xde, 0xad, 0xbe, 0xef]),

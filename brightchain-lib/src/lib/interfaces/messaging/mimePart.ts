@@ -14,6 +14,7 @@
  */
 
 import type { BlockId } from '../branded/primitives/blockId';
+import type { BrightDateTimestamp } from '../../types/brightDateTimestamp';
 
 /**
  * RFC 2045 Content-Type header representation.
@@ -128,13 +129,13 @@ export interface IContentDisposition {
   filename?: string;
 
   /** Creation date of the file, if known */
-  creationDate?: Date;
+  creationDate?: BrightDateTimestamp;
 
   /** Last modification date of the file, if known */
-  modificationDate?: Date;
+  modificationDate?: BrightDateTimestamp;
 
   /** Date the file was last read, if known */
-  readDate?: Date;
+  readDate?: BrightDateTimestamp;
 
   /** Approximate size of the content in bytes */
   size?: number;

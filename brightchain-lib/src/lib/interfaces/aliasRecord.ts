@@ -8,6 +8,7 @@
  */
 
 import { PlatformID } from '@digitaldefiance/ecies-lib';
+import type { BrightDateTimestamp } from '../types/brightDateTimestamp';
 
 /**
  * A registered pseudonymous alias record.
@@ -25,9 +26,9 @@ export interface AliasRecord<TID extends PlatformID = Uint8Array> {
   /** Whether the alias is currently active */
   isActive: boolean;
   /** Timestamp of alias registration */
-  registeredAt: Date;
+  registeredAt: BrightDateTimestamp;
   /** Timestamp of deactivation, if applicable */
-  deactivatedAt?: Date;
+  deactivatedAt?: BrightDateTimestamp;
   /** Epoch at registration */
   epochNumber: number;
 }

@@ -8,6 +8,13 @@ import { useShowcaseI18n } from '../i18n/ShowcaseI18nContext';
 import { ShowcaseStrings } from '../i18n/showcaseStrings';
 import './BlogPost.css';
 
+// Build-time map of all blog posts (src/blog/*.md)
+const blogPostFiles = import.meta.glob('../blog/*.md', {
+  query: '?raw',
+  import: 'default',
+  eager: true,
+}) as Record<string, string>;
+
 function BlogPost() {
   const { t } = useShowcaseI18n();
   const { slug } = useParams<{ slug: string }>();
@@ -41,10 +48,12 @@ function BlogPost() {
         return;
       }
 
-      // Try local file
-      const response = await fetch(`/blog/${slug}.md`);
-      if (response.ok) {
-        const text = await response.text();
+      // Look up the post in the build-time glob map
+      const matchingKey = Object.keys(blogPostFiles).find((key) =>
+        key.endsWith(`/${slug}.md`),
+      );
+      if (matchingKey) {
+        const text = blogPostFiles[matchingKey];
         parseAndSetPost(text, slug);
         setLoading(false);
         return;

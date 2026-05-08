@@ -22,6 +22,8 @@ import { createMailbox } from '../../interfaces/messaging/emailAddress';
 import type { IEmailMetadata } from '../../interfaces/messaging/emailMetadata';
 import { createContentType } from '../../interfaces/messaging/mimePart';
 import { InMemoryEmailMetadataStore } from './inMemoryEmailMetadataStore';
+import { normalizeToBrightDate, brightDateNow } from '../../utils/brightDateConversions';
+import type { BrightDateTimestamp } from '../../types/brightDateTimestamp';
 
 const bid = (s: string) => s as unknown as BlockId;
 
@@ -30,7 +32,7 @@ const USER = 'alice@example.com';
 function buildEmail(
   overrides: Partial<IEmailMetadata> & { messageId: string },
 ): IEmailMetadata {
-  const now = new Date();
+  const now = brightDateNow();
   return {
     blockId: bid(overrides.messageId),
     createdAt: now,
@@ -109,9 +111,9 @@ describe('InMemoryEmailMetadataStore', () => {
 
     it('should filter by date range', async () => {
       const store = new InMemoryEmailMetadataStore();
-      const jan = new Date('2025-01-15');
-      const feb = new Date('2025-02-15');
-      const mar = new Date('2025-03-15');
+      const jan = normalizeToBrightDate(new Date('2025-01-15'));
+      const feb = normalizeToBrightDate(new Date('2025-02-15'));
+      const mar = normalizeToBrightDate(new Date('2025-03-15'));
 
       await store.store(buildEmail({ messageId: '<jan@test>', date: jan }));
       await store.store(buildEmail({ messageId: '<feb@test>', date: feb }));
@@ -175,9 +177,9 @@ describe('InMemoryEmailMetadataStore', () => {
   describe('sorting (Requirement 13.7)', () => {
     it('should sort by date descending by default', async () => {
       const store = new InMemoryEmailMetadataStore();
-      const old = new Date('2025-01-01');
-      const mid = new Date('2025-06-01');
-      const recent = new Date('2025-12-01');
+      const old = normalizeToBrightDate(new Date('2025-01-01'));
+      const mid = normalizeToBrightDate(new Date('2025-06-01'));
+      const recent = normalizeToBrightDate(new Date('2025-12-01'));
 
       await store.store(buildEmail({ messageId: '<old@test>', date: old }));
       await store.store(buildEmail({ messageId: '<mid@test>', date: mid }));
@@ -233,7 +235,7 @@ describe('InMemoryEmailMetadataStore', () => {
         await store.store(
           buildEmail({
             messageId: `<e${i}@test>`,
-            date: new Date(2025, 0, i + 1),
+            date: normalizeToBrightDate(new Date(2025, 0, i + 1)),
           }),
         );
       }

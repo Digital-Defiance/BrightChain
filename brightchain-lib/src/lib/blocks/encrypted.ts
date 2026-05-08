@@ -33,6 +33,7 @@ import { IEphemeralBlock } from '../interfaces/blocks/ephemeral';
 import { logValidationFailure } from '../logging/blockLogger';
 import { getGlobalServiceProvider } from '../services/globalServiceProvider';
 import { Checksum } from '../types/checksum';
+import type { BrightDateTimestamp } from '../types/brightDateTimestamp';
 import { EphemeralBlock } from './ephemeral';
 
 /**
@@ -243,7 +244,7 @@ export class EncryptedBlock<TID extends PlatformID = Uint8Array>
     data: Uint8Array,
     checksum: Checksum,
     creator: Member<TID>,
-    dateCreated?: Date,
+    dateCreated?: BrightDateTimestamp,
     lengthBeforeEncryption?: number,
     canRead?: boolean,
     canPersist?: boolean,

@@ -18,6 +18,8 @@ import type {
   IGossipService,
   MessageDeliveryMetadata,
 } from '@brightchain/brightchain-lib';
+import { dateToBrightDate } from '@brightchain/brightchain-lib';
+import type { BrightDateTimestamp } from '@brightchain/brightchain-lib';
 import * as fc from 'fast-check';
 import { InMemoryHeadRegistry } from '../lib/headRegistry';
 
@@ -134,7 +136,7 @@ const headTripleArb = fc.record({
  * Arbitrary for two distinct timestamps within a reasonable range.
  * Guarantees t1 !== t2 by filtering.
  */
-const distinctTimestampPairArb: fc.Arbitrary<{ earlier: Date; later: Date }> =
+const distinctTimestampPairArb: fc.Arbitrary<{ earlier: BrightDateTimestamp; later: BrightDateTimestamp }> =
   fc
     .tuple(
       fc.integer({ min: 1_000_000_000_000, max: 1_900_000_000_000 }),
@@ -143,7 +145,7 @@ const distinctTimestampPairArb: fc.Arbitrary<{ earlier: Date; later: Date }> =
     .filter(([a, b]) => a !== b)
     .map(([a, b]) => {
       const sorted = a < b ? [a, b] : [b, a];
-      return { earlier: new Date(sorted[0]), later: new Date(sorted[1]) };
+      return { earlier: dateToBrightDate(new Date(sorted[0])), later: dateToBrightDate(new Date(sorted[1])) };
     });
 
 /**
@@ -405,8 +407,8 @@ describe('HeadRegistry Cross-Node Sync Property-Based Tests', () => {
             registryB.getHead(dbName, collectionName),
           );
           expect(
-            registryA.getHeadTimestamp(dbName, collectionName)?.getTime(),
-          ).toBe(registryB.getHeadTimestamp(dbName, collectionName)?.getTime());
+            registryA.getHeadTimestamp(dbName, collectionName),
+          ).toBe(registryB.getHeadTimestamp(dbName, collectionName));
 
           // And that state should be the later timestamp's block
           expect(registryA.getHead(dbName, collectionName)).toBe(

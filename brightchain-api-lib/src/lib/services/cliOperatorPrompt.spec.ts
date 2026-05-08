@@ -1,6 +1,7 @@
 import {
   ProposalActionType,
   ProposalDisplay,
+  dateToBrightDate,
 } from '@brightchain/brightchain-lib';
 import { HexString } from '@digitaldefiance/ecies-lib';
 import * as readline from 'readline';
@@ -45,7 +46,7 @@ function makeProposal(overrides?: Partial<ProposalDisplay>): ProposalDisplay {
     actionType: ProposalActionType.ADD_MEMBER,
     actionPayload: { memberId: 'test-member' },
     proposerMemberId: '11223344aabbccdd11223344aabbccdd' as HexString,
-    expiresAt: new Date('2025-12-31T23:59:59Z'),
+    expiresAt: dateToBrightDate(new Date('2025-12-31T23:59:59Z')),
     ...overrides,
   };
 }

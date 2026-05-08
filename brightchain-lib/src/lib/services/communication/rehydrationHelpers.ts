@@ -61,7 +61,7 @@ export function groupAndSortMessages(
   }
 
   for (const [, list] of grouped) {
-    list.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+    list.sort((a, b) => a.createdAt - b.createdAt);
   }
 
   return grouped;

@@ -9,6 +9,7 @@ import { ILedgerEntry } from '../../interfaces/ledger/ledgerEntry';
 import { ILedgerSignatureVerifier } from '../../interfaces/ledger/ledgerSignatureVerifier';
 import { ChecksumService } from '../../services/checksum.service';
 import { Checksum } from '../../types/checksum';
+import { normalizeToBrightDate } from '../../utils/brightDateConversions';
 import { IncrementalMerkleTree } from '../incrementalMerkleTree';
 import { LedgerChainValidator } from '../ledgerChainValidator';
 import { LedgerEntrySerializer } from '../ledgerEntrySerializer';
@@ -46,7 +47,7 @@ describe('LedgerChainValidator', () => {
 
       const partial = {
         sequenceNumber: i,
-        timestamp: new Date(1700000000000 + i * 1000),
+        timestamp: normalizeToBrightDate(new Date(1700000000000 + i * 1000)),
         previousEntryHash,
         signerPublicKey: new Uint8Array(33).fill(0x02),
         payload: new Uint8Array([0xde, 0xad, i & 0xff]),

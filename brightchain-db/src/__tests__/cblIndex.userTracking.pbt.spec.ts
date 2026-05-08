@@ -9,7 +9,7 @@
  */
 
 import type { BlockId } from '@brightchain/brightchain-lib';
-import { CBLVisibility } from '@brightchain/brightchain-lib';
+import { brightDateNow, CBLVisibility, dateToBrightDate } from '@brightchain/brightchain-lib';
 import * as fc from 'fast-check';
 import { CBLIndex } from '../lib/cblIndex';
 import { BrightDb } from '../lib/database';
@@ -132,7 +132,7 @@ describe('CBLIndex User-Level Tracking Property-Based Tests', () => {
             blockId1: ids.blockId1,
             blockId2: ids.blockId2,
             blockSize: 256,
-            createdAt: new Date(),
+            createdAt: brightDateNow(),
             createdBy: userId,
             visibility: CBLVisibility.Private,
             userCollection: collection1,
@@ -148,7 +148,7 @@ describe('CBLIndex User-Level Tracking Property-Based Tests', () => {
               blockId1: noiseId1,
               blockId2: noiseId2,
               blockSize: 256,
-              createdAt: new Date(),
+              createdAt: brightDateNow(),
               createdBy: userId,
               visibility: CBLVisibility.Private,
               userCollection: collection2,
@@ -178,7 +178,7 @@ describe('CBLIndex User-Level Tracking Property-Based Tests', () => {
             blockId1: ids.blockId1,
             blockId2: ids.blockId2,
             blockSize: 256,
-            createdAt: new Date(),
+            createdAt: brightDateNow(),
             createdBy: userId,
             visibility: CBLVisibility.Private,
             userCollection: collection2,
@@ -233,7 +233,7 @@ describe('CBLIndex User-Level Tracking Property-Based Tests', () => {
             blockId1: ids.blockId1,
             blockId2: ids.blockId2,
             blockSize: 256,
-            createdAt: new Date(),
+            createdAt: brightDateNow(),
             createdBy: userA,
             visibility: CBLVisibility.Private,
           });
@@ -321,7 +321,7 @@ describe('CBLIndex User-Level Tracking Property-Based Tests', () => {
             blockId1: ids.blockId1,
             blockId2: ids.blockId2,
             blockSize: 256,
-            createdAt: new Date(),
+            createdAt: brightDateNow(),
             createdBy: creator,
             visibility,
             sharedWith:

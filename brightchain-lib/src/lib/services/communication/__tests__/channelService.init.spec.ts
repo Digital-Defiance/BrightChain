@@ -71,12 +71,12 @@ describe('ChannelService.init()', () => {
       creatorId: 'alice',
       visibility: ChannelVisibility.PUBLIC,
       members: [
-        { memberId: 'alice', role: DefaultRole.OWNER, joinedAt: new Date() },
-        { memberId: 'bob', role: DefaultRole.MEMBER, joinedAt: new Date() },
+        { memberId: 'alice', role: DefaultRole.OWNER, joinedAt: 9000 },
+        { memberId: 'bob', role: DefaultRole.MEMBER, joinedAt: 9000 },
       ],
       encryptedSharedKey: new Map([[0, new Map([['alice', 'key1']])]]),
-      createdAt: new Date(),
-      lastMessageAt: new Date(),
+      createdAt: 9000,
+      lastMessageAt: 9000,
       pinnedMessageIds: [],
       historyVisibleToNewMembers: true,
     };
@@ -226,11 +226,11 @@ describe('ChannelService.init()', () => {
       creatorId: 'alice',
       visibility: ChannelVisibility.PUBLIC,
       members: [
-        { memberId: 'alice', role: DefaultRole.OWNER, joinedAt: new Date() },
+        { memberId: 'alice', role: DefaultRole.OWNER, joinedAt: 9000 },
       ],
       encryptedSharedKey: null as unknown as Map<number, Map<string, string>>,
-      createdAt: new Date(),
-      lastMessageAt: new Date(),
+      createdAt: 9000,
+      lastMessageAt: 9000,
       pinnedMessageIds: [],
       historyVisibleToNewMembers: false,
     };

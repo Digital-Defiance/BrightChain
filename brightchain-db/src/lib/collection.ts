@@ -11,7 +11,14 @@ import type {
   DeferredHeadUpdate,
   HeadRecord,
 } from '@brightchain/brightchain-lib';
-import { Checksum, IBlockStore } from '@brightchain/brightchain-lib';
+import {
+  Checksum,
+  IBlockStore,
+  brightDateNow,
+  dateToBrightDate,
+  normalizeToBrightDate,
+} from '@brightchain/brightchain-lib';
+import type { BrightDateTimestamp } from '@brightchain/brightchain-lib';
 import { sha3_512 } from '@noble/hashes/sha3';
 import { randomUUID } from 'crypto';
 import { runAggregation } from './aggregation';
@@ -123,17 +130,17 @@ export class Collection<T extends BsonDocument = BsonDocument> {
   /** In-memory document cache for fast reads */
   private readonly docCache = new Map<DocumentId, T>();
   /**
-   * Per-document write timestamps (milliseconds since epoch).
+   * Per-document write timestamps (BrightDateTimestamp).
    * Used for per-key LWW during gossip merge so that two concurrent writes on
    * different nodes can both survive rather than one silently overwriting the
    * other at the collection-snapshot level.
    */
-  private readonly docTimestamps = new Map<DocumentId, number>();
+  private readonly docTimestamps = new Map<DocumentId, BrightDateTimestamp>();
   /**
-   * Per-document delete tombstones (milliseconds since epoch).
+   * Per-document delete tombstones (BrightDateTimestamp).
    * A tombstone wins over an insert if its timestamp is later.
    */
-  private readonly docTombstones = new Map<DocumentId, number>();
+  private readonly docTombstones = new Map<DocumentId, BrightDateTimestamp>();
   /** Index manager */
   private readonly indexManager = new IndexManager();
   /** Change listeners */
@@ -158,6 +165,8 @@ export class Collection<T extends BsonDocument = BsonDocument> {
   private readonly generateId: () => string;
   /** Optional store-level lock for write serialization */
   private storeLock?: StoreLock;
+  /** Clock function for per-document timestamps and TTL cutoffs */
+  private readonly nowBd: () => BrightDateTimestamp;
   /**
    * Unsubscribe function returned by headRegistry.onHeadChange().
    * Stored so we can clean up when the collection is dropped or destroyed.
@@ -187,6 +196,7 @@ export class Collection<T extends BsonDocument = BsonDocument> {
     if (options?.readPreference) this.readPreference = options.readPreference;
     this.generateId = options?.idGenerator ?? defaultIdGenerator;
     if (options?.storeLock) this.storeLock = options.storeLock;
+    this.nowBd = options?.nowBd ?? brightDateNow;
 
     // Subscribe to external head changes so this collection can merge gossip
     // updates without requiring a full reload.
@@ -240,7 +250,9 @@ export class Collection<T extends BsonDocument = BsonDocument> {
     // After initial load, drain any in-flight gossip merge so reads observe
     // the latest converged state. mergeFromGossipHead is a no-op until
     // `loaded` is true, so awaiting it here cannot deadlock the load path.
-    if (this.pendingGossipMerge && !this.isMergingGossip) {
+    // Note: we await even when isMergingGossip is true so that a find() call
+    // issued while a merge is in progress still observes the fully-merged state.
+    if (this.pendingGossipMerge) {
       await this.pendingGossipMerge.catch(() => undefined);
     }
   }
@@ -479,7 +491,7 @@ export class Collection<T extends BsonDocument = BsonDocument> {
     this.docCache.set(id, docWithId);
 
     // Record per-document write timestamp for LWW merge
-    this.docTimestamps.set(id, Date.now());
+    this.docTimestamps.set(id, this.nowBd());
     this.docTombstones.delete(id);
 
     // Add to indexes (may throw DuplicateKeyError)
@@ -527,7 +539,7 @@ export class Collection<T extends BsonDocument = BsonDocument> {
     this.docCache.delete(logicalId);
 
     // Record a tombstone so remote nodes learn about this delete during merge
-    this.docTombstones.set(logicalId, Date.now());
+    this.docTombstones.set(logicalId, this.nowBd());
     this.docTimestamps.delete(logicalId);
 
     await this.persistMeta();
@@ -1136,21 +1148,28 @@ export class Collection<T extends BsonDocument = BsonDocument> {
    */
   async sweepTTL(field: string, expireAfterSeconds: number): Promise<number> {
     await this.ensureLoaded();
-    const cutoff = new Date(Date.now() - expireAfterSeconds * 1000);
+    const expireDays = expireAfterSeconds / 86400;
+    const cutoff = this.nowBd() - expireDays;
     const expired: DocumentId[] = [];
 
     for (const id of this.docIndex.keys()) {
       const doc = await this.readDoc(id);
       if (!doc) continue;
       const value = doc[field];
-      let dateValue: Date | null = null;
-      if (value instanceof Date) {
-        dateValue = value;
-      } else if (typeof value === 'string' || typeof value === 'number') {
-        const parsed = new Date(value as string | number);
-        if (!isNaN(parsed.getTime())) dateValue = parsed;
+      let bdValue: number | null = null;
+      if (typeof value === 'number') {
+        bdValue = value;
+      } else if (value instanceof Date) {
+        bdValue = dateToBrightDate(value);
+      } else if (typeof value === 'string') {
+        try {
+          bdValue = normalizeToBrightDate(value);
+        } catch {
+          // skip unparseable string fields
+          continue;
+        }
       }
-      if (dateValue && dateValue <= cutoff) {
+      if (bdValue !== null && bdValue <= cutoff) {
         expired.push(id);
       }
     }
@@ -1374,7 +1393,7 @@ export class Collection<T extends BsonDocument = BsonDocument> {
       updateDescription:
         operationType === 'update' ? updateDescription : undefined,
       ns: { db: this.dbName, coll: this.name },
-      timestamp: new Date(),
+      timestamp: this.nowBd(),
     };
     for (const listener of this.changeListeners) {
       try {
@@ -1525,7 +1544,7 @@ export class HeadRegistry {
     return new Map(this.heads);
   }
 
-  getHeadTimestamp(_dbName: string, _collectionName: string): Date | undefined {
+  getHeadTimestamp(_dbName: string, _collectionName: string): BrightDateTimestamp | undefined {
     return undefined;
   }
 
@@ -1533,7 +1552,7 @@ export class HeadRegistry {
     dbName: string,
     collectionName: string,
     blockId: string,
-    _timestamp: Date,
+    _timestamp: BrightDateTimestamp,
   ): Promise<boolean> {
     this.setHead(dbName, collectionName, blockId);
     return true;
@@ -1543,7 +1562,7 @@ export class HeadRegistry {
     _dbName: string,
     _collectionName: string,
     _blockId: string,
-    _timestamp: Date,
+    _timestamp: BrightDateTimestamp,
   ): Promise<void> {
     // No-op: legacy registry does not support gossip deferred updates.
   }
@@ -1559,7 +1578,7 @@ export class HeadRegistry {
   exportSnapshot(): ReadonlyMap<string, HeadRecord> {
     const result = new Map<string, HeadRecord>();
     for (const [key, blockId] of this.heads) {
-      result.set(key, { blockId, timestamp: new Date(0).toISOString() });
+      result.set(key, { blockId, timestamp: 0 });
     }
     return result;
   }
@@ -1586,15 +1605,15 @@ export class HeadRegistry {
 interface CollectionMeta {
   mappings: Record<string, string>;
   /**
-   * Per-document write timestamps (ms since epoch).
+   * Per-document write timestamps (BrightDateTimestamp).
    * Absent in legacy snapshots — treated as 0 during merge (remote wins).
    */
-  docTimestamps?: Record<string, number>;
+  docTimestamps?: Record<string, BrightDateTimestamp>;
   /**
-   * Per-document delete tombstones (ms since epoch).
+   * Per-document delete tombstones (BrightDateTimestamp).
    * Present only when documents have been explicitly removed.
    */
-  docTombstones?: Record<string, number>;
+  docTombstones?: Record<string, BrightDateTimestamp>;
   indexes: Array<{
     name: string;
     spec: IndexSpec;

@@ -265,14 +265,17 @@ export const ShowcaseUkrainianStrings: Partial<
   [ShowcaseStrings.FAQ_Tech_Q18_Title]:
     '18. Як BrightStack реалізує наскрізне шифрування (E2EE) у стані спокою?',
   [ShowcaseStrings.FAQ_Tech_Q18_Intro]:
-    'E2EE у BrightStack — це не лише шифрування під час передачі — кожне повідомлення шифрується до запису у блок-сховище. Миттю, як виникає шифротекст, відкритий текст назавжди видаляється з пам\'яті та сховища.',
-  [ShowcaseStrings.FAQ_Tech_Q18_AtRest_Label]: 'Застосування шифрування у стані спокою',
+    "E2EE у BrightStack — це не лише шифрування під час передачі — кожне повідомлення шифрується до запису у блок-сховище. Миттю, як виникає шифротекст, відкритий текст назавжди видаляється з пам'яті та сховища.",
+  [ShowcaseStrings.FAQ_Tech_Q18_AtRest_Label]:
+    'Застосування шифрування у стані спокою',
   [ShowcaseStrings.FAQ_Tech_Q18_AtRest]:
     'При створенні EmailMessageService шифрує необроблені байти повідомлення і зберігає лише шифротекст AES-256-GCM в encryptedBody. textBody, htmlBody та всі тіла частин MIME явно встановлюються в undefined і ніколи не записуються до сховища.',
-  [ShowcaseStrings.FAQ_Tech_Q18_Schemes_Label]: 'Чотири підтримувані схеми шифрування',
+  [ShowcaseStrings.FAQ_Tech_Q18_Schemes_Label]:
+    'Чотири підтримувані схеми шифрування',
   [ShowcaseStrings.FAQ_Tech_Q18_Schemes]:
     'RECIPIENT_KEYS використовує ECIES для створення унікального шифротексту для кожного одержувача. SHARED_KEY використовує єдиний спільний секрет AES-256-GCM. S/MIME і GPG також повністю підтримуються для сумісності з існуючою поштовою інфраструктурою.',
-  [ShowcaseStrings.FAQ_Tech_Q18_Purge_Label]: 'Гарантія видалення відкритого тексту',
+  [ShowcaseStrings.FAQ_Tech_Q18_Purge_Label]:
+    'Гарантія видалення відкритого тексту',
   [ShowcaseStrings.FAQ_Tech_Q18_Purge]:
     'Після шифрування textBody, htmlBody та всі поля parts[].body явно встановлюються в undefined і ніколи не зберігаються. Зашифрований вміст зберігається як encryptedBody разом з encryptionIv та encryptionAuthTag. Бінарні поля кодуються в base64 для JSON-транспорту через REST API.',
   [ShowcaseStrings.FAQ_Tech_Q18_Inbound_Label]: 'Шифрування вхідної пошти SMTP',
@@ -281,7 +284,7 @@ export const ShowcaseUkrainianStrings: Partial<
 
   // FAQ Technical Q19 — BrightDate
   [ShowcaseStrings.FAQ_Tech_Q19_Title]:
-    '19. Що таке BrightDate і чому він з\'являється скрізь?',
+    "19. Що таке BrightDate і чому він з'являється скрізь?",
   [ShowcaseStrings.FAQ_Tech_Q19_Intro]:
     'BrightDate — це офіційна система часу BrightChain — універсальне десяткове представлення часу, натхненне концепцією зоряної дати зі Star Trek, але засноване на реальній науці. Кожна мітка часу в BrightChain відображається у подвійному форматі: знайома локальна дата поруч із її еквівалентом BrightDate, як метрична система поруч з імперською. Наприклад: "15 січ. 2025 (BD 9146.438)".',
   [ShowcaseStrings.FAQ_Tech_Q19_Epoch_Label]: 'Наукова епоха',
@@ -296,12 +299,14 @@ export const ShowcaseUkrainianStrings: Partial<
   [ShowcaseStrings.FAQ_Tech_Q19_TAI_Label]: 'Монотонний режим TAI',
   [ShowcaseStrings.FAQ_Tech_Q19_TAI]:
     'Для застосунків, які не можуть толерувати високосні секунди (криптографічні мітки часу, розподілений консенсус), BrightDate підтримує режим TAI (Міжнародний атомний час) — строго монотонну шкалу часу, де кожна секунда є точно однією секундою СІ, без вставок чи видалень.',
-  [ShowcaseStrings.FAQ_Tech_Q19_Interplanetary_Label]: 'Готовий до міжпланетного',
+  [ShowcaseStrings.FAQ_Tech_Q19_Interplanetary_Label]:
+    'Готовий до міжпланетного',
   [ShowcaseStrings.FAQ_Tech_Q19_Interplanetary]:
     'BrightDate природно розширюється до міжпланетної координації. Він включає перетворення дати Сол Марса, розрахунки затримки світла та хронометраж поширення сигналу. Коли вузли BrightChain зрештою поширяться за межі Землі, система часу вже підготовлена.',
-  [ShowcaseStrings.FAQ_Tech_Q19_DualDisplay_Label]: 'Філософія подвійного відображення',
+  [ShowcaseStrings.FAQ_Tech_Q19_DualDisplay_Label]:
+    'Філософія подвійного відображення',
   [ShowcaseStrings.FAQ_Tech_Q19_DualDisplay]:
-    'BrightDate відображається поруч із традиційними датами по всьому BrightChain — в електронних листах, метаданих файлів, печатках сховищ, транзакціях Joule, подіях календаря та скрізь, де з\'являється мітка часу. Мета — поступове звикання: ви завжди маєте локальну дату як орієнтир, але з часом BrightDate стає природним способом думати про час в екосистемі BrightChain.',
+    "BrightDate відображається поруч із традиційними датами по всьому BrightChain — в електронних листах, метаданих файлів, печатках сховищ, транзакціях Joule, подіях календаря та скрізь, де з'являється мітка часу. Мета — поступове звикання: ви завжди маєте локальну дату як орієнтир, але з часом BrightDate стає природним способом думати про час в екосистемі BrightChain.",
   [ShowcaseStrings.FAQ_Tech_Q19_Conclusion]:
     'BrightDate є відкритим кодом (@brightchain/brightdate на npm) і може використовуватися незалежно від BrightChain для будь-якого проекту, який отримує користь від представлення часу без часових поясів та з науковим обґрунтуванням.',
 
@@ -2387,6 +2392,13 @@ export const ShowcaseUkrainianStrings: Partial<
   [ShowcaseStrings.PP_S18_OrgName]: 'Digital Defiance',
   [ShowcaseStrings.PP_S18_EmailLabel]: 'Електронна пошта:',
   [ShowcaseStrings.PP_S18_WebLabel]: 'Веб:',
+  [ShowcaseStrings.Slogan_Math_Search_Warrant]:
+    'Математика не приймає ордер на обшук.',
+  [ShowcaseStrings.Slogan_Where_State_Sees_Noise]:
+    'Там, де держава бачить шум, народ знаходить правду.',
+  [ShowcaseStrings.Slogan_Building_World_Where_Ideas_Have_No_Borders]:
+    'Будуємо світ, де ідеї не мають кордонів, а правда не має власника.',
+  [ShowcaseStrings.Slogan_Defiance_By_Design]: 'Спротив за задумом.',
 };
 
 export default ShowcaseUkrainianStrings;

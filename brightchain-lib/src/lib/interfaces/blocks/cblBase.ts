@@ -2,6 +2,7 @@ import {
   SignatureUint8Array,
   type PlatformID,
 } from '@digitaldefiance/ecies-lib';
+import type { BrightDateTimestamp } from '../../types/brightDateTimestamp';
 import { Checksum } from '../../types/checksum';
 import { IEphemeralBlock } from './ephemeral';
 
@@ -16,9 +17,9 @@ export interface ICBLCore<TID extends PlatformID = Uint8Array>
   get creatorId(): TID;
 
   /**
-   * Date the CBL was created
+   * Date the CBL was created (BrightDateValue)
    */
-  get dateCreated(): Date;
+  get dateCreated(): BrightDateTimestamp;
 
   /**
    * Number of addresses in the CBL

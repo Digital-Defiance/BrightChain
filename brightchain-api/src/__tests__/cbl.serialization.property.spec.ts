@@ -12,6 +12,8 @@
 import {
   BlockEncryptionType,
   BlockSize,
+  brightDateNow,
+  brightDateToDate,
   ConstituentBlockListBlock,
   initializeBrightChain,
   ServiceProvider,
@@ -82,7 +84,7 @@ describe('CBL Serialization Round-Trip Property Tests', () => {
             // Create CBL header and data
             const addressList = Buffer.concat(blockAddresses);
             const fileDataLength = 1024;
-            const dateCreated = new Date();
+            const dateCreated = brightDateNow();
 
             const { headerData } = cblService.makeCblHeader(
               creator,
@@ -193,7 +195,7 @@ describe('CBL Serialization Round-Trip Property Tests', () => {
             // Create CBL
             const addressList = Buffer.concat(blockAddresses);
             const fileDataLength = 2048;
-            const dateCreated = new Date();
+            const dateCreated = brightDateNow();
 
             const { headerData } = cblService.makeCblHeader(
               creator,
@@ -221,11 +223,11 @@ describe('CBL Serialization Round-Trip Property Tests', () => {
             );
             expect(parsedHeader.tupleSize).toBe(cbl.tupleSize);
 
-            // Verify date is within reasonable tolerance (1 second)
+            // Verify date is within reasonable tolerance (1 second = 1/86400 days)
             const dateDiff = Math.abs(
-              parsedHeader.dateCreated.getTime() - dateCreated.getTime(),
+              parsedHeader.dateCreated - dateCreated,
             );
-            expect(dateDiff).toBeLessThan(1000);
+            expect(dateDiff).toBeLessThan(1 / 86400);
           },
         ),
         { numRuns: 10 },
@@ -263,7 +265,7 @@ describe('CBL Serialization Round-Trip Property Tests', () => {
 
             const { headerData } = cblService.makeCblHeader(
               creator,
-              new Date(),
+              brightDateNow(),
               blockAddresses.length,
               fileDataLength,
               addressList,

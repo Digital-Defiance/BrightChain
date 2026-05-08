@@ -18,6 +18,7 @@
  */
 
 import type {
+  BrightDateTimestamp,
   DeferredHeadUpdate,
   HeadRecord,
   IHeadRegistry,
@@ -111,7 +112,10 @@ export class AuthorizedHeadRegistry implements IHeadRegistry {
     return this.inner.getAllHeads();
   }
 
-  getHeadTimestamp(dbName: string, collectionName: string): Date | undefined {
+  getHeadTimestamp(
+    dbName: string,
+    collectionName: string,
+  ): BrightDateTimestamp | undefined {
     return this.inner.getHeadTimestamp(dbName, collectionName);
   }
 
@@ -151,7 +155,7 @@ export class AuthorizedHeadRegistry implements IHeadRegistry {
     dbName: string,
     collectionName: string,
     blockId: string,
-    timestamp: Date,
+    timestamp: BrightDateTimestamp,
     writeProof?: IWriteProof,
   ): Promise<boolean> {
     await this.authorizeWrite(dbName, collectionName, blockId, writeProof);
@@ -177,7 +181,7 @@ export class AuthorizedHeadRegistry implements IHeadRegistry {
     dbName: string,
     collectionName: string,
     blockId: string,
-    timestamp: Date,
+    timestamp: BrightDateTimestamp,
   ): Promise<void> {
     return this.inner.deferHeadUpdate(
       dbName,

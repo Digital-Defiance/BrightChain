@@ -289,29 +289,31 @@ export const ShowcaseFrenchStrings: Partial<
 
   // FAQ Technical Q19 — BrightDate
   [ShowcaseStrings.FAQ_Tech_Q19_Title]:
-    '19. Qu\'est-ce que BrightDate et pourquoi apparaît-il partout ?',
+    "19. Qu'est-ce que BrightDate et pourquoi apparaît-il partout ?",
   [ShowcaseStrings.FAQ_Tech_Q19_Intro]:
-    'BrightDate est le système de temps officiel de BrightChain — une représentation temporelle décimale universelle inspirée du concept de date stellaire de Star Trek, mais fondée sur la science réelle. Chaque horodatage dans BrightChain est affiché en format dual : la date locale familière à côté de son équivalent BrightDate, comme afficher le métrique à côté de l\'impérial. Par exemple : « 15 jan. 2025 (BD 9146.438) ».',
+    "BrightDate est le système de temps officiel de BrightChain — une représentation temporelle décimale universelle inspirée du concept de date stellaire de Star Trek, mais fondée sur la science réelle. Chaque horodatage dans BrightChain est affiché en format dual : la date locale familière à côté de son équivalent BrightDate, comme afficher le métrique à côté de l'impérial. Par exemple : « 15 jan. 2025 (BD 9146.438) ».",
   [ShowcaseStrings.FAQ_Tech_Q19_Epoch_Label]: 'Époque scientifique',
   [ShowcaseStrings.FAQ_Tech_Q19_Epoch]:
     'BrightDate compte les jours décimaux depuis J2000.0 (1er janvier 2000, 12:00:00 UTC) — la même époque utilisée par les astronomes du monde entier pour la mécanique céleste. Cela rend BrightDate naturellement compatible avec les calculs astronomiques et la coordination interplanétaire.',
   [ShowcaseStrings.FAQ_Tech_Q19_Format_Label]: 'Format jour décimal',
   [ShowcaseStrings.FAQ_Tech_Q19_Format]:
-    'Une valeur BrightDate comme 9146.43750 signifie « 9146 jours et 43,75% d\'un jour depuis l\'époque J2000.0 ». La partie entière est le nombre de jours, la partie fractionnaire est l\'heure du jour en décimal. Pas de fuseaux horaires, pas d\'heure d\'été, pas d\'ambiguïté — juste un nombre sur une ligne temporelle.',
+    "Une valeur BrightDate comme 9146.43750 signifie « 9146 jours et 43,75% d'un jour depuis l'époque J2000.0 ». La partie entière est le nombre de jours, la partie fractionnaire est l'heure du jour en décimal. Pas de fuseaux horaires, pas d'heure d'été, pas d'ambiguïté — juste un nombre sur une ligne temporelle.",
   [ShowcaseStrings.FAQ_Tech_Q19_Arithmetic_Label]: 'Arithmétique triviale',
   [ShowcaseStrings.FAQ_Tech_Q19_Arithmetic]:
-    'Besoin du temps écoulé entre deux événements ? Soustrayez un BrightDate d\'un autre. Le résultat est en jours. Besoin de planifier quelque chose dans 3 heures ? Ajoutez 0,125. Les sous-unités métriques (millijours ≈ 86,4 secondes, microjours ≈ 86,4 millisecondes) rendent les durées à échelle humaine intuitives.',
+    "Besoin du temps écoulé entre deux événements ? Soustrayez un BrightDate d'un autre. Le résultat est en jours. Besoin de planifier quelque chose dans 3 heures ? Ajoutez 0,125. Les sous-unités métriques (millijours ≈ 86,4 secondes, microjours ≈ 86,4 millisecondes) rendent les durées à échelle humaine intuitives.",
   [ShowcaseStrings.FAQ_Tech_Q19_TAI_Label]: 'Mode TAI monotone',
   [ShowcaseStrings.FAQ_Tech_Q19_TAI]:
     'Pour les applications qui ne peuvent tolérer les secondes intercalaires (horodatages cryptographiques, consensus distribué), BrightDate prend en charge le mode TAI (Temps Atomique International) — une échelle de temps strictement monotone où chaque seconde est exactement une seconde SI, sans insertions ni suppressions.',
-  [ShowcaseStrings.FAQ_Tech_Q19_Interplanetary_Label]: 'Prêt pour l\'interplanétaire',
+  [ShowcaseStrings.FAQ_Tech_Q19_Interplanetary_Label]:
+    "Prêt pour l'interplanétaire",
   [ShowcaseStrings.FAQ_Tech_Q19_Interplanetary]:
-    'BrightDate s\'étend naturellement à la coordination interplanétaire. Il inclut les conversions de date Sol martienne, les calculs de délai lumineux et la synchronisation de propagation des signaux. À mesure que les nœuds BrightChain s\'étendront au-delà de la Terre, le système temporel est déjà préparé.',
-  [ShowcaseStrings.FAQ_Tech_Q19_DualDisplay_Label]: 'Philosophie d\'affichage dual',
+    "BrightDate s'étend naturellement à la coordination interplanétaire. Il inclut les conversions de date Sol martienne, les calculs de délai lumineux et la synchronisation de propagation des signaux. À mesure que les nœuds BrightChain s'étendront au-delà de la Terre, le système temporel est déjà préparé.",
+  [ShowcaseStrings.FAQ_Tech_Q19_DualDisplay_Label]:
+    "Philosophie d'affichage dual",
   [ShowcaseStrings.FAQ_Tech_Q19_DualDisplay]:
-    'BrightDate est affiché aux côtés des dates traditionnelles dans tout BrightChain — dans les e-mails, les métadonnées de fichiers, les sceaux de coffres, les transactions Joule, les événements de calendrier et partout où un horodatage apparaît. L\'objectif est la familiarité progressive : vous avez toujours la date locale comme référence, mais avec le temps BrightDate devient la façon naturelle de penser le temps dans l\'écosystème BrightChain.',
+    "BrightDate est affiché aux côtés des dates traditionnelles dans tout BrightChain — dans les e-mails, les métadonnées de fichiers, les sceaux de coffres, les transactions Joule, les événements de calendrier et partout où un horodatage apparaît. L'objectif est la familiarité progressive : vous avez toujours la date locale comme référence, mais avec le temps BrightDate devient la façon naturelle de penser le temps dans l'écosystème BrightChain.",
   [ShowcaseStrings.FAQ_Tech_Q19_Conclusion]:
-    'BrightDate est open source (@brightchain/brightdate sur npm) et peut être utilisé indépendamment de BrightChain pour tout projet bénéficiant d\'une représentation temporelle sans fuseaux horaires et scientifiquement fondée.',
+    "BrightDate est open source (@brightchain/brightdate sur npm) et peut être utilisé indépendamment de BrightChain pour tout projet bénéficiant d'une représentation temporelle sans fuseaux horaires et scientifiquement fondée.",
 
   // FAQ Ecosystem Questions
   [ShowcaseStrings.FAQ_Eco_WhatIsBrightChain_Title]:
@@ -537,7 +539,7 @@ export const ShowcaseFrenchStrings: Partial<
     'Le caractère aléatoire cryptographique supprime la responsabilité du stockage. Aucun bloc individuel ne contient de contenu identifiable, offrant une immunité juridique aux opérateurs de nœuds.',
   [ShowcaseStrings.About_Feature_E2EE_Title]: 'Chiffrement de bout en bout',
   [ShowcaseStrings.About_Feature_E2EE_Desc]:
-    'Chaque donnée est chiffrée avant de quitter votre appareil. Le texte en clair n\'est jamais stocké, jamais transmis, jamais exposé. Quatre schémas de chiffrement — clés ECIES par destinataire, clés partagées AES-256-GCM, S/MIME et GPG — garantissent que vos données restent les vôtres, de la création à la reconstruction.',
+    "Chaque donnée est chiffrée avant de quitter votre appareil. Le texte en clair n'est jamais stocké, jamais transmis, jamais exposé. Quatre schémas de chiffrement — clés ECIES par destinataire, clés partagées AES-256-GCM, S/MIME et GPG — garantissent que vos données restent les vôtres, de la création à la reconstruction.",
   [ShowcaseStrings.About_Feature_EnergyEfficient_Title]: 'Économe en énergie',
   [ShowcaseStrings.About_Feature_EnergyEfficient_Desc]:
     'Pas de minage par preuve de travail inutile. Tout le calcul sert un objectif utile — stockage, vérification et opérations réseau.',
@@ -2433,6 +2435,13 @@ export const ShowcaseFrenchStrings: Partial<
   [ShowcaseStrings.PP_S18_OrgName]: 'Digital Defiance',
   [ShowcaseStrings.PP_S18_EmailLabel]: 'E-mail :',
   [ShowcaseStrings.PP_S18_WebLabel]: 'Web :',
+  [ShowcaseStrings.Slogan_Math_Search_Warrant]:
+    "Les mathématiques n'acceptent pas de mandat de perquisition.",
+  [ShowcaseStrings.Slogan_Where_State_Sees_Noise]:
+    "Là où l'État voit du bruit, le peuple trouve la vérité.",
+  [ShowcaseStrings.Slogan_Building_World_Where_Ideas_Have_No_Borders]:
+    "Bâtir un monde où les idées n'ont pas de frontières et où la vérité n'a pas de propriétaire.",
+  [ShowcaseStrings.Slogan_Defiance_By_Design]: 'La Défiance par le Design.',
 };
 
 export default ShowcaseFrenchStrings;

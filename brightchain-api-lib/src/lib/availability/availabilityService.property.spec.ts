@@ -27,6 +27,7 @@ import {
   HeartbeatConfig,
   IBlockRegistry,
   ICBLIndexEntry,
+  brightDateNow,
   IDiscoveryProtocol,
   IGossipService,
   IHeartbeatMonitor,
@@ -127,7 +128,7 @@ class MockBlockRegistry implements IBlockRegistry {
     return {
       nodeId: 'test-node',
       blockIds: this.getLocalBlockIds(),
-      generatedAt: new Date(),
+      generatedAt: 9000,
       checksum: 'test-checksum',
     };
   }
@@ -143,7 +144,7 @@ class MockBlockRegistry implements IBlockRegistry {
     return {
       nodeId: 'test-node',
       pools: new Map(),
-      generatedAt: new Date(),
+      generatedAt: 9000,
       checksum: 'test-checksum',
     };
   }
@@ -537,7 +538,7 @@ describe('AvailabilityService Property Tests - State Management', () => {
             );
             await service.updateLocation(blockId, {
               nodeId: remoteNodeId,
-              lastSeen: new Date(),
+              lastSeen: brightDateNow(),
               isAuthoritative: true,
             });
 
@@ -1243,7 +1244,7 @@ describe('AvailabilityService Property Tests - Events', () => {
           // Add location
           await service.updateLocation(blockId, {
             nodeId,
-            lastSeen: new Date(),
+            lastSeen: brightDateNow(),
             isAuthoritative: false,
           });
 
@@ -1279,7 +1280,7 @@ describe('AvailabilityService Property Tests - Events', () => {
           // Add location first
           await service.updateLocation(blockId, {
             nodeId,
-            lastSeen: new Date(),
+            lastSeen: brightDateNow(),
             isAuthoritative: false,
           });
 
@@ -1347,14 +1348,14 @@ describe('AvailabilityService Property Tests - Events', () => {
           // Add location
           await service.updateLocation(blockId, {
             nodeId,
-            lastSeen: new Date(),
+            lastSeen: brightDateNow(),
             isAuthoritative: false,
           });
 
           // Update same location
           await service.updateLocation(blockId, {
             nodeId,
-            lastSeen: new Date(),
+            lastSeen: brightDateNow(),
             isAuthoritative: true,
             latencyMs: 100,
           });
@@ -1396,7 +1397,7 @@ describe('AvailabilityService Property Tests - Events', () => {
           await service.setAvailabilityState(blockId, AvailabilityState.Remote);
           await service.updateLocation(blockId, {
             nodeId: 'peer-1',
-            lastSeen: new Date(),
+            lastSeen: brightDateNow(),
             isAuthoritative: false,
           });
 
@@ -1465,7 +1466,7 @@ describe('AvailabilityService Property Tests - Events', () => {
           await service.setAvailabilityState(blockId, AvailabilityState.Remote);
           await service.updateLocation(blockId, {
             nodeId: 'peer-1',
-            lastSeen: new Date(),
+            lastSeen: brightDateNow(),
             isAuthoritative: false,
           });
           await service.removeLocation(blockId, 'peer-1');
@@ -1518,7 +1519,7 @@ describe('AvailabilityService Property Tests - Events', () => {
       );
       await service.updateLocation('test12345678901234567890123456789', {
         nodeId: 'peer-1',
-        lastSeen: new Date(),
+        lastSeen: brightDateNow(),
         isAuthoritative: false,
       });
 
@@ -1741,7 +1742,7 @@ describe('AvailabilityService Property Tests - Staleness', () => {
           // Update location (refresh)
           await customService.updateLocation(blockId, {
             nodeId,
-            lastSeen: new Date(),
+            lastSeen: brightDateNow(),
             isAuthoritative: false,
           });
 
@@ -1765,7 +1766,7 @@ describe('AvailabilityService Property Tests - Staleness', () => {
           // Add location
           await service.updateLocation(blockId, {
             nodeId,
-            lastSeen: new Date(),
+            lastSeen: brightDateNow(),
             isAuthoritative: false,
           });
 

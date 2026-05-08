@@ -14,6 +14,8 @@ import {
   CommunicationEventType,
   PresenceStatus,
 } from '@brightchain/brightchain-lib';
+import type { BrightDateTimestamp } from '@brightchain/brightchain-lib';
+import { brightDateNow } from '@brightchain/brightchain-lib';
 import { WebSocket } from 'ws';
 
 /**
@@ -27,7 +29,7 @@ export type SharedContextResolver = (memberId: string) => Set<string>;
  */
 export interface IPresenceChangeEvent {
   type: CommunicationEventType.PRESENCE_CHANGED;
-  timestamp: Date;
+  timestamp: BrightDateTimestamp;
   data: {
     memberId: string;
     status: PresenceStatus;
@@ -114,7 +116,7 @@ export class PresenceService {
     const bulkStatus = this.getStatusBulk([...sharedMembers]);
     const payload = {
       type: 'presence:bulk_status',
-      timestamp: new Date(),
+      timestamp: brightDateNow(),
       data: Object.fromEntries(bulkStatus),
     };
     if (ws.readyState === WebSocket.OPEN) {
@@ -152,7 +154,7 @@ export class PresenceService {
   ): void {
     const event: IPresenceChangeEvent = {
       type: CommunicationEventType.PRESENCE_CHANGED,
-      timestamp: new Date(),
+      timestamp: brightDateNow(),
       data: { memberId, status },
     };
 

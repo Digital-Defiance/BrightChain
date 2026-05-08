@@ -141,8 +141,8 @@ describe('MemberStore - Profile Operations', () => {
       expect(profile.publicProfile?.reputation).toBeDefined();
       expect(profile.publicProfile?.storageQuota).toBeDefined();
       expect(profile.publicProfile?.storageUsed).toBeDefined();
-      expect(profile.publicProfile?.dateCreated).toBeInstanceOf(Date);
-      expect(profile.publicProfile?.dateUpdated).toBeInstanceOf(Date);
+      expect(typeof profile.publicProfile?.dateCreated).toBe('number');
+      expect(typeof profile.publicProfile?.dateUpdated).toBe('number');
     });
 
     it('should retrieve private profile data successfully', async () => {

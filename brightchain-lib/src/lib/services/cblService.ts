@@ -35,6 +35,8 @@ import { Validator } from '../utils/validator';
 
 import { BrightChainStrings } from '../enumerations';
 import { translate } from '../i18n';
+import type { BrightDateTimestamp } from '../types/brightDateTimestamp';
+import { brightDateToDate, dateToBrightDate } from '../utils/brightDateConversions';
 import { detectBlockFormat } from './blockFormatService';
 import { ChecksumService } from './checksum.service';
 import { getGlobalServiceProvider } from './globalServiceProvider';
@@ -572,7 +574,7 @@ export class CBLService<TID extends PlatformID = Uint8Array> {
   /**
    * Get the date created from the header
    */
-  public getDateCreated(header: Uint8Array): Date {
+  public getDateCreated(header: Uint8Array): BrightDateTimestamp {
     if (this.isEncrypted(header)) {
       throw new CblError(CblErrorType.CblEncrypted);
     }
@@ -586,7 +588,7 @@ export class CBLService<TID extends PlatformID = Uint8Array> {
       this.headerOffsets.DateCreated + CONSTANTS['UINT32_SIZE'],
       false,
     );
-    return new Date(high * 0x100000000 + low);
+    return dateToBrightDate(new Date(high * 0x100000000 + low));
   }
 
   /**
@@ -1175,7 +1177,7 @@ export class CBLService<TID extends PlatformID = Uint8Array> {
    */
   public makeCblHeader(
     creator: Member<TID>,
-    dateCreated: Date,
+    dateCreated: BrightDateTimestamp,
     cblAddressCount: number,
     fileDataLength: number,
     addressList: Uint8Array,
@@ -1218,14 +1220,15 @@ export class CBLService<TID extends PlatformID = Uint8Array> {
 
     // Create buffers for header fields
     const buffers = this.createArrays();
-    const timestamp = dateCreated.getTime();
+    // Convert BrightDateTimestamp to milliseconds for binary storage
+    const timestampMs = brightDateToDate(dateCreated).getTime();
 
     // Write timestamp using DataView
     const dateView = new DataView(buffers.dateCreated.buffer);
-    dateView.setUint32(0, Math.floor(timestamp / 0x100000000), false);
+    dateView.setUint32(0, Math.floor(timestampMs / 0x100000000), false);
     dateView.setUint32(
       CONSTANTS['UINT32_SIZE'],
-      timestamp % 0x100000000,
+      timestampMs % 0x100000000,
       false,
     );
 
@@ -1743,7 +1746,7 @@ export class CBLService<TID extends PlatformID = Uint8Array> {
    */
   public makeSuperCblHeader(
     creator: Member<TID>,
-    dateCreated: Date,
+    dateCreated: BrightDateTimestamp,
     subCblCount: number,
     totalBlockCount: number,
     depth: number,
@@ -1805,7 +1808,7 @@ export class CBLService<TID extends PlatformID = Uint8Array> {
     const dataLengthBuffer = new Uint8Array(CBLService.DataLengthSize);
     const blockSizeBuffer = new Uint8Array(CONSTANTS['UINT32_SIZE']);
 
-    const timestamp = dateCreated.getTime();
+    const timestamp = brightDateToDate(dateCreated).getTime();
 
     // Write timestamp using DataView
     const dateView = new DataView(dateBuffer.buffer);

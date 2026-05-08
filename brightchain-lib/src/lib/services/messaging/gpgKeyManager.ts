@@ -9,6 +9,7 @@ import type {
   IGpgSignatureResult,
   IGpgVerificationResult,
 } from '../../interfaces/messaging/gpgKey';
+import { normalizeToBrightDate } from '../../utils/brightDateConversions';
 
 /**
  * Manages GPG (OpenPGP) key lifecycle: generation, import, export, and validation.
@@ -476,14 +477,14 @@ export class GpgKeyManager {
   private async extractMetadata(key: any): Promise<IGpgKeyMetadata> {
     const keyId = key.getKeyID().toHex();
     const fingerprint = key.getFingerprint();
-    const createdAt = key.getCreationTime();
+    const createdAt = normalizeToBrightDate(key.getCreationTime());
     const expirationTime = await key.getExpirationTime();
     const userIds = key.getUserIDs();
     const algorithmInfo = key.getAlgorithmInfo();
 
-    let expiresAt: Date | null = null;
+    let expiresAt: number | null = null;
     if (expirationTime instanceof Date) {
-      expiresAt = expirationTime;
+      expiresAt = normalizeToBrightDate(expirationTime);
     }
     // If expirationTime is Infinity or null, expiresAt stays null (no expiration)
 

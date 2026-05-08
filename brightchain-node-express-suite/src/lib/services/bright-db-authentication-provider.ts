@@ -81,6 +81,7 @@ export class BrightDbAuthenticationProvider<
         currency?: string;
         directChallenge?: boolean;
         lastLogin?: string;
+        brightDateDisplay?: string;
       }>('users');
 
       const userDoc = await usersCol.findOne({ _id: userId } as never);
@@ -166,6 +167,9 @@ export class BrightDbAuthenticationProvider<
         currency: userDoc.currency ?? 'USD',
         directChallenge: userDoc.directChallenge ?? false,
         lastLogin: userDoc.lastLogin,
+        ...(userDoc.brightDateDisplay && {
+          brightDateDisplay: userDoc.brightDateDisplay,
+        }),
       };
     } catch {
       return null;
