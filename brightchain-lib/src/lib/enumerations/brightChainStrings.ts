@@ -1802,6 +1802,17 @@ const _brightChainKeys = {
   JouleEventLog_Col_Kind: 'JouleEventLog_Col_Kind',
   JouleEventLog_Col_Amount: 'JouleEventLog_Col_Amount',
   JouleEventLog_Col_Description: 'JouleEventLog_Col_Description',
+
+  // Slogans
+  Slogan_Math_Search_Warrant: 'Slogan_Math_Search_Warrant',
+  Slogan_Signal_Belongs_To_You: 'Slogan_Signal_Belongs_To_You',
+  Slogan_Defiance_By_Design: 'Slogan_Defiance_By_Design',
+  Slogan_BrightChain_Privacy: 'Slogan_BrightChain_Privacy',
+  Slogan_BrightChain_Privacy_Long: 'Slogan_BrightChain_Privacy_Long',
+  Slogan_Speak_Freely: 'Slogan_Speak_Freely',
+  Slogan_Distributed_By_Many: 'Slogan_Distributed_By_Many',
+  Slogan_Truth_In_The_Signal: 'Slogan_Truth_In_The_Signal',
+  Slogan_Ideas_Paper_Trail: 'Slogan_Ideas_Paper_Trail',
 } as const;
 
 export const BrightChainStrings: BrandedStringKeys<typeof _brightChainKeys> =

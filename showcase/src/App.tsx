@@ -10,6 +10,7 @@ import BlogPost from './components/BlogPost';
 import { BrightChainSoupDemo } from './components/BrightChainSoupDemo';
 import { CompatibilityWarning } from './components/CompatibilityWarning';
 import Components from './components/Components';
+import DatePage from './components/DatePage';
 import Demo from './components/Demo';
 import { DemoNavigation } from './components/DemoNavigation';
 import { EducationalModeProvider } from './components/EducationalModeProvider';
@@ -52,6 +53,9 @@ function App() {
             <DemoNavigation />
             <Routes>
               <Route path="/" element={<HomePage />} />
+              <Route path="/date" element={<DatePage />} />
+              <Route path="/now" element={<DatePage />} />
+              <Route path="/today" element={<DatePage />} />
               <Route path="/blog" element={<Blog />} />
               <Route path="/blog/new" element={<BlogEditor />} />
               <Route path="/blog/:slug" element={<BlogPost />} />

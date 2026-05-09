@@ -39,7 +39,11 @@ const languageLoaders: Record<
 export interface ShowcaseI18nContextValue {
   language: CoreLanguageCode;
   setLanguage: (lang: CoreLanguageCode) => void;
-  t: (key: ShowcaseStringKey, params?: Record<string, string>) => string;
+  t: (
+    key: ShowcaseStringKey,
+    params?: Record<string, string>,
+    lang?: string,
+  ) => string;
   isLoading: boolean;
 }
 
@@ -171,10 +175,19 @@ export const ShowcaseI18nProvider: React.FC<{ children: React.ReactNode }> = ({
   }, []);
 
   const t = useCallback(
-    (key: ShowcaseStringKey, params?: Record<string, string>): string => {
+    (
+      key: ShowcaseStringKey,
+      params?: Record<string, string>,
+      lang?: string,
+    ): string => {
       // stringsVersion is captured to ensure React re-renders after language loads
       void stringsVersion;
-      return engine.safeTranslate(ShowcaseComponentId, key, params, language);
+      return engine.safeTranslate(
+        ShowcaseComponentId,
+        key,
+        params,
+        lang ?? language,
+      );
     },
     [engine, language, stringsVersion],
   );

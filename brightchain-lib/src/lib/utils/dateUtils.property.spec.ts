@@ -296,7 +296,7 @@ describe('Feature: block-security-hardening, Property 8: Malformed Date Rejectio
           fc.array(fc.anything()),
         ),
         (nonDate) => {
-          // @ts-expect-error - Testing runtime behavior with invalid types
+          // @ts-ignore - Testing runtime behavior with invalid types
           expect(isValidDate(nonDate)).toBe(false);
         },
       ),
@@ -333,7 +333,7 @@ describe('Feature: block-security-hardening, Property 8: Malformed Date Rejectio
           fc.object(),
         ),
         (nonDate) => {
-          // @ts-expect-error - Testing runtime behavior with invalid types
+          // @ts-ignore - Testing runtime behavior with invalid types
           expect(() => serializeDate(nonDate)).toThrow(/Invalid date object/i);
         },
       ),

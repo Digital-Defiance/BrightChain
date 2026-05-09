@@ -7,7 +7,7 @@ nav_order: 3
 
 ## 1. Abstract
 
-> *Where the state sees noise, the people find truth.*
+> *BrightChain: Privacy you don't have to ask for.*
 
 BrightChain is a decentralized application platform and the foundation of BrightStack — a full-stack paradigm for building decentralized applications using BrightChain, Express, React, and Node.js. At its heart is a concept introduced by The Owner Free File System which breaks a file up into source blocks and merges them with blocks of random data using an "exclusive or" operation and discards the source blocks. Added on top of that, we introduce identity/anonymity, voting, reputation, block revocation and expiration, and a confidential BrightTrust. What the Owner Free Filesystem called "whitening", we call "Brightening" and where BrightChain gets its name.
 

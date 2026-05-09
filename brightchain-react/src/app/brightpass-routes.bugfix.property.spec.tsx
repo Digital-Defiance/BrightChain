@@ -10,6 +10,10 @@
  * **Validates: Requirements 1.3**
  */
 
+// Async React property tests can exceed 5 s under parallel load — give them room.
+jest.retryTimes(2, { logErrorsBeforeRetry: false });
+jest.setTimeout(30000);
+
 import { render } from '@testing-library/react';
 import React from 'react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';

@@ -4,6 +4,69 @@ import { ShowcaseStringKey, ShowcaseStrings } from '../showcaseStrings';
 export const ShowcaseSpanishStrings: Partial<
   ComponentStrings<ShowcaseStringKey>
 > = {
+  // BrightChain
+  [ShowcaseStrings.Common_Bright]: 'Brillante',
+  [ShowcaseStrings.Common_Chain]: 'Cadena',
+
+  [ShowcaseStrings.Common_Privacy]: 'Privacidad',
+  [ShowcaseStrings.Common_Participation]: 'Participación',
+  [ShowcaseStrings.Common_Power]: 'Poder',
+  [ShowcaseStrings.Common_PrivacyParticipationPower]:
+    'Privacidad. Participación. Poder.',
+
+  [ShowcaseStrings.Date_BrightDateTemplate]: 'BD {BD}',
+
+  // ── DatePage ──
+  [ShowcaseStrings.DatePage_Title]: 'Fecha y hora',
+  [ShowcaseStrings.DatePage_BrightDateEpochLabel]:
+    'BrightDate (días decimales desde J2000.0)',
+  [ShowcaseStrings.DatePage_HolidaysTitle]:
+    'Festividades y celebraciones de hoy',
+  [ShowcaseStrings.DatePage_AllFormatsTitle]: 'Todos los formatos de fecha',
+  [ShowcaseStrings.DatePage_AboutBrightDateTitle]: 'Acerca de BrightDate',
+  [ShowcaseStrings.DatePage_AboutBrightDate_Epoch]:
+    'BrightDate cuenta días decimales desde la época J2000.0 (1 de enero de 2000 a las 12:00:00 UTC). Es la misma época utilizada por astrónomos de todo el mundo para la mecánica celeste.',
+  [ShowcaseStrings.DatePage_AboutBrightDate_Fraction]:
+    'La parte entera es el conteo de días. La parte fraccionaria es la hora decimal del día. Por ejemplo, 0,5 = mediodía, 0,25 = 06:00, 0,75 = 18:00.',
+  [ShowcaseStrings.DatePage_AboutBrightDate_NoTimezones]:
+    'Sin zonas horarias, sin horario de verano, sin ambigüedad — solo un número en una línea temporal.',
+  [ShowcaseStrings.DatePage_Format_BrightDateFull]:
+    'BrightDate (precisión completa)',
+  [ShowcaseStrings.DatePage_Format_BrightDateCompact]:
+    'BrightDate (compacto)',
+  [ShowcaseStrings.DatePage_Format_BrightDateStandard]:
+    'BrightDate (estándar)',
+  [ShowcaseStrings.DatePage_Format_ISO8601]: 'ISO 8601',
+  [ShowcaseStrings.DatePage_Format_UTC]: 'UTC',
+  [ShowcaseStrings.DatePage_Format_LocalDateTime]: 'Fecha y hora local',
+  [ShowcaseStrings.DatePage_Format_LocalDate]: 'Fecha local',
+  [ShowcaseStrings.DatePage_Format_LocalTime]: 'Hora local',
+  [ShowcaseStrings.DatePage_Format_UnixTimestamp]: 'Marca de tiempo Unix',
+  [ShowcaseStrings.DatePage_Format_UnixMs]: 'Milisegundos Unix',
+  [ShowcaseStrings.DatePage_Format_JulianDate]: 'Fecha juliana',
+  [ShowcaseStrings.DatePage_Format_ModifiedJulianDate]:
+    'Fecha juliana modificada',
+  [ShowcaseStrings.DatePage_Format_DayOfYear]: 'Día del año',
+  [ShowcaseStrings.DatePage_Format_ISOWeek]: 'Semana ISO',
+  [ShowcaseStrings.DatePage_Format_RFC2822]: 'RFC 2822',
+  [ShowcaseStrings.DatePage_HolidayType_Public]: 'Día festivo',
+  [ShowcaseStrings.DatePage_HolidayType_Bank]: 'Día festivo bancario',
+  [ShowcaseStrings.DatePage_HolidayType_Observance]: 'Celebración',
+  [ShowcaseStrings.DatePage_HolidayType_Religious]: 'Religioso',
+
+  // ── DatePage: Cochrane Easter Egg (Interplanetary Telemetry) ──
+  [ShowcaseStrings.DatePage_Telemetry_Title]: 'Telemetría Interplanetaria',
+  [ShowcaseStrings.DatePage_Telemetry_Subtitle]:
+    'Retardo de luz unidireccional actual expresado en milidías (md)',
+  [ShowcaseStrings.DatePage_Telemetry_MoonDelay]: 'Tierra → Luna',
+  [ShowcaseStrings.DatePage_Telemetry_MarsDelayMin]: 'Tierra → Marte (mín)',
+  [ShowcaseStrings.DatePage_Telemetry_MarsDelayMax]: 'Tierra → Marte (máx)',
+  [ShowcaseStrings.DatePage_Telemetry_MarsDelayCurrent]:
+    'Tierra → Marte (est. actual)',
+  [ShowcaseStrings.DatePage_Telemetry_Unit]: 'md',
+  [ShowcaseStrings.DatePage_Telemetry_Footer]:
+    'BrightDate está diseñado para un mundo más allá del Tiempo Estándar Terrestre. Un milidía ≈ 86,4 segundos.',
+
   // Navigation
   [ShowcaseStrings.Nav_Home]: 'Inicio',
   [ShowcaseStrings.Nav_SoupDemo]: 'Demo Soup',
@@ -11,6 +74,7 @@ export const ShowcaseSpanishStrings: Partial<
   [ShowcaseStrings.Nav_Blog]: 'Blog',
   [ShowcaseStrings.Nav_FAQ]: 'Preguntas Frecuentes',
   [ShowcaseStrings.Nav_Docs]: 'Documentación',
+  [ShowcaseStrings.Nav_BrightDate]: 'BrightDate',
   [ShowcaseStrings.Nav_Home_Description]: 'Página principal',
   [ShowcaseStrings.Nav_SoupDemo_Description]:
     'Visualización interactiva de bloques',
@@ -18,6 +82,7 @@ export const ShowcaseSpanishStrings: Partial<
     'Libro mayor blockchain con gobernanza',
   [ShowcaseStrings.Nav_Blog_Description]:
     'Blog y actualizaciones de BrightChain',
+  [ShowcaseStrings.Nav_BrightDate_Description]: 'BrightDate actual',
   [ShowcaseStrings.Nav_FAQ_Description]: 'Preguntas frecuentes',
   [ShowcaseStrings.Nav_Docs_Description]: 'Documentación del proyecto',
   [ShowcaseStrings.Nav_ToggleMenu]: 'Alternar menú',
@@ -2435,11 +2500,21 @@ export const ShowcaseSpanishStrings: Partial<
   [ShowcaseStrings.PP_S18_WebLabel]: 'Web:',
   [ShowcaseStrings.Slogan_Math_Search_Warrant]:
     'Las matemáticas no aceptan una orden de registro.',
-  [ShowcaseStrings.Slogan_Where_State_Sees_Noise]:
-    'Donde el Estado ve ruido, el pueblo encuentra la verdad.',
-  [ShowcaseStrings.Slogan_Building_World_Where_Ideas_Have_No_Borders]:
-    'Construyendo un mundo donde las ideas no tengan fronteras y la verdad no tenga dueño.',
-  [ShowcaseStrings.Slogan_Defiance_By_Design]: 'Desafío por Diseño.',
+  [ShowcaseStrings.Slogan_Signal_Belongs_To_You]:
+    'La señal te pertenece. El ruido pertenece a todos.',
+  [ShowcaseStrings.Slogan_Defiance_By_Design]: 'Rebeldía por diseño.',
+  [ShowcaseStrings.Slogan_BrightChain_Privacy]:
+    'Privacidad que no tienes que pedir.',
+  [ShowcaseStrings.Slogan_BrightChain_Privacy_Long]:
+    'BrightChain: Privacidad que no tienes que pedir.',
+  [ShowcaseStrings.Slogan_Speak_Freely]:
+    'Habla libremente; las matemáticas te respaldan.',
+  [ShowcaseStrings.Slogan_Distributed_By_Many]:
+    'Distribuido por muchos, poseído por nadie.',
+  [ShowcaseStrings.Slogan_Truth_In_The_Signal]:
+    'La verdad en la señal, la seguridad en el ruido.',
+  [ShowcaseStrings.Slogan_Ideas_Paper_Trail]:
+    'Las ideas no deberían dejar rastro.',
 };
 
 export default ShowcaseSpanishStrings;

@@ -1,12 +1,12 @@
 {
   "name": "@brightchain/brightchain-react-components",
-  "version": "0.32.0",
+  "version": "0.32.1",
   "type": "commonjs",
   "main": "./src/index.js",
   "browser": "./src/browser.ts",
   "types": "./src/index.d.ts",
   "dependencies": {
-    "@brightchain/brightchain-lib": "^0.32.0",
+    "@brightchain/brightchain-lib": "^0.32.1",
     "@digitaldefiance/ecies-lib": "5.2.2",
     "@digitaldefiance/express-suite-react-components": "4.29.1",
     "@digitaldefiance/i18n-lib": "4.7.5",
@@ -15,6 +15,7 @@
     "@mui/icons-material": "^7.3.7",
     "@mui/material": "^7.3.7",
     "@mui/utils": "7.3.9",
+    "framer-motion": "^12.38.0",
     "react": "19.2.4",
     "react-router-dom": "6.11.2",
     "tslib": "^2.3.0"

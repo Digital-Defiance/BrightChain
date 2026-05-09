@@ -1951,10 +1951,8 @@ export const UkrainianStrings: ComponentStrings<BrightChainStringKey> = {
   [BrightChainStrings.DatePage_Telemetry_Subtitle]:
     'Поточна одностороння світлова затримка у мілідобах (md)',
   [BrightChainStrings.DatePage_Telemetry_MoonDelay]: 'Земля → Місяць',
-  [BrightChainStrings.DatePage_Telemetry_MarsDelayMin]:
-    'Земля → Марс (мін)',
-  [BrightChainStrings.DatePage_Telemetry_MarsDelayMax]:
-    'Земля → Марс (макс)',
+  [BrightChainStrings.DatePage_Telemetry_MarsDelayMin]: 'Земля → Марс (мін)',
+  [BrightChainStrings.DatePage_Telemetry_MarsDelayMax]: 'Земля → Марс (макс)',
   [BrightChainStrings.DatePage_Telemetry_MarsDelayCurrent]:
     'Земля → Марс (поточна оцінка)',
   [BrightChainStrings.DatePage_Telemetry_Unit]: 'md',
@@ -2015,4 +2013,23 @@ export const UkrainianStrings: ComponentStrings<BrightChainStringKey> = {
   [BrightChainStrings.JouleEventLog_Col_Kind]: 'Тип',
   [BrightChainStrings.JouleEventLog_Col_Amount]: 'Сума',
   [BrightChainStrings.JouleEventLog_Col_Description]: 'Опис',
+
+  // Slogans
+  [BrightChainStrings.Slogan_Math_Search_Warrant]:
+    'Математика не приймає ордер на обшук.',
+  [BrightChainStrings.Slogan_Signal_Belongs_To_You]:
+    'Сигнал належить тобі. Шум належить усім.',
+  [BrightChainStrings.Slogan_Defiance_By_Design]: 'Спротив через дизайн.',
+  [BrightChainStrings.Slogan_BrightChain_Privacy]:
+    'Приватність, про яку не треба просити.',
+  [BrightChainStrings.Slogan_BrightChain_Privacy_Long]:
+    'BrightChain: Приватність, про яку не треба просити.',
+  [BrightChainStrings.Slogan_Speak_Freely]:
+    'Говори вільно; математика тебе захищає.',
+  [BrightChainStrings.Slogan_Distributed_By_Many]:
+    'Розподілено багатьма, не належить нікому.',
+  [BrightChainStrings.Slogan_Truth_In_The_Signal]:
+    'Правда в сигналі, безпека в шумі.',
+  [BrightChainStrings.Slogan_Ideas_Paper_Trail]:
+    'Ідеї не повинні залишати паперового сліду.',
 };

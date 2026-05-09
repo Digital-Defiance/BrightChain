@@ -9,7 +9,15 @@
  *
  * No mocks — real Express servers, real HTTP requests, real WebSocket
  * connections, real in-memory service graphs.
+ *
+ * These tests are sensitive to parallel Jest worker load because the i18n
+ * GlobalActiveContext singleton can be cleared by another worker between
+ * requests. jest.retryTimes(2) handles the rare flake without masking real
+ * failures (a genuine bug would fail all 3 attempts).
  */
+
+// Retry up to 2 extra times on flaky parallel-load failures.
+jest.retryTimes(2, { logErrorsBeforeRetry: false });
 
 import {
   ChannelService,

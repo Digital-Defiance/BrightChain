@@ -1964,10 +1964,8 @@ export const FrenchStrings: ComponentStrings<BrightChainStringKey> = {
   [BrightChainStrings.DatePage_Telemetry_Subtitle]:
     'Délai lumineux unidirectionnel actuel exprimé en millijours (md)',
   [BrightChainStrings.DatePage_Telemetry_MoonDelay]: 'Terre → Lune',
-  [BrightChainStrings.DatePage_Telemetry_MarsDelayMin]:
-    'Terre → Mars (min)',
-  [BrightChainStrings.DatePage_Telemetry_MarsDelayMax]:
-    'Terre → Mars (max)',
+  [BrightChainStrings.DatePage_Telemetry_MarsDelayMin]: 'Terre → Mars (min)',
+  [BrightChainStrings.DatePage_Telemetry_MarsDelayMax]: 'Terre → Mars (max)',
   [BrightChainStrings.DatePage_Telemetry_MarsDelayCurrent]:
     'Terre → Mars (est. actuelle)',
   [BrightChainStrings.DatePage_Telemetry_Unit]: 'md',
@@ -2033,4 +2031,23 @@ export const FrenchStrings: ComponentStrings<BrightChainStringKey> = {
   [BrightChainStrings.JouleEventLog_Col_Kind]: 'Type',
   [BrightChainStrings.JouleEventLog_Col_Amount]: 'Montant',
   [BrightChainStrings.JouleEventLog_Col_Description]: 'Description',
+
+  // Slogans
+  [BrightChainStrings.Slogan_Math_Search_Warrant]:
+    "Les mathématiques n'acceptent pas de mandat de perquisition.",
+  [BrightChainStrings.Slogan_Signal_Belongs_To_You]:
+    'Le signal vous appartient. Le bruit appartient à tous.',
+  [BrightChainStrings.Slogan_Defiance_By_Design]: 'Résistance par conception.',
+  [BrightChainStrings.Slogan_BrightChain_Privacy]:
+    "Une confidentialité que vous n'avez pas à demander.",
+  [BrightChainStrings.Slogan_BrightChain_Privacy_Long]:
+    "BrightChain : Une confidentialité que vous n'avez pas à demander.",
+  [BrightChainStrings.Slogan_Speak_Freely]:
+    'Parlez librement ; les mathématiques vous protègent.',
+  [BrightChainStrings.Slogan_Distributed_By_Many]:
+    'Distribué par plusieurs, possédé par personne.',
+  [BrightChainStrings.Slogan_Truth_In_The_Signal]:
+    'La vérité dans le signal, la sécurité dans le bruit.',
+  [BrightChainStrings.Slogan_Ideas_Paper_Trail]:
+    'Les idées ne devraient pas laisser de traces.',
 };

@@ -2566,7 +2566,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@brightchain/brightchain-lib@workspace:brightchain-lib"
   dependencies:
-    "@brightchain/brightdate": "npm:0.32.0"
+    "@brightchain/brightdate": "npm:0.32.1"
     "@digitaldefiance/branded-interface": "npm:0.0.5"
     "@digitaldefiance/bzip2-wasm": "npm:^1.1.1"
     "@digitaldefiance/ecies-lib": "npm:5.2.2"
@@ -2630,6 +2630,7 @@ __metadata:
     "@mui/utils": "npm:7.3.9"
     "@types/react": "npm:^19.2.14"
     "@types/react-dom": "npm:^19.2.3"
+    framer-motion: "npm:^12.38.0"
     react: "npm:19.2.4"
     react-router-dom: "npm:6.11.2"
     tslib: "npm:^2.3.0"
@@ -2697,7 +2698,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@brightchain/brightdate@npm:0.32.0, @brightchain/brightdate@npm:^0.32.0, @brightchain/brightdate@workspace:brightdate":
+"@brightchain/brightdate@npm:0.32.1, @brightchain/brightdate@npm:^0.32.1, @brightchain/brightdate@workspace:brightdate":
   version: 0.0.0-use.local
   resolution: "@brightchain/brightdate@workspace:brightdate"
   dependencies:
@@ -2850,7 +2851,7 @@ __metadata:
     react-router-dom: "npm:^7.14.0"
   peerDependencies:
     "@brightchain/brightchain-lib": ^0.32.0
-    "@brightchain/brightdate": ^0.32.0
+    "@brightchain/brightdate": ^0.32.1
     "@brightchain/brightmail-lib": ^0.32.0
     "@digitaldefiance/express-suite-react-components": 4.29.1
     "@mui/icons-material": "*"
@@ -15214,7 +15215,7 @@ __metadata:
     "@brightchain/brightchain-lib": "npm:^0.32.0"
     "@brightchain/brightchain-react-components": "npm:^0.32.0"
     "@brightchain/brightchat-lib": "npm:^0.32.0"
-    "@brightchain/brightdate": "npm:^0.32.0"
+    "@brightchain/brightdate": "npm:^0.32.1"
     "@brightchain/brighthub-lib": "npm:^0.32.0"
     "@brightchain/brighthub-react-components": "npm:^0.32.0"
     "@brightchain/brightmail-lib": "npm:^0.32.0"
@@ -19945,6 +19946,28 @@ __metadata:
     react-dom:
       optional: true
   checksum: 10/f8805f9f5664b86aad6b9ed280a79b10e7ed4e31048728d4c3767d95a5c9feeb0279844bbe613dcb3741bb784cdf6ad761e726249fa4feeec9bec4a29f78a397
+  languageName: node
+  linkType: hard
+
+"framer-motion@npm:^12.38.0":
+  version: 12.38.0
+  resolution: "framer-motion@npm:12.38.0"
+  dependencies:
+    motion-dom: "npm:^12.38.0"
+    motion-utils: "npm:^12.36.0"
+    tslib: "npm:^2.4.0"
+  peerDependencies:
+    "@emotion/is-prop-valid": "*"
+    react: ^18.0.0 || ^19.0.0
+    react-dom: ^18.0.0 || ^19.0.0
+  peerDependenciesMeta:
+    "@emotion/is-prop-valid":
+      optional: true
+    react:
+      optional: true
+    react-dom:
+      optional: true
+  checksum: 10/4d529d1648a8e31ec9859e7ff1296b7e4ef0028eb09cbc7d626068766ab53e486038b431fac33b1438a1cc076a244e6843c5a8c0f38442885832308452b4b25e
   languageName: node
   linkType: hard
 
@@ -25542,10 +25565,26 @@ __metadata:
   languageName: node
   linkType: hard
 
+"motion-dom@npm:^12.38.0":
+  version: 12.38.0
+  resolution: "motion-dom@npm:12.38.0"
+  dependencies:
+    motion-utils: "npm:^12.36.0"
+  checksum: 10/78c040b46d93273932cf80c70e39845be5a442dcaf18d4345b45a9193de9dfa87c885b609943cb652115e4eac5d46ef40b452185073dd43fc328b134f9975e90
+  languageName: node
+  linkType: hard
+
 "motion-utils@npm:^11.18.1":
   version: 11.18.1
   resolution: "motion-utils@npm:11.18.1"
   checksum: 10/8af61c8260ed6abe9c0d4e1037bd80de95a461a62c89daaf26bfdcdccc96799eed5c45adbdff90ea78614336bf2e3b91f4eb6ecb4e4028a3bce53977b54822a2
+  languageName: node
+  linkType: hard
+
+"motion-utils@npm:^12.36.0":
+  version: 12.36.0
+  resolution: "motion-utils@npm:12.36.0"
+  checksum: 10/c4a2a7ffac48ca44082d6d31b115f245025060a7e69d70dac062646d8f96c39e5662a7c8a51f255566fdf8e719ef1269a8e9aa3a04fc263bb65b5a7b61331901
   languageName: node
   linkType: hard
 

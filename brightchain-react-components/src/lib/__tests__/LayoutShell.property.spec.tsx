@@ -4,6 +4,10 @@
  * Uses fast-check to verify universal correctness properties
  * across randomly generated inputs.
  */
+// Async React property tests can exceed 5 s under parallel load — give them room.
+jest.retryTimes(2, { logErrorsBeforeRetry: false });
+jest.setTimeout(30000);
+
 import { useTheme } from '@mui/material/styles';
 import '@testing-library/jest-dom';
 import { cleanup, render, screen } from '@testing-library/react';

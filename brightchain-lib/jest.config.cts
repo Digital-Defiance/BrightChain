@@ -1,4 +1,4 @@
-export default {
+module.exports = {
   displayName: 'brightchain-lib',
   preset: '../jest.preset.js',
   testEnvironment: '<rootDir>/src/test/customEnvironment.ts',
@@ -6,8 +6,9 @@ export default {
     '^.+\\.[tj]s$': [
       'ts-jest',
       {
-        tsconfig: '<rootDir>/tsconfig.spec.json',
+        tsconfig: './tsconfig.spec.json',
         useESM: true,
+        isolatedModules: false,
       },
     ],
   },

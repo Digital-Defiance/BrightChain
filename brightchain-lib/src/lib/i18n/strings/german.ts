@@ -1967,10 +1967,8 @@ export const GermanStrings: ComponentStrings<BrightChainStringKey> = {
   [BrightChainStrings.DatePage_Telemetry_Subtitle]:
     'Aktuelle Einweg-Lichtverzögerung in Millitagen (md)',
   [BrightChainStrings.DatePage_Telemetry_MoonDelay]: 'Erde → Mond',
-  [BrightChainStrings.DatePage_Telemetry_MarsDelayMin]:
-    'Erde → Mars (min)',
-  [BrightChainStrings.DatePage_Telemetry_MarsDelayMax]:
-    'Erde → Mars (max)',
+  [BrightChainStrings.DatePage_Telemetry_MarsDelayMin]: 'Erde → Mars (min)',
+  [BrightChainStrings.DatePage_Telemetry_MarsDelayMax]: 'Erde → Mars (max)',
   [BrightChainStrings.DatePage_Telemetry_MarsDelayCurrent]:
     'Erde → Mars (aktuelle Schätzung)',
   [BrightChainStrings.DatePage_Telemetry_Unit]: 'md',
@@ -2033,4 +2031,23 @@ export const GermanStrings: ComponentStrings<BrightChainStringKey> = {
   [BrightChainStrings.JouleEventLog_Col_Kind]: 'Art',
   [BrightChainStrings.JouleEventLog_Col_Amount]: 'Betrag',
   [BrightChainStrings.JouleEventLog_Col_Description]: 'Beschreibung',
+
+  // Slogans
+  [BrightChainStrings.Slogan_Math_Search_Warrant]:
+    'Mathematik akzeptiert keinen Durchsuchungsbefehl.',
+  [BrightChainStrings.Slogan_Signal_Belongs_To_You]:
+    'Das Signal gehört dir. Das Rauschen gehört allen.',
+  [BrightChainStrings.Slogan_Defiance_By_Design]: 'Widerstand durch Design.',
+  [BrightChainStrings.Slogan_BrightChain_Privacy]:
+    'Privatsphäre, um die du nicht bitten musst.',
+  [BrightChainStrings.Slogan_BrightChain_Privacy_Long]:
+    'BrightChain: Privatsphäre, um die du nicht bitten musst.',
+  [BrightChainStrings.Slogan_Speak_Freely]:
+    'Sprich frei; die Mathematik schützt dich.',
+  [BrightChainStrings.Slogan_Distributed_By_Many]:
+    'Von vielen verteilt, von niemandem besessen.',
+  [BrightChainStrings.Slogan_Truth_In_The_Signal]:
+    'Wahrheit im Signal, Sicherheit im Rauschen.',
+  [BrightChainStrings.Slogan_Ideas_Paper_Trail]:
+    'Ideen sollten keine Papierspur hinterlassen.',
 };

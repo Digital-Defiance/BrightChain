@@ -6,7 +6,7 @@ module.exports = {
     '^.+\\.[tj]s$': [
       'ts-jest',
       {
-        tsconfig: '<rootDir>/tsconfig.spec.json',
+        tsconfig: require('path').join(__dirname, 'tsconfig.spec.json'),
         diagnostics: false,
       },
     ],

@@ -6,7 +6,7 @@ This feature establishes BrightDate (decimal days since J2000.0) as the native a
 
 ## Glossary
 
-- **BrightDate**: A decimal number representing days since the J2000.0 epoch (January 1, 2000, 12:00:00 UTC). Implemented as the `BrightDate` class in `@digitaldefiance/brightdate`.
+- **BrightDate**: A decimal number representing days since the J2000.0 epoch (January 1, 2000, 12:00:00 UTC). Implemented as the `BrightDate` class in `@brightchain/brightdate`.
 - **BrightDateValue**: The numeric type alias (`number`) representing a raw BrightDate value without the class wrapper.
 - **Transaction**: Any discrete operation recorded in the system that requires a timestamp (block creation, message send, key registration, delivery receipt, etc.).
 - **Schema**: A TypeScript interface or type definition that includes one or more timestamp fields.

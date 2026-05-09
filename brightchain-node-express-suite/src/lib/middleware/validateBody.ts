@@ -24,7 +24,7 @@ export function validateBody<T extends Record<string, unknown>>(
       return;
     }
     const result = safeParseInterface(req.body, definition);
-    if (!result.success) {
+    if (result.success === false) {
       res.status(400).json({
         error: result.error.message,
         code: result.error.code,

@@ -5,6 +5,66 @@ import { ShowcaseStringKey, ShowcaseStrings } from '../showcaseStrings';
 export const ShowcaseGermanStrings: Partial<
   ComponentStrings<ShowcaseStringKey>
 > = {
+  // BrightChain
+  [ShowcaseStrings.Common_Bright]: 'Hell',
+  [ShowcaseStrings.Common_Chain]: 'Kette',
+
+  [ShowcaseStrings.Common_Privacy]: 'Privatsphäre',
+  [ShowcaseStrings.Common_Participation]: 'Teilhabe',
+  [ShowcaseStrings.Common_Power]: 'Macht',
+  [ShowcaseStrings.Common_PrivacyParticipationPower]:
+    'Privatsphäre. Teilhabe. Macht.',
+
+  [ShowcaseStrings.Date_BrightDateTemplate]: 'BD {BD}',
+
+  // ── DatePage ──
+  [ShowcaseStrings.DatePage_Title]: 'Datum und Uhrzeit',
+  [ShowcaseStrings.DatePage_BrightDateEpochLabel]:
+    'BrightDate (Dezimaltage seit J2000.0)',
+  [ShowcaseStrings.DatePage_HolidaysTitle]: 'Heutige Feiertage und Gedenktage',
+  [ShowcaseStrings.DatePage_AllFormatsTitle]: 'Alle Datumsformate',
+  [ShowcaseStrings.DatePage_AboutBrightDateTitle]: 'Über BrightDate',
+  [ShowcaseStrings.DatePage_AboutBrightDate_Epoch]:
+    'BrightDate zählt Dezimaltage seit der J2000.0-Epoche (1. Januar 2000 um 12:00:00 UTC). Dies ist dieselbe Epoche, die von Astronomen weltweit für die Himmelsmechanik verwendet wird.',
+  [ShowcaseStrings.DatePage_AboutBrightDate_Fraction]:
+    'Der ganzzahlige Teil ist die Tageszählung. Der Bruchteil ist die dezimale Tageszeit. Zum Beispiel: 0,5 = Mittag, 0,25 = 06:00, 0,75 = 18:00.',
+  [ShowcaseStrings.DatePage_AboutBrightDate_NoTimezones]:
+    'Keine Zeitzonen, keine Sommerzeit, keine Mehrdeutigkeit — nur eine Zahl auf einer Zeitlinie.',
+  [ShowcaseStrings.DatePage_Format_BrightDateFull]:
+    'BrightDate (volle Präzision)',
+  [ShowcaseStrings.DatePage_Format_BrightDateCompact]: 'BrightDate (kompakt)',
+  [ShowcaseStrings.DatePage_Format_BrightDateStandard]: 'BrightDate (Standard)',
+  [ShowcaseStrings.DatePage_Format_ISO8601]: 'ISO 8601',
+  [ShowcaseStrings.DatePage_Format_UTC]: 'UTC',
+  [ShowcaseStrings.DatePage_Format_LocalDateTime]: 'Lokales Datum und Uhrzeit',
+  [ShowcaseStrings.DatePage_Format_LocalDate]: 'Lokales Datum',
+  [ShowcaseStrings.DatePage_Format_LocalTime]: 'Lokale Uhrzeit',
+  [ShowcaseStrings.DatePage_Format_UnixTimestamp]: 'Unix-Zeitstempel',
+  [ShowcaseStrings.DatePage_Format_UnixMs]: 'Unix-Millisekunden',
+  [ShowcaseStrings.DatePage_Format_JulianDate]: 'Julianisches Datum',
+  [ShowcaseStrings.DatePage_Format_ModifiedJulianDate]:
+    'Modifiziertes Julianisches Datum',
+  [ShowcaseStrings.DatePage_Format_DayOfYear]: 'Tag des Jahres',
+  [ShowcaseStrings.DatePage_Format_ISOWeek]: 'ISO-Woche',
+  [ShowcaseStrings.DatePage_Format_RFC2822]: 'RFC 2822',
+  [ShowcaseStrings.DatePage_HolidayType_Public]: 'Gesetzlicher Feiertag',
+  [ShowcaseStrings.DatePage_HolidayType_Bank]: 'Bankfeiertag',
+  [ShowcaseStrings.DatePage_HolidayType_Observance]: 'Gedenktag',
+  [ShowcaseStrings.DatePage_HolidayType_Religious]: 'Religiös',
+
+  // ── DatePage: Cochrane Easter Egg (Interplanetary Telemetry) ──
+  [ShowcaseStrings.DatePage_Telemetry_Title]: 'Interplanetare Telemetrie',
+  [ShowcaseStrings.DatePage_Telemetry_Subtitle]:
+    'Aktuelle Einweg-Lichtverzögerung in Millitagen (md)',
+  [ShowcaseStrings.DatePage_Telemetry_MoonDelay]: 'Erde → Mond',
+  [ShowcaseStrings.DatePage_Telemetry_MarsDelayMin]: 'Erde → Mars (min)',
+  [ShowcaseStrings.DatePage_Telemetry_MarsDelayMax]: 'Erde → Mars (max)',
+  [ShowcaseStrings.DatePage_Telemetry_MarsDelayCurrent]:
+    'Erde → Mars (aktuelle Schätzung)',
+  [ShowcaseStrings.DatePage_Telemetry_Unit]: 'md',
+  [ShowcaseStrings.DatePage_Telemetry_Footer]:
+    'BrightDate ist für eine Welt jenseits der Erd-Standardzeit konzipiert. Ein Millitag ≈ 86,4 Sekunden.',
+
   // Navigation
   [ShowcaseStrings.Nav_Home]: 'Startseite',
   [ShowcaseStrings.Nav_SoupDemo]: 'Soup Demo',
@@ -12,6 +72,7 @@ export const ShowcaseGermanStrings: Partial<
   [ShowcaseStrings.Nav_Blog]: 'Blog',
   [ShowcaseStrings.Nav_FAQ]: 'FAQ',
   [ShowcaseStrings.Nav_Docs]: 'Dokumentation',
+  [ShowcaseStrings.Nav_BrightDate]: 'BrightDate',
   [ShowcaseStrings.Nav_Home_Description]: 'Hauptseite',
   [ShowcaseStrings.Nav_SoupDemo_Description]:
     'Interaktive Block-Visualisierung',
@@ -20,6 +81,7 @@ export const ShowcaseGermanStrings: Partial<
   [ShowcaseStrings.Nav_Blog_Description]: 'BrightChain Blog und Updates',
   [ShowcaseStrings.Nav_FAQ_Description]: 'Häufig gestellte Fragen',
   [ShowcaseStrings.Nav_Docs_Description]: 'Projektdokumentation',
+  [ShowcaseStrings.Nav_BrightDate_Description]: 'Aktuelles BrightDate',
   [ShowcaseStrings.Nav_ToggleMenu]: 'Menü umschalten',
   [ShowcaseStrings.FAQ_BrightDB_Logo_Alt]: 'BrightDB-Logo',
   [ShowcaseStrings.FAQ_TopSecret_Logo_Alt]: 'Top Secret dApp',
@@ -2404,11 +2466,21 @@ export const ShowcaseGermanStrings: Partial<
   [ShowcaseStrings.PP_S18_WebLabel]: 'Web:',
   [ShowcaseStrings.Slogan_Math_Search_Warrant]:
     'Mathematik akzeptiert keinen Durchsuchungsbefehl.',
-  [ShowcaseStrings.Slogan_Where_State_Sees_Noise]:
-    'Wo der Staat nur Rauschen sieht, findet das Volk die Wahrheit.',
-  [ShowcaseStrings.Slogan_Building_World_Where_Ideas_Have_No_Borders]:
-    'Wir bauen eine Welt, in der Ideen keine Grenzen kennen und die Wahrheit keinen Besitzer hat.',
+  [ShowcaseStrings.Slogan_Signal_Belongs_To_You]:
+    'Das Signal gehört dir. Das Rauschen gehört allen.',
   [ShowcaseStrings.Slogan_Defiance_By_Design]: 'Widerstand durch Design.',
+  [ShowcaseStrings.Slogan_BrightChain_Privacy]:
+    'Privatsphäre, um die du nicht bitten musst.',
+  [ShowcaseStrings.Slogan_BrightChain_Privacy_Long]:
+    'BrightChain: Privatsphäre, um die du nicht bitten musst.',
+  [ShowcaseStrings.Slogan_Speak_Freely]:
+    'Sprich frei; die Mathematik schützt dich.',
+  [ShowcaseStrings.Slogan_Distributed_By_Many]:
+    'Von vielen verteilt, von niemandem besessen.',
+  [ShowcaseStrings.Slogan_Truth_In_The_Signal]:
+    'Wahrheit im Signal, Sicherheit im Rauschen.',
+  [ShowcaseStrings.Slogan_Ideas_Paper_Trail]:
+    'Ideen sollten keine Papierspur hinterlassen.',
 };
 
 export default ShowcaseGermanStrings;

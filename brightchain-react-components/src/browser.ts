@@ -9,6 +9,7 @@ export * from './lib/BrightChainLogo';
 export * from './lib/BrightChainLogoI18N';
 // BrightChainSoupDemo intentionally omitted — depends on @digitaldefiance/ecies-lib (Node.js crypto)
 export * from './lib/BrightChainSubLogo';
+export * from './lib/BrightDate';
 export * from './lib/communication';
 export * from './lib/identity';
 export * from './lib/layout';

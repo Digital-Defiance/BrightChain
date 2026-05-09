@@ -1,5 +1,5 @@
 import { CONSTANTS } from '@brightchain/brightchain-lib';
-import React from 'react';
+import React, { useEffect, useId, useRef, useState } from 'react';
 import './BrightChainLogo.scss';
 
 export interface BrightChainLogoProps {
@@ -10,11 +10,23 @@ export interface BrightChainLogoProps {
   secondaryText?: string;
   taglineColor?: string;
   taglineText?: string;
+  /** Accessible label for the logo. Defaults to "{primaryText}{secondaryText}". */
+  ariaLabel?: string;
   className?: string;
   style?: React.CSSProperties;
   width?: number | string;
   height?: number | string;
 }
+
+/** Fixed height of the SVG coordinate space. */
+const VIEWBOX_HEIGHT = 600;
+/**
+ * Initial viewBox width — generous enough for English with the correct fonts.
+ * Will be replaced after fonts load and getBBox() can measure accurately.
+ */
+const VIEWBOX_WIDTH_DEFAULT = 3200;
+/** Right padding in SVG units added after the widest text element. */
+const VIEWBOX_RIGHT_PAD = 40;
 
 export const BrightChainLogo: React.FC<BrightChainLogoProps> = ({
   primaryColor: brightColor = CONSTANTS.THEME_COLORS.CHAIN_BLUE_DARK,
@@ -24,19 +36,62 @@ export const BrightChainLogo: React.FC<BrightChainLogoProps> = ({
   secondaryText = 'Chain',
   taglineColor = '#ffffff',
   taglineText = 'Privacy. Participation. Power.',
+  ariaLabel,
   className,
   style,
-  width = 3151,
-  height = 649,
-}) => (
+  width,
+  height = 600,
+}) => {
+  const svgRef = useRef<SVGSVGElement>(null);
+  const [viewBoxWidth, setViewBoxWidth] = useState(VIEWBOX_WIDTH_DEFAULT);
+  const titleId = useId();
+
+  useEffect(() => {
+    const svg = svgRef.current;
+    if (!svg) return;
+
+    const measure = () => {
+      try {
+        // Measure the full content bounding box of the SVG in user-unit space.
+        // This includes the logo mark paths + all text, so it's the true width.
+        const bbox = svg.getBBox();
+        if (bbox.width > 0) {
+          setViewBoxWidth(bbox.x + bbox.width + VIEWBOX_RIGHT_PAD);
+        }
+      } catch {
+        // SSR or detached element — keep default
+      }
+    };
+
+    // Wait for fonts before measuring so getBBox() uses the real typeface.
+    // After fonts load, also wait one rAF so the browser has laid out the SVG.
+    if (typeof document !== 'undefined' && document.fonts?.ready) {
+      document.fonts.ready.then(() => {
+        requestAnimationFrame(() => requestAnimationFrame(measure));
+      });
+    } else {
+      requestAnimationFrame(() => requestAnimationFrame(measure));
+    }
+  }, [primaryText, secondaryText, taglineText]);
+
+  const resolvedHeight =
+    height ?? (typeof width === 'number' ? Math.round(width / (viewBoxWidth / VIEWBOX_HEIGHT)) : undefined);
+
+  const resolvedAriaLabel = ariaLabel ?? `${primaryText}${secondaryText} ${taglineText}`;
+
+  return (
   <svg
+    ref={svgRef}
     xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 3182.62 600"
-    width={width}
-    height={height}
+    viewBox={`0 0 ${viewBoxWidth} ${VIEWBOX_HEIGHT}`}
+    height={resolvedHeight}
+    overflow="visible"
+    role="img"
+    aria-labelledby={titleId}
     className={className}
-    style={style}
+    style={{ overflow: 'visible', ...style }}
   >
+    <title id={titleId}>{resolvedAriaLabel}</title>
     <path
       fill={chainColor}
       d="M438.28,0h16.11l10.84,1.17,11.43,1.76,8.79,2.05,6.15,1.76,11.72,4.1,8.2,3.81,7.62,3.81,4.39,2.64,6.74,4.1,4.98,3.52,5.27,3.81,4.1,3.22,4.69,4.39,1.76,1.46v.59l1.17.59,2.64,2.64,2.05,2.34,3.22,3.52,2.64,3.22,2.93,3.22,2.93,4.1,3.81,5.27,3.22,4.98,4.98,8.5,2.93,5.57,2.64,5.86,2.34,5.57,4.1,11.43,1.76,6.74,2.34,9.96,2.05,14.36.59,9.67v9.38l-.59,9.08-1.46,11.72-1.46,7.91-2.64,10.25-4.39,12.6-3.81,8.5-3.81,7.91-3.81,6.45-2.93,4.98-7.03,9.38-3.22,4.1-2.93,2.93-2.64,3.22-3.22,3.22-2.05,2.34-40.72,40.72-3.81,2.93-3.22,2.05-4.69,2.34-5.86,1.76-5.86.88h-5.27l-5.57-.88-4.39-1.17-4.69-2.34-3.52-2.05-4.1-3.52-2.34-2.05-2.34-2.64-2.64-3.52-2.93-5.27-1.76-5.57-.88-4.39-.29-2.34v-4.98l.88-6.15,2.05-6.45,3.81-6.74,2.34-2.64,2.64-3.22,37.79-37.79,1.46-1.76h.59l.59-1.17,2.93-2.93,2.64-3.22,3.81-5.27,4.1-7.03,2.93-6.15,2.05-5.57,1.46-5.27,1.46-7.03.59-3.52.29-4.1v-7.91l-.59-6.15-1.46-7.32-1.46-5.86-2.64-7.32-3.52-7.03-4.1-6.74-3.81-4.98-2.93-3.22-2.05-2.34-4.1-3.81-4.1-3.22-4.39-3.22-7.32-4.1-4.69-2.05-3.52-1.46-7.03-2.34-8.5-1.76-3.81-.59-5.27-.29h-4.98l-5.27.29-7.03,1.17-7.03,1.76-8.2,2.93-7.32,3.52-4.39,2.64-5.57,4.1-3.81,3.22-5.86,5.27-3.22,3.22-2.05,2.34-32.81,32.81-.59.88h-.59l-.59,1.17-49.51,49.51-4.1,4.39-19.34,19.34-2.64,3.22-2.34,2.64-4.39,5.86-2.64,4.39-2.34,4.39-3.22,8.2-2.64,8.79-1.17,6.15-.59,8.2v5.86l.59,7.03,1.46,7.32,2.34,7.62,2.64,7.03,3.52,6.74,2.93,4.69,4.1,5.27,3.22,3.52,2.64,3.22,3.22,3.81,2.64,4.1,2.34,4.69,1.46,4.98.88,6.45v4.69l-.88,5.86-1.76,5.86-3.52,6.45-3.22,3.81-2.05,2.34-2.05,2.05-4.1,3.22-5.86,3.22-4.39,1.46-3.22.88-7.91.88-7.32-.88-5.86-1.76-4.69-2.34-3.22-2.05-4.39-3.81-2.05-1.76-2.05-2.34-4.69-4.98-2.64-2.93-4.1-5.57-3.81-5.27-3.22-4.98-4.39-7.03-2.93-5.27-4.98-11.13-3.22-8.79-2.34-7.03-2.93-12.3-1.46-9.67-.88-8.2-.59-10.55v-4.39l.88-14.06,1.76-12.01,2.05-9.08,2.05-7.91,3.81-10.55,3.22-7.32,3.81-8.2,2.64-4.39,4.98-8.2,3.81-5.27,4.1-5.57,2.64-3.22,4.1-4.39,2.34-2.34,2.05-2.34,55.66-55.66,1.46-1.76h.59l.59-1.17,58.89-58.89,2.34-2.05,3.81-3.52,1.17-.59v-.59l2.34-2.05,4.98-3.81,4.98-3.52,4.1-2.93,4.1-2.34,4.98-2.93,4.69-2.64,4.69-2.34,7.62-3.52,10.55-3.81,5.86-1.76,11.13-2.64,11.13-1.76,7.62-.88,4.1-.29Z"
@@ -57,14 +112,16 @@ export const BrightChainLogo: React.FC<BrightChainLogoProps> = ({
     </text>
     <text
       fontFamily="'IBMPlexSans', 'IBM Plex Sans', sans-serif"
-      fontSize="135"
-      transform="translate(634.5 554.91)"
+      fontWeight="600"
+      fontSize="175"
+      transform="translate(619.09 510)"
     >
-      <tspan fill={taglineColor} x="50" y="0">
+      <tspan fill={taglineColor}>
         {taglineText}
       </tspan>
     </text>
   </svg>
-);
+  );
+};
 
 export default BrightChainLogo;

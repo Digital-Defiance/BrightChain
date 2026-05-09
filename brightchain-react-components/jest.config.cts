@@ -4,7 +4,7 @@ module.exports = {
   testEnvironment: 'jsdom',
   setupFiles: ['<rootDir>/src/test-setup.ts'],
   transform: {
-    '^.+\\.[tj]sx?$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.spec.json' }],
+    '^.+\\.[tj]sx?$': ['ts-jest', { tsconfig: require('path').join(__dirname, 'tsconfig.spec.json') }],
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html'],
   coverageDirectory: '../coverage/brightchain-react-components',

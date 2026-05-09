@@ -6,6 +6,55 @@ import {
 export const ShowcaseComponentId = 'Showcase';
 
 export const ShowcaseStrings = createI18nStringKeys(ShowcaseComponentId, {
+  Common_Bright: 'Common_Bright',
+  Common_Chain: 'Common_Chain',
+
+  Common_Privacy: 'Common_Privacy',
+  Common_Participation: 'Common_Participation',
+  Common_Power: 'Common_Power',
+  Common_PrivacyParticipationPower: 'Common_PrivacyParticipationPower',
+
+  Date_BrightDateTemplate: 'Date_BrightDateTemplate',
+
+  // ── DatePage ──
+  DatePage_Title: 'DatePage_Title',
+  DatePage_BrightDateEpochLabel: 'DatePage_BrightDateEpochLabel',
+  DatePage_HolidaysTitle: 'DatePage_HolidaysTitle',
+  DatePage_AllFormatsTitle: 'DatePage_AllFormatsTitle',
+  DatePage_AboutBrightDateTitle: 'DatePage_AboutBrightDateTitle',
+  DatePage_AboutBrightDate_Epoch: 'DatePage_AboutBrightDate_Epoch',
+  DatePage_AboutBrightDate_Fraction: 'DatePage_AboutBrightDate_Fraction',
+  DatePage_AboutBrightDate_NoTimezones: 'DatePage_AboutBrightDate_NoTimezones',
+  DatePage_Format_BrightDateFull: 'DatePage_Format_BrightDateFull',
+  DatePage_Format_BrightDateCompact: 'DatePage_Format_BrightDateCompact',
+  DatePage_Format_BrightDateStandard: 'DatePage_Format_BrightDateStandard',
+  DatePage_Format_ISO8601: 'DatePage_Format_ISO8601',
+  DatePage_Format_UTC: 'DatePage_Format_UTC',
+  DatePage_Format_LocalDateTime: 'DatePage_Format_LocalDateTime',
+  DatePage_Format_LocalDate: 'DatePage_Format_LocalDate',
+  DatePage_Format_LocalTime: 'DatePage_Format_LocalTime',
+  DatePage_Format_UnixTimestamp: 'DatePage_Format_UnixTimestamp',
+  DatePage_Format_UnixMs: 'DatePage_Format_UnixMs',
+  DatePage_Format_JulianDate: 'DatePage_Format_JulianDate',
+  DatePage_Format_ModifiedJulianDate: 'DatePage_Format_ModifiedJulianDate',
+  DatePage_Format_DayOfYear: 'DatePage_Format_DayOfYear',
+  DatePage_Format_ISOWeek: 'DatePage_Format_ISOWeek',
+  DatePage_Format_RFC2822: 'DatePage_Format_RFC2822',
+  DatePage_HolidayType_Public: 'DatePage_HolidayType_Public',
+  DatePage_HolidayType_Bank: 'DatePage_HolidayType_Bank',
+  DatePage_HolidayType_Observance: 'DatePage_HolidayType_Observance',
+  DatePage_HolidayType_Religious: 'DatePage_HolidayType_Religious',
+
+  // ── DatePage: Cochrane Easter Egg (Interplanetary Telemetry) ──
+  DatePage_Telemetry_Title: 'DatePage_Telemetry_Title',
+  DatePage_Telemetry_Subtitle: 'DatePage_Telemetry_Subtitle',
+  DatePage_Telemetry_MoonDelay: 'DatePage_Telemetry_MoonDelay',
+  DatePage_Telemetry_MarsDelayMin: 'DatePage_Telemetry_MarsDelayMin',
+  DatePage_Telemetry_MarsDelayMax: 'DatePage_Telemetry_MarsDelayMax',
+  DatePage_Telemetry_MarsDelayCurrent: 'DatePage_Telemetry_MarsDelayCurrent',
+  DatePage_Telemetry_Unit: 'DatePage_Telemetry_Unit',
+  DatePage_Telemetry_Footer: 'DatePage_Telemetry_Footer',
+
   // Navigation
   Nav_Home: 'Nav_Home',
   Nav_SoupDemo: 'Nav_SoupDemo',
@@ -13,12 +62,14 @@ export const ShowcaseStrings = createI18nStringKeys(ShowcaseComponentId, {
   Nav_Blog: 'Nav_Blog',
   Nav_FAQ: 'Nav_FAQ',
   Nav_Docs: 'Nav_Docs',
+  Nav_BrightDate: 'Nav_BrightDate',
   Nav_Home_Description: 'Nav_Home_Description',
   Nav_SoupDemo_Description: 'Nav_SoupDemo_Description',
   Nav_Ledger_Description: 'Nav_Ledger_Description',
   Nav_Blog_Description: 'Nav_Blog_Description',
   Nav_FAQ_Description: 'Nav_FAQ_Description',
   Nav_Docs_Description: 'Nav_Docs_Description',
+  Nav_BrightDate_Description: 'Nav_BrightDate_Description',
   Nav_ToggleMenu: 'Nav_ToggleMenu',
 
   // Language Selector
@@ -1693,10 +1744,14 @@ export const ShowcaseStrings = createI18nStringKeys(ShowcaseComponentId, {
 
   // Slogans
   Slogan_Math_Search_Warrant: 'Slogan_Math_Search_Warrant',
-  Slogan_Where_State_Sees_Noise: 'Slogan_Where_State_Sees_Noise',
-  Slogan_Building_World_Where_Ideas_Have_No_Borders:
-    'Slogan_Building_World_Where_Ideas_Have_No_Borders',
+  Slogan_Signal_Belongs_To_You: 'Slogan_Signal_Belongs_To_You',
   Slogan_Defiance_By_Design: 'Slogan_Defiance_By_Design',
+  Slogan_BrightChain_Privacy: 'Slogan_BrightChain_Privacy',
+  Slogan_BrightChain_Privacy_Long: 'Slogan_BrightChain_Privacy_Long',
+  Slogan_Speak_Freely: 'Slogan_Speak_Freely',
+  Slogan_Distributed_By_Many: 'Slogan_Distributed_By_Many',
+  Slogan_Truth_In_The_Signal: 'Slogan_Truth_In_The_Signal',
+  Slogan_Ideas_Paper_Trail: 'Slogan_Ideas_Paper_Trail',
 } as const);
 
 export type ShowcaseStringKey = BrandedStringKeyValue<typeof ShowcaseStrings>;

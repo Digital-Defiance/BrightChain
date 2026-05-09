@@ -8,6 +8,7 @@ import { BrightChainStrings, THEME_COLORS } from '@brightchain/brightchain-lib';
 import {
   BrightChainLogoI18N,
   BrightChainSubLogo,
+  SloganRotation,
 } from '@brightchain/brightchain-react-components';
 import { useI18n } from '@digitaldefiance/express-suite-react-components';
 import {
@@ -128,6 +129,8 @@ export const SplashPage: FC = () => {
             width={200}
           />
         </Box>
+
+        <SloganRotation />
 
         <Stack
           direction="row"

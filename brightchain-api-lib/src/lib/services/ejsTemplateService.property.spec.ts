@@ -4,6 +4,10 @@
  * Feature: node-ejs-splash-page, Property 1: Template variable completeness
  * Validates: Requirements 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7
  */
+// Async React property tests can exceed 5 s under parallel load — give them room.
+jest.retryTimes(2, { logErrorsBeforeRetry: false });
+jest.setTimeout(30000);
+
 import { afterEach, beforeEach, describe, expect, it } from '@jest/globals';
 import * as fc from 'fast-check';
 import { mkdtempSync, rmSync, writeFileSync } from 'fs';

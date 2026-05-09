@@ -5,6 +5,65 @@ import { ShowcaseStringKey, ShowcaseStrings } from '../showcaseStrings';
 export const ShowcaseJapaneseStrings: Partial<
   ComponentStrings<ShowcaseStringKey>
 > = {
+  // BrightChain
+  [ShowcaseStrings.Common_Bright]: 'ブライト',
+  [ShowcaseStrings.Common_Chain]: 'チェーン',
+
+  [ShowcaseStrings.Common_Privacy]: 'プライバシー',
+  [ShowcaseStrings.Common_Participation]: '参加',
+  [ShowcaseStrings.Common_Power]: '力',
+  [ShowcaseStrings.Common_PrivacyParticipationPower]:
+    'プライバシー。参加。力。',
+
+  [ShowcaseStrings.Date_BrightDateTemplate]: 'BD {BD}',
+
+  // ── DatePage ──
+  [ShowcaseStrings.DatePage_Title]: '日付と時刻',
+  [ShowcaseStrings.DatePage_BrightDateEpochLabel]:
+    'BrightDate（J2000.0からの10進日数）',
+  [ShowcaseStrings.DatePage_HolidaysTitle]: '本日の祝日・記念日',
+  [ShowcaseStrings.DatePage_AllFormatsTitle]: 'すべての日付形式',
+  [ShowcaseStrings.DatePage_AboutBrightDateTitle]: 'BrightDateについて',
+  [ShowcaseStrings.DatePage_AboutBrightDate_Epoch]:
+    'BrightDateはJ2000.0エポック（2000年1月1日 12:00:00 UTC）からの10進日数を数えます。これは世界中の天文学者が天体力学に使用するのと同じエポックです。',
+  [ShowcaseStrings.DatePage_AboutBrightDate_Fraction]:
+    '整数部分は日数です。小数部分は1日の10進時刻です。例：0.5 = 正午、0.25 = 06:00、0.75 = 18:00。',
+  [ShowcaseStrings.DatePage_AboutBrightDate_NoTimezones]:
+    'タイムゾーンなし、夏時間なし、曖昧さなし — 一つのタイムライン上の一つの数字だけ。',
+  [ShowcaseStrings.DatePage_Format_BrightDateFull]: 'BrightDate（完全精度）',
+  [ShowcaseStrings.DatePage_Format_BrightDateCompact]:
+    'BrightDate（コンパクト）',
+  [ShowcaseStrings.DatePage_Format_BrightDateStandard]: 'BrightDate（標準）',
+  [ShowcaseStrings.DatePage_Format_ISO8601]: 'ISO 8601',
+  [ShowcaseStrings.DatePage_Format_UTC]: 'UTC',
+  [ShowcaseStrings.DatePage_Format_LocalDateTime]: 'ローカル日時',
+  [ShowcaseStrings.DatePage_Format_LocalDate]: 'ローカル日付',
+  [ShowcaseStrings.DatePage_Format_LocalTime]: 'ローカル時刻',
+  [ShowcaseStrings.DatePage_Format_UnixTimestamp]: 'Unixタイムスタンプ',
+  [ShowcaseStrings.DatePage_Format_UnixMs]: 'Unixミリ秒',
+  [ShowcaseStrings.DatePage_Format_JulianDate]: 'ユリウス日',
+  [ShowcaseStrings.DatePage_Format_ModifiedJulianDate]: '修正ユリウス日',
+  [ShowcaseStrings.DatePage_Format_DayOfYear]: '年間通算日',
+  [ShowcaseStrings.DatePage_Format_ISOWeek]: 'ISO週番号',
+  [ShowcaseStrings.DatePage_Format_RFC2822]: 'RFC 2822',
+  [ShowcaseStrings.DatePage_HolidayType_Public]: '祝日',
+  [ShowcaseStrings.DatePage_HolidayType_Bank]: '銀行休業日',
+  [ShowcaseStrings.DatePage_HolidayType_Observance]: '記念日',
+  [ShowcaseStrings.DatePage_HolidayType_Religious]: '宗教的',
+
+  // ── DatePage: Cochrane Easter Egg (Interplanetary Telemetry) ──
+  [ShowcaseStrings.DatePage_Telemetry_Title]: '惑星間テレメトリー',
+  [ShowcaseStrings.DatePage_Telemetry_Subtitle]:
+    '現在の片道光遅延（ミリデイ単位、md）',
+  [ShowcaseStrings.DatePage_Telemetry_MoonDelay]: '地球 → 月',
+  [ShowcaseStrings.DatePage_Telemetry_MarsDelayMin]: '地球 → 火星（最小）',
+  [ShowcaseStrings.DatePage_Telemetry_MarsDelayMax]: '地球 → 火星（最大）',
+  [ShowcaseStrings.DatePage_Telemetry_MarsDelayCurrent]:
+    '地球 → 火星（現在の推定）',
+  [ShowcaseStrings.DatePage_Telemetry_Unit]: 'md',
+  [ShowcaseStrings.DatePage_Telemetry_Footer]:
+    'BrightDateは地球標準時を超えた世界のために設計されています。1ミリデイ ≈ 86.4秒。',
+
   // Navigation
   [ShowcaseStrings.Nav_Home]: 'ホーム',
   [ShowcaseStrings.Nav_SoupDemo]: 'Soupデモ',
@@ -12,6 +71,7 @@ export const ShowcaseJapaneseStrings: Partial<
   [ShowcaseStrings.Nav_Blog]: 'ブログ',
   [ShowcaseStrings.Nav_FAQ]: 'よくある質問',
   [ShowcaseStrings.Nav_Docs]: 'ドキュメント',
+  [ShowcaseStrings.Nav_BrightDate]: 'BrightDate',
   [ShowcaseStrings.Nav_Home_Description]: 'メインページ',
   [ShowcaseStrings.Nav_SoupDemo_Description]:
     'インタラクティブなブロック可視化',
@@ -20,6 +80,7 @@ export const ShowcaseJapaneseStrings: Partial<
   [ShowcaseStrings.Nav_Blog_Description]: 'BrightChainブログと更新情報',
   [ShowcaseStrings.Nav_FAQ_Description]: 'よくある質問',
   [ShowcaseStrings.Nav_Docs_Description]: 'プロジェクトドキュメント',
+  [ShowcaseStrings.Nav_BrightDate_Description]: '現在のBrightDate',
   [ShowcaseStrings.Nav_ToggleMenu]: 'メニュー切替',
   [ShowcaseStrings.FAQ_BrightDB_Logo_Alt]: 'BrightDBのロゴ',
   [ShowcaseStrings.FAQ_TopSecret_Logo_Alt]: 'トップシークレット dApp',
@@ -2328,11 +2389,20 @@ export const ShowcaseJapaneseStrings: Partial<
   [ShowcaseStrings.PP_S18_WebLabel]: 'ウェブ：',
   [ShowcaseStrings.Slogan_Math_Search_Warrant]:
     '数学は捜索令状を受け付けない。',
-  [ShowcaseStrings.Slogan_Where_State_Sees_Noise]:
-    '国家がノイズを見る場所に、人々は真実を見出す。',
-  [ShowcaseStrings.Slogan_Building_World_Where_Ideas_Have_No_Borders]:
-    '思想に国境はなく、真実には所有者がいない世界を築く。',
-  [ShowcaseStrings.Slogan_Defiance_By_Design]: '設計による抵抗。',
+  [ShowcaseStrings.Slogan_Signal_Belongs_To_You]:
+    'シグナルはあなたのもの。ノイズはみんなのもの。',
+  [ShowcaseStrings.Slogan_Defiance_By_Design]: '設計による反骨。',
+  [ShowcaseStrings.Slogan_BrightChain_Privacy]:
+    '許可を求めなくていいプライバシー。',
+  [ShowcaseStrings.Slogan_BrightChain_Privacy_Long]:
+    'BrightChain：許可を求めなくていいプライバシー。',
+  [ShowcaseStrings.Slogan_Speak_Freely]: '自由に語れ。数学があなたを守る。',
+  [ShowcaseStrings.Slogan_Distributed_By_Many]:
+    '多くの人が配布し、誰も所有しない。',
+  [ShowcaseStrings.Slogan_Truth_In_The_Signal]:
+    'シグナルに真実、ノイズに安全。',
+  [ShowcaseStrings.Slogan_Ideas_Paper_Trail]:
+    'アイデアに痕跡を残すべきではない。',
 };
 
 export default ShowcaseJapaneseStrings;
