@@ -1,0 +1,22 @@
+@use './brightchain';
+
+.hero-badge-slogan {
+  display: inline-block;
+  padding: 0.5rem 1.5rem;
+  background: transparent;
+  border: 2px solid var(--accent-secondary, #0a60d0);
+  border-radius: 20px;
+  margin-bottom: 2rem;
+}
+
+.badge-slogan {
+  color: var(--accent-secondary, #0a60d0);
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.badge-text-slogan {
+  color: var(--accent-secondary, #0a60d0);
+  font-weight: 600;
+  font-size: 0.95rem;
+}

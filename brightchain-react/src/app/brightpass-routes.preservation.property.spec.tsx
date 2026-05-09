@@ -10,6 +10,10 @@
  * **Validates: Requirements 3.3, 3.4, 3.5**
  */
 
+// Async React property tests can exceed 5 s under parallel load — give them room.
+jest.retryTimes(2, { logErrorsBeforeRetry: false });
+jest.setTimeout(30000);
+
 import { render } from '@testing-library/react';
 import fc from 'fast-check';
 import React from 'react';

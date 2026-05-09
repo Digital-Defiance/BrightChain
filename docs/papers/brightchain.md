@@ -15,7 +15,7 @@ jessica@digitaldefiance.org
 
 ---
 
-> *Building a world where ideas have no borders and truth has no owner.*
+> *BrightChain: Privacy you don't have to ask for.*
 
 ## 1. Introduction
 

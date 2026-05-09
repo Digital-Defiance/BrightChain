@@ -1980,8 +1980,7 @@ export const AmericanEnglishStrings: ComponentStrings<BrightChainStringKey> = {
   [BrightChainStrings.Dispute_IdTemplate]: 'Dispute #{ID}',
   [BrightChainStrings.Dispute_State_Disputed]: 'Under review',
   [BrightChainStrings.Dispute_State_ResolvedFinal]: 'Resolved (final)',
-  [BrightChainStrings.Dispute_State_ResolvedReplaced]:
-    'Resolved (superseded)',
+  [BrightChainStrings.Dispute_State_ResolvedReplaced]: 'Resolved (superseded)',
   [BrightChainStrings.Dispute_Field_Amount]: 'Amount',
   [BrightChainStrings.Dispute_Field_Opened]: 'Opened',
   [BrightChainStrings.Dispute_Field_Reason]: 'Reason',
@@ -1996,8 +1995,7 @@ export const AmericanEnglishStrings: ComponentStrings<BrightChainStringKey> = {
     'Joule Rate Table — Version {VERSION}',
   [BrightChainStrings.RateTransparency_EffectiveTemplate]:
     'Effective: {DATE} ({BD})',
-  [BrightChainStrings.RateTransparency_SignedByTemplate]:
-    'Signed by: {SIGNER}',
+  [BrightChainStrings.RateTransparency_SignedByTemplate]: 'Signed by: {SIGNER}',
   [BrightChainStrings.RateTransparency_Col_ResourceClass]: 'Resource class',
   [BrightChainStrings.RateTransparency_Col_Rate]: 'Rate',
   [BrightChainStrings.RateTransparency_Col_PerUnit]: 'Per unit',
@@ -2011,6 +2009,25 @@ export const AmericanEnglishStrings: ComponentStrings<BrightChainStringKey> = {
   [BrightChainStrings.JouleEventLog_Col_Kind]: 'Kind',
   [BrightChainStrings.JouleEventLog_Col_Amount]: 'Amount',
   [BrightChainStrings.JouleEventLog_Col_Description]: 'Description',
+
+  // Slogans
+  [BrightChainStrings.Slogan_Math_Search_Warrant]:
+    'Mathematics does not accept a search warrant.',
+  [BrightChainStrings.Slogan_Signal_Belongs_To_You]:
+    'The signal belongs to you. The noise belongs to everyone.',
+  [BrightChainStrings.Slogan_Defiance_By_Design]: 'Defiance by Design.',
+  [BrightChainStrings.Slogan_BrightChain_Privacy]:
+    "Privacy you don't have to ask for.",
+  [BrightChainStrings.Slogan_BrightChain_Privacy_Long]:
+    "BrightChain: Privacy you don't have to ask for.",
+  [BrightChainStrings.Slogan_Speak_Freely]:
+    'Speak freely; the math has your back.',
+  [BrightChainStrings.Slogan_Distributed_By_Many]:
+    'Distributed by many, owned by none.',
+  [BrightChainStrings.Slogan_Truth_In_The_Signal]:
+    'Truth in the signal, safety in the noise.',
+  [BrightChainStrings.Slogan_Ideas_Paper_Trail]:
+    "Ideas shouldn't have a paper trail.",
 };
 
 export default AmericanEnglishStrings;

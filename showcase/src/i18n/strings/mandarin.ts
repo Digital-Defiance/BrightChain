@@ -5,6 +5,63 @@ import { ShowcaseStringKey, ShowcaseStrings } from '../showcaseStrings';
 export const ShowcaseMandarinStrings: Partial<
   ComponentStrings<ShowcaseStringKey>
 > = {
+  // BrightChain
+  [ShowcaseStrings.Common_Bright]: '明亮',
+  [ShowcaseStrings.Common_Chain]: '链',
+
+  [ShowcaseStrings.Common_Privacy]: '隐私',
+  [ShowcaseStrings.Common_Participation]: '参与',
+  [ShowcaseStrings.Common_Power]: '力量',
+  [ShowcaseStrings.Common_PrivacyParticipationPower]: '隐私。参与。力量。',
+
+  [ShowcaseStrings.Date_BrightDateTemplate]: 'BD {BD}',
+
+  // ── DatePage ──
+  [ShowcaseStrings.DatePage_Title]: '日期与时间',
+  [ShowcaseStrings.DatePage_BrightDateEpochLabel]:
+    'BrightDate（自J2000.0以来的十进制天数）',
+  [ShowcaseStrings.DatePage_HolidaysTitle]: '今日节假日与纪念日',
+  [ShowcaseStrings.DatePage_AllFormatsTitle]: '所有日期格式',
+  [ShowcaseStrings.DatePage_AboutBrightDateTitle]: '关于BrightDate',
+  [ShowcaseStrings.DatePage_AboutBrightDate_Epoch]:
+    'BrightDate计算自J2000.0纪元（2000年1月1日12:00:00 UTC）以来的十进制天数。这是全世界天文学家用于天体力学的同一纪元。',
+  [ShowcaseStrings.DatePage_AboutBrightDate_Fraction]:
+    '整数部分是天数计数。小数部分是一天中的十进制时间。例如：0.5 = 正午，0.25 = 06:00，0.75 = 18:00。',
+  [ShowcaseStrings.DatePage_AboutBrightDate_NoTimezones]:
+    '没有时区，没有夏令时，没有歧义——只是一条时间线上的一个数字。',
+  [ShowcaseStrings.DatePage_Format_BrightDateFull]: 'BrightDate（完整精度）',
+  [ShowcaseStrings.DatePage_Format_BrightDateCompact]: 'BrightDate（紧凑）',
+  [ShowcaseStrings.DatePage_Format_BrightDateStandard]: 'BrightDate（标准）',
+  [ShowcaseStrings.DatePage_Format_ISO8601]: 'ISO 8601',
+  [ShowcaseStrings.DatePage_Format_UTC]: 'UTC',
+  [ShowcaseStrings.DatePage_Format_LocalDateTime]: '本地日期和时间',
+  [ShowcaseStrings.DatePage_Format_LocalDate]: '本地日期',
+  [ShowcaseStrings.DatePage_Format_LocalTime]: '本地时间',
+  [ShowcaseStrings.DatePage_Format_UnixTimestamp]: 'Unix时间戳',
+  [ShowcaseStrings.DatePage_Format_UnixMs]: 'Unix毫秒',
+  [ShowcaseStrings.DatePage_Format_JulianDate]: '儒略日',
+  [ShowcaseStrings.DatePage_Format_ModifiedJulianDate]: '修正儒略日',
+  [ShowcaseStrings.DatePage_Format_DayOfYear]: '年中第几天',
+  [ShowcaseStrings.DatePage_Format_ISOWeek]: 'ISO周',
+  [ShowcaseStrings.DatePage_Format_RFC2822]: 'RFC 2822',
+  [ShowcaseStrings.DatePage_HolidayType_Public]: '公共假日',
+  [ShowcaseStrings.DatePage_HolidayType_Bank]: '银行假日',
+  [ShowcaseStrings.DatePage_HolidayType_Observance]: '纪念日',
+  [ShowcaseStrings.DatePage_HolidayType_Religious]: '宗教节日',
+
+  // ── DatePage: Cochrane Easter Egg (Interplanetary Telemetry) ──
+  [ShowcaseStrings.DatePage_Telemetry_Title]: '行星际遥测',
+  [ShowcaseStrings.DatePage_Telemetry_Subtitle]:
+    '当前单向光延迟，以毫日（md）表示',
+  [ShowcaseStrings.DatePage_Telemetry_MoonDelay]: '地球 → 月球',
+  [ShowcaseStrings.DatePage_Telemetry_MarsDelayMin]: '地球 → 火星（最小）',
+  [ShowcaseStrings.DatePage_Telemetry_MarsDelayMax]: '地球 → 火星（最大）',
+  [ShowcaseStrings.DatePage_Telemetry_MarsDelayCurrent]:
+    '地球 → 火星（当前估计）',
+  [ShowcaseStrings.DatePage_Telemetry_Unit]: 'md',
+  [ShowcaseStrings.DatePage_Telemetry_Footer]:
+    'BrightDate专为超越地球标准时间的世界而设计。一毫日 ≈ 86.4秒。',
+
   // Navigation
   [ShowcaseStrings.Nav_Home]: '首页',
   [ShowcaseStrings.Nav_SoupDemo]: 'Soup演示',
@@ -12,12 +69,14 @@ export const ShowcaseMandarinStrings: Partial<
   [ShowcaseStrings.Nav_Blog]: '博客',
   [ShowcaseStrings.Nav_FAQ]: '常见问题',
   [ShowcaseStrings.Nav_Docs]: '文档',
+  [ShowcaseStrings.Nav_BrightDate]: 'BrightDate',
   [ShowcaseStrings.Nav_Home_Description]: '主页',
   [ShowcaseStrings.Nav_SoupDemo_Description]: '交互式区块可视化',
   [ShowcaseStrings.Nav_Ledger_Description]: '带治理的区块链账本',
   [ShowcaseStrings.Nav_Blog_Description]: 'BrightChain博客和更新',
   [ShowcaseStrings.Nav_FAQ_Description]: '常见问题解答',
   [ShowcaseStrings.Nav_Docs_Description]: '项目文档',
+  [ShowcaseStrings.Nav_BrightDate_Description]: '当前 BrightDate',
   [ShowcaseStrings.Nav_ToggleMenu]: '切换菜单',
   [ShowcaseStrings.FAQ_BrightDB_Logo_Alt]: 'BrightDB标志',
   [ShowcaseStrings.FAQ_TopSecret_Logo_Alt]: '绝密 dApp',
@@ -2161,11 +2220,16 @@ export const ShowcaseMandarinStrings: Partial<
   [ShowcaseStrings.PP_S18_EmailLabel]: '电子邮件：',
   [ShowcaseStrings.PP_S18_WebLabel]: '网站：',
   [ShowcaseStrings.Slogan_Math_Search_Warrant]: '数学不接受搜查令。',
-  [ShowcaseStrings.Slogan_Where_State_Sees_Noise]:
-    '国家看到的只是噪音，人民发现的却是真理。',
-  [ShowcaseStrings.Slogan_Building_World_Where_Ideas_Have_No_Borders]:
-    '构建一个思想无国界、真理无主人的世界。',
-  [ShowcaseStrings.Slogan_Defiance_By_Design]: '设计即反抗。',
+  [ShowcaseStrings.Slogan_Signal_Belongs_To_You]:
+    '信号属于你。噪声属于所有人。',
+  [ShowcaseStrings.Slogan_Defiance_By_Design]: '以设计之名，坚守反抗。',
+  [ShowcaseStrings.Slogan_BrightChain_Privacy]: '无需申请的隐私保护。',
+  [ShowcaseStrings.Slogan_BrightChain_Privacy_Long]:
+    'BrightChain：无需申请的隐私保护。',
+  [ShowcaseStrings.Slogan_Speak_Freely]: '自由发声；数学为你护航。',
+  [ShowcaseStrings.Slogan_Distributed_By_Many]: '众人分布，无人占有。',
+  [ShowcaseStrings.Slogan_Truth_In_The_Signal]: '信号中有真相，噪声中有安全。',
+  [ShowcaseStrings.Slogan_Ideas_Paper_Trail]: '思想不应留下痕迹。',
 };
 
 export default ShowcaseMandarinStrings;

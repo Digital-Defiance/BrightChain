@@ -1,5 +1,6 @@
 export * from './BrightChainLogo';
 export * from './BrightChainLogoI18N';
+export * from './BrightChainLogoI18NRotation';
 export * from './BrightChainSoupDemo';
 export * from './BrightChainSubLogo';
 export * from './BrightDate';
@@ -15,3 +16,4 @@ export * from './layout';
 export * from './settings/BrightDateDisplaySelector';
 export * from './showcase';
 export * from './SimpleSoupDemo';
+export * from './SloganRotation';

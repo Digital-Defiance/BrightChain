@@ -3,6 +3,67 @@ import { ShowcaseStringKey, ShowcaseStrings } from '../showcaseStrings';
 
 export const ShowcaseAmericanEnglishStrings: ComponentStrings<ShowcaseStringKey> =
   {
+    // BrightChain
+    [ShowcaseStrings.Common_Bright]: 'Bright',
+    [ShowcaseStrings.Common_Chain]: 'Chain',
+
+    [ShowcaseStrings.Common_Privacy]: 'Privacy',
+    [ShowcaseStrings.Common_Participation]: 'Participation',
+    [ShowcaseStrings.Common_Power]: 'Power',
+    [ShowcaseStrings.Common_PrivacyParticipationPower]:
+      'Privacy. Participation. Power.',
+
+    [ShowcaseStrings.Date_BrightDateTemplate]: 'BD {BD}',
+
+    // ── DatePage ──
+    [ShowcaseStrings.DatePage_Title]: 'Date & Time',
+    [ShowcaseStrings.DatePage_BrightDateEpochLabel]:
+      'BrightDate (decimal days since J2000.0)',
+    [ShowcaseStrings.DatePage_HolidaysTitle]: "Today's Holidays & Observances",
+    [ShowcaseStrings.DatePage_AllFormatsTitle]: 'All Date Formats',
+    [ShowcaseStrings.DatePage_AboutBrightDateTitle]: 'About BrightDate',
+    [ShowcaseStrings.DatePage_AboutBrightDate_Epoch]:
+      'BrightDate counts decimal days since the J2000.0 epoch (January 1, 2000 at 12:00:00 UTC). This is the same epoch used by astronomers worldwide for celestial mechanics.',
+    [ShowcaseStrings.DatePage_AboutBrightDate_Fraction]:
+      'The integer part is the day count. The fractional part is the decimal time of day. For example, 0.5 = noon, 0.25 = 06:00, 0.75 = 18:00.',
+    [ShowcaseStrings.DatePage_AboutBrightDate_NoTimezones]:
+      'No time zones, no daylight saving, no ambiguity — just one number on one timeline.',
+    [ShowcaseStrings.DatePage_Format_BrightDateFull]:
+      'BrightDate (full precision)',
+    [ShowcaseStrings.DatePage_Format_BrightDateCompact]: 'BrightDate (compact)',
+    [ShowcaseStrings.DatePage_Format_BrightDateStandard]:
+      'BrightDate (standard)',
+    [ShowcaseStrings.DatePage_Format_ISO8601]: 'ISO 8601',
+    [ShowcaseStrings.DatePage_Format_UTC]: 'UTC',
+    [ShowcaseStrings.DatePage_Format_LocalDateTime]: 'Local Date & Time',
+    [ShowcaseStrings.DatePage_Format_LocalDate]: 'Local Date',
+    [ShowcaseStrings.DatePage_Format_LocalTime]: 'Local Time',
+    [ShowcaseStrings.DatePage_Format_UnixTimestamp]: 'Unix Timestamp',
+    [ShowcaseStrings.DatePage_Format_UnixMs]: 'Unix Milliseconds',
+    [ShowcaseStrings.DatePage_Format_JulianDate]: 'Julian Date',
+    [ShowcaseStrings.DatePage_Format_ModifiedJulianDate]:
+      'Modified Julian Date',
+    [ShowcaseStrings.DatePage_Format_DayOfYear]: 'Day of Year',
+    [ShowcaseStrings.DatePage_Format_ISOWeek]: 'ISO Week',
+    [ShowcaseStrings.DatePage_Format_RFC2822]: 'RFC 2822',
+    [ShowcaseStrings.DatePage_HolidayType_Public]: 'Public Holiday',
+    [ShowcaseStrings.DatePage_HolidayType_Bank]: 'Bank Holiday',
+    [ShowcaseStrings.DatePage_HolidayType_Observance]: 'Observance',
+    [ShowcaseStrings.DatePage_HolidayType_Religious]: 'Religious',
+
+    // ── DatePage: Cochrane Easter Egg (Interplanetary Telemetry) ──
+    [ShowcaseStrings.DatePage_Telemetry_Title]: 'Interplanetary Telemetry',
+    [ShowcaseStrings.DatePage_Telemetry_Subtitle]:
+      'Current one-way light-delay expressed in millidays (md)',
+    [ShowcaseStrings.DatePage_Telemetry_MoonDelay]: 'Earth → Moon',
+    [ShowcaseStrings.DatePage_Telemetry_MarsDelayMin]: 'Earth → Mars (min)',
+    [ShowcaseStrings.DatePage_Telemetry_MarsDelayMax]: 'Earth → Mars (max)',
+    [ShowcaseStrings.DatePage_Telemetry_MarsDelayCurrent]:
+      'Earth → Mars (current est.)',
+    [ShowcaseStrings.DatePage_Telemetry_Unit]: 'md',
+    [ShowcaseStrings.DatePage_Telemetry_Footer]:
+      'BrightDate is designed for a world beyond Earth-Standard Time. One milliday ≈ 86.4 seconds.',
+
     // Navigation
     [ShowcaseStrings.Nav_Home]: 'Home',
     [ShowcaseStrings.Nav_SoupDemo]: 'Soup Demo',
@@ -10,6 +71,7 @@ export const ShowcaseAmericanEnglishStrings: ComponentStrings<ShowcaseStringKey>
     [ShowcaseStrings.Nav_Blog]: 'Blog',
     [ShowcaseStrings.Nav_FAQ]: 'FAQ',
     [ShowcaseStrings.Nav_Docs]: 'Docs',
+    [ShowcaseStrings.Nav_BrightDate]: 'BrightDate',
     [ShowcaseStrings.Nav_Home_Description]: 'Main showcase page',
     [ShowcaseStrings.Nav_SoupDemo_Description]:
       'Interactive block soup visualization',
@@ -18,6 +80,7 @@ export const ShowcaseAmericanEnglishStrings: ComponentStrings<ShowcaseStringKey>
     [ShowcaseStrings.Nav_Blog_Description]: 'BrightChain blog and updates',
     [ShowcaseStrings.Nav_FAQ_Description]: 'Frequently asked questions',
     [ShowcaseStrings.Nav_Docs_Description]: 'Project documentation',
+    [ShowcaseStrings.Nav_BrightDate_Description]: 'Current BrightDate',
     [ShowcaseStrings.Nav_ToggleMenu]: 'Toggle menu',
     [ShowcaseStrings.FAQ_TopSecret_Logo_Alt]: 'Top Secret dApp',
     [ShowcaseStrings.FAQ_BrightChat_Logo_Alt]: 'BrightChat Logo',
@@ -2381,9 +2444,19 @@ export const ShowcaseAmericanEnglishStrings: ComponentStrings<ShowcaseStringKey>
     [ShowcaseStrings.PP_S18_WebLabel]: 'Web:',
     [ShowcaseStrings.Slogan_Math_Search_Warrant]:
       'Mathematics does not accept a search warrant.',
-    [ShowcaseStrings.Slogan_Where_State_Sees_Noise]:
-      'Where the state sees noise, the people find truth.',
-    [ShowcaseStrings.Slogan_Building_World_Where_Ideas_Have_No_Borders]:
-      'Building a world where ideas have no borders and truth has no owner.',
+    [ShowcaseStrings.Slogan_Signal_Belongs_To_You]:
+      'The signal belongs to you. The noise belongs to everyone.',
     [ShowcaseStrings.Slogan_Defiance_By_Design]: 'Defiance by Design.',
+    [ShowcaseStrings.Slogan_BrightChain_Privacy]:
+      "Privacy you don't have to ask for.",
+    [ShowcaseStrings.Slogan_BrightChain_Privacy_Long]:
+      "BrightChain: Privacy you don't have to ask for.",
+    [ShowcaseStrings.Slogan_Speak_Freely]:
+      'Speak freely; the math has your back.',
+    [ShowcaseStrings.Slogan_Distributed_By_Many]:
+      'Distributed by many, owned by none.',
+    [ShowcaseStrings.Slogan_Truth_In_The_Signal]:
+      'Truth in the signal, safety in the noise.',
+    [ShowcaseStrings.Slogan_Ideas_Paper_Trail]:
+      "Ideas shouldn't have a paper trail.",
   };

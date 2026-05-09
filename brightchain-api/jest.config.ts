@@ -12,7 +12,7 @@ export default {
   testEnvironment: 'node',
   setupFiles: ['reflect-metadata'],
   transform: {
-    '^.+\\.ts$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.spec.json' }],
+    '^.+\\.ts$': ['ts-jest', { tsconfig: './tsconfig.spec.json' }],
     '^.+\\.js$': [
       'ts-jest',
       {

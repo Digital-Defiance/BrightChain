@@ -1,0 +1,29 @@
+:root {
+  /* BrightChain Blue Theme */
+  --bg-primary: #0a0e1a;
+  --bg-secondary: #111827;
+  --bg-tertiary: #1f2937;
+  --text-primary: #ffffff;
+  --text-secondary: #9ca3af;
+  --accent-primary: #46b6fd; /* BrightChain blue */
+  --accent-secondary: #0a60d0; /* Deep blue */
+  --accent-tertiary: #5ecbff; /* Lighter blue for highlights */
+  --gradient-primary: linear-gradient(135deg, #2daaff, #0074e0);
+  --chain-blue: #1976d2;
+  --chain-blue-light: #46b6fd;
+  --chain-blue-dark: #0a60d0;
+  --tagline-light: #ffffff;
+  --tagline-dark: #000000;
+  --bright-cyan: #00bcd4;
+  --bright-cyan-light: #4dd0e1;
+  --bright-cyan-dark: #0097a7;
+  --crypto-purple: #9c27b0;
+  --secure-green: #4caf50;
+  --alert-orange: #ff9800;
+  --error-red: #f44336;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}

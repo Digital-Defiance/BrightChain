@@ -2403,56 +2403,56 @@ __metadata:
   dependencies:
     "@azure/identity": "npm:^4.6.0"
     "@azure/storage-blob": "npm:^12.26.0"
-    "@brightchain/brightchain-api-lib": "npm:^0.32.0"
-    "@brightchain/brightchain-lib": "npm:^0.32.0"
+    "@brightchain/brightchain-api-lib": "npm:^0.32.1"
+    "@brightchain/brightchain-lib": "npm:^0.32.1"
     tslib: "npm:^2.3.0"
   languageName: unknown
   linkType: soft
 
-"@brightchain/brightcal-api-lib@npm:^0.32.0, @brightchain/brightcal-api-lib@workspace:brightcal-api-lib":
+"@brightchain/brightcal-api-lib@npm:^0.32.1, @brightchain/brightcal-api-lib@workspace:brightcal-api-lib":
   version: 0.0.0-use.local
   resolution: "@brightchain/brightcal-api-lib@workspace:brightcal-api-lib"
   dependencies:
     tslib: "npm:^2.3.0"
   peerDependencies:
-    "@brightchain/brightcal-lib": ^0.32.0
-    "@brightchain/brightchain-api-lib": ^0.32.0
-    "@brightchain/db": ^0.32.0
+    "@brightchain/brightcal-lib": ^0.32.1
+    "@brightchain/brightchain-api-lib": ^0.32.1
+    "@brightchain/db": ^0.32.1
   languageName: unknown
   linkType: soft
 
-"@brightchain/brightcal-lib@npm:^0.32.0, @brightchain/brightcal-lib@workspace:brightcal-lib":
+"@brightchain/brightcal-lib@npm:^0.32.1, @brightchain/brightcal-lib@workspace:brightcal-lib":
   version: 0.0.0-use.local
   resolution: "@brightchain/brightcal-lib@workspace:brightcal-lib"
   dependencies:
     tslib: "npm:^2.3.0"
   peerDependencies:
-    "@brightchain/brightchain-lib": ^0.32.0
+    "@brightchain/brightchain-lib": ^0.32.1
   languageName: unknown
   linkType: soft
 
-"@brightchain/brightcal-react-components@npm:^0.32.0, @brightchain/brightcal-react-components@workspace:brightcal-react-components":
+"@brightchain/brightcal-react-components@npm:^0.32.1, @brightchain/brightcal-react-components@workspace:brightcal-react-components":
   version: 0.0.0-use.local
   resolution: "@brightchain/brightcal-react-components@workspace:brightcal-react-components"
   dependencies:
     tslib: "npm:^2.3.0"
   peerDependencies:
-    "@brightchain/brightcal-lib": ^0.32.0
-    "@brightchain/brightchain-lib": ^0.32.0
+    "@brightchain/brightcal-lib": ^0.32.1
+    "@brightchain/brightchain-lib": ^0.32.1
     react: ^18.0.0
     react-dom: ^18.0.0
   languageName: unknown
   linkType: soft
 
-"@brightchain/brightchain-api-lib@npm:^0.32.0, @brightchain/brightchain-api-lib@workspace:brightchain-api-lib":
+"@brightchain/brightchain-api-lib@npm:^0.32.1, @brightchain/brightchain-api-lib@workspace:brightchain-api-lib":
   version: 0.0.0-use.local
   resolution: "@brightchain/brightchain-api-lib@workspace:brightchain-api-lib"
   dependencies:
     "@aws-sdk/client-ses": "npm:^3.859.0"
-    "@brightchain/brightchain-identity": "npm:^0.32.0"
-    "@brightchain/brightchain-lib": "npm:^0.32.0"
-    "@brightchain/db": "npm:^0.32.0"
-    "@brightchain/node-express-suite": "npm:^0.32.0"
+    "@brightchain/brightchain-identity": "npm:^0.32.1"
+    "@brightchain/brightchain-lib": "npm:^0.32.1"
+    "@brightchain/db": "npm:^0.32.1"
+    "@brightchain/node-express-suite": "npm:^0.32.1"
     "@digitaldefiance/branded-enum": "npm:0.0.7"
     "@digitaldefiance/ecies-lib": "npm:5.2.2"
     "@digitaldefiance/enclave-bridge-client": "npm:^1.1.0"
@@ -2510,7 +2510,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@brightchain/brightchain-identity@npm:^0.32.0, @brightchain/brightchain-identity@workspace:brightchain-identity":
+"@brightchain/brightchain-identity@npm:^0.32.1, @brightchain/brightchain-identity@workspace:brightchain-identity":
   version: 0.0.0-use.local
   resolution: "@brightchain/brightchain-identity@workspace:brightchain-identity"
   dependencies:
@@ -2518,7 +2518,7 @@ __metadata:
     "@digitaldefiance/i18n-lib": "npm:4.7.5"
     "@digitaldefiance/node-ecies-lib": "npm:5.2.2"
   peerDependencies:
-    "@brightchain/brightchain-lib": ^0.32.0
+    "@brightchain/brightchain-lib": ^0.32.1
   languageName: unknown
   linkType: soft
 
@@ -2562,11 +2562,11 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@brightchain/brightchain-lib@npm:^0.32.0, @brightchain/brightchain-lib@workspace:brightchain-lib":
+"@brightchain/brightchain-lib@npm:^0.32.1, @brightchain/brightchain-lib@workspace:brightchain-lib":
   version: 0.0.0-use.local
   resolution: "@brightchain/brightchain-lib@workspace:brightchain-lib"
   dependencies:
-    "@brightchain/brightdate": "npm:0.32.0"
+    "@brightchain/brightdate": "npm:0.32.2"
     "@digitaldefiance/branded-interface": "npm:0.0.5"
     "@digitaldefiance/bzip2-wasm": "npm:^1.1.1"
     "@digitaldefiance/ecies-lib": "npm:5.2.2"
@@ -2615,11 +2615,11 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@brightchain/brightchain-react-components@npm:^0.32.0, @brightchain/brightchain-react-components@workspace:brightchain-react-components":
+"@brightchain/brightchain-react-components@npm:^0.32.1, @brightchain/brightchain-react-components@workspace:brightchain-react-components":
   version: 0.0.0-use.local
   resolution: "@brightchain/brightchain-react-components@workspace:brightchain-react-components"
   dependencies:
-    "@brightchain/brightchain-lib": "npm:^0.32.0"
+    "@brightchain/brightchain-lib": "npm:^0.32.1"
     "@digitaldefiance/ecies-lib": "npm:5.2.2"
     "@digitaldefiance/express-suite-react-components": "npm:4.29.1"
     "@digitaldefiance/i18n-lib": "npm:4.7.5"
@@ -2630,6 +2630,7 @@ __metadata:
     "@mui/utils": "npm:7.3.9"
     "@types/react": "npm:^19.2.14"
     "@types/react-dom": "npm:^19.2.3"
+    framer-motion: "npm:^12.38.0"
     react: "npm:19.2.4"
     react-router-dom: "npm:6.11.2"
     tslib: "npm:^2.3.0"
@@ -2642,7 +2643,7 @@ __metadata:
   dependencies:
     tslib: "npm:^2.3.0"
   peerDependencies:
-    "@brightchain/brightchain-lib": ">=0.32.0"
+    "@brightchain/brightchain-lib": ^0.32.1
   languageName: unknown
   linkType: soft
 
@@ -2654,19 +2655,19 @@ __metadata:
     "@types/react-dom": "npm:^19.2.3"
     tslib: "npm:^2.3.0"
   peerDependencies:
-    "@brightchain/brightchart-lib": ">=0.32.0"
+    "@brightchain/brightchart-lib": ^0.32.1
     "@fortawesome/react-fontawesome": ">=3.0.0"
     react: ">=18.0.0"
   languageName: unknown
   linkType: soft
 
-"@brightchain/brightchat-lib@npm:^0.32.0, @brightchain/brightchat-lib@workspace:brightchat-lib":
+"@brightchain/brightchat-lib@npm:^0.32.1, @brightchain/brightchat-lib@workspace:brightchat-lib":
   version: 0.0.0-use.local
   resolution: "@brightchain/brightchat-lib@workspace:brightchat-lib"
   dependencies:
     "@digitaldefiance/i18n-lib": "npm:4.7.5"
   peerDependencies:
-    "@brightchain/brightchain-lib": ^0.32.0
+    "@brightchain/brightchain-lib": ^0.32.1
   languageName: unknown
   linkType: soft
 
@@ -2686,8 +2687,8 @@ __metadata:
     react-easy-crop: "npm:5.5.7"
     react-router-dom: "npm:^7.14.0"
   peerDependencies:
-    "@brightchain/brightchain-lib": ^0.32.0
-    "@brightchain/brightchat-lib": ^0.32.0
+    "@brightchain/brightchain-lib": ^0.32.1
+    "@brightchain/brightchat-lib": ^0.32.1
     "@digitaldefiance/express-suite-react-components": 4.29.1
     "@mui/icons-material": "*"
     "@mui/material": "*"
@@ -2697,7 +2698,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@brightchain/brightdate@npm:0.32.0, @brightchain/brightdate@npm:^0.32.0, @brightchain/brightdate@workspace:brightdate":
+"@brightchain/brightdate@npm:0.32.2, @brightchain/brightdate@npm:^0.32.2, @brightchain/brightdate@workspace:brightdate":
   version: 0.0.0-use.local
   resolution: "@brightchain/brightdate@workspace:brightdate"
   dependencies:
@@ -2707,7 +2708,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@brightchain/brighthub-lib@npm:^0.32.0, @brightchain/brighthub-lib@workspace:brighthub-lib":
+"@brightchain/brighthub-lib@npm:^0.32.1, @brightchain/brighthub-lib@workspace:brighthub-lib":
   version: 0.0.0-use.local
   resolution: "@brightchain/brighthub-lib@workspace:brighthub-lib"
   dependencies:
@@ -2733,7 +2734,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@brightchain/brighthub-react-components@npm:^0.32.0, @brightchain/brighthub-react-components@workspace:brighthub-react-components":
+"@brightchain/brighthub-react-components@npm:^0.32.1, @brightchain/brighthub-react-components@workspace:brighthub-react-components":
   version: 0.0.0-use.local
   resolution: "@brightchain/brighthub-react-components@workspace:brighthub-react-components"
   dependencies:
@@ -2770,8 +2771,8 @@ __metadata:
     ts-jest: "npm:^29.0.0"
     tslib: "npm:^2.3.0"
   peerDependencies:
-    "@brightchain/brightchain-lib": ^0.32.0
-    "@brightchain/brightledger-assets-lib": ^0.32.0
+    "@brightchain/brightchain-lib": ^0.32.1
+    "@brightchain/brightledger-assets-lib": ^0.32.1
     express: ^4.0.0 || ^5.0.0
   languageName: unknown
   linkType: soft
@@ -2787,7 +2788,7 @@ __metadata:
     ts-jest: "npm:^29.0.0"
     tslib: "npm:^2.3.0"
   peerDependencies:
-    "@brightchain/brightchain-lib": ^0.32.0
+    "@brightchain/brightchain-lib": ^0.32.1
     "@digitaldefiance/ecies-lib": 5.2.2
   languageName: unknown
   linkType: soft
@@ -2798,8 +2799,8 @@ __metadata:
   dependencies:
     tslib: "npm:^2.3.0"
   peerDependencies:
-    "@brightchain/brightchain-lib": ^0.32.0
-    "@brightchain/brightledger-assets-lib": ^0.32.0
+    "@brightchain/brightchain-lib": ^0.32.1
+    "@brightchain/brightledger-assets-lib": ^0.32.1
     react: ^18.0.0
     react-dom: ^18.0.0
   languageName: unknown
@@ -2809,7 +2810,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@brightchain/brightledger-metering-log-lib@workspace:brightledger-metering-log-lib"
   dependencies:
-    "@brightchain/brightchain-lib": "npm:^0.32.0"
+    "@brightchain/brightchain-lib": "npm:^0.32.1"
     "@digitaldefiance/ecies-lib": "npm:5.2.2"
     "@noble/curves": "npm:^1.9.0"
     "@noble/hashes": "npm:^1.8.0"
@@ -2820,17 +2821,17 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@brightchain/brightmail-lib@npm:^0.32.0, @brightchain/brightmail-lib@workspace:brightmail-lib":
+"@brightchain/brightmail-lib@npm:^0.32.1, @brightchain/brightmail-lib@workspace:brightmail-lib":
   version: 0.0.0-use.local
   resolution: "@brightchain/brightmail-lib@workspace:brightmail-lib"
   dependencies:
     "@digitaldefiance/i18n-lib": "npm:4.7.5"
   peerDependencies:
-    "@brightchain/brightchain-lib": ^0.32.0
+    "@brightchain/brightchain-lib": ^0.32.1
   languageName: unknown
   linkType: soft
 
-"@brightchain/brightmail-react-components@npm:^0.32.0, @brightchain/brightmail-react-components@workspace:brightmail-react-components":
+"@brightchain/brightmail-react-components@npm:^0.32.1, @brightchain/brightmail-react-components@workspace:brightmail-react-components":
   version: 0.0.0-use.local
   resolution: "@brightchain/brightmail-react-components@workspace:brightmail-react-components"
   dependencies:
@@ -2849,9 +2850,9 @@ __metadata:
     react-dom: "npm:^19.2.4"
     react-router-dom: "npm:^7.14.0"
   peerDependencies:
-    "@brightchain/brightchain-lib": ^0.32.0
-    "@brightchain/brightdate": ^0.32.0
-    "@brightchain/brightmail-lib": ^0.32.0
+    "@brightchain/brightchain-lib": ^0.32.1
+    "@brightchain/brightdate": ^0.32.2
+    "@brightchain/brightmail-lib": ^0.32.1
     "@digitaldefiance/express-suite-react-components": 4.29.1
     "@mui/icons-material": "*"
     "@mui/material": "*"
@@ -2861,17 +2862,17 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@brightchain/brightpass-lib@npm:^0.32.0, @brightchain/brightpass-lib@workspace:brightpass-lib":
+"@brightchain/brightpass-lib@npm:^0.32.1, @brightchain/brightpass-lib@workspace:brightpass-lib":
   version: 0.0.0-use.local
   resolution: "@brightchain/brightpass-lib@workspace:brightpass-lib"
   dependencies:
     "@digitaldefiance/i18n-lib": "npm:4.7.5"
   peerDependencies:
-    "@brightchain/brightchain-lib": ^0.32.0
+    "@brightchain/brightchain-lib": ^0.32.1
   languageName: unknown
   linkType: soft
 
-"@brightchain/brightpass-react-components@npm:^0.32.0, @brightchain/brightpass-react-components@workspace:brightpass-react-components":
+"@brightchain/brightpass-react-components@npm:^0.32.1, @brightchain/brightpass-react-components@workspace:brightpass-react-components":
   version: 0.0.0-use.local
   resolution: "@brightchain/brightpass-react-components@workspace:brightpass-react-components"
   dependencies:
@@ -2888,7 +2889,7 @@ __metadata:
     react-router-dom: "npm:^7.14.0"
     yup: "npm:^1.7.1"
   peerDependencies:
-    "@brightchain/brightchain-lib": ^0.32.0
+    "@brightchain/brightchain-lib": ^0.32.1
     "@digitaldefiance/express-suite-react-components": 4.29.1
     "@digitaldefiance/i18n-lib": 4.7.5
     "@mui/icons-material": "*"
@@ -2902,7 +2903,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@brightchain/db@npm:^0.32.0, @brightchain/db@workspace:brightchain-db":
+"@brightchain/db@npm:^0.32.1, @brightchain/db@workspace:brightchain-db":
   version: 0.0.0-use.local
   resolution: "@brightchain/db@workspace:brightchain-db"
   dependencies:
@@ -2910,19 +2911,19 @@ __metadata:
     "@types/express": "npm:^5.0.6"
     tslib: "npm:^2.8.1"
   peerDependencies:
-    "@brightchain/brightchain-lib": ^0.32.0
+    "@brightchain/brightchain-lib": ^0.32.1
     "@digitaldefiance/branded-interface": 0.0.5
     "@digitaldefiance/node-express-suite": 4.28.3
     express: ">=5.0.0"
   languageName: unknown
   linkType: soft
 
-"@brightchain/digitalburnbag-api-lib@npm:^0.32.0, @brightchain/digitalburnbag-api-lib@workspace:digitalburnbag-api-lib":
+"@brightchain/digitalburnbag-api-lib@npm:^0.32.1, @brightchain/digitalburnbag-api-lib@workspace:digitalburnbag-api-lib":
   version: 0.0.0-use.local
   resolution: "@brightchain/digitalburnbag-api-lib@workspace:digitalburnbag-api-lib"
   dependencies:
-    "@brightchain/brightchain-lib": "npm:^0.32.0"
-    "@brightchain/digitalburnbag-lib": "npm:^0.32.0"
+    "@brightchain/brightchain-lib": "npm:^0.32.1"
+    "@brightchain/digitalburnbag-lib": "npm:^0.32.1"
     "@digitaldefiance/ecies-lib": "npm:5.2.2"
     "@digitaldefiance/i18n-lib": "npm:4.7.5"
     "@digitaldefiance/node-ecies-lib": "npm:5.2.2"
@@ -2967,7 +2968,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@brightchain/digitalburnbag-lib@npm:^0.32.0, @brightchain/digitalburnbag-lib@workspace:digitalburnbag-lib":
+"@brightchain/digitalburnbag-lib@npm:^0.32.1, @brightchain/digitalburnbag-lib@workspace:digitalburnbag-lib":
   version: 0.0.0-use.local
   resolution: "@brightchain/digitalburnbag-lib@workspace:digitalburnbag-lib"
   dependencies:
@@ -2978,12 +2979,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@brightchain/digitalburnbag-react-components@npm:^0.32.0, @brightchain/digitalburnbag-react-components@workspace:digitalburnbag-react-components":
+"@brightchain/digitalburnbag-react-components@npm:^0.32.1, @brightchain/digitalburnbag-react-components@workspace:digitalburnbag-react-components":
   version: 0.0.0-use.local
   resolution: "@brightchain/digitalburnbag-react-components@workspace:digitalburnbag-react-components"
   peerDependencies:
     "@awesome.me/kit-a20d532681": ^1.0.23
-    "@brightchain/brightchain-lib": ">=0.32.0"
+    "@brightchain/brightchain-lib": ^0.32.1
     "@emotion/react": ">=11.0.0"
     "@emotion/styled": ">=11.0.0"
     "@fortawesome/fontawesome-svg-core": ^7.2.0
@@ -3015,8 +3016,8 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@brightchain/digitalburnbag-sync-client@workspace:digitalburnbag-sync-client"
   dependencies:
-    "@brightchain/brightchain-lib": "npm:^0.32.0"
-    "@brightchain/digitalburnbag-lib": "npm:^0.32.0"
+    "@brightchain/brightchain-lib": "npm:^0.32.1"
+    "@brightchain/digitalburnbag-lib": "npm:^0.32.1"
     "@types/better-sqlite3": "npm:^7.6.0"
     "@types/jest": "npm:^30.0.0"
     "@types/node": "npm:^24.1.0"
@@ -3031,7 +3032,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@brightchain/node-express-suite@npm:^0.32.0, @brightchain/node-express-suite@workspace:brightchain-node-express-suite":
+"@brightchain/node-express-suite@npm:^0.32.1, @brightchain/node-express-suite@workspace:brightchain-node-express-suite":
   version: 0.0.0-use.local
   resolution: "@brightchain/node-express-suite@workspace:brightchain-node-express-suite"
   dependencies:
@@ -3053,8 +3054,8 @@ __metadata:
     jsonwebtoken: "npm:^9.0.3"
     tslib: "npm:^2.3.0"
   peerDependencies:
-    "@brightchain/brightchain-lib": ^0.32.0
-    "@brightchain/db": ^0.32.0
+    "@brightchain/brightchain-lib": ^0.32.1
+    "@brightchain/db": ^0.32.1
     "@digitaldefiance/branded-interface": 0.0.5
     "@digitaldefiance/node-express-suite": 4.28.3
     bcrypt: ^5.0.0
@@ -3067,8 +3068,8 @@ __metadata:
   resolution: "@brightchain/s3-store@workspace:brightchain-s3-store"
   dependencies:
     "@aws-sdk/client-s3": "npm:^3.700.0"
-    "@brightchain/brightchain-api-lib": "npm:^0.32.0"
-    "@brightchain/brightchain-lib": "npm:^0.32.0"
+    "@brightchain/brightchain-api-lib": "npm:^0.32.1"
+    "@brightchain/brightchain-lib": "npm:^0.32.1"
     tslib: "npm:^2.3.0"
   languageName: unknown
   linkType: soft
@@ -15120,8 +15121,8 @@ __metadata:
   resolution: "brightchain-showcase@workspace:showcase"
   dependencies:
     "@awesome.me/kit-a20d532681": "npm:^1.0.23"
-    "@brightchain/brightchain-lib": "npm:^0.32.0"
-    "@brightchain/digitalburnbag-react-components": "npm:^0.32.0"
+    "@brightchain/brightchain-lib": "npm:^0.32.1"
+    "@brightchain/digitalburnbag-react-components": "npm:^0.32.1"
     "@digitaldefiance/ecies-lib": "npm:5.2.2"
     "@digitaldefiance/i18n-lib": "npm:4.7.5"
     "@digitaldefiance/reed-solomon-erasure.wasm": "npm:^1.0.2"
@@ -15207,24 +15208,24 @@ __metadata:
     "@azure/storage-blob": "npm:^12.26.0"
     "@babel/core": "npm:^7.14.5"
     "@babel/preset-react": "npm:^7.14.5"
-    "@brightchain/brightcal-api-lib": "npm:^0.32.0"
-    "@brightchain/brightcal-lib": "npm:^0.32.0"
-    "@brightchain/brightcal-react-components": "npm:^0.32.0"
-    "@brightchain/brightchain-api-lib": "npm:^0.32.0"
-    "@brightchain/brightchain-lib": "npm:^0.32.0"
-    "@brightchain/brightchain-react-components": "npm:^0.32.0"
-    "@brightchain/brightchat-lib": "npm:^0.32.0"
-    "@brightchain/brightdate": "npm:^0.32.0"
-    "@brightchain/brighthub-lib": "npm:^0.32.0"
-    "@brightchain/brighthub-react-components": "npm:^0.32.0"
-    "@brightchain/brightmail-lib": "npm:^0.32.0"
-    "@brightchain/brightmail-react-components": "npm:^0.32.0"
-    "@brightchain/brightpass-lib": "npm:^0.32.0"
-    "@brightchain/brightpass-react-components": "npm:^0.32.0"
-    "@brightchain/db": "npm:^0.32.0"
-    "@brightchain/digitalburnbag-api-lib": "npm:^0.32.0"
-    "@brightchain/digitalburnbag-lib": "npm:^0.32.0"
-    "@brightchain/digitalburnbag-react-components": "npm:^0.32.0"
+    "@brightchain/brightcal-api-lib": "npm:^0.32.1"
+    "@brightchain/brightcal-lib": "npm:^0.32.1"
+    "@brightchain/brightcal-react-components": "npm:^0.32.1"
+    "@brightchain/brightchain-api-lib": "npm:^0.32.1"
+    "@brightchain/brightchain-lib": "npm:^0.32.1"
+    "@brightchain/brightchain-react-components": "npm:^0.32.1"
+    "@brightchain/brightchat-lib": "npm:^0.32.1"
+    "@brightchain/brightdate": "npm:^0.32.2"
+    "@brightchain/brighthub-lib": "npm:^0.32.1"
+    "@brightchain/brighthub-react-components": "npm:^0.32.1"
+    "@brightchain/brightmail-lib": "npm:^0.32.1"
+    "@brightchain/brightmail-react-components": "npm:^0.32.1"
+    "@brightchain/brightpass-lib": "npm:^0.32.1"
+    "@brightchain/brightpass-react-components": "npm:^0.32.1"
+    "@brightchain/db": "npm:^0.32.1"
+    "@brightchain/digitalburnbag-api-lib": "npm:^0.32.1"
+    "@brightchain/digitalburnbag-lib": "npm:^0.32.1"
+    "@brightchain/digitalburnbag-react-components": "npm:^0.32.1"
     "@digitaldefiance/branded-enum": "npm:0.0.7"
     "@digitaldefiance/branded-interface": "npm:0.0.5"
     "@digitaldefiance/bzip2-wasm": "npm:^1.1.1"
@@ -19945,6 +19946,28 @@ __metadata:
     react-dom:
       optional: true
   checksum: 10/f8805f9f5664b86aad6b9ed280a79b10e7ed4e31048728d4c3767d95a5c9feeb0279844bbe613dcb3741bb784cdf6ad761e726249fa4feeec9bec4a29f78a397
+  languageName: node
+  linkType: hard
+
+"framer-motion@npm:^12.38.0":
+  version: 12.38.0
+  resolution: "framer-motion@npm:12.38.0"
+  dependencies:
+    motion-dom: "npm:^12.38.0"
+    motion-utils: "npm:^12.36.0"
+    tslib: "npm:^2.4.0"
+  peerDependencies:
+    "@emotion/is-prop-valid": "*"
+    react: ^18.0.0 || ^19.0.0
+    react-dom: ^18.0.0 || ^19.0.0
+  peerDependenciesMeta:
+    "@emotion/is-prop-valid":
+      optional: true
+    react:
+      optional: true
+    react-dom:
+      optional: true
+  checksum: 10/4d529d1648a8e31ec9859e7ff1296b7e4ef0028eb09cbc7d626068766ab53e486038b431fac33b1438a1cc076a244e6843c5a8c0f38442885832308452b4b25e
   languageName: node
   linkType: hard
 
@@ -25542,10 +25565,26 @@ __metadata:
   languageName: node
   linkType: hard
 
+"motion-dom@npm:^12.38.0":
+  version: 12.38.0
+  resolution: "motion-dom@npm:12.38.0"
+  dependencies:
+    motion-utils: "npm:^12.36.0"
+  checksum: 10/78c040b46d93273932cf80c70e39845be5a442dcaf18d4345b45a9193de9dfa87c885b609943cb652115e4eac5d46ef40b452185073dd43fc328b134f9975e90
+  languageName: node
+  linkType: hard
+
 "motion-utils@npm:^11.18.1":
   version: 11.18.1
   resolution: "motion-utils@npm:11.18.1"
   checksum: 10/8af61c8260ed6abe9c0d4e1037bd80de95a461a62c89daaf26bfdcdccc96799eed5c45adbdff90ea78614336bf2e3b91f4eb6ecb4e4028a3bce53977b54822a2
+  languageName: node
+  linkType: hard
+
+"motion-utils@npm:^12.36.0":
+  version: 12.36.0
+  resolution: "motion-utils@npm:12.36.0"
+  checksum: 10/c4a2a7ffac48ca44082d6d31b115f245025060a7e69d70dac062646d8f96c39e5662a7c8a51f255566fdf8e719ef1269a8e9aa3a04fc263bb65b5a7b61331901
   languageName: node
   linkType: hard
 

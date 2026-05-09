@@ -188,12 +188,6 @@
       "@brightchain/brightledger-assets-react-components/*": [
         "brightledger-assets-react-components/src/*"
       ],
-      "@digitaldefiance/brightdate": [
-        "brightdate/src/index.ts"
-      ],
-      "@digitaldefiance/brightdate/*": [
-        "brightdate/src/*"
-      ],
       "@brightchain/brightdate": [
         "brightdate/src/index.ts"
       ],

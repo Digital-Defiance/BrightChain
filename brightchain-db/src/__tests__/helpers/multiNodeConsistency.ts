@@ -65,10 +65,22 @@ export interface MultiNodeFactory {
 
 /**
  * Allow pending `void` async calls (e.g. mergeFromGossipHead) to drain.
- * Two ticks: first for the initial Promise, second for nested store.put.
+ *
+ * mergeFromGossipHead involves at least two real async I/O hops:
+ *   1. store.getData(checksum)  — reads the gossip block
+ *   2. persistMeta()            — writes the merged state back
+ *
+ * Two setImmediate ticks only drain the microtask queue; they don't wait
+ * for the I/O to complete. We use a short setTimeout to give the event
+ * loop time to process the pending I/O callbacks.
  */
 async function flushAsync(): Promise<void> {
+  // Drain microtasks first
   await new Promise<void>((r) => setImmediate(r));
+  await new Promise<void>((r) => setImmediate(r));
+  // Then yield to the I/O poll phase so store.getData / store.put can settle
+  await new Promise<void>((r) => setTimeout(r, 20));
+  // One more microtask drain in case the I/O callbacks queued more work
   await new Promise<void>((r) => setImmediate(r));
 }
 

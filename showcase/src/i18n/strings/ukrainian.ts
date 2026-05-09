@@ -5,6 +5,68 @@ import { ShowcaseStringKey, ShowcaseStrings } from '../showcaseStrings';
 export const ShowcaseUkrainianStrings: Partial<
   ComponentStrings<ShowcaseStringKey>
 > = {
+  // BrightChain
+  [ShowcaseStrings.Common_Bright]: 'Яскравий',
+  [ShowcaseStrings.Common_Chain]: 'Ланцюг',
+
+  [ShowcaseStrings.Common_Privacy]: 'Приватність',
+  [ShowcaseStrings.Common_Participation]: 'Участь',
+  [ShowcaseStrings.Common_Power]: 'Сила',
+  [ShowcaseStrings.Common_PrivacyParticipationPower]:
+    'Приватність. Участь. Сила.',
+
+  [ShowcaseStrings.Date_BrightDateTemplate]: 'BD {BD}',
+
+  // ── DatePage ──
+  [ShowcaseStrings.DatePage_Title]: 'Дата та час',
+  [ShowcaseStrings.DatePage_BrightDateEpochLabel]:
+    'BrightDate (десяткові дні від J2000.0)',
+  [ShowcaseStrings.DatePage_HolidaysTitle]: "Свята та пам'ятні дати сьогодні",
+  [ShowcaseStrings.DatePage_AllFormatsTitle]: 'Усі формати дати',
+  [ShowcaseStrings.DatePage_AboutBrightDateTitle]: 'Про BrightDate',
+  [ShowcaseStrings.DatePage_AboutBrightDate_Epoch]:
+    'BrightDate рахує десяткові дні від епохи J2000.0 (1 січня 2000 року о 12:00:00 UTC). Це та сама епоха, яку використовують астрономи всього світу для небесної механіки.',
+  [ShowcaseStrings.DatePage_AboutBrightDate_Fraction]:
+    'Ціла частина — це кількість днів. Дробова частина — це десятковий час доби. Наприклад: 0,5 = полудень, 0,25 = 06:00, 0,75 = 18:00.',
+  [ShowcaseStrings.DatePage_AboutBrightDate_NoTimezones]:
+    'Без часових поясів, без літнього часу, без двозначності — лише одне число на одній часовій лінії.',
+  [ShowcaseStrings.DatePage_Format_BrightDateFull]:
+    'BrightDate (повна точність)',
+  [ShowcaseStrings.DatePage_Format_BrightDateCompact]:
+    'BrightDate (компактний)',
+  [ShowcaseStrings.DatePage_Format_BrightDateStandard]:
+    'BrightDate (стандартний)',
+  [ShowcaseStrings.DatePage_Format_ISO8601]: 'ISO 8601',
+  [ShowcaseStrings.DatePage_Format_UTC]: 'UTC',
+  [ShowcaseStrings.DatePage_Format_LocalDateTime]: 'Місцева дата та час',
+  [ShowcaseStrings.DatePage_Format_LocalDate]: 'Місцева дата',
+  [ShowcaseStrings.DatePage_Format_LocalTime]: 'Місцевий час',
+  [ShowcaseStrings.DatePage_Format_UnixTimestamp]: 'Мітка часу Unix',
+  [ShowcaseStrings.DatePage_Format_UnixMs]: 'Мілісекунди Unix',
+  [ShowcaseStrings.DatePage_Format_JulianDate]: 'Юліанська дата',
+  [ShowcaseStrings.DatePage_Format_ModifiedJulianDate]:
+    'Модифікована юліанська дата',
+  [ShowcaseStrings.DatePage_Format_DayOfYear]: 'День року',
+  [ShowcaseStrings.DatePage_Format_ISOWeek]: 'Тиждень ISO',
+  [ShowcaseStrings.DatePage_Format_RFC2822]: 'RFC 2822',
+  [ShowcaseStrings.DatePage_HolidayType_Public]: 'Державне свято',
+  [ShowcaseStrings.DatePage_HolidayType_Bank]: 'Банківське свято',
+  [ShowcaseStrings.DatePage_HolidayType_Observance]: "Пам'ятна дата",
+  [ShowcaseStrings.DatePage_HolidayType_Religious]: 'Релігійне',
+
+  // ── DatePage: Cochrane Easter Egg (Interplanetary Telemetry) ──
+  [ShowcaseStrings.DatePage_Telemetry_Title]: 'Міжпланетна телеметрія',
+  [ShowcaseStrings.DatePage_Telemetry_Subtitle]:
+    'Поточна одностороння світлова затримка у мілідобах (md)',
+  [ShowcaseStrings.DatePage_Telemetry_MoonDelay]: 'Земля → Місяць',
+  [ShowcaseStrings.DatePage_Telemetry_MarsDelayMin]: 'Земля → Марс (мін)',
+  [ShowcaseStrings.DatePage_Telemetry_MarsDelayMax]: 'Земля → Марс (макс)',
+  [ShowcaseStrings.DatePage_Telemetry_MarsDelayCurrent]:
+    'Земля → Марс (поточна оцінка)',
+  [ShowcaseStrings.DatePage_Telemetry_Unit]: 'md',
+  [ShowcaseStrings.DatePage_Telemetry_Footer]:
+    'BrightDate створено для світу за межами Земного Стандартного Часу. Один мілідень ≈ 86,4 секунди.',
+
   // Navigation
   [ShowcaseStrings.Nav_Home]: 'Головна',
   [ShowcaseStrings.Nav_SoupDemo]: 'Демо Soup',
@@ -12,6 +74,7 @@ export const ShowcaseUkrainianStrings: Partial<
   [ShowcaseStrings.Nav_Blog]: 'Блог',
   [ShowcaseStrings.Nav_FAQ]: 'Питання',
   [ShowcaseStrings.Nav_Docs]: 'Документація',
+  [ShowcaseStrings.Nav_BrightDate]: 'BrightDate',
   [ShowcaseStrings.Nav_Home_Description]: 'Головна сторінка',
   [ShowcaseStrings.Nav_SoupDemo_Description]:
     'Інтерактивна візуалізація блоків',
@@ -19,6 +82,7 @@ export const ShowcaseUkrainianStrings: Partial<
   [ShowcaseStrings.Nav_Blog_Description]: 'Блог та оновлення BrightChain',
   [ShowcaseStrings.Nav_FAQ_Description]: 'Часті запитання',
   [ShowcaseStrings.Nav_Docs_Description]: 'Документація проекту',
+  [ShowcaseStrings.Nav_BrightDate_Description]: 'Поточна BrightDate',
   [ShowcaseStrings.Nav_ToggleMenu]: 'Перемкнути меню',
   [ShowcaseStrings.FAQ_BrightDB_Logo_Alt]: 'Логотип BrightDB',
   [ShowcaseStrings.FAQ_TopSecret_Logo_Alt]: 'Цілком таємний dApp',
@@ -2394,11 +2458,21 @@ export const ShowcaseUkrainianStrings: Partial<
   [ShowcaseStrings.PP_S18_WebLabel]: 'Веб:',
   [ShowcaseStrings.Slogan_Math_Search_Warrant]:
     'Математика не приймає ордер на обшук.',
-  [ShowcaseStrings.Slogan_Where_State_Sees_Noise]:
-    'Там, де держава бачить шум, народ знаходить правду.',
-  [ShowcaseStrings.Slogan_Building_World_Where_Ideas_Have_No_Borders]:
-    'Будуємо світ, де ідеї не мають кордонів, а правда не має власника.',
-  [ShowcaseStrings.Slogan_Defiance_By_Design]: 'Спротив за задумом.',
+  [ShowcaseStrings.Slogan_Signal_Belongs_To_You]:
+    'Сигнал належить тобі. Шум належить усім.',
+  [ShowcaseStrings.Slogan_Defiance_By_Design]: 'Спротив через дизайн.',
+  [ShowcaseStrings.Slogan_BrightChain_Privacy]:
+    'Приватність, про яку не треба просити.',
+  [ShowcaseStrings.Slogan_BrightChain_Privacy_Long]:
+    'BrightChain: Приватність, про яку не треба просити.',
+  [ShowcaseStrings.Slogan_Speak_Freely]:
+    'Говори вільно; математика тебе захищає.',
+  [ShowcaseStrings.Slogan_Distributed_By_Many]:
+    'Розподілено багатьма, не належить нікому.',
+  [ShowcaseStrings.Slogan_Truth_In_The_Signal]:
+    'Правда в сигналі, безпека в шумі.',
+  [ShowcaseStrings.Slogan_Ideas_Paper_Trail]:
+    'Ідеї не повинні залишати паперового сліду.',
 };
 
 export default ShowcaseUkrainianStrings;

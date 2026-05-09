@@ -6,7 +6,7 @@ import { ShowcaseStringKey, ShowcaseStrings } from '../i18n/showcaseStrings';
 import './DemoNavigation.css';
 import { LanguageSelector } from './LanguageSelector';
 
-import brightchainTxImg from '../assets/images/brightchain-tx-white.png';
+import { BrightChainLogoI18N } from './BrightChainLogoI18N';
 
 export type DemoMode =
   | 'home'
@@ -15,7 +15,8 @@ export type DemoMode =
   | 'minimal'
   | 'blog'
   | 'ledger'
-  | 'faq';
+  | 'faq'
+  | 'date';
 
 interface NavigationItem {
   id: DemoMode;
@@ -60,6 +61,13 @@ const navigationItems: NavigationItem[] = [
     description: ShowcaseStrings.Nav_FAQ_Description,
     icon: '❓',
     path: '/faq',
+  },
+  {
+    id: 'date',
+    label: ShowcaseStrings.Nav_BrightDate,
+    description: ShowcaseStrings.Nav_BrightDate_Description,
+    icon: '📅',
+    path: '/date',
   },
 ];
 
@@ -122,11 +130,7 @@ export const DemoNavigation: React.FC<DemoNavigationProps> = ({
     >
       <div className="nav-container">
         <Link to="/" className="nav-logo">
-          <img
-            src={brightchainTxImg}
-            alt="BrightChain"
-            style={{ height: '36px' }}
-          />
+          <BrightChainLogoI18N height={36} />
         </Link>
 
         {/* Desktop Navigation */}

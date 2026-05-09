@@ -1,11 +1,12 @@
 import { motion } from 'framer-motion';
-import { FC, useEffect, useMemo } from 'react';
+import { FC } from 'react';
 import { FaGithub, FaLock, FaNewspaper } from 'react-icons/fa';
 import { GiCookingPot } from 'react-icons/gi';
 import { Link } from 'react-router-dom';
 import { useShowcaseI18n } from '../i18n/ShowcaseI18nContext';
 import { ShowcaseStrings } from '../i18n/showcaseStrings';
 import { AnimatedParticles } from './AnimatedParticles';
+import { BrightChainLogoI18N } from './BrightChainLogoI18N';
 import './Hero.css';
 import { ScrollIndicator } from './ScrollIndicator';
 import { SloganRotation } from './SloganRotation';
@@ -14,7 +15,7 @@ interface HeroProps {
   scrollY: number;
 }
 
-const Hero = ({ scrollY }: HeroProps) => {
+const Hero: FC<HeroProps> = ({ scrollY }: HeroProps) => {
   const { t } = useShowcaseI18n();
   const parallaxOffset = scrollY * 0.5;
 
@@ -48,10 +49,7 @@ const Hero = ({ scrollY }: HeroProps) => {
           animate={{ opacity: 1 }}
           transition={{ delay: 0.2, duration: 0.8 }}
         >
-          <img
-            src="https://raw.githubusercontent.com/Digital-Defiance/BrightChain/main/brightchain-react/src/assets/images/brightchain-tx-white.png"
-            style={{ height: 137 }}
-          />
+          <BrightChainLogoI18N height={137} />
         </motion.h1>
 
         <SloganRotation />

@@ -1971,10 +1971,8 @@ export const SpanishStrings: ComponentStrings<BrightChainStringKey> = {
   [BrightChainStrings.DatePage_Telemetry_Subtitle]:
     'Retardo de luz unidireccional actual expresado en milidías (md)',
   [BrightChainStrings.DatePage_Telemetry_MoonDelay]: 'Tierra → Luna',
-  [BrightChainStrings.DatePage_Telemetry_MarsDelayMin]:
-    'Tierra → Marte (mín)',
-  [BrightChainStrings.DatePage_Telemetry_MarsDelayMax]:
-    'Tierra → Marte (máx)',
+  [BrightChainStrings.DatePage_Telemetry_MarsDelayMin]: 'Tierra → Marte (mín)',
+  [BrightChainStrings.DatePage_Telemetry_MarsDelayMax]: 'Tierra → Marte (máx)',
   [BrightChainStrings.DatePage_Telemetry_MarsDelayCurrent]:
     'Tierra → Marte (est. actual)',
   [BrightChainStrings.DatePage_Telemetry_Unit]: 'md',
@@ -2039,4 +2037,23 @@ export const SpanishStrings: ComponentStrings<BrightChainStringKey> = {
   [BrightChainStrings.JouleEventLog_Col_Kind]: 'Tipo',
   [BrightChainStrings.JouleEventLog_Col_Amount]: 'Monto',
   [BrightChainStrings.JouleEventLog_Col_Description]: 'Descripción',
+
+  // Slogans
+  [BrightChainStrings.Slogan_Math_Search_Warrant]:
+    'Las matemáticas no aceptan una orden de registro.',
+  [BrightChainStrings.Slogan_Signal_Belongs_To_You]:
+    'La señal te pertenece. El ruido pertenece a todos.',
+  [BrightChainStrings.Slogan_Defiance_By_Design]: 'Rebeldía por diseño.',
+  [BrightChainStrings.Slogan_BrightChain_Privacy]:
+    'Privacidad que no tienes que pedir.',
+  [BrightChainStrings.Slogan_BrightChain_Privacy_Long]:
+    'BrightChain: Privacidad que no tienes que pedir.',
+  [BrightChainStrings.Slogan_Speak_Freely]:
+    'Habla libremente; las matemáticas te respaldan.',
+  [BrightChainStrings.Slogan_Distributed_By_Many]:
+    'Distribuido por muchos, poseído por nadie.',
+  [BrightChainStrings.Slogan_Truth_In_The_Signal]:
+    'La verdad en la señal, la seguridad en el ruido.',
+  [BrightChainStrings.Slogan_Ideas_Paper_Trail]:
+    'Las ideas no deberían dejar rastro.',
 };

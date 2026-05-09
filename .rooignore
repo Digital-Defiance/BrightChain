@@ -1,0 +1,38 @@
+# --- THE BLACK HOLE ---
+# Essential for monorepos. AI doesn't need to read lodash internals.
+node_modules/
+**/node_modules/
+
+# --- COMPILED JUNK ---
+# Indexing minified JS is like asking the AI to read hieroglyphics.
+dist/
+build/
+out/
+.next/
+.cache/
+**/dist/
+**/build/
+tmp/
+
+# --- BAGGAGE & LOGS ---
+# No need to index your git history or crash reports.
+.git/
+*.log
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+coverage/
+.nyc_output/
+.nx/
+.yarn/
+
+# --- STATIC ASSETS ---
+# Roo cannot "see" images or videos. Indexing them is a waste of CPU.
+public/assets/
+public/images/
+*.png
+*.jpg
+*.svg
+*.mp4
+*.pdf
+

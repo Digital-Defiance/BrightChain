@@ -1781,10 +1781,8 @@ export const MandarinStrings: ComponentStrings<BrightChainStringKey> = {
   [BrightChainStrings.DatePage_Telemetry_Subtitle]:
     '当前单向光延迟，以毫日（md）表示',
   [BrightChainStrings.DatePage_Telemetry_MoonDelay]: '地球 → 月球',
-  [BrightChainStrings.DatePage_Telemetry_MarsDelayMin]:
-    '地球 → 火星（最小）',
-  [BrightChainStrings.DatePage_Telemetry_MarsDelayMax]:
-    '地球 → 火星（最大）',
+  [BrightChainStrings.DatePage_Telemetry_MarsDelayMin]: '地球 → 火星（最小）',
+  [BrightChainStrings.DatePage_Telemetry_MarsDelayMax]: '地球 → 火星（最大）',
   [BrightChainStrings.DatePage_Telemetry_MarsDelayCurrent]:
     '地球 → 火星（当前估计）',
   [BrightChainStrings.DatePage_Telemetry_Unit]: 'md',
@@ -1841,4 +1839,18 @@ export const MandarinStrings: ComponentStrings<BrightChainStringKey> = {
   [BrightChainStrings.JouleEventLog_Col_Kind]: '类型',
   [BrightChainStrings.JouleEventLog_Col_Amount]: '金额',
   [BrightChainStrings.JouleEventLog_Col_Description]: '描述',
+
+  // Slogans
+  [BrightChainStrings.Slogan_Math_Search_Warrant]: '数学不接受搜查令。',
+  [BrightChainStrings.Slogan_Signal_Belongs_To_You]:
+    '信号属于你。噪声属于所有人。',
+  [BrightChainStrings.Slogan_Defiance_By_Design]: '以设计之名，坚守反抗。',
+  [BrightChainStrings.Slogan_BrightChain_Privacy]: '无需申请的隐私保护。',
+  [BrightChainStrings.Slogan_BrightChain_Privacy_Long]:
+    'BrightChain：无需申请的隐私保护。',
+  [BrightChainStrings.Slogan_Speak_Freely]: '自由发声；数学为你护航。',
+  [BrightChainStrings.Slogan_Distributed_By_Many]: '众人分布，无人占有。',
+  [BrightChainStrings.Slogan_Truth_In_The_Signal]:
+    '信号中有真相，噪声中有安全。',
+  [BrightChainStrings.Slogan_Ideas_Paper_Trail]: '思想不应留下痕迹。',
 };

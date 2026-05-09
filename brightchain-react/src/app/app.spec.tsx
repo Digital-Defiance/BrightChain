@@ -58,6 +58,9 @@ jest.mock('@brightchain/brightchain-react-components', () => ({
   StoragePoolsDemo: () => (
     <div data-testid="storage-pools-demo">StoragePoolsDemo Mock</div>
   ),
+  SloganRotation: () => (
+    <div data-testid="slogan-rotation">SloganRotation Mock</div>
+  ),
 }));
 
 // Mock brighthub-react-components to avoid real useI18n calls

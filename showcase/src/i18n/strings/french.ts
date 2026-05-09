@@ -5,6 +5,66 @@ import { ShowcaseStringKey, ShowcaseStrings } from '../showcaseStrings';
 export const ShowcaseFrenchStrings: Partial<
   ComponentStrings<ShowcaseStringKey>
 > = {
+  // BrightChain
+  [ShowcaseStrings.Common_Bright]: 'Brillant',
+  [ShowcaseStrings.Common_Chain]: 'Chaîne',
+
+  [ShowcaseStrings.Common_Privacy]: 'Confidentialité',
+  [ShowcaseStrings.Common_Participation]: 'Participation',
+  [ShowcaseStrings.Common_Power]: 'Pouvoir',
+  [ShowcaseStrings.Common_PrivacyParticipationPower]:
+    'Confidentialité. Participation. Pouvoir.',
+
+  [ShowcaseStrings.Date_BrightDateTemplate]: 'BD {BD}',
+
+  // ── DatePage ──
+  [ShowcaseStrings.DatePage_Title]: 'Date et heure',
+  [ShowcaseStrings.DatePage_BrightDateEpochLabel]:
+    'BrightDate (jours décimaux depuis J2000.0)',
+  [ShowcaseStrings.DatePage_HolidaysTitle]: 'Fêtes et célébrations du jour',
+  [ShowcaseStrings.DatePage_AllFormatsTitle]: 'Tous les formats de date',
+  [ShowcaseStrings.DatePage_AboutBrightDateTitle]: 'À propos de BrightDate',
+  [ShowcaseStrings.DatePage_AboutBrightDate_Epoch]:
+    "BrightDate compte les jours décimaux depuis l'époque J2000.0 (1er janvier 2000 à 12:00:00 UTC). C'est la même époque utilisée par les astronomes du monde entier pour la mécanique céleste.",
+  [ShowcaseStrings.DatePage_AboutBrightDate_Fraction]:
+    "La partie entière est le nombre de jours. La partie fractionnaire est l'heure décimale du jour. Par exemple, 0,5 = midi, 0,25 = 06:00, 0,75 = 18:00.",
+  [ShowcaseStrings.DatePage_AboutBrightDate_NoTimezones]:
+    "Pas de fuseaux horaires, pas d'heure d'été, pas d'ambiguïté — juste un nombre sur une ligne temporelle.",
+  [ShowcaseStrings.DatePage_Format_BrightDateFull]:
+    'BrightDate (précision complète)',
+  [ShowcaseStrings.DatePage_Format_BrightDateCompact]: 'BrightDate (compact)',
+  [ShowcaseStrings.DatePage_Format_BrightDateStandard]: 'BrightDate (standard)',
+  [ShowcaseStrings.DatePage_Format_ISO8601]: 'ISO 8601',
+  [ShowcaseStrings.DatePage_Format_UTC]: 'UTC',
+  [ShowcaseStrings.DatePage_Format_LocalDateTime]: 'Date et heure locales',
+  [ShowcaseStrings.DatePage_Format_LocalDate]: 'Date locale',
+  [ShowcaseStrings.DatePage_Format_LocalTime]: 'Heure locale',
+  [ShowcaseStrings.DatePage_Format_UnixTimestamp]: 'Horodatage Unix',
+  [ShowcaseStrings.DatePage_Format_UnixMs]: 'Millisecondes Unix',
+  [ShowcaseStrings.DatePage_Format_JulianDate]: 'Date julienne',
+  [ShowcaseStrings.DatePage_Format_ModifiedJulianDate]:
+    'Date julienne modifiée',
+  [ShowcaseStrings.DatePage_Format_DayOfYear]: "Jour de l'année",
+  [ShowcaseStrings.DatePage_Format_ISOWeek]: 'Semaine ISO',
+  [ShowcaseStrings.DatePage_Format_RFC2822]: 'RFC 2822',
+  [ShowcaseStrings.DatePage_HolidayType_Public]: 'Jour férié',
+  [ShowcaseStrings.DatePage_HolidayType_Bank]: 'Jour férié bancaire',
+  [ShowcaseStrings.DatePage_HolidayType_Observance]: 'Célébration',
+  [ShowcaseStrings.DatePage_HolidayType_Religious]: 'Religieux',
+
+  // ── DatePage: Cochrane Easter Egg (Interplanetary Telemetry) ──
+  [ShowcaseStrings.DatePage_Telemetry_Title]: 'Télémétrie Interplanétaire',
+  [ShowcaseStrings.DatePage_Telemetry_Subtitle]:
+    'Délai lumineux unidirectionnel actuel exprimé en millijours (md)',
+  [ShowcaseStrings.DatePage_Telemetry_MoonDelay]: 'Terre → Lune',
+  [ShowcaseStrings.DatePage_Telemetry_MarsDelayMin]: 'Terre → Mars (min)',
+  [ShowcaseStrings.DatePage_Telemetry_MarsDelayMax]: 'Terre → Mars (max)',
+  [ShowcaseStrings.DatePage_Telemetry_MarsDelayCurrent]:
+    'Terre → Mars (est. actuelle)',
+  [ShowcaseStrings.DatePage_Telemetry_Unit]: 'md',
+  [ShowcaseStrings.DatePage_Telemetry_Footer]:
+    'BrightDate est conçu pour un monde au-delà du Temps Standard Terrestre. Un millijour ≈ 86,4 secondes.',
+
   // Navigation
   [ShowcaseStrings.Nav_Home]: 'Accueil',
   [ShowcaseStrings.Nav_SoupDemo]: 'Démo Soup',
@@ -12,6 +72,7 @@ export const ShowcaseFrenchStrings: Partial<
   [ShowcaseStrings.Nav_Blog]: 'Blog',
   [ShowcaseStrings.Nav_FAQ]: 'FAQ',
   [ShowcaseStrings.Nav_Docs]: 'Documentation',
+  [ShowcaseStrings.Nav_BrightDate]: 'BrightDate',
   [ShowcaseStrings.Nav_Home_Description]: 'Page principale',
   [ShowcaseStrings.Nav_SoupDemo_Description]:
     'Visualisation interactive des blocs',
@@ -20,6 +81,7 @@ export const ShowcaseFrenchStrings: Partial<
   [ShowcaseStrings.Nav_Blog_Description]: 'Blog et actualités BrightChain',
   [ShowcaseStrings.Nav_FAQ_Description]: 'Questions fréquemment posées',
   [ShowcaseStrings.Nav_Docs_Description]: 'Documentation du projet',
+  [ShowcaseStrings.Nav_BrightDate_Description]: 'Date BrightDate actuelle',
   [ShowcaseStrings.Nav_ToggleMenu]: 'Basculer le menu',
 
   // Language Selector
@@ -2437,11 +2499,21 @@ export const ShowcaseFrenchStrings: Partial<
   [ShowcaseStrings.PP_S18_WebLabel]: 'Web :',
   [ShowcaseStrings.Slogan_Math_Search_Warrant]:
     "Les mathématiques n'acceptent pas de mandat de perquisition.",
-  [ShowcaseStrings.Slogan_Where_State_Sees_Noise]:
-    "Là où l'État voit du bruit, le peuple trouve la vérité.",
-  [ShowcaseStrings.Slogan_Building_World_Where_Ideas_Have_No_Borders]:
-    "Bâtir un monde où les idées n'ont pas de frontières et où la vérité n'a pas de propriétaire.",
-  [ShowcaseStrings.Slogan_Defiance_By_Design]: 'La Défiance par le Design.',
+  [ShowcaseStrings.Slogan_Signal_Belongs_To_You]:
+    'Le signal vous appartient. Le bruit appartient à tous.',
+  [ShowcaseStrings.Slogan_Defiance_By_Design]: 'Résistance par conception.',
+  [ShowcaseStrings.Slogan_BrightChain_Privacy]:
+    "Une confidentialité que vous n'avez pas à demander.",
+  [ShowcaseStrings.Slogan_BrightChain_Privacy_Long]:
+    "BrightChain : Une confidentialité que vous n'avez pas à demander.",
+  [ShowcaseStrings.Slogan_Speak_Freely]:
+    'Parlez librement ; les mathématiques vous protègent.',
+  [ShowcaseStrings.Slogan_Distributed_By_Many]:
+    'Distribué par plusieurs, possédé par personne.',
+  [ShowcaseStrings.Slogan_Truth_In_The_Signal]:
+    'La vérité dans le signal, la sécurité dans le bruit.',
+  [ShowcaseStrings.Slogan_Ideas_Paper_Trail]:
+    'Les idées ne devraient pas laisser de traces.',
 };
 
 export default ShowcaseFrenchStrings;

@@ -7,7 +7,7 @@ export default {
     '^.+\\.ts$': [
       'ts-jest',
       {
-        tsconfig: '<rootDir>/tsconfig.spec.json',
+        tsconfig: './tsconfig.spec.json',
         useESM: true,
         diagnostics: false,
       },

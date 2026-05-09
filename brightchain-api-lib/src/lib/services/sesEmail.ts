@@ -44,7 +44,7 @@ export class SESEmailService<TID extends PlatformID = DefaultBackendIdType>
     this.debug = application.environment.debug;
 
     // Initialize the SES client with provided AWS credentials and region.
-    const environment: Environment = application.environment as Environment;
+    const environment: Environment = application.environment as unknown as Environment;
     this.sesClient = new SESClient({
       region: environment.aws.region,
       credentials: {

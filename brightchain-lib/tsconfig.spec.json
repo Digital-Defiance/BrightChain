@@ -15,6 +15,9 @@
     "noImplicitThis": true,
     "alwaysStrict": true
   },
+  "files": [
+    "src/test/types/jest.d.ts"
+  ],
   "include": [
     "jest.config.ts",
     "src/**/*.test.ts",

@@ -8,6 +8,7 @@ export interface BrightChainLogoI18NProps {
   primarySecondaryBreak?: boolean;
   secondaryColor?: string;
   taglineColor?: string;
+  taglineText?: string;
   className?: string;
   style?: React.CSSProperties;
   width?: number | string;
@@ -19,6 +20,7 @@ export const BrightChainLogoI18N: React.FC<BrightChainLogoI18NProps> = ({
   primarySecondaryBreak = false,
   secondaryColor: chainColor = CONSTANTS.THEME_COLORS.CHAIN_BLUE_LIGHT,
   taglineColor = '#ffffff',
+  taglineText,
   className,
   style,
   width = 3151,
@@ -143,7 +145,7 @@ export const BrightChainLogoI18N: React.FC<BrightChainLogoI18NProps> = ({
     secondaryColor: chainColor,
     secondaryText: secondaryText,
     taglineColor,
-    taglineText: t(
+    taglineText: taglineText ?? t(
       BrightChainStrings.Common_PrivacyParticipationPower,
       undefined,
       languageCode,

@@ -45,7 +45,7 @@ describe('deserialize() with invalid JSON returns INVALID_JSON error code (Req 5
     for (const bad of invalidJsonCases) {
       const result = nodeStatusSerializer.deserialize(bad);
       expect(result.success).toBe(false);
-      if (!result.success) {
+      if (result.success === false) {
         expect(result.error.code).toBe('INVALID_JSON');
       }
     }
@@ -55,7 +55,7 @@ describe('deserialize() with invalid JSON returns INVALID_JSON error code (Req 5
     for (const bad of invalidJsonCases) {
       const result = peerInfoSerializer.deserialize(bad);
       expect(result.success).toBe(false);
-      if (!result.success) {
+      if (result.success === false) {
         expect(result.error.code).toBe('INVALID_JSON');
       }
     }
@@ -65,7 +65,7 @@ describe('deserialize() with invalid JSON returns INVALID_JSON error code (Req 5
     for (const bad of invalidJsonCases) {
       const result = poolInfoSerializer.deserialize(bad);
       expect(result.success).toBe(false);
-      if (!result.success) {
+      if (result.success === false) {
         expect(result.error.code).toBe('INVALID_JSON');
       }
     }
@@ -75,7 +75,7 @@ describe('deserialize() with invalid JSON returns INVALID_JSON error code (Req 5
     for (const bad of invalidJsonCases) {
       const result = energyAccountStatusSerializer.deserialize(bad);
       expect(result.success).toBe(false);
-      if (!result.success) {
+      if (result.success === false) {
         expect(result.error.code).toBe('INVALID_JSON');
       }
     }
@@ -91,7 +91,7 @@ describe('deserialize() with schema-mismatched JSON returns VALIDATION_FAILED er
   it('nodeStatusSerializer: returns VALIDATION_FAILED for empty object JSON', () => {
     const result = nodeStatusSerializer.deserialize('{}');
     expect(result.success).toBe(false);
-    if (!result.success) {
+    if (result.success === false) {
       expect(result.error.code).toBe('VALIDATION_FAILED');
     }
   });
@@ -100,7 +100,7 @@ describe('deserialize() with schema-mismatched JSON returns VALIDATION_FAILED er
     const json = JSON.stringify({ nodeId: 'abc', healthy: true });
     const result = nodeStatusSerializer.deserialize(json);
     expect(result.success).toBe(false);
-    if (!result.success) {
+    if (result.success === false) {
       expect(result.error.code).toBe('VALIDATION_FAILED');
     }
   });
@@ -116,7 +116,7 @@ describe('deserialize() with schema-mismatched JSON returns VALIDATION_FAILED er
     });
     const result = nodeStatusSerializer.deserialize(json);
     expect(result.success).toBe(false);
-    if (!result.success) {
+    if (result.success === false) {
       expect(result.error.code).toBe('VALIDATION_FAILED');
     }
   });
@@ -124,7 +124,7 @@ describe('deserialize() with schema-mismatched JSON returns VALIDATION_FAILED er
   it('peerInfoSerializer: returns VALIDATION_FAILED for empty object JSON', () => {
     const result = peerInfoSerializer.deserialize('{}');
     expect(result.success).toBe(false);
-    if (!result.success) {
+    if (result.success === false) {
       expect(result.error.code).toBe('VALIDATION_FAILED');
     }
   });
@@ -137,7 +137,7 @@ describe('deserialize() with schema-mismatched JSON returns VALIDATION_FAILED er
     });
     const result = peerInfoSerializer.deserialize(json);
     expect(result.success).toBe(false);
-    if (!result.success) {
+    if (result.success === false) {
       expect(result.error.code).toBe('VALIDATION_FAILED');
     }
   });
@@ -155,7 +155,7 @@ describe('deserialize() with schema-mismatched JSON returns VALIDATION_FAILED er
     });
     const result = poolInfoSerializer.deserialize(json);
     expect(result.success).toBe(false);
-    if (!result.success) {
+    if (result.success === false) {
       expect(result.error.code).toBe('VALIDATION_FAILED');
     }
   });
@@ -163,7 +163,7 @@ describe('deserialize() with schema-mismatched JSON returns VALIDATION_FAILED er
   it('energyAccountStatusSerializer: returns VALIDATION_FAILED for empty object JSON', () => {
     const result = energyAccountStatusSerializer.deserialize('{}');
     expect(result.success).toBe(false);
-    if (!result.success) {
+    if (result.success === false) {
       expect(result.error.code).toBe('VALIDATION_FAILED');
     }
   });
@@ -178,7 +178,7 @@ describe('deserialize() with schema-mismatched JSON returns VALIDATION_FAILED er
     });
     const result = blockStoreStatsSerializer.deserialize(json);
     expect(result.success).toBe(false);
-    if (!result.success) {
+    if (result.success === false) {
       expect(result.error.code).toBe('VALIDATION_FAILED');
     }
   });
@@ -192,7 +192,7 @@ describe('deserialize() with schema-mismatched JSON returns VALIDATION_FAILED er
     });
     const result = clientEventSerializer.deserialize(json);
     expect(result.success).toBe(false);
-    if (!result.success) {
+    if (result.success === false) {
       expect(result.error.code).toBe('VALIDATION_FAILED');
     }
   });
@@ -200,7 +200,7 @@ describe('deserialize() with schema-mismatched JSON returns VALIDATION_FAILED er
   it('nodeStatusSerializer: returns VALIDATION_FAILED for a JSON array', () => {
     const result = nodeStatusSerializer.deserialize('[1, 2, 3]');
     expect(result.success).toBe(false);
-    if (!result.success) {
+    if (result.success === false) {
       expect(result.error.code).toBe('VALIDATION_FAILED');
     }
   });
@@ -208,7 +208,7 @@ describe('deserialize() with schema-mismatched JSON returns VALIDATION_FAILED er
   it('nodeStatusSerializer: returns VALIDATION_FAILED for a JSON null', () => {
     const result = nodeStatusSerializer.deserialize('null');
     expect(result.success).toBe(false);
-    if (!result.success) {
+    if (result.success === false) {
       expect(result.error.code).toBe('VALIDATION_FAILED');
     }
   });

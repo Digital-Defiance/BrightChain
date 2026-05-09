@@ -69,10 +69,7 @@
         "{workspaceRoot}/coverage/{projectRoot}"
       ],
       "options": {
-        "jestConfig": "brightchain-lib/jest.config.ts",
-        "setupFilesAfterEnv": [
-          "<rootDir>/jest.setup.ts"
-        ],
+        "jestConfig": "brightchain-lib/jest.config.cts",
         "codeCoverage": false,
         "coverageReporters": [
           "text",

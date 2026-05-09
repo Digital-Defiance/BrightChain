@@ -1850,10 +1850,8 @@ export const JapaneseStrings: ComponentStrings<BrightChainStringKey> = {
   [BrightChainStrings.DatePage_Telemetry_Subtitle]:
     '現在の片道光遅延（ミリデイ単位、md）',
   [BrightChainStrings.DatePage_Telemetry_MoonDelay]: '地球 → 月',
-  [BrightChainStrings.DatePage_Telemetry_MarsDelayMin]:
-    '地球 → 火星（最小）',
-  [BrightChainStrings.DatePage_Telemetry_MarsDelayMax]:
-    '地球 → 火星（最大）',
+  [BrightChainStrings.DatePage_Telemetry_MarsDelayMin]: '地球 → 火星（最小）',
+  [BrightChainStrings.DatePage_Telemetry_MarsDelayMax]: '地球 → 火星（最大）',
   [BrightChainStrings.DatePage_Telemetry_MarsDelayCurrent]:
     '地球 → 火星（現在の推定）',
   [BrightChainStrings.DatePage_Telemetry_Unit]: 'md',
@@ -1914,4 +1912,22 @@ export const JapaneseStrings: ComponentStrings<BrightChainStringKey> = {
   [BrightChainStrings.JouleEventLog_Col_Kind]: '種類',
   [BrightChainStrings.JouleEventLog_Col_Amount]: '金額',
   [BrightChainStrings.JouleEventLog_Col_Description]: '説明',
+
+  // Slogans
+  [BrightChainStrings.Slogan_Math_Search_Warrant]:
+    '数学は捜索令状を受け付けない。',
+  [BrightChainStrings.Slogan_Signal_Belongs_To_You]:
+    'シグナルはあなたのもの。ノイズはみんなのもの。',
+  [BrightChainStrings.Slogan_Defiance_By_Design]: '設計による反骨。',
+  [BrightChainStrings.Slogan_BrightChain_Privacy]:
+    '許可を求めなくていいプライバシー。',
+  [BrightChainStrings.Slogan_BrightChain_Privacy_Long]:
+    'BrightChain：許可を求めなくていいプライバシー。',
+  [BrightChainStrings.Slogan_Speak_Freely]: '自由に語れ。数学があなたを守る。',
+  [BrightChainStrings.Slogan_Distributed_By_Many]:
+    '多くの人が配布し、誰も所有しない。',
+  [BrightChainStrings.Slogan_Truth_In_The_Signal]:
+    'シグナルに真実、ノイズに安全。',
+  [BrightChainStrings.Slogan_Ideas_Paper_Trail]:
+    'アイデアに痕跡を残すべきではない。',
 };

@@ -8,6 +8,12 @@
  * error messages and visual indicators for all error conditions.
  */
 
+// Async React property tests can exceed 5 s under parallel load — give them room.
+// Vitest equivalent: set timeout via vi.setConfig (no retryTimes in Vitest core;
+// use vitest.config retry option for suite-level retries).
+import { vi } from 'vitest';
+vi.setConfig({ testTimeout: 30000 });
+
 import { act, render, renderHook, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import {

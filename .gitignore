@@ -3,9 +3,13 @@
 test-dev.log
 build.log
 e2e.log
+test-errors.log
+e2e-errors.log
 
 /Lumen
+.nx/
 express-suite
+playwright-report/
 test-outputs/
 test-output.*
 brightchain-lib/.cache/
