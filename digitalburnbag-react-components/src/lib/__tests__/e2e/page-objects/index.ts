@@ -1,0 +1,11 @@
+export { ACLEditorPage } from './ACLEditorPage';
+export { ActivityFeedPage } from './ActivityFeedPage';
+export { BulkOperationsPage } from './BulkOperationsPage';
+export { CanaryConfigPage } from './CanaryConfigPage';
+export { FileBrowserPage } from './FileBrowserPage';
+export { FolderExportPage } from './FolderExportPage';
+export { PreviewViewerPage } from './PreviewViewerPage';
+export { ShareDialogPage } from './ShareDialogPage';
+export { StorageAnalyticsPage } from './StorageAnalyticsPage';
+export { TrashBinPage } from './TrashBinPage';
+export { UploadWidgetPage } from './UploadWidgetPage';

@@ -1,0 +1,435 @@
+/* ── BrightCal Calendar Styles ─────────────────────────────────────────── */
+
+/* ── Layout ──────────────────────────────────────────────────────────── */
+.brightcal-layout {
+  display: flex;
+  height: 100%;
+  min-height: 0;
+}
+
+.brightcal-desktop {
+  flex-direction: row;
+}
+
+.brightcal-mobile {
+  flex-direction: column;
+}
+
+.brightcal-sidebar {
+  width: 240px;
+  flex-shrink: 0;
+  border-right: 1px solid #e0e0e0;
+  padding: 12px;
+  overflow-y: auto;
+}
+
+.brightcal-main {
+  flex: 1;
+  min-width: 0;
+  overflow-y: auto;
+  padding: 12px;
+}
+
+/* ── CalendarWidget ──────────────────────────────────────────────────── */
+.brightcal-widget {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.brightcal-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+  color: #b71c1c;
+}
+
+.brightcal-error button {
+  margin-top: 12px;
+  padding: 6px 16px;
+  border: 1px solid #b71c1c;
+  border-radius: 4px;
+  background: #fff;
+  color: #b71c1c;
+  cursor: pointer;
+}
+
+.brightcal-error button:hover {
+  background: #ffebee;
+}
+
+.brightcal-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+}
+
+.brightcal-skeleton {
+  width: 80%;
+  height: 200px;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: brightcal-shimmer 1.5s infinite;
+  border-radius: 8px;
+}
+
+@keyframes brightcal-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ── Toolbar ─────────────────────────────────────────────────────────── */
+.brightcal-toolbar {
+  display: flex;
+  gap: 4px;
+  padding: 8px 0;
+  border-bottom: 1px solid #e0e0e0;
+  margin-bottom: 8px;
+}
+
+.brightcal-toolbar button {
+  padding: 6px 14px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background: #fff;
+  cursor: pointer;
+  font-size: 13px;
+  color: #333;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.brightcal-toolbar button:hover {
+  background: #f5f5f5;
+}
+
+.brightcal-toolbar button.brightcal-active {
+  background: #1976d2;
+  color: #fff;
+  border-color: #1976d2;
+}
+
+.brightcal-view-container {
+  flex: 1;
+  min-height: 0;
+}
+
+/* ── MiniCalendar ────────────────────────────────────────────────────── */
+.brightcal-mini-calendar {
+  user-select: none;
+}
+
+.brightcal-mini-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.brightcal-mini-nav button {
+  background: none;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+  padding: 2px 8px;
+  border-radius: 4px;
+  color: #555;
+}
+
+.brightcal-mini-nav button:hover {
+  background: #f0f0f0;
+}
+
+.brightcal-mini-month-label {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.brightcal-mini-header {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  text-align: center;
+  font-size: 11px;
+  font-weight: 600;
+  color: #888;
+  margin-bottom: 4px;
+}
+
+.brightcal-mini-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 1px;
+}
+
+.brightcal-mini-day {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  margin: 0 auto;
+  border: none;
+  border-radius: 50%;
+  background: none;
+  font-size: 12px;
+  cursor: pointer;
+  color: #333;
+  transition: background 0.15s;
+}
+
+.brightcal-mini-day:hover {
+  background: #e3f2fd;
+}
+
+.brightcal-mini-day.brightcal-other-month {
+  color: #bbb;
+}
+
+.brightcal-mini-day.brightcal-today {
+  font-weight: 700;
+  color: #1976d2;
+}
+
+.brightcal-mini-day.brightcal-selected {
+  background: #1976d2;
+  color: #fff;
+}
+
+.brightcal-mini-day.brightcal-selected:hover {
+  background: #1565c0;
+}
+
+/* ── MonthView ───────────────────────────────────────────────────────── */
+.brightcal-month-view {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.brightcal-month-header {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  text-align: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: #555;
+  border-bottom: 1px solid #e0e0e0;
+  padding-bottom: 6px;
+  margin-bottom: 4px;
+}
+
+.brightcal-weekday-header {
+  padding: 4px 0;
+}
+
+.brightcal-month-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  flex: 1;
+  gap: 1px;
+  background: #e0e0e0;
+}
+
+.brightcal-day-cell {
+  background: #fff;
+  min-height: 80px;
+  padding: 4px 6px;
+  cursor: pointer;
+  transition: background 0.15s;
+  display: flex;
+  flex-direction: column;
+}
+
+.brightcal-day-cell:hover {
+  background: #f5f5f5;
+}
+
+.brightcal-day-cell:focus {
+  outline: 2px solid #1976d2;
+  outline-offset: -2px;
+}
+
+.brightcal-day-cell.brightcal-today {
+  background: #e3f2fd;
+}
+
+.brightcal-day-number {
+  font-size: 13px;
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 4px;
+}
+
+.brightcal-today .brightcal-day-number {
+  color: #1976d2;
+  font-weight: 700;
+}
+
+.brightcal-event-indicators {
+  display: flex;
+  gap: 3px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.brightcal-event-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.brightcal-event-dot:focus {
+  outline: 2px solid #1976d2;
+  outline-offset: 1px;
+}
+
+.brightcal-more-events {
+  font-size: 10px;
+  color: #888;
+}
+
+/* ── WeekView ────────────────────────────────────────────────────────── */
+.brightcal-week-view {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.brightcal-week-header {
+  display: grid;
+  grid-template-columns: 60px repeat(7, 1fr);
+  border-bottom: 1px solid #e0e0e0;
+  font-size: 12px;
+  font-weight: 600;
+  color: #555;
+}
+
+.brightcal-week-day-header {
+  text-align: center;
+  padding: 6px 4px;
+}
+
+.brightcal-time-gutter {
+  /* empty header cell above the time labels */
+}
+
+.brightcal-week-body {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.brightcal-week-row {
+  display: grid;
+  grid-template-columns: 60px repeat(7, 1fr);
+  min-height: 48px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.brightcal-week-cell {
+  position: relative;
+  border-left: 1px solid #f0f0f0;
+  cursor: pointer;
+  padding: 2px;
+  transition: background 0.15s;
+}
+
+.brightcal-week-cell:hover {
+  background: #fafafa;
+}
+
+.brightcal-week-cell:focus {
+  outline: 2px solid #1976d2;
+  outline-offset: -2px;
+}
+
+/* ── DayView ─────────────────────────────────────────────────────────── */
+.brightcal-day-view {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.brightcal-day-header h2 {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0 0 8px;
+  color: #333;
+}
+
+.brightcal-day-body {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.brightcal-time-slot {
+  display: flex;
+  min-height: 12px;
+  border-bottom: 1px solid #f5f5f5;
+}
+
+.brightcal-time-label {
+  width: 60px;
+  flex-shrink: 0;
+  font-size: 11px;
+  color: #888;
+  text-align: right;
+  padding-right: 8px;
+  padding-top: 2px;
+}
+
+.brightcal-slot-content {
+  flex: 1;
+  min-height: 12px;
+  cursor: pointer;
+  position: relative;
+  transition: background 0.15s;
+}
+
+.brightcal-slot-content:hover {
+  background: #fafafa;
+}
+
+.brightcal-slot-content:focus {
+  outline: 2px solid #1976d2;
+  outline-offset: -2px;
+}
+
+/* ── Shared event block (Week + Day views) ───────────────────────────── */
+.brightcal-event-block {
+  border-radius: 4px;
+  padding: 2px 6px;
+  margin: 1px 0;
+  color: #fff;
+  font-size: 12px;
+  cursor: pointer;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  min-height: 20px;
+}
+
+.brightcal-event-block:focus {
+  outline: 2px solid #333;
+  outline-offset: 1px;
+}
+
+.brightcal-event-title {
+  font-weight: 500;
+}
+
+.brightcal-event-location {
+  display: block;
+  font-size: 11px;
+  opacity: 0.85;
+}
+
+/* ── MonthView blank cells ───────────────────────────────────────────── */
+.brightcal-day-cell.brightcal-blank {
+  background: #fafafa;
+  cursor: default;
+}

@@ -1,8 +1,7 @@
-import { motion } from 'framer-motion';
 import { FC, useEffect, useMemo, useState } from 'react';
-import './SloganRotation.scss';
 import { useI18n } from '@digitaldefiance/express-suite-react-components';
 import { BrightChainStrings } from '@brightchain/brightchain-lib';
+import { HeroBadge } from './HeroBadge';
 
 export const SloganRotation: FC = () => {
   const slogans = useMemo(
@@ -30,13 +29,6 @@ export const SloganRotation: FC = () => {
   }, [slogans.length]);
 
   return (
-    <motion.div
-      className="hero-badge-slogan"
-      initial={{ opacity: 0, scale: 0.8 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ delay: 0.1, duration: 0.6 }}
-    >
-      <span className="badge-slogan">{t(slogans[currentIndex])}</span>
-    </motion.div>
+    <HeroBadge text={t(slogans[currentIndex])} />
   );
 };

@@ -2566,7 +2566,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@brightchain/brightchain-lib@workspace:brightchain-lib"
   dependencies:
-    "@brightchain/brightdate": "npm:0.32.2"
+    "@brightchain/brightdate": "npm:0.32.3"
     "@digitaldefiance/branded-interface": "npm:0.0.5"
     "@digitaldefiance/bzip2-wasm": "npm:^1.1.1"
     "@digitaldefiance/ecies-lib": "npm:5.2.2"
@@ -2698,15 +2698,14 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@brightchain/brightdate@npm:0.32.2, @brightchain/brightdate@npm:^0.32.2, @brightchain/brightdate@workspace:brightdate":
-  version: 0.0.0-use.local
-  resolution: "@brightchain/brightdate@workspace:brightdate"
+"@brightchain/brightdate@npm:0.32.3, @brightchain/brightdate@npm:^0.32.3":
+  version: 0.32.3
+  resolution: "@brightchain/brightdate@npm:0.32.3"
   dependencies:
-    "@jest/globals": "npm:^30.3.0"
-    "@types/node": "npm:^20.0.0"
     tslib: "npm:^2.3.0"
-  languageName: unknown
-  linkType: soft
+  checksum: 10/10ca4faf2d6b5bb72c1e58d12e225f25cb18b65657bf03f83670ac00056d7b4f983e3821b3f00819ee3dc699eeaa22a33a9cf94df82545bca06acbef5c90c9dc
+  languageName: node
+  linkType: hard
 
 "@brightchain/brighthub-lib@npm:^0.32.1, @brightchain/brighthub-lib@workspace:brighthub-lib":
   version: 0.0.0-use.local
@@ -2851,7 +2850,7 @@ __metadata:
     react-router-dom: "npm:^7.14.0"
   peerDependencies:
     "@brightchain/brightchain-lib": ^0.32.1
-    "@brightchain/brightdate": ^0.32.2
+    "@brightchain/brightdate": ^0.32.3
     "@brightchain/brightmail-lib": ^0.32.1
     "@digitaldefiance/express-suite-react-components": 4.29.1
     "@mui/icons-material": "*"
@@ -11852,7 +11851,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:^20.0.0, @types/node@npm:^20.9.0":
+"@types/node@npm:^20.9.0":
   version: 20.19.39
   resolution: "@types/node@npm:20.19.39"
   dependencies:
@@ -15215,7 +15214,7 @@ __metadata:
     "@brightchain/brightchain-lib": "npm:^0.32.1"
     "@brightchain/brightchain-react-components": "npm:^0.32.1"
     "@brightchain/brightchat-lib": "npm:^0.32.1"
-    "@brightchain/brightdate": "npm:^0.32.2"
+    "@brightchain/brightdate": "npm:^0.32.3"
     "@brightchain/brighthub-lib": "npm:^0.32.1"
     "@brightchain/brighthub-react-components": "npm:^0.32.1"
     "@brightchain/brightmail-lib": "npm:^0.32.1"
@@ -31423,6 +31422,22 @@ __metadata:
   checksum: 10/58359185275ef1f39c339ae94e598168aa6bb789f6cf0d52e726c1e7087a94e9c17f0385a28d34483dec1ffc2c75670ec714dc5603d99c3124ec83bc2b0a0f42
   languageName: node
   linkType: hard
+
+"subspace-lattice-react@workspace:subspace-lattice-react":
+  version: 0.0.0-use.local
+  resolution: "subspace-lattice-react@workspace:subspace-lattice-react"
+  peerDependencies:
+    react: ">=18.2.0"
+    react-dom: ">=18.2.0"
+    subspace-lattice: "workspace:*"
+  languageName: unknown
+  linkType: soft
+
+"subspace-lattice@workspace:subspace-lattice":
+  version: 0.0.0-use.local
+  resolution: "subspace-lattice@workspace:subspace-lattice"
+  languageName: unknown
+  linkType: soft
 
 "sumchecker@npm:^3.0.1":
   version: 3.0.1

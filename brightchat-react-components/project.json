@@ -1,0 +1,58 @@
+{
+  "name": "brightchat-react-components",
+  "$schema": "../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "brightchat-react-components/src",
+  "projectType": "library",
+  "tags": [
+    "type:lib",
+    "scope:frontend"
+  ],
+  "implicitDependencies": [
+    "brightchain-lib",
+    "brightchain-react-components",
+    "brightchat-lib"
+  ],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "outputPath": "dist/brightchat-react-components",
+        "main": "brightchat-react-components/src/index.ts",
+        "tsConfig": "brightchat-react-components/tsconfig.lib.json",
+        "assets": [
+          {
+            "input": "brightchat-react-components",
+            "glob": "*.md",
+            "output": "."
+          }
+        ]
+      },
+      "configurations": {
+        "development": {},
+        "production": {}
+      }
+    },
+    "publish": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npm publish --access public",
+        "cwd": "dist/brightchat-react-components"
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": [
+        "{workspaceRoot}/coverage/{projectRoot}"
+      ],
+      "options": {
+        "jestConfig": "brightchat-react-components/jest.config.cts"
+      }
+    }
+  }
+}

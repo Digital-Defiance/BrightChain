@@ -1,0 +1,44 @@
+{
+  "name": "@brightchain/brightcal-api-lib",
+  "version": "0.32.1",
+  "description": "BrightCal API library - CalDAV server, REST controllers, scheduling engine, notification service, permission manager, booking engine, and MongoDB models for BrightChain calendar",
+  "main": "src/index.js",
+  "types": "src/index.d.ts",
+  "files": [
+    "src",
+    "README.md"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Digital-Defiance/BrightChain.git",
+    "directory": "brightcal-api-lib"
+  },
+  "homepage": "https://github.com/Digital-Defiance/BrightChain#readme",
+  "bugs": {
+    "url": "https://github.com/Digital-Defiance/BrightChain/issues"
+  },
+  "keywords": [
+    "brightchain",
+    "brightcal",
+    "calendar",
+    "caldav",
+    "scheduling",
+    "api"
+  ],
+  "author": "Digital Defiance",
+  "license": "MIT",
+  "peerDependencies": {
+    "@brightchain/brightcal-lib": "^0.32.1",
+    "@brightchain/brightchain-api-lib": "^0.32.1",
+    "@brightchain/db": "^0.32.1"
+  },
+  "dependencies": {
+    "tslib": "^2.3.0"
+  },
+  "scripts": {
+    "build": "npx nx build brightcal-api-lib",
+    "build:prod": "npx nx build brightcal-api-lib --configuration=production",
+    "test": "npx nx test brightcal-api-lib",
+    "lint": "npx nx lint brightcal-api-lib"
+  }
+}

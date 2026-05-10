@@ -1666,6 +1666,13 @@ export const UkrainianStrings: ComponentStrings<BrightChainStringKey> = {
     "Ви впевнені, що хочете видалити блок {BLOCK_ID}? Це також видалить пов'язані блоки парності з локального сховища.",
   [BrightChainStrings.Admin_Blocks_SizeBytesTemplate]: '{SIZE} байт',
 
+  [BrightChainStrings.Games_Menu_Title]: 'Ігри',
+  [BrightChainStrings.Subspace_Lattice]: 'Підпросторова Решітка',
+  [BrightChainStrings.Subspace]: 'Підпросторова',
+  [BrightChainStrings.Lattice]: 'Решітка',
+  [BrightChainStrings.Subspace_Lattice_Description]:
+    'Стратегічне поєднання контролю території та тактичних маневрів, де гравці проєктують сенсорні мережі для захоплення суверенного простору. Створюйте швидкісні лінії постачання та флоти з варп-двигунами, щоб перехитрити супротивника та панувати в секторі.',
+
   // Public Block Explorer
   [BrightChainStrings.Explorer_Menu_Title]: 'Оглядач блоків',
   [BrightChainStrings.Explorer_Title]: 'Оглядач блоків',
@@ -1907,6 +1914,7 @@ export const UkrainianStrings: ComponentStrings<BrightChainStringKey> = {
     'Сервіс обмеження швидкості недоступний. Запит відхилено.',
 
   [BrightChainStrings.Date_BrightDateTemplate]: 'BD {BD}',
+  [BrightChainStrings.Date_BrightDate_UTC_With_Benefits]: 'UTC з перевагами',
 
   // ── DatePage ──
   [BrightChainStrings.DatePage_Title]: 'Дата та час',

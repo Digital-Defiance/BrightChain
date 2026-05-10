@@ -1,0 +1,105 @@
+import {
+  EnumLanguageTranslation,
+  i18nEngine,
+} from '@brightchain/brightchain-lib';
+import { LanguageCodes } from '@digitaldefiance/i18n-lib';
+import { EncounterStatus } from '../encounter';
+
+export type EncounterStatusLanguageTranslation =
+  EnumLanguageTranslation<EncounterStatus>;
+
+export const EncounterStatusTranslations: EncounterStatusLanguageTranslation =
+  i18nEngine.registerEnum(
+    EncounterStatus,
+    {
+      [LanguageCodes.DE]: {
+        [EncounterStatus.Planned]: 'Geplant',
+        [EncounterStatus.Arrived]: 'Eingetroffen',
+        [EncounterStatus.Triaged]: 'Triagiert',
+        [EncounterStatus.InProgress]: 'In Bearbeitung',
+        [EncounterStatus.OnLeave]: 'Beurlaubt',
+        [EncounterStatus.Finished]: 'Abgeschlossen',
+        [EncounterStatus.Cancelled]: 'Storniert',
+        [EncounterStatus.EnteredInError]: 'Irrtümlich eingegeben',
+        [EncounterStatus.Unknown]: 'Unbekannt',
+      },
+      [LanguageCodes.EN_GB]: {
+        [EncounterStatus.Planned]: 'Planned',
+        [EncounterStatus.Arrived]: 'Arrived',
+        [EncounterStatus.Triaged]: 'Triaged',
+        [EncounterStatus.InProgress]: 'In Progress',
+        [EncounterStatus.OnLeave]: 'On Leave',
+        [EncounterStatus.Finished]: 'Finished',
+        [EncounterStatus.Cancelled]: 'Cancelled',
+        [EncounterStatus.EnteredInError]: 'Entered in Error',
+        [EncounterStatus.Unknown]: 'Unknown',
+      },
+      [LanguageCodes.EN_US]: {
+        [EncounterStatus.Planned]: 'Planned',
+        [EncounterStatus.Arrived]: 'Arrived',
+        [EncounterStatus.Triaged]: 'Triaged',
+        [EncounterStatus.InProgress]: 'In Progress',
+        [EncounterStatus.OnLeave]: 'On Leave',
+        [EncounterStatus.Finished]: 'Finished',
+        [EncounterStatus.Cancelled]: 'Cancelled',
+        [EncounterStatus.EnteredInError]: 'Entered in Error',
+        [EncounterStatus.Unknown]: 'Unknown',
+      },
+      [LanguageCodes.ES]: {
+        [EncounterStatus.Planned]: 'Planificado',
+        [EncounterStatus.Arrived]: 'Llegado',
+        [EncounterStatus.Triaged]: 'Triado',
+        [EncounterStatus.InProgress]: 'En progreso',
+        [EncounterStatus.OnLeave]: 'Con permiso',
+        [EncounterStatus.Finished]: 'Finalizado',
+        [EncounterStatus.Cancelled]: 'Cancelado',
+        [EncounterStatus.EnteredInError]: 'Ingresado por error',
+        [EncounterStatus.Unknown]: 'Desconocido',
+      },
+      [LanguageCodes.FR]: {
+        [EncounterStatus.Planned]: 'Planifié',
+        [EncounterStatus.Arrived]: 'Arrivé',
+        [EncounterStatus.Triaged]: 'Trié',
+        [EncounterStatus.InProgress]: 'En cours',
+        [EncounterStatus.OnLeave]: 'En congé',
+        [EncounterStatus.Finished]: 'Terminé',
+        [EncounterStatus.Cancelled]: 'Annulé',
+        [EncounterStatus.EnteredInError]: 'Saisi par erreur',
+        [EncounterStatus.Unknown]: 'Inconnu',
+      },
+      [LanguageCodes.JA]: {
+        [EncounterStatus.Planned]: '計画済み',
+        [EncounterStatus.Arrived]: '到着',
+        [EncounterStatus.Triaged]: 'トリアージ済み',
+        [EncounterStatus.InProgress]: '進行中',
+        [EncounterStatus.OnLeave]: '外出中',
+        [EncounterStatus.Finished]: '終了',
+        [EncounterStatus.Cancelled]: '取消済み',
+        [EncounterStatus.EnteredInError]: '誤入力',
+        [EncounterStatus.Unknown]: '不明',
+      },
+      [LanguageCodes.UK]: {
+        [EncounterStatus.Planned]: 'Запланований',
+        [EncounterStatus.Arrived]: 'Прибув',
+        [EncounterStatus.Triaged]: 'Тріажований',
+        [EncounterStatus.InProgress]: 'В процесі',
+        [EncounterStatus.OnLeave]: 'У відпустці',
+        [EncounterStatus.Finished]: 'Завершений',
+        [EncounterStatus.Cancelled]: 'Скасований',
+        [EncounterStatus.EnteredInError]: 'Помилково введений',
+        [EncounterStatus.Unknown]: 'Невідомий',
+      },
+      [LanguageCodes.ZH_CN]: {
+        [EncounterStatus.Planned]: '已计划',
+        [EncounterStatus.Arrived]: '已到达',
+        [EncounterStatus.Triaged]: '已分诊',
+        [EncounterStatus.InProgress]: '进行中',
+        [EncounterStatus.OnLeave]: '请假中',
+        [EncounterStatus.Finished]: '已结束',
+        [EncounterStatus.Cancelled]: '已取消',
+        [EncounterStatus.EnteredInError]: '误录入',
+        [EncounterStatus.Unknown]: '未知',
+      },
+    },
+    'EncounterStatus',
+  );

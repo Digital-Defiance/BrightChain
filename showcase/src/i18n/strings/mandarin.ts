@@ -15,6 +15,7 @@ export const ShowcaseMandarinStrings: Partial<
   [ShowcaseStrings.Common_PrivacyParticipationPower]: '隐私。参与。力量。',
 
   [ShowcaseStrings.Date_BrightDateTemplate]: 'BD {BD}',
+  [ShowcaseStrings.Date_BrightDate_UTC_With_Benefits]: 'UTC 增强版',
 
   // ── DatePage ──
   [ShowcaseStrings.DatePage_Title]: '日期与时间',

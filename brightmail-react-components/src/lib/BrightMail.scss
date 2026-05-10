@@ -1,0 +1,13 @@
+$brightchain-chainlight: #46b6fd;
+$brightchain-chaindark: #0a60d0;
+
+.brightMailMenuLabel {
+    font-family: 'Inter', sans-serif !important;
+    font-weight: 700 !important;
+}
+.brightChainLight {
+    color: $brightchain-chainlight;
+}
+.brightChainDark {
+    color: $brightchain-chaindark;
+}

@@ -12,7 +12,7 @@ test.describe('Auth Pages Render', () => {
   test('register page renders registration form', async ({ page }) => {
     await page.goto('/register');
     await expect(
-      page.getByRole('heading', { name: /register/i }),
+      page.getByRole('heading', { name: 'Register', exact: true }),
     ).toBeVisible();
     await expect(page.locator('#username')).toBeVisible();
     await expect(page.locator('#email')).toBeVisible();

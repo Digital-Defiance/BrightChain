@@ -16,6 +16,7 @@ export const ShowcaseFrenchStrings: Partial<
     'Confidentialité. Participation. Pouvoir.',
 
   [ShowcaseStrings.Date_BrightDateTemplate]: 'BD {BD}',
+  [ShowcaseStrings.Date_BrightDate_UTC_With_Benefits]: 'UTC avec avantages',
 
   // ── DatePage ──
   [ShowcaseStrings.DatePage_Title]: 'Date et heure',

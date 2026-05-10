@@ -14,6 +14,7 @@ export const ShowcaseAmericanEnglishStrings: ComponentStrings<ShowcaseStringKey>
       'Privacy. Participation. Power.',
 
     [ShowcaseStrings.Date_BrightDateTemplate]: 'BD {BD}',
+    [ShowcaseStrings.Date_BrightDate_UTC_With_Benefits]: 'UTC With Benefits',
 
     // ── DatePage ──
     [ShowcaseStrings.DatePage_Title]: 'Date & Time',

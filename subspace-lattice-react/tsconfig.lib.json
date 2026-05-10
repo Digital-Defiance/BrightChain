@@ -1,0 +1,19 @@
+{
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    "module": "esnext",
+    "moduleResolution": "node",
+    "jsx": "react-jsx",
+    "declaration": true,
+    "sourceMap": true,
+    "outDir": "../dist/subspace-lattice-react",
+    "rootDirs": [
+      "src",
+      "../subspace-lattice/src"
+    ],
+    "strict": true,
+    "allowSyntheticDefaultImports": true
+  },
+  "include": ["src/**/*.ts", "src/**/*.js", "src/**/*.tsx", "src/**/*.jsx"],
+  "exclude": ["**/*.spec.ts", "**/*.spec.js", "**/*.spec.tsx", "**/*.spec.jsx"]
+}

@@ -39,6 +39,9 @@
     },
     {
       "path": "../digitalburnbag-lib"
+    },
+    {
+      "path": "../subspace-lattice/tsconfig.lib.json"
     }
   ]
 }

@@ -16,6 +16,7 @@ export const ShowcaseJapaneseStrings: Partial<
     'プライバシー。参加。力。',
 
   [ShowcaseStrings.Date_BrightDateTemplate]: 'BD {BD}',
+  [ShowcaseStrings.Date_BrightDate_UTC_With_Benefits]: 'UTC（特典付き）',
 
   // ── DatePage ──
   [ShowcaseStrings.DatePage_Title]: '日付と時刻',

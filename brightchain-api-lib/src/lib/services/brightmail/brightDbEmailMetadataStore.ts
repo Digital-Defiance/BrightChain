@@ -282,7 +282,12 @@ export class BrightDbEmailMetadataStore implements IEmailMetadataStore {
         cleanUpdate[k] = v;
       }
     }
-    await this.emailCollection.updateOne(
+    // Use updateMany — sendEmail stores a sender copy (folder='sent') and a
+    // per-recipient copy (folder='inbox') under the SAME messageId. Read
+    // receipts and other per-message metadata must apply to all copies so
+    // the inbox query (which returns the recipient copy) reflects the
+    // updated state. Mirrors the deleteMany behaviour in `delete`.
+    await this.emailCollection.updateMany(
       { messageId } as Partial<EmailDocument>,
       cleanUpdate as Partial<EmailDocument>,
     );
@@ -307,18 +312,25 @@ export class BrightDbEmailMetadataStore implements IEmailMetadataStore {
       this.isRecipient(email, resolvedEmail),
     );
 
-    // 1b. Deduplicate by messageId — sendEmail stores a sender copy and a
-    //     per-recipient copy with the same messageId but different blockId.
-    //     Without dedup the inbox shows the same email twice.
+    // 2. Apply filters (must run BEFORE messageId dedup — sendEmail stores
+    //    a sender copy (folder='sent') and a per-recipient copy
+    //    (folder='inbox') with the SAME messageId. Both pass isRecipient
+    //    for self-emails (and both live in the same collection on a single
+    //    node). If we dedup first, an arbitrary copy survives and the
+    //    folder filter then excludes the wrong one, leaving the inbox
+    //    empty. Folder-filtering first ensures only the copy matching
+    //    the requested folder survives for dedup.)
+    results = this.applyFilters(results, query, userId);
+
+    // 2b. Deduplicate by messageId — defensive: after folder filtering
+    //     there should be at most one copy per messageId per folder, but
+    //     keep dedup to guard against edge cases (e.g. BCC self-copy).
     const seen = new Set<string>();
     results = results.filter((email) => {
       if (seen.has(email.messageId)) return false;
       seen.add(email.messageId);
       return true;
     });
-
-    // 2. Apply filters
-    results = this.applyFilters(results, query, userId);
 
     // Count unread among filtered results
     const readKeys = await this.getReadKeysForUser(userId);
@@ -351,15 +363,22 @@ export class BrightDbEmailMetadataStore implements IEmailMetadataStore {
     const allEmails = (allDocs ?? []).map((d) => deserializeEmail(d));
     const readKeys = await this.getReadKeysForUser(userId);
 
+    // Filter to inbox-folder copies that the user is a recipient of BEFORE
+    // deduping by messageId. sendEmail stores both a sender copy
+    // (folder='sent') and a recipient copy (folder='inbox') with the same
+    // messageId; deduping first would arbitrarily drop the inbox copy.
+    const inboxEmails = allEmails.filter(
+      (email) =>
+        (email.folder ?? 'inbox') === 'inbox' &&
+        this.isRecipient(email, resolvedEmail),
+    );
+
     const seen = new Set<string>();
     let count = 0;
-    for (const email of allEmails) {
+    for (const email of inboxEmails) {
       if (seen.has(email.messageId)) continue;
       seen.add(email.messageId);
-      if (
-        this.isRecipient(email, resolvedEmail) &&
-        !readKeys.has(this.readKey(email.messageId, userId))
-      ) {
+      if (!readKeys.has(this.readKey(email.messageId, userId))) {
         count++;
       }
     }

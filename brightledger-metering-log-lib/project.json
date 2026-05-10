@@ -1,0 +1,56 @@
+{
+  "name": "brightledger-metering-log-lib",
+  "$schema": "../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "brightledger-metering-log-lib/src",
+  "projectType": "library",
+  "tags": [
+    "type:lib",
+    "scope:node-only",
+    "scope:brightledger"
+  ],
+  "implicitDependencies": [
+    "brightchain-lib"
+  ],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "outputPath": "dist/brightledger-metering-log-lib",
+        "main": "brightledger-metering-log-lib/src/index.ts",
+        "tsConfig": "brightledger-metering-log-lib/tsconfig.lib.json",
+        "assets": [
+          {
+            "input": "brightledger-metering-log-lib",
+            "glob": "*.md",
+            "output": "."
+          },
+          {
+            "input": "brightledger-metering-log-lib",
+            "glob": "package.json",
+            "output": "."
+          }
+        ]
+      },
+      "configurations": {
+        "development": {},
+        "production": {}
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": [
+        "{workspaceRoot}/coverage/{projectRoot}"
+      ],
+      "options": {
+        "jestConfig": "brightledger-metering-log-lib/jest.config.ts",
+        "passWithNoTests": true
+      }
+    }
+  }
+}

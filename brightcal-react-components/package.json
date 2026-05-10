@@ -1,0 +1,44 @@
+{
+  "name": "@brightchain/brightcal-react-components",
+  "version": "0.32.1",
+  "description": "BrightCal React UI components for BrightChain shared calendar interface",
+  "main": "src/index.js",
+  "types": "src/index.d.ts",
+  "files": [
+    "src",
+    "README.md"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Digital-Defiance/BrightChain.git",
+    "directory": "brightcal-react-components"
+  },
+  "homepage": "https://github.com/Digital-Defiance/BrightChain#readme",
+  "bugs": {
+    "url": "https://github.com/Digital-Defiance/BrightChain/issues"
+  },
+  "keywords": [
+    "brightchain",
+    "brightcal",
+    "calendar",
+    "react",
+    "components"
+  ],
+  "author": "Digital Defiance",
+  "license": "MIT",
+  "peerDependencies": {
+    "@brightchain/brightcal-lib": "^0.32.1",
+    "@brightchain/brightchain-lib": "^0.32.1",
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0"
+  },
+  "dependencies": {
+    "tslib": "^2.3.0"
+  },
+  "scripts": {
+    "build": "npx nx build brightcal-react-components",
+    "build:prod": "npx nx build brightcal-react-components --configuration=production",
+    "test": "npx nx test brightcal-react-components",
+    "lint": "npx nx lint brightcal-react-components"
+  }
+}

@@ -199,7 +199,7 @@ test.describe('EJS Splash Page — SPA Fallthrough', () => {
 
     // React router should handle /register
     await expect(
-      page.getByRole('heading', { name: /register/i }),
+      page.getByRole('heading', { name: 'Register', exact: true }),
     ).toBeVisible();
   });
 

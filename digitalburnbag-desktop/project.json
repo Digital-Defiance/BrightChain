@@ -1,0 +1,60 @@
+{
+  "name": "digitalburnbag-desktop",
+  "sourceRoot": "digitalburnbag-desktop/src",
+  "projectType": "application",
+  "tags": [
+    "type:app",
+    "scope:desktop"
+  ],
+  "implicitDependencies": [
+    "brightchain-lib",
+    "digitalburnbag-lib",
+    "digitalburnbag-sync-client"
+  ],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "outputPath": "dist/digitalburnbag-desktop",
+        "main": "digitalburnbag-desktop/src/index.ts",
+        "tsConfig": "digitalburnbag-desktop/tsconfig.lib.json",
+        "assets": [
+          {
+            "input": "digitalburnbag-desktop",
+            "glob": "*.md",
+            "output": "."
+          },
+          {
+            "input": "digitalburnbag-desktop",
+            "glob": "package.json",
+            "output": "."
+          }
+        ]
+      },
+      "dependsOn": [
+        "^build"
+      ],
+      "configurations": {
+        "development": {},
+        "production": {}
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": [
+        "{workspaceRoot}/coverage/{projectRoot}"
+      ],
+      "options": {
+        "jestConfig": "digitalburnbag-desktop/jest.config.cts",
+        "passWithNoTests": true
+      },
+      "cache": true
+    }
+  }
+}

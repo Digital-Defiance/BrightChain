@@ -46,7 +46,7 @@ describe('Joule resource-credit E2E', () => {
 
   describe('Rate table', () => {
     it('GET /joule/rate-table returns a valid rate table', async () => {
-      const res: AxiosResponse = await axios.get('/joule/rate-table', {
+      const res: AxiosResponse = await axios.get('/api/joule/rate-table', {
         headers: memberHeaders(),
         validateStatus: () => true,
       });
@@ -75,10 +75,13 @@ describe('Joule resource-credit E2E', () => {
     });
 
     it('GET /joule/rate-table/history returns an array', async () => {
-      const res: AxiosResponse = await axios.get('/joule/rate-table/history', {
-        headers: memberHeaders(),
-        validateStatus: () => true,
-      });
+      const res: AxiosResponse = await axios.get(
+        '/api/joule/rate-table/history',
+        {
+          headers: memberHeaders(),
+          validateStatus: () => true,
+        },
+      );
 
       if (res.status === 404 || res.status === 503) return;
 
@@ -98,7 +101,7 @@ describe('Joule resource-credit E2E', () => {
       };
 
       const res: AxiosResponse = await axios.post(
-        '/operator/joule/grant',
+        '/api/operator/joule/grant',
         body,
         {
           headers: operatorHeaders(),
@@ -124,7 +127,7 @@ describe('Joule resource-credit E2E', () => {
       };
 
       const res: AxiosResponse = await axios.post(
-        '/operator/joule/rate-table',
+        '/api/operator/joule/rate-table',
         body,
         {
           headers: operatorHeaders(),
@@ -144,7 +147,7 @@ describe('Joule resource-credit E2E', () => {
 
   describe('Member Joule endpoints', () => {
     it('GET /me/joule/balance returns bigint string fields', async () => {
-      const res: AxiosResponse = await axios.get('/me/joule/balance', {
+      const res: AxiosResponse = await axios.get('/api/me/joule/balance', {
         headers: memberHeaders(),
         validateStatus: () => true,
       });
@@ -170,7 +173,7 @@ describe('Joule resource-credit E2E', () => {
 
     it('GET /me/joule/consumption returns array with bigint amounts', async () => {
       const res: AxiosResponse = await axios.get(
-        '/me/joule/consumption?window=86400000',
+        '/api/me/joule/consumption?window=86400000',
         {
           headers: memberHeaders(),
           validateStatus: () => true,
@@ -193,7 +196,7 @@ describe('Joule resource-credit E2E', () => {
     });
 
     it('GET /me/joule/events returns array', async () => {
-      const res: AxiosResponse = await axios.get('/me/joule/events', {
+      const res: AxiosResponse = await axios.get('/api/me/joule/events', {
         headers: memberHeaders(),
         validateStatus: () => true,
       });
@@ -206,7 +209,7 @@ describe('Joule resource-credit E2E', () => {
     });
 
     it('GET /me/joule/reservations returns array', async () => {
-      const res: AxiosResponse = await axios.get('/me/joule/reservations', {
+      const res: AxiosResponse = await axios.get('/api/me/joule/reservations', {
         headers: memberHeaders(),
         validateStatus: () => true,
       });
@@ -219,7 +222,7 @@ describe('Joule resource-credit E2E', () => {
     });
 
     it('GET /me/joule/disputes returns array', async () => {
-      const res: AxiosResponse = await axios.get('/me/joule/disputes', {
+      const res: AxiosResponse = await axios.get('/api/me/joule/disputes', {
         headers: memberHeaders(),
         validateStatus: () => true,
       });

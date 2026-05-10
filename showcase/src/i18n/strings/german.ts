@@ -16,6 +16,7 @@ export const ShowcaseGermanStrings: Partial<
     'Privatsphäre. Teilhabe. Macht.',
 
   [ShowcaseStrings.Date_BrightDateTemplate]: 'BD {BD}',
+  [ShowcaseStrings.Date_BrightDate_UTC_With_Benefits]: 'UTC mit Vorteilen',
 
   // ── DatePage ──
   [ShowcaseStrings.DatePage_Title]: 'Datum und Uhrzeit',

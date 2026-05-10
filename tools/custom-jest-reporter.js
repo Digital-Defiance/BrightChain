@@ -2,6 +2,14 @@ const fs = require('fs');
 const path = require('path');
 const os = require('os');
 
+// Strip ANSI escape codes so log files contain plain text.
+// eslint-disable-next-line no-control-regex
+const ANSI_RE =
+  /[\x1b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><~]/g;
+function stripAnsi(str) {
+  return typeof str === 'string' ? str.replace(ANSI_RE, '') : '';
+}
+
 // Shared progress file written by all parallel Jest processes,
 // read by tools/scripts/test-with-progress.mjs for live ETA.
 // Location: $BRIGHTCHAIN_PROGRESS_FILE env var, or a fixed tmp path.
@@ -48,17 +56,22 @@ class CustomReporter {
    * @param {import('@jest/types').TestResult.AssertionResult} testCaseResult
    */
   onTestCaseResult(test, testCaseResult) {
+    const failed = testCaseResult.status === 'failed';
     emit({
       event: 'test_case',
       ts: Date.now(),
-      status: testCaseResult.status,           // 'passed' | 'failed' | 'skipped' | 'todo'
-      duration: testCaseResult.duration ?? 0,  // ms
+      status: testCaseResult.status, // 'passed' | 'failed' | 'skipped' | 'todo'
+      duration: testCaseResult.duration ?? 0, // ms
       fullName: testCaseResult.fullName,
       ancestorTitles: testCaseResult.ancestorTitles,
       suitePath: test.path,
-      // First failure message only (keep lines small)
-      failureMsg: testCaseResult.status === 'failed'
-        ? (testCaseResult.failureMessages[0] || '').split('\n')[0]
+      // First line of first message — kept short for the live progress display.
+      failureMsg: failed
+        ? stripAnsi((testCaseResult.failureMessages[0] || '').split('\n')[0])
+        : undefined,
+      // All lines of all messages, ANSI-stripped — written verbatim to the log file.
+      failureMessages: failed
+        ? testCaseResult.failureMessages.map(stripAnsi)
         : undefined,
     });
   }
@@ -73,16 +86,20 @@ class CustomReporter {
       event: 'suite_done',
       ts: Date.now(),
       suitePath: test.path,
-      suitePass: testResult.testResults.filter(t => t.status === 'passed').length,
-      suiteFail: testResult.testResults.filter(t => t.status === 'failed').length,
-      suiteSkip: testResult.testResults.filter(t => t.status === 'skipped' || t.status === 'todo').length,
+      suitePass: testResult.testResults.filter((t) => t.status === 'passed')
+        .length,
+      suiteFail: testResult.testResults.filter((t) => t.status === 'failed')
+        .length,
+      suiteSkip: testResult.testResults.filter(
+        (t) => t.status === 'skipped' || t.status === 'todo',
+      ).length,
       // Jest's own running aggregate across all suites this process has seen
-      aggPassedTests:  aggregatedResult.numPassedTests,
-      aggFailedTests:  aggregatedResult.numFailedTests,
-      aggTotalTests:   aggregatedResult.numTotalTests,
+      aggPassedTests: aggregatedResult.numPassedTests,
+      aggFailedTests: aggregatedResult.numFailedTests,
+      aggTotalTests: aggregatedResult.numTotalTests,
       aggPassedSuites: aggregatedResult.numPassedTestSuites,
       aggFailedSuites: aggregatedResult.numFailedTestSuites,
-      aggTotalSuites:  aggregatedResult.numTotalTestSuites,
+      aggTotalSuites: aggregatedResult.numTotalTestSuites,
     });
   }
 

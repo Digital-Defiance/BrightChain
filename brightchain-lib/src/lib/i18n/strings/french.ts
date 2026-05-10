@@ -1678,6 +1678,13 @@ export const FrenchStrings: ComponentStrings<BrightChainStringKey> = {
     'Êtes-vous sûr de vouloir supprimer le bloc {BLOCK_ID} ? Cela supprimera également les blocs de parité associés du stockage local.',
   [BrightChainStrings.Admin_Blocks_SizeBytesTemplate]: '{SIZE} octets',
 
+  [BrightChainStrings.Games_Menu_Title]: 'Jeux',
+  [BrightChainStrings.Subspace_Lattice]: 'Treillis Subspatial',
+  [BrightChainStrings.Subspace]: 'Subspatial',
+  [BrightChainStrings.Lattice]: 'Treillis',
+  [BrightChainStrings.Subspace_Lattice_Description]:
+    'Une fusion stratégique entre contrôle de territoire et manœuvres tactiques où les joueurs projettent des réseaux de capteurs pour revendiquer l’espace souverain. Établissez des lignes de ravitaillement à grande vitesse et des flottes capables de distorsion pour déjouer votre adversaire et dominer le secteur.',
+
   // Public Block Explorer
   [BrightChainStrings.Explorer_Menu_Title]: 'Explorateur de blocs',
   [BrightChainStrings.Explorer_Title]: 'Explorateur de blocs',
@@ -1921,6 +1928,7 @@ export const FrenchStrings: ComponentStrings<BrightChainStringKey> = {
     'Service de limitation de débit indisponible. Requête refusée.',
 
   [BrightChainStrings.Date_BrightDateTemplate]: 'BD {BD}',
+  [BrightChainStrings.Date_BrightDate_UTC_With_Benefits]: 'UTC avec avantages',
 
   // ── DatePage ──
   [BrightChainStrings.DatePage_Title]: 'Date et heure',

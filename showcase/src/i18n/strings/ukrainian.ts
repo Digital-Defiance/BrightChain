@@ -16,6 +16,7 @@ export const ShowcaseUkrainianStrings: Partial<
     'Приватність. Участь. Сила.',
 
   [ShowcaseStrings.Date_BrightDateTemplate]: 'BD {BD}',
+  [ShowcaseStrings.Date_BrightDate_UTC_With_Benefits]: 'UTC з перевагами',
 
   // ── DatePage ──
   [ShowcaseStrings.DatePage_Title]: 'Дата та час',

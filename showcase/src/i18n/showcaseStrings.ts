@@ -15,6 +15,7 @@ export const ShowcaseStrings = createI18nStringKeys(ShowcaseComponentId, {
   Common_PrivacyParticipationPower: 'Common_PrivacyParticipationPower',
 
   Date_BrightDateTemplate: 'Date_BrightDateTemplate',
+  Date_BrightDate_UTC_With_Benefits: 'Date_BrightDate_UTC_With_Benefits',
 
   // ── DatePage ──
   DatePage_Title: 'DatePage_Title',

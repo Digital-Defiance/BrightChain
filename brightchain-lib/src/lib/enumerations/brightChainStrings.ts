@@ -1499,6 +1499,13 @@ const _brightChainKeys = {
   Admin_Blocks_DeleteConfirmTemplate: 'Admin_Blocks_DeleteConfirmTemplate',
   Admin_Blocks_SizeBytesTemplate: 'Admin_Blocks_SizeBytesTemplate',
 
+  // Games
+  Games_Menu_Title: 'Games_Menu_Title',
+  Subspace_Lattice: 'Subspace_Lattice',
+  Subspace: 'Subspace',
+  Lattice: 'Lattice',
+  Subspace_Lattice_Description: 'Subspace_Lattice_Description',
+
   // Public Block Explorer
   Explorer_Menu_Title: 'Explorer_Menu_Title',
   Explorer_Title: 'Explorer_Title',
@@ -1677,7 +1684,8 @@ const _brightChainKeys = {
   Friends_Unauthenticated: 'Friends_Unauthenticated',
 
   // PoUW (Proof of Useful Work) Errors
-  Error_PoUW_WorkUnit_InvalidJSONTemplate: 'Error_PoUW_WorkUnit_InvalidJSONTemplate',
+  Error_PoUW_WorkUnit_InvalidJSONTemplate:
+    'Error_PoUW_WorkUnit_InvalidJSONTemplate',
   Error_PoUW_WorkUnit_ExpectedObject: 'Error_PoUW_WorkUnit_ExpectedObject',
   Error_PoUW_WorkUnit_MissingFieldTemplate:
     'Error_PoUW_WorkUnit_MissingFieldTemplate',
@@ -1687,7 +1695,8 @@ const _brightChainKeys = {
     'Error_PoUW_WorkUnit_InvalidOperationTemplate',
   Error_PoUW_WorkUnit_InvalidDifficultyTemplate:
     'Error_PoUW_WorkUnit_InvalidDifficultyTemplate',
-  Error_PoUW_WorkResult_InvalidJSONTemplate: 'Error_PoUW_WorkResult_InvalidJSONTemplate',
+  Error_PoUW_WorkResult_InvalidJSONTemplate:
+    'Error_PoUW_WorkResult_InvalidJSONTemplate',
   Error_PoUW_WorkResult_ExpectedObject: 'Error_PoUW_WorkResult_ExpectedObject',
   Error_PoUW_WorkResult_MissingFieldTemplate:
     'Error_PoUW_WorkResult_MissingFieldTemplate',
@@ -1716,6 +1725,7 @@ const _brightChainKeys = {
     'Error_PoUW_Middleware_RateLimitDenied',
 
   Date_BrightDateTemplate: 'Date_BrightDateTemplate',
+  Date_BrightDate_UTC_With_Benefits: 'Date_BrightDate_UTC_With_Benefts',
 
   // ── DatePage ──
   DatePage_Title: 'DatePage_Title',

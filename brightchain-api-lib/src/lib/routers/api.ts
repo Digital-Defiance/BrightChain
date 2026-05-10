@@ -87,6 +87,7 @@ import { MessagesController } from '../controllers/api/messages';
 import { NodesController } from '../controllers/api/nodes';
 import { SCBLController } from '../controllers/api/scbl';
 import { ServerController } from '../controllers/api/servers';
+import { SubspaceLatticeController } from '../controllers/api/subspaceLatticeController';
 import { SyncController } from '../controllers/api/sync';
 import { TempUploadController } from '../controllers/api/tempUploadController';
 import { UnifiedNotificationController } from '../controllers/api/unifiedNotifications';
@@ -161,6 +162,7 @@ export class ApiRouter<
   private readonly jouleOperatorController: JouleOperatorController<TID>;
   private readonly brightchartRouter: BrightChartRouter<TID>;
   private readonly tempUploadController: TempUploadController<TID>;
+  private readonly subspaceLatticeController: SubspaceLatticeController<TID>;
   private readonly stagingService: StagingService;
   private readonly stagingCleanupScheduler: StagingCleanupScheduler;
   private introspectionController: IntrospectionController<TID> | null = null;
@@ -205,6 +207,7 @@ export class ApiRouter<
     this.serverController = new ServerController(application);
     this.syncController = new SyncController(application);
     this.userSearchController = new UserSearchController(application);
+    this.subspaceLatticeController = new SubspaceLatticeController(application);
 
     // BrightHub controllers
     this.brightHubPostController = new BrightHubPostController(application);
@@ -321,6 +324,7 @@ export class ApiRouter<
 
     this.router.use('/temp-upload', this.tempUploadController.router);
     this.router.use('/identity', this.identityController.router);
+    this.router.use('/game', this.subspaceLatticeController.router);
 
     if (
       application.environment.enabledFeatures.some(
@@ -553,6 +557,7 @@ export class ApiRouter<
    */
   public setMessagePassingService(service: MessagePassingService): void {
     this.messagesController.setMessageService(service);
+    this.subspaceLatticeController.setMessagePassingService(service);
   }
 
   /**
@@ -628,6 +633,7 @@ export class ApiRouter<
    */
   public setSyncEventSystem(eventSystem: EventNotificationSystem): void {
     this.syncController.setEventSystem(eventSystem);
+    this.subspaceLatticeController.setEventSystem(eventSystem);
   }
 
   /**

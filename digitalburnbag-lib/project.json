@@ -1,0 +1,46 @@
+{
+  "name": "digitalburnbag-lib",
+  "sourceRoot": "digitalburnbag-lib/src",
+  "projectType": "library",
+  "tags": ["type:lib", "scope:shared"],
+  "implicitDependencies": ["brightchain-lib"],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/digitalburnbag-lib",
+        "main": "digitalburnbag-lib/src/index.ts",
+        "tsConfig": "digitalburnbag-lib/tsconfig.lib.json",
+        "assets": [
+          {
+            "input": "digitalburnbag-lib",
+            "glob": "*.md",
+            "output": "."
+          }
+        ]
+      },
+      "configurations": {
+        "development": {},
+        "production": {}
+      }
+    },
+    "publish": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npm publish --access public",
+        "cwd": "dist/digitalburnbag-lib"
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "digitalburnbag-lib/jest.config.cts"
+      }
+    }
+  }
+}

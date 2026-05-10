@@ -44,14 +44,18 @@ import {
   type IContentType,
   type IMimePart,
 } from '../../interfaces/messaging/mimePart';
+import type { BrightDateTimestamp } from '../../types/brightDateTimestamp';
+import {
+  brightDateNow,
+  brightDateToDate,
+  normalizeToBrightDate,
+} from '../../utils/brightDateConversions';
 import { EmailEncryptionService } from './emailEncryptionService';
 import {
   EmailValidator,
   type IEmailInput as IValidatorEmailInput,
 } from './emailValidator';
 import type { MessageCBLService } from './messageCBLService';
-import { brightDateNow, normalizeToBrightDate, brightDateToDate } from '../../utils/brightDateConversions';
-import type { BrightDateTimestamp } from '../../types/brightDateTimestamp';
 
 // ─── Configuration Interface ────────────────────────────────────────────────
 
@@ -719,7 +723,8 @@ export class EmailMessageService {
   async sendEmail(email: IEmailInput): Promise<ISendEmailResult> {
     // 1. Auto-generate required headers if missing
     const messageId = email.messageId ?? this.generateMessageId();
-    const date = email.date != null ? normalizeToBrightDate(email.date) : brightDateNow();
+    const date =
+      email.date != null ? normalizeToBrightDate(email.date) : brightDateNow();
 
     // 2. Adapt service IEmailInput to validator's IEmailInput and validate
     const validatorInput: IValidatorEmailInput = {
@@ -1157,6 +1162,8 @@ export class EmailMessageService {
           this.partitionRecipients(toCcMailboxes);
 
         const toCcMetadata = this.createBccStrippedCopy(metadata);
+        // Recipients receive the email in their inbox, not sent folder.
+        toCcMetadata.folder = 'inbox';
         await this.metadataStore.store(toCcMetadata);
 
         // Deliver to internal To/CC recipients via gossip
@@ -1197,6 +1204,8 @@ export class EmailMessageService {
       if (email.bcc && email.bcc.length > 0) {
         for (const bccMailbox of email.bcc) {
           const bccCopy = this.createBccRecipientCopy(metadata, bccMailbox);
+          // BCC recipients receive the email in their inbox, not sent folder.
+          bccCopy.folder = 'inbox';
           await this.metadataStore.store(bccCopy);
 
           if (this.isExternalMailbox(bccMailbox)) {
@@ -1270,7 +1279,8 @@ export class EmailMessageService {
    */
   async receiveEmail(email: IEmailInput): Promise<ISendEmailResult> {
     const messageId = email.messageId ?? this.generateMessageId();
-    const date = email.date != null ? normalizeToBrightDate(email.date) : brightDateNow();
+    const date =
+      email.date != null ? normalizeToBrightDate(email.date) : brightDateNow();
     const brightchainMessageId = this.generateMessageId();
     const now = brightDateNow();
 

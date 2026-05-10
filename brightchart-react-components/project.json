@@ -1,0 +1,48 @@
+{
+  "name": "brightchart-react-components",
+  "$schema": "../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "brightchart-react-components/src",
+  "implicitDependencies": ["brightchart-lib"],
+  "projectType": "library",
+  "release": {
+    "version": {
+      "manifestRootsToUpdate": ["dist/{projectRoot}"],
+      "currentVersionResolver": "git-tag",
+      "fallbackCurrentVersionResolver": "disk"
+    }
+  },
+  "tags": ["type:lib"],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/brightchart-react-components",
+        "main": "brightchart-react-components/src/index.ts",
+        "tsConfig": "brightchart-react-components/tsconfig.lib.json",
+        "assets": ["brightchart-react-components/*.md"]
+      },
+      "configurations": {
+        "development": {},
+        "production": {}
+      }
+    },
+    "publish": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npm publish --access public",
+        "cwd": "dist/brightchart-react-components"
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "brightchart-react-components/jest.config.cts"
+      }
+    }
+  }
+}

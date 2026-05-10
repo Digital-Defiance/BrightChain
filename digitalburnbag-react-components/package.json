@@ -1,0 +1,39 @@
+{
+  "name": "@brightchain/digitalburnbag-react-components",
+  "version": "0.32.1",
+  "description": "React components for the Digital Burnbag module",
+  "main": "./index.js",
+  "module": "./index.mjs",
+  "types": "./index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "import": "./index.mjs",
+      "require": "./index.js"
+    }
+  },
+  "peerDependencies": {
+    "@awesome.me/kit-a20d532681": "^1.0.23",
+    "@brightchain/brightchain-lib": "^0.32.1",
+    "@emotion/react": ">=11.0.0",
+    "@emotion/styled": ">=11.0.0",
+    "@fortawesome/fontawesome-svg-core": "^7.2.0",
+    "@fortawesome/react-fontawesome": "^3.2.0",
+    "@mui/material": ">=5.0.0",
+    "react": ">=18.0.0",
+    "react-dom": ">=18.0.0",
+    "recharts": ">=2.0.0"
+  },
+  "keywords": [
+    "digitalburnbag",
+    "brightchain",
+    "react-components"
+  ],
+  "scripts": {
+    "build": "npx nx build digitalburnbag-react-components",
+    "test": "npx nx test digitalburnbag-react-components",
+    "lint": "npx nx lint digitalburnbag-react-components",
+    "build:dev": "npx nx build digitalburnbag-react-components --configuration=development",
+    "build:prod": "npx nx build digitalburnbag-react-components --configuration=production"
+  }
+}

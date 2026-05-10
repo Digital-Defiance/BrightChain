@@ -1,0 +1,65 @@
+{
+  "name": "@brightchain/brightmail-react-components",
+  "version": "0.32.1",
+  "description": "BrightMail React UI components for BrightChain email interface",
+  "main": "src/index.js",
+  "types": "src/index.d.ts",
+  "files": [
+    "src",
+    "README.md"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Digital-Defiance/BrightChain.git",
+    "directory": "brightmail-react-components"
+  },
+  "homepage": "https://github.com/Digital-Defiance/BrightChain#readme",
+  "bugs": {
+    "url": "https://github.com/Digital-Defiance/BrightChain/issues"
+  },
+  "keywords": [
+    "brightchain",
+    "brightmail",
+    "email",
+    "react",
+    "components"
+  ],
+  "author": "Digital Defiance",
+  "license": "MIT",
+  "peerDependencies": {
+    "@brightchain/brightchain-lib": "^0.32.1",
+    "@brightchain/brightdate": "^0.32.3",
+    "@brightchain/brightmail-lib": "^0.32.1",
+    "@digitaldefiance/express-suite-react-components": "4.29.1",
+    "@mui/icons-material": "*",
+    "@mui/material": "*",
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0",
+    "react-router-dom": "^6.0.0"
+  },
+  "dependencies": {
+    "@awesome.me/kit-a20d532681": "^1.0.23"
+  },
+  "scripts": {
+    "build": "npx nx build brightmail-react-components",
+    "test": "npx nx test brightmail-react-components",
+    "lint": "npx nx lint brightmail-react-components",
+    "build:dev": "npx nx build brightmail-react-components --configuration=development",
+    "build:prod": "npx nx build brightmail-react-components --configuration=production"
+  },
+  "devDependencies": {
+    "@digitaldefiance/express-suite-react-components": "4.29.1",
+    "@mui/icons-material": "^7.3.9",
+    "@mui/material": "^7.3.9",
+    "@tiptap/extension-link": "^3.22.2",
+    "@tiptap/extension-underline": "^3.22.2",
+    "@tiptap/react": "^3.22.2",
+    "@tiptap/starter-kit": "^3.22.2",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "axios": "^1.14.0",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "react-router-dom": "^7.14.0"
+  }
+}

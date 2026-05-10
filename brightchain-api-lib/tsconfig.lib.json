@@ -1,7 +1,10 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "rootDir": "src",
+    "rootDirs": [
+      "src",
+      "../subspace-lattice/src"
+    ],
     "outDir": "../../dist/brightchain-api-lib",
     "declaration": true,
     "declarationMap": true,
@@ -35,6 +38,9 @@
     },
     {
       "path": "../brightchain-identity/tsconfig.lib.json"
+    },
+    {
+      "path": "../subspace-lattice/tsconfig.lib.json"
     }
   ]
 }

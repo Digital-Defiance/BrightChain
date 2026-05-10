@@ -1,8 +1,7 @@
-import { motion } from 'framer-motion';
 import { FC, useEffect, useMemo, useState } from 'react';
 import { useShowcaseI18n } from '../i18n/ShowcaseI18nContext';
 import { ShowcaseStrings } from '../i18n/showcaseStrings';
-import './SloganRotation.css';
+import { HeroBadge } from './HeroBadge';
 
 export const SloganRotation: FC = () => {
   const slogans = useMemo(
@@ -29,14 +28,5 @@ export const SloganRotation: FC = () => {
     return () => clearInterval(intervalId);
   }, [slogans.length]);
 
-  return (
-    <motion.div
-      className="hero-badge-slogan"
-      initial={{ opacity: 0, scale: 0.8 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ delay: 0.1, duration: 0.6 }}
-    >
-      <span className="badge-slogan">{t(slogans[currentIndex])}</span>
-    </motion.div>
-  );
+  return <HeroBadge text={t(slogans[currentIndex])} />;
 };

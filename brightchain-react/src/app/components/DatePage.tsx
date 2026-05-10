@@ -9,7 +9,7 @@ import {
   nowAsBrightDate,
   toBrightDateString,
 } from '@brightchain/brightchain-lib';
-import { BrightDate } from '@brightchain/brightchain-react-components';
+import { BrightDate, HeroBadge } from '@brightchain/brightchain-react-components';
 import { useI18n } from '@digitaldefiance/express-suite-react-components';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
@@ -286,6 +286,10 @@ export const DatePage: FC = () => {
           {t(BrightChainStrings.DatePage_Title)}
         </Typography>
       </Box>
+
+      <HeroBadge
+        text={t(BrightChainStrings.Date_BrightDate_UTC_With_Benefits)}
+      />
 
       {/* BrightDate Hero */}
       <Card

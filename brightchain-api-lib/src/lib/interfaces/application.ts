@@ -30,4 +30,10 @@ export interface IBrightChainApplication<
    * @param controller - Controller instance
    */
   setController(name: string, controller: unknown): void;
+
+  /**
+   * Get the node ID
+   * @returns The node ID
+   */
+  getNodeId(): TID;
 }

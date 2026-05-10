@@ -1,0 +1,74 @@
+.game-layout {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  grid-template-rows: auto 1fr;
+  gap: 20px;
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.game-info {
+  grid-column: 1 / -1;
+  background-color: #1a1a1a;
+  padding: 15px 20px;
+  border-radius: 8px;
+  border: 1px solid #444;
+  color: #eee;
+}
+
+.game-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.game-header h2 {
+  margin: 0;
+  color: #4da6ff;
+}
+
+.rules-btn {
+    background-color: #333;
+    color: #4da6ff;
+    border: 1px solid #4da6ff;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s;
+}
+
+.rules-btn:hover {
+    background-color: #4da6ff;
+    color: #000;
+}
+
+.game-info p {
+  margin: 5px 0;
+  font-size: 14px;
+}
+
+.winner-announcement {
+    color: #0f0 !important;
+    font-size: 18px !important;
+    margin-top: 10px !important;
+    text-transform: uppercase;
+}
+
+.game-main-panel {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  background-color: #111;
+  border-radius: 8px;
+  border: 1px solid #444;
+  padding: 20px;
+  min-height: 600px;
+}
+
+.game-side-panel {
+  display: flex;
+  flex-direction: column;
+}

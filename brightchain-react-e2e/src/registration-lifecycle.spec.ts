@@ -53,7 +53,7 @@ base.describe('Registration Form Submission', () => {
 
       await page.goto('/register');
       await baseExpect(
-        page.getByRole('heading', { name: /register/i }),
+        page.getByRole('heading', { name: 'Register', exact: true }),
       ).toBeVisible({ timeout: 15000 });
 
       // Fill the registration form fields
@@ -118,7 +118,7 @@ base.describe('Registration Form Submission', () => {
 
       await page.goto('/register');
       await baseExpect(
-        page.getByRole('heading', { name: /register/i }),
+        page.getByRole('heading', { name: 'Register', exact: true }),
       ).toBeVisible({ timeout: 15000 });
 
       await page.locator('#username').fill(creds.username);

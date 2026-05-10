@@ -178,6 +178,10 @@ export default defineConfig({
     force: true,
   },
   resolve: {
+    // Prefer .ts source files over compiled .js when resolving within workspace
+    // libraries (e.g. brightchain-lib). Without this, Rollup finds .js (CJS)
+    // files alongside .ts sources and fails to extract named exports.
+    extensions: ['.mts', '.ts', '.tsx', '.mjs', '.js', '.jsx', '.json'],
     // NOTE: @noble/hashes is intentionally NOT deduped.
     // ethereum-cryptography@2.2.1 depends on @noble/hashes@1.4.0 whose _assert
     // has a different API than v1.8.0. We intentionally leave _assert unaliased
@@ -202,9 +206,13 @@ export default defineConfig({
       '@digitaldefiance/i18n-lib',
       '@digitaldefiance/suite-core-lib',
     ],
-    extensions: ['.mjs', '.js', '.mts', '.ts', '.jsx', '.tsx', '.json'],
     alias: {
-      // Local workspace alias - use browser entry point for browser compatibility
+      // Local workspace aliases - use TypeScript source for browser compatibility.
+      // The compiled .js files are CJS and Rollup can't extract named exports from them.
+      '@brightchain/brightdate': resolve(
+        __dirname,
+        '../brightdate/src/index.ts',
+      ),
       '@brightchain/brightchain-lib': resolve(
         __dirname,
         '../brightchain-lib/src/browser.ts',
@@ -218,6 +226,10 @@ export default defineConfig({
       '@brightchain/digitalburnbag-react-components': resolve(
         __dirname,
         '../digitalburnbag-react-components/src/browser.ts',
+      ),
+      '@brightchain/digitalburnbag-lib': resolve(
+        __dirname,
+        '../digitalburnbag-lib/src/index.ts',
       ),
       // Replace js-sha3 with @noble/hashes for browser compatibility
       'js-sha3': resolve(nobleHashesEsmDir, 'sha3.js'),

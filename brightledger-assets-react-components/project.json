@@ -1,0 +1,63 @@
+{
+  "name": "brightledger-assets-react-components",
+  "sourceRoot": "brightledger-assets-react-components/src",
+  "projectType": "library",
+  "tags": [
+    "type:lib",
+    "scope:frontend"
+  ],
+  "implicitDependencies": [
+    "brightledger-assets-lib"
+  ],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/brightledger-assets-react-components",
+        "main": "brightledger-assets-react-components/src/index.ts",
+        "tsConfig": "brightledger-assets-react-components/tsconfig.lib.json",
+        "assets": [
+          {
+            "input": "brightledger-assets-react-components",
+            "glob": "*.md",
+            "output": "."
+          },
+          {
+            "input": "brightledger-assets-react-components/src/lib/styles",
+            "glob": "*.css",
+            "output": "./src/lib/styles"
+          }
+        ]
+      },
+      "configurations": {
+        "development": {},
+        "production": {}
+      }
+    },
+    "publish": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npm publish --access public",
+        "cwd": "dist/brightledger-assets-react-components"
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "brightledger-assets-react-components/jest.config.cts",
+        "passWithNoTests": true
+      },
+      "configurations": {
+        "ci": {
+          "ci": true,
+          "codeCoverage": true
+        }
+      }
+    }
+  }
+}

@@ -15,7 +15,7 @@ test.describe('Navigation', () => {
     await signUpLink.click();
     await expect(page).toHaveURL(/\/register/);
     await expect(
-      page.getByRole('heading', { name: /register/i }),
+      page.getByRole('heading', { name: 'Register', exact: true }),
     ).toBeVisible();
   });
 

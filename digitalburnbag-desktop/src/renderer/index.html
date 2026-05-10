@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'">
+  <title>Digital Burnbag</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; margin: 0; padding: 20px; background: #1a1a2e; color: #e0e0e0; }
+    .container { max-width: 440px; margin: 0 auto; }
+    h1 { font-size: 1.4em; color: #00d4ff; margin-bottom: 4px; }
+    .subtitle { color: #888; font-size: 0.85em; margin-bottom: 24px; }
+    .status-card { background: #16213e; border-radius: 8px; padding: 16px; margin-bottom: 12px; }
+    .status-label { font-size: 0.75em; text-transform: uppercase; color: #666; letter-spacing: 0.5px; }
+    .status-value { font-size: 1.1em; margin-top: 4px; }
+    .online { color: #4caf50; }
+    .offline { color: #f44336; }
+    button { background: #00d4ff; color: #1a1a2e; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 600; margin-right: 8px; margin-top: 8px; }
+    button:hover { background: #00b8d4; }
+    button.secondary { background: #333; color: #ccc; }
+    button.secondary:hover { background: #444; }
+    #log { background: #0f0f23; border-radius: 6px; padding: 12px; font-family: monospace; font-size: 0.8em; max-height: 200px; overflow-y: auto; margin-top: 16px; }
+    .log-entry { margin: 2px 0; color: #888; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Digital Burnbag</h1>
+    <p class="subtitle">Secure file sync client</p>
+
+    <div class="status-card">
+      <div class="status-label">Connection</div>
+      <div class="status-value" id="connection-status">Checking...</div>
+    </div>
+
+    <div class="status-card">
+      <div class="status-label">Sync Status</div>
+      <div class="status-value" id="sync-status">Not started</div>
+    </div>
+
+    <div class="status-card">
+      <div class="status-label">Active Items</div>
+      <div class="status-value" id="active-count">0</div>
+    </div>
+
+    <div>
+      <button id="btn-start">Start Sync</button>
+      <button id="btn-stop" class="secondary">Stop Sync</button>
+    </div>
+
+    <div id="log"></div>
+  </div>
+
+  <script>
+    // The burnbag API is exposed via the preload script
+    const api = window.burnbag;
+
+    function log(msg) {
+      const el = document.getElementById('log');
+      const entry = document.createElement('div');
+      entry.className = 'log-entry';
+      entry.textContent = new Date().toLocaleTimeString() + ' ' + msg;
+      el.prepend(entry);
+    }
+
+    async function refreshState() {
+      try {
+        const state = await api.getSyncState();
+        document.getElementById('sync-status').textContent = state.running ? 'Running' : 'Stopped';
+        document.getElementById('connection-status').textContent = state.online ? 'Online' : 'Offline';
+        document.getElementById('connection-status').className = 'status-value ' + (state.online ? 'online' : 'offline');
+        document.getElementById('active-count').textContent = String(state.activeSyncCount);
+      } catch (e) {
+        document.getElementById('sync-status').textContent = 'Error';
+      }
+    }
+
+    document.getElementById('btn-start').addEventListener('click', async () => {
+      try {
+        await api.startSync();
+        log('Sync started');
+        refreshState();
+      } catch (e) {
+        log('Start failed: ' + e.message);
+      }
+    });
+
+    document.getElementById('btn-stop').addEventListener('click', async () => {
+      try {
+        await api.stopSync();
+        log('Sync stopped');
+        refreshState();
+      } catch (e) {
+        log('Stop failed: ' + e.message);
+      }
+    });
+
+    if (api) {
+      api.onSyncStatusChanged((event) => {
+        log('Status: ' + event.itemId + ' -> ' + event.status);
+        refreshState();
+      });
+    }
+
+    refreshState();
+    setInterval(refreshState, 5000);
+  </script>
+</body>
+</html>

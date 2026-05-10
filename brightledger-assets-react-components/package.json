@@ -1,0 +1,41 @@
+{
+  "name": "@brightchain/brightledger-assets-react-components",
+  "version": "0.32.1",
+  "description": "React UI components for the BrightChain Programmable Asset Ledger",
+  "main": "src/index.js",
+  "types": "src/index.d.ts",
+  "files": [
+    "src",
+    "README.md"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Digital-Defiance/BrightChain.git",
+    "directory": "brightledger-assets-react-components"
+  },
+  "homepage": "https://github.com/Digital-Defiance/BrightChain#readme",
+  "bugs": {
+    "url": "https://github.com/Digital-Defiance/BrightChain/issues"
+  },
+  "keywords": [
+    "brightchain",
+    "brightledger",
+    "assets",
+    "react",
+    "components"
+  ],
+  "author": "Digital Defiance",
+  "license": "MIT",
+  "peerDependencies": {
+    "@brightchain/brightchain-lib": "^0.32.1",
+    "@brightchain/brightledger-assets-lib": "^0.32.1",
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0"
+  },
+  "dependencies": {
+    "tslib": "^2.3.0"
+  },
+  "scripts": {
+    "build:prod": "npx nx build brightledger-assets-react-components --configuration=production"
+  }
+}

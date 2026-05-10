@@ -1,0 +1,42 @@
+{
+  "name": "@brightchain/brightchat-lib",
+  "version": "0.32.1",
+  "description": "BrightChat shared library - request interfaces and types for BrightChain chat",
+  "main": "src/index.js",
+  "types": "src/index.d.ts",
+  "files": [
+    "src",
+    "README.md"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Digital-Defiance/BrightChain.git",
+    "directory": "brightchat-lib"
+  },
+  "homepage": "https://github.com/Digital-Defiance/BrightChain#readme",
+  "bugs": {
+    "url": "https://github.com/Digital-Defiance/BrightChain/issues"
+  },
+  "keywords": [
+    "brightchain",
+    "brightchat",
+    "chat",
+    "messaging",
+    "types"
+  ],
+  "author": "Digital Defiance",
+  "license": "MIT",
+  "peerDependencies": {
+    "@brightchain/brightchain-lib": "^0.32.1"
+  },
+  "dependencies": {
+    "@digitaldefiance/i18n-lib": "4.7.5"
+  },
+  "scripts": {
+    "build": "npx nx build brightchat-lib",
+    "test": "npx nx test brightchat-lib",
+    "lint": "npx nx lint brightchat-lib",
+    "build:dev": "npx nx build brightchat-lib --configuration=development",
+    "build:prod": "npx nx build brightchat-lib --configuration=production"
+  }
+}

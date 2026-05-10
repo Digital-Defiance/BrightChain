@@ -25,6 +25,7 @@ import { FC, useEffect, useMemo, useState } from 'react';
 import { useShowcaseI18n } from '../i18n/ShowcaseI18nContext';
 import { ShowcaseStrings } from '../i18n/showcaseStrings';
 import { BrightDate } from './BrightDate';
+import { HeroBadge } from './HeroBadge';
 
 // ─── Date Format Helpers ────────────────────────────────────────────────────
 
@@ -287,6 +288,10 @@ export const DatePage: FC = () => {
             {t(ShowcaseStrings.DatePage_Title)}
           </Typography>
         </Box>
+
+        <HeroBadge
+          text={t(ShowcaseStrings.Date_BrightDate_UTC_With_Benefits)}
+        />
 
         {/* BrightDate Hero */}
         <Card

@@ -1674,6 +1674,13 @@ export const GermanStrings: ComponentStrings<BrightChainStringKey> = {
     'Sind Sie sicher, dass Sie Block {BLOCK_ID} löschen möchten? Dies entfernt auch zugehörige Paritätsblöcke aus dem lokalen Speicher.',
   [BrightChainStrings.Admin_Blocks_SizeBytesTemplate]: '{SIZE} Bytes',
 
+  [BrightChainStrings.Games_Menu_Title]: 'Spiele',
+  [BrightChainStrings.Subspace_Lattice]: 'Subraum-Gitter',
+  [BrightChainStrings.Subspace]: 'Subraum',
+  [BrightChainStrings.Lattice]: 'Gitter',
+  [BrightChainStrings.Subspace_Lattice_Description]:
+    'Eine strategische Verschmelzung von Gebietskontrolle und taktischen Manövern, bei der Spieler Sensornetze projizieren, um souveränen Raum zu beanspruchen. Errichten Sie Hochgeschwindigkeits-Versorgungslinien und Warp-fähige Flotten, um Ihren Gegner auszumanövrieren und den Sektor zu dominieren.',
+
   // Public Block Explorer
   [BrightChainStrings.Explorer_Menu_Title]: 'Block-Explorer',
   [BrightChainStrings.Explorer_Title]: 'Block-Explorer',
@@ -1922,6 +1929,7 @@ export const GermanStrings: ComponentStrings<BrightChainStringKey> = {
     'Ratenbegrenzungsdienst nicht verfügbar. Anfrage abgelehnt.',
 
   [BrightChainStrings.Date_BrightDateTemplate]: 'BD {BD}',
+  [BrightChainStrings.Date_BrightDate_UTC_With_Benefits]: 'UTC mit Vorteilen',
 
   // ── DatePage ──
   [BrightChainStrings.DatePage_Title]: 'Datum und Uhrzeit',

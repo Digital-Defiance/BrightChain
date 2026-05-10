@@ -1,0 +1,65 @@
+{
+  "name": "@brightchain/brightpass-react-components",
+  "version": "0.32.1",
+  "description": "BrightPass React UI components for BrightChain password manager",
+  "main": "src/index.js",
+  "types": "src/index.d.ts",
+  "files": [
+    "src",
+    "README.md"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Digital-Defiance/BrightChain.git",
+    "directory": "brightpass-react-components"
+  },
+  "homepage": "https://github.com/Digital-Defiance/BrightChain#readme",
+  "bugs": {
+    "url": "https://github.com/Digital-Defiance/BrightChain/issues"
+  },
+  "keywords": [
+    "brightchain",
+    "brightpass",
+    "password-manager",
+    "react",
+    "components"
+  ],
+  "author": "Digital Defiance",
+  "license": "MIT",
+  "peerDependencies": {
+    "@brightchain/brightchain-lib": "^0.32.1",
+    "@digitaldefiance/express-suite-react-components": "4.29.1",
+    "@digitaldefiance/i18n-lib": "4.7.5",
+    "@mui/icons-material": "*",
+    "@mui/material": "*",
+    "axios": "*",
+    "formik": "^2.4.6",
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0",
+    "react-router-dom": "^6.0.0",
+    "yup": "^1.0.0"
+  },
+  "dependencies": {
+    "@awesome.me/kit-a20d532681": "^1.0.23"
+  },
+  "scripts": {
+    "build": "npx nx build brightpass-react-components",
+    "test": "npx nx test brightpass-react-components",
+    "lint": "npx nx lint brightpass-react-components",
+    "build:dev": "npx nx build brightpass-react-components --configuration=development",
+    "build:prod": "npx nx build brightpass-react-components --configuration=production"
+  },
+  "devDependencies": {
+    "@digitaldefiance/express-suite-react-components": "4.29.1",
+    "@mui/icons-material": "^7.3.9",
+    "@mui/material": "^7.3.9",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "axios": "^1.14.0",
+    "formik": "^2.4.9",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "react-router-dom": "^7.14.0",
+    "yup": "^1.7.1"
+  }
+}

@@ -1,0 +1,1 @@
+export { detectConflicts } from './detectConflicts';

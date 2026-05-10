@@ -1,0 +1,56 @@
+{
+  "name": "@brightchain/brighthub-react-components",
+  "version": "0.32.1",
+  "description": "React components for BrightHub social network module",
+  "main": "./index.js",
+  "module": "./index.mjs",
+  "types": "./index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "import": "./index.mjs",
+      "require": "./index.js"
+    },
+    "./theme": {
+      "types": "./lib/theme/index.d.ts",
+      "import": "./lib/theme/index.mjs",
+      "require": "./lib/theme/index.js"
+    }
+  },
+  "peerDependencies": {
+    "@emotion/react": ">=11.0.0",
+    "@emotion/styled": ">=11.0.0",
+    "@mui/material": ">=5.0.0",
+    "react": ">=18.0.0",
+    "react-dom": ">=18.0.0"
+  },
+  "keywords": [
+    "brighthub",
+    "brightchain",
+    "social-network",
+    "react-components"
+  ],
+  "scripts": {
+    "build": "npx nx build brighthub-react-components",
+    "test": "npx nx test brighthub-react-components",
+    "lint": "npx nx lint brighthub-react-components",
+    "build:dev": "npx nx build brighthub-react-components --configuration=development",
+    "build:prod": "npx nx build brighthub-react-components --configuration=production"
+  },
+  "devDependencies": {
+    "@awesome.me/kit-a20d532681": "^1.0.23",
+    "@digitaldefiance/express-suite-react-components": "4.29.1",
+    "@fortawesome/react-fontawesome": "^3.3.0",
+    "@mui/icons-material": "^7.3.9",
+    "@mui/material": "^7.3.9",
+    "@mui/system": "^7.3.9",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "react-router-dom": "^7.14.0"
+  },
+  "dependencies": {
+    "react-easy-crop": "5.5.7"
+  }
+}

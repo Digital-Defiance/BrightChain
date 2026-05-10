@@ -16,10 +16,10 @@ import {
   CONSTANTS,
   CoreConstants,
   i18nEngine,
-  type IServer,
   ISuiteCoreConstants,
   registerI18nComponentPackage,
   THEME_COLORS,
+  type IServer,
 } from '@brightchain/brightchain-lib';
 import {
   BrightChainLogoI18N,
@@ -137,6 +137,7 @@ import { AppFooter } from './components/AppFooter';
 import DashboardPage from './components/DashboardPage';
 import { DatePage } from './components/DatePage';
 import { ExplorerMenuRegistration } from './components/ExplorerMenuRegistration';
+import { useGamesMenuRegistration } from './components/GamesMenuRegistration';
 import { GlobalNotificationBell } from './components/GlobalNotificationBell';
 import { GoogleAnalytics } from './components/GoogleAnalytics';
 import { SplashPage } from './components/SplashPage';
@@ -294,6 +295,12 @@ if (burnbagEnabled) {
 // Block Explorer is always available (public, no feature flag)
 const BlockExplorerRoutes = lazy(() =>
   import('./block-explorer-routes').then((m) => ({
+    default: m.default,
+  })),
+);
+
+const SubspaceLatticeRoutes = lazy(() =>
+  import('./subspace-lattice-routes').then((m) => ({
     default: m.default,
   })),
 );
@@ -792,7 +799,12 @@ const InnerApp: FC = () => {
   };
   indexPriority += 100;
 
+  const { gamesMenuConfig, indexPriority: newPriority } =
+    useGamesMenuRegistration(indexPriority);
+  indexPriority = newPriority;
+
   const featureMenuMap: [BrightChainFeatures, IMenuConfig][] = [
+    [BrightChainFeatures.Games, gamesMenuConfig],
     [BrightChainFeatures.DigitalBurnbag, digitalBurnbagMenuConfig],
     [BrightChainFeatures.BrightMail, brightMailMenuConfig],
     [BrightChainFeatures.BrightPass, brightPassMenuConfig],
@@ -814,302 +826,307 @@ const InnerApp: FC = () => {
   return (
     <BrightDateProvider
       initialMode={
-        ((userData as IRequestUserDTO & { brightDateDisplay?: BrightDateDisplayMode } | null)
-          ?.brightDateDisplay as BrightDateDisplayMode) ?? BrightDateDisplayMode.Dual
+        ((
+          userData as
+            | (IRequestUserDTO & { brightDateDisplay?: BrightDateDisplayMode })
+            | null
+        )?.brightDateDisplay as BrightDateDisplayMode) ??
+        BrightDateDisplayMode.Dual
       }
       onModeChange={(mode) => {
         // Persist to API (best-effort)
         api.post('/user/settings', { brightDateDisplay: mode }).catch(() => {});
       }}
     >
-    <MenuProvider menuConfigs={menuConfigs}>
-      <GoogleAnalytics
-        measurementId={environment.gtag}
-        enabled={environment.production || environment.gaForce === true}
-      />
-      <ExplorerMenuRegistration indexPriority={indexPriority} />
-      <AdminMenuRegistration />
-      <Box className="app-container" sx={{ paddingTop: '64px' }}>
-        <TopMenu
-          Logo={
-            <BrightChainLogoI18N
-              primaryColor={THEME_COLORS.CHAIN_BLUE_DARK}
-              secondaryColor={THEME_COLORS.CHAIN_BLUE_LIGHT}
-              taglineColor={THEME_COLORS.TAGLINE_LIGHT_COLOR}
-              height={40}
-              width={200}
-            />
-          }
-          constants={CoreConstants}
-          showTitle={false}
-          actions={<GlobalNotificationBell />}
+      <MenuProvider menuConfigs={menuConfigs}>
+        <GoogleAnalytics
+          measurementId={environment.gtag}
+          enabled={environment.production || environment.gaForce === true}
         />
-        <Suspense
-          fallback={
-            <Box display="flex" justifyContent="center" mt={4}>
-              <CircularProgress />
-            </Box>
-          }
-        >
-          <Routes>
-            <Route path="/" element={<SplashPage />} />
-            <Route path="/_spa" element={<SplashPage />} />
-            <Route path="/demo" element={<BrightChainSoupDemo />} />
-            <Route
-              path="/showcase/storage-pools"
-              element={<StoragePoolsDemo />}
-            />
-            <Route path="/showcase/messaging" element={<MessagingDemo />} />
-            <Route path="/showcase/brightpass" element={<BrightPassDemo />} />
-            <Route path="/showcase/database" element={<DatabaseDemo />} />
-            <Route path="/showcase/identity" element={<IdentityDemo />} />
-            <Route path="/date" element={<DatePage />} />
-            <Route path="/now" element={<DatePage />} />
-            <Route path="/today" element={<DatePage />} />
-            <Route
-              path="/dashboard"
-              element={
-                <PrivateRoute>
-                  <DashboardPage />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/admin/dashboard"
-              element={
-                <AdminRoute>
-                  <AdminDashboardPage />
-                </AdminRoute>
-              }
-            />
-            <Route
-              path="/admin/about"
-              element={
-                <AdminRoute>
-                  <AboutPage />
-                </AdminRoute>
-              }
-            />
-            <Route
-              path="/admin/users"
-              element={
-                <AdminRoute>
-                  <AdminUserManagementPanel />
-                </AdminRoute>
-              }
-            />
-            <Route
-              path="/admin/blocks"
-              element={
-                <AdminRoute>
-                  <AdminBlockExplorerPanel />
-                </AdminRoute>
-              }
-            />
-            <Route
-              path="/admin/chat"
-              element={
-                <AdminRoute>
-                  <AdminChatPanel />
-                </AdminRoute>
-              }
-            />
-            <Route
-              path="/admin/chat-servers"
-              element={
-                <AdminRoute>
-                  <AdminChatServersPanel />
-                </AdminRoute>
-              }
-            />
-            <Route
-              path="/admin/hub"
-              element={
-                <AdminRoute>
-                  <AdminHubPanel />
-                </AdminRoute>
-              }
-            />
-            <Route
-              path="/admin/mail"
-              element={
-                <AdminRoute>
-                  <AdminMailPanel />
-                </AdminRoute>
-              }
-            />
-            <Route
-              path="/admin/joule"
-              element={
-                <AdminRoute>
-                  <AdminJoulePanel />
-                </AdminRoute>
-              }
-            />
-            <Route
-              path="/admin/pass"
-              element={
-                <AdminRoute>
-                  <AdminPassPanel />
-                </AdminRoute>
-              }
-            />
-            <Route
-              path="/admin/emails"
-              element={
-                <AdminRoute>
-                  <FakeEmailAdminPanel />
-                </AdminRoute>
-              }
-            />
-            <Route
-              path="/api-access"
-              element={
-                <PrivateRoute>
-                  <ApiAccess />
-                </PrivateRoute>
-              }
-            />
-            <Route path="/backup-code" element={<BackupCodeLoginWrapper />} />
-            <Route
-              path="/backup-codes"
-              element={
-                <PrivateRoute>
-                  <BackupCodesWrapper />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/login"
-              element={
-                <UnAuthRoute>
-                  <LoginFormWrapper
-                    onVerifyTotp={(code, pendingTotpToken) => {
-                      const svc = createAuthService(
-                        CoreConstants as ISuiteCoreConstants,
-                        API_BASE_URL,
-                        eciesConfig,
-                        emailDomain,
-                      );
-                      return svc.verifyTotpLogin(pendingTotpToken, code);
-                    }}
-                  />
-                </UnAuthRoute>
-              }
-            />
-            <Route
-              path="/logout"
-              element={
-                <PrivateRoute>
-                  <LogoutPageWrapper />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/register"
-              element={
-                <UnAuthRoute>
-                  <RegisterFormWrapper
-                    componentProps={{
-                      disallowedEmailDomains: [emailDomain],
-                    }}
-                  />
-                </UnAuthRoute>
-              }
-            />
-            <Route
-              path="/forgot-password"
-              element={
-                <UnAuthRoute>
-                  <ForgotPasswordFormWrapper />
-                </UnAuthRoute>
-              }
-            />
-            <Route
-              path="/reset-password"
-              element={
-                <UnAuthRoute>
-                  <ResetPasswordFormWrapper />
-                </UnAuthRoute>
-              }
-            />
-            <Route
-              path="/change-password"
-              element={
-                <PrivateRoute>
-                  <ChangePasswordFormWrapper />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/verify-email"
-              element={
-                <UnAuthRoute>
-                  <VerifyEmailPageWrapper />
-                </UnAuthRoute>
-              }
-            />
-            <Route
-              path="/user-settings"
-              element={
-                <PrivateRoute>
-                  <UserSettingsFormWrapper
-                    constants={CoreConstants as ISuiteCoreConstants}
-                    eciesConfig={eciesConfig}
-                    emailDomain={emailDomain}
-                    totpAvailable={TOTP_AVAILABLE}
-                    componentProps={{
-                      additionalInitialValues: {
-                        brightDateDisplay: BrightDateDisplayMode.Dual,
-                      },
-                      additionalFields: (formik) => (
-                        <BrightDateDisplaySelector
-                          value={
-                            (formik.values.brightDateDisplay as string) ||
-                            BrightDateDisplayMode.Dual
-                          }
-                          onChange={(val) =>
-                            formik.setFieldValue('brightDateDisplay', val)
-                          }
-                        />
-                      ),
-                    }}
-                  />
-                </PrivateRoute>
-              }
-            />
-            {BrightMailRoutes && (
-              <Route path="/brightmail/*" element={<BrightMailRoutes />} />
-            )}
-            {BrightPassRoutes && (
-              <Route path="/brightpass/*" element={<BrightPassRoutes />} />
-            )}
-            {BrightHubRoutes && (
-              <Route path="/brighthub/*" element={<BrightHubRoutes />} />
-            )}
-            {BrightChatRoutes && (
-              <Route path="/brightchat/*" element={<BrightChatRoutes />} />
-            )}
-            {BrightChartRoutes && (
-              <Route path="/brightchart/*" element={<BrightChartRoutes />} />
-            )}
-            {BurnbagRoutes && (
-              <Route path="/burnbag/*" element={<BurnbagRoutes />} />
-            )}
-            <Route path="/explorer/*" element={<BlockExplorerRoutes />} />
-            <Route
-              path="/notifications"
-              element={
-                <PrivateRoute>
-                  <UnifiedNotificationsPage />
-                </PrivateRoute>
-              }
-            />
-          </Routes>
-        </Suspense>
-        <AppFooter />
-      </Box>
-    </MenuProvider>
+        <ExplorerMenuRegistration indexPriority={indexPriority} />
+        <AdminMenuRegistration />
+        <Box className="app-container" sx={{ paddingTop: '64px' }}>
+          <TopMenu
+            Logo={
+              <BrightChainLogoI18N
+                primaryColor={THEME_COLORS.CHAIN_BLUE_DARK}
+                secondaryColor={THEME_COLORS.CHAIN_BLUE_LIGHT}
+                taglineColor={THEME_COLORS.TAGLINE_LIGHT_COLOR}
+                height={40}
+                width={200}
+              />
+            }
+            constants={CoreConstants}
+            showTitle={false}
+            actions={<GlobalNotificationBell />}
+          />
+          <Suspense
+            fallback={
+              <Box display="flex" justifyContent="center" mt={4}>
+                <CircularProgress />
+              </Box>
+            }
+          >
+            <Routes>
+              <Route path="/" element={<SplashPage />} />
+              <Route path="/_spa" element={<SplashPage />} />
+              <Route path="/demo" element={<BrightChainSoupDemo />} />
+              <Route
+                path="/showcase/storage-pools"
+                element={<StoragePoolsDemo />}
+              />
+              <Route path="/showcase/messaging" element={<MessagingDemo />} />
+              <Route path="/showcase/brightpass" element={<BrightPassDemo />} />
+              <Route path="/showcase/database" element={<DatabaseDemo />} />
+              <Route path="/showcase/identity" element={<IdentityDemo />} />
+              <Route path="/date" element={<DatePage />} />
+              <Route path="/now" element={<DatePage />} />
+              <Route path="/today" element={<DatePage />} />
+              <Route
+                path="/dashboard"
+                element={
+                  <PrivateRoute>
+                    <DashboardPage />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/admin/dashboard"
+                element={
+                  <AdminRoute>
+                    <AdminDashboardPage />
+                  </AdminRoute>
+                }
+              />
+              <Route
+                path="/admin/about"
+                element={
+                  <AdminRoute>
+                    <AboutPage />
+                  </AdminRoute>
+                }
+              />
+              <Route
+                path="/admin/users"
+                element={
+                  <AdminRoute>
+                    <AdminUserManagementPanel />
+                  </AdminRoute>
+                }
+              />
+              <Route
+                path="/admin/blocks"
+                element={
+                  <AdminRoute>
+                    <AdminBlockExplorerPanel />
+                  </AdminRoute>
+                }
+              />
+              <Route
+                path="/admin/chat"
+                element={
+                  <AdminRoute>
+                    <AdminChatPanel />
+                  </AdminRoute>
+                }
+              />
+              <Route
+                path="/admin/chat-servers"
+                element={
+                  <AdminRoute>
+                    <AdminChatServersPanel />
+                  </AdminRoute>
+                }
+              />
+              <Route
+                path="/admin/hub"
+                element={
+                  <AdminRoute>
+                    <AdminHubPanel />
+                  </AdminRoute>
+                }
+              />
+              <Route
+                path="/admin/mail"
+                element={
+                  <AdminRoute>
+                    <AdminMailPanel />
+                  </AdminRoute>
+                }
+              />
+              <Route
+                path="/admin/joule"
+                element={
+                  <AdminRoute>
+                    <AdminJoulePanel />
+                  </AdminRoute>
+                }
+              />
+              <Route
+                path="/admin/pass"
+                element={
+                  <AdminRoute>
+                    <AdminPassPanel />
+                  </AdminRoute>
+                }
+              />
+              <Route
+                path="/admin/emails"
+                element={
+                  <AdminRoute>
+                    <FakeEmailAdminPanel />
+                  </AdminRoute>
+                }
+              />
+              <Route
+                path="/api-access"
+                element={
+                  <PrivateRoute>
+                    <ApiAccess />
+                  </PrivateRoute>
+                }
+              />
+              <Route path="/backup-code" element={<BackupCodeLoginWrapper />} />
+              <Route
+                path="/backup-codes"
+                element={
+                  <PrivateRoute>
+                    <BackupCodesWrapper />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/login"
+                element={
+                  <UnAuthRoute>
+                    <LoginFormWrapper
+                      onVerifyTotp={(code, pendingTotpToken) => {
+                        const svc = createAuthService(
+                          CoreConstants as ISuiteCoreConstants,
+                          API_BASE_URL,
+                          eciesConfig,
+                          emailDomain,
+                        );
+                        return svc.verifyTotpLogin(pendingTotpToken, code);
+                      }}
+                    />
+                  </UnAuthRoute>
+                }
+              />
+              <Route
+                path="/logout"
+                element={
+                  <PrivateRoute>
+                    <LogoutPageWrapper />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/register"
+                element={
+                  <UnAuthRoute>
+                    <RegisterFormWrapper
+                      componentProps={{
+                        disallowedEmailDomains: [emailDomain],
+                      }}
+                    />
+                  </UnAuthRoute>
+                }
+              />
+              <Route
+                path="/forgot-password"
+                element={
+                  <UnAuthRoute>
+                    <ForgotPasswordFormWrapper />
+                  </UnAuthRoute>
+                }
+              />
+              <Route
+                path="/reset-password"
+                element={
+                  <UnAuthRoute>
+                    <ResetPasswordFormWrapper />
+                  </UnAuthRoute>
+                }
+              />
+              <Route
+                path="/change-password"
+                element={
+                  <PrivateRoute>
+                    <ChangePasswordFormWrapper />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/verify-email"
+                element={
+                  <UnAuthRoute>
+                    <VerifyEmailPageWrapper />
+                  </UnAuthRoute>
+                }
+              />
+              <Route
+                path="/user-settings"
+                element={
+                  <PrivateRoute>
+                    <UserSettingsFormWrapper
+                      constants={CoreConstants as ISuiteCoreConstants}
+                      eciesConfig={eciesConfig}
+                      emailDomain={emailDomain}
+                      totpAvailable={TOTP_AVAILABLE}
+                      componentProps={{
+                        additionalInitialValues: {
+                          brightDateDisplay: BrightDateDisplayMode.Dual,
+                        },
+                        additionalFields: (formik) => (
+                          <BrightDateDisplaySelector
+                            value={
+                              (formik.values.brightDateDisplay as string) ||
+                              BrightDateDisplayMode.Dual
+                            }
+                            onChange={(val) =>
+                              formik.setFieldValue('brightDateDisplay', val)
+                            }
+                          />
+                        ),
+                      }}
+                    />
+                  </PrivateRoute>
+                }
+              />
+              {BrightMailRoutes && (
+                <Route path="/brightmail/*" element={<BrightMailRoutes />} />
+              )}
+              {BrightPassRoutes && (
+                <Route path="/brightpass/*" element={<BrightPassRoutes />} />
+              )}
+              {BrightHubRoutes && (
+                <Route path="/brighthub/*" element={<BrightHubRoutes />} />
+              )}
+              {BrightChatRoutes && (
+                <Route path="/brightchat/*" element={<BrightChatRoutes />} />
+              )}
+              {BrightChartRoutes && (
+                <Route path="/brightchart/*" element={<BrightChartRoutes />} />
+              )}
+              {BurnbagRoutes && (
+                <Route path="/burnbag/*" element={<BurnbagRoutes />} />
+              )}
+              <Route path="/explorer/*" element={<BlockExplorerRoutes />} />
+              <Route path="/game/*" element={<SubspaceLatticeRoutes />} />
+              <Route
+                path="/notifications"
+                element={
+                  <PrivateRoute>
+                    <UnifiedNotificationsPage />
+                  </PrivateRoute>
+                }
+              />
+            </Routes>
+          </Suspense>
+          <AppFooter />
+        </Box>
+      </MenuProvider>
     </BrightDateProvider>
   );
 };

@@ -1,0 +1,63 @@
+{
+  "name": "brightcal-react-components",
+  "sourceRoot": "brightcal-react-components/src",
+  "projectType": "library",
+  "tags": [
+    "type:lib",
+    "scope:frontend"
+  ],
+  "implicitDependencies": [
+    "brightcal-lib"
+  ],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/brightcal-react-components",
+        "main": "brightcal-react-components/src/index.ts",
+        "tsConfig": "brightcal-react-components/tsconfig.lib.json",
+        "assets": [
+          {
+            "input": "brightcal-react-components",
+            "glob": "*.md",
+            "output": "."
+          },
+          {
+            "input": "brightcal-react-components/src/lib/styles",
+            "glob": "*.css",
+            "output": "./src/lib/styles"
+          }
+        ]
+      },
+      "configurations": {
+        "development": {},
+        "production": {}
+      }
+    },
+    "publish": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npm publish --access public",
+        "cwd": "dist/brightcal-react-components"
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "brightcal-react-components/jest.config.cts",
+        "passWithNoTests": true
+      },
+      "configurations": {
+        "ci": {
+          "ci": true,
+          "codeCoverage": true
+        }
+      }
+    }
+  }
+}

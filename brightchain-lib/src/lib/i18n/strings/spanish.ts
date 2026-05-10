@@ -1679,6 +1679,13 @@ export const SpanishStrings: ComponentStrings<BrightChainStringKey> = {
     '¿Está seguro de que desea eliminar el bloque {BLOCK_ID}? Esto también eliminará los bloques de paridad asociados del almacenamiento local.',
   [BrightChainStrings.Admin_Blocks_SizeBytesTemplate]: '{SIZE} bytes',
 
+  [BrightChainStrings.Games_Menu_Title]: 'Juegos',
+  [BrightChainStrings.Subspace_Lattice]: 'Red Subespacial',
+  [BrightChainStrings.Subspace]: 'Subespacial',
+  [BrightChainStrings.Lattice]: 'Red',
+  [BrightChainStrings.Subspace_Lattice_Description]:
+    'Una fusión estratégica de control de territorio y maniobras tácticas donde los jugadores proyectan redes de sensores para reclamar espacio soberano. Establece líneas de suministro de alta velocidad y flotas con capacidad de curvatura para superar a tu oponente y dominar el sector.',
+
   // Public Block Explorer
   [BrightChainStrings.Explorer_Menu_Title]: 'Explorador de bloques',
   [BrightChainStrings.Explorer_Title]: 'Explorador de bloques',
@@ -1927,6 +1934,7 @@ export const SpanishStrings: ComponentStrings<BrightChainStringKey> = {
     'Servicio de limitación de velocidad no disponible. Solicitud denegada.',
 
   [BrightChainStrings.Date_BrightDateTemplate]: 'BD {BD}',
+  [BrightChainStrings.Date_BrightDate_UTC_With_Benefits]: 'UTC con beneficios',
 
   // ── DatePage ──
   [BrightChainStrings.DatePage_Title]: 'Fecha y hora',

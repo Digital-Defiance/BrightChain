@@ -1660,6 +1660,13 @@ export const AmericanEnglishStrings: ComponentStrings<BrightChainStringKey> = {
     'Are you sure you want to delete block {BLOCK_ID}? This will also remove associated parity blocks from the local store.',
   [BrightChainStrings.Admin_Blocks_SizeBytesTemplate]: '{SIZE} bytes',
 
+  [BrightChainStrings.Games_Menu_Title]: 'Games',
+  [BrightChainStrings.Subspace_Lattice]: 'Subspace Lattice',
+  [BrightChainStrings.Subspace]: 'Subspace',
+  [BrightChainStrings.Lattice]: 'Lattice',
+  [BrightChainStrings.Subspace_Lattice_Description]:
+    'A strategic fusion of territory control and tactical maneuvers where players project Sensor Nets to claim sovereign space. Establish high-speed supply lines and warp-capable fleets to outmaneuver your opponent and dominate the sector.',
+
   // Public Block Explorer
   [BrightChainStrings.Explorer_Menu_Title]: 'Block Explorer',
   [BrightChainStrings.Explorer_Title]: 'Block Explorer',
@@ -1904,6 +1911,7 @@ export const AmericanEnglishStrings: ComponentStrings<BrightChainStringKey> = {
     'Rate limiting service unavailable. Request denied.',
 
   [BrightChainStrings.Date_BrightDateTemplate]: 'BD {BD}',
+  [BrightChainStrings.Date_BrightDate_UTC_With_Benefits]: 'UTC With Benefits',
 
   // ── DatePage ──
   [BrightChainStrings.DatePage_Title]: 'Date & Time',

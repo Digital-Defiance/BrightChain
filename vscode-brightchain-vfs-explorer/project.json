@@ -1,0 +1,62 @@
+{
+  "name": "vscode-brightchain-vfs-explorer",
+  "sourceRoot": "vscode-brightchain-vfs-explorer/src",
+  "projectType": "library",
+  "tags": ["type:extension", "scope:vscode"],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{projectRoot}/out"],
+      "options": {
+        "outputPath": "vscode-brightchain-vfs-explorer/out",
+        "main": "vscode-brightchain-vfs-explorer/src/extension.ts",
+        "tsConfig": "vscode-brightchain-vfs-explorer/tsconfig.lib.json",
+        "assets": [],
+        "generatePackageJson": false
+      },
+      "configurations": {
+        "development": {},
+        "production": {}
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["vscode-brightchain-vfs-explorer/src/**/*.ts"]
+      }
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "vscode-brightchain-vfs-explorer/jest.config.ts",
+        "codeCoverage": false
+      },
+      "configurations": {
+        "ci": {
+          "ci": true,
+          "codeCoverage": true,
+          "coverageReporters": ["text", "lcov"],
+          "collectCoverageFrom": ["src/**/*.ts"]
+        }
+      }
+    },
+    "package": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build"],
+      "options": {
+        "command": "npx @vscode/vsce package --no-dependencies -o ../dist/brightchain-vfs-explorer.vsix",
+        "cwd": "vscode-brightchain-vfs-explorer"
+      }
+    },
+    "publish": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build"],
+      "options": {
+        "command": "npx @vscode/vsce publish --no-dependencies",
+        "cwd": "vscode-brightchain-vfs-explorer"
+      }
+    }
+  }
+}

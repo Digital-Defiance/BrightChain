@@ -1,0 +1,12 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../dist/out-tsc",
+    "types": ["node", "vite/client"]
+  },
+  "include": [
+    "e2e-app/**/*.ts",
+    "e2e-app/**/*.tsx",
+    "playwright.config.ts"
+  ]
+}

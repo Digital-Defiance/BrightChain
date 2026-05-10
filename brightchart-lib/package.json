@@ -1,0 +1,48 @@
+{
+  "name": "@brightchain/brightchart-lib",
+  "version": "0.32.1",
+  "description": "BrightChart core library - FHIR R4 patient identity and MPI interfaces",
+  "main": "src/index.js",
+  "types": "src/index.d.ts",
+  "files": [
+    "src",
+    "README.md"
+  ],
+  "exports": {
+    ".": {
+      "types": "./src/index.d.ts",
+      "import": "./src/index.js",
+      "require": "./src/index.js"
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Digital-Defiance/BrightChain.git",
+    "directory": "brightchart-lib"
+  },
+  "homepage": "https://github.com/Digital-Defiance/BrightChain#readme",
+  "bugs": {
+    "url": "https://github.com/Digital-Defiance/BrightChain/issues"
+  },
+  "keywords": [
+    "brightchart",
+    "ehr",
+    "fhir",
+    "patient",
+    "mpi",
+    "brightchain"
+  ],
+  "author": "Digital Defiance",
+  "license": "MIT",
+  "peerDependencies": {
+    "@brightchain/brightchain-lib": "^0.32.1"
+  },
+  "dependencies": {
+    "tslib": "^2.3.0"
+  },
+  "type": "commonjs",
+  "scripts": {
+    "build:dev": "npx nx build brightchart-lib --configuration=development",
+    "build:prod": "npx nx build brightchart-lib --configuration=production"
+  }
+}

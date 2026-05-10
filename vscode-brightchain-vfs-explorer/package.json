@@ -1,0 +1,138 @@
+{
+  "name": "brightchain-vfs-explorer",
+  "version": "0.1.0",
+  "displayName": "BrightChain VFS Explorer",
+  "description": "VS Code extension for browsing and managing files on the BrightChain / Digital Burnbag platform",
+  "publisher": "brightchain",
+  "license": "MIT",
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Digital-Defiance/vscode-brightchain-vfs-explorer.git"
+  },
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "main": "./out/src/extension.js",
+  "activationEvents": [
+    "onFileSystem:brightchain",
+    "onView:brightchain-explorer",
+    "onCommand:brightchain.login"
+  ],
+  "contributes": {
+    "configuration": {
+      "title": "BrightChain VFS Explorer",
+      "properties": {
+        "brightchainVfsExplorer.apiHostUrl": {
+          "type": "string",
+          "default": "https://brightchain.org",
+          "description": "API host URL for the BrightChain / Digital Burnbag platform"
+        }
+      }
+    },
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "brightchain-explorer",
+          "title": "BrightChain",
+          "icon": "resources/brightchain-icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "brightchain-explorer": [
+        {
+          "id": "brightchain-explorer",
+          "name": "BrightChain",
+          "when": "true"
+        }
+      ]
+    },
+    "viewsWelcome": [
+      {
+        "view": "brightchain-explorer",
+        "contents": "Sign in to BrightChain to browse your files.\n[Sign In](command:brightchain.login)"
+      }
+    ],
+    "commands": [
+      {
+        "command": "brightchain.login",
+        "title": "BrightChain: Login"
+      },
+      {
+        "command": "brightchain.logout",
+        "title": "BrightChain: Logout"
+      },
+      {
+        "command": "brightchain.uploadFile",
+        "title": "BrightChain: Upload File"
+      },
+      {
+        "command": "brightchain.downloadFile",
+        "title": "BrightChain: Download File"
+      },
+      {
+        "command": "brightchain.searchFiles",
+        "title": "BrightChain: Search Files"
+      },
+      {
+        "command": "brightchain.viewVersions",
+        "title": "BrightChain: View Version History"
+      },
+      {
+        "command": "brightchain.newFolder",
+        "title": "BrightChain: New Folder"
+      },
+      {
+        "command": "brightchain.refreshExplorer",
+        "title": "BrightChain: Refresh Explorer"
+      }
+    ],
+    "menus": {
+      "view/item/context": [
+        {
+          "command": "brightchain.newFolder",
+          "when": "viewItem == brightchain-folder",
+          "group": "1_new"
+        },
+        {
+          "command": "brightchain.uploadFile",
+          "when": "viewItem == brightchain-folder",
+          "group": "1_new"
+        },
+        {
+          "command": "brightchain.refreshExplorer",
+          "when": "viewItem == brightchain-folder",
+          "group": "9_refresh"
+        },
+        {
+          "command": "brightchain.downloadFile",
+          "when": "viewItem == brightchain-file",
+          "group": "1_actions"
+        },
+        {
+          "command": "brightchain.viewVersions",
+          "when": "viewItem == brightchain-file",
+          "group": "2_versions"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "build": "node ../node_modules/nx/bin/nx.js build vscode-brightchain-vfs-explorer",
+    "package": "npx @vscode/vsce package --no-dependencies -o ../dist/brightchain-vfs-explorer.vsix",
+    "publish": "npx @vscode/vsce publish --no-dependencies"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.85.0",
+    "fast-check": "^4.5.3"
+  },
+  "dependencies": {
+    "@noble/curves": "^1.9.0",
+    "@noble/hashes": "^1.7.0",
+    "tslib": "^2.3.0"
+  }
+}

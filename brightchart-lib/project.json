@@ -1,0 +1,81 @@
+{
+  "name": "brightchart-lib",
+  "sourceRoot": "brightchart-lib/src",
+  "projectType": "library",
+  "tags": [
+    "type:lib",
+    "scope:core"
+  ],
+  "implicitDependencies": ["brightchain-lib"],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "outputPath": "dist/brightchart-lib",
+        "main": "brightchart-lib/src/index.ts",
+        "tsConfig": "brightchart-lib/tsconfig.lib.json",
+        "assets": [
+          {
+            "input": "brightchart-lib",
+            "glob": "*.md",
+            "output": "."
+          },
+          {
+            "input": "brightchart-lib",
+            "glob": "package.json",
+            "output": "."
+          }
+        ]
+      },
+      "configurations": {
+        "development": {},
+        "production": {}
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": [
+        "{options.outputFile}"
+      ],
+      "options": {
+        "lintFilePatterns": [
+          "brightchart-lib/**/*.ts"
+        ]
+      }
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": [
+        "{workspaceRoot}/coverage/{projectRoot}"
+      ],
+      "options": {
+        "jestConfig": "brightchart-lib/jest.config.cts",
+        "codeCoverage": false,
+        "coverageReporters": [
+          "text",
+          "lcov",
+          "html"
+        ],
+        "collectCoverageFrom": [
+          "src/**/*.ts"
+        ]
+      },
+      "configurations": {
+        "ci": {
+          "ci": true,
+          "codeCoverage": true,
+          "coverageReporters": [
+            "text",
+            "lcov"
+          ],
+          "collectCoverageFrom": [
+            "src/**/*.ts"
+          ]
+        }
+      }
+    }
+  }
+}

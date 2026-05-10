@@ -1,0 +1,14 @@
+{
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "declaration": true,
+    "sourceMap": true,
+    "outDir": "../dist/subspace-lattice",
+    "rootDir": "src",
+    "strict": true
+  },
+  "include": ["src/**/*.ts", "src/**/*.js", "src/**/*.tsx", "src/**/*.jsx"],
+  "exclude": ["**/*.spec.ts", "**/*.spec.js", "**/*.spec.tsx", "**/*.spec.jsx"]
+}

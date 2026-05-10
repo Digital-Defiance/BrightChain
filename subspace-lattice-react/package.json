@@ -1,0 +1,11 @@
+{
+  "name": "subspace-lattice-react",
+  "version": "0.0.1",
+  "private": true,
+  "main": "src/index.js",
+  "peerDependencies": {
+    "react": ">=18.2.0",
+    "react-dom": ">=18.2.0",
+    "subspace-lattice": "workspace:*"
+  }
+}

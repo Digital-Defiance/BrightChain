@@ -1,0 +1,67 @@
+.rules-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.rules-dialog {
+  background-color: #1a1a1a;
+  border: 1px solid #4da6ff;
+  border-radius: 8px;
+  padding: 30px;
+  width: 90%;
+  max-width: 600px;
+  max-height: 80vh;
+  overflow-y: auto;
+  color: #eee;
+  position: relative;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.8);
+}
+
+.rules-dialog h2 {
+  color: #4da6ff;
+  margin-top: 0;
+  border-bottom: 1px solid #333;
+  padding-bottom: 10px;
+}
+
+.rules-dialog h3 {
+  color: #ddd;
+  margin-top: 20px;
+}
+
+.rules-content {
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.rules-content ul {
+  padding-left: 20px;
+}
+
+.rules-content li {
+  margin-bottom: 8px;
+}
+
+.close-btn {
+  position: absolute;
+  top: 15px;
+  right: 20px;
+  background: none;
+  border: none;
+  color: #888;
+  font-size: 28px;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.close-btn:hover {
+  color: #fff;
+}

@@ -1,0 +1,1 @@
+// This file is obsolete. Game sync logic is handled directly via API calls in React and the subspaceLatticeController.

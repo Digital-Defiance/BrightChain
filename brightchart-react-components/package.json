@@ -1,0 +1,43 @@
+{
+  "name": "@brightchain/brightchart-react-components",
+  "version": "0.32.1",
+  "description": "BrightChart React UI components for patient identity management",
+  "main": "./src/index.js",
+  "types": "./src/index.d.ts",
+  "type": "commonjs",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Digital-Defiance/BrightChain.git",
+    "directory": "brightchart-react-components"
+  },
+  "homepage": "https://github.com/Digital-Defiance/BrightChain#readme",
+  "bugs": {
+    "url": "https://github.com/Digital-Defiance/BrightChain/issues"
+  },
+  "keywords": [
+    "brightchart",
+    "ehr",
+    "fhir",
+    "patient",
+    "react",
+    "components"
+  ],
+  "author": "Digital Defiance",
+  "license": "MIT",
+  "peerDependencies": {
+    "@brightchain/brightchart-lib": "^0.32.1",
+    "@fortawesome/react-fontawesome": ">=3.0.0",
+    "react": ">=18.0.0"
+  },
+  "dependencies": {
+    "tslib": "^2.3.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3"
+  },
+  "scripts": {
+    "build:dev": "npx nx build brightchart-react-components --configuration=development",
+    "build:prod": "npx nx build brightchart-react-components --configuration=production"
+  }
+}

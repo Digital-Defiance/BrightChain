@@ -39,7 +39,10 @@ import {
   type ITransferAction,
   type IUnfreezeAccountAction,
 } from '@brightchain/brightledger-assets-lib';
-import type { SignatureUint8Array } from '@digitaldefiance/ecies-lib';
+import type {
+  GuidV7Uint8Array,
+  SignatureUint8Array,
+} from '@digitaldefiance/ecies-lib';
 import { Writable } from 'node:stream';
 
 import {
@@ -84,6 +87,24 @@ function makeAssetIdBuf(seed: number): AssetIdBuffer {
   const buf = new Uint8Array(32);
   buf[0] = seed & 0xff;
   return buf as unknown as AssetIdBuffer;
+}
+
+/**
+ * Build a deterministic GuidV7Uint8Array from a string label (16 bytes,
+ * padded, with UUIDv7 version+variant bits patched in).  Mirrors
+ * shardIdFromString in brightledger-assets-api-lib test fixtures.
+ */
+function shardIdFromString(label: string): GuidV7Uint8Array {
+  const buf = new Uint8Array(16);
+  const enc = new TextEncoder().encode(label);
+  buf.set(enc.subarray(0, Math.min(enc.length, 16)));
+  buf[6] = (buf[6] & 0x0f) | 0x70; // version 7
+  buf[8] = (buf[8] & 0x3f) | 0x80; // variant
+  return buf as unknown as GuidV7Uint8Array;
+}
+
+function shardIdHex(label: string): string {
+  return Buffer.from(shardIdFromString(label)).toString('hex');
 }
 
 function assetHex(seed: number): string {
@@ -356,7 +377,7 @@ describe('Joule asset — end-to-end E2E', () => {
       processPublicKey: makePk(PROCESS_KEY_SEED),
       notBefore: NOW - 1000,
       notAfter: NOW + 6 * 24 * 60 * 60 * 1000,
-      shardIds: ['energy-shard'],
+      shardIds: [shardIdHex('energy-shard')],
     };
 
     const issuerSet = new AuthorizedSignerSet(
@@ -382,7 +403,7 @@ describe('Joule asset — end-to-end E2E', () => {
 
     const settlement1: IBatchSettlementAction = {
       kind: ActionKind.BatchSettlement,
-      shardId: 'energy-shard',
+      shardId: shardIdFromString('energy-shard'),
       fromSeq: 0n,
       toSeq: 9n,
       memberDeltas: earnDeltas,
@@ -396,7 +417,10 @@ describe('Joule asset — end-to-end E2E', () => {
     expect('rejected' in r1).toBe(false);
 
     const state1 = projectionService.state;
-    expect(state1.shardSettlement.has('energy-shard')).toBe(true);
+    // shardSettlement is keyed by `toHex(shardId)` (see reducer/validator),
+    // so look up using the hex form rather than the raw identifier.
+    const energyShardKey = shardIdHex('energy-shard');
+    expect(state1.shardSettlement.has(energyShardKey)).toBe(true);
 
     const spendDeltas: IMemberDelta[] = [
       { memberKey: ACCOUNT_A_KEY, delta: -20_000_000n }, // −20 J
@@ -404,7 +428,7 @@ describe('Joule asset — end-to-end E2E', () => {
 
     const settlement2: IBatchSettlementAction = {
       kind: ActionKind.BatchSettlement,
-      shardId: 'energy-shard',
+      shardId: shardIdFromString('energy-shard'),
       fromSeq: 10n,
       toSeq: 19n,
       memberDeltas: spendDeltas,
@@ -483,7 +507,7 @@ describe('Joule asset — end-to-end E2E', () => {
   it('6. BatchChallenge outside dispute window is rejected', async () => {
     const challenge: IBatchChallengeAction = {
       kind: ActionKind.BatchChallenge,
-      shardId: 'energy-shard',
+      shardId: shardIdFromString('energy-shard'),
       settlementSeq: 0n, // settlement doesn't exist in this fresh ledger
       claimedTipHash: fill32(0xff),
       challengerKey: ACCOUNT_A_KEY,

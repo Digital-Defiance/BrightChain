@@ -14,6 +14,8 @@ export enum MessageEventType {
   MESSAGE_RECEIVED = 'message:received',
   MESSAGE_DELIVERED = 'message:delivered',
   MESSAGE_FAILED = 'message:failed',
+  GAME_PIECE_MOVED = 'game:piece-moved',
+  GAME_CHAT_MESSAGE = 'game:chat-message',
 }
 
 export enum BlockEventType {
@@ -114,7 +116,7 @@ export interface ISystemEventBroadcaster {
  *
  * Delegates WebSocket delivery to an ISystemEventBroadcaster (typically
  * ClientWebSocketServer) so that all real-time events flow through a
- * single unified WebSocket connection per client.
+  * single unified WebSocket connection per client.
  *
  * @requirements 4.5, 5.2, 5.4
  */

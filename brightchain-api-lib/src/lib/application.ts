@@ -19,7 +19,11 @@ import {
   type ISubsystemContext,
 } from '@brightchain/brightchain-lib';
 import { BrightDbApplication } from '@brightchain/node-express-suite';
-import { PlatformID } from '@digitaldefiance/node-ecies-lib';
+import {
+  PlatformID,
+  getEnhancedNodeIdProvider,
+  IIdProvider,
+} from '@digitaldefiance/node-ecies-lib';
 import {
   debugLog,
   DummyEmailService,
@@ -46,6 +50,7 @@ import {
 } from './datastore/document-store';
 import { EmailServices } from './enumerations/email-services';
 import { Environment } from './environment';
+import { IBrightChainApplication } from './interfaces/application';
 import { DebitAuthorizationService } from './joule/debitAuthorization';
 import { ReservationReaper } from './joule/reservationReaper';
 import { Middlewares } from './middlewares';
@@ -73,6 +78,8 @@ import { EventNotificationSystem } from './services/eventNotificationSystem';
 import { MessagePassingService } from './services/messagePassingService';
 import { WebSocketMessageServer } from './services/webSocketMessageServer';
 
+const idProvider = getEnhancedNodeIdProvider();
+
 /**
  * Application class for BrightChain.
  *
@@ -86,12 +93,15 @@ import { WebSocketMessageServer } from './services/webSocketMessageServer';
  * Database integration is handled by the BrightChainDatabasePlugin, registered
  * via configureBrightChainApp() during construction.
  */
-export class App<TID extends PlatformID> extends BrightDbApplication<
-  TID,
-  Environment<TID>,
-  IConstants,
-  AppRouter<TID>
-> {
+export class App<TID extends PlatformID>
+  extends BrightDbApplication<
+    TID,
+    Environment<TID>,
+    IConstants,
+    AppRouter<TID>
+  >
+  implements IBrightChainApplication<TID>
+{
   private controllers: Map<string, unknown> = new Map();
   private readonly keyStorage: SecureKeyStorage;
   private _preConnectionStore: DocumentStore | null = null;
@@ -146,6 +156,10 @@ export class App<TID extends PlatformID> extends BrightDbApplication<
     // AssetsSubsystemPlugin registration is deferred to start() because it
     // requires pluginContext.blockStore, which is only available after the
     // BrightChainDatabasePlugin connects (inside super.start()).
+  }
+
+  public getNodeId(): TID {
+    return idProvider.parseSafe(this.environment.nodeId) as TID;
   }
 
   /**

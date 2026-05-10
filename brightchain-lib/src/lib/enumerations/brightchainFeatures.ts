@@ -1,4 +1,5 @@
 export enum BrightChainFeatures {
+  Games = 'Games',
   BrightChat = 'BrightChat',
   BrightChart = 'BrightChart',
   BrightHub = 'BrightHub',

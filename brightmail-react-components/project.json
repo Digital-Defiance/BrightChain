@@ -1,0 +1,47 @@
+{
+  "name": "brightmail-react-components",
+  "$schema": "../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "brightmail-react-components/src",
+  "projectType": "library",
+  "tags": ["type:lib", "scope:frontend"],
+  "implicitDependencies": ["brightchain-lib", "brightchain-react-components"],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/brightmail-react-components",
+        "main": "brightmail-react-components/src/index.ts",
+        "tsConfig": "brightmail-react-components/tsconfig.lib.json",
+        "assets": [
+          {
+            "input": "brightmail-react-components",
+            "glob": "*.md",
+            "output": "."
+          }
+        ]
+      },
+      "configurations": {
+        "development": {},
+        "production": {}
+      }
+    },
+    "publish": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npm publish --access public",
+        "cwd": "dist/brightmail-react-components"
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "brightmail-react-components/jest.config.cts"
+      }
+    }
+  }
+}

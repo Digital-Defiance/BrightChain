@@ -1510,6 +1510,13 @@ export const MandarinStrings: ComponentStrings<BrightChainStringKey> = {
     '您确定要删除区块 {BLOCK_ID} 吗？这也将从本地存储中删除关联的奇偶校验块。',
   [BrightChainStrings.Admin_Blocks_SizeBytesTemplate]: '{SIZE} 字节',
 
+  [BrightChainStrings.Games_Menu_Title]: '游戏',
+  [BrightChainStrings.Subspace_Lattice]: '亚空间晶格',
+  [BrightChainStrings.Subspace]: '子空间',
+  [BrightChainStrings.Lattice]: '格',
+  [BrightChainStrings.Subspace_Lattice_Description]:
+    '领土控制与战术机动的战略融合，玩家通过投射传感器网络来宣示主权空间。建立高速补给线和具备曲速能力的舰队，以智取对手并统治该星区。',
+
   // Public Block Explorer
   [BrightChainStrings.Explorer_Menu_Title]: '区块浏览器',
   [BrightChainStrings.Explorer_Title]: '区块浏览器',
@@ -1742,6 +1749,7 @@ export const MandarinStrings: ComponentStrings<BrightChainStringKey> = {
     '速率限制服务不可用。请求被拒绝。',
 
   [BrightChainStrings.Date_BrightDateTemplate]: 'BD {BD}',
+  [BrightChainStrings.Date_BrightDate_UTC_With_Benefits]: 'UTC 增强版',
 
   // ── DatePage ──
   [BrightChainStrings.DatePage_Title]: '日期与时间',

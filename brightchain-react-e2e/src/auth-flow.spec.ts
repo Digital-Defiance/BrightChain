@@ -14,7 +14,7 @@ test.describe('Auth Flow', () => {
     const timestamp = Date.now();
     await page.goto('/register');
     await expect(
-      page.getByRole('heading', { name: /register/i }),
+      page.getByRole('heading', { name: 'Register', exact: true }),
     ).toBeVisible();
 
     await page.locator('#username').fill(`e2euser${timestamp}`);

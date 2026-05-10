@@ -1,0 +1,105 @@
+import {
+  EnumLanguageTranslation,
+  i18nEngine,
+} from '@brightchain/brightchain-lib';
+import { LanguageCodes } from '@digitaldefiance/i18n-lib';
+import { ServiceRequestIntent } from '../orders';
+
+export type ServiceRequestIntentLanguageTranslation =
+  EnumLanguageTranslation<ServiceRequestIntent>;
+
+export const ServiceRequestIntentTranslations: ServiceRequestIntentLanguageTranslation =
+  i18nEngine.registerEnum(
+    ServiceRequestIntent,
+    {
+      [LanguageCodes.DE]: {
+        [ServiceRequestIntent.Proposal]: 'Vorschlag',
+        [ServiceRequestIntent.Plan]: 'Plan',
+        [ServiceRequestIntent.Directive]: 'Anweisung',
+        [ServiceRequestIntent.Order]: 'Auftrag',
+        [ServiceRequestIntent.OriginalOrder]: 'Originalauftrag',
+        [ServiceRequestIntent.ReflexOrder]: 'Reflexauftrag',
+        [ServiceRequestIntent.FillerOrder]: 'Ergänzungsauftrag',
+        [ServiceRequestIntent.InstanceOrder]: 'Instanzauftrag',
+        [ServiceRequestIntent.Option]: 'Option',
+      },
+      [LanguageCodes.EN_GB]: {
+        [ServiceRequestIntent.Proposal]: 'Proposal',
+        [ServiceRequestIntent.Plan]: 'Plan',
+        [ServiceRequestIntent.Directive]: 'Directive',
+        [ServiceRequestIntent.Order]: 'Order',
+        [ServiceRequestIntent.OriginalOrder]: 'Original Order',
+        [ServiceRequestIntent.ReflexOrder]: 'Reflex Order',
+        [ServiceRequestIntent.FillerOrder]: 'Filler Order',
+        [ServiceRequestIntent.InstanceOrder]: 'Instance Order',
+        [ServiceRequestIntent.Option]: 'Option',
+      },
+      [LanguageCodes.EN_US]: {
+        [ServiceRequestIntent.Proposal]: 'Proposal',
+        [ServiceRequestIntent.Plan]: 'Plan',
+        [ServiceRequestIntent.Directive]: 'Directive',
+        [ServiceRequestIntent.Order]: 'Order',
+        [ServiceRequestIntent.OriginalOrder]: 'Original Order',
+        [ServiceRequestIntent.ReflexOrder]: 'Reflex Order',
+        [ServiceRequestIntent.FillerOrder]: 'Filler Order',
+        [ServiceRequestIntent.InstanceOrder]: 'Instance Order',
+        [ServiceRequestIntent.Option]: 'Option',
+      },
+      [LanguageCodes.ES]: {
+        [ServiceRequestIntent.Proposal]: 'Propuesta',
+        [ServiceRequestIntent.Plan]: 'Plan',
+        [ServiceRequestIntent.Directive]: 'Directiva',
+        [ServiceRequestIntent.Order]: 'Orden',
+        [ServiceRequestIntent.OriginalOrder]: 'Orden original',
+        [ServiceRequestIntent.ReflexOrder]: 'Orden refleja',
+        [ServiceRequestIntent.FillerOrder]: 'Orden de relleno',
+        [ServiceRequestIntent.InstanceOrder]: 'Orden de instancia',
+        [ServiceRequestIntent.Option]: 'Opción',
+      },
+      [LanguageCodes.FR]: {
+        [ServiceRequestIntent.Proposal]: 'Proposition',
+        [ServiceRequestIntent.Plan]: 'Plan',
+        [ServiceRequestIntent.Directive]: 'Directive',
+        [ServiceRequestIntent.Order]: 'Ordonnance',
+        [ServiceRequestIntent.OriginalOrder]: 'Ordonnance originale',
+        [ServiceRequestIntent.ReflexOrder]: 'Ordonnance réflexe',
+        [ServiceRequestIntent.FillerOrder]: 'Ordonnance de remplissage',
+        [ServiceRequestIntent.InstanceOrder]: "Ordonnance d'instance",
+        [ServiceRequestIntent.Option]: 'Option',
+      },
+      [LanguageCodes.JA]: {
+        [ServiceRequestIntent.Proposal]: '提案',
+        [ServiceRequestIntent.Plan]: '計画',
+        [ServiceRequestIntent.Directive]: '指示',
+        [ServiceRequestIntent.Order]: 'オーダー',
+        [ServiceRequestIntent.OriginalOrder]: '元オーダー',
+        [ServiceRequestIntent.ReflexOrder]: 'リフレックスオーダー',
+        [ServiceRequestIntent.FillerOrder]: 'フィラーオーダー',
+        [ServiceRequestIntent.InstanceOrder]: 'インスタンスオーダー',
+        [ServiceRequestIntent.Option]: 'オプション',
+      },
+      [LanguageCodes.UK]: {
+        [ServiceRequestIntent.Proposal]: 'Пропозиція',
+        [ServiceRequestIntent.Plan]: 'План',
+        [ServiceRequestIntent.Directive]: 'Директива',
+        [ServiceRequestIntent.Order]: 'Замовлення',
+        [ServiceRequestIntent.OriginalOrder]: 'Оригінальне замовлення',
+        [ServiceRequestIntent.ReflexOrder]: 'Рефлексне замовлення',
+        [ServiceRequestIntent.FillerOrder]: 'Замовлення-заповнювач',
+        [ServiceRequestIntent.InstanceOrder]: 'Замовлення-екземпляр',
+        [ServiceRequestIntent.Option]: 'Опція',
+      },
+      [LanguageCodes.ZH_CN]: {
+        [ServiceRequestIntent.Proposal]: '建议',
+        [ServiceRequestIntent.Plan]: '计划',
+        [ServiceRequestIntent.Directive]: '指令',
+        [ServiceRequestIntent.Order]: '医嘱',
+        [ServiceRequestIntent.OriginalOrder]: '原始医嘱',
+        [ServiceRequestIntent.ReflexOrder]: '反射医嘱',
+        [ServiceRequestIntent.FillerOrder]: '填充医嘱',
+        [ServiceRequestIntent.InstanceOrder]: '实例医嘱',
+        [ServiceRequestIntent.Option]: '选项',
+      },
+    },
+    'ServiceRequestIntent',
+  );

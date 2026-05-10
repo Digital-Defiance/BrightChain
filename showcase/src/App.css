@@ -2,7 +2,7 @@
   width: 100%;
   min-height: 100vh;
   background: var(--bg-primary);
-  padding-top: 70px; /* Account for fixed navigation */
+  padding-top: 90px; /* Account for fixed navigation */
 }
 
 @media (max-width: 768px) {

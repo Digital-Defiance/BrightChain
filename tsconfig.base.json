@@ -23,6 +23,12 @@
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
     "paths": {
+      "subspace-lattice": [
+        "subspace-lattice/src/index.ts"
+      ],
+      "subspace-lattice-react": [
+        "subspace-lattice-react/src/index.ts"
+      ],
       "@brightchain/brightchart-lib": [
         "brightchart-lib/src/index.ts"
       ],
@@ -187,12 +193,6 @@
       ],
       "@brightchain/brightledger-assets-react-components/*": [
         "brightledger-assets-react-components/src/*"
-      ],
-      "@brightchain/brightdate": [
-        "brightdate/src/index.ts"
-      ],
-      "@brightchain/brightdate/*": [
-        "brightdate/src/*"
       ]
     }
   },

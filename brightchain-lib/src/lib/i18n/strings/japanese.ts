@@ -1564,6 +1564,13 @@ export const JapaneseStrings: ComponentStrings<BrightChainStringKey> = {
     'ブロック {BLOCK_ID} を削除してもよろしいですか？関連するパリティブロックもローカルストレージから削除されます。',
   [BrightChainStrings.Admin_Blocks_SizeBytesTemplate]: '{SIZE} バイト',
 
+  [BrightChainStrings.Games_Menu_Title]: 'ゲーム',
+  [BrightChainStrings.Subspace_Lattice]: '亜空間ラティス',
+  [BrightChainStrings.Subspace]: 'サブスペース',
+  [BrightChainStrings.Lattice]: '格子',
+  [BrightChainStrings.Subspace_Lattice_Description]:
+    '陣取りと戦術的機動を融合させた戦略ゲーム。センサーネットを投射して領空を確保しましょう。高速補給線とワープ可能な艦隊を構築し、敵の裏をかいてセクターを支配してください。',
+
   // Public Block Explorer
   [BrightChainStrings.Explorer_Menu_Title]: 'ブロックエクスプローラー',
   [BrightChainStrings.Explorer_Title]: 'ブロックエクスプローラー',
@@ -1810,6 +1817,7 @@ export const JapaneseStrings: ComponentStrings<BrightChainStringKey> = {
     'レート制限サービスが利用できません。リクエストが拒否されました。',
 
   [BrightChainStrings.Date_BrightDateTemplate]: 'BD {BD}',
+  [BrightChainStrings.Date_BrightDate_UTC_With_Benefits]: 'UTC（特典付き）',
 
   // ── DatePage ──
   [BrightChainStrings.DatePage_Title]: '日付と時刻',

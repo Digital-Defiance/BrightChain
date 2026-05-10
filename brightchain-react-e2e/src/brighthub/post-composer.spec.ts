@@ -155,7 +155,9 @@ test.describe('PostComposer', () => {
       await gotoTimeline(page);
 
       // Attach 4 files via the hidden input
-      const fileInput = page.locator('input[type="file"][accept*="image"]');
+      const fileInput = page.locator(
+        'input[type="file"][data-testid="post-attachment-input"]',
+      );
       await expect(fileInput).toBeAttached({ timeout: 10_000 });
       const files = Array.from({ length: 4 }, (_, i) => ({
         name: `test-${i}.png`,
@@ -175,7 +177,9 @@ test.describe('PostComposer', () => {
     }) => {
       await gotoTimeline(page);
 
-      const fileInput = page.locator('input[type="file"][accept*="image"]');
+      const fileInput = page.locator(
+        'input[type="file"][data-testid="post-attachment-input"]',
+      );
       await expect(fileInput).toBeAttached({ timeout: 10_000 });
       await fileInput.setInputFiles({
         name: 'test.png',
@@ -195,7 +199,9 @@ test.describe('PostComposer', () => {
     }) => {
       await gotoTimeline(page);
 
-      const fileInput = page.locator('input[type="file"][accept*="image"]');
+      const fileInput = page.locator(
+        'input[type="file"][data-testid="post-attachment-input"]',
+      );
       await expect(fileInput).toBeAttached({ timeout: 10_000 });
       await fileInput.setInputFiles({
         name: 'test.png',
