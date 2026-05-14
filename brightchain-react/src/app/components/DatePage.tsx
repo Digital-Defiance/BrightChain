@@ -9,7 +9,10 @@ import {
   nowAsBrightDate,
   toBrightDateString,
 } from '@brightchain/brightchain-lib';
-import { BrightDate, HeroBadge } from '@brightchain/brightchain-react-components';
+import {
+  BrightDate,
+  HeroBadge,
+} from '@brightchain/brightchain-react-components';
 import { useI18n } from '@digitaldefiance/express-suite-react-components';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
@@ -386,7 +389,7 @@ export const DatePage: FC = () => {
         <CardContent>
           <Typography variant="h6" gutterBottom>
             <Link
-              href="https://github.com/Digital-Defiance/brightdate/blob/main/README.md"
+              href="https://brightdate.org"
               target="_blank"
               rel="noopener noreferrer"
             >
