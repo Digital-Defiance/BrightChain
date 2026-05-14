@@ -388,7 +388,7 @@ export const DatePage: FC = () => {
           <CardContent>
             <Typography variant="h6" gutterBottom>
               <Link
-                href="https://github.com/Digital-Defiance/brightdate/blob/main/README.md"
+                href="https://brightdate.org"
                 target="_blank"
                 rel="noopener noreferrer"
               >
