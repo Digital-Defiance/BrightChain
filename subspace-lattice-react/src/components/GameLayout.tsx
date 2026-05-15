@@ -73,7 +73,17 @@ export const GameLayout: React.FC = () => {
       : 'OBSERVER';
 
   if (!activeRoom || !engine) {
-    return <Lobby onCreateRoom={handleCreateRoom} onJoinRoom={handleJoinRoom} />;
+    // If we've hydrated an activeRoom from the URL but the user isn't seated
+    // yet (engine is null), pre-fill the Lobby join form with the room code
+    // so they just hit "Engage" to take the open seat.
+    const pendingRoomCode = activeRoom?.roomCode ?? routeRoomCode;
+    return (
+      <Lobby
+        onCreateRoom={handleCreateRoom}
+        onJoinRoom={handleJoinRoom}
+        initialRoomCode={pendingRoomCode}
+      />
+    );
   }
 
   return (
@@ -84,7 +94,20 @@ export const GameLayout: React.FC = () => {
             <h2>{activeRoom.name}</h2>
             <button className="rules-btn" onClick={() => setShowRules(true)}>View Rules</button>
         </div>
-        <p>Room Code: <strong>{activeRoom.roomCode}</strong></p>
+        <div className="room-code-share">
+          <span>Room Code: <strong>{activeRoom.roomCode}</strong></span>
+          <button
+            className="copy-code-btn"
+            title="Copy join link"
+            onClick={() =>
+              void navigator.clipboard.writeText(
+                `${window.location.origin}/game/subspace-lattice/${activeRoom.roomCode}`,
+              )
+            }
+          >
+            Copy Link
+          </button>
+        </div>
         <p>Your Role: <strong>{localPlayerColor}</strong></p>
         <p>Current Turn: <strong>{engine.getState().currentPlayer}</strong></p>
         {engine.getState().winner && (

@@ -59,10 +59,10 @@ export const useGameSync = (localPlayerId: string) => {
     // This structure depends on how EventNotificationSystem formats its payloads
     // We assume a format like { event: 'game:piece-moved', data: { ... } }
 
-    if (lastMessage.event === 'game:piece-moved') {
-      handleIncomingMove(lastMessage.data);
-    } else if (lastMessage.event === 'game:chat-message') {
-      handleIncomingChat(lastMessage.data);
+    if (lastMessage.type === 'game:piece-moved') {
+      handleIncomingMove(lastMessage.metadata as IMovePieceEventPayload<string>);
+    } else if (lastMessage.type === 'game:chat-message') {
+      handleIncomingChat(lastMessage.metadata as IChatMessageSentEventPayload<string>);
     }
   }, [lastMessage, handleIncomingMove, handleIncomingChat]);
 
@@ -106,23 +106,36 @@ export const useGameSync = (localPlayerId: string) => {
    * Hydrate state from a roomCode (e.g. on initial mount when the URL contains
    * /game/subspace-lattice/{roomCode}). Does NOT mutate participant lists;
    * use `joinRoom` for that.
+   *
+   * If the local player is already seated (refresh recovery), the engine is
+   * restored so the board renders immediately. If they are not yet a
+   * participant, only `activeRoom` is set — this keeps `engine` null so
+   * GameLayout continues to render the Lobby, letting the user join via the
+   * pre-filled join form.
    */
   const hydrateFromRoomCode = useCallback(
     async (roomCode: string) => {
       try {
         const room = await apiClient.getRoomByCode(roomCode);
-        setEngine(new SubspaceLatticeEngine());
-        setActiveRoom({ ...room, chatMessages: room.chatMessages ?? [] });
+        const hydrated = { ...room, chatMessages: room.chatMessages ?? [] };
+        setActiveRoom(hydrated);
+        const isAlreadyPlayer =
+          room.whitePlayerId === localPlayerId ||
+          room.blackPlayerId === localPlayerId;
+        if (isAlreadyPlayer) {
+          setEngine(new SubspaceLatticeEngine());
+        }
         return room;
       } catch (error) {
         console.error('Failed to hydrate room:', error);
         return null;
       }
     },
-    // apiClient is recreated each render but stable in behavior; intentionally
-    // omitting from deps to avoid re-running on every render.
+    // localPlayerId is stable for the lifetime of the hook; apiClient is
+    // recreated each render but stable in behavior. Intentionally omitting
+    // apiClient from deps to avoid re-running on every render.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [],
+    [localPlayerId],
   );
 
   const sendMove = async (roomId: string, pieceId: string, to: Coordinate) => {

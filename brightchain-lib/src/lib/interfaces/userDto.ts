@@ -54,6 +54,7 @@ export interface IRegistrationRequest {
   password: string;
   displayName?: string;
   mnemonic?: string; // optional BIP39 mnemonic for user-provided identity recovery
+  directChallenge?: boolean; // opt-in to direct-challenge (passwordless) login at registration time
 }
 
 /**

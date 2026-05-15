@@ -283,6 +283,11 @@ export class ClientWebSocketServer implements ISystemEventBroadcaster {
           clearTimeout(authTimeout);
           ws.removeListener('message', onFirstMessage);
         });
+
+        ws.on('error', () => {
+          clearTimeout(authTimeout);
+          ws.removeListener('message', onFirstMessage);
+        });
       }
     });
   }

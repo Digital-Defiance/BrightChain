@@ -4,12 +4,14 @@ import './Lobby.css';
 interface LobbyProps {
   onCreateRoom: (name: string, password?: string) => void;
   onJoinRoom: (roomCode: string, password?: string, asObserver?: boolean) => void;
+  /** Pre-fill the join form and switch to the Join tab automatically. */
+  initialRoomCode?: string;
 }
 
-export const Lobby: React.FC<LobbyProps> = ({ onCreateRoom, onJoinRoom }) => {
-  const [isCreating, setIsCreating] = useState(true);
+export const Lobby: React.FC<LobbyProps> = ({ onCreateRoom, onJoinRoom, initialRoomCode }) => {
+  const [isCreating, setIsCreating] = useState(!initialRoomCode);
   const [roomName, setRoomName] = useState('');
-  const [roomCode, setRoomCode] = useState('');
+  const [roomCode, setRoomCode] = useState(initialRoomCode ?? '');
   const [password, setPassword] = useState('');
   const [asObserver, setAsObserver] = useState(false);
 

@@ -1,7 +1,8 @@
 import { BlockAnnouncement } from '@brightchain/brightchain-lib';
 import { IECIESConfig } from '@digitaldefiance/ecies-lib';
 import { ECIESService, SignatureBuffer } from '@digitaldefiance/node-ecies-lib';
-import { Server } from 'http';
+import { IncomingMessage, Server } from 'http';
+import { Duplex } from 'stream';
 import { WebSocket, WebSocketServer } from 'ws';
 import type { EncryptedBatchPayload } from '../availability/gossipService';
 
@@ -31,8 +32,16 @@ export class WebSocketMessageServer {
   /** Optional callback to check if a node's public key is banned */
   private isBannedCallback?: (publicKey: Buffer) => boolean;
 
-  constructor(server: Server, requireAuth = true) {
-    this.wss = new WebSocketServer({ server });
+  /**
+   * @param server - Optional HTTP server. When provided, upgrade requests are
+   *   handled automatically (useful for standalone use / tests).
+   *   In production, pass `null` and route upgrades manually via `handleUpgrade`
+   *   so multiple WebSocketServer instances on the same HTTP server do not
+   *   conflict (each would otherwise call handleUpgrade on the same socket).
+   * @param requireAuth - Require ECIES node authentication (default: true).
+   */
+  constructor(server?: Server | null, requireAuth = true) {
+    this.wss = new WebSocketServer({ noServer: true });
     // SECURITY: Default to requiring authentication in production.
     // The requireAuth=false path is only for development/testing.
     this.requireAuth = requireAuth;
@@ -42,6 +51,14 @@ export class WebSocketMessageServer {
         '[WebSocketMessageServer] WARNING: Authentication is DISABLED. ' +
           'Any peer can connect with any nodeId. This is only safe for development.',
       );
+    }
+
+    if (server) {
+      // Auto-register upgrade handler when a server is provided.
+      // Only safe when this is the sole WSS on the HTTP server.
+      server.on('upgrade', (req: IncomingMessage, socket: Duplex, head: Buffer) => {
+        this.handleUpgrade(req, socket, head);
+      });
     }
 
     // Create Node.js-compatible ECIES config with full algorithm name
@@ -56,6 +73,17 @@ export class WebSocketMessageServer {
 
     this.eciesService = new ECIESService(config);
     this.setupConnectionHandler();
+  }
+
+  /**
+   * Route an HTTP upgrade request to this server.
+   * Call from a central upgrade handler to avoid multiple WSS instances
+   * registering on the same HTTP server.
+   */
+  handleUpgrade(req: IncomingMessage, socket: Duplex, head: Buffer): void {
+    this.wss.handleUpgrade(req, socket, head, (ws) => {
+      this.wss.emit('connection', ws, req);
+    });
   }
 
   /**

@@ -34,16 +34,16 @@ import {
   ApiErrorResponse,
   Controller,
   DecoratorBaseController,
+  findAuthToken,
   Get,
   IApiChallengeResponse,
   IApiMessageResponse,
   IStatusCodeResponse,
   Post,
   Put,
+  ServiceKeys,
   SystemUserService,
   TotpService,
-  ServiceKeys,
-  findAuthToken,
 } from '@digitaldefiance/node-express-suite';
 import {
   getSuiteCoreTranslation,
@@ -51,8 +51,12 @@ import {
   SuiteCoreStringKey,
 } from '@digitaldefiance/suite-core-lib';
 import { randomBytes } from 'crypto';
-import { verify as jwtVerify, JwtPayload, TokenExpiredError as JwtTokenExpiredError } from 'jsonwebtoken';
 import type { NextFunction, Request, Response } from 'express';
+import {
+  JwtPayload,
+  TokenExpiredError as JwtTokenExpiredError,
+  verify as jwtVerify,
+} from 'jsonwebtoken';
 import { SchemaCollection } from '../enumerations/schema-collection';
 import type { IBrightDbApplication } from '../interfaces/bright-db-application';
 import {
@@ -133,8 +137,14 @@ export class BrightDbUserController<
     }
 
     try {
-      const { username, email, password, mnemonic, displayName } =
-        req.body as unknown as IRegistrationRequest;
+      const {
+        username,
+        email,
+        password,
+        mnemonic,
+        displayName,
+        directChallenge,
+      } = req.body as unknown as IRegistrationRequest;
 
       const authService =
         this.application.services.get<BrightDbAuthService<TID>>('auth');
@@ -144,6 +154,7 @@ export class BrightDbUserController<
         new SecureString(password),
         mnemonic ? new SecureString(mnemonic) : undefined,
         displayName,
+        directChallenge ?? false,
       );
 
       // Hook for subclasses to perform post-registration actions
@@ -459,8 +470,14 @@ export class BrightDbUserController<
               status: profile.publicProfile.status,
               storageQuota: profile.publicProfile.storageQuota?.toString(),
               storageUsed: profile.publicProfile.storageUsed?.toString(),
-              lastActive: profile.publicProfile.lastActive !== undefined ? brightDateToISO(profile.publicProfile.lastActive) : undefined,
-              dateCreated: profile.publicProfile.dateCreated !== undefined ? brightDateToISO(profile.publicProfile.dateCreated) : undefined,
+              lastActive:
+                profile.publicProfile.lastActive !== undefined
+                  ? brightDateToISO(profile.publicProfile.lastActive)
+                  : undefined,
+              dateCreated:
+                profile.publicProfile.dateCreated !== undefined
+                  ? brightDateToISO(profile.publicProfile.dateCreated)
+                  : undefined,
             };
           }
         }
@@ -571,8 +588,14 @@ export class BrightDbUserController<
               status: profile.publicProfile.status,
               storageQuota: profile.publicProfile.storageQuota?.toString(),
               storageUsed: profile.publicProfile.storageUsed?.toString(),
-              lastActive: profile.publicProfile.lastActive !== undefined ? brightDateToISO(profile.publicProfile.lastActive) : undefined,
-              dateCreated: profile.publicProfile.dateCreated !== undefined ? brightDateToISO(profile.publicProfile.dateCreated) : undefined,
+              lastActive:
+                profile.publicProfile.lastActive !== undefined
+                  ? brightDateToISO(profile.publicProfile.lastActive)
+                  : undefined,
+              dateCreated:
+                profile.publicProfile.dateCreated !== undefined
+                  ? brightDateToISO(profile.publicProfile.dateCreated)
+                  : undefined,
             };
           }
         }
@@ -1087,8 +1110,16 @@ export class BrightDbUserController<
           siteLanguage: user.siteLanguage,
           directChallenge: user.directChallenge,
           ...(user.lastLogin && { lastLogin: user.lastLogin }),
-          ...((user as IRequestUserDTO & { brightDateDisplay?: BrightDateDisplayMode }).brightDateDisplay && {
-            brightDateDisplay: (user as IRequestUserDTO & { brightDateDisplay?: BrightDateDisplayMode }).brightDateDisplay,
+          ...((
+            user as IRequestUserDTO & {
+              brightDateDisplay?: BrightDateDisplayMode;
+            }
+          ).brightDateDisplay && {
+            brightDateDisplay: (
+              user as IRequestUserDTO & {
+                brightDateDisplay?: BrightDateDisplayMode;
+              }
+            ).brightDateDisplay,
           }),
         },
       },
@@ -1385,7 +1416,14 @@ export class BrightDbUserController<
     _next: NextFunction,
   ): Promise<IStatusCodeResponse<IApiTotpSetupResponse | IApiMessageResponse>> {
     if (!req.user) {
-      return { statusCode: 401, response: { message: getSuiteCoreTranslation(SuiteCoreStringKey.Common_NoUserOnRequest) } };
+      return {
+        statusCode: 401,
+        response: {
+          message: getSuiteCoreTranslation(
+            SuiteCoreStringKey.Common_NoUserOnRequest,
+          ),
+        },
+      };
     }
 
     const user = req.user as IRequestUserDTO;
@@ -1401,15 +1439,23 @@ export class BrightDbUserController<
 
     let userDoc = await usersCol.findOne({ _id: idHex } as never);
     if (!userDoc) {
-      const dashed = idHex.replace(/^([0-9a-f]{8})([0-9a-f]{4})([0-9a-f]{4})([0-9a-f]{4})([0-9a-f]{12})$/i, '$1-$2-$3-$4-$5');
+      const dashed = idHex.replace(
+        /^([0-9a-f]{8})([0-9a-f]{4})([0-9a-f]{4})([0-9a-f]{4})([0-9a-f]{12})$/i,
+        '$1-$2-$3-$4-$5',
+      );
       userDoc = await usersCol.findOne({ _id: dashed } as never);
     }
 
     if (userDoc?.totpEnabled) {
-      return { statusCode: 409, response: { message: 'TOTP is already active' } };
+      return {
+        statusCode: 409,
+        response: { message: 'TOTP is already active' },
+      };
     }
 
-    const totpService = this.application.services.get<TotpService>(ServiceKeys.TOTP);
+    const totpService = this.application.services.get<TotpService>(
+      ServiceKeys.TOTP,
+    );
     const secret = totpService.generateSecret();
 
     // Encrypt with system user's ECIES public key for server-side decryption
@@ -1417,12 +1463,17 @@ export class BrightDbUserController<
       this.application.environment as never,
       this.application.constants,
     );
-    const encryptedSecret = (await systemUser.encryptData(Buffer.from(secret, 'utf-8'))).toString('hex');
+    const encryptedSecret = (
+      await systemUser.encryptData(Buffer.from(secret, 'utf-8'))
+    ).toString('hex');
 
     const docId = userDoc?._id ?? idHex;
     if (!userDoc) {
       // Document doesn't exist yet — create it with the pending secret
-      await usersCol.create({ _id: docId, totpPendingSecret: encryptedSecret } as never);
+      await usersCol.create({
+        _id: docId,
+        totpPendingSecret: encryptedSecret,
+      } as never);
     } else {
       await usersCol.updateOne(
         { _id: docId } as never,
@@ -1453,12 +1504,22 @@ export class BrightDbUserController<
     _next: NextFunction,
   ): Promise<IStatusCodeResponse<IApiMessageResponse>> {
     if (!req.user) {
-      return { statusCode: 401, response: { message: getSuiteCoreTranslation(SuiteCoreStringKey.Common_NoUserOnRequest) } };
+      return {
+        statusCode: 401,
+        response: {
+          message: getSuiteCoreTranslation(
+            SuiteCoreStringKey.Common_NoUserOnRequest,
+          ),
+        },
+      };
     }
 
     const { code } = req.body as { code?: unknown };
     if (typeof code !== 'string' || !/^\d{6}$/.test(code)) {
-      return { statusCode: 400, response: { message: 'Code must be exactly 6 digits' } };
+      return {
+        statusCode: 400,
+        response: { message: 'Code must be exactly 6 digits' },
+      };
     }
 
     const user = req.user as IRequestUserDTO;
@@ -1475,21 +1536,31 @@ export class BrightDbUserController<
 
     let userDoc = await usersCol.findOne({ _id: idHex } as never);
     if (!userDoc) {
-      const dashed = idHex.replace(/^([0-9a-f]{8})([0-9a-f]{4})([0-9a-f]{4})([0-9a-f]{4})([0-9a-f]{12})$/i, '$1-$2-$3-$4-$5');
+      const dashed = idHex.replace(
+        /^([0-9a-f]{8})([0-9a-f]{4})([0-9a-f]{4})([0-9a-f]{4})([0-9a-f]{12})$/i,
+        '$1-$2-$3-$4-$5',
+      );
       userDoc = await usersCol.findOne({ _id: dashed } as never);
     }
 
     if (!userDoc?.totpPendingSecret) {
-      return { statusCode: 400, response: { message: 'TOTP setup has not been initiated' } };
+      return {
+        statusCode: 400,
+        response: { message: 'TOTP setup has not been initiated' },
+      };
     }
 
     const systemUser = SystemUserService.getSystemUser(
       this.application.environment as never,
       this.application.constants,
     );
-    const decryptedSecret = systemUser.decryptData(Buffer.from(userDoc.totpPendingSecret, 'hex')).toString('utf-8');
+    const decryptedSecret = systemUser
+      .decryptData(Buffer.from(userDoc.totpPendingSecret, 'hex'))
+      .toString('utf-8');
 
-    const totpService = this.application.services.get<TotpService>(ServiceKeys.TOTP);
+    const totpService = this.application.services.get<TotpService>(
+      ServiceKeys.TOTP,
+    );
     if (!totpService.verifyCode(decryptedSecret, code)) {
       return { statusCode: 400, response: { message: 'Invalid TOTP code' } };
     }
@@ -1497,10 +1568,17 @@ export class BrightDbUserController<
     const docId = userDoc._id ?? idHex;
     await usersCol.updateOne(
       { _id: docId } as never,
-      { totpSecret: userDoc.totpPendingSecret, totpEnabled: true, totpPendingSecret: null } as never,
+      {
+        totpSecret: userDoc.totpPendingSecret,
+        totpEnabled: true,
+        totpPendingSecret: null,
+      } as never,
     );
 
-    return { statusCode: 200, response: { message: 'TOTP has been enabled successfully' } };
+    return {
+      statusCode: 200,
+      response: { message: 'TOTP has been enabled successfully' },
+    };
   }
 
   /**
@@ -1514,12 +1592,22 @@ export class BrightDbUserController<
     _next: NextFunction,
   ): Promise<IStatusCodeResponse<IApiMessageResponse>> {
     if (!req.user) {
-      return { statusCode: 401, response: { message: getSuiteCoreTranslation(SuiteCoreStringKey.Common_NoUserOnRequest) } };
+      return {
+        statusCode: 401,
+        response: {
+          message: getSuiteCoreTranslation(
+            SuiteCoreStringKey.Common_NoUserOnRequest,
+          ),
+        },
+      };
     }
 
     const { code } = req.body as { code?: unknown };
     if (typeof code !== 'string' || !/^\d{6}$/.test(code)) {
-      return { statusCode: 400, response: { message: 'Code must be exactly 6 digits' } };
+      return {
+        statusCode: 400,
+        response: { message: 'Code must be exactly 6 digits' },
+      };
     }
 
     const user = req.user as IRequestUserDTO;
@@ -1536,21 +1624,31 @@ export class BrightDbUserController<
 
     let userDoc = await usersCol.findOne({ _id: idHex } as never);
     if (!userDoc) {
-      const dashed = idHex.replace(/^([0-9a-f]{8})([0-9a-f]{4})([0-9a-f]{4})([0-9a-f]{4})([0-9a-f]{12})$/i, '$1-$2-$3-$4-$5');
+      const dashed = idHex.replace(
+        /^([0-9a-f]{8})([0-9a-f]{4})([0-9a-f]{4})([0-9a-f]{4})([0-9a-f]{12})$/i,
+        '$1-$2-$3-$4-$5',
+      );
       userDoc = await usersCol.findOne({ _id: dashed } as never);
     }
 
     if (!userDoc?.totpEnabled) {
-      return { statusCode: 409, response: { message: 'TOTP is not currently active' } };
+      return {
+        statusCode: 409,
+        response: { message: 'TOTP is not currently active' },
+      };
     }
 
     const systemUser = SystemUserService.getSystemUser(
       this.application.environment as never,
       this.application.constants,
     );
-    const decryptedSecret = systemUser.decryptData(Buffer.from(userDoc.totpSecret as string, 'hex')).toString('utf-8');
+    const decryptedSecret = systemUser
+      .decryptData(Buffer.from(userDoc.totpSecret as string, 'hex'))
+      .toString('utf-8');
 
-    const totpService = this.application.services.get<TotpService>(ServiceKeys.TOTP);
+    const totpService = this.application.services.get<TotpService>(
+      ServiceKeys.TOTP,
+    );
     if (!totpService.verifyCode(decryptedSecret, code)) {
       return { statusCode: 400, response: { message: 'Invalid TOTP code' } };
     }
@@ -1558,10 +1656,17 @@ export class BrightDbUserController<
     const docId = userDoc._id ?? idHex;
     await usersCol.updateOne(
       { _id: docId } as never,
-      { totpEnabled: false, totpSecret: null, totpPendingSecret: null } as never,
+      {
+        totpEnabled: false,
+        totpSecret: null,
+        totpPendingSecret: null,
+      } as never,
     );
 
-    return { statusCode: 200, response: { message: 'TOTP has been disabled successfully' } };
+    return {
+      statusCode: 200,
+      response: { message: 'TOTP has been disabled successfully' },
+    };
   }
 
   /**
@@ -1575,12 +1680,22 @@ export class BrightDbUserController<
     _next: NextFunction,
   ): Promise<IStatusCodeResponse<IApiTotpSetupResponse | IApiMessageResponse>> {
     if (!req.user) {
-      return { statusCode: 401, response: { message: getSuiteCoreTranslation(SuiteCoreStringKey.Common_NoUserOnRequest) } };
+      return {
+        statusCode: 401,
+        response: {
+          message: getSuiteCoreTranslation(
+            SuiteCoreStringKey.Common_NoUserOnRequest,
+          ),
+        },
+      };
     }
 
     const { code } = req.body as { code?: unknown };
     if (typeof code !== 'string' || !/^\d{6}$/.test(code)) {
-      return { statusCode: 400, response: { message: 'Code must be exactly 6 digits' } };
+      return {
+        statusCode: 400,
+        response: { message: 'Code must be exactly 6 digits' },
+      };
     }
 
     const user = req.user as IRequestUserDTO;
@@ -1596,27 +1711,39 @@ export class BrightDbUserController<
 
     let userDoc = await usersCol.findOne({ _id: idHex } as never);
     if (!userDoc) {
-      const dashed = idHex.replace(/^([0-9a-f]{8})([0-9a-f]{4})([0-9a-f]{4})([0-9a-f]{4})([0-9a-f]{12})$/i, '$1-$2-$3-$4-$5');
+      const dashed = idHex.replace(
+        /^([0-9a-f]{8})([0-9a-f]{4})([0-9a-f]{4})([0-9a-f]{4})([0-9a-f]{12})$/i,
+        '$1-$2-$3-$4-$5',
+      );
       userDoc = await usersCol.findOne({ _id: dashed } as never);
     }
 
     if (!userDoc?.totpEnabled) {
-      return { statusCode: 409, response: { message: 'TOTP is not currently active' } };
+      return {
+        statusCode: 409,
+        response: { message: 'TOTP is not currently active' },
+      };
     }
 
     const systemUser = SystemUserService.getSystemUser(
       this.application.environment as never,
       this.application.constants,
     );
-    const decryptedSecret = systemUser.decryptData(Buffer.from(userDoc.totpSecret as string, 'hex')).toString('utf-8');
+    const decryptedSecret = systemUser
+      .decryptData(Buffer.from(userDoc.totpSecret as string, 'hex'))
+      .toString('utf-8');
 
-    const totpService = this.application.services.get<TotpService>(ServiceKeys.TOTP);
+    const totpService = this.application.services.get<TotpService>(
+      ServiceKeys.TOTP,
+    );
     if (!totpService.verifyCode(decryptedSecret, code)) {
       return { statusCode: 400, response: { message: 'Invalid TOTP code' } };
     }
 
     const newSecret = totpService.generateSecret();
-    const encryptedNewSecret = (await systemUser.encryptData(Buffer.from(newSecret, 'utf-8'))).toString('hex');
+    const encryptedNewSecret = (
+      await systemUser.encryptData(Buffer.from(newSecret, 'utf-8'))
+    ).toString('hex');
 
     const docId = userDoc._id ?? idHex;
     await usersCol.updateOne(
@@ -1632,7 +1759,11 @@ export class BrightDbUserController<
 
     return {
       statusCode: 200,
-      response: { provisioningUri, secret: newSecret, message: 'TOTP reset initiated. Please confirm with the new code.' },
+      response: {
+        provisioningUri,
+        secret: newSecret,
+        message: 'TOTP reset initiated. Please confirm with the new code.',
+      },
     };
   }
 
@@ -1648,7 +1779,14 @@ export class BrightDbUserController<
   ): Promise<IStatusCodeResponse<IApiLoginResponse | IApiMessageResponse>> {
     const token = findAuthToken(req.headers);
     if (!token) {
-      return { statusCode: 401, response: { message: getSuiteCoreTranslation(SuiteCoreStringKey.Validation_InvalidToken) } };
+      return {
+        statusCode: 401,
+        response: {
+          message: getSuiteCoreTranslation(
+            SuiteCoreStringKey.Validation_InvalidToken,
+          ),
+        },
+      };
     }
 
     let decoded: JwtPayload;
@@ -1659,20 +1797,44 @@ export class BrightDbUserController<
       ) as JwtPayload;
     } catch (err) {
       if (err instanceof JwtTokenExpiredError) {
-        return { statusCode: 401, response: { message: getSuiteCoreTranslation(SuiteCoreStringKey.Validation_TokenExpired) } };
+        return {
+          statusCode: 401,
+          response: {
+            message: getSuiteCoreTranslation(
+              SuiteCoreStringKey.Validation_TokenExpired,
+            ),
+          },
+        };
       }
-      return { statusCode: 401, response: { message: getSuiteCoreTranslation(SuiteCoreStringKey.Validation_InvalidToken) } };
+      return {
+        statusCode: 401,
+        response: {
+          message: getSuiteCoreTranslation(
+            SuiteCoreStringKey.Validation_InvalidToken,
+          ),
+        },
+      };
     }
 
     if (!decoded || decoded['pendingTotp'] !== true || !decoded['userId']) {
-      return { statusCode: 401, response: { message: getSuiteCoreTranslation(SuiteCoreStringKey.Validation_InvalidToken) } };
+      return {
+        statusCode: 401,
+        response: {
+          message: getSuiteCoreTranslation(
+            SuiteCoreStringKey.Validation_InvalidToken,
+          ),
+        },
+      };
     }
 
     const userId = decoded['userId'] as string;
 
     const { code } = req.body as { code?: unknown };
     if (typeof code !== 'string' || !/^\d{6}$/.test(code)) {
-      return { statusCode: 400, response: { message: 'Code must be exactly 6 digits' } };
+      return {
+        statusCode: 400,
+        response: { message: 'Code must be exactly 6 digits' },
+      };
     }
 
     const sp = ServiceProvider.getInstance();
@@ -1689,27 +1851,43 @@ export class BrightDbUserController<
 
     let userDoc = await usersCol.findOne({ _id: idHex } as never);
     if (!userDoc) {
-      const dashed = idHex.replace(/^([0-9a-f]{8})([0-9a-f]{4})([0-9a-f]{4})([0-9a-f]{4})([0-9a-f]{12})$/i, '$1-$2-$3-$4-$5');
+      const dashed = idHex.replace(
+        /^([0-9a-f]{8})([0-9a-f]{4})([0-9a-f]{4})([0-9a-f]{4})([0-9a-f]{12})$/i,
+        '$1-$2-$3-$4-$5',
+      );
       userDoc = await usersCol.findOne({ _id: dashed } as never);
     }
 
     if (!userDoc?.totpEnabled || !userDoc.totpSecret) {
-      return { statusCode: 401, response: { message: getSuiteCoreTranslation(SuiteCoreStringKey.Validation_InvalidToken) } };
+      return {
+        statusCode: 401,
+        response: {
+          message: getSuiteCoreTranslation(
+            SuiteCoreStringKey.Validation_InvalidToken,
+          ),
+        },
+      };
     }
 
     const systemUser = SystemUserService.getSystemUser(
       this.application.environment as never,
       this.application.constants,
     );
-    const decryptedSecret = systemUser.decryptData(Buffer.from(userDoc.totpSecret, 'hex')).toString('utf-8');
+    const decryptedSecret = systemUser
+      .decryptData(Buffer.from(userDoc.totpSecret, 'hex'))
+      .toString('utf-8');
 
-    const totpService = this.application.services.get<TotpService>(ServiceKeys.TOTP);
+    const totpService = this.application.services.get<TotpService>(
+      ServiceKeys.TOTP,
+    );
     if (!totpService.verifyCode(decryptedSecret, code)) {
       return { statusCode: 400, response: { message: 'Invalid TOTP code' } };
     }
 
-    const authService = this.application.services.get<BrightDbAuthService<TID>>('auth');
-    const memberStore = this.application.services.get<MemberStore>('memberStore');
+    const authService =
+      this.application.services.get<BrightDbAuthService<TID>>('auth');
+    const memberStore =
+      this.application.services.get<MemberStore>('memberStore');
 
     let memberName = userDoc.username ?? userId;
     let memberType = MemberType.User;
@@ -1740,7 +1918,12 @@ export class BrightDbUserController<
           username: memberName,
           email: userDoc.email ?? '',
           roles: [],
-          rolePrivileges: { admin: false, member: true, child: false, system: false },
+          rolePrivileges: {
+            admin: false,
+            member: true,
+            child: false,
+            system: false,
+          },
           emailVerified: true,
           timezone: 'UTC',
           siteLanguage: 'en-US',
@@ -1755,7 +1938,12 @@ export class BrightDbUserController<
         username: memberName,
         email: userDoc.email ?? '',
         roles: [],
-        rolePrivileges: { admin: false, member: true, child: false, system: false },
+        rolePrivileges: {
+          admin: false,
+          member: true,
+          child: false,
+          system: false,
+        },
         emailVerified: true,
         timezone: 'UTC',
         siteLanguage: 'en-US',

@@ -11,14 +11,12 @@ export const useSubspaceLatticeSocket = (roomId: string | null) => {
 
     // Determine WebSocket protocol
     const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = `${wsProtocol}//${window.location.host}/?token=${encodeURIComponent(token)}`;
+    const wsUrl = `${wsProtocol}//${window.location.host}/ws/client?token=${encodeURIComponent(token)}`;
 
     const newSocket = new WebSocket(wsUrl);
 
     newSocket.onopen = () => {
       console.log('Subspace Lattice WebSocket connected');
-      // Subscribe to room-specific events
-      newSocket.send(JSON.stringify({ type: 'subscribe', topic: `game:${roomId}` }));
     };
 
     newSocket.onmessage = (event) => {

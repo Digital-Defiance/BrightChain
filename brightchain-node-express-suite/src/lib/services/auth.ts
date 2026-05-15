@@ -87,6 +87,7 @@ export class BrightDbAuthService<TID extends PlatformID = Buffer> {
     password: SecureString,
     mnemonic?: SecureString,
     displayName?: string,
+    directChallenge = false,
   ): Promise<IAuthToken> {
     // Check for duplicate email
     const existing = await this.memberStore.queryIndex({ email });
@@ -281,7 +282,7 @@ export class BrightDbAuthService<TID extends PlatformID = Buffer> {
         backupCodes: [],
         accountStatus: 'PendingEmailVerification',
         emailVerified: false,
-        directChallenge: false,
+        directChallenge: directChallenge,
         timezone: 'UTC',
         siteLanguage: 'en-US',
         darkMode: false,
@@ -542,11 +543,9 @@ export class BrightDbAuthService<TID extends PlatformID = Buffer> {
    * Expires in 600 seconds (10 minutes).
    */
   signPendingTotpToken(userId: string): string {
-    return jwt.sign(
-      { userId, pendingTotp: true },
-      this.jwtSecret,
-      { expiresIn: 600 },
-    );
+    return jwt.sign({ userId, pendingTotp: true }, this.jwtSecret, {
+      expiresIn: 600,
+    });
   }
 
   async verifyToken(token: string): Promise<ITokenPayload> {

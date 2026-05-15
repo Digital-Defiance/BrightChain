@@ -476,8 +476,10 @@ export class App<TID extends PlatformID>
 
     // WebSocket — attach to the captured HTTP server
     if (this._httpServer) {
+      // noServer: true — we route upgrades manually below to avoid both
+      // WSS instances registering duplicate upgrade handlers on the same socket.
       this.wsServer = new WebSocketMessageServer(
-        this._httpServer,
+        null,
         this.environment.production,
       );
       this.services.register('wsServer', () => this.wsServer);
@@ -494,6 +496,16 @@ export class App<TID extends PlatformID>
         this.environment.jwtSecret,
       );
       this.services.register('clientWsServer', () => this.clientWsServer);
+
+      // Route non-/ws/client upgrade requests to the gossip WebSocket server.
+      // ClientWebSocketServer already registers its own upgrade listener (path: '/ws/client').
+      // WebSocketMessageServer uses noServer:true so it relies on this handler.
+      this._httpServer.on('upgrade', (req, socket, head) => {
+        const pathname = (req.url ?? '/').split('?')[0];
+        if (pathname !== '/ws/client') {
+          this.wsServer?.handleUpgrade(req, socket, head);
+        }
+      });
 
       // Wire EventNotificationSystem to broadcast through ClientWebSocketServer
       // This unifies all real-time event delivery through a single WebSocket connection
