@@ -209,10 +209,10 @@ export default defineConfig({
     alias: {
       // Local workspace aliases - use TypeScript source for browser compatibility.
       // The compiled .js files are CJS and Rollup can't extract named exports from them.
-      '@brightchain/brightdate': resolve(
-        __dirname,
-        '../brightdate/src/index.ts',
-      ),
+      // '@brightchain/brightdate': resolve(
+      //   __dirname,
+      //   '../brightdate/src/index.ts',
+      // ),
       '@brightchain/brightchain-lib': resolve(
         __dirname,
         '../brightchain-lib/src/browser.ts',

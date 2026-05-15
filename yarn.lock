@@ -15121,6 +15121,7 @@ __metadata:
   dependencies:
     "@awesome.me/kit-a20d532681": "npm:^1.0.23"
     "@brightchain/brightchain-lib": "npm:^0.32.1"
+    "@brightchain/brightdate": "npm:^0.32.5"
     "@brightchain/digitalburnbag-react-components": "npm:^0.32.1"
     "@digitaldefiance/ecies-lib": "npm:5.2.2"
     "@digitaldefiance/i18n-lib": "npm:4.7.5"
