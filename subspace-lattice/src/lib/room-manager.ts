@@ -38,6 +38,7 @@ export class RoomManager<TId = string> {
       roomCode,
       name,
       creatorId,
+      whitePlayerId: creatorId, // Assign creator as host
       allowObservers,
       observerIds: [],
       gameState: this.createInitialGameState(),

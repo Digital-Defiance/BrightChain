@@ -2566,7 +2566,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@brightchain/brightchain-lib@workspace:brightchain-lib"
   dependencies:
-    "@brightchain/brightdate": "npm:0.32.3"
+    "@brightchain/brightdate": "npm:0.32.5"
     "@digitaldefiance/branded-interface": "npm:0.0.5"
     "@digitaldefiance/bzip2-wasm": "npm:^1.1.1"
     "@digitaldefiance/ecies-lib": "npm:5.2.2"
@@ -2698,12 +2698,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@brightchain/brightdate@npm:0.32.3, @brightchain/brightdate@npm:^0.32.3":
-  version: 0.32.3
-  resolution: "@brightchain/brightdate@npm:0.32.3"
+"@brightchain/brightdate@npm:0.32.5, @brightchain/brightdate@npm:^0.32.5":
+  version: 0.32.5
+  resolution: "@brightchain/brightdate@npm:0.32.5"
   dependencies:
     tslib: "npm:^2.3.0"
-  checksum: 10/10ca4faf2d6b5bb72c1e58d12e225f25cb18b65657bf03f83670ac00056d7b4f983e3821b3f00819ee3dc699eeaa22a33a9cf94df82545bca06acbef5c90c9dc
+  checksum: 10/5338fc577af678a425ae3d700c2423de60bd27b9d6aeb0df58d89caf31e28b258859b35e571cd53c7ac911f1f543183192a9901c6de9d08e9fab78fd689fbd28
   languageName: node
   linkType: hard
 
@@ -2850,7 +2850,7 @@ __metadata:
     react-router-dom: "npm:^7.14.0"
   peerDependencies:
     "@brightchain/brightchain-lib": ^0.32.1
-    "@brightchain/brightdate": ^0.32.3
+    "@brightchain/brightdate": ^0.32.5
     "@brightchain/brightmail-lib": ^0.32.1
     "@digitaldefiance/express-suite-react-components": 4.29.1
     "@mui/icons-material": "*"
@@ -15214,7 +15214,7 @@ __metadata:
     "@brightchain/brightchain-lib": "npm:^0.32.1"
     "@brightchain/brightchain-react-components": "npm:^0.32.1"
     "@brightchain/brightchat-lib": "npm:^0.32.1"
-    "@brightchain/brightdate": "npm:^0.32.3"
+    "@brightchain/brightdate": "npm:^0.32.5"
     "@brightchain/brighthub-lib": "npm:^0.32.1"
     "@brightchain/brighthub-react-components": "npm:^0.32.1"
     "@brightchain/brightmail-lib": "npm:^0.32.1"

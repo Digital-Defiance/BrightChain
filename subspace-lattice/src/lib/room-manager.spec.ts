@@ -32,16 +32,18 @@ describe('RoomManager', () => {
 
   it('should handle joining and leaving', () => {
     const room = roomManager.createRoom('Test Room', 'user-1');
-    
-    // Join white
-    let success = roomManager.joinRoom(room.id, 'player-white');
-    expect(success).toBe(true);
-    expect(room.whitePlayerId).toBe('player-white');
+
+    // Creator should be white player
+    expect(room.whitePlayerId).toBe('user-1');
 
     // Join black
-    success = roomManager.joinRoom(room.id, 'player-black');
+    let success = roomManager.joinRoom(room.id, 'player-black');
     expect(success).toBe(true);
     expect(room.blackPlayerId).toBe('player-black');
+
+    // Try joining as white (should fail, already assigned)
+    success = roomManager.joinRoom(room.id, 'player-white');
+    expect(success).toBe(false);
 
     // Try joining as third player
     success = roomManager.joinRoom(room.id, 'player-third');
@@ -52,8 +54,8 @@ describe('RoomManager', () => {
     expect(success).toBe(true);
     expect(room.observerIds).toContain('observer-1');
 
-    // Leave
-    roomManager.leaveRoom(room.id, 'player-white');
+    // Leave (white)
+    roomManager.leaveRoom(room.id, 'user-1');
     expect(room.whitePlayerId).toBeUndefined();
   });
 

@@ -66,7 +66,7 @@
   "author": "Digital Defiance",
   "license": "MIT",
   "dependencies": {
-    "@brightchain/brightdate": "0.32.3",
+    "@brightchain/brightdate": "0.32.5",
     "@digitaldefiance/branded-interface": "0.0.5",
     "@digitaldefiance/bzip2-wasm": "^1.1.1",
     "@digitaldefiance/ecies-lib": "5.2.2",

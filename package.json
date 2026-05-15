@@ -163,7 +163,7 @@
     "@brightchain/brightchain-lib": "^0.32.1",
     "@brightchain/brightchain-react-components": "^0.32.1",
     "@brightchain/brightchat-lib": "^0.32.1",
-    "@brightchain/brightdate": "^0.32.3",
+    "@brightchain/brightdate": "^0.32.5",
     "@brightchain/brighthub-lib": "^0.32.1",
     "@brightchain/brighthub-react-components": "^0.32.1",
     "@brightchain/brightmail-lib": "^0.32.1",
