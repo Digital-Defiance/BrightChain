@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useGameSync } from '../hooks/useGameSync';
 import { Board } from './Board';
 import { Chat } from './Chat';
@@ -12,26 +13,67 @@ export const GameLayout: React.FC = () => {
   const { userData } = useAuth();
   const localPlayerId = userData?.id || 'local-user';
   const [showRules, setShowRules] = useState(false);
-  
+  const { roomCode: routeRoomCode } = useParams<{ roomCode?: string }>();
+  const navigate = useNavigate();
+
   const {
     activeRoom,
     engine,
     createAndJoinRoom,
     joinRoom,
+    hydrateFromRoomCode,
     sendMove,
     sendChatMessage,
     sendPlacement
   } = useGameSync(localPlayerId);
 
+  // Hydrate from URL: if the route includes a roomCode and we don't already
+  // have it loaded, fetch the room so refresh-recovery works.
+  useEffect(() => {
+    if (routeRoomCode && activeRoom?.roomCode !== routeRoomCode) {
+      void hydrateFromRoomCode(routeRoomCode);
+    }
+  }, [routeRoomCode, activeRoom?.roomCode, hydrateFromRoomCode]);
+
+  // Push URL when a room becomes active so refresh keeps us in the game.
+  useEffect(() => {
+    if (activeRoom?.roomCode && activeRoom.roomCode !== routeRoomCode) {
+      navigate(`/game/subspace-lattice/${activeRoom.roomCode}`, {
+        replace: false,
+      });
+    }
+  }, [activeRoom?.roomCode, routeRoomCode, navigate]);
+
+  // Wrap createAndJoinRoom/joinRoom so the lobby callbacks remain (name, password)
+  // / (code, password, asObserver) without leaking navigation concerns.
+  const handleCreateRoom = async (name: string, password?: string) => {
+    await createAndJoinRoom(name, password);
+  };
+  const handleJoinRoom = async (
+    code: string,
+    password?: string,
+    asObserver?: boolean,
+  ) => {
+    await joinRoom(code, password, asObserver);
+  };
+
+  // Determine the local user's role in the active room.
+  // The server is the source of truth: if the room has whitePlayerId/blackPlayerId
+  // matching us, use that. As a safety net for any auth id formatting mismatch
+  // between the verify endpoint and the JWT-derived memberId used server-side,
+  // also treat the local user as White when they are the room's creator (the
+  // server assigns the creator to the white slot on room creation).
+  const isCreator =
+    !!activeRoom?.creatorId && activeRoom?.creatorId === localPlayerId;
   const localPlayerColor =
-    activeRoom?.whitePlayerId === localPlayerId
+    activeRoom?.whitePlayerId === localPlayerId || isCreator
       ? PlayerColor.White
       : activeRoom?.blackPlayerId === localPlayerId
       ? PlayerColor.Black
       : 'OBSERVER';
 
   if (!activeRoom || !engine) {
-    return <Lobby onCreateRoom={createAndJoinRoom} onJoinRoom={joinRoom} />;
+    return <Lobby onCreateRoom={handleCreateRoom} onJoinRoom={handleJoinRoom} />;
   }
 
   return (

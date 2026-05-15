@@ -39,7 +39,7 @@
   },
   "devDependencies": {
     "@awesome.me/kit-a20d532681": "^1.0.23",
-    "@digitaldefiance/express-suite-react-components": "4.29.1",
+    "@digitaldefiance/express-suite-react-components": "4.30.0",
     "@fortawesome/react-fontawesome": "^3.3.0",
     "@mui/icons-material": "^7.3.9",
     "@mui/material": "^7.3.9",

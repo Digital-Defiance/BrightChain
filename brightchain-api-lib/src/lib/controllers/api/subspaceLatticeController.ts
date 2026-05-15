@@ -35,6 +35,8 @@ type SubspaceLatticeApiResponseType = JsonResponse;
 
 interface ISubspaceLatticeHandlers<TID extends PlatformID> {
   createRoom: ApiRequestHandler<SubspaceLatticeApiResponseType>;
+  getRoomByCode: ApiRequestHandler<SubspaceLatticeApiResponseType>;
+  joinRoomByCode: ApiRequestHandler<SubspaceLatticeApiResponseType>;
   movePiece: ApiRequestHandler<SubspaceLatticeApiResponseType>;
   sendChat: ApiRequestHandler<SubspaceLatticeApiResponseType>;
 }
@@ -65,6 +67,12 @@ export class SubspaceLatticeController<
     // in a closure that dereferences this.handler at request time.
     this.router.post('/subspace-lattice/room', (req, res) =>
       this.createRoom(req, res),
+    );
+    this.router.get('/subspace-lattice/room/code/:roomCode', (req, res) =>
+      this.getRoomByCode(req, res),
+    );
+    this.router.post('/subspace-lattice/room/code/:roomCode/join', (req, res) =>
+      this.joinRoomByCode(req, res),
     );
     this.router.post('/subspace-lattice/room/:roomId/move', (req, res) =>
       this.movePiece(req, res),
@@ -101,6 +109,92 @@ export class SubspaceLatticeController<
     const updatedRoom = this.roomManager.getRoom(room.id);
 
     return res.status(201).json(updatedRoom as unknown as SubspaceLatticeApiResponseType);
+  };
+
+  /**
+   * GET /subspace-lattice/room/code/:roomCode — fetch a room by its short code
+   * so a client can hydrate state after a refresh.
+   */
+  public getRoomByCode = async (
+    req: Request,
+    res: Response<SubspaceLatticeApiResponseType>,
+  ): Promise<Response<SubspaceLatticeApiResponseType>> => {
+    const roomCode = String(req.params['roomCode'] ?? '').trim();
+    if (!roomCode) {
+      return res
+        .status(400)
+        .json({ error: 'Room code is required' } as unknown as SubspaceLatticeApiResponseType);
+    }
+    const room = this.roomManager.getRoomByCode(roomCode);
+    if (!room) {
+      return res
+        .status(404)
+        .json({ error: 'Room not found' } as unknown as SubspaceLatticeApiResponseType);
+    }
+    return res.status(200).json(room as unknown as SubspaceLatticeApiResponseType);
+  };
+
+  /**
+   * POST /subspace-lattice/room/code/:roomCode/join — join a room by its short
+   * code. The authenticated user fills the first open seat (white, then black);
+   * if both are taken (or asObserver is true) they join as an observer.
+   */
+  public joinRoomByCode = async (
+    req: Request,
+    res: Response<SubspaceLatticeApiResponseType>,
+  ): Promise<Response<SubspaceLatticeApiResponseType>> => {
+    const roomCode = String(req.params['roomCode'] ?? '').trim();
+    const { password, asObserver } = (req.body ?? {}) as {
+      password?: string;
+      asObserver?: boolean;
+    };
+    if (!roomCode) {
+      return res
+        .status(400)
+        .json({ error: 'Room code is required' } as unknown as SubspaceLatticeApiResponseType);
+    }
+    const room = this.roomManager.getRoomByCode(roomCode);
+    if (!room) {
+      return res
+        .status(404)
+        .json({ error: 'Room not found' } as unknown as SubspaceLatticeApiResponseType);
+    }
+    const reqUser = (req as Request & { user?: IRequestUser }).user;
+    const userId = reqUser?.memberId ?? reqUser?.id;
+    if (!userId) {
+      return res
+        .status(401)
+        .json({ error: 'Unauthenticated' } as unknown as SubspaceLatticeApiResponseType);
+    }
+    // If already a participant, just return the current room state.
+    const alreadyIn =
+      room.whitePlayerId === userId ||
+      room.blackPlayerId === userId ||
+      room.observerIds.includes(userId);
+    if (!alreadyIn) {
+      const joinedAsPlayer = !asObserver && this.roomManager.joinRoom(
+        room.id,
+        userId,
+        false,
+        password,
+      );
+      if (!joinedAsPlayer) {
+        // Room full or asObserver requested — fall back to observer.
+        const joinedAsObserver = this.roomManager.joinRoom(
+          room.id,
+          userId,
+          true,
+          password,
+        );
+        if (!joinedAsObserver) {
+          return res.status(403).json({
+            error: 'Unable to join room (wrong password or observers disabled)',
+          } as unknown as SubspaceLatticeApiResponseType);
+        }
+      }
+    }
+    const updatedRoom = this.roomManager.getRoom(room.id);
+    return res.status(200).json(updatedRoom as unknown as SubspaceLatticeApiResponseType);
   };
 
   public movePiece = async (

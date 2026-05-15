@@ -95,7 +95,7 @@ import { UserController } from '../controllers/api/user';
 import { UserSearchController } from '../controllers/api/userSearch';
 import { IBrightChainApplication } from '../interfaces';
 import { RateTableCache } from '../joule/rateTableCache';
-import { requireAuthWithRoles } from '../middlewares/authentication';
+import { requireAuth, requireAuthWithRoles } from '../middlewares/authentication';
 import { createBrightDateRateLimiter } from '../middlewares/brightdate-rate-limiter';
 import { EventNotificationSystem } from '../services/eventNotificationSystem';
 import { MessagePassingService } from '../services/messagePassingService';
@@ -324,7 +324,11 @@ export class ApiRouter<
 
     this.router.use('/temp-upload', this.tempUploadController.router);
     this.router.use('/identity', this.identityController.router);
-    this.router.use('/game', this.subspaceLatticeController.router);
+    this.router.use(
+      '/game',
+      requireAuth(application.environment.jwtSecret),
+      this.subspaceLatticeController.router,
+    );
 
     if (
       application.environment.enabledFeatures.some(

@@ -6,6 +6,7 @@ export const SubspaceLatticeRoutes: React.FC = () => {
   return (
     <Routes>
       <Route path="/subspace-lattice" element={<GameLayout />} />
+      <Route path="/subspace-lattice/:roomCode" element={<GameLayout />} />
     </Routes>
   );
 };

@@ -29,7 +29,7 @@
   "peerDependencies": {
     "@brightchain/brightchain-lib": "^0.32.1",
     "@brightchain/brightchat-lib": "^0.32.1",
-    "@digitaldefiance/express-suite-react-components": "4.29.1",
+    "@digitaldefiance/express-suite-react-components": "4.30.0",
     "@mui/icons-material": "*",
     "@mui/material": "*",
     "react": "^18.0.0",
@@ -48,7 +48,7 @@
     "build:prod": "npx nx build brightchat-react-components --configuration=production"
   },
   "devDependencies": {
-    "@digitaldefiance/express-suite-react-components": "4.29.1",
+    "@digitaldefiance/express-suite-react-components": "4.30.0",
     "@mui/icons-material": "^7.3.9",
     "@mui/material": "^7.3.9",
     "@types/react": "^19.2.14",

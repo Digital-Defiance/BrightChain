@@ -8,7 +8,7 @@
   "dependencies": {
     "@brightchain/brightchain-lib": "^0.32.1",
     "@digitaldefiance/ecies-lib": "5.2.2",
-    "@digitaldefiance/express-suite-react-components": "4.29.1",
+    "@digitaldefiance/express-suite-react-components": "4.30.0",
     "@digitaldefiance/i18n-lib": "4.7.5",
     "@fortawesome/fontawesome-svg-core": "^7.2.0",
     "@fortawesome/react-fontawesome": "^3.2.0",

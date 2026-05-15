@@ -17,6 +17,8 @@ export const useGamesMenuRegistration = (indexPriority: number = 100) => {
   const gamesMenuConfig: IMenuConfig = {
     menuType: gamesMenu,
     menuIcon: <FontAwesomeIcon icon={faGameBoard} />,
+    label: 'Games',
+    category: 'apps',
     priority: indexPriority,
     options: [
       {

@@ -43,6 +43,24 @@ export function createSubspaceLatticeApiClient(api: AxiosInstance) {
       handleApiCall<IGameRoom>(() =>
         api.post('/game/subspace-lattice/room', { name, password })
       ),
+
+    getRoomByCode: (roomCode: string) =>
+      handleApiCall<IGameRoom>(() =>
+        api.get(
+          `/game/subspace-lattice/room/code/${encodeURIComponent(roomCode)}`,
+        ),
+      ),
+
+    joinRoomByCode: (
+      roomCode: string,
+      payload: { password?: string; asObserver?: boolean } = {},
+    ) =>
+      handleApiCall<IGameRoom>(() =>
+        api.post(
+          `/game/subspace-lattice/room/code/${encodeURIComponent(roomCode)}/join`,
+          payload,
+        ),
+      ),
       
     movePiece: (roomId: string, payload: IMovePieceEventPayload<string>) =>
       handleApiCall<void>(() =>

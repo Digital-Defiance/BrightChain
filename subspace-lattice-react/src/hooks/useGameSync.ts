@@ -74,9 +74,11 @@ export const useGameSync = (localPlayerId: string) => {
       // For now, we assume creator is automatically joined.
       setEngine(new SubspaceLatticeEngine());
       setActiveRoom({ ...room, chatMessages: room.chatMessages ?? [] });
+      return room;
     } catch (error) {
       console.error('Failed to create room:', error);
       alert('Failed to create room.');
+      return null;
     }
   };
 
@@ -85,12 +87,43 @@ export const useGameSync = (localPlayerId: string) => {
     password?: string,
     asObserver?: boolean,
   ) => {
-    // Backend needs a joinRoom endpoint to validate code and return room details.
-    // Since we don't have it yet, this will fail in a real scenario without backend updates.
-    alert(
-      'Joining via code requires backend implementation. Please create a room for testing.',
-    );
+    try {
+      const room = await apiClient.joinRoomByCode(roomCode, {
+        password,
+        asObserver,
+      });
+      setEngine(new SubspaceLatticeEngine());
+      setActiveRoom({ ...room, chatMessages: room.chatMessages ?? [] });
+      return room;
+    } catch (error) {
+      console.error('Failed to join room:', error);
+      alert('Failed to join room.');
+      return null;
+    }
   };
+
+  /**
+   * Hydrate state from a roomCode (e.g. on initial mount when the URL contains
+   * /game/subspace-lattice/{roomCode}). Does NOT mutate participant lists;
+   * use `joinRoom` for that.
+   */
+  const hydrateFromRoomCode = useCallback(
+    async (roomCode: string) => {
+      try {
+        const room = await apiClient.getRoomByCode(roomCode);
+        setEngine(new SubspaceLatticeEngine());
+        setActiveRoom({ ...room, chatMessages: room.chatMessages ?? [] });
+        return room;
+      } catch (error) {
+        console.error('Failed to hydrate room:', error);
+        return null;
+      }
+    },
+    // apiClient is recreated each render but stable in behavior; intentionally
+    // omitting from deps to avoid re-running on every render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [],
+  );
 
   const sendMove = async (roomId: string, pieceId: string, to: Coordinate) => {
     if (!engine) return;
@@ -131,6 +164,7 @@ export const useGameSync = (localPlayerId: string) => {
     engine,
     createAndJoinRoom,
     joinRoom,
+    hydrateFromRoomCode,
     sendMove,
     sendChatMessage,
     sendPlacement,

@@ -78,6 +78,7 @@ import {
   FakeEmailAdminPanel,
   ForgotPasswordFormWrapper,
   I18nProvider,
+  ICategoryConfig,
   IMenuConfig,
   LoginFormWrapper,
   LogoutPageWrapper,
@@ -104,6 +105,7 @@ import {
   type IRequestUserDTO,
 } from '@digitaldefiance/suite-core-lib';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import AppsIcon from '@mui/icons-material/Apps';
 import BarChartIcon from '@mui/icons-material/BarChart';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -476,6 +478,8 @@ const InnerApp: FC = () => {
   const brightMailMenuConfig: IMenuConfig = {
     menuType: mailMenu,
     menuIcon: <FontAwesomeIcon icon={faEnvelope} />,
+    label: 'Mail',
+    category: 'apps',
     priority: indexPriority,
     options: [
       {
@@ -549,6 +553,8 @@ const InnerApp: FC = () => {
   const brightPassMenuConfig: IMenuConfig = {
     menuType: passMenu,
     menuIcon: <FontAwesomeIcon icon={faLock} />,
+    label: 'Pass',
+    category: 'apps',
     priority: indexPriority,
     options: [
       {
@@ -586,6 +592,8 @@ const InnerApp: FC = () => {
   const brightHubMenuConfig: IMenuConfig = {
     menuType: hubMenu,
     menuIcon: <FontAwesomeIcon icon={faCircleNodes} />,
+    label: 'Hub',
+    category: 'apps',
     priority: indexPriority,
     options: [
       {
@@ -624,6 +632,8 @@ const InnerApp: FC = () => {
   const brightChatMenuConfig: IMenuConfig = {
     menuType: chatMenu,
     menuIcon: <FontAwesomeIcon icon={faComment} />,
+    label: 'Chat',
+    category: 'apps',
     priority: nextIndex,
     options: [
       {
@@ -653,6 +663,8 @@ const InnerApp: FC = () => {
   const digitalBurnbagMenuConfig: IMenuConfig = {
     menuType: digitalBurnbagMenu,
     menuIcon: <BirdbagLogoGrey height={24} />,
+    label: 'Burnbag',
+    category: 'apps',
     priority: indexPriority,
     options: [
       {
@@ -727,6 +739,8 @@ const InnerApp: FC = () => {
   const brightChartMenuConfig: IMenuConfig = {
     menuType: chartMenu,
     menuIcon: <FontAwesomeIcon icon={faBookMedical} />,
+    label: 'Chart',
+    category: 'apps',
     priority: indexPriority,
     options: [
       {
@@ -791,6 +805,8 @@ const InnerApp: FC = () => {
   const brightDateMenuConfig: IMenuConfig = {
     menuType: dateMenu,
     menuIcon: <FontAwesomeIcon icon={faCalendarClock} />,
+    label: 'Date',
+    category: 'apps',
     priority: indexPriority,
     options: [],
     action: () => {
@@ -819,6 +835,18 @@ const InnerApp: FC = () => {
     ...featureMenuMap
       .filter(([feature]) => enabledFeatures.has(feature))
       .map(([, config]) => config),
+  ];
+
+  const appCategories: ICategoryConfig[] = [
+    {
+      id: 'apps',
+      icon: <AppsIcon />,
+      label: 'Apps',
+      columns: 3,
+      showLabels: true,
+      showHeader: false,
+      hideWhenEmpty: true,
+    },
   ];
   indexPriority += 10;
   indexPriority += 10;
@@ -859,6 +887,7 @@ const InnerApp: FC = () => {
             constants={CoreConstants}
             showTitle={false}
             actions={<GlobalNotificationBell />}
+            categories={appCategories}
           />
           <Suspense
             fallback={
