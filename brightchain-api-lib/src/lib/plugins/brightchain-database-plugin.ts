@@ -209,10 +209,50 @@ export class BrightChainDatabasePlugin<
    *
    * Uses RbacInputBuilder to generate ephemeral credentials and calls
    * initializeWithRbac() for a fully functional dev database.
+   *
+   * On subsequent calls (e.g. via /admin/dev/reseed) this also wipes the
+   * existing dev state — drops all DB collections, clears the in-memory
+   * block store, and resets MemberStore in-memory indexes — so that
+   * previously-registered users do not survive the reseed.
    */
   override async initializeDevStore(): Promise<
     IBrightChainInitResult<TID, BrightDb>
   > {
+    // Wipe any prior dev state before re-seeding so this acts as a true
+    // reset rather than an additive seed. Safe on first invocation: the
+    // collections / stores will simply be empty.
+    if (this._brightDb) {
+      try {
+        await this._brightDb.dropDatabase();
+      } catch (err) {
+        console.warn(
+          '[BrightChain] initializeDevStore: dropDatabase() failed:',
+          err,
+        );
+      }
+    }
+    if (this._blockStore) {
+      const store = this._blockStore as unknown as { clear?: () => void };
+      if (typeof store.clear === 'function') {
+        try {
+          store.clear();
+        } catch (err) {
+          console.warn(
+            '[BrightChain] initializeDevStore: blockStore.clear() failed:',
+            err,
+          );
+        }
+      }
+    }
+    if (this._memberStore) {
+      const ms = this._memberStore as MemberStore<TID> & {
+        clearIndexes?: () => void;
+      };
+      if (typeof ms.clearIndexes === 'function') {
+        ms.clearIndexes();
+      }
+    }
+
     const result = await this.seedWithRbac(true);
     // After seeding, update the MemberStore's DB reference so queryIndex()
     // can find the freshly seeded members via DB-backed lookups.

@@ -36,4 +36,11 @@ export interface IBrightChainApplication<
    * @returns The node ID
    */
   getNodeId(): TID;
+
+  /**
+   * Drop and re-seed the in-memory dev block store.
+   * Only available when running in DEV_DATABASE (in-memory) mode.
+   * @returns The new seed credentials, or throws if not in dev mode.
+   */
+  reseedDevStore(): Promise<unknown>;
 }

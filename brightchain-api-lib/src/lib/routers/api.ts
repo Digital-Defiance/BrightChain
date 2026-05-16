@@ -38,6 +38,7 @@ import { AppConstants } from '../appConstants';
 import type { IWriteAclApiManager } from '../auth/writeAclApiRouter';
 import { PoolDiscoveryService } from '../availability/poolDiscoveryService';
 import { AdminBlockController } from '../controllers/api/adminBlock';
+import { AdminDevReseedController } from '../controllers/api/adminDevReseed';
 import { AdminChatController } from '../controllers/api/adminChat';
 import { AdminChatServersController } from '../controllers/api/adminChatServers';
 import { AdminHubController } from '../controllers/api/adminHub';
@@ -156,6 +157,7 @@ export class ApiRouter<
   private readonly adminPassController: AdminPassController<TID>;
   private readonly adminMailController: AdminMailController<TID>;
   private readonly adminJouleController: AdminJouleController<TID>;
+  private readonly adminDevReseedController: AdminDevReseedController<TID> | null = null;
   private readonly jouleRateTableController: JouleRateTableController<TID>;
   private readonly brightdateNowController: BrightDateNowController<TID>;
   private readonly jouleMemberController: JouleMemberController<TID>;
@@ -229,6 +231,10 @@ export class ApiRouter<
 
     // Admin controllers
     this.adminUserController = new AdminUserController(application);
+    // Dev-only reseed controller (in-memory mode only)
+    if (application.environment.devDatabasePoolName) {
+      this.adminDevReseedController = new AdminDevReseedController(application);
+    }
     this.adminBlockController = new AdminBlockController(application);
     this.blockExplorerController = new BlockExplorerController(application);
     this.adminHubController = new AdminHubController(application);
@@ -525,6 +531,11 @@ export class ApiRouter<
             error: 'Joule resource credits are not enabled on this instance.',
           }),
       );
+    }
+
+    // Admin dev reseed — only available in DEV_DATABASE (in-memory) mode
+    if (this.adminDevReseedController) {
+      this.router.use('/admin/dev', ...adminAuth, this.adminDevReseedController.router);
     }
 
     // Mount the fake-email inspection router when using the fake/disabled email service.

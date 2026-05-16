@@ -131,6 +131,8 @@
     "inituserdb:full": "NODE_ENV=production yarn build:all:dev:stream --configuration=production && NODE_ENV=production npx nx serve brightchain-inituserdb --output-style=stream --args=--gen-system-user-mnemonic --args=--gen-member-user-mnemonic --args=--gen-mnemonic-hmac-secret --args=--gen-mnemonic-encryption-key --configuration=production",
     "inituserdb:drop": "NODE_ENV=production yarn build:all:dev:stream --configuration=production && NODE_ENV=production npx nx serve brightchain-inituserdb --output-style=stream --args=--drop --configuration=production",
     "inituserdb:full:drop": "NODE_ENV=production yarn build:all:dev:stream --configuration=production && NODE_ENV=production npx nx serve brightchain-inituserdb --output-style=stream --args=--drop --args=--gen-system-user-mnemonic --args=--gen-member-user-mnemonic --args=--gen-mnemonic-hmac-secret --args=--gen-mnemonic-encryption-key --configuration=production",
+    "dev-reseed": "npx tsx scripts/dev-reseed.ts",
+    "reseed:dev": "bash -c 'set -a && . brightchain-api/src/.env && set +a && yarn dev-reseed --api-url http://localhost:3005/api --username \"${ADMIN_USERNAME:-admin}\" --mnemonic \"$ADMIN_MNEMONIC\"'",
     "seed:org-roles": "npx nx run tools-seed-org-roles:serve",
     "gamut": "yarn build:all:dev:nocache:logged && yarn test:all:dev:logged && yarn test:all:e2e:dev:nocache:logged",
     "register:player1": "yarn register-user --api-url http://localhost:3005/api --display-name \"Player 1\" --username player1 --email player1@localhost.localdomain --password \"123456aB!!!!\" --direct-challenge",

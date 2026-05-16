@@ -100,6 +100,20 @@ export class MemberStore<TID extends PlatformID = Uint8Array>
   }
 
   /**
+   * Clear all in-memory indexes (member, region, name, email).
+   *
+   * Intended for dev/test reseed flows that wipe the underlying datastore
+   * and need the MemberStore to forget previously seeded users. Does not
+   * touch the block store or the attached DB.
+   */
+  public clearIndexes(): void {
+    this.memberIndex.clear();
+    this.regionIndex.clear();
+    this.nameIndex.clear();
+    this.emailIndex.clear();
+  }
+
+  /**
    * Pick the smallest supported block size that can hold `dataLength` bytes.
    *
    * Delegates to `BlockService.getBlockSizeForData` with the block store's

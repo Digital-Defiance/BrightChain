@@ -64,12 +64,21 @@ yarn register-user --api-url https://staging.example.com/api --username alice --
 | `--admin-password <p>` | Admin account password |
 | `--admin-mnemonic <w>` | Admin BIP39 mnemonic — logs in via the ECIES direct-challenge flow instead of a password |
 | `--admin-token <jwt>` | Pre-existing admin JWT (overrides username/password/mnemonic login) |
+| `--no-sdi` | Disable OSC 7777 credential injection even if `SDI_SESSION_ID`/`SDI_SESSION_KEY` are set |
 
 ### Admin credential resolution order
 
 1. `--admin-token` — used directly, no login required
 2. `--admin-mnemonic` — performs a two-step ECIES challenge-response login; requires `--admin-email` or `--admin-username` to identify the account (the admin must have `directChallenge: true` on their account)
 3. `--admin-username` + `--admin-password` — standard password login
+
+### SDI (OSC 7777) credential injection
+
+If the environment contains `SDI_SESSION_ID` and `SDI_SESSION_KEY` (a 32-byte AES-256 key, base64-encoded), the registered credentials are automatically injected into the running BSH Desktop Agent via an OSC 7777 escape sequence after the JSON result is printed.
+
+The sequence is written directly to `/dev/tty` so it reaches the terminal emulator even when stdout is piped. The agent decrypts the AES-256-GCM ciphertext, validates the authentication tag, and forwards the structured `ephemeral-auth` payload to any connected browser extension or form-filler for the specified TTL (300 s).
+
+Use `--no-sdi` to suppress injection (e.g. in CI environments where you only need the JSON output).
 
 ### Email verification strategy
 

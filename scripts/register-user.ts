@@ -34,6 +34,18 @@
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
+interface SdiEphemeralAuthPayload {
+  type: 'ephemeral-auth';
+  context: string;
+  ttl: number;
+  data: {
+    username: string;
+    password: string;
+    email: string;
+    additional_fields?: Record<string, string>;
+  };
+}
+
 interface ParsedArgs {
   apiUrl: string;
   username: string;
@@ -48,6 +60,7 @@ interface ParsedArgs {
   adminPassword?: string;
   adminMnemonic?: string;
   adminToken?: string;
+  noSdi: boolean;
 }
 
 interface RegisterResponse {
@@ -85,6 +98,7 @@ function parseArgs(argv: string[]): ParsedArgs | null {
   let adminPassword: string | undefined;
   let adminMnemonic: string | undefined;
   let adminToken: string | undefined;
+  let noSdi = false;
 
   for (let i = 2; i < argv.length; i++) {
     const flag = argv[i];
@@ -141,6 +155,9 @@ function parseArgs(argv: string[]): ParsedArgs | null {
         adminToken = next;
         i++;
         break;
+      case '--no-sdi':
+        noSdi = true;
+        break;
       case '--help':
       case '-h':
         return null;
@@ -165,6 +182,7 @@ function parseArgs(argv: string[]): ParsedArgs | null {
     adminPassword,
     adminMnemonic,
     adminToken,
+    noSdi,
   };
 }
 
@@ -224,6 +242,94 @@ async function httpPut<T = unknown>(
   return { status: res.status, data };
 }
 
+// ── SDI (OSC 7777) ───────────────────────────────────────────────────────────
+
+/**
+ * Emit an OSC 7777 Secure SDI sequence carrying an ephemeral-auth payload.
+ *
+ * Delegates entirely to the `bsh-inject` builtin (bsh 5.10.0+). That builtin
+ * holds the AES-256-GCM session key in C memory (derived via X25519/HKDF
+ * during daemon registration) — the key is never exposed to the environment.
+ *
+ * The OSC sequence is written to /dev/tty directly by the bsh subprocess so
+ * it reaches the terminal emulator even when our stdout/stderr are piped.
+ *
+ * During automated testing, set SDI_SOCKET_PATH to redirect bsh to a mock
+ * daemon instead of the real Desktop Agent socket.
+ */
+async function sendSdiCredentials(
+  context: string,
+  username: string,
+  email: string,
+  password: string,
+  additionalFields?: Record<string, string>,
+): Promise<boolean> {
+  const { spawnSync } = require('child_process') as typeof import('child_process');
+  const fs = require('fs') as typeof import('fs');
+
+  // bsh-inject is a builtin — only present when bsh is installed.
+  const which = spawnSync('which', ['bsh'], { encoding: 'utf8' });
+  if (which.status !== 0) return false;
+
+  const payload: SdiEphemeralAuthPayload = {
+    type: 'ephemeral-auth',
+    context,
+    ttl: 300,
+    data: {
+      username,
+      password,
+      email,
+      ...(additionalFields && Object.keys(additionalFields).length > 0
+        ? { additional_fields: additionalFields }
+        : {}),
+    },
+  };
+
+  // The OSC sequence must reach the terminal emulator, not a pipe.
+  // Open /dev/tty directly for the child's stdout; fall back to inherited.
+  let ttyFd: number | 'inherit' = 'inherit';
+  let ttyOpened = false;
+  try {
+    ttyFd = fs.openSync('/dev/tty', 'w') as number;
+    ttyOpened = true;
+  } catch {
+    // /dev/tty unavailable (CI without a TTY) — fall back to inherited stdout
+  }
+
+  try {
+    // Load the sdi module (no-op if already loaded), then call bsh-inject.
+    // The context URL is passed as a positional param — not interpolated into
+    // the shell command string — to prevent injection.
+    const result = spawnSync(
+      'bsh',
+      [
+        '-c',
+        'zmodload bsh/sdi 2>/dev/null; bsh-inject "$@"',
+        '_',           // $0 (dummy script name; $@ starts from $1)
+        '--type', 'ephemeral-auth',
+        '--context', context,
+      ],
+      {
+        input: JSON.stringify(payload),
+        encoding: 'utf8',
+        stdio: ['pipe', ttyFd, 'pipe'],
+      },
+    );
+
+    if (result.status !== 0) {
+      const msg = (result.stderr as string)?.trim();
+      if (msg) process.stderr.write(`SDI: ${msg}\n`);
+      return false;
+    }
+
+    return true;
+  } finally {
+    if (ttyOpened && typeof ttyFd === 'number') {
+      fs.closeSync(ttyFd);
+    }
+  }
+}
+
 // ── Password generation ───────────────────────────────────────────────────────
 
 function generatePassword(): string {
@@ -280,7 +386,8 @@ async function adminLoginWithMnemonic(
   // Step 1: Request a direct-login challenge from the server
   const challengeResult = await httpPost<{
     message?: string;
-    data?: { challenge?: string; serverPublicKey?: string };
+    challenge?: string;
+    serverPublicKey?: string;
     error?: string;
   }>(`${apiUrl}/user/request-direct-login`, {});
 
@@ -292,7 +399,7 @@ async function adminLoginWithMnemonic(
     throw new Error(`Admin mnemonic login (challenge request) failed: ${msg}`);
   }
 
-  const challenge = challengeResult.data?.data?.challenge;
+  const challenge = challengeResult.data?.challenge;
   if (!challenge) {
     throw new Error(
       'Admin mnemonic login: challenge response missing challenge field',
@@ -324,7 +431,7 @@ async function adminLoginWithMnemonic(
   // Step 4: Submit the signed challenge response
   const loginResult = await httpPost<{
     message?: string;
-    data?: { token?: string };
+    token?: string;
     error?: string;
   }>(`${apiUrl}/user/direct-challenge`, {
     challenge,
@@ -340,7 +447,7 @@ async function adminLoginWithMnemonic(
     throw new Error(`Admin mnemonic login failed: ${msg}`);
   }
 
-  const token = loginResult.data?.data?.token;
+  const token = loginResult.data?.token;
   if (!token) {
     throw new Error('Admin mnemonic login response missing token');
   }
@@ -355,7 +462,7 @@ async function adminLogin(
 ): Promise<string> {
   const result = await httpPost<{
     message?: string;
-    data?: { token?: string };
+    token?: string;
     error?: string;
   }>(`${apiUrl}/user/login`, { username, password });
 
@@ -367,7 +474,7 @@ async function adminLogin(
     throw new Error(`Admin login failed: ${msg}`);
   }
 
-  const token = result.data?.data?.token;
+  const token = result.data?.token;
   if (!token) {
     throw new Error('Admin login response missing token');
   }
@@ -503,6 +610,15 @@ Optional:
   --admin-password <p>    Admin account password
   --admin-mnemonic <w>    Admin BIP39 mnemonic (alternative to --admin-password)
   --admin-token <jwt>     Pre-existing admin JWT (overrides username/password)
+  --no-sdi               Disable OSC 7777 credential injection via bsh-inject
+
+SDI (OSC 7777):
+  When bsh 5.10.0+ is the active shell, the registered credentials are also
+  injected via the Secure SDI protocol using the bsh-inject builtin. The
+  session key is negotiated internally (X25519/HKDF) — no env vars needed.
+  A compliant BSH Desktop Agent will forward them to the browser/form-filler
+  without touching the clipboard. Set SDI_SOCKET_PATH to redirect to a mock
+  daemon for testing.
 
 Email verification:
   Tries GET /api/test/emails/:email first (fake/test mode, no auth).
@@ -606,6 +722,24 @@ async function main(): Promise<void> {
   };
 
   console.log(JSON.stringify(output, null, 2));
+
+  // ── 7. SDI injection (OSC 7777) ──────────────────────────────
+  if (!args.noSdi) {
+    const additionalFields: Record<string, string> = {};
+    if (mnemonic) additionalFields['mnemonic'] = mnemonic;
+    if (reg.token) additionalFields['token'] = reg.token;
+
+    const sdiSent = await sendSdiCredentials(
+      args.apiUrl,
+      args.username,
+      args.email,
+      password,
+      additionalFields,
+    );
+    if (sdiSent) {
+      process.stderr.write('SDI: credentials injected via OSC 7777\n');
+    }
+  }
 }
 
 main().catch((err) => {

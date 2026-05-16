@@ -13,5 +13,11 @@
     "typescript",
     "typescriptreact"
   ],
-  "typescript.autoClosingTags": false
+  "typescript.autoClosingTags": false,
+  "terminal.integrated.profiles.linux": {
+    "bsh (login)": {
+      "path": "/opt/homebrew/bin/bsh",
+      "args": ["-l"]
+    }
+  }
 }

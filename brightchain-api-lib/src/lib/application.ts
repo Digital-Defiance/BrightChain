@@ -163,6 +163,23 @@ export class App<TID extends PlatformID>
   }
 
   /**
+   * Drop and re-seed the in-memory dev block store.
+   * Only available when DEV_DATABASE is set (in-memory mode).
+   * Calls initializeDevStore() on the database plugin, which drops the
+   * current data and seeds fresh RBAC credentials.
+   * @returns The init result with new credentials.
+   * @throws Error if not running in dev/memory mode.
+   */
+  public async reseedDevStore(): Promise<unknown> {
+    if (!this.environment.devDatabasePoolName) {
+      throw new Error(
+        'reseedDevStore() is only available in DEV_DATABASE (in-memory) mode.',
+      );
+    }
+    return this._plugin.initializeDevStore();
+  }
+
+  /**
    * Override the base createEmailService() to handle the SES email service.
    * The upstream Application only knows about Fake, Dummy, and Postfix;
    * SES is a BrightChain-specific implementation.
