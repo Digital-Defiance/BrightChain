@@ -222,7 +222,9 @@ async function main(): Promise<void> {
     process.stderr.write('Authenticated.\n');
   }
 
-  process.stderr.write(`Sending reseed request to ${apiUrl}/admin/dev/reseed...\n`);
+  process.stderr.write(
+    `Sending reseed request to ${apiUrl}/admin/dev/reseed...\n`,
+  );
 
   const result = await httpPost<{
     message?: string;

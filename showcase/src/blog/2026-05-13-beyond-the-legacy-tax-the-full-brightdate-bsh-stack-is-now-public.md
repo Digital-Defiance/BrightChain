@@ -16,27 +16,27 @@ Today, we are officially linking the three pillars of the BrightDate ecosystem. 
 The foundation. A timezone-free decimal time scalar anchored at the **J2000.0 Epoch** (the same one used by NASA/ESA). One float. No offsets. No DST. Simple arithmetic.
 
 - **The Hook:** `b - a = duration`. That’s it.
-- **Link:** https://brightdate.brightchain.org
+- **Link:** [https://brightdate.org](https://brightdate.org)
 
 #### **2. The Environment: BSH (BrightShell)**
 
 A fork of `zsh` that treats BrightDate as a native primitive. Your prompt, your history, and your system parameters all speak the same decimal language.
 
 - **The Hook:** Native glob modifiers. Want to find files modified in the last 10 minutes? `ls *(.m-0.007)`. Want to filter by immutable birth time? Use the `.b` modifier.
-- **Link:** https://bsh.brightchain.org
+- **Link:** [https://bsh.digitaldefiance.org](https://bsh.digitaldefiance.org)
 
 #### **3. The Toolkit: Bright-Findutils**
 
 We’ve ported the core GNU utilities to support decimal scalars natively. `find`, `xargs`, and `locate` now speak BrightDate.
 
 - **The Hook:** Absolute temporal filtering. `find . -after 9628.4` captures exactly what happened during your specific mission window, regardless of where on Earth you are sitting.
-- **Link:** https://findutils.brightchain.org
+- **Link:** [https://findutils.digitaldefiance.org](https:/findutils.digitaldefiance.org)
 
 #### **4. The Community Hub: Oh-My-BSH**
 
 The framework for customizing your terminal environment, including the **BrightDate Mobile Widget** with full RGB customization.
 
-- **Link:** https://ohmybsh.brightchain.org
+- **Link:** [https://ohmybsh.digitaldefiance.org](https://ohmybsh.digitaldefiance.org)
 
 ------
 

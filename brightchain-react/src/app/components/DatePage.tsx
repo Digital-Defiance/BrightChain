@@ -3,7 +3,6 @@
  * including BrightDate, and shows known holidays for today using date-holidays.
  */
 
-import { faCalendarClock } from '@awesome.me/kit-a20d532681/icons/classic/regular';
 import {
   BrightChainStrings,
   nowAsBrightDate,
@@ -11,10 +10,10 @@ import {
 } from '@brightchain/brightchain-lib';
 import {
   BrightDate,
+  BrightDateIcon,
   HeroBadge,
 } from '@brightchain/brightchain-react-components';
 import { useI18n } from '@digitaldefiance/express-suite-react-components';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   Box,
   Card,
@@ -25,6 +24,7 @@ import {
   Link,
   Tooltip,
   Typography,
+  useTheme,
 } from '@mui/material';
 import Holidays from 'date-holidays';
 import { FC, useEffect, useMemo, useState } from 'react';
@@ -281,10 +281,19 @@ export const DatePage: FC = () => {
     },
   ];
 
+  const theme = useTheme();
   return (
     <Container maxWidth="md" sx={{ py: 4 }}>
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 3 }}>
-        <FontAwesomeIcon icon={faCalendarClock} color="primary" size="3x" />
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
+        <BrightDateIcon
+          height={48}
+          width={48}
+          fill={
+            theme.palette.mode === 'dark'
+              ? theme.palette.primary.contrastText
+              : theme.palette.primary.dark
+          }
+        />
         <Typography variant="h4" component="h1">
           {t(BrightChainStrings.DatePage_Title)}
         </Typography>

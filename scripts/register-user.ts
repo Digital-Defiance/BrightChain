@@ -38,6 +38,7 @@ interface SdiEphemeralAuthPayload {
   type: 'ephemeral-auth';
   context: string;
   ttl: number;
+  issued_at: number;
   data: {
     username: string;
     password: string;
@@ -264,8 +265,8 @@ async function sendSdiCredentials(
   password: string,
   additionalFields?: Record<string, string>,
 ): Promise<boolean> {
-  const { spawnSync } = require('child_process') as typeof import('child_process');
-  const fs = require('fs') as typeof import('fs');
+  const { spawnSync } =
+    require('child_process') as typeof import('child_process');
 
   // bsh-inject is a builtin — only present when bsh is installed.
   const which = spawnSync('which', ['bsh'], { encoding: 'utf8' });
@@ -275,6 +276,7 @@ async function sendSdiCredentials(
     type: 'ephemeral-auth',
     context,
     ttl: 300,
+    issued_at: Math.floor(Date.now() / 1000),
     data: {
       username,
       password,
@@ -285,49 +287,127 @@ async function sendSdiCredentials(
     },
   };
 
-  // The OSC sequence must reach the terminal emulator, not a pipe.
-  // Open /dev/tty directly for the child's stdout; fall back to inherited.
-  let ttyFd: number | 'inherit' = 'inherit';
-  let ttyOpened = false;
-  try {
-    ttyFd = fs.openSync('/dev/tty', 'w') as number;
-    ttyOpened = true;
-  } catch {
-    // /dev/tty unavailable (CI without a TTY) — fall back to inherited stdout
-  }
+  // bsh-inject writes the OSC 7777 sequence directly to /dev/tty (RFC §3.6)
+  // and relays the same ciphertext to SDIAgent over the persistent ECDH
+  // socket (Option B).  A zero exit code means the agent confirmed delivery.
 
-  try {
-    // Load the sdi module (no-op if already loaded), then call bsh-inject.
-    // The context URL is passed as a positional param — not interpolated into
-    // the shell command string — to prevent injection.
-    const result = spawnSync(
-      'bsh',
-      [
-        '-c',
-        'zmodload bsh/sdi 2>/dev/null; bsh-inject "$@"',
-        '_',           // $0 (dummy script name; $@ starts from $1)
-        '--type', 'ephemeral-auth',
-        '--context', context,
-      ],
-      {
-        input: JSON.stringify(payload),
-        encoding: 'utf8',
-        stdio: ['pipe', ttyFd, 'pipe'],
+  // Resolve SDI_SOCKET_PATH: prefer the inherited env var only if the socket
+  // is still alive; fall back to ~/.config/sdi/socket written by SDIAgent.
+  // When the agent is sandboxed its socket lives inside a Containers directory
+  // and cannot advertise itself via launchctl setenv or ~/.config/sdi/socket,
+  // so we also scan /tmp and ~/Library/Containers for live sdi-agent sockets.
+  const { readFileSync, existsSync, statSync, readdirSync } =
+    require('fs') as typeof import('fs');
+  const { homedir } = require('os') as typeof import('os');
+
+  // Check that a path is a socket file AND is actually accepting connections.
+  // statSync().isSocket() alone returns true for stale leftover socket files.
+  const isLiveSocket = (p: string): Promise<boolean> => {
+    try {
+      if (!statSync(p).isSocket()) return Promise.resolve(false);
+    } catch {
+      return Promise.resolve(false);
+    }
+    const net = require('net') as typeof import('net');
+    return new Promise((resolve) => {
+      const client = net.createConnection(p, () => {
+        client.destroy();
+        resolve(true);
+      });
+      client.setTimeout(500, () => {
+        client.destroy();
+        resolve(false);
+      });
+      client.on('error', () => resolve(false));
+    });
+  };
+
+  // Discover any live sdi-agent socket by scanning well-known locations.
+  // This handles the case where the agent is sandboxed and cannot update
+  // SDI_SOCKET_PATH or write the fallback file.
+  const discoverSdiSocket = async (): Promise<string> => {
+    const candidates: string[] = [];
+
+    // 1. /tmp/sdi-agent-* (non-sandboxed agent)
+    try {
+      const tmpEntries = readdirSync('/tmp');
+      candidates.push(
+        ...tmpEntries
+          .filter((f) => f.startsWith('sdi-agent-'))
+          .map((f) => `/tmp/${f}`),
+      );
+    } catch {}
+
+    // 2. ~/Library/Containers/*/Data/tmp/sdi-agent-* (sandboxed agent)
+    const containersDir = `${homedir()}/Library/Containers`;
+    try {
+      const bundleIds = readdirSync(containersDir);
+      for (const bundleId of bundleIds) {
+        const tmpDir = `${containersDir}/${bundleId}/Data/tmp`;
+        try {
+          const entries = readdirSync(tmpDir);
+          candidates.push(
+            ...entries
+              .filter((f) => f.startsWith('sdi-agent-'))
+              .map((f) => `${tmpDir}/${f}`),
+          );
+        } catch {}
+      }
+    } catch {}
+
+    for (const candidate of candidates) {
+      if (await isLiveSocket(candidate)) return candidate;
+    }
+    return '';
+  };
+
+  let sdiSocketPath = process.env.SDI_SOCKET_PATH ?? '';
+  if (sdiSocketPath && !(await isLiveSocket(sdiSocketPath))) sdiSocketPath = '';
+  if (!sdiSocketPath) {
+    const fallback = `${homedir()}/.config/sdi/socket`;
+    if (existsSync(fallback))
+      sdiSocketPath = readFileSync(fallback, 'utf8').trim();
+    if (sdiSocketPath && !(await isLiveSocket(sdiSocketPath)))
+      sdiSocketPath = '';
+  }
+  // Last resort: scan well-known locations for a live socket.
+  if (!sdiSocketPath) sdiSocketPath = await discoverSdiSocket();
+
+  const result = spawnSync(
+    'bsh',
+    [
+      '-c',
+      // Explicit error propagation from zmodload aids diagnostics.
+      // bin_bsh_inject handles lazy session init for non-interactive shells.
+      'zmodload bsh/sdi || { echo "SDI module load failed — is bsh/sdi installed?" >&2; exit 2; }; bsh-inject "$@"',
+      '_', // $0 (dummy script name; $@ starts from $1)
+      '--type',
+      'ephemeral-auth',
+      '--context',
+      context,
+    ],
+    {
+      input: JSON.stringify(payload),
+      stdio: ['pipe', 'pipe', 'pipe'],
+      env: {
+        ...process.env,
+        ...(sdiSocketPath ? { SDI_SOCKET_PATH: sdiSocketPath } : {}),
       },
-    );
+    },
+  ) as import('child_process').SpawnSyncReturns<Buffer>;
 
-    if (result.status !== 0) {
-      const msg = (result.stderr as string)?.trim();
-      if (msg) process.stderr.write(`SDI: ${msg}\n`);
-      return false;
-    }
-
-    return true;
-  } finally {
-    if (ttyOpened && typeof ttyFd === 'number') {
-      fs.closeSync(ttyFd);
-    }
+  if (result.status !== 0) {
+    const msg = (result.stderr as Buffer)?.toString('utf8')?.trim();
+    if (msg) process.stderr.write(`SDI: ${msg}\n`);
+    if (!sdiSocketPath)
+      process.stderr.write(
+        'SDI: no socket path found — is the BSH SDIAgent running?\n',
+      );
+    return false;
   }
+
+  process.stdout.write('SDI: credentials injected via OSC 7777\n');
+  return true;
 }
 
 // ── Password generation ───────────────────────────────────────────────────────
@@ -736,8 +816,8 @@ async function main(): Promise<void> {
       password,
       additionalFields,
     );
-    if (sdiSent) {
-      process.stderr.write('SDI: credentials injected via OSC 7777\n');
+    if (!sdiSent) {
+      process.stderr.write('SDI: injection failed — credentials not sent\n');
     }
   }
 }

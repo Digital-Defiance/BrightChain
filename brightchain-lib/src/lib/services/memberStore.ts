@@ -43,7 +43,11 @@ import {
 import { IBlockStore } from '../interfaces/storage/blockStore';
 import { IMemberStoreDb } from '../interfaces/storage/documentTypes';
 import { Checksum } from '../types/checksum';
-import { brightDateNow, normalizeToBrightDate, brightDateToISO } from '../utils/brightDateConversions';
+import {
+  brightDateNow,
+  brightDateToISO,
+  normalizeToBrightDate,
+} from '../utils/brightDateConversions';
 import { MemberCblService } from './member/memberCblService';
 import { ServiceProvider } from './service.provider';
 
@@ -956,7 +960,8 @@ export class MemberStore<TID extends PlatformID = Uint8Array>
             changes.publicChanges?.lastSeen ??
             currentProfile.publicProfile?.lastActive ??
             brightDateNow(),
-          dateCreated: currentProfile.publicProfile?.dateCreated ?? brightDateNow(),
+          dateCreated:
+            currentProfile.publicProfile?.dateCreated ?? brightDateNow(),
           dateUpdated: brightDateNow(),
         };
 
@@ -990,7 +995,8 @@ export class MemberStore<TID extends PlatformID = Uint8Array>
               preferredRegions: [],
             },
           activityLog: currentProfile.privateProfile?.activityLog ?? [],
-          dateCreated: currentProfile.privateProfile?.dateCreated ?? brightDateNow(),
+          dateCreated:
+            currentProfile.privateProfile?.dateCreated ?? brightDateNow(),
           dateUpdated: brightDateNow(),
         };
 
