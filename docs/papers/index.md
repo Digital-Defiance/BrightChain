@@ -28,6 +28,14 @@ The BrightChain project is documented through a series of companion papers, each
 
 - [BrightTor](BrightTor-Whitepaper) — An anonymized overlay network protocol that layers Tor-like onion routing on top of BrightChain's block storage and gossip infrastructure.
 
+## Science/Core
+
+The goal of these three standards is to eliminate the mathematical "debt" of legacy time and geographic systems by replacing them with a unified, high-performance framework based on the speed of light. By synchronizing space and time into a single decimal-SI scale, they enable distributed systems to calculate location, distance, and network latency with unprecedented speed and precision.
+
+- [BrightDate](brightdate-specification) - BrightDate is the temporal foundation that replaces fragmented calendars with a single, decimal count of days since the J2000 epoch, providing a perfectly smooth timeline for distributed systems.
+- [Bright Space Standard](bright-space-standard) - BrightSpace uses those decimal units to create a fixed, 3D coordinate grid anchored to the center of the Earth, eliminating the complex math and "polar errors" found in traditional latitude and longitude.
+- [Bright Spacetime Standard](bright-spacetime-standard) - Bright Spacetime is the overarching mathematical framework that unifies the two, setting the speed of light to 1 so that distance and time are measured with the exact same ruler.
+
 ---
 
 {% assign pages = site.pages | where_exp: "page", "page.parent == 'Papers'" | sort: "nav_order" %}
