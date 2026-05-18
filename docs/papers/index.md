@@ -23,6 +23,7 @@ The BrightChain project is documented through a series of companion papers, each
 - [BrightChart Practice Records Portability Standard](brightchart-open-standard) — A FHIR R4-based open standard for full-fidelity EMR data portability across medical, dental, and veterinary practices.
 - [BrightPass](brightpass) — A decentralized password manager with VCBL (Vault Constituent Block List) architecture on privacy-preserving block storage.
 - [BrightDB](brightdb) — A MongoDB-compatible document database over content-addressable block storage.
+- [BSH](bsh) - BrightShell is the essential bridge between the theoretical papers of the Bright Spacetime Standard and the practical reality of daily engineering. It transforms BrightDate from an abstract specification into a living, breathing toolset.
 
 ## Networking
 
