@@ -209,6 +209,14 @@ const About = () => {
               NPM
             </a>
             {' • '}
+            <a
+              href="https://www.reddit.com/r/BrightChain/"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Sub-Reddit
+            </a>
+            {' • '}
             <a href="/demo" rel="noopener noreferrer">
               {t(ShowcaseStrings.Hero_CTA_SoupDemo)}
             </a>

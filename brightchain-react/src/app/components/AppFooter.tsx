@@ -44,6 +44,15 @@ export const AppFooter: FC = () => {
       >
         {t(BrightChainStrings.Splash_PrivacyPolicy)}
       </Button>
+      <Button
+        href="https://www.reddit.com/r/BrightChain/"
+        variant="text"
+        size="small"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        Sub-Reddit
+      </Button>
       <Typography
         variant="caption"
         color="text.secondary"
