@@ -5,7 +5,7 @@ parent: "Papers"
 ---
 # The BrightSpace Geocentric Reference Frame (BSGRF)
 
-**Version:** 1.1.0 (component) — Bright Spacetime Protocol (BSP) suite member
+**Version:** 1.1.0 (component) — Bright Spacetime Standard (BSS) suite member
 
 **Organization:** Digital Defiance (501c3)
 

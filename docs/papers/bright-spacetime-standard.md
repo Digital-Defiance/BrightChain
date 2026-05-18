@@ -12,7 +12,7 @@ parent: "Papers"
 
    **Interactive companion:** https://brightdate.org/spacetime
 
-   **Version:** 0.1.0 (component, draft) — Bright Spacetime Protocol (BSP) suite member
+   **Version:** 0.1.0 (component, draft) — Bright Spacetime Standard (BSS) suite member
 
    **Status:** Draft convention — comments and corrections welcome.
 

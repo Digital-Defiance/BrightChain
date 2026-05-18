@@ -44,7 +44,7 @@ BrightSpace interactive demo: [https://brightdate.org/spacetime](https://brightd
 
 # Why This Matters
 
-By moving away from “legacy geographic debt” and arbitrary calendar artifacts, we create a foundation for high-performance decentralized systems. Whether you are auditing network latency or planning an interplanetary trajectory, the Bright Spacetime Protocol ensures that space and time are finally using the same ruler.
+By moving away from “legacy geographic debt” and arbitrary calendar artifacts, we create a foundation for high-performance decentralized systems. Whether you are auditing network latency or planning an interplanetary trajectory, the Bright Spacetime Standard ensures that space and time are finally using the same ruler.
 
 ***\*“Fixed in Space. Universal in Time. Defiant by Design.”\****
 
