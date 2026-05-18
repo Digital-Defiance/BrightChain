@@ -27,7 +27,7 @@ parent: "Papers"
 
 Modern software engineering is burdened by a fragmented time landscape: UTC timezones, Unix milliseconds, Julian Dates, GPS weeks, TAI offsets, and leap-second ambiguities proliferate across distributed systems with no shared conceptual anchor. Every timestamp library re-derives the same conversions from the same patchwork of calendar artefacts, with errors accumulating at every interface boundary.
 
-**BrightDate** proposes a principled alternative: a single, universal scalar count of decimal SI days elapsed since the J2000.0 astronomical epoch, computed on a TAI substrate that eliminates leap-second discontinuities from core arithmetic. The system ships three companion types — `BrightDate` (Float64, ergonomic), `BrightInstant` (BigInt TAI seconds + nanoseconds, rigorous), and `ExactBrightDate` (BigInt picoseconds, lossless archival) — that together cover the full spectrum from astronomy to blockchain-grade fidelity. For timestamps predating the J2000.0 epoch, a paged extension called **Pre-BrightDate (PBD)** replaces unbounded negative scalars with positive, human-legible era labels spanning Tera-second blocks (~31,710 Julian years each), reaching cleanly to the Big Bang without floating-point degradation.
+**BrightDate** proposes a principled alternative: a single, universal scalar count of decimal SI days elapsed since the J2000.0 astronomical epoch, computed on a TAI substrate that eliminates leap-second discontinuities from core arithmetic. The system ships three companion types — `BrightDate` (Float64, ergonomic), `BrightInstant` (BigInt TAI seconds + nanoseconds, rigorous), and `ExactBrightDate` (BigInt picoseconds, lossless archival) — that together cover the full spectrum from astronomy to blockchain-grade fidelity. Pre-J2000.0 timestamps are signed scalars in the canonical representation; for display, a `PBD` prefix renders the absolute value of any negative BrightDate so that user-facing strings never carry a leading minus sign.
 
 ---
 
@@ -190,120 +190,67 @@ These are properties of 64-bit floating-point arithmetic, not BrightDate defects
 
 ---
 
-## 5. Pre-BrightDate (PBD): Deep-Time Paging
+## 5. Pre-J2000.0 Display Convention (PBD)
 
-### 5.1 The Problem with Unbounded Negatives
+### 5.1 The Convention
 
-Because BrightDate is anchored at J2000.0, any moment before `2000-01-01T11:58:55.816Z` is naturally a negative scalar. Negatives are mathematically valid but operationally hazardous:
+Pre-J2000.0 instants are negative BrightDate scalars in the canonical representation. Negative numbers are mathematically fine for storage, comparison, and arithmetic, but they read poorly in user-facing displays — leading minus signs invite sign-flip mistakes, and large negative scientific notation (`-4.35e17`) is hostile to skim-reading.
 
-- Sign-flip bugs in formatters.
-- Off-by-one errors when crossing zero.
-- Magnitude-dependent Float64 drift that worsens as timestamps move further from the epoch.
-- Counterintuitive ordering: `−4.35 × 10¹⁷` (Big Bang) versus `−1.58 × 10¹¹` (3000 BC) requires knowing the sign convention to interpret.
+To address this **without changing storage or arithmetic**, BrightDate defines a display-only label convention:
 
-### 5.2 The PBD Solution: Tera-Second Pages
+- A non-negative scalar `bd ≥ 0` is rendered as **`BD <bd>`**.
+- A negative scalar `bd < 0` is rendered as **`PBD <|bd|>`**.
+- `BD 0` is the canonical label for J2000.0. **There is no `PBD 0`.** A formatter MUST NOT produce `PBD 0`; a parser MUST reject `PBD 0` as invalid.
 
-Pre-BrightDate (PBD) replaces the unbounded negative line with a sequence of named, positive-valued pages called **eras**. Each era spans exactly one **Tera-second** (10¹² SI seconds ≈ 31,710 Julian years). Within each page, values run from 0 to 10¹² — always forward, always positive.
+The `PBD` prefix is shorthand for *Pre-BrightDate*: a sign-flipping cosmetic for negative values, nothing more. The internal scalar is unchanged; round-tripping through the display layer is exact.
 
-**The key insight:** this is a presentation and indexing layer, not a new number system. The canonical representation remains the signed scalar; PBD is generated at format time and parsed at input time, exactly as a human-readable date string is generated from a Unix timestamp without replacing it.
+### 5.2 Worked Examples
 
-### 5.3 SI-Metric Alignment: The Tera-Bright
+| Internal scalar (days) | Display label  | Civil meaning                       |
+|------------------------|----------------|-------------------------------------|
+| `0`                    | `BD 0`         | J2000.0                             |
+| `9622.504`             | `BD 9622.504`  | ~2026 (current era)                 |
+| `-1`                   | `PBD 1`        | One day before J2000.0              |
+| `-11125.154`           | `PBD 11125.154`| Apollo 11 landing (1969-07-20)      |
+| `-1826388.89`          | `PBD 1826388.89` | ~3000 BC (earliest writing)       |
 
-PBD math is performed in **Bright-seconds (bs)**, where `1 bs = 1 SI second`. One **Tera-Bright** (`1 Ts`) is therefore:
+### 5.3 Sort Rule for Labels
 
-- **Time:** 10¹² s ≈ 31,710 Julian years (one PBD page).
-- **Distance (in BrightSpace terms):** 1 Tera-light-second ≈ 0.0317 light-years.
+When sorting *label strings* (rather than the underlying scalars), the rule is:
 
-Because the same SI prefix lineage governs both time and space in the BrightChain ecosystem, a `PBD-N` label is not an arbitrary bucket — it is a physically meaningful volume of history, exactly 10¹² seconds long, anchored to the same J2000.0 zero point.
+1. Any `BD` value is later than any `PBD` value.
+2. Within `BD`, **larger** number is later.
+3. Within `PBD`, **smaller** number is later (closer to J2000.0).
 
-### 5.4 The Paging Model
-
-Let `T = 1,000,000,000,000 s` (one Tera-Bright, ≈ 31,710 years).
-
-| Era | Raw second range | Page value (era-local) | Approx. Gregorian window |
-|-----|-----------------|------------------------|--------------------------|
-| BD | `[0, +∞)` | raw scalar | J2000.0 → forever |
-| PBD1 | `(−T, 0)` | `raw + T` | ~29,710 BC → J2000.0 |
-| PBD2 | `(−2T, −T]` | `raw + 2T` | ~61,420 BC → ~29,710 BC |
-| PBD*N* | `(−N·T, −(N−1)·T]` | `raw + N·T` | ~31,710 Julian years per page |
-
-**There is no `PBD0`.** The current era — J2000.0 and all future time — is plain BD, unpaged. PBD*N* is reserved for N ≥ 1, labeling pre-epoch time only.
-
-### 5.5 Era Calculation
-
-For a raw Bright-second value `r < 0`:
-
-```
-N         = ⌊|r| / T⌋ + 1
-pageValue = r + N · T
-```
-
-The pair `(N, pageValue)` uniquely identifies every pre-epoch instant. Reconstruction is trivial:
-
-```
-r = pageValue − N · T
-```
-
-### 5.6 Three Invariants
-
-1. **One timeline, always increasing toward the future.** Within any era, a larger page value is *later*. In PBD1, page `999,999,999,999` is one second before J2000.0; page `1` is almost a full Tera-second before J2000.0. Values do *not* count backwards. (This is the opposite of BC labeling, and the reason BC dates break every library that touches them.)
-
-2. **Boundaries are half-open with a closed upper.** `BD = [0, +∞)`, `PBD1 = (−T, 0)`, `PBD2 = (−2T, −T]`, `PBD-N = (−N·T, −(N−1)·T]`. The exact boundary `−k·T` is the last instant of `PBD(k+1)` (page `T`). Every scalar has exactly one canonical label — no "Year Zero" ambiguity.
-
-3. **Deltas use the scalar, not the page.** `Δt = raw_a − raw_b`. Never `pageA − pageB`. Subtracting page values across an era boundary silently drops a Tera-second.
-
-### 5.7 Comparing Across the BD/PBD Boundary
-
-When only label tuples are available:
+In code:
 
 ```typescript
 function isLater(a: BrightLabel, b: BrightLabel): boolean {
   if (a.kind !== b.kind) return a.kind === 'BD';   // any BD > any PBD
-  if (a.kind === 'BD')   return a.seconds > b.seconds;
-  if (a.era !== b.era)   return a.era < b.era;      // smaller era = closer to J2000.0
-  return a.page > b.page;                           // within an era, larger page = later
+  if (a.kind === 'BD')   return a.value > b.value;
+  return a.value < b.value;                        // within PBD, smaller is later
 }
 ```
 
-Sort ascending by time: BD first, then PBD by era *descending*, then page *ascending*.
+When the underlying numeric scalars are available, native numeric comparison is the right tool — it agrees with the label-string rule without needing the prefix at all.
 
-### 5.8 Why Pages Instead of Negatives?
+### 5.4 Format and Parse API
 
-| Property | Single negative line | PBD-N paging |
-|----------|---------------------|--------------|
-| Sign confusion | Constant hazard | Eliminated — every page is positive |
-| Sort order | Native (numeric) | Native (sort by N desc, then page) |
-| Labeling deep time | `−4.35 × 10¹⁷ s` | `PBD435000: <page>` — scale is obvious |
-| Float64 drift | Worsens with magnitude | Stays inside one Tera-second window |
-| Storage | One Float64 | One small int + one Float64 (or tuple) |
-| Cosmological reach | Saturates Float64 | Big Bang ≈ PBD435,000 — well inside `Number.MAX_SAFE_INTEGER` |
+```typescript
+formatBD(0)              // "BD 0"
+formatBD(9622.504)       // "BD 9622.504"
+formatBD(-11125.154)     // "PBD 11125.154"
+formatBD(-1)             // "PBD 1"
 
-### 5.9 Benchmark Anchors
-
-| Historical moment | Raw seconds | PBD label |
-|-------------------|-------------|-----------|
-| J2000.0 (epoch) | `0` | `BD 0.000` |
-| ~3000 BC (earliest writing) | `≈ −1.578 × 10¹¹` | `PBD1: ~842,212,000,000` |
-| ~12,000 BC (end of last glacial maximum) | `≈ −4.42 × 10¹¹` | `PBD1: ~557,800,000,000` |
-| ~100,000 BC (deep Paleolithic) | `≈ −3.156 × 10¹²` | `PBD4: ~844,240,000,000` |
-| Big Bang (~13.8 Gyr ago) | `≈ −4.35 × 10¹⁷` | `PBD~435,000: <page>` |
-
-Most of recorded human history fits inside **PBD1**. Civilization from ~3000 BC to J2000.0 is roughly 5,000 years — less than one-sixth of a single Tera-second page.
-
-### 5.10 Representation Formats
-
-```jsonc
-// JSON tuple form — indexable, deterministic
-{ "pbd": [1, 842000000000.000] }   // PBD1, page 842000000000 → raw ≈ -158Gs
-
-// String label form — human-readable
-"PBD1: 842000000000.000"
-
-// Scalar (legacy) — valid, automatically paged when displayed
--157788000000
+parseBD("BD 9622.504")   // 9622.504
+parseBD("PBD 11125.154") // -11125.154
+parseBD("BD 0")          // 0
+parseBD("PBD 0")         // throws — PBD 0 is invalid
 ```
 
-A negative raw BrightDate scalar always round-trips through `(era, pageValue)` without loss. The paging is a presentation and indexing layer, not a different number system. Existing negative scalars remain canonical and first-class.
+### 5.5 Precision Note for Deep Time
+
+`BrightDate` Float64 covers ~287,000 years from J2000.0 with sub-microsecond ULP, in either direction. For deep-time work that needs full precision indefinitely far from the epoch — geological timescales, cosmological references — use `BrightInstant` (BigInt TAI seconds + integer nanoseconds) or `ExactBrightDate` (BigInt picoseconds). Both are integer-backed and have no magnitude-dependent precision degradation. The display convention above applies identically: their human-facing labels use the same `BD`/`PBD` prefix rule.
 
 ---
 
@@ -365,7 +312,6 @@ TAI_UTC_OFFSET_AT_J2000 = 32               // TAI − UTC at J2000.0 (seconds)
 TT_TAI_OFFSET_SECONDS   = 32.184           // TT − TAI (fixed by IAU definition)
 CURRENT_TAI_UTC_OFFSET  = 37               // TAI − UTC as of 2017
 GPS_EPOCH_UNIX_TAI      = 315_964_819      // GPS epoch as TAI Unix seconds
-PBD_ERA_SECONDS         = 1_000_000_000_000 // One Tera-second; length of one PBD era
 SECONDS_PER_DAY         = 86_400           // SI seconds per day
 ```
 
@@ -409,7 +355,6 @@ BrightDate is not new physics and does not propose new fundamental constants. It
 
 - BrightDate does not replace TAI or UTC at the metrology level. It is an application-layer convention that consumes those standards.
 - Below sub-microsecond scales — high-precision pulsar timing, optical clock comparisons — the relevant unit is the SI second itself and BrightDate Float64 offers no advantage over `BrightInstant` or `ExactBrightDate`.
-- The PBD system assigns human history to PBD1. Systems that display deep-time dates to end users must document that `PBD1` values are *earlier* than any BD value, despite having larger page numbers.
 - The standard does not specify coordinate systems, energy units, or momentum. These are intentionally out of scope.
 
 ### 11.3 Invitation
