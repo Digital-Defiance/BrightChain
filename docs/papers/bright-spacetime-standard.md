@@ -12,7 +12,9 @@ parent: "Papers"
 
    **Interactive companion:** https://brightdate.org/spacetime
 
-   **Status:** Draft convention, v0.1 — comments and corrections welcome.
+   **Version:** 0.1.0 (component, draft) — Bright Spacetime Protocol (BSP) suite member
+
+   **Status:** Draft convention — comments and corrections welcome.
 
    **Date:** 2026
 
@@ -86,6 +88,8 @@ parent: "Papers"
 
    The same hierarchy applies to Bright-Seconds (μbs, mbs, bs, kbs, Mbs, Gbs).
 
+   **Symbol convention.** `μbm` and `μbs` are canonical. **`ubm`** and **`ubs`** are ASCII-safe fallbacks for code, terminals, and storage formats where Greek `μ` is impractical; both forms refer to the same unit.
+
    ### 2.4 The Light-Day family (calendar-aware extension)
 
    For applications that need to interoperate with Earth-bound calendars (scheduling, ephemerides, day-cycle missions), we additionally define:
@@ -96,7 +100,11 @@ parent: "Papers"
 
    ### 2.5 Epoch and metric signature
 
-   - **Epoch:** J2000.0 = 2000-01-01T12:00:00 TT (IAU, *Astronomical Almanac*). Coordinate times in the standard are measured from this instant. The reference implementation handles the TT → TAI → UTC chain explicitly, including all leap seconds through the most recent IERS bulletin.
+   - **Epoch — canonical block (identical across all BrightChain time/space specifications):**
+
+     > The BrightDate epoch is **J2000.0**, defined as `2000-01-01T12:00:00.000 TT`. In TAI, this is `2000-01-01T11:59:27.816` (Unix TAI second `946,727,967.816`). The UTC label, as returned by standard software clocks, is `2000-01-01T11:58:55.816Z` (Unix millisecond `946,727,935,816`). All BrightDate and BrightSpacetime coordinate times are measured from this instant on a TAI substrate.
+
+     The reference implementation handles the TT → TAI → UTC chain explicitly, including all leap seconds through the most recent IERS bulletin. See §4A for the GCRS/BCRS framing of these coordinates.
 
    - **Metric signature:** (-,+,+,+), matching Misner–Thorne–Wheeler. The line element is:
 
@@ -167,6 +175,57 @@ parent: "Papers"
    120 AU ≈ 5.99 × 10⁴ bs ≈ 16.6 hours light-travel
 
    In Gigabrights, that is 1.80 × 10⁻⁴ Gbm. The order of magnitude tells you immediately that interstellar distances begin one hierarchy level higher — Proxima Centauri sits at ~0.134 Gbm.
+
+------
+
+   ## 4A. Coordinate Time, Proper Time, and the BrightDate Substrate
+
+   The worked examples above mix two concepts that are equal for terrestrial engineering and *not* equal for precision interplanetary work. The standard must be explicit about which is which.
+
+   ### 4A.1 What BrightDate Coordinates Actually Are
+
+   BrightDate timestamps are **coordinate time** in a specific reference frame. Two frames are relevant in practice:
+
+   - **GCRS** (Geocentric Celestial Reference System) — the natural frame for Earth-orbit, cislunar, and Earth-station work. Origin: Earth's centre of mass; axes: kinematically non-rotating relative to distant quasars. The TT timescale is the time coordinate of the GCRS.
+   - **BCRS** (Barycentric Celestial Reference System) — the natural frame for interplanetary, heliophysics, and deep-space work. Origin: Solar System barycentre. The TCB timescale is the time coordinate of the BCRS; TDB is its widely used scaled relative.
+
+   The BrightDate scalar is, by construction, a count of SI days since J2000.0 on the **TAI substrate**. TAI is realised on the rotating geoid and differs from TT only by the fixed offset `TT − TAI = 32.184 s`. For all practical purposes within Earth's gravity well, BrightDate coordinate time tracks GCRS coordinate time. It does **not** automatically yield BCRS coordinate time, and it does **not** yield the proper time of an arbitrary worldline.
+
+   ### 4A.2 When the Distinction Doesn't Matter
+
+   For everything inside roughly 1 AU of Earth — terrestrial networking, GNSS, lunar comms, asteroid-belt latency budgets — the difference between GCRS coordinate time, BCRS coordinate time, and the proper time of a clock at rest in the GCRS is below microsecond order. Engineering teams can treat BrightDate timestamps as proper time without measurable error.
+
+   ### 4A.3 When It Does Matter
+
+   For precision interplanetary work, three corrections become observable:
+
+   1. **Gravitational time dilation.** A clock deeper in a gravitational potential ticks slower than coordinate time. The leading-order rate factor is:
+
+      `dτ/dt = sqrt(1 − 2U/c² − v²/c²) ≈ 1 − U/c² − v²/(2c²)`
+
+      where `U` is the Newtonian gravitational potential at the clock (positive, magnitude convention) and `v` is the clock's velocity in the chosen coordinate frame. In Bright units (`c = 1`) this simplifies to `dτ/dt ≈ 1 − U − v²/2`, with `U` and `v²` rendered as dimensionless ratios to `c²`.
+
+   2. **TT vs TCB rate offset.** A clock at rest on Earth's geoid drifts against TCB at roughly `1.55 × 10⁻⁸` (about 0.49 s/year), because the entire Earth sits at a non-trivial depth in the Sun's potential. Mission-planning calculations that span Earth and barycentric coordinates must apply this correction explicitly; BrightDate alone does not absorb it.
+
+   3. **Shapiro delay.** Light passing near a massive body takes longer in coordinate time than its straight-line BrightSpace distance suggests. For an Earth–Mars signal grazing the Sun at superior conjunction, the correction reaches ~250 µs. The Bright unit of light-distance remains exact; what changes is that the *coordinate-time path length* of the signal is no longer the Euclidean BrightSpace distance. Stated as an inequality:
+
+      `Δt > sqrt(Δx² + Δy² + Δz²)`     (in curved spacetime, in Bright units)
+
+      with equality recovered only in flat spacetime. The Euclidean chord is a **lower bound** on coordinate light-travel time — useful as a Distance-Bounding floor (§4.1, BrightSpace), insufficient as a precise propagation model when a signal traverses a deep gravitational well.
+
+   ### 4A.4 Reference-Implementation Surface
+
+   The reference implementation exposes proper-time machinery as a separate, opt-in layer:
+
+   - `properTimeFactor(potential_U, velocity_beta_squared)` — returns the dimensionless `dτ/dt` rate at first post-Newtonian order, with both arguments in Bright units (dimensionless ratios to `c²`).
+   - `tcbFromTt(brightDate, observerWorldline?)` — converts a GCRS-substrate BrightDate to its BCRS-coordinate-time counterpart. The current implementation uses the IAU 2006 SOFA conventions for the linear part and exposes an extension point for higher-order terms.
+   - `properTimeAlongWorldline(events, metric?)` — integrates `sqrt(-ds²)` along an ordered sequence of `SpacetimeEvent`s under a supplied metric (defaults to Minkowski; gravitational metrics are pluggable).
+
+   The directive: BrightDate gives you a clean, monotonic, high-precision coordinate-time scalar. For proper time, call the proper-time helpers. For barycentric coordinate time, call the BCRS conversion. Mixing the three silently is the failure mode the standard is built to prevent.
+
+   ### 4A.5 Twin Paradox, Revisited
+
+   The twin paradox in §4.2 used coordinate time `T = 10` years and recovered proper time `2T/γ = 16.0` years. That calculation is exact under the Minkowski metric the example assumes — flat spacetime, no gravity. In a real interplanetary scenario, the same algebra runs through `properTimeAlongWorldline` with a Schwarzschild or post-Newtonian metric, and the gravitational terms in §4A.3 enter automatically. The user code does not change; only the metric pluggable does.
 
 ------
 
