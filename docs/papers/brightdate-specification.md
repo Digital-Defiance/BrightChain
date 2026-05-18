@@ -18,6 +18,9 @@ parent: "Papers"
 
 **Date:** 2026
 
+- See also: [https://github.brightdate.org/docs/papers/bright-space-standard](https://github.brightdate.org/docs/papers/bright-space-standard)
+- See also: [https://github.brightdate.org/docs/papers/bright-spacetime-standard](https://github.brightdate.org/docs/papers/bright-spacetime-standard)
+
 ---
 
 ## Abstract

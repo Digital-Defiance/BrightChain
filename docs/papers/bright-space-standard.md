@@ -11,6 +11,9 @@ parent: "Papers"
 
 **Author:** Jessica Mulein
 
+- See also: [https://github.brightdate.org/docs/papers/bright-spacetime-standard](https://github.brightdate.org/docs/papers/bright-spacetime-standard)
+- See also: [https://github.brightdate.org/docs/papers/brightdate-specification](https://github.brightdate.org/docs/papers/brightdate-specification)
+
 ------
 
 ## **1. The Problem: Legacy Geographic Debt**
