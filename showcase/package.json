@@ -15,7 +15,7 @@
   "dependencies": {
     "@awesome.me/kit-a20d532681": "^1.0.23",
     "@brightchain/brightchain-lib": "^0.32.1",
-    "@brightchain/brightdate": "^0.32.5",
+    "@brightchain/brightdate": "^0.33.0",
     "@brightchain/digitalburnbag-react-components": "^0.32.1",
     "@digitaldefiance/ecies-lib": "5.2.2",
     "@digitaldefiance/i18n-lib": "4.7.5",
