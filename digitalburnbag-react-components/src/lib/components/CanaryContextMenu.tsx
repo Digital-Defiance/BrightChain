@@ -32,7 +32,7 @@ import {
   Slider,
   Typography,
 } from '@mui/material';
-import { useCallback, useMemo, useState } from 'react';
+import { JSX, useCallback, useMemo, useState } from 'react';
 import type { IApiProviderConnectionDTO } from '../services/burnbag-api-client';
 
 // ---------------------------------------------------------------------------
@@ -105,17 +105,24 @@ export function getBindingCountBadge(bindings: ICanaryBinding[]): number {
 
 function signalToColor(sig?: string): string {
   switch (sig) {
-    case 'presence': return '#4caf50';
-    case 'absence': return '#ff9800';
+    case 'presence':
+      return '#4caf50';
+    case 'absence':
+      return '#ff9800';
     case HeartbeatSignalType.CHECK_FAILED:
     case 'check_failed':
-    case 'error': return '#f44336';
-    case 'duress': return '#9c27b0';
-    default: return '#9e9e9e';
+    case 'error':
+      return '#f44336';
+    case 'duress':
+      return '#9c27b0';
+    default:
+      return '#9e9e9e';
   }
 }
 
-function groupByCategory(connections: IApiProviderConnectionDTO[]): Map<string, IApiProviderConnectionDTO[]> {
+function groupByCategory(
+  connections: IApiProviderConnectionDTO[],
+): Map<string, IApiProviderConnectionDTO[]> {
   const groups = new Map<string, IApiProviderConnectionDTO[]>();
   for (const c of connections) {
     const cat = c.providerId.split('-')[0] ?? 'other';
@@ -133,11 +140,22 @@ interface IBindingConfigPopoverProps {
   open: boolean;
   onClose: () => void;
   connection: IApiProviderConnectionDTO;
-  onAttach: (params: { condition: 'ABSENCE' | 'DURESS'; action: string; absenceThresholdHours: number }) => Promise<void>;
+  onAttach: (params: {
+    condition: 'ABSENCE' | 'DURESS';
+    action: string;
+    absenceThresholdHours: number;
+  }) => Promise<void>;
   onAddMoreProviders: () => void;
 }
 
-function BindingConfigPopover({ anchorEl, open, onClose, connection, onAttach, onAddMoreProviders }: IBindingConfigPopoverProps) {
+function BindingConfigPopover({
+  anchorEl,
+  open,
+  onClose,
+  connection,
+  onAttach,
+  onAddMoreProviders,
+}: IBindingConfigPopoverProps) {
   const [condition, setCondition] = useState<'ABSENCE' | 'DURESS'>('ABSENCE');
   const [action, setAction] = useState('notify');
   const [thresholdHours, setThresholdHours] = useState(24);
@@ -148,7 +166,11 @@ function BindingConfigPopover({ anchorEl, open, onClose, connection, onAttach, o
     setError('');
     setIsAttaching(true);
     try {
-      await onAttach({ condition, action, absenceThresholdHours: thresholdHours });
+      await onAttach({
+        condition,
+        action,
+        absenceThresholdHours: thresholdHours,
+      });
       onClose();
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to attach canary');
@@ -168,10 +190,15 @@ function BindingConfigPopover({ anchorEl, open, onClose, connection, onAttach, o
     >
       <Paper sx={{ p: 2, width: 300 }}>
         <Typography variant="subtitle2" gutterBottom>
-          Configure Canary — {connection.providerDisplayName ?? connection.providerId}
+          Configure Canary —{' '}
+          {connection.providerDisplayName ?? connection.providerId}
         </Typography>
 
-        {error && <Alert severity="error" sx={{ mb: 1 }}>{error}</Alert>}
+        {error && (
+          <Alert severity="error" sx={{ mb: 1 }}>
+            {error}
+          </Alert>
+        )}
 
         {/* Condition dropdown — no text input */}
         <FormControl fullWidth size="small" sx={{ mb: 2 }}>
@@ -179,11 +206,17 @@ function BindingConfigPopover({ anchorEl, open, onClose, connection, onAttach, o
           <Select
             value={condition}
             label="Condition"
-            onChange={e => setCondition(e.target.value as 'ABSENCE' | 'DURESS')}
+            onChange={(e) =>
+              setCondition(e.target.value as 'ABSENCE' | 'DURESS')
+            }
             data-testid="condition-dropdown"
           >
-            <MenuItem value="ABSENCE">Absence — trigger when no activity detected</MenuItem>
-            <MenuItem value="DURESS">Duress — trigger on duress code login</MenuItem>
+            <MenuItem value="ABSENCE">
+              Absence — trigger when no activity detected
+            </MenuItem>
+            <MenuItem value="DURESS">
+              Duress — trigger on duress code login
+            </MenuItem>
           </Select>
         </FormControl>
 
@@ -193,7 +226,7 @@ function BindingConfigPopover({ anchorEl, open, onClose, connection, onAttach, o
           <Select
             value={action}
             label="Protocol Action"
-            onChange={e => setAction(e.target.value)}
+            onChange={(e) => setAction(e.target.value)}
             data-testid="action-dropdown"
           >
             <MenuItem value="notify">Notify recipients</MenuItem>
@@ -215,7 +248,11 @@ function BindingConfigPopover({ anchorEl, open, onClose, connection, onAttach, o
               min={1}
               max={168}
               step={1}
-              marks={[{ value: 24, label: '24h' }, { value: 72, label: '72h' }, { value: 168, label: '7d' }]}
+              marks={[
+                { value: 24, label: '24h' },
+                { value: 72, label: '72h' },
+                { value: 168, label: '7d' },
+              ]}
               size="small"
               data-testid="threshold-slider"
             />
@@ -223,13 +260,27 @@ function BindingConfigPopover({ anchorEl, open, onClose, connection, onAttach, o
         )}
 
         <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-          <Button size="small" variant="outlined" onClick={onAddMoreProviders} startIcon={<AddIcon />} data-testid="add-more-providers-button">
+          <Button
+            size="small"
+            variant="outlined"
+            onClick={onAddMoreProviders}
+            startIcon={<AddIcon />}
+            data-testid="add-more-providers-button"
+          >
             Add more providers
           </Button>
-          <Button size="small" variant="contained" onClick={handleAttach} disabled={isAttaching} data-testid="attach-button">
+          <Button
+            size="small"
+            variant="contained"
+            onClick={handleAttach}
+            disabled={isAttaching}
+            data-testid="attach-button"
+          >
             Attach
           </Button>
-          <Button size="small" onClick={onClose}>Cancel</Button>
+          <Button size="small" onClick={onClose}>
+            Cancel
+          </Button>
         </Box>
       </Paper>
     </Popover>
@@ -246,29 +297,64 @@ interface IManageCanariesPanelProps {
   onClose: () => void;
 }
 
-function ManageCanariesPanel({ bindings, onRemove, onClose }: IManageCanariesPanelProps) {
+function ManageCanariesPanel({
+  bindings,
+  onRemove,
+  onClose,
+}: IManageCanariesPanelProps) {
   const [removing, setRemoving] = useState<string | null>(null);
 
   const handleRemove = async (id: string) => {
     setRemoving(id);
-    try { await onRemove(id); } finally { setRemoving(null); }
+    try {
+      await onRemove(id);
+    } finally {
+      setRemoving(null);
+    }
   };
 
   return (
     <Box sx={{ p: 2, minWidth: 280 }} data-testid="manage-canaries-panel">
-      <Typography variant="subtitle2" gutterBottom>Manage Canaries</Typography>
-      {bindings.map(b => (
-        <Box key={b.id} sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1, p: 1, border: '1px solid', borderColor: 'divider', borderRadius: 1 }}>
+      <Typography variant="subtitle2" gutterBottom>
+        Manage Canaries
+      </Typography>
+      {bindings.map((b) => (
+        <Box
+          key={b.id}
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1,
+            mb: 1,
+            p: 1,
+            border: '1px solid',
+            borderColor: 'divider',
+            borderRadius: 1,
+          }}
+        >
           <Box sx={{ flex: 1 }}>
-            <Typography variant="body2" sx={{ fontWeight: 600 }}>{b.providerDisplayName}</Typography>
-            <Typography variant="caption" color="text.secondary">{b.condition} → {b.action}</Typography>
+            <Typography variant="body2" sx={{ fontWeight: 600 }}>
+              {b.providerDisplayName}
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              {b.condition} → {b.action}
+            </Typography>
           </Box>
-          <Button size="small" color="error" startIcon={<DeleteIcon />} onClick={() => handleRemove(b.id)} disabled={removing === b.id} data-testid={`remove-binding-${b.id}`}>
+          <Button
+            size="small"
+            color="error"
+            startIcon={<DeleteIcon />}
+            onClick={() => handleRemove(b.id)}
+            disabled={removing === b.id}
+            data-testid={`remove-binding-${b.id}`}
+          >
             Remove
           </Button>
         </Box>
       ))}
-      <Button size="small" onClick={onClose} sx={{ mt: 1 }}>Close</Button>
+      <Button size="small" onClick={onClose} sx={{ mt: 1 }}>
+        Close
+      </Button>
     </Box>
   );
 }
@@ -295,53 +381,79 @@ export function CanaryContextMenu({
 }: ICanaryContextMenuProps) {
   const [subMenuAnchor, setSubMenuAnchor] = useState<HTMLElement | null>(null);
   const [popoverAnchor, setPopoverAnchor] = useState<HTMLElement | null>(null);
-  const [selectedConnection, setSelectedConnection] = useState<IApiProviderConnectionDTO | null>(null);
+  const [selectedConnection, setSelectedConnection] =
+    useState<IApiProviderConnectionDTO | null>(null);
   const [showManage, setShowManage] = useState(false);
   const [manageAnchor, setManageAnchor] = useState<HTMLElement | null>(null);
 
   const connectedConnections = useMemo(
-    () => connections.filter(c => c.status === 'connected' || c.status === 'active'),
+    () =>
+      connections.filter(
+        (c) => c.status === 'connected' || c.status === 'active',
+      ),
     [connections],
   );
 
-  const groupedConnections = useMemo(() => groupByCategory(connectedConnections), [connectedConnections]);
+  const groupedConnections = useMemo(
+    () => groupByCategory(connectedConnections),
+    [connectedConnections],
+  );
 
   const bindingCount = existingBindings.length;
 
-  const handleAttachCanaryClick = useCallback((event: React.MouseEvent<HTMLElement>) => {
-    if (connectedConnections.length === 0) return;
-    setSubMenuAnchor(event.currentTarget);
-  }, [connectedConnections.length]);
+  const handleAttachCanaryClick = useCallback(
+    (event: React.MouseEvent<HTMLElement>) => {
+      if (connectedConnections.length === 0) return;
+      setSubMenuAnchor(event.currentTarget);
+    },
+    [connectedConnections.length],
+  );
 
-  const handleProviderSelect = useCallback((event: React.MouseEvent<HTMLElement>, connection: IApiProviderConnectionDTO) => {
-    setSelectedConnection(connection);
-    setPopoverAnchor(event.currentTarget);
-    setSubMenuAnchor(null);
-  }, []);
+  const handleProviderSelect = useCallback(
+    (
+      event: React.MouseEvent<HTMLElement>,
+      connection: IApiProviderConnectionDTO,
+    ) => {
+      setSelectedConnection(connection);
+      setPopoverAnchor(event.currentTarget);
+      setSubMenuAnchor(null);
+    },
+    [],
+  );
 
-  const handleAttach = useCallback(async (params: { condition: 'ABSENCE' | 'DURESS'; action: string; absenceThresholdHours: number }) => {
-    if (!selectedConnection) return;
-    await onCreateBinding({
-      targetId: target.id,
-      targetType: target.type,
-      providerConnectionId: selectedConnection.id,
-      ...params,
-    });
-    setPopoverAnchor(null);
-    setSelectedConnection(null);
-    onClose();
-  }, [selectedConnection, target, onCreateBinding, onClose]);
+  const handleAttach = useCallback(
+    async (params: {
+      condition: 'ABSENCE' | 'DURESS';
+      action: string;
+      absenceThresholdHours: number;
+    }) => {
+      if (!selectedConnection) return;
+      await onCreateBinding({
+        targetId: target.id,
+        targetType: target.type,
+        providerConnectionId: selectedConnection.id,
+        ...params,
+      });
+      setPopoverAnchor(null);
+      setSelectedConnection(null);
+      onClose();
+    },
+    [selectedConnection, target, onCreateBinding, onClose],
+  );
 
   const handleMultiCanarySetup = useCallback(() => {
     onClose();
     onOpenMultiCanarySetup(target);
   }, [onClose, onOpenMultiCanarySetup, target]);
 
-  const handleManageCanaries = useCallback((event: React.MouseEvent<HTMLElement>) => {
-    setManageAnchor(event.currentTarget);
-    setShowManage(true);
-    onClose();
-  }, [onClose]);
+  const handleManageCanaries = useCallback(
+    (event: React.MouseEvent<HTMLElement>) => {
+      setManageAnchor(event.currentTarget);
+      setShowManage(true);
+      onClose();
+    },
+    [onClose],
+  );
 
   return (
     <>
@@ -354,12 +466,20 @@ export function CanaryContextMenu({
       >
         {/* "Attach Canary" with count badge */}
         <MenuItem
-          onClick={connectedConnections.length === 0 ? undefined : handleAttachCanaryClick}
+          onClick={
+            connectedConnections.length === 0
+              ? undefined
+              : handleAttachCanaryClick
+          }
           data-testid="attach-canary-menu-item"
           disabled={connectedConnections.length === 0}
         >
           <ListItemIcon>
-            <Badge badgeContent={bindingCount > 0 ? bindingCount : undefined} color="primary" data-testid="binding-count-badge">
+            <Badge
+              badgeContent={bindingCount > 0 ? bindingCount : undefined}
+              color="primary"
+              data-testid="binding-count-badge"
+            >
               <NotificationsActiveIcon fontSize="small" />
             </Badge>
           </ListItemIcon>
@@ -368,7 +488,13 @@ export function CanaryContextMenu({
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 Attach Canary
                 {bindingCount > 0 && (
-                  <Chip label={bindingCount} size="small" color="primary" sx={{ height: 18, fontSize: '0.65rem' }} data-testid="binding-count-chip" />
+                  <Chip
+                    label={bindingCount}
+                    size="small"
+                    color="primary"
+                    sx={{ height: 18, fontSize: '0.65rem' }}
+                    data-testid="binding-count-chip"
+                  />
                 )}
               </Box>
             }
@@ -377,27 +503,55 @@ export function CanaryContextMenu({
 
         {/* "Connect a Provider First" when no providers connected */}
         {connectedConnections.length === 0 && (
-          <MenuItem onClick={() => { onClose(); onNavigateToMarketplace(); }} data-testid="connect-provider-first-item">
-            <ListItemIcon><OpenInNewIcon fontSize="small" /></ListItemIcon>
-            <ListItemText primary="Connect a Provider First" secondary="Open Provider Marketplace" />
+          <MenuItem
+            onClick={() => {
+              onClose();
+              onNavigateToMarketplace();
+            }}
+            data-testid="connect-provider-first-item"
+          >
+            <ListItemIcon>
+              <OpenInNewIcon fontSize="small" />
+            </ListItemIcon>
+            <ListItemText
+              primary="Connect a Provider First"
+              secondary="Open Provider Marketplace"
+            />
           </MenuItem>
         )}
 
         {/* "Multi-Canary Setup" */}
         {connectedConnections.length >= 2 && (
-          <MenuItem onClick={handleMultiCanarySetup} data-testid="multi-canary-setup-item">
-            <ListItemIcon><AddIcon fontSize="small" /></ListItemIcon>
-            <ListItemText primary="Multi-Canary Setup" secondary="Configure redundancy with multiple providers" />
+          <MenuItem
+            onClick={handleMultiCanarySetup}
+            data-testid="multi-canary-setup-item"
+          >
+            <ListItemIcon>
+              <AddIcon fontSize="small" />
+            </ListItemIcon>
+            <ListItemText
+              primary="Multi-Canary Setup"
+              secondary="Configure redundancy with multiple providers"
+            />
           </MenuItem>
         )}
 
         {/* "Manage Canaries" when bindings exist */}
         {bindingCount > 0 && [
           <Divider key="divider" />,
-          <MenuItem key="manage" onClick={handleManageCanaries} data-testid="manage-canaries-item">
-            <ListItemIcon><EditIcon fontSize="small" /></ListItemIcon>
-            <ListItemText primary="Manage Canaries" secondary={`${bindingCount} binding${bindingCount !== 1 ? 's' : ''} attached`} />
-          </MenuItem>
+          <MenuItem
+            key="manage"
+            onClick={handleManageCanaries}
+            data-testid="manage-canaries-item"
+          >
+            <ListItemIcon>
+              <EditIcon fontSize="small" />
+            </ListItemIcon>
+            <ListItemText
+              primary="Manage Canaries"
+              secondary={`${bindingCount} binding${bindingCount !== 1 ? 's' : ''} attached`}
+            />
+          </MenuItem>,
         ]}
       </Menu>
 
@@ -410,7 +564,11 @@ export function CanaryContextMenu({
         anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
         transformOrigin={{ vertical: 'top', horizontal: 'left' }}
       >
-        <MenuItem disabled divider style={{ pointerEvents: 'none', opacity: 1 }}>
+        <MenuItem
+          disabled
+          divider
+          style={{ pointerEvents: 'none', opacity: 1 }}
+        >
           <Typography variant="caption" color="text.secondary">
             Select a provider
           </Typography>
@@ -419,27 +577,53 @@ export function CanaryContextMenu({
           const items: JSX.Element[] = [];
           for (const [category, conns] of groupedConnections.entries()) {
             items.push(
-              <MenuItem key={`cat-${category}`} disabled divider style={{ pointerEvents: 'none', opacity: 1 }}>
-                <Typography variant="caption" color="text.secondary" sx={{ textTransform: 'uppercase', fontSize: '0.6rem', letterSpacing: 1 }}>
+              <MenuItem
+                key={`cat-${category}`}
+                disabled
+                divider
+                style={{ pointerEvents: 'none', opacity: 1 }}
+              >
+                <Typography
+                  variant="caption"
+                  color="text.secondary"
+                  sx={{
+                    textTransform: 'uppercase',
+                    fontSize: '0.6rem',
+                    letterSpacing: 1,
+                  }}
+                >
                   {category}
                 </Typography>
-              </MenuItem>
+              </MenuItem>,
             );
             for (const conn of conns) {
               items.push(
                 <MenuItem
                   key={conn.id}
-                  onClick={e => handleProviderSelect(e, conn)}
+                  onClick={(e) => handleProviderSelect(e, conn)}
                   data-testid={`provider-submenu-item-${conn.id}`}
                 >
                   <ListItemIcon>
-                    <Box sx={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: signalToColor(conn.lastCheckResult ?? conn.status) }} />
+                    <Box
+                      sx={{
+                        width: 8,
+                        height: 8,
+                        borderRadius: '50%',
+                        backgroundColor: signalToColor(
+                          conn.lastCheckResult ?? conn.status,
+                        ),
+                      }}
+                    />
                   </ListItemIcon>
                   <ListItemText
-                    primary={conn.providerDisplayName ?? conn.providerUsername ?? conn.providerId}
+                    primary={
+                      conn.providerDisplayName ??
+                      conn.providerUsername ??
+                      conn.providerId
+                    }
                     secondary={conn.status}
                   />
-                </MenuItem>
+                </MenuItem>,
               );
             }
           }
@@ -452,10 +636,17 @@ export function CanaryContextMenu({
         <BindingConfigPopover
           anchorEl={popoverAnchor}
           open={Boolean(popoverAnchor)}
-          onClose={() => { setPopoverAnchor(null); setSelectedConnection(null); }}
+          onClose={() => {
+            setPopoverAnchor(null);
+            setSelectedConnection(null);
+          }}
           connection={selectedConnection}
           onAttach={handleAttach}
-          onAddMoreProviders={() => { setPopoverAnchor(null); setSelectedConnection(null); handleMultiCanarySetup(); }}
+          onAddMoreProviders={() => {
+            setPopoverAnchor(null);
+            setSelectedConnection(null);
+            handleMultiCanarySetup();
+          }}
         />
       )}
 

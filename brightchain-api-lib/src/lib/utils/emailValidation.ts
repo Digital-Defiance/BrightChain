@@ -11,15 +11,13 @@ import { body, param, query, ValidationChain } from 'express-validator';
 
 export const sendEmailValidation: ValidationChain[] = [
   body('from.localPart')
-    .optional()
     .isString()
     .notEmpty()
-    .withMessage('from.localPart must be a non-empty string if provided'),
+    .withMessage('from.localPart must be a non-empty string'),
   body('from.domain')
-    .optional()
     .isString()
     .notEmpty()
-    .withMessage('from.domain must be a non-empty string if provided'),
+    .withMessage('from.domain must be a non-empty string'),
   body('from.displayName')
     .optional()
     .isString()

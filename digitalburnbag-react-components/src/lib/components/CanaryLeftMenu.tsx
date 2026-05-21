@@ -25,9 +25,9 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material';
-import styles from './CanaryLeftMenu.module.css';
 import { useMemo, useState } from 'react';
 import type { IApiProviderConnectionDTO } from '../services/burnbag-api-client';
+import styles from './CanaryLeftMenu.module.css';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -58,7 +58,14 @@ export interface ICanaryLeftMenuProps {
   /** Webhook endpoint summaries */
   webhookEndpoints: IWebhookEndpointSummary[];
   /** Called when user navigates to a section */
-  onNavigate: (section: 'my-providers' | 'marketplace' | 'multi-canary' | 'webhooks' | 'provider-detail') => void;
+  onNavigate: (
+    section:
+      | 'my-providers'
+      | 'marketplace'
+      | 'multi-canary'
+      | 'webhooks'
+      | 'provider-detail',
+  ) => void;
   /** Called when user clicks a specific provider */
   onSelectProvider?: (connectionId: string) => void;
   /** Currently active section */
@@ -69,10 +76,19 @@ export interface ICanaryLeftMenuProps {
 // Pure exported functions (for property-based testing)
 // ---------------------------------------------------------------------------
 
-const ATTENTION_STATUSES = new Set(['error', 'expired', 'paused', 'check_failed', 'absence']);
+const ATTENTION_STATUSES = new Set([
+  'error',
+  'expired',
+  'paused',
+  'check_failed',
+  'absence',
+]);
 
 function needsAttention(conn: IApiProviderConnectionDTO): boolean {
-  return ATTENTION_STATUSES.has(conn.status) || ATTENTION_STATUSES.has(conn.lastCheckResult ?? '');
+  return (
+    ATTENTION_STATUSES.has(conn.status) ||
+    ATTENTION_STATUSES.has(conn.lastCheckResult ?? '')
+  );
 }
 
 /**
@@ -84,7 +100,9 @@ function needsAttention(conn: IApiProviderConnectionDTO): boolean {
  * Property 23: Overall system health classification
  * Validates: Requirements 14.7
  */
-export function classifySystemHealth(connections: IApiProviderConnectionDTO[]): CanarySystemHealth {
+export function classifySystemHealth(
+  connections: IApiProviderConnectionDTO[],
+): CanarySystemHealth {
   if (connections.length === 0) return 'healthy';
   const attentionCount = connections.filter(needsAttention).length;
   if (attentionCount === 0) return 'healthy';
@@ -98,7 +116,9 @@ export function classifySystemHealth(connections: IApiProviderConnectionDTO[]): 
  * Property 24: Attention-needed badge count accuracy
  * Validates: Requirements 14.6
  */
-export function getAttentionNeededCount(connections: IApiProviderConnectionDTO[]): number {
+export function getAttentionNeededCount(
+  connections: IApiProviderConnectionDTO[],
+): number {
   return connections.filter(needsAttention).length;
 }
 
@@ -106,7 +126,9 @@ export function getAttentionNeededCount(connections: IApiProviderConnectionDTO[]
  * Compute overall canary system health.
  * @deprecated Use classifySystemHealth instead
  */
-export function computeSystemHealth(connections: IApiProviderConnectionDTO[]): CanarySystemHealth {
+export function computeSystemHealth(
+  connections: IApiProviderConnectionDTO[],
+): CanarySystemHealth {
   return classifySystemHealth(connections);
 }
 
@@ -114,21 +136,32 @@ export function computeSystemHealth(connections: IApiProviderConnectionDTO[]): C
 // Helpers
 // ---------------------------------------------------------------------------
 
-function healthColor(health: CanarySystemHealth): 'success' | 'warning' | 'error' {
+function healthColor(
+  health: CanarySystemHealth,
+): 'success' | 'warning' | 'error' {
   switch (health) {
-    case 'healthy': return 'success';
-    case 'degraded': return 'warning';
-    case 'critical': return 'error';
+    case 'healthy':
+      return 'success';
+    case 'degraded':
+      return 'warning';
+    case 'critical':
+      return 'error';
   }
 }
 
 function signalColor(sig?: string): string {
   switch (sig) {
-    case 'presence': return '#4caf50';
-    case 'absence': return '#ff9800';
-    case 'check_failed': case 'error': return '#f44336';
-    case 'duress': return '#9c27b0';
-    default: return '#9e9e9e';
+    case 'presence':
+      return '#4caf50';
+    case 'absence':
+      return '#ff9800';
+    case 'check_failed':
+    case 'error':
+      return '#f44336';
+    case 'duress':
+      return '#9c27b0';
+    default:
+      return '#9e9e9e';
   }
 }
 
@@ -162,14 +195,25 @@ export function CanaryLeftMenu({
   const [multiCanaryExpanded, setMultiCanaryExpanded] = useState(false);
   const [webhooksExpanded, setWebhooksExpanded] = useState(false);
 
-  const attentionCount = useMemo(() => getAttentionNeededCount(connections), [connections]);
-  const systemHealth = useMemo(() => classifySystemHealth(connections), [connections]);
+  const attentionCount = useMemo(
+    () => getAttentionNeededCount(connections),
+    [connections],
+  );
+  const systemHealth = useMemo(
+    () => classifySystemHealth(connections),
+    [connections],
+  );
 
   return (
     <Box data-testid="canary-left-menu" sx={{ width: '100%' }}>
       {/* Overall health indicator */}
-      <Box sx={{ px: 2, py: 1, display: 'flex', alignItems: 'center', gap: 1 }} data-testid="system-health-indicator">
-        <Typography variant="caption" color="text.secondary">Canary System</Typography>
+      <Box
+        sx={{ px: 2, py: 1, display: 'flex', alignItems: 'center', gap: 1 }}
+        data-testid="system-health-indicator"
+      >
+        <Typography variant="caption" color="text.secondary">
+          Canary System
+        </Typography>
         <Chip
           label={systemHealth}
           size="small"
@@ -185,12 +229,19 @@ export function CanaryLeftMenu({
       <List dense disablePadding>
         {/* ── My Providers ── */}
         <ListItemButton
-          onClick={() => { setMyProvidersExpanded(v => !v); onNavigate('my-providers'); }}
+          onClick={() => {
+            setMyProvidersExpanded((v) => !v);
+            onNavigate('my-providers');
+          }}
           selected={activeSection === 'my-providers'}
           data-testid="nav-my-providers"
         >
           <ListItemIcon sx={{ minWidth: 32 }}>
-            <Badge badgeContent={attentionCount > 0 ? attentionCount : undefined} color="warning" data-testid="attention-badge">
+            <Badge
+              badgeContent={attentionCount > 0 ? attentionCount : undefined}
+              color="warning"
+              data-testid="attention-badge"
+            >
               <NotificationsActiveIcon fontSize="small" />
             </Badge>
           </ListItemIcon>
@@ -199,14 +250,24 @@ export function CanaryLeftMenu({
               <span className={styles['canary-left-menu-flex']}>
                 My Providers
                 {attentionCount > 0 && (
-                  <Tooltip title={`${attentionCount} provider${attentionCount !== 1 ? 's' : ''} need attention`}>
-                    <WarningAmberIcon fontSize="small" color="warning" data-testid="warning-icon" />
+                  <Tooltip
+                    title={`${attentionCount} provider${attentionCount !== 1 ? 's' : ''} need attention`}
+                  >
+                    <WarningAmberIcon
+                      fontSize="small"
+                      color="warning"
+                      data-testid="warning-icon"
+                    />
                   </Tooltip>
                 )}
               </span>
             }
             secondary={`${connections.length} connected`}
-            primaryTypographyProps={{ variant: 'body2', fontWeight: 600, component: 'span' }}
+            primaryTypographyProps={{
+              variant: 'body2',
+              fontWeight: 600,
+              component: 'span',
+            }}
             secondaryTypographyProps={{ variant: 'caption', component: 'span' }}
           />
         </ListItemButton>
@@ -215,10 +276,12 @@ export function CanaryLeftMenu({
         <Collapse in={myProvidersExpanded} data-testid="my-providers-list">
           {connections.length === 0 && (
             <Box sx={{ px: 3, py: 1 }}>
-              <Typography variant="caption" color="text.secondary">No providers connected.</Typography>
+              <Typography variant="caption" color="text.secondary">
+                No providers connected.
+              </Typography>
             </Box>
           )}
-          {connections.map(conn => (
+          {connections.map((conn) => (
             <ListItemButton
               key={conn.id}
               sx={{ pl: 4, py: 0.5 }}
@@ -226,15 +289,45 @@ export function CanaryLeftMenu({
               data-testid={`provider-list-item-${conn.id}`}
             >
               <ListItemIcon sx={{ minWidth: 20 }}>
-                <Box sx={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: signalColor(conn.lastCheckResult ?? conn.status) }} data-testid={`provider-status-dot-${conn.id}`} />
+                <Box
+                  sx={{
+                    width: 8,
+                    height: 8,
+                    borderRadius: '50%',
+                    backgroundColor: signalColor(
+                      conn.lastCheckResult ?? conn.status,
+                    ),
+                  }}
+                  data-testid={`provider-status-dot-${conn.id}`}
+                />
               </ListItemIcon>
               <ListItemText
-                primary={<span>{conn.providerDisplayName ?? conn.providerUsername ?? conn.providerId}</span>}
+                primary={
+                  <span>
+                    {conn.providerDisplayName ??
+                      conn.providerUsername ??
+                      conn.providerId}
+                  </span>
+                }
                 secondary={formatTimeSince(conn.lastCheckedAt)}
-                primaryTypographyProps={{ variant: 'caption', noWrap: true, component: 'span' }}
-                secondaryTypographyProps={{ variant: 'caption', sx: { fontSize: '0.6rem' }, component: 'span' }}
+                primaryTypographyProps={{
+                  variant: 'caption',
+                  noWrap: true,
+                  component: 'span',
+                }}
+                secondaryTypographyProps={{
+                  variant: 'caption',
+                  sx: { fontSize: '0.6rem' },
+                  component: 'span',
+                }}
               />
-              {needsAttention(conn) && <WarningAmberIcon fontSize="small" color="warning" sx={{ ml: 0.5 }} />}
+              {needsAttention(conn) && (
+                <WarningAmberIcon
+                  fontSize="small"
+                  color="warning"
+                  sx={{ ml: 0.5 }}
+                />
+              )}
             </ListItemButton>
           ))}
         </Collapse>
@@ -250,52 +343,92 @@ export function CanaryLeftMenu({
           <ListItemIcon sx={{ minWidth: 32 }}>
             <ShoppingBagIcon fontSize="small" />
           </ListItemIcon>
-            <ListItemText
-              primary={<span>Provider Marketplace</span>}
-              secondary="Browse & connect providers"
-              primaryTypographyProps={{ variant: 'body2', fontWeight: 600, component: 'span' }}
-              secondaryTypographyProps={{ variant: 'caption', component: 'span' }}
-            />
+          <ListItemText
+            primary={<span>Provider Marketplace</span>}
+            secondary="Browse & connect providers"
+            primaryTypographyProps={{
+              variant: 'body2',
+              fontWeight: 600,
+              component: 'span',
+            }}
+            secondaryTypographyProps={{ variant: 'caption', component: 'span' }}
+          />
         </ListItemButton>
 
         <Divider sx={{ my: 0.5 }} />
 
         {/* ── Multi-Canary Bindings ── */}
         <ListItemButton
-          onClick={() => { setMultiCanaryExpanded(v => !v); onNavigate('multi-canary'); }}
+          onClick={() => {
+            setMultiCanaryExpanded((v) => !v);
+            onNavigate('multi-canary');
+          }}
           selected={activeSection === 'multi-canary'}
           data-testid="nav-multi-canary"
         >
           <ListItemIcon sx={{ minWidth: 32 }}>
             <LinkIcon fontSize="small" />
           </ListItemIcon>
-            <ListItemText
-              primary={<span>Multi-Canary Bindings</span>}
-              secondary={`${multiCanaryBindings.length} configured`}
-              primaryTypographyProps={{ variant: 'body2', fontWeight: 600, component: 'span' }}
-              secondaryTypographyProps={{ variant: 'caption', component: 'span' }}
-            />
+          <ListItemText
+            primary={<span>Multi-Canary Bindings</span>}
+            secondary={`${multiCanaryBindings.length} configured`}
+            primaryTypographyProps={{
+              variant: 'body2',
+              fontWeight: 600,
+              component: 'span',
+            }}
+            secondaryTypographyProps={{ variant: 'caption', component: 'span' }}
+          />
         </ListItemButton>
 
         <Collapse in={multiCanaryExpanded} data-testid="multi-canary-list">
           {multiCanaryBindings.length === 0 && (
             <Box sx={{ px: 3, py: 1 }}>
-              <Typography variant="caption" color="text.secondary">No bindings configured.</Typography>
+              <Typography variant="caption" color="text.secondary">
+                No bindings configured.
+              </Typography>
             </Box>
           )}
-          {multiCanaryBindings.map(binding => (
-            <ListItemButton key={binding.id} sx={{ pl: 4, py: 0.5 }} data-testid={`binding-list-item-${binding.id}`}>
+          {multiCanaryBindings.map((binding) => (
+            <ListItemButton
+              key={binding.id}
+              sx={{ pl: 4, py: 0.5 }}
+              data-testid={`binding-list-item-${binding.id}`}
+            >
               <ListItemText
                 primary={<span>{binding.name}</span>}
                 secondary={
                   <span className={styles['canary-left-menu-flex']}>
-                    <span>{binding.targetNames.slice(0, 2).join(', ')}{binding.targetNames.length > 2 ? '…' : ''}</span>
-                    <Chip label={`${binding.providerCount} providers`} size="small" sx={{ height: 14, fontSize: '0.55rem' }} />
-                    <Chip label={binding.aggregateStatus} size="small" color={binding.aggregateStatus === 'all_present' ? 'success' : 'warning'} sx={{ height: 14, fontSize: '0.55rem' }} />
+                    <span>
+                      {binding.targetNames.slice(0, 2).join(', ')}
+                      {binding.targetNames.length > 2 ? '…' : ''}
+                    </span>
+                    <Chip
+                      label={`${binding.providerCount} providers`}
+                      size="small"
+                      sx={{ height: 14, fontSize: '0.55rem' }}
+                    />
+                    <Chip
+                      label={binding.aggregateStatus}
+                      size="small"
+                      color={
+                        binding.aggregateStatus === 'all_present'
+                          ? 'success'
+                          : 'warning'
+                      }
+                      sx={{ height: 14, fontSize: '0.55rem' }}
+                    />
                   </span>
                 }
-                primaryTypographyProps={{ variant: 'caption', noWrap: true, component: 'span' }}
-                secondaryTypographyProps={{ variant: 'caption', component: 'span' }}
+                primaryTypographyProps={{
+                  variant: 'caption',
+                  noWrap: true,
+                  component: 'span',
+                }}
+                secondaryTypographyProps={{
+                  variant: 'caption',
+                  component: 'span',
+                }}
               />
             </ListItemButton>
           ))}
@@ -305,34 +438,55 @@ export function CanaryLeftMenu({
 
         {/* ── Webhook Endpoints ── */}
         <ListItemButton
-          onClick={() => { setWebhooksExpanded(v => !v); onNavigate('webhooks'); }}
+          onClick={() => {
+            setWebhooksExpanded((v) => !v);
+            onNavigate('webhooks');
+          }}
           selected={activeSection === 'webhooks'}
           data-testid="nav-webhooks"
         >
           <ListItemIcon sx={{ minWidth: 32 }}>
             <WebhookIcon fontSize="small" />
           </ListItemIcon>
-            <ListItemText
-              primary={<span>Webhook Endpoints</span>}
-              secondary={`${webhookEndpoints.length} active`}
-              primaryTypographyProps={{ variant: 'body2', fontWeight: 600, component: 'span' }}
-              secondaryTypographyProps={{ variant: 'caption', component: 'span' }}
-            />
+          <ListItemText
+            primary={<span>Webhook Endpoints</span>}
+            secondary={`${webhookEndpoints.length} active`}
+            primaryTypographyProps={{
+              variant: 'body2',
+              fontWeight: 600,
+              component: 'span',
+            }}
+            secondaryTypographyProps={{ variant: 'caption', component: 'span' }}
+          />
         </ListItemButton>
 
         <Collapse in={webhooksExpanded} data-testid="webhooks-list">
           {webhookEndpoints.length === 0 && (
             <Box sx={{ px: 3, py: 1 }}>
-              <Typography variant="caption" color="text.secondary">No webhook endpoints.</Typography>
+              <Typography variant="caption" color="text.secondary">
+                No webhook endpoints.
+              </Typography>
             </Box>
           )}
-          {webhookEndpoints.map(ep => (
-            <ListItemButton key={ep.id} sx={{ pl: 4, py: 0.5 }} data-testid={`webhook-list-item-${ep.id}`}>
+          {webhookEndpoints.map((ep) => (
+            <ListItemButton
+              key={ep.id}
+              sx={{ pl: 4, py: 0.5 }}
+              data-testid={`webhook-list-item-${ep.id}`}
+            >
               <ListItemText
                 primary={<span>{ep.providerName}</span>}
                 secondary={`${formatTimeSince(ep.lastReceivedAt)} · ${ep.successRate} success`}
-                primaryTypographyProps={{ variant: 'caption', noWrap: true, component: 'span' }}
-                secondaryTypographyProps={{ variant: 'caption', sx: { fontSize: '0.6rem' }, component: 'span' }}
+                primaryTypographyProps={{
+                  variant: 'caption',
+                  noWrap: true,
+                  component: 'span',
+                }}
+                secondaryTypographyProps={{
+                  variant: 'caption',
+                  sx: { fontSize: '0.6rem' },
+                  component: 'span',
+                }}
               />
             </ListItemButton>
           ))}
