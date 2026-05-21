@@ -130,14 +130,22 @@ describe('MemberStore Profile CBL Round-Trip Property Tests', () => {
             expect(roundTripped.reputation).toBe(originalData.reputation);
             expect(roundTripped.storageQuota).toBe(originalData.storageQuota);
             expect(roundTripped.storageUsed).toBe(originalData.storageUsed);
-            expect(roundTripped.dateCreated).toBe(
-              originalData.dateCreated,
+            // BrightDate timestamps incur a ~120 ns round-trip tax for
+            // arbitrary Unix-ms inputs (BrightDate spec §4.1). Use
+            // toBeCloseTo at 6 decimal places (≈ 86 ms tolerance), which
+            // is far above the ~1 ms tax and safely below any meaningful
+            // wall-clock precision.
+            expect(roundTripped.dateCreated).toBeCloseTo(
+              originalData.dateCreated as number,
+              6,
             );
-            expect(roundTripped.dateUpdated).toBe(
-              originalData.dateUpdated,
+            expect(roundTripped.dateUpdated).toBeCloseTo(
+              originalData.dateUpdated as number,
+              6,
             );
-            expect(roundTripped.lastActive).toBe(
-              originalData.lastActive,
+            expect(roundTripped.lastActive).toBeCloseTo(
+              originalData.lastActive as number,
+              6,
             );
 
             return true;
@@ -227,11 +235,17 @@ describe('MemberStore Profile CBL Round-Trip Property Tests', () => {
             expect(roundTripped.settings.autoReplication).toBe(true);
             expect(roundTripped.settings.minRedundancy).toBe(3);
             expect(roundTripped.activityLog).toHaveLength(activityCount);
-            expect(roundTripped.dateCreated).toBe(
-              originalData.dateCreated,
+            // BrightDate timestamps round-trip with a ~120 ns Unix-ms tax
+            // for arbitrary inputs (BrightDate spec §4.1). 6-dp closeness
+            // is ≈ 86 ms, well above the tax and well under any meaningful
+            // wall-clock precision.
+            expect(roundTripped.dateCreated).toBeCloseTo(
+              originalData.dateCreated as number,
+              6,
             );
-            expect(roundTripped.dateUpdated).toBe(
-              originalData.dateUpdated,
+            expect(roundTripped.dateUpdated).toBeCloseTo(
+              originalData.dateUpdated as number,
+              6,
             );
 
             return true;

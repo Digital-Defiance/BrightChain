@@ -7,7 +7,10 @@
  */
 
 import type { ICommunicationMessage } from '@brightchain/brightchain-lib';
-import { dateToBrightDate } from '@brightchain/brightchain-lib';
+import {
+  brightDateToISO,
+  dateToBrightDate,
+} from '@brightchain/brightchain-lib';
 import fc from 'fast-check';
 import {
   applyKeyRotation,
@@ -23,9 +26,12 @@ function getTimestamp(item: ThreadItem): string {
     return item.timestamp;
   }
   const msg = item as ICommunicationMessage;
-  // createdAt is BrightDateTimestamp (number) — convert to ISO for string comparison
+  // createdAt is BrightDateTimestamp (number, days since J2000.0). Use
+  // the library's brightDateToISO so leap-second and TAI-substrate
+  // corrections are applied — manual `bd * 86_400_000 + J2000_MS` would
+  // skip those and drift ~5 s in the current era.
   const bd = msg.createdAt as unknown as number;
-  return new Date(bd * 86400000 + 946728000000).toISOString();
+  return brightDateToISO(bd);
 }
 
 /** Check whether an array of ThreadItems is sorted chronologically. */

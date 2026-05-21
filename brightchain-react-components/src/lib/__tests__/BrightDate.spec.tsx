@@ -329,8 +329,10 @@ describe('BrightDate', () => {
       renderWithI18n(<BrightDate value={0} interval={0} format="standard" />);
 
       const el = screen.getByTestId('bright-date');
-      // J2000.0 epoch = 2000-01-01T12:00:00.000Z
-      expect(el.getAttribute('datetime')).toBe('2000-01-01T12:00:00.000Z');
+      // J2000.0 epoch UTC label = 2000-01-01T11:58:55.816Z (per BrightDate
+      // spec §2.0). Not UTC noon — the 64.184-second gap is the TT−TAI
+      // (32.184 s) plus TAI−UTC (32 s) offset at J2000.0.
+      expect(el.getAttribute('datetime')).toBe('2000-01-01T11:58:55.816Z');
     });
 
     it('accepts negative values (dates before J2000.0)', () => {

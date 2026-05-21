@@ -27,8 +27,8 @@ jest.mock('@brightchain/brightchain-lib', () => ({
   formatDateByMode: (_date: unknown, localeStr: string) => localeStr,
   getDateTooltip: () => '',
   brightDateNow: () => 9146.438,
-  brightDateToDate: (bd: number) => new Date((bd + 10957.5) * 86400000),
-  dateToBrightDate: (d: Date) => (d.getTime() - 946728000000) / 86400000,
+  brightDateToDate: (bd: number) => new Date(bd * 86_400_000 + 946_727_935_816),
+  dateToBrightDate: (d: Date) => (d.getTime() - 946_727_935_816) / 86_400_000,
   BrightChainStrings: new Proxy({}, { get: (_t: unknown, p: string | symbol) => String(p) }),
   CommunicationEventType: {
     MESSAGE_SENT: 'communication:message_sent',
@@ -111,7 +111,7 @@ const validDateArb = fc
     min: new Date('2020-01-01T00:00:00Z').getTime(),
     max: new Date('2030-12-31T23:59:59Z').getTime(),
   })
-  .map((ms) => (ms - 946728000000) / 86400000); // convert to BrightDateTimestamp
+  .map((ms) => (ms - 946_727_935_816) / 86_400_000); // convert to BrightDateTimestamp (J2000.0 UTC label anchor)
 
 const reactionArb = fc.record({
   id: fc.uuid(),

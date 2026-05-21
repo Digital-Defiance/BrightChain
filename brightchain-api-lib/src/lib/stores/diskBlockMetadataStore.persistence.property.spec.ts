@@ -133,7 +133,11 @@ describe('DiskBlockMetadataStore Persistence Property Tests', () => {
               // Verify all fields are correct
               expect(retrieved).not.toBeNull();
               expect(retrieved!.blockId).toBe(blockId);
-              expect(retrieved!.createdAt).toBe(now);
+              // BrightDate timestamps incur a ~120 ns round-trip tax for
+              // arbitrary Unix-ms inputs (BrightDate spec §4.1). 6-dp
+              // closeness ≈ 86 ms — far above the tax, far under any
+              // meaningful clock resolution.
+              expect(retrieved!.createdAt).toBeCloseTo(now as number, 6);
               expect(retrieved!.durabilityLevel).toBe(options.durabilityLevel);
               expect(retrieved!.targetReplicationFactor).toBe(
                 options.targetReplicationFactor,
@@ -145,8 +149,9 @@ describe('DiskBlockMetadataStore Persistence Property Tests', () => {
                 expect(retrieved!.expiresAt).toBeNull();
               } else {
                 expect(retrieved!.expiresAt).not.toBeNull();
-                expect(retrieved!.expiresAt!).toBe(
-                  options.expiresAt,
+                expect(retrieved!.expiresAt!).toBeCloseTo(
+                  options.expiresAt as number,
+                  6,
                 );
               }
             } finally {

@@ -15,6 +15,7 @@ import {
   BlockManifest,
   ReconciliationConfig,
 } from '@brightchain/brightchain-lib';
+import { toUnixMs } from '@brightchain/brightdate';
 import fc from 'fast-check';
 import { existsSync, mkdirSync, rmSync } from 'fs';
 import { join } from 'path';
@@ -47,10 +48,12 @@ const arbValidBrightDate = fc
     max: new Date('2025-12-31').getTime(),
   })
   .map((timestamp) => {
-    // Convert Unix ms to BrightDateTimestamp (days since J2000.0)
-    // J2000.0 = 2000-01-01T12:00:00Z = 946728000000 ms
-    const J2000_MS = 946728000000;
-    return (timestamp - J2000_MS) / 86400000;
+    // Convert Unix ms to BrightDateTimestamp (days since J2000.0).
+    // The J2000.0 anchor in Unix ms is the UTC label `946_727_935_816`
+    // (≡ `2000-01-01T11:58:55.816Z`), per BrightDate spec §2.0 — NOT UTC
+    // noon (`946_728_000_000`), which is TT noon and 64.184 s later.
+    const J2000_MS = 946_727_935_816;
+    return (timestamp - J2000_MS) / 86_400_000;
   });
 
 /**
@@ -355,11 +358,13 @@ describe('Sync Vector Property Tests', () => {
               const updatedVector = service.getSyncVector(peerId);
               expect(updatedVector).not.toBeNull();
 
-              // Timestamp should be updated to approximately now (as BrightDateTimestamp)
+              // Timestamp should be updated to approximately now (as BrightDateTimestamp).
+              // Use the library's toUnixMs to convert: this correctly accounts
+              // for the TAI substrate, leap seconds, and the J2000.0 UTC label
+              // anchor. Manual `J2000_MS + bd * 86_400_000` would understate
+              // by ~5 s in the current era because it ignores leap seconds.
               const updatedTime = updatedVector!.lastSyncTimestamp;
-              // Convert to Unix ms for comparison
-              const J2000_MS = 946728000000;
-              const updatedMs = J2000_MS + updatedTime * 86400000;
+              const updatedMs = toUnixMs(updatedTime as number);
               expect(updatedMs).toBeGreaterThanOrEqual(beforeReconcile);
               expect(updatedMs).toBeLessThanOrEqual(afterReconcile + 1000); // 1s tolerance
 

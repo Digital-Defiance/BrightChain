@@ -15,6 +15,8 @@ The BrightChain project is documented through a series of companion papers, each
 
 - [ECDH-to-Paillier Bridge](paillier-bridge) — Detailed algorithmic specification of the deterministic key bridge construction, including byte-level DRBG state, reproducible test vectors, and extended security analysis.
 - [ECIES-Lib](ecies-lib) — The Elliptic Curve Integrated Encryption Scheme library that serves as the cryptographic foundation for the entire platform.
+- [Enclave Bridge Protocol (EBP/1)](enclave-bridge-protocol) — Replication-grade specification of the Apple Secure Enclave bridge protocol, the TypeScript client, and the `SecureEnclaveKeyring` consumer.
+- [SDI-EB / OSC 7777 v3](sdi-enclave-bridge) — Secure Semantic Data Injection over Enclave Bridge: unified successor to SDI v1/v2, anchoring shell-to-agent terminal traffic on EBP/1 with hardware-signed registration transcripts and the full `geo-context` payload surface.
 - [BrightChain Crypto Sessions](brightchain-crypto-sessions) — Server-side key custody for end-to-end encrypted suites: sliding-TTL `CryptoSessionStore` and the `useSessionEstablish` / `useSessionUnlock` middlewares that let users authenticate once per session instead of once per request.
 
 ## Applications

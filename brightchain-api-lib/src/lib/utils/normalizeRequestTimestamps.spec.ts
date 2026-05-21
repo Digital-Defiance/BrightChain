@@ -52,12 +52,14 @@ describe('IEnrichedTimestampResponse', () => {
       updatedAtISO: brightDateToISO(createdAt),
     };
 
-    // J2000.0 = January 1, 2000, 12:00:00 UTC
+    // J2000.0 epoch UTC label = 2000-01-01T11:58:55.816Z (per BrightDate
+    // spec §2.0). Not UTC noon — the 64.184-second gap is TT−TAI + TAI−UTC.
     const parsed = new Date(response.createdAtISO);
     expect(parsed.getUTCFullYear()).toBe(2000);
     expect(parsed.getUTCMonth()).toBe(0); // January
     expect(parsed.getUTCDate()).toBe(1);
-    expect(parsed.getUTCHours()).toBe(12);
+    expect(parsed.getUTCHours()).toBe(11);
+    expect(parsed.getUTCMinutes()).toBe(58);
   });
 
   it('derives correct ISO string for a current-era BrightDate value (~9300)', () => {
@@ -149,12 +151,15 @@ describe('normalizeRequestTimestamps', () => {
     });
 
     it('produces the correct BrightDate value from an ISO string', () => {
-      const isoString = '2000-01-01T12:00:00.000Z'; // J2000.0 epoch
+      // J2000.0 epoch UTC label is 2000-01-01T11:58:55.816Z (per BrightDate
+      // spec §2.0); 2000-01-01T12:00:00.000Z is TT noon, which is 64.184 s
+      // *after* J2000.0 — not the anchor.
+      const isoString = '2000-01-01T11:58:55.816Z'; // J2000.0 epoch (UTC label)
       const body = { timestamp: isoString };
 
       const result = normalizeRequestTimestamps(body, ['timestamp']);
 
-      // J2000.0 = BrightDate 0
+      // J2000.0 = BrightDate 0 (within Float64 round-trip tax, ~120 ns)
       expect(Math.abs((result.timestamp as unknown as number) - 0)).toBeLessThan(0.000001);
     });
   });

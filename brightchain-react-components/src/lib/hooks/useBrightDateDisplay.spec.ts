@@ -6,9 +6,10 @@
 import { renderHook } from '@testing-library/react';
 import { useBrightDateDisplay } from './useBrightDateDisplay';
 
-// J2000.0 epoch: 2000-01-01T12:00:00.000Z
-// BrightDateValue 0 corresponds to this date.
-const J2000_DATE = new Date('2000-01-01T12:00:00.000Z');
+// J2000.0 epoch UTC label: 2000-01-01T11:58:55.816Z (per BrightDate spec §2.0).
+// BrightDateValue 0 corresponds to this instant — not UTC noon (the
+// 64.184-second gap is the TT−TAI + TAI−UTC offset at J2000.0).
+const J2000_DATE = new Date('2000-01-01T11:58:55.816Z');
 
 // A known BrightDateValue: ~9146 days after J2000 ≈ 2025-01-15
 // Using a fixed value for deterministic tests.
@@ -56,7 +57,8 @@ describe('useBrightDateDisplay', () => {
 
     it('returns a locale string for J2000.0 epoch (value = 0) near 2000-01-01', () => {
       const { result } = renderHook(() => useBrightDateDisplay(0, 'en-US'));
-      // J2000.0 epoch is 2000-01-01T12:00:00Z — locale string should contain "2000"
+      // J2000.0 epoch UTC label is 2000-01-01T11:58:55.816Z — locale string
+      // should still contain "2000".
       expect(result.current.localeString).toContain('2000');
     });
 
@@ -101,7 +103,8 @@ describe('useBrightDateDisplay', () => {
     it('returns a Date near 2000-01-01 for J2000.0 epoch (value = 0)', () => {
       const { result } = renderHook(() => useBrightDateDisplay(0));
       const date = result.current.date;
-      // J2000.0 epoch is 2000-01-01T12:00:00.000Z
+      // J2000.0 epoch UTC label is 2000-01-01T11:58:55.816Z; year, month,
+      // and day-of-month all still match 2000-01-01.
       expect(date.getUTCFullYear()).toBe(J2000_DATE.getUTCFullYear());
       expect(date.getUTCMonth()).toBe(J2000_DATE.getUTCMonth());
       expect(date.getUTCDate()).toBe(J2000_DATE.getUTCDate());
