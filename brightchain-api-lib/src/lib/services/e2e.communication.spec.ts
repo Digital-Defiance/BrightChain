@@ -981,38 +981,48 @@ describe('Communication API – Multi-Node E2E Integration', () => {
     it('kick on node-1, key rotation verified, member gone on node-2', async () => {
       const [node0, node1, node2] = env.nodes;
 
-      const ch = await request(node0.app)
-        .post('/api/brightchat/channels')
-        .send({
-          memberId: 'alice',
-          name: 'kick-cross',
-          visibility: ChannelVisibility.PUBLIC,
-        })
-        .expect(201);
+      let chId: string | undefined;
+      try {
+        const ch = await request(node0.app)
+          .post('/api/brightchat/channels')
+          .send({
+            memberId: 'alice',
+            name: 'kick-cross',
+            visibility: ChannelVisibility.PUBLIC,
+          })
+          .expect(201);
 
-      const chId = ch.body.data.id;
-      await request(node1.app)
-        .post(`/api/brightchat/channels/${chId}/join`)
-        .send({ memberId: 'bob' })
-        .expect(200);
+        chId = ch.body.data.id;
+        await request(node1.app)
+          .post(`/api/brightchat/channels/${chId}/join`)
+          .send({ memberId: 'bob' })
+          .expect(200);
 
-      const oldKey = env.channelService.getSymmetricKey(chId)!;
+        const oldKey = env.channelService.getSymmetricKey(chId)!;
 
-      // Kick via node-1
-      await request(node1.app)
-        .post(`/api/brightchat/channels/${chId}/kick/bob`)
-        .send({ memberId: 'alice' })
-        .expect(200);
+        // Kick via node-1
+        await request(node1.app)
+          .post(`/api/brightchat/channels/${chId}/kick/bob`)
+          .send({ memberId: 'alice' })
+          .expect(200);
 
-      const newKey = env.channelService.getSymmetricKey(chId)!;
-      expect(Buffer.compare(oldKey, newKey)).not.toBe(0);
+        const newKey = env.channelService.getSymmetricKey(chId)!;
+        expect(Buffer.compare(oldKey, newKey)).not.toBe(0);
 
-      // Bob cannot send via node-2
-      const failRes = await request(node2.app)
-        .post(`/api/brightchat/channels/${chId}/messages`)
-        .send({ memberId: 'bob', content: 'kicked msg' });
+        // Bob cannot send via node-2
+        const failRes = await request(node2.app)
+          .post(`/api/brightchat/channels/${chId}/messages`)
+          .send({ memberId: 'bob', content: 'kicked msg' });
 
-      expect(failRes.body.error).toBeDefined();
+        expect(failRes.body.error).toBeDefined();
+      } finally {
+        // Clean up so retries don't get 409 on channel name conflict
+        if (chId) {
+          await env.channelService.deleteChannel(chId, 'alice').catch(() => {
+            // ignore – channel may already be gone
+          });
+        }
+      }
     });
   });
 
