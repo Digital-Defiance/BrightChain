@@ -169,14 +169,16 @@ const inst  = BrightInstant.fromBrightDate(bd);               // lossless within
 
 ### 4.1 The Round-Trip Tax
 
-For day-aligned Unix milliseconds (exact multiples of `86,400,000 ms` from the J2000.0 anchor), `BrightDate` round-trips with bit-exactness:
+The reference implementation routes integer Unix-ms inputs through exact-integer paths, so a substantial set of common inputs round-trips bit-exactly:
 
 ```typescript
-fromUnixMs(0).toUnixMs()               === 0;               // Unix epoch: exact
-fromUnixMs(946_728_000_000).toUnixMs() === 946_728_000_000; // J2000.0: exact
+fromUnixMs(0).toUnixMs()                === 0;                // Unix epoch: exact
+fromUnixMs(946_727_935_816).toUnixMs()  === 946_727_935_816;  // J2000.0 (UTC label): exact
+fromUnixMs(946_728_000_000).toUnixMs()  === 946_728_000_000;  // TT noon: exact
+fromUnixMs(1_700_000_000_000).toUnixMs() === 1_700_000_000_000; // also exact
 ```
 
-For off-day inputs, an error bounded by `~2⁻⁵² × magnitude` applies — approximately 0.00012 ms (~120 ns) at current-era timestamps. Systems that can tolerate sub-microsecond error at the Unix-ms boundary should use `BrightDate`. Systems that cannot should use `ExactBrightDate`.
+Bit-exactness is not guaranteed for arbitrary Unix-ms inputs. For an input `ms` of typical current-era magnitude (~10¹² ms), the round-trip error is bounded by `~2⁻⁵² × |ms| ≈ 0.00012 ms` (≈ 120 ns) — well under any realistic clock resolution. Systems that can tolerate sub-microsecond error at the Unix-ms boundary should use `BrightDate`. Systems that cannot — blockchain consensus, byte-identical archival — should use `ExactBrightDate`, which round-trips bit-exactly for *every* integer Unix-ms input by construction.
 
 ### 4.2 Algebraic Identity Limits
 
@@ -341,7 +343,7 @@ Two consecutive UTC seconds straddling a positive leap second boundary correspon
 - **CCSDS Time Code Formats (CCSDS 301.0-B-4):** standardises *encoding* of time tags for spacecraft telemetry, not an underlying unit system or scalar.
 - **TAI directly:** monotonic and physically correct, but provides no agreed epoch, no decimal-day hierarchy, and no reference implementation oriented toward general engineering use.
 
-BrightDate fills a specific gap: a TAI-substrate scalar anchored at the standard astronomical epoch, with SI decimal sub-units, a paged deep-time extension, honest Float64 precision documentation, and an open-source reference implementation in TypeScript and Rust.
+BrightDate fills a specific gap: a TAI-substrate scalar anchored at the standard astronomical epoch, with SI decimal sub-units, a sign-flipping `BD` / `PBD` display convention for pre-epoch instants, honest Float64 precision documentation, and an open-source reference implementation in TypeScript and Rust.
 
 ---
 

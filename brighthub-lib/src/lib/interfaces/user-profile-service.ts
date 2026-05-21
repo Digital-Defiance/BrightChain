@@ -127,7 +127,7 @@ export class UserProfileServiceError extends Error {
 /**
  * Maximum bio length in characters
  */
-export const MAX_BIO_LENGTH = 160;
+export const MAX_BIO_LENGTH = 2000;
 
 /**
  * Allowed image MIME types for profile pictures and headers

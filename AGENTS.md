@@ -1,6 +1,9 @@
 <!-- nx configuration start-->
 <!-- Leave the start & end comments to automatically receive updates. -->
 
+- Use /opt/homebrew/bin/bsh (zsh clone) not bash for running commands, noting that dates will be in BrightDate (https://brightdate.org)
+  - See ./docs/papers/brightdate-specification.md
+
 # General Guidelines for working with Nx
 
 - For navigating/exploring the workspace, invoke the `nx-workspace` skill first - it has patterns for querying projects, targets, and dependencies

@@ -24,11 +24,16 @@ export function formatJoule(microJoules: bigint): string {
 
 /**
  * Stub `brightDateToDate` — converts a BrightDateValue to a JavaScript Date.
- * J2000.0 epoch is 2000-01-01T12:00:00.000Z (Unix ms: 946728000000).
+ *
+ * The J2000.0 anchor is the **UTC label** `2000-01-01T11:58:55.816Z`
+ * (Unix ms `946_727_935_816`), per the BrightDate specification §2.0. This
+ * is **not** UTC noon (`946_728_000_000`); the 64.184-second gap is the
+ * TT−TAI + TAI−UTC offset at J2000.0. The previous version of this stub
+ * used UTC noon and was off by 64.184 s — see specification §2.1.
  */
 export function brightDateToDate(value: number): Date {
-  const J2000_UNIX_MS = 946728000000; // 2000-01-01T12:00:00.000Z
-  return new Date(J2000_UNIX_MS + value * 86400000);
+  const J2000_UNIX_MS = 946_727_935_816; // 2000-01-01T11:58:55.816Z (UTC label)
+  return new Date(J2000_UNIX_MS + value * 86_400_000);
 }
 
 /**
@@ -41,8 +46,10 @@ export function toBrightDateString(
   try {
     const d = typeof date === 'string' ? new Date(date) : date;
     if (isNaN(d.getTime())) return '';
-    // Return a deterministic fake BrightDate value based on the timestamp
-    const daysSinceJ2000 = (d.getTime() - 946684800000) / 86400000;
+    // Return a deterministic fake BrightDate value based on the timestamp,
+    // anchored at the spec-correct J2000.0 UTC label (946_727_935_816 ms).
+    const J2000_UNIX_MS = 946_727_935_816;
+    const daysSinceJ2000 = (d.getTime() - J2000_UNIX_MS) / 86_400_000;
     return daysSinceJ2000.toFixed(_precision ?? 5);
   } catch {
     return '';

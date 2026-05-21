@@ -19,9 +19,9 @@ The fundamental relevance of BSH lies in its removal of the "translation layer."
 
 BSH eliminates this friction by integrating BrightDate directly into the shell’s core:
 
-- **Prompt Escapes:** Native support for `%B` (BrightDate) and other decimal-time indicators in the prompt string allows for real-time situational awareness of the decimal timeline.
-- **Built-in Parameters:** Standard variables like `$EPOCHSECONDS` are supplemented with `$BRIGHTDATE` and `$BRIGHTDATE_INT`, providing sub-millisecond precision for scripts without external binary calls.
-- **Timestamped History:** Command history in BSH is recorded in BrightDate, ensuring that the forensic timeline of a session is perfectly monotonic and free from leap-second or timezone ambiguities.
+- **Prompt Escapes:** A new `%P` prompt escape expands to the current BrightDate (decimal, six-fraction-digit precision) in any `PS1`/`PS2`/`RPROMPT`. It is additive — none of zsh's standard prompt escapes (`%B`, `%b`, `%D`, `%T`, etc.) are altered, so existing prompt themes keep working unchanged.
+- **Built-in Parameters:** Standard variables like `$EPOCHSECONDS` (from `zsh/datetime`) are supplemented with always-available, read-only `$BRIGHTDATE` (a Float64 scalar in decimal BrightDays since J2000.0) and `$BRIGHTDATE_INT` (the integer floor of `$BRIGHTDATE` — the whole-day counter). The `zsh/datetime` module additionally exposes `$BRIGHTEPOCH` for parity with `$EPOCHREALTIME`.
+- **Timestamped History:** The `history` builtin renders each entry's execution time as a BrightDate value, ensuring that the forensic timeline of a session is monotonic and free from leap-second or timezone ambiguities.
 
 ------
 
@@ -42,7 +42,7 @@ By making BrightDate the default temporal reference for the shell, BSH changes t
 Beyond the user experience, BSH provides significant technical advantages for automation:
 
 - **Arithmetic Simplicity:** Because BrightDate is a decimal scalar, calculating the duration between two events in BSH is a simple subtraction (`$end - $start`). This removes the need for complex `date` command flags or parsing logic for hours and minutes.
-- **High-Performance Built-ins:** Tools like `bdate`, `btime`, and `bcal` are available natively within the Digital Defiance ecosystem, allowing BSH scripts to interact with the Bright Spacetime Standard with zero overhead.
+- **High-Performance Built-ins:** Tools like `bdate`, `btime`, `buptime`, `bcal`, and `bwatch` are provided natively (and also shadow the classic `date`, `time`, `uptime`, `cal`, and `watch` names), delegating to the `brightdate-rust` static library through an in-process FFI — zero fork/exec overhead.
 - **Synchronized Infrastructure:** When BSH is used across a network of nodes, the "geographic debt" described in the BrightSpace standard is mitigated by a shared shell environment that understands the exact same temporal substrate, making logs and distributed tasks easier to correlate.
 
 ------

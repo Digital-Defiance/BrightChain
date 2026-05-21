@@ -2566,7 +2566,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@brightchain/brightchain-lib@workspace:brightchain-lib"
   dependencies:
-    "@brightchain/brightdate": "npm:^0.34.0"
+    "@brightchain/brightdate": "npm:^0.36.0"
     "@digitaldefiance/branded-interface": "npm:0.0.5"
     "@digitaldefiance/bzip2-wasm": "npm:^1.1.1"
     "@digitaldefiance/ecies-lib": "npm:5.2.2"
@@ -2698,12 +2698,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@brightchain/brightdate@npm:^0.34.0":
-  version: 0.34.0
-  resolution: "@brightchain/brightdate@npm:0.34.0"
+"@brightchain/brightdate@npm:^0.36.0":
+  version: 0.36.0
+  resolution: "@brightchain/brightdate@npm:0.36.0"
   dependencies:
     tslib: "npm:^2.3.0"
-  checksum: 10/08bd22344bc895ff4f505ebd08b32f5b82e6916d0fb2c12fcc2fab772135957a8f2462a81ca05967e0fe52a57cdc682f2cd1f216afd71e8461da08367cb893a0
+  checksum: 10/ffb8d241eefa386c09aa6a96ddf61592480b1b264c482d67c18a9758d3df9e77c258b8cd491ac75bfa3a7b5178d7fba5770d145fb9fd65d2dc7d69e0ffc3fb54
   languageName: node
   linkType: hard
 
@@ -2850,7 +2850,7 @@ __metadata:
     react-router-dom: "npm:^7.14.0"
   peerDependencies:
     "@brightchain/brightchain-lib": ^0.32.1
-    "@brightchain/brightdate": ^0.34.0
+    "@brightchain/brightdate": ^0.36.0
     "@brightchain/brightmail-lib": ^0.32.1
     "@digitaldefiance/express-suite-react-components": 4.30.1
     "@mui/icons-material": "*"
@@ -15121,7 +15121,7 @@ __metadata:
   dependencies:
     "@awesome.me/kit-a20d532681": "npm:^1.0.23"
     "@brightchain/brightchain-lib": "npm:^0.32.1"
-    "@brightchain/brightdate": "npm:^0.34.0"
+    "@brightchain/brightdate": "npm:^0.36.0"
     "@brightchain/digitalburnbag-react-components": "npm:^0.32.1"
     "@digitaldefiance/ecies-lib": "npm:5.2.2"
     "@digitaldefiance/i18n-lib": "npm:4.7.5"
@@ -15215,7 +15215,7 @@ __metadata:
     "@brightchain/brightchain-lib": "npm:^0.32.1"
     "@brightchain/brightchain-react-components": "npm:^0.32.1"
     "@brightchain/brightchat-lib": "npm:^0.32.1"
-    "@brightchain/brightdate": "npm:^0.34.0"
+    "@brightchain/brightdate": "npm:^0.36.0"
     "@brightchain/brighthub-lib": "npm:^0.32.1"
     "@brightchain/brighthub-react-components": "npm:^0.32.1"
     "@brightchain/brightmail-lib": "npm:^0.32.1"

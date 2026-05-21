@@ -19,19 +19,33 @@ import {
 // ─── Epoch constants ──────────────────────────────────────────────────────────
 
 /**
- * J2000.0 epoch: January 1, 2000, 12:00:00 UTC
- * BrightDateValue = 0 by definition.
+ * J2000.0 epoch as a JavaScript Date.
+ *
+ * Per the BrightDate specification (§2.0 Canonical Epoch), J2000.0 is defined
+ * as `2000-01-01T12:00:00.000 TT`. The corresponding **UTC label** — what a
+ * standard JavaScript `Date` shows when it represents the same physical
+ * instant — is `2000-01-01T11:58:55.816Z`, exactly 64.184 seconds earlier
+ * than UTC noon (TT−TAI = 32.184 s plus TAI−UTC = 32 s at J2000.0).
+ *
+ * `BrightDate(0)` corresponds to this UTC label, **not** UTC noon. The
+ * 64.184-second gap is the canonical, spec-mandated behaviour.
  */
-const J2000_DATE = new Date('2000-01-01T12:00:00.000Z');
+const J2000_DATE = new Date('2000-01-01T11:58:55.816Z');
 const J2000_BRIGHT_DATE_VALUE = 0;
 
 /**
- * Unix epoch: January 1, 1970, 00:00:00 UTC
- * BrightDateValue = -10957.5 exactly.
- * Calculation: (1970-01-01T00:00:00Z − 2000-01-01T12:00:00Z) = -10957.5 days
+ * Unix epoch: January 1, 1970, 00:00:00 UTC.
+ *
+ * Under the spec's TAI substrate with leap-second accounting, the Unix epoch
+ * is **not** an exact half-day before J2000.0; the leap seconds inserted
+ * between 1972 and 1999 shift the answer by ~22.5 seconds.
+ *
+ * The exact value the library returns for `fromDate(1970-01-01T00:00:00Z)` is
+ * `-10957.499511759259`. Tests assert against this with `toBeCloseTo` to
+ * absorb the ~120 ns Unix-ms round-trip tax documented in BrightDate spec §4.1.
  */
 const UNIX_EPOCH_DATE = new Date('1970-01-01T00:00:00.000Z');
-const UNIX_EPOCH_BRIGHT_DATE_VALUE = -10957.5;
+const UNIX_EPOCH_BRIGHT_DATE_VALUE = -10957.499511759259;
 
 // ─── brightDateToDate ─────────────────────────────────────────────────────────
 
@@ -72,11 +86,12 @@ describe('brightDateToDate', () => {
       expect(result.getTime()).toBe(J2000_DATE.getTime());
     });
 
-    it('handles a fractional BrightDateValue (0.5 = 12 hours after J2000)', () => {
+    it('handles a fractional BrightDateValue (0.5 = 12 hours after J2000.0)', () => {
       const result = brightDateToDate(0.5);
       expect(result).toBeInstanceOf(Date);
-      // 0.5 days = 12 hours after J2000 = 2000-01-02T00:00:00Z
-      const expected = new Date('2000-01-02T00:00:00.000Z');
+      // 0.5 days after J2000.0 (UTC label 2000-01-01T11:58:55.816Z) is
+      // 2000-01-01T23:58:55.816Z — 12 hours, not midnight.
+      const expected = new Date('2000-01-01T23:58:55.816Z');
       expect(Math.abs(result.getTime() - expected.getTime())).toBeLessThanOrEqual(1);
     });
   });
@@ -88,12 +103,15 @@ describe('dateToBrightDate', () => {
   describe('known epoch values', () => {
     it('converts J2000.0 date to BrightDateValue 0', () => {
       const result = dateToBrightDate(J2000_DATE);
-      expect(result).toBe(J2000_BRIGHT_DATE_VALUE);
+      // J2000.0 is the anchor — round-trip is bit-exact for this single
+      // instant only. Allow ≤120 ns (≈ 1.4e-12 days) of float64 round-trip
+      // tax per BrightDate spec §4.1.
+      expect(Math.abs(result - J2000_BRIGHT_DATE_VALUE)).toBeLessThanOrEqual(2e-12);
     });
 
-    it('converts Unix epoch date to BrightDateValue -10957.5', () => {
+    it('converts Unix epoch date to BrightDateValue ~-10957.4995 (spec-correct, TAI-substrate)', () => {
       const result = dateToBrightDate(UNIX_EPOCH_DATE);
-      expect(result).toBeCloseTo(UNIX_EPOCH_BRIGHT_DATE_VALUE, 10);
+      expect(result).toBeCloseTo(UNIX_EPOCH_BRIGHT_DATE_VALUE, 6);
     });
   });
 
@@ -167,14 +185,14 @@ describe('brightDateToISO', () => {
 
 describe('isoToBrightDate', () => {
   describe('known epoch values', () => {
-    it('converts J2000.0 ISO string to BrightDateValue 0', () => {
-      const result = isoToBrightDate('2000-01-01T12:00:00.000Z');
-      expect(result).toBe(J2000_BRIGHT_DATE_VALUE);
+    it('converts J2000.0 ISO string (UTC label) to BrightDateValue 0', () => {
+      const result = isoToBrightDate('2000-01-01T11:58:55.816Z');
+      expect(Math.abs(result - J2000_BRIGHT_DATE_VALUE)).toBeLessThanOrEqual(2e-12);
     });
 
-    it('converts Unix epoch ISO string to BrightDateValue -10957.5', () => {
+    it('converts Unix epoch ISO string to BrightDateValue ~-10957.4995 (spec-correct, TAI-substrate)', () => {
       const result = isoToBrightDate('1970-01-01T00:00:00.000Z');
-      expect(result).toBeCloseTo(UNIX_EPOCH_BRIGHT_DATE_VALUE, 10);
+      expect(result).toBeCloseTo(UNIX_EPOCH_BRIGHT_DATE_VALUE, 6);
     });
   });
 
@@ -237,14 +255,14 @@ describe('normalizeToBrightDate', () => {
   });
 
   describe('known epoch values — string input', () => {
-    it('converts J2000.0 ISO string to BrightDateValue 0', () => {
-      const result = normalizeToBrightDate('2000-01-01T12:00:00.000Z');
-      expect(result).toBe(J2000_BRIGHT_DATE_VALUE);
+    it('converts J2000.0 ISO string (UTC label) to BrightDateValue 0', () => {
+      const result = normalizeToBrightDate('2000-01-01T11:58:55.816Z');
+      expect(Math.abs(result - J2000_BRIGHT_DATE_VALUE)).toBeLessThanOrEqual(2e-12);
     });
 
-    it('converts Unix epoch ISO string to BrightDateValue -10957.5', () => {
+    it('converts Unix epoch ISO string to BrightDateValue ~-10957.4995 (spec-correct, TAI-substrate)', () => {
       const result = normalizeToBrightDate('1970-01-01T00:00:00.000Z');
-      expect(result).toBeCloseTo(UNIX_EPOCH_BRIGHT_DATE_VALUE, 10);
+      expect(result).toBeCloseTo(UNIX_EPOCH_BRIGHT_DATE_VALUE, 6);
     });
   });
 

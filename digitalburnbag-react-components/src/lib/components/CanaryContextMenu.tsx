@@ -392,15 +392,13 @@ export function CanaryContextMenu({
         )}
 
         {/* "Manage Canaries" when bindings exist */}
-        {bindingCount > 0 && (
-          <>
-            <Divider />
-            <MenuItem onClick={handleManageCanaries} data-testid="manage-canaries-item">
-              <ListItemIcon><EditIcon fontSize="small" /></ListItemIcon>
-              <ListItemText primary="Manage Canaries" secondary={`${bindingCount} binding${bindingCount !== 1 ? 's' : ''} attached`} />
-            </MenuItem>
-          </>
-        )}
+        {bindingCount > 0 && [
+          <Divider key="divider" />,
+          <MenuItem key="manage" onClick={handleManageCanaries} data-testid="manage-canaries-item">
+            <ListItemIcon><EditIcon fontSize="small" /></ListItemIcon>
+            <ListItemText primary="Manage Canaries" secondary={`${bindingCount} binding${bindingCount !== 1 ? 's' : ''} attached`} />
+          </MenuItem>
+        ]}
       </Menu>
 
       {/* Provider submenu — grouped by category, visual list */}
@@ -412,31 +410,41 @@ export function CanaryContextMenu({
         anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
         transformOrigin={{ vertical: 'top', horizontal: 'left' }}
       >
-        <Typography variant="caption" color="text.secondary" sx={{ px: 2, py: 0.5, display: 'block' }}>
-          Select a provider
-        </Typography>
-        {Array.from(groupedConnections.entries()).map(([category, conns]) => (
-          <Box key={category}>
-            <Typography variant="caption" color="text.secondary" sx={{ px: 2, py: 0.25, display: 'block', textTransform: 'uppercase', fontSize: '0.6rem', letterSpacing: 1 }}>
-              {category}
-            </Typography>
-            {conns.map(conn => (
-              <MenuItem
-                key={conn.id}
-                onClick={e => handleProviderSelect(e, conn)}
-                data-testid={`provider-submenu-item-${conn.id}`}
-              >
-                <ListItemIcon>
-                  <Box sx={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: signalToColor(conn.lastCheckResult ?? conn.status) }} />
-                </ListItemIcon>
-                <ListItemText
-                  primary={conn.providerDisplayName ?? conn.providerUsername ?? conn.providerId}
-                  secondary={conn.status}
-                />
+        <MenuItem disabled divider style={{ pointerEvents: 'none', opacity: 1 }}>
+          <Typography variant="caption" color="text.secondary">
+            Select a provider
+          </Typography>
+        </MenuItem>
+        {(() => {
+          const items: JSX.Element[] = [];
+          for (const [category, conns] of groupedConnections.entries()) {
+            items.push(
+              <MenuItem key={`cat-${category}`} disabled divider style={{ pointerEvents: 'none', opacity: 1 }}>
+                <Typography variant="caption" color="text.secondary" sx={{ textTransform: 'uppercase', fontSize: '0.6rem', letterSpacing: 1 }}>
+                  {category}
+                </Typography>
               </MenuItem>
-            ))}
-          </Box>
-        ))}
+            );
+            for (const conn of conns) {
+              items.push(
+                <MenuItem
+                  key={conn.id}
+                  onClick={e => handleProviderSelect(e, conn)}
+                  data-testid={`provider-submenu-item-${conn.id}`}
+                >
+                  <ListItemIcon>
+                    <Box sx={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: signalToColor(conn.lastCheckResult ?? conn.status) }} />
+                  </ListItemIcon>
+                  <ListItemText
+                    primary={conn.providerDisplayName ?? conn.providerUsername ?? conn.providerId}
+                    secondary={conn.status}
+                  />
+                </MenuItem>
+              );
+            }
+          }
+          return items;
+        })()}
       </Menu>
 
       {/* Binding config popover */}

@@ -194,8 +194,12 @@ describe('DiskMessageMetadataStore - Persistence Property Tests', () => {
 
             const found = retrieved.find((m) => m.blockId === metadata.blockId);
             expect(found?.acknowledgments.has(recipientIds[0])).toBe(true);
-            expect(found?.acknowledgments.get(recipientIds[0])).toBe(
-              ackTime,
+            // BrightDate timestamps incur a ~120 ns round-trip tax for
+            // arbitrary Unix-ms inputs (BrightDate spec §4.1). 6-dp
+            // closeness ≈ 86 ms.
+            expect(found?.acknowledgments.get(recipientIds[0])).toBeCloseTo(
+              ackTime as number,
+              6,
             );
           } finally {
             rmSync(iterTempDir, { recursive: true, force: true });

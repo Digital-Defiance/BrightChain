@@ -92,9 +92,10 @@ test.describe('File Upload and Browser Workflow', () => {
       { name: `e2e-multi-b-${ts}.txt`, content: 'File B content' },
     ]);
 
-    // Both file names should appear in progress
-    await expect(page.getByText(`e2e-multi-a-${ts}.txt`)).toBeVisible();
-    await expect(page.getByText(`e2e-multi-b-${ts}.txt`)).toBeVisible();
+    // Wait for both files to appear in the file browser
+    const browser = new FileBrowserPage(page);
+    await browser.waitForFile(`e2e-multi-a-${ts}.txt`);
+    await browser.waitForFile(`e2e-multi-b-${ts}.txt`);
 
     // Wait for completion
     await upload.waitForUploadComplete();
