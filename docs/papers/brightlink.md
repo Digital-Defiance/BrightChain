@@ -1,14 +1,14 @@
 ---
-title: "BrightLink Protocol v1: Hardware-Anchored Credential Delivery for Developer Workflows"
+title: "BrightLink Protocol: Hardware-Anchored Credential Delivery for Developer Workflows"
 parent: "Papers"
 nav_order: 19
 ---
 
-# BrightLink Protocol v1 — A Specification for Hardware-Anchored Ephemeral-Credential Delivery
+# BrightLink Protocol — A Specification for Hardware-Anchored Ephemeral-Credential Delivery
 
 **Authors:** Jessica Mulein
 **Status:** Proposal / Draft Standard, replication-grade
-**Version:** 1.1 (BrightLink v1 — geo, push, and cross-platform attestation)
+**Version:** 1.1 (BrightLink — geo, push, and cross-platform attestation)
 **Date:** May 2026
 **Built on:** [Enclave Bridge Protocol (EBP/1)](enclave-bridge-protocol). Coordinates expressed in [BrightSpace](bright-space-standard) and [BrightDate](brightdate-specification) units.
 
@@ -315,7 +315,7 @@ Successful deliveries return `{"ok": true, "type": "<echoed>", "context": "<echo
 | `LINK_PUSH` | §10 | Implemented (this RFC). |
 | `LINK_AUDIT_EMIT` | §11 | Reserved — returns `"LINK_AUDIT_EMIT not implemented in this build"`. |
 
-A BrightLink-aware bridge MUST acknowledge any reserved command name with the literal `"not implemented in this build"` suffix so callers can distinguish a v1-aware bridge from one that returns the EBP/1 generic `"Unknown command: <cmd>"`.
+A BrightLink-aware bridge MUST acknowledge any reserved command name with the literal `"not implemented in this build"` suffix so callers can distinguish a BrightLink-aware bridge from one that returns the EBP/1 generic `"Unknown command: <cmd>"`.
 
 ### 4.8 Peer Attestation, TTL Clamping, and Provenance
 
