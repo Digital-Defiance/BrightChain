@@ -21,7 +21,7 @@
     "@types/jest": "^30.0.0",
     "@types/node": "^24.1.0",
     "@types/ws": "^8.5.0",
-    "electron": "^33.0.0"
+    "electron": "^42.3.0"
   },
   "scripts": {
     "build": "npx nx build digitalburnbag-desktop",
