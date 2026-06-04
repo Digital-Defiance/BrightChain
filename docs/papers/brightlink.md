@@ -12,7 +12,7 @@ nav_order: 19
 **Date:** May 2026
 **Built on:** [Enclave Bridge Protocol (EBP/1)](enclave-bridge-protocol). Coordinates expressed in [BrightSpace](bright-space-standard) and [BrightDate](brightdate-specification) units.
 
-> **One-line pitch.** BrightLink delivers short-lived developer credentials from arbitrary CLI tools to a single hardware-anchored desktop agent (BrightNexus) over a Unix socket, and gives those tools scope-gated access to the host's spatial context. Key custody runs through whatever hardware-rooted signing facility the host provides — Apple's Secure Enclave on macOS, TPM2 (or PKCS#11, or a software fallback) on Linux. Sessions are authenticated by a bridge-signed transcript; credentials live with their declared TTL on a clean menu-bar UI; coordinates are exposed in both WGS84 and BrightSpace ECEF, gated by a five-rung scope ladder and a per-caller allowlist; nothing touches the clipboard, scrollback, history, or `~/.aws/credentials`.
+> **One-line pitch.** BrightLink delivers short-lived developer credentials from arbitrary CLI tools to a single hardware-anchored desktop agent (BrightNexus) over a Unix socket, and gives those tools scope-gated access to the host's spatial context. Key custody runs through whatever hardware-rooted signing facility the host provides — Apple's Secure Enclave on macOS, TPM2 (with a software fallback) on Linux; PKCS#11/HSM backends are reserved for a future revision (see §6.1). Sessions are authenticated by a bridge-signed transcript; credentials live with their declared TTL on a clean menu-bar UI; coordinates are exposed in both WGS84 and BrightSpace ECEF, gated by a five-rung scope ladder and a per-caller allowlist; nothing touches the clipboard, scrollback, history, or `~/.aws/credentials`.
 
 > **Scope.** BrightLink covers (a) the EBP/1-extension command surface (`LINK_REGISTER`, `LINK_DELIVER`), (b) the bilateral session-key derivation, (c) the canonical bridge-signed transcript layout, (d) the AES-256-GCM length-prefixed AAD construction for delivered credentials, (e) the standardised payload schemas (`ephemeral-auth`, `db-connection`, `plaintext`, `api-token`, `cloud-session`, `ssh-credential`, `kubeconfig-context`, `totp-seed`, `mtls-cert`), (f) the geo command surface (`LINK_GEO_STATUS`, `LINK_GEO_PROXIMITY`, `LINK_GEO_ZONE`, `LINK_GEO_GET`, `LINK_GEO_REFRESH`) with WGS84 + BrightSpace dual-coordinate output, the zone shape algebra, and the scope ladder, (g) the agent-to-shell push channel `LINK_PUSH`, (h) the cross-platform `BridgeIdentity` and `PeerAttestation` interfaces, and (i) the policy controls a deployer is expected to expose (peer-attestation enforcement, credential TTL ceiling, geo ACL, prompt routing).
 
@@ -44,7 +44,7 @@ The de-facto delivery vector — `export AWS_SESSION_TOKEN=...` — is fast and 
 
 ### 2.2 One agent, one capability surface
 
-BrightLink collapses credential delivery and geo mediation into one process: **BrightNexus**, a resident agent (a SwiftUI menu-bar app on macOS Apple Silicon, a system-tray app on Linux) with key custody anchored to whatever hardware-rooted signing facility the host provides — the Secure Enclave on macOS, TPM2 or PKCS#11 on Linux, with a software-key fallback when neither is available. The user runs one app, grants it one capability surface, and gets back one menu of currently-live credentials and one queue of pending geo-grant prompts.
+BrightLink collapses credential delivery and geo mediation into one process: **BrightNexus**, a resident agent (a SwiftUI menu-bar app on macOS Apple Silicon, a system-tray app on Linux) with key custody anchored to whatever hardware-rooted signing facility the host provides — the Secure Enclave on macOS, TPM2 on Linux, with a software-key fallback when TPM2 is unavailable. The user runs one app, grants it one capability surface, and gets back one menu of currently-live credentials and one queue of pending geo-grant prompts.
 
 ### 2.3 Spatial awareness without surveillance
 
@@ -116,6 +116,12 @@ The bridge is **per-user**. Each user account has its own `~/.brightchain/bright
 
 Three pluggable infrastructure layers (`BridgeIdentity`, `PeerAttestation`, `GeoSource`) abstract platform differences. The protocol surface is identical across macOS and Linux; only the implementation modules differ. See §6.
 
+**EBP/1 naming note.** Commands such as `GET_ENCLAVE_PUBLIC_KEY` and `ENCLAVE_SIGN` use Apple-era names for historical wire compatibility. On all platforms, "enclave" denotes the bridge's **hardware-rooted signing identity** (`BridgeIdentity`), not necessarily Apple's Secure Enclave.
+
+**`bridgeIdentityKind` (v1.1).** `VERSION`/`INFO` responses and successful `LINK_REGISTER` responses SHOULD include a string field `bridgeIdentityKind` with one of `SepBridgeIdentity`, `Tpm2BridgeIdentity`, or `FileBridgeIdentity`. Clients use this (along with `~/.brightchain/brightnexus/bridge-identity.kind`) to refuse software-backed bridges when policy requires hardware anchoring.
+
+**Hardware-required configuration.** If the environment variable `BRIGHTNEXUS_REQUIRE_HARDWARE=1` (or `true`) is set, Linux bridges MUST refuse to start unless `Tpm2BridgeIdentity` is selected. This prevents silent downgrade to `FileBridgeIdentity`.
+
 ---
 
 ## 4. Wire Specification
@@ -144,7 +150,7 @@ Before any credential delivery takes place, a CLI session registers with the loc
 
 ### 4.2 Wire-Level Distinguishability
 
-`VERSION` / `INFO` responses carry a `brightlinkProtocolVersion: 1` field. BrightLink-aware clients pin on this. EBP/1-only bridges that don't speak BrightLink return EBP/1's generic `"Unknown command: <cmd>"` for `LINK_REGISTER`; BrightLink-aware bridges that haven't yet shipped a particular reserved command return an error string ending `"not implemented in this build"`. This lets clients distinguish three regimes: not-aware, aware-but-incomplete, and aware-and-implemented.
+`VERSION` / `INFO` responses carry a `brightlinkProtocolVersion: 1` field and a `bridgeIdentityKind` string (`SepBridgeIdentity`, `Tpm2BridgeIdentity`, or `FileBridgeIdentity`) naming the active `BridgeIdentity` implementation. BrightLink-aware clients pin on `brightlinkProtocolVersion` and MAY refuse registration when `bridgeIdentityKind` is software-backed and policy requires hardware anchoring. EBP/1-only bridges that don't speak BrightLink return EBP/1's generic `"Unknown command: <cmd>"` for `LINK_REGISTER`; BrightLink-aware bridges that haven't yet shipped a particular reserved command return an error string ending `"not implemented in this build"`. This lets clients distinguish three regimes: not-aware, aware-but-incomplete, and aware-and-implemented.
 
 ### 4.3 Concurrency, Lifetime, and Per-Session State
 
@@ -162,7 +168,7 @@ Rationale: a remote attacker who has somehow injected JSON onto the local socket
 
 ### 4.5 The `LINK_REGISTER` Command
 
-The handshake establishes `K_session`, derives a transcript covering every input either side contributed, and gets that transcript signed by the bridge's SEP-anchored P-256 key. The shell verifies that signature against the SEP public key (`GET_ENCLAVE_PUBLIC_KEY`) and pins it on first use.
+The handshake establishes `K_session`, derives a transcript covering every input either side contributed, and gets that transcript signed by the bridge's hardware-rooted P-256 key. The shell verifies that signature against the bridge public key (`GET_ENCLAVE_PUBLIC_KEY` — EBP/1 retains the historical *enclave* command name; on Linux the same field carries the TPM2- or file-backed `BridgeIdentity` public key) and pins it on first use.
 
 #### 4.5.0 Pinning to DD-ECIES (Normative)
 
@@ -453,9 +459,15 @@ Three implementations are normative for v1.x:
 | `Tpm2BridgeIdentity` | Linux with TPM2 | TPM2 NV via tpm2-tss | yes |
 | `FileBridgeIdentity` | any POSIX (fallback) | `~/.brightchain/brightnexus/bridge-identity.key` mode 0600 | no |
 
-The bridge selects an implementation at startup with this preference order: SEP (if Apple Silicon), TPM2 (if `/dev/tpm0` exists and tpm2-tss is linked), File (last resort). The selected implementation is logged at startup and stored in `~/.brightchain/brightnexus/bridge-identity.kind` so the client can be informed in the §4.5 transcript that "this bridge identity is software-backed" — useful for security-policy-aware clients to refuse software-only bridges where the user requires hardware anchoring.
+**Non-normative (v1.1+).** `Pkcs11BridgeIdentity` (PKCS#11 token/HSM) is anticipated for enterprise deployments but is not required for v1.x conformance. Implementations MAY probe PKCS#11 before falling back to `FileBridgeIdentity`.
+
+The bridge selects an implementation at startup with this preference order: SEP (if Apple Silicon), TPM2 (if `/dev/tpmrm0` or `/dev/tpm0` exists and tpm2-tss is linked), File (last resort). The selected implementation is logged at startup and stored in `~/.brightchain/brightnexus/bridge-identity.kind` and exposed as `bridgeIdentityKind` in `VERSION`/`INFO` and `LINK_REGISTER` responses so clients can detect software-backed bridges.
 
 The §4.5 `transcriptSig` is produced by `BridgeIdentity.sign(transcript_bytes)`. The client TOFU-pins `BridgeIdentity.publicKey()` on first registration and verifies pin-match on every subsequent one. Pins are invalidated only by user action (a "Reset BrightNexus identity" button in the GUI that wipes the bridge identity, regenerates a fresh one, and warns that all pinned clients will refuse to register until re-pinned).
+
+> **Note (non-normative, future work).** PKCS#11 HSM backends for `BridgeIdentity` are out of scope for v1.x. A future revision MAY add a `Pkcs11BridgeIdentity` implementation without changing the BrightLink wire surface.
+
+On Linux, set `BRIGHTNEXUS_REQUIRE_HARDWARE=1` to make the bridge refuse startup when TPM2-backed identity is unavailable (instead of silently falling back to `FileBridgeIdentity`).
 
 ### 6.2 `PeerAttestation`
 
@@ -481,7 +493,7 @@ enum AttestationClass {
   BshBuiltin,         // any: signed by the bsh release key
   DpkgSigned,         // Linux: Debian/Ubuntu .deb signed
   RpmSigned,          // Linux: Red Hat/Fedora .rpm signed
-  FlatpakSigned,      // Linux: Flatpak signed
+  FlatpakSigned,      // Linux: Flatpak signed (v1.x MAY report Unsigned until flatpak info integration ships)
   Unsigned,           // any: TOFU pin by (path, hash) only
 }
 
@@ -509,7 +521,9 @@ struct SshSessionInfo {
 | `BshBuiltin` | `digitaldefiance` | Subject id from our cert | bsh, BrightNexus, our shipped tools. |
 | `DpkgSigned` | Repository GPG fingerprint (e.g. Debian archive key) | Package name (e.g. `awscli`) | Trusted iff repo GPG key is installed. |
 | `RpmSigned` | RPM-DB GPG key fingerprint | Package name | Same model as dpkg. |
-| `FlatpakSigned` | Flathub GPG fingerprint or flatpakrepo key | Application ID (`com.example.App`) | |
+| `FlatpakSigned` | Flathub GPG fingerprint or flatpakrepo key | Application ID (`com.example.App`) | v1.x implementations MAY classify unrecognized Flatpak signatures as `Unsigned` and log the Flatpak ref for operator review. |
+
+> **Flatpak attestation (v1).** Until `LinuxPeerAttestation` ships full Flatpak signature verification, conforming v1.x bridges MAY treat Flatpak-packaged peers as `Unsigned` while logging the application ID. This preserves the unsigned-binary geo cap (§14.7) rather than granting false `FlatpakSigned` trust.
 | `Unsigned` | `null` | `null` | Identified by `(executable_path, executable_hash)` TOFU pair only. |
 
 Two normative implementations:
@@ -1145,7 +1159,7 @@ The repository at [github.com/BrightChain/bsh](https://github.com/BrightChain/bs
 - A spec-derived mock bridge (`mock-brightnexus`) that any client implementation can drive.
 - A spec-derived mock shell (`mock-bsh-client`) that any bridge implementation can drive.
 - Known-answer vectors for `K_session` derivation, the canonical transcript, and DD-ECIES encrypt/decrypt.
-- Real-bridge integration tests that drive a running BrightNexus instance (Swift on macOS, Rust on Linux when the Linux port lands).
+- Real-bridge integration tests that drive a running BrightNexus instance (Swift on macOS; [BrightNexus-linux](https://github.com/Digital-Defiance/BrightNexus-linux) Rust reference on Linux).
 - Real-shell integration tests that drive a real bsh binary against the mock bridge.
 - Geo-specific known-answer vectors: ECEF↔WGS84 conversion at the GODE reference station (per [BrightSpace §5](bright-space-standard)), zone shape membership tests, scope-ladder enforcement, ACL signature verification, attestation-class identification on both platforms, SSH-session lineage detection.
 
@@ -1158,7 +1172,7 @@ A conformant implementation MUST pass the same vectors. CI matrix runs are scrip
 1. **Trust boundary.** A user who runs an attacker's binary on their machine has already lost; BrightLink does not defend against that. It defends against (a) credentials living longer than they should, (b) credentials reaching things that don't need to see them, and (c) location data reaching binaries the user has not explicitly authorised to read it.
 2. **Local-socket adversaries.** `AF_UNIX` mode 0600 inside `~/.brightchain/brightnexus/` (mode 0700) confines reach to the local user. `K_session` never leaves the bridge or shell processes; an attacker who can read `/proc/<pid>/mem` can already read everything.
 3. **Bridge-identity TOFU.** First-install pinning is a real boundary, not a perfect one. A user who runs a malicious BrightNexus build before ever running a real one is in the lying-bridge attack window. On macOS, future drafts MAY add out-of-band SEP-key publication via Apple's developer notarization records. On Linux, distribution-signed BrightNexus packages with a published bridge-identity public-key fingerprint provide a similar out-of-band channel.
-4. **Software-only `BridgeIdentity`.** The `FileBridgeIdentity` fallback puts the private key on disk in mode 0600 — encrypted at rest where libsecret/GNOME Keyring is available, in plaintext otherwise. This is weaker than hardware-anchored key custody. The bridge logs `bridge identity is software-backed` at startup; clients can refuse to register against software-backed bridges (§6.1) by checking the kind. v1.x MUST NOT silently downgrade trust expectations: if hardware was promised by configuration, the bridge MUST refuse to start with `FileBridgeIdentity`.
+4. **Software-only `BridgeIdentity`.** The `FileBridgeIdentity` fallback puts the private key on disk in mode 0600 — encrypted at rest where libsecret/GNOME Keyring is available (via the platform keyring integration), in plaintext otherwise. This is weaker than hardware-anchored key custody. The bridge logs `bridge identity is software-backed` at startup; clients can refuse to register against software-backed bridges (§6.1) by checking `bridgeIdentityKind` / `bridge-identity.kind`. v1.x MUST NOT silently downgrade trust expectations: if hardware was promised by configuration (`BRIGHTNEXUS_REQUIRE_HARDWARE=1`), the bridge MUST refuse to start with `FileBridgeIdentity`.
 5. **Spoofing defence.** The kernel-canonical executable path (`proc_pidpath` on macOS, `/proc/<pid>/exe` on Linux) is read from kernel state, not from peer-supplied data. argv[0] is irrelevant. A binary calling itself `bsh` cannot bypass an allowlist keyed on `(BshBuiltin, digitaldefiance, org.digitaldefiance.bsh)`; its signing identity will not match.
 6. **Allowlist tampering.** `geo-acl.json` and `geo-zones.json` are signed by `BridgeIdentity`. A user (or attacker with same-uid file write) who tampers with either invalidates the signature, which the bridge detects on next read and reverts to `prompt` for every entry. This is not perfect — an attacker who can also call `BridgeIdentity.sign()` (i.e., who has compromised the bridge process) can re-sign tampered files — but it raises the bar from "edit the file" to "compromise the running bridge process".
 7. **Unsigned-binary cap.** Unsigned binaries CANNOT receive `geo:zone` or higher, regardless of user grant. This is enforced in the bridge above any ACL entry. The cap exists because TOFU-pinning a hash for an unsigned binary is fragile (`brew upgrade` invalidates the pin) and trains users to dismiss re-prompt friction.
@@ -1172,7 +1186,7 @@ A conformant implementation MUST pass the same vectors. CI matrix runs are scrip
 ## 15. Compatibility
 
 - **EBP/1.** BrightLink layers cleanly on top of EBP/1. An EBP/1 client that doesn't speak BrightLink ignores the extra `brightlinkProtocolVersion` field in `VERSION`.
-- **Operating systems.** macOS / Apple Silicon is the reference platform. Linux ports are normative through the §6 platform pluggables: `Tpm2BridgeIdentity` + `LinuxPeerAttestation` + `GeoClueGeoSource`. Windows is out of scope for v1.x; a Windows port would land `DpapiBridgeIdentity` (or TPM2 via `tbs.h`), `WindowsPeerAttestation`, and `WindowsLocationServiceGeoSource`.
+- **Operating systems.** macOS / Apple Silicon is the reference platform. Linux ports are normative through the §6 platform pluggables: `Tpm2BridgeIdentity` + `LinuxPeerAttestation` + `GeoClueGeoSource`. The reference Linux bridge is [BrightNexus-linux](https://github.com/Digital-Defiance/BrightNexus-linux) (Rust). Windows is out of scope for v1.x; a Windows port would land `DpapiBridgeIdentity` (or TPM2 via `tbs.h`), `WindowsPeerAttestation`, and `WindowsLocationServiceGeoSource`.
 - **Languages.** The wire is JSON over Unix socket — any language with crypto primitives (AES-GCM, HKDF-SHA256, secp256k1 ECDH, P-256 ECDSA) can implement either side.
 - **Architectures.** The reference Swift bridge is Apple Silicon-only because of SEP. The reference TypeScript client and the bsh C module are arch-agnostic; they have been tested on x86_64 Linux and arm64 Linux against the reference Rust bridge (when shipped).
 

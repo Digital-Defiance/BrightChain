@@ -18,8 +18,8 @@ parent: "Papers"
 
 **Date:** 2026
 
-- See also: [https://github.brightdate.org/docs/papers/bright-space-standard](https://github.brightdate.org/docs/papers/bright-space-standard)
-- See also: [https://github.brightdate.org/docs/papers/bright-spacetime-standard](https://github.brightdate.org/docs/papers/bright-spacetime-standard)
+- See also: [https://github.brightchain.org/docs/papers/bright-space-standard](https://github.brightchain.org/docs/papers/bright-space-standard)
+- See also: [https://github.brightchain.org/docs/papers/bright-spacetime-standard](https://github.brightchain.org/docs/papers/bright-spacetime-standard)
 
 ---
 
@@ -111,6 +111,21 @@ Elapsed durations in BrightDate express naturally: `b - a = elapsed_days`. No un
 ### 2.4 TAI Substrate
 
 Internally, BrightDate advances in strict SI seconds with no discontinuities. Two consecutive UTC seconds straddling a leap-second boundary correspond to exactly 2 SI seconds in BrightDate, because TAI advances by 2 during that transition. This is the physically correct behavior. Leap seconds appear only at UTC conversion boundaries (`toISO`, `fromISO`, `toUnixMs`, `fromDate`), where `:60` is rendered correctly.
+
+### 2.5 Use as a Spacetime-Vector Time Component
+
+The BrightDate *day* scalar is the right unit for calendars, scheduling, logging, analytics, and human display. It is **not** the unit used for the time axis of a BrightSpace / Bright Spacetime 4D vector `[t, x, y, z]`. Those vectors require `c = 1` to hold across all four components, which means the time axis must use the same ruler as the BrightMeter spatial axes — the **Bright-Second (bs)**, where `1 bs = 1 light-second = 1 SI second` (Bright Spacetime Standard §2.2).
+
+Convert between the two by the exact factor 86,400:
+
+```
+t_bs           = brightDateDays × 86,400     // day scalar  → vector time component
+brightDateDays = t_bs / 86,400               // vector time component → display label
+```
+
+Numerically, the Bright-Second count from J2000.0 is exactly the TAI-second count carried by `BrightInstant` (§3.2). The recommended practice is therefore: **store and compute** the spacetime-vector time component as `BrightInstant` (or its raw second count), and render it as a `BD` / `PBD` day label only for display. Using a day-scalar directly as `t` alongside BrightMeter spatial components silently makes `c = 86,400` and breaks every relativistic formula downstream.
+
+If an application genuinely wants the *calendar day* to remain the time unit, the consistent choice is to pair BrightDate days with **Light-Days** as the spatial unit (`1 Ld = 86,400 bm`), which preserves `c = 1` at calendar scale. See Bright Spacetime Standard §2.4.
 
 ---
 

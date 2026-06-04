@@ -18,8 +18,8 @@ parent: "Papers"
 
    **Date:** 2026
 
-- See also: [https://github.brightdate.org/docs/papers/bright-space-standard](https://github.brightdate.org/docs/papers/bright-space-standard)
-- See also: [https://github.brightdate.org/docs/papers/brightdate-specification](https://github.brightdate.org/docs/papers/brightdate-specification)
+- See also: [https://github.brightchain.org/docs/papers/bright-space-standard](https://github.brightchain.org/docs/papers/bright-space-standard)
+- See also: [https://github.brightchain.org/docs/papers/brightdate-specification](https://github.brightchain.org/docs/papers/brightdate-specification)
 
 ------
 
@@ -76,6 +76,14 @@ parent: "Papers"
 
    When the unit is used to denote a *temporal* interval rather than a spatial extent, we call it a **Bright-Second** (bs). Numerically, 1 bs = 1 bm. The two names are a notational courtesy to readers who want spatial-vs-temporal framing in their heads; the underlying unit is one and the same.
 
+   **Equivalent space-first definition.** The Bright-Second need not be posited independently — it can be *derived from* the BrightMeter as the time light takes to traverse one BrightMeter:
+
+   > 1 bs ≡ 1 bm / c = 1 SI second (exact).
+
+   This is not circular. The BrightMeter is grounded in the 2019 SI redefinition (`c` is a *defined* constant, not a measured one), so `1 bm = 299,792,458 m` is exact by definition and the transit time follows exactly. Whether one starts from time (`1 bm = c · 1 s`) or from space (`1 bs = 1 bm / c`), the unit is identical; the space-first framing simply makes explicit that space and time share a single ruler.
+
+   **Canonical time axis.** The Bright-Second is the unit of the **time component of every 4D spacetime vector** `[t, x, y, z]` in this suite (BrightSpace §6). With `t` in Bright-Seconds and `x, y, z` in BrightMeters, `c = 1` holds across the whole vector and the Minkowski line element (§2.5) carries no conversion factor. BrightDate *days* (BrightDate specification §2.1) are a calendar/display layer, related by `1 day = 86,400 bs`; a day-scalar MUST NOT be used directly as the `t` component alongside BrightMeter spatial components, or the vector silently encodes `c = 86,400`.
+
    ### 2.3 Decimal-SI hierarchy
 
    The BrightMeter takes the standard SI prefixes without modification:
@@ -100,6 +108,8 @@ parent: "Papers"
    1 Ld = c * 86,400 s = 2.59020683712 × 10¹³ m
 
    with corresponding **Light-Milliday** (Lmd) and **Light-Microday** (Lμd) subdivisions. The Ld is *not* the base unit — it inherits the SI-day's non-power-of-ten conversion to seconds — but it remains the natural choice when "one calendar day of light-travel" is the relevant scale.
+
+   The Light-Day is the **spatial partner of the BrightDate day** in a second, calendar-scale `c = 1` sub-system: with time measured in BrightDate days and space in Light-Days, `1 Ld = 86,400 bm` and `c = 1 Ld/day`. This is the *only* pairing in which a BrightDate day-scalar may serve as the `t` component of a spacetime vector — and only against Light-Day spatial components, never BrightMeters. The two sub-systems convert exactly by the same factor of 86,400 on each axis (`1 day = 86,400 bs`, `1 Ld = 86,400 bm`). Terrestrial, orbital, and cislunar engineering should use the bs/bm pair; the day/Ld pair (with `1 Ld ≈ 173 AU`) is for solar-system and calendar-facing work where that scale is appropriate.
 
    ### 2.5 Epoch and metric signature
 

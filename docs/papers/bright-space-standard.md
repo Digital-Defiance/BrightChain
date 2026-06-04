@@ -11,8 +11,8 @@ parent: "Papers"
 
 **Author:** Jessica Mulein
 
-- See also: [https://github.brightdate.org/docs/papers/bright-spacetime-standard](https://github.brightdate.org/docs/papers/bright-spacetime-standard)
-- See also: [https://github.brightdate.org/docs/papers/brightdate-specification](https://github.brightdate.org/docs/papers/brightdate-specification)
+- See also: [https://github.brightchain.org/docs/papers/bright-spacetime-standard](https://github.brightchain.org/docs/papers/bright-spacetime-standard)
+- See also: [https://github.brightchain.org/docs/papers/brightdate-specification](https://github.brightchain.org/docs/papers/brightdate-specification)
 
 ------
 
@@ -157,18 +157,37 @@ This block is identical across the BrightSpace, Bright Spacetime, and BrightDate
 
 The ultimate utility is the **Spacetime Vector**. Every file in **BrightChain** and every entry in **BrightDB** is stamped with a single 4-component array: `[t, x, y, z]`.
 
-- **t** = **BrightDate** (Seconds from J2000).
-- **x, y, z** = **BrightSpace** (Distance from Earth Center in bm).
+- **t** = time in **Bright-Seconds (bs)** elapsed from J2000.0 on the TAI substrate — numerically the `BrightInstant` second count (see the BrightDate specification §3.2). This is **not** the BrightDate *day* scalar; days are a human-readable display label, not the stored vector component.
+- **x, y, z** = **BrightSpace** distance from the Earth's centre of mass, in **BrightMeters (bm)**.
+
+### **6.1 Why the Time Axis Is in Bright-Seconds, Not BrightDate Days**
+
+The entire payoff of the BrightMeter is that `c = 1`: one BrightMeter of space is exactly the distance light covers in one Bright-Second of time (`1 bm ≡ c · 1 s`, and `1 bs ≡ 1 bm` numerically — see Bright Spacetime Standard §2.1–§2.2). For `c = 1` to hold *across all four components of the vector*, the time and space axes must share that ruler.
+
+A **BrightDate day** is 86,400 Bright-Seconds. If `t` were carried in days while `x, y, z` are in BrightMeters, the speed of light implied by the stamped vector would read `c = 86,400 bm/day ≠ 1`, silently breaking every Minkowski calculation downstream. The vector therefore stores `t` in **Bright-Seconds**; the calendar-day value is recovered for display by dividing by 86,400 (`BD = t / 86400`).
+
+Two — and only two — coherent `(time, space)` pairings yield `c = 1` (Bright Spacetime Standard §2.2, §2.4):
+
+| Sub-system | Time unit | Space unit | Use |
+| ---------- | --------- | ---------- | --- |
+| **Engineering** (canonical for the 4D stamp) | Bright-Second (bs) | BrightMeter (bm) | networking, geospatial, cryptographic timestamping |
+| **Calendar** | BrightDate day (1 bd = 86,400 bs) | Light-Day (1 Ld = 86,400 bm) | ephemerides, solar-system latency budgets, human calendars |
+
+Never mix the rows. A vector whose `t` is in days **must** carry space in Light-Days; a vector whose `t` is in Bright-Seconds **must** carry space in BrightMeters. The canonical BrightChain / BrightDB stamp uses the **engineering** row.
 
 ### **Example: The "Digital Notary"**
 
 A WCAP (Web Content Authenticity Protocol) claim is generated. It doesn't say "Created at 2 PM at the GSFC reference station." It says:
 
 ```
-Signed: [832441200.42, 0.003771855, -0.016115327, 0.013323219]
+Signed: [ 832441200.42, 0.003771855, -0.016115327, 0.013323219 ]
+         [    t (bs)   ,   x (bm)   ,    y (bm)   ,    z (bm)   ]
 ```
 
-The spatial components are the ITRF2020 GODE station coordinates at reference epoch 2015.0, divided by `c = 299,792,458` (see §5). For a long-lived claim, an implementation should also record the BrightDate epoch at which the spatial coordinate was sampled so that future readers can re-project through the published velocity vector and recover the surveyor's intent to millimetre precision.
+- `t = 832441200.42` **Bright-Seconds** from J2000.0 on the TAI substrate — the same instant a human reads as **BD 9634.736** (`832,441,200.42 / 86,400`). The day label is *derived* from `t`; it is never the stored component.
+- `x, y, z` are the ITRF2020 GODE station coordinates at reference epoch 2015.0, divided by `c = 299,792,458` (see §5).
+
+Because `t` is in Bright-Seconds and `x, y, z` are in BrightMeters, the four numbers live on a single `c = 1` ruler: the spatial magnitude of this vector is *literally* its one-way light-time from the origin, with no conversion. For a long-lived claim, an implementation should also record the BrightDate epoch at which the spatial coordinate was sampled so that future readers can re-project through the published velocity vector and recover the surveyor's intent to millimetre precision.
 
 This is a universal, immutable coordinate. It doesn't matter if a thousand years pass or if timezones change—the file is anchored to a specific point in the planet's history and space with zero ambiguity.
 
