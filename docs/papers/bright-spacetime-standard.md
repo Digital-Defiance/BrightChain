@@ -66,11 +66,11 @@ parent: "Papers"
 
    ## 2. Definitions
 
-   ### 2.1 The BrightMeter
+   ### 2.1 The Bright (BrightMeter)
 
-   > **1 bm = c \* 1 s = 299,792,458 m**
+   > **1 Bright (symbol bm) = c × 1 s = 299,792,458 m**
 
-   The definition is **exact**: c has a defined numerical value in SI, and the SI second is defined from the caesium-133 hyperfine transition. No measurement enters.
+   The base unit is one **light-second**, called the **Bright** (formal name **BrightMeter**, symbol **bm**). The word *meter* is historical; **1 bm is not one SI metre** — it is the distance light travels in one SI second. The definition is **exact**: c has a defined numerical value in SI, and the SI second is defined from the caesium-133 hyperfine transition. No measurement enters.
 
    ### 2.2 The Bright-Second
 
@@ -92,12 +92,14 @@ parent: "Papers"
    | ---------- | ----------- | ------------------ | ------------------------------------- |
    | μbm        | Microbright | 299.792458         | Lab benches, fibre-optic delays       |
    | mbm        | Millibright | 299,792.458        | LEO orbits (~Earth's radius scale)    |
-   | bm         | BrightMeter | 299,792,458        | Cislunar, geostationary, LEO comms    |
-   | kbm        | Kilobright  | 2.99792458 × 10¹¹  | Earth–Sun (1 AU ≈ 499 bm = 0.499 kbm) |
+   | bm         | Bright (BrightMeter) | 299,792,458   | 1 light-second; cislunar / LEO comms  |
+   | kbm        | Kilobright  | 2.99792458 × 10¹¹  | Earth–Sun (1 AU ≈ 0.499 kbm)          |
    | Mbm        | Megabright  | 2.99792458 × 10¹⁴  | Inner-system mission planning         |
    | Gbm        | Gigabright  | 2.99792458 × 10¹⁷  | Heliopause, near-interstellar         |
 
    The same hierarchy applies to Bright-Seconds (μbs, mbs, bs, kbs, Mbs, Gbs).
+
+   **Not the BrightDate milliday hierarchy.** BrightDate’s md / μd / nd prefixes apply to **decimal days** (the dashboard). This section’s μbs / mbs / bs / … apply to **light-seconds** (physics and networking). They share SI prefixes but not the same base unit; convert with `1 day = 86_400 bs` (BrightDate specification §2.3).
 
    **Symbol convention.** `μbm` and `μbs` are canonical. **`ubm`** and **`ubs`** are ASCII-safe fallbacks for code, terminals, and storage formats where Greek `μ` is impractical; both forms refer to the same unit.
 
@@ -123,7 +125,59 @@ parent: "Papers"
 
      ds² = -dt² + dx² + dy² + dz²
 
-     with t, x, y, z all in BrightMetres / Bright-Seconds.
+     with t, x, y, z all in Brights (bm) / Bright-Seconds (bs), or in **light-attoseconds** when using the integer engine (§2.6).
+
+   ### 2.6 Light-attosecond engine (BrightDate v2)
+
+   For exact storage and spacetime arithmetic, the Bright suite recommends **attoseconds since J2000.0** on the TAI substrate (BrightDate specification §2.6, type `ExactBrightAtto`). One attosecond tick is one **light-attosecond**:
+
+   > 1 as of light-travel = (299,792,458 / 10¹⁸) m ≈ 0.30 nm
+
+   With `c = 1`, the four components of `[t, x, y, z]` may be carried as four **signed i128** (or `BigInt`) values in the **same** tick unit: time in attoseconds, space in attoseconds of light-travel (`10¹⁸` as = 1 Bright). Conversion to SI metres is the exact rational `× 299792458 / 10¹⁸`. Minkowski intervals and proper-time sums use integer arithmetic on those ticks; the Float64 **BrightDate day** remains the human dashboard only.
+
+   **Scale factors (exact):**
+
+   ```
+   1 Bright (bm)  = 10¹⁸ as
+   1 Bright-Second (bs) = 10¹⁸ as
+   1 SI day       = 86_400 × 10¹⁸ as
+   ```
+
+   **Worked example — GODE station claim (integer engine).** Take the BrightSpace Digital Notary vector (BSGRF §6): `t = 832_441_200.42` bs, GODE at `(x, y, z)` bm = `(+0.003771855, −0.016115327, +0.013323219)` (ITRF2020 epoch 2015.0). Promote each component to attoseconds (same tick for time and space because `c = 1`):
+
+   ```
+   t_as = 832_441_200_420_000_000_000     // 832_441_200.42 × 10¹⁸
+   x_as =   3_771_855_000_000_000         // 0.003771855 × 10¹⁸
+   y_as = −16_115_327_000_000_000
+   z_as =  13_323_219_000_000_000
+   ```
+
+   **1. Interval from the origin event** `O = (0, 0, 0, 0)` **in the same units** (flat Minkowski, (−,+,+,+)):
+
+   ```
+   ds² = −t_as² + x_as² + y_as² + z_as²
+   ```
+
+   Every term is an **integer** square; `ds²` is negative (timelike separation — a massive observer can sit at O and later receive the signal from the stamp). No factor of `c` appears. The reference implementation evaluates this as `intervalSquared(O, E)` on `SpacetimeEvent` values expressed in Bright-Seconds; the attosecond form is the same numerics with the scale absorbed into the coordinates.
+
+   **2. Spatial chord equals light-time.** In bs/bm the Euclidean chord from Earth centre to GODE is
+
+   ```
+   r_bm = √(x² + y² + z²) ≈ 0.02124 bm ≈ 21.2 ms
+   ```
+
+   In attoseconds, `r_as = √(x_as² + y_as² + z_as²) = r_bm × 10¹⁸` — the **same number** as the one-way light-time budget because `c = 1`. No `r/c` conversion.
+
+   **3. Dashboard label (derived, not stored).** Integer divmod on `t_as` (BrightDate specification §2.6):
+
+   ```
+   days_whole   = t_as div_euclid 86_400_000_000_000_000_000
+   remainder_as = t_as rem_euclid  86_400_000_000_000_000_000
+   BD_display   = days_whole + remainder_as / 86_400_000_000_000_000_000
+                ≈ 9634.736…   // matches the bs/bm view; never round-trip BD into consensus
+   ```
+
+   Wire storage for this stamp: four signed **i128** attosecond ticks (16 bytes each, big-endian two's-complement) or text `EBA1:<t_as>` plus three spatial ticks — not the Float64 day scalar.
 
 ------
 
@@ -188,6 +242,16 @@ parent: "Papers"
    120 AU ≈ 5.99 × 10⁴ bs ≈ 16.6 hours light-travel
 
    In Gigabrights, that is 1.80 × 10⁻⁴ Gbm. The order of magnitude tells you immediately that interstellar distances begin one hierarchy level higher — Proxima Centauri sits at ~0.134 Gbm.
+
+   ### 4.4 Integer interval (library surface)
+
+   The worked attosecond promotion in §2.6 is what `@brightchain/brightdate` implements when you keep everything in the engineering units: `SpacetimeEvent` uses `t` in **Bright-Seconds** and `x, y, z` in **Brights**, and
+
+   ```
+   intervalSquared(O, E) = −(Δt)² + (Δx)² + (Δy)² + (Δz)²
+   ```
+
+   returns `ds²` with **no `c` in the formula**. For consensus storage, persist `(t_as, x_as, y_as, z_as)` and apply the identical expression on integers; `ExactBrightAtto` is the time leg, and spatial legs are `bm × 10¹⁸`. Proper time along a timelike chain is `Σ √(−Δds²)` leg-by-leg — again with no conversion factors when all four components share the attosecond tick.
 
 ------
 

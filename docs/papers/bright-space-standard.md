@@ -28,7 +28,7 @@ Current global positioning relies on Geodetic coordinates (Latitude, Longitude, 
 
 ## **2. The BrightSpace Solution**
 
-**BrightSpace** replaces angular "maps" with a 4D Vector Space. By using the **Bright-Meter (bm)**—defined as 299,792,458 meters—we normalize the size of the planet to the speed of light.
+**BrightSpace** replaces angular "maps" with a 4D Vector Space. By using the **Bright** (formal name **BrightMeter**, symbol **bm**)—one light-second = 299,792,458 SI metres—we normalize the size of the planet to the speed of light. For exact storage, spatial components may use the same **light-attosecond** integer ticks as the time axis (Bright Spacetime Standard §2.6); **bm** remains the engineering-scale name for `10¹⁸` attoseconds of light-travel.
 
 ### **2.1 The Reference Frame**
 
@@ -188,6 +188,12 @@ Signed: [ 832441200.42, 0.003771855, -0.016115327, 0.013323219 ]
 - `x, y, z` are the ITRF2020 GODE station coordinates at reference epoch 2015.0, divided by `c = 299,792,458` (see §5).
 
 Because `t` is in Bright-Seconds and `x, y, z` are in BrightMeters, the four numbers live on a single `c = 1` ruler: the spatial magnitude of this vector is *literally* its one-way light-time from the origin, with no conversion. For a long-lived claim, an implementation should also record the BrightDate epoch at which the spatial coordinate was sampled so that future readers can re-project through the published velocity vector and recover the surveyor's intent to millimetre precision.
+
+### **6.2 Canonical storage (attosecond engine)**
+
+For databases, wire formats, and causal checks, the recommended stamp is **four `ExactBrightAtto` ticks** (attoseconds since J2000.0 on the TAI substrate): one for `t`, three for `x, y, z` with each spatial component equal to `bm × 10¹⁸` (one **light-attosecond** per tick; Bright Spacetime Standard §2.6). The bs/bm array in the Digital Notary example is a human- and f64-friendly view of the same event.
+
+Causal classification uses the same Minkowski form as the library: `intervalSquared` in `@brightchain/brightdate` computes `ds² = −(Δt)² + (Δx)² + (Δy)² + (Δz)²` with no factor of `c`, whether you pass Bright-Seconds/Brights or promote the stamp to integer attoseconds first. The **BD** day label remains a divmod-derived display layer only (BrightDate specification §2.6).
 
 This is a universal, immutable coordinate. It doesn't matter if a thousand years pass or if timezones change—the file is anchored to a specific point in the planet's history and space with zero ambiguity.
 

@@ -6,7 +6,7 @@ parent: "Papers"
 
 # BrightDate: A Decimal-SI Universal Time Standard Anchored at J2000.0
 
-**Version:** 1.0.0 (component) — Bright Spacetime Protocol (BSP) suite member
+**Version:** 1.1.0 (component) — Bright Spacetime Protocol (BSP) suite member
 
 **Organization:** Digital Defiance (501c3)
 
@@ -27,7 +27,7 @@ parent: "Papers"
 
 Modern software engineering is burdened by a fragmented time landscape: UTC timezones, Unix milliseconds, Julian Dates, GPS weeks, TAI offsets, and leap-second ambiguities proliferate across distributed systems with no shared conceptual anchor. Every timestamp library re-derives the same conversions from the same patchwork of calendar artefacts, with errors accumulating at every interface boundary.
 
-**BrightDate** proposes a principled alternative: a single, universal scalar count of decimal SI days elapsed since the J2000.0 astronomical epoch, computed on a TAI substrate that eliminates leap-second discontinuities from core arithmetic. The system ships three companion types — `BrightDate` (Float64, ergonomic), `BrightInstant` (BigInt TAI seconds + nanoseconds, rigorous), and `ExactBrightDate` (BigInt picoseconds, lossless archival) — that together cover the full spectrum from astronomy to blockchain-grade fidelity. Pre-J2000.0 timestamps are signed scalars in the canonical representation; for display, a `PBD` prefix renders the absolute value of any negative BrightDate so that user-facing strings never carry a leading minus sign.
+**BrightDate** separates the **engine** from the **dashboard**, like Unix time: canonical storage is a signed integer count of TAI **attoseconds** since J2000.0 (`ExactBrightAtto`, 128-bit / `BigInt`); human-facing **decimal SI days** (`BrightDate`, Float64) are a presentation lens derived by integer divmod, not the source of truth for consensus. The reference implementation also offers `ExactBrightDate` (picoseconds) when you prefer that divisor — the class name documents the tick size. Pre-J2000.0 values are signed in the integer engine; the `PBD` display prefix renders negative day labels without a leading minus sign.
 
 ---
 
@@ -108,6 +108,15 @@ Because BrightDate is measured in decimal days, SI prefixes yield intuitive sub-
 
 Elapsed durations in BrightDate express naturally: `b - a = elapsed_days`. No unit algebra enters the computation.
 
+**This is not the Bright-Second hierarchy.** BrightDate sub-units (md, μd, nd) are **prefixes on the day** — the native unit of the decimal dashboard (`BD 9622.50417` means days + fraction of a day). Bright Spacetime uses a **separate** hierarchy: **Bright-Seconds** (bs, kbs, Mbs, Gbs) and **Brights** (bm, kbm, …) at the **light-second** scale for `c = 1` engineering. The bridge is exact: `1 day = 86_400 bs` and `1 md = 86.4 s`. You are not expected to replace millidays with kilobrights; you pick the sub-system for the job:
+
+| Sub-system | Time prefixes | Space partner | Typical use |
+| ---------- | ------------- | ------------- | ----------- |
+| **Calendar / dashboard** | md, μd, nd (on **days**) | Light-Day (Ld) if vectors need days | `BD` labels, scheduling, logs |
+| **Engineering / spacetime** | μbs, mbs, bs, kbs, Mbs, Gbs | Bright (bm, kbm, …) | latency, distance bounding, `[t,x,y,z]` |
+
+Canonical storage (`ExactBrightAtto`) sits **below** both: attoseconds since J2000.0, from which either hierarchy is a derived view.
+
 ### 2.4 TAI Substrate
 
 Internally, BrightDate advances in strict SI seconds with no discontinuities. Two consecutive UTC seconds straddling a leap-second boundary correspond to exactly 2 SI seconds in BrightDate, because TAI advances by 2 during that transition. This is the physically correct behavior. Leap seconds appear only at UTC conversion boundaries (`toISO`, `fromISO`, `toUnixMs`, `fromDate`), where `:60` is rendered correctly.
@@ -127,15 +136,47 @@ Numerically, the Bright-Second count from J2000.0 is exactly the TAI-second coun
 
 If an application genuinely wants the *calendar day* to remain the time unit, the consistent choice is to pair BrightDate days with **Light-Days** as the spatial unit (`1 Ld = 86,400 bm`), which preserves `c = 1` at calendar scale. See Bright Spacetime Standard §2.4.
 
+### 2.6 Canonical integer engine (v2)
+
+> **1 attosecond tick since J2000.0** on the TAI substrate is the recommended canonical representation for databases, APIs, network serialization, and spacetime vectors under the Bright `c = 1` convention (one tick = one **light-attosecond**). Wire form: **16-byte big-endian two's-complement signed i128** (TypeScript `BigInt`; Rust `i128`). Text debug form: `EBA1:<attoseconds>`.
+
+Decimal BrightDate days are derived from the integer without float division on the canonical value:
+
+```
+days_whole   = t_as div_euclid 86_400_000_000_000_000_000
+remainder_as = t_as rem_euclid  86_400_000_000_000_000_000
+BD_display   = days_whole + format_decimal(remainder_as / 86_400_000_000_000_000_000)
+```
+
+**Two-way conversion with `BrightDate` (Float64) is supported and explicitly lossy** when the float carries more digits than the tick quantum or when arithmetic uses IEEE 754 (`fromBrightDateValue` / `toBrightDateValue`). Parsing a formatted `BD` string for UI is fine; **consensus and signatures must use the integer**, not the decimal string.
+
+`ExactBrightDate` (picoseconds, `EBD1:`) remains available for deployments that already store picosecond ticks; convert to attoseconds exactly via `× 10⁶`.
+
 ---
 
-## 3. The Three Companion Types
+## 3. Representation layers (engine vs dashboard)
 
-A single precision level cannot serve every use case. BrightDate ships three types that share the same epoch and TAI semantics but differ in representation and fidelity.
+BrightDate is intentionally **bi-scalar at the human layer** (decimal days) and **mono-scalar at the storage layer** (integer attoseconds). The types below are lenses on the same J2000.0 / TAI epoch — pick the engine first, then project to the dashboard.
 
-### 3.1 `BrightDate` — Float64, Ergonomic
+### 3.1 `ExactBrightAtto` — canonical engine (attoseconds)
 
-The primary type. Stores the signed day count as a 64-bit IEEE 754 double. For the current era (~BD 9,600–11,000 at time of writing), Float64 provides approximately 190-nanosecond resolution — far above NTP jitter and mechanical clock accuracy. Arithmetic uses native operators (`a - b`, `a < b`, `Math.abs`). Astronomy helpers (GMST, lunar phase, interplanetary light delay) operate in this type.
+Signed **attoseconds** since J2000.0. TypeScript: `bigint`; Rust: `i128`. Range at this resolution: ±~5.4×10¹² years. Sub-nanometre spatial resolution when the same tick is used for Bright spacetime axes (Bright Spacetime Standard §2.6).
+
+**Choose `ExactBrightAtto` when:** building consensus timestamps, archival storage, spacetime vectors, or any path where a microsecond today must remain exactly one microsecond in fifty years.
+
+### 3.2 `ExactBrightDate` — picosecond engine (optional)
+
+Same semantics as §3.1 but internal unit is **picoseconds** (`EBD1:` wire prefix). Bit-exact round-trip with integer Unix milliseconds. Convert to `ExactBrightAtto` without loss when sub-picosecond ticks are zero.
+
+**Choose `ExactBrightDate` when:** you standardised on picoseconds before attoseconds, or you only need millisecond-aligned Unix-ms consensus.
+
+### 3.3 `BrightInstant` — BigInt TAI seconds + nanoseconds
+
+Nanosecond rigour without attosecond magnitude in the type name. Ideal for GPS / NTP pipelines that already think in seconds + ns.
+
+### 3.4 `BrightDate` — Float64 decimal days (v1 dashboard)
+
+The **presentation lens**. Stores signed decimal SI days for ergonomic astronomy, scheduling, logging, and widgets. For the current era (~BD 9,600–11,000), Float64 provides ~190 ns worst-case ULP — fine for display, risky as the *only* storage layer in consensus systems.
 
 **Float64 resolution by era (worst-case ULP at the upper end of the row's magnitude):**
 
@@ -148,34 +189,21 @@ The primary type. Stores the signed day count as a 64-bit IEEE 754 double. For t
 
 Float64 covers 287,000+ years without losing sub-microsecond resolution. The resolution at the epoch itself is bounded only by IEEE 754 sub-normals and is not engineering-meaningful; treat the **1-day row as the practical floor** — any timestamp other than the epoch instant lives there or further out.
 
-**Choose `BrightDate` when:** doing astronomy, scheduling, analytics, logging, display, or interval arithmetic, and when timestamps will be compared and diffed rather than exactly reconstructed.
+**Choose `BrightDate` when:** doing astronomy, scheduling, analytics, logging, display, or interval arithmetic on the v1 Float64 API — and **always** back it with `ExactBrightAtto` (or `ExactBrightDate`) at persistence boundaries.
 
-### 3.2 `BrightInstant` — BigInt TAI Seconds + Integer Nanoseconds
-
-Stores TAI seconds since J2000.0 as a `BigInt` plus an integer nanosecond remainder. Provides exact 1-nanosecond precision at any magnitude with no Float64 drift. The rigorous form for distributed systems, GPS engineering, and interplanetary mission timing.
-
-**Choose `BrightInstant` when:** nanosecond fidelity must be maintained indefinitely far from the epoch, or when system clocks are the input source (e.g., GPS receiver, NTP-disciplined oscillator).
-
-### 3.3 `ExactBrightDate` — BigInt Picoseconds
-
-Stores the full timestamp as a BigInt count of picoseconds from J2000.0. Provides bit-exact round-trips for any integer Unix-millisecond input:
+### 3.5 Mixing types
 
 ```typescript
-const ms = 1_700_000_000_123;
-ExactBrightDate.fromUnixMs(ms).toUnixMs() === ms; // true, always, unconditionally
-```
+// Canonical store → dashboard (divmod; lossy only in the final Float64)
+const canonical = ExactBrightAtto.fromUnixMs(Date.now());
+const bd = BrightDate.fromExactBrightAtto(canonical); // v1 Float64 view
 
-**Choose `ExactBrightDate` when:** you must return user-supplied Unix milliseconds byte-identical, for blockchain consensus on exact timestamps, or for century-scale archival without drift accumulation.
+// Dashboard → canonical (lossy if float has sub-tick detail)
+const back = bd.toExactBrightAtto();
 
-### 3.4 Mixing Types
-
-The three types are designed to interoperate at boundaries:
-
-```typescript
-// Store with full fidelity; compute with Float64 speed
-const exact = ExactBrightDate.fromUnixMs(Date.now());
-const bd    = BrightDate.fromValue(exact.toBrightDateValue()); // lossy to Float64 res
-const inst  = BrightInstant.fromBrightDate(bd);               // lossless within Float64 res
+// Picosecond engine ↔ attosecond engine (exact when ps % 10⁶ === 0)
+const ps = ExactBrightDate.fromUnixMs(1_700_000_000_123);
+const atto = ExactBrightAtto.fromExactBrightDate(ps);
 ```
 
 ---
@@ -299,7 +327,7 @@ toBinary(9622.50417);          // 8-byte ArrayBuffer (big-endian IEEE 754)
 fromBinary(buf);               // bit-exact round-trip
 ```
 
-`ExactBrightDate` uses a 16-byte big-endian two's complement representation for its BigInt picosecond value.
+`ExactBrightAtto` and `ExactBrightDate` both use the same **16-byte big-endian two's-complement** wire layout; only the tick quantum (attoseconds vs picoseconds) differs. Encoded text forms: `EBA1:<attoseconds>`, `EBD1:<picoseconds>`.
 
 ---
 
