@@ -13154,6 +13154,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@vitest/pretty-format@npm:4.1.7":
+  version: 4.1.7
+  resolution: "@vitest/pretty-format@npm:4.1.7"
+  dependencies:
+    tinyrainbow: "npm:^3.1.0"
+  checksum: 10/79c86c39173577250955744c3444d8c0c9304c95c7d351b91a916229252c3733a0e969741a8f3441a5c4777b5a4371707ecb747ea4bfd2c07e72ddf1ef621293
+  languageName: node
+  linkType: hard
+
 "@vitest/runner@npm:2.1.9":
   version: 2.1.9
   resolution: "@vitest/runner@npm:2.1.9"
@@ -13213,28 +13222,11 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@vitest/ui@npm:^2.1.8":
-  version: 2.1.9
-  resolution: "@vitest/ui@npm:2.1.9"
+"@vitest/ui@npm:^4.1.7":
+  version: 4.1.7
+  resolution: "@vitest/ui@npm:4.1.7"
   dependencies:
-    "@vitest/utils": "npm:2.1.9"
-    fflate: "npm:^0.8.2"
-    flatted: "npm:^3.3.1"
-    pathe: "npm:^1.1.2"
-    sirv: "npm:^3.0.0"
-    tinyglobby: "npm:^0.2.10"
-    tinyrainbow: "npm:^1.2.0"
-  peerDependencies:
-    vitest: 2.1.9
-  checksum: 10/dd96c9cd93ded45816ac71ea102c578ea8460ccb5eb2c8ea4e8d330c68d35dcafd63c66b8153b145cbfd2f1004232d66004abc6125b28d0d0e08538f99471fa8
-  languageName: node
-  linkType: hard
-
-"@vitest/ui@npm:^4.0.0":
-  version: 4.1.5
-  resolution: "@vitest/ui@npm:4.1.5"
-  dependencies:
-    "@vitest/utils": "npm:4.1.5"
+    "@vitest/utils": "npm:4.1.7"
     fflate: "npm:^0.8.2"
     flatted: "npm:^3.4.2"
     pathe: "npm:^2.0.3"
@@ -13242,8 +13234,8 @@ __metadata:
     tinyglobby: "npm:^0.2.15"
     tinyrainbow: "npm:^3.1.0"
   peerDependencies:
-    vitest: 4.1.5
-  checksum: 10/e318d78d60d100fe8717d841be07ff920ae91e5655d4e35048be057099cd697026c1fffbc0587760095422b77a1708c433bf8449500d0197a2a67a44f02a8edc
+    vitest: 4.1.7
+  checksum: 10/d8453578832f0d1f70ad5098bf677962758d06fbe1b9f75a532929fe0f3529de1b7c9a80bb795f9b0a5c034b7d098b080638226466c640ed12ab80a62dfef904
   languageName: node
   linkType: hard
 
@@ -13266,6 +13258,17 @@ __metadata:
     convert-source-map: "npm:^2.0.0"
     tinyrainbow: "npm:^3.1.0"
   checksum: 10/4f75a2df6f910578a361ae92eb92a2b6921f50cc748994f3b2e5900d0ae687b6683f33b090dedf9b96eaca23bac117817d9448a4a333c7a96b94ee767399f18c
+  languageName: node
+  linkType: hard
+
+"@vitest/utils@npm:4.1.7":
+  version: 4.1.7
+  resolution: "@vitest/utils@npm:4.1.7"
+  dependencies:
+    "@vitest/pretty-format": "npm:4.1.7"
+    convert-source-map: "npm:^2.0.0"
+    tinyrainbow: "npm:^3.1.0"
+  checksum: 10/9cc729618dade24de3ad6862c288c22e9daac3fda5cae0abc9b6ce87035cc8e7efa2b66c3c124ae08beef462b36761b062e792bbc619798b832a7ea9382ed12a
   languageName: node
   linkType: hard
 
@@ -15150,7 +15153,7 @@ __metadata:
     "@types/react-router-dom": "npm:^5.3.3"
     "@uiw/react-md-editor": "npm:^4.0.11"
     "@vitejs/plugin-react": "npm:^5.1.1"
-    "@vitest/ui": "npm:^2.1.8"
+    "@vitest/ui": "npm:^4.1.7"
     bson: "npm:^6.10.4"
     currency-codes: "npm:^2.2.0"
     eslint: "npm:^9.39.1"
@@ -15320,7 +15323,7 @@ __metadata:
     "@typescript-eslint/eslint-plugin": "npm:8.50.1"
     "@typescript-eslint/parser": "npm:8.50.1"
     "@vitejs/plugin-react": "npm:^4.2.0"
-    "@vitest/ui": "npm:^4.0.0"
+    "@vitest/ui": "npm:^4.1.7"
     ajv: "npm:^8.0.0"
     axios: "npm:^1.13.6"
     babel-jest: "npm:30.0.5"
@@ -19776,7 +19779,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"flatted@npm:^3.2.7, flatted@npm:^3.2.9, flatted@npm:^3.3.1, flatted@npm:^3.4.2":
+"flatted@npm:^3.2.7, flatted@npm:^3.2.9, flatted@npm:^3.4.2":
   version: 3.4.2
   resolution: "flatted@npm:3.4.2"
   checksum: 10/a9e78fe5c2c1fcd98209a015ccee3a6caa953e01729778e83c1fe92e68601a63e1e69cd4e573010ca99eaf585a581b80ccf1018b99283e6cbc2117bcba1e030f
@@ -30695,7 +30698,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"sirv@npm:^3.0.0, sirv@npm:^3.0.2":
+"sirv@npm:^3.0.2":
   version: 3.0.2
   resolution: "sirv@npm:3.0.2"
   dependencies:
@@ -31839,7 +31842,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tinyglobby@npm:^0.2.10, tinyglobby@npm:^0.2.12, tinyglobby@npm:^0.2.13, tinyglobby@npm:^0.2.15, tinyglobby@npm:^0.2.16":
+"tinyglobby@npm:^0.2.12, tinyglobby@npm:^0.2.13, tinyglobby@npm:^0.2.15, tinyglobby@npm:^0.2.16":
   version: 0.2.16
   resolution: "tinyglobby@npm:0.2.16"
   dependencies:
