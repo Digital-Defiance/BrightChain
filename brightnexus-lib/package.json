@@ -10,6 +10,8 @@
   "scripts": {
     "build": "npx nx build brightnexus-lib",
     "test": "npx nx test brightnexus-lib",
-    "lint": "npx nx lint brightnexus-lib"
+    "lint": "npx nx lint brightnexus-lib",
+    "build:dev": "npx nx build brightnexus-lib --configuration=development",
+    "build:prod": "npx nx build brightnexus-lib --configuration=production"
   }
 }
