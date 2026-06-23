@@ -1,0 +1,32 @@
+{
+  "name": "@brightchain/brightnexus-react-components",
+  "version": "0.32.1",
+  "description": "React UI for BrightNexus BSLP geo registry",
+  "main": "./index.js",
+  "module": "./index.mjs",
+  "types": "./index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "import": "./index.mjs",
+      "require": "./index.js"
+    }
+  },
+  "peerDependencies": {
+    "@emotion/react": ">=11.0.0",
+    "@emotion/styled": ">=11.0.0",
+    "@mui/material": ">=5.0.0",
+    "react": ">=18.0.0",
+    "react-dom": ">=18.0.0"
+  },
+  "dependencies": {
+    "@brightchain/brightnexus-api-lib": "^0.32.1",
+    "@brightchain/brightnexus-lib": "^0.32.1",
+    "axios": "^1.13.6",
+    "tslib": "^2.3.0"
+  },
+  "scripts": {
+    "build": "npx nx build brightnexus-react-components",
+    "lint": "npx nx lint brightnexus-react-components"
+  }
+}

@@ -11,6 +11,8 @@
     "@aws-sdk/client-ses": "^3.859.0",
     "@brightchain/brightchain-identity": "^0.32.1",
     "@brightchain/brightchain-lib": "^0.32.1",
+    "@brightchain/brightnexus-api-lib": "^0.32.1",
+    "@brightchain/brightnexus-lib": "^0.32.1",
     "@brightchain/db": "^0.32.1",
     "@brightchain/node-express-suite": "^0.32.1",
     "@digitaldefiance/branded-enum": "0.0.7",

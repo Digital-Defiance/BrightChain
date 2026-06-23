@@ -1,0 +1,53 @@
+{
+  "name": "brightnexus-api-lib",
+  "sourceRoot": "brightnexus-api-lib/src",
+  "projectType": "library",
+  "tags": ["type:lib", "scope:brightnexus"],
+  "implicitDependencies": ["brightnexus-lib"],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/brightnexus-api-lib",
+        "main": "brightnexus-api-lib/src/index.ts",
+        "tsConfig": "brightnexus-api-lib/tsconfig.lib.json",
+        "assets": [
+          {
+            "input": "brightnexus-api-lib",
+            "glob": "*.md",
+            "output": "."
+          },
+          {
+            "input": "brightnexus-api-lib",
+            "glob": "package.json",
+            "output": "."
+          }
+        ]
+      },
+      "dependsOn": ["^build"],
+      "configurations": {
+        "development": {},
+        "production": {}
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "brightnexus-api-lib/jest.config.cts",
+        "passWithNoTests": true
+      }
+    },
+    "publish": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npm publish --access public",
+        "cwd": "dist/brightnexus-api-lib"
+      }
+    }
+  }
+}

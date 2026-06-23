@@ -96,6 +96,7 @@ export class Environment<TID extends PlatformID = DefaultBackendIdType>
             BrightChainFeatures.BrightHub,
             BrightChainFeatures.BrightMail,
             BrightChainFeatures.BrightPass,
+            BrightChainFeatures.BrightNexus,
           ];
 
     const emailServiceRaw = (envObj['EMAIL_SERVICE'] ?? EmailServices.Fake)

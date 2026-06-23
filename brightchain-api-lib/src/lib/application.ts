@@ -60,6 +60,7 @@ import { BrightChatSubsystemPlugin } from './plugins/subsystems/brightChatSubsys
 import { BrightHubSubsystemPlugin } from './plugins/subsystems/brightHubSubsystemPlugin';
 import { BrightPassSubsystemPlugin } from './plugins/subsystems/brightPassSubsystemPlugin';
 import { BrightTrustSubsystemPlugin } from './plugins/subsystems/brightTrustSubsystemPlugin';
+import { BrightNexusSubsystemPlugin } from './plugins/subsystems/brightNexusSubsystemPlugin';
 import { BurnbagSubsystemPlugin } from './plugins/subsystems/burnbagSubsystemPlugin';
 import { EmailSubsystemPlugin } from './plugins/subsystems/emailSubsystemPlugin';
 import { EmailGatewaySubsystemPlugin } from './plugins/subsystems/emailGatewaySubsystemPlugin';
@@ -147,6 +148,7 @@ export class App<TID extends PlatformID>
     // Register subsystem plugins (initialized in insertion order during start())
     this.registerSubsystemPlugin(new EmailSubsystemPlugin());
     this.registerSubsystemPlugin(new BurnbagSubsystemPlugin());
+    this.registerSubsystemPlugin(new BrightNexusSubsystemPlugin());
     this.registerSubsystemPlugin(new EmailGatewaySubsystemPlugin());
     this.registerSubsystemPlugin(new BrightHubSubsystemPlugin());
     this.registerSubsystemPlugin(new BrightChatSubsystemPlugin());

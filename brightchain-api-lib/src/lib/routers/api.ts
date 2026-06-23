@@ -25,6 +25,10 @@ import {
   IUserProfileService,
 } from '@brightchain/brighthub-lib';
 import {
+  type IAllBrightNexusControllerDeps,
+  registerBrightNexusRoutesOnRouter,
+} from '@brightchain/brightnexus-api-lib';
+import {
   type IAllBurnbagControllerDeps,
   registerBurnbagRoutesOnRouter,
 } from '@brightchain/digitalburnbag-api-lib';
@@ -98,6 +102,7 @@ import { IBrightChainApplication } from '../interfaces';
 import { RateTableCache } from '../joule/rateTableCache';
 import { requireAuth, requireAuthWithRoles } from '../middlewares/authentication';
 import { createBrightDateRateLimiter } from '../middlewares/brightdate-rate-limiter';
+import { createBrightNexusLookupRateLimiter } from '../middlewares/brightnexus-lookup-rate-limiter';
 import { EventNotificationSystem } from '../services/eventNotificationSystem';
 import { MessagePassingService } from '../services/messagePassingService';
 import { StagingCleanupScheduler, StagingService } from '../services/staging';
@@ -997,6 +1002,29 @@ export class ApiRouter<
       this.brightchainApplication,
       deps,
       '/burnbag',
+    );
+  }
+
+  /**
+   * Mount BrightNexus BSLP geo registry routes (DHT publication tier).
+   * Routes: `/brightnexus/location/*`
+   */
+  public mountBrightNexusRoutes(
+    deps: IAllBrightNexusControllerDeps<TID>,
+  ): void {
+    if (
+      !this.brightchainApplication.environment.enabledFeatures.some(
+        (f) => f === BrightChainFeatures.BrightNexus,
+      )
+    ) {
+      return;
+    }
+    registerBrightNexusRoutesOnRouter<TID>(
+      this.router,
+      this.brightchainApplication,
+      deps,
+      '/brightnexus/location',
+      { publicReadRateLimiter: createBrightNexusLookupRateLimiter() },
     );
   }
 

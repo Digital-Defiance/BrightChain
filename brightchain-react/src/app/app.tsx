@@ -115,6 +115,7 @@ import GroupIcon from '@mui/icons-material/Group';
 import LabelIcon from '@mui/icons-material/Label';
 import LocalHospitalIcon from '@mui/icons-material/LocalHospital';
 import SendIcon from '@mui/icons-material/Send';
+import PublicIcon from '@mui/icons-material/Public';
 import TimelineIcon from '@mui/icons-material/Timeline';
 import { Box, CircularProgress, CssBaseline } from '@mui/material';
 import { LocalizationProvider } from '@mui/x-date-pickers';
@@ -228,6 +229,9 @@ const brightPassEnabled = enabledFeatures.includes(
 const burnbagEnabled = enabledFeatures.includes(
   BrightChainFeatures.DigitalBurnbag,
 );
+const brightNexusEnabled = enabledFeatures.includes(
+  BrightChainFeatures.BrightNexus,
+);
 const brightChartEnabled = enabledFeatures.includes(
   BrightChainFeatures.BrightChart,
 );
@@ -289,6 +293,14 @@ let BurnbagRoutes: LazyExoticComponent<FC<object>>;
 if (burnbagEnabled) {
   BurnbagRoutes = lazy(() =>
     import('./burnbag-routes').then((m) => ({
+      default: m.default,
+    })),
+  );
+}
+let BrightNexusRoutes: LazyExoticComponent<FC<object>>;
+if (brightNexusEnabled) {
+  BrightNexusRoutes = lazy(() =>
+    import('./brightnexus-routes').then((m) => ({
       default: m.default,
     })),
   );
@@ -475,6 +487,7 @@ const InnerApp: FC = () => {
   const mailMenu = createMenuType(String(IncludeOnMenu.BrightMailMenu));
   const passMenu = createMenuType(String(IncludeOnMenu.BrightPassMenu));
   const dateMenu = createMenuType(String(IncludeOnMenu.BrightDateMenu));
+  const brightNexusMenu = createMenuType(String(IncludeOnMenu.BrightNexusMenu));
   const brightMailMenuConfig: IMenuConfig = {
     menuType: mailMenu,
     menuIcon: <FontAwesomeIcon icon={faEnvelope} />,
@@ -736,6 +749,31 @@ const InnerApp: FC = () => {
   };
   indexPriority += 100;
 
+  const brightNexusMenuConfig: IMenuConfig = {
+    menuType: brightNexusMenu,
+    menuIcon: <PublicIcon />,
+    label: 'Nexus',
+    category: 'apps',
+    priority: indexPriority,
+    options: [
+      {
+        id: 'brightnexus-registry',
+        label: (
+          <BrightChainSubLogo leadText="Bright" subText="Nexus" height={24} />
+        ),
+        includeOnMenus: [brightNexusMenu, MenuTypes.SideMenu],
+        index: indexPriority,
+        icon: <PublicIcon />,
+        link: '/brightnexus',
+        requiresAuth: true,
+      },
+    ],
+    action: () => {
+      navigate('/brightnexus');
+    },
+  };
+  indexPriority += 100;
+
   const brightChartMenuConfig: IMenuConfig = {
     menuType: chartMenu,
     menuIcon: <FontAwesomeIcon icon={faBookMedical} />,
@@ -822,6 +860,7 @@ const InnerApp: FC = () => {
   const featureMenuMap: [BrightChainFeatures, IMenuConfig][] = [
     [BrightChainFeatures.Games, gamesMenuConfig],
     [BrightChainFeatures.DigitalBurnbag, digitalBurnbagMenuConfig],
+    [BrightChainFeatures.BrightNexus, brightNexusMenuConfig],
     [BrightChainFeatures.BrightMail, brightMailMenuConfig],
     [BrightChainFeatures.BrightPass, brightPassMenuConfig],
     [BrightChainFeatures.BrightHub, brightHubMenuConfig],
@@ -1140,6 +1179,9 @@ const InnerApp: FC = () => {
               )}
               {BurnbagRoutes && (
                 <Route path="/burnbag/*" element={<BurnbagRoutes />} />
+              )}
+              {BrightNexusRoutes && (
+                <Route path="/brightnexus/*" element={<BrightNexusRoutes />} />
               )}
               <Route path="/explorer/*" element={<BlockExplorerRoutes />} />
               <Route path="/game/*" element={<SubspaceLatticeRoutes />} />

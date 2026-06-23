@@ -6,4 +6,5 @@ export enum BrightChainFeatures {
   BrightMail = 'BrightMail',
   BrightPass = 'BrightPass',
   DigitalBurnbag = 'DigitalBurnbag',
+  BrightNexus = 'BrightNexus',
 }

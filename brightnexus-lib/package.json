@@ -1,0 +1,15 @@
+{
+  "name": "@brightchain/brightnexus-lib",
+  "version": "0.32.1",
+  "type": "commonjs",
+  "main": "./src/index.js",
+  "types": "./src/index.d.ts",
+  "dependencies": {
+    "tslib": "^2.3.0"
+  },
+  "scripts": {
+    "build": "npx nx build brightnexus-lib",
+    "test": "npx nx test brightnexus-lib",
+    "lint": "npx nx lint brightnexus-lib"
+  }
+}

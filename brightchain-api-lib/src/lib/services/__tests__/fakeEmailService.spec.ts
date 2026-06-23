@@ -7,7 +7,10 @@ import { FakeEmailService } from '@digitaldefiance/node-express-suite';
 import express from 'express';
 import fc from 'fast-check';
 import request from 'supertest';
-import { createTestEmailRouter } from '../../routers/testEmailRouter';
+import {
+  createTestEmailRouter,
+  listCapturedEmailsForAddress,
+} from '../../routers/testEmailRouter';
 
 // --- Arbitraries ---
 
@@ -268,26 +271,16 @@ describe('FakeEmailService – Property Tests', () => {
 
     /**
      * For any email sent via the FakeEmailService during a test run,
-     * a GET /api/test/emails/:address request with the recipient address
-     * should return a response containing that email's subject, text,
-     * and HTML body.
+     * the test email router handler (GET /api/test/emails/:address) must
+     * return that email's subject, text, and HTML body.
+     *
+     * Property iterations call `listCapturedEmailsForAddress` directly so
+     * fast-check is not coupled to supertest sockets (avoids ECONNRESET flakes).
      *
      * **Validates: Requirements 5.8**
      */
 
-    function createApp(): express.Express {
-      const a = express();
-      a.use('/api/test', createTestEmailRouter());
-      return a;
-    }
-
-    // Create app once to avoid server churn across property iterations
-    let app: express.Express;
-    beforeEach(() => {
-      app = createApp();
-    });
-
-    it('GET /api/test/emails/:address returns emails stored via sendEmail', async () => {
+    it('listCapturedEmailsForAddress returns emails stored via sendEmail', async () => {
       await fc.assert(
         fc.asyncProperty(
           emailArb,
@@ -299,49 +292,19 @@ describe('FakeEmailService – Property Tests', () => {
 
             await service.sendEmail(to, subject, text, html);
 
-            try {
-              const res = await request(app)
-                .get(`/api/test/emails/${encodeURIComponent(to)}`)
-                .expect(200);
-
-              const emails = res.body;
-              expect(Array.isArray(emails)).toBe(true);
-              expect(emails).toHaveLength(1);
-              expect(emails[0].to).toBe(to);
-              expect(emails[0].subject).toBe(subject);
-              expect(emails[0].text).toBe(text);
-              expect(emails[0].html).toBe(html);
-            } catch (err: unknown) {
-              // Supertest can race with Express under parallel test load,
-              // producing ECONNRESET or transient status mismatches.
-              // This is a test-infrastructure artifact, not a real bug.
-              if (err instanceof Error) {
-                const code = (err as NodeJS.ErrnoException).code;
-                if (code === 'ECONNRESET' || code === 'ECONNREFUSED') {
-                  return;
-                }
-                // Under heavy parallel test load, supertest/Express can
-                // produce transient mismatches (e.g. 404, 400, socket
-                // hang up) due to socket recycling. Test-infra artifact.
-                if (
-                  err.message?.includes('ECONNRESET') ||
-                  err.message?.includes('ECONNREFUSED') ||
-                  err.message?.includes('socket hang up') ||
-                  err.message?.includes('got 404') ||
-                  err.message?.includes('got 400') ||
-                  err.message?.includes('got 500')
-                ) {
-                  return;
-                }
-              }
-              throw err;
-            }          },
+            const emails = listCapturedEmailsForAddress(to);
+            expect(emails).toHaveLength(1);
+            expect(emails[0].to).toBe(to);
+            expect(emails[0].subject).toBe(subject);
+            expect(emails[0].text).toBe(text);
+            expect(emails[0].html).toBe(html);
+          },
         ),
-        { numRuns: 30 },
+        { numRuns: 100 },
       );
     });
 
-    it('GET /api/test/emails/:address returns multiple emails for same recipient', async () => {
+    it('listCapturedEmailsForAddress returns multiple emails for same recipient', async () => {
       await fc.assert(
         fc.asyncProperty(
           emailArb,
@@ -356,77 +319,51 @@ describe('FakeEmailService – Property Tests', () => {
               await service.sendEmail(to, subject, text, html);
             }
 
-            try {
-              const res = await request(app)
-                .get(`/api/test/emails/${encodeURIComponent(to)}`)
-                .expect(200);
+            const emails = listCapturedEmailsForAddress(to);
+            expect(emails).toHaveLength(emailData.length);
 
-              const emails = res.body;
-              expect(emails).toHaveLength(emailData.length);
-
-              for (let i = 0; i < emailData.length; i++) {
-                expect(emails[i].subject).toBe(emailData[i][0]);
-                expect(emails[i].text).toBe(emailData[i][1]);
-                expect(emails[i].html).toBe(emailData[i][2]);
-              }
-            } catch (err: unknown) {
-              // Supertest can race with Express under parallel test load,
-              // producing ECONNRESET or transient status mismatches.
-              // This is a test-infrastructure artifact, not a real bug.
-              if (err instanceof Error) {
-                const code = (err as NodeJS.ErrnoException).code;
-                if (code === 'ECONNRESET' || code === 'ECONNREFUSED') {
-                  return;
-                }
-                // Transient supertest status assertion failures under heavy
-                // parallel test load (socket recycling, peer close).
-                if (
-                  err.message?.includes('socket hang up') ||
-                  err.message?.includes('got 404') ||
-                  err.message?.includes('got 400') ||
-                  err.message?.includes('got 500')
-                ) {
-                  return;
-                }
-              }
-              throw err;
+            for (let i = 0; i < emailData.length; i++) {
+              expect(emails[i].subject).toBe(emailData[i][0]);
+              expect(emails[i].text).toBe(emailData[i][1]);
+              expect(emails[i].html).toBe(emailData[i][2]);
             }
           },
         ),
-        { numRuns: 30 },
+        { numRuns: 100 },
       );
     });
 
-    it('GET /api/test/emails/:address returns empty array for unknown address', async () => {
+    it('listCapturedEmailsForAddress returns empty array for unknown address', async () => {
       await fc.assert(
         fc.asyncProperty(emailArb, async (to) => {
           service.clear();
-
-          try {
-            const res = await request(app)
-              .get(`/api/test/emails/${encodeURIComponent(to)}`)
-              .expect(200);
-
-            expect(res.body).toEqual([]);
-          } catch (err: unknown) {
-            if (err instanceof Error) {
-              const code = (err as NodeJS.ErrnoException).code;
-              if (
-                code === 'ECONNRESET' ||
-                code === 'ECONNREFUSED' ||
-                err.message?.includes('socket hang up') ||
-                err.message?.includes('got 404') ||
-                err.message?.includes('got 400') ||
-                err.message?.includes('got 500')
-              ) {
-                return;
-              }
-            }
-            throw err;
-          }
+          expect(listCapturedEmailsForAddress(to)).toEqual([]);
         }),
-        { numRuns: 20 },
+        { numRuns: 100 },
       );
+    });
+  });
+
+  describe('Property 10 (HTTP): test email router via supertest', () => {
+    function createApp(): express.Express {
+      const a = express();
+      a.use('/api/test', createTestEmailRouter());
+      return a;
+    }
+
+    it('GET /api/test/emails/:address returns stored email JSON', async () => {
+      const app = createApp();
+      const to = 'property10-http@example.com';
+
+      service.clear();
+      await service.sendEmail(to, 'subject', 'text', '<p>html</p>');
+
+      const res = await request(app)
+        .get(`/api/test/emails/${encodeURIComponent(to)}`)
+        .expect(200);
+
+      expect(res.body).toHaveLength(1);
+      expect(res.body[0].subject).toBe('subject');
     });
   });
 });

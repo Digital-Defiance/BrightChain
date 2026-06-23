@@ -35,6 +35,7 @@ jest.setTimeout(180_000);
 const STATIC_PLUGINS = [
   'email',
   'burnbag',
+  'brightnexus',
   'email-gateway',
   'brighthub',
   'brightchat',
@@ -234,6 +235,7 @@ describe('Expected subsystem plugin inventory', () => {
         'email',
         'email-gateway',
         'burnbag',
+        'brightnexus',
         'brighthub',
         'brightchat',
         'brightpass',
@@ -241,6 +243,6 @@ describe('Expected subsystem plugin inventory', () => {
         'brightcal',
       ]),
     );
-    expect(ALL_EXPECTED_PLUGINS).toHaveLength(8);
+    expect(ALL_EXPECTED_PLUGINS).toHaveLength(9);
   });
 });

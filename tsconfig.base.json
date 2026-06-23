@@ -122,6 +122,24 @@
       "@digitaldefiance/node-ecies-lib/src/*": [
         "node_modules/@digitaldefiance/node-ecies-lib/src/*"
       ],
+      "@brightchain/brightnexus-lib": [
+        "brightnexus-lib/src/index.ts"
+      ],
+      "@brightchain/brightnexus-lib/*": [
+        "brightnexus-lib/src/*"
+      ],
+      "@brightchain/brightnexus-api-lib": [
+        "brightnexus-api-lib/src/index.ts"
+      ],
+      "@brightchain/brightnexus-api-lib/*": [
+        "brightnexus-api-lib/src/*"
+      ],
+      "@brightchain/brightnexus-react-components": [
+        "brightnexus-react-components/src/index.ts"
+      ],
+      "@brightchain/brightnexus-react-components/*": [
+        "brightnexus-react-components/src/*"
+      ],
       "@brightchain/digitalburnbag-lib": [
         "digitalburnbag-lib/src/index.ts"
       ],

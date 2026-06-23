@@ -1,0 +1,31 @@
+{
+  "name": "brightnexus-react-components",
+  "sourceRoot": "brightnexus-react-components/src",
+  "projectType": "library",
+  "tags": ["type:lib", "scope:brightnexus"],
+  "implicitDependencies": ["brightnexus-lib", "brightchain-react-components"],
+  "targets": {
+    "build": {
+      "executor": "@nx/vite:build",
+      "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
+      "options": {
+        "outputPath": "dist/brightnexus-react-components"
+      },
+      "configurations": {
+        "development": { "mode": "development" },
+        "production": { "mode": "production" }
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    },
+    "publish": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npm publish --access public",
+        "cwd": "dist/brightnexus-react-components"
+      }
+    }
+  }
+}

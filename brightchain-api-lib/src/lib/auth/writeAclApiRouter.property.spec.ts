@@ -16,6 +16,9 @@ import fc from 'fast-check';
 import request from 'supertest';
 
 import {
+  brightDateNow,
+  brightDateToISO,
+  normalizeToBrightDate,
   type IAclDocument,
   type IBlockStore,
   type INodeAuthenticator,
@@ -88,6 +91,27 @@ function computeAclMutationPayload(aclDoc: IAclDocument): Uint8Array {
 /** Create a valid admin signature for a given ACL document. */
 function makeValidSignature(aclDoc: IAclDocument): Uint8Array {
   const payload = computeAclMutationPayload(aclDoc);
+  const sig = new Uint8Array(64);
+  sig[0] = payload[0];
+  return sig;
+}
+
+/**
+ * Capability token payload hash — must match WriteAclManager.createCapabilityTokenPayload.
+ */
+function computeCapabilityTokenPayload(
+  granteeHex: string,
+  dbName: string,
+  collectionName: string,
+  expiresAtIso: string,
+): Uint8Array {
+  const expiresAt = normalizeToBrightDate(expiresAtIso);
+  const message = `${granteeHex}:${dbName}:${collectionName}:${brightDateToISO(expiresAt)}`;
+  return sha256(new TextEncoder().encode(message));
+}
+
+/** Valid admin/grantor signature for a capability token (MockAuthenticator). */
+function makeValidTokenSignature(payload: Uint8Array): Uint8Array {
   const sig = new Uint8Array(64);
   sig[0] = payload[0];
   return sig;
@@ -292,28 +316,27 @@ describe('Feature: brightdb-write-acls, Property 14: API Admin Authentication En
               break;
             }
             case 'post-tokens': {
-              // issueCapabilityToken checks isAclAdministrator then verifies
-              // the admin signature over the token payload
               const granteeKey = makePublicKey(0x99);
               const granteeHex = Buffer.from(granteeKey).toString('hex');
-              const expiresAt = new Date(Date.now() + 3600000);
+              const expiresAt = brightDateNow() + 3_600_000 / 86_400_000;
+              const expiresAtIso = brightDateToISO(expiresAt);
               const collName = '';
-              const tokenPayloadMsg = `${granteeHex}:${dbName}:${collName}:${expiresAt.toISOString()}`;
-              const tokenPayload = sha256(
-                new TextEncoder().encode(tokenPayloadMsg),
+              const tokenPayload = computeCapabilityTokenPayload(
+                granteeHex,
+                dbName,
+                collName,
+                expiresAtIso,
               );
-              const tokenSig = new Uint8Array(64);
-              tokenSig[0] = tokenPayload[0];
+              const tokenSig = makeValidTokenSignature(tokenPayload);
               const tokenSigHex = Buffer.from(tokenSig).toString('hex');
 
-              // The admin signature header is used for issueCapabilityToken
               res = await request(server)
                 .post(`/acl/${dbName}/tokens`)
                 .set('X-Acl-Admin-Signature', tokenSigHex)
                 .set('X-Acl-Admin-PublicKey', adminKeyHex)
                 .send({
                   granteePublicKey: granteeHex,
-                  expiresAt: expiresAt.toISOString(),
+                  expiresAt: expiresAtIso,
                   grantorSignature: tokenSigHex,
                   grantorPublicKey: adminKeyHex,
                 });
@@ -383,22 +406,21 @@ describe('Feature: brightdb-write-acls, Property 14: API Admin Authentication En
               break;
             }
             case 'post-tokens': {
-              // Compute the actual token payload hash so we can ensure the
-              // signature's first byte differs from it (the MockAuthenticator
-              // checks signature[0] === challenge[0]).
               const granteeKeyInvalid = Uint8Array.from(
                 Buffer.from('cc'.repeat(33), 'hex'),
               );
               const granteeHexInvalid =
                 Buffer.from(granteeKeyInvalid).toString('hex');
-              const expiresAtInvalid = new Date(Date.now() + 3600000);
+              const expiresAtInvalid = brightDateNow() + 3_600_000 / 86_400_000;
+              const expiresAtIsoInvalid = brightDateToISO(expiresAtInvalid);
               const collNameInvalid = '';
-              const tokenPayloadMsgInvalid = `${granteeHexInvalid}:${dbName}:${collNameInvalid}:${expiresAtInvalid.toISOString()}`;
-              const tokenPayloadInvalid = sha256(
-                new TextEncoder().encode(tokenPayloadMsgInvalid),
+              const tokenPayloadInvalid = computeCapabilityTokenPayload(
+                granteeHexInvalid,
+                dbName,
+                collNameInvalid,
+                expiresAtIsoInvalid,
               );
               const wrongSig = new Uint8Array(64);
-              // Ensure first byte differs from the payload hash
               wrongSig[0] = (tokenPayloadInvalid[0] + 1) % 256;
               const wrongSigHex = Buffer.from(wrongSig).toString('hex');
 
@@ -408,7 +430,7 @@ describe('Feature: brightdb-write-acls, Property 14: API Admin Authentication En
                 .set('X-Acl-Admin-PublicKey', adminKeyHex)
                 .send({
                   granteePublicKey: granteeHexInvalid,
-                  expiresAt: expiresAtInvalid.toISOString(),
+                  expiresAt: expiresAtIsoInvalid,
                   grantorSignature: wrongSigHex,
                   grantorPublicKey: adminKeyHex,
                 });

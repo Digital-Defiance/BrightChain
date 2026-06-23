@@ -9,6 +9,8 @@
     "brightchain-test-utils",
     "digitalburnbag-api-lib",
     "digitalburnbag-lib",
+    "brightnexus-api-lib",
+    "brightnexus-lib",
     "!brightcal-api-lib",
     "!brightledger-assets-api-lib"
   ],

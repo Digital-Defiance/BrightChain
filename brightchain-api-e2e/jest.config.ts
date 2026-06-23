@@ -36,6 +36,10 @@ export default {
       '<rootDir>/../brightchain-lib/src/$1',
     '^@brightchain/db$': '<rootDir>/../brightchain-db/src/index.ts',
     '^@brightchain/db/(.*)$': '<rootDir>/../brightchain-db/src/$1',
+    '^@brightchain/brightnexus-lib$':
+      '<rootDir>/../brightnexus-lib/src/index.ts',
+    '^@brightchain/brightnexus-api-lib$':
+      '<rootDir>/../brightnexus-api-lib/src/index.ts',
     '^@brightchain/test-utils$':
       '<rootDir>/../brightchain-test-utils/src/index.ts',
     '^@brightchain/test-utils/(.*)$':

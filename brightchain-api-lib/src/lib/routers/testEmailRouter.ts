@@ -5,8 +5,18 @@
  * @module routers/testEmailRouter
  */
 
-import { FakeEmailService } from '@digitaldefiance/node-express-suite';
+import {
+  FakeEmailService,
+  type CapturedEmail,
+} from '@digitaldefiance/node-express-suite';
 import { Request, Response, Router } from 'express';
+
+/**
+ * Returns captured test emails for a recipient (same data as GET /emails/:address).
+ */
+export function listCapturedEmailsForAddress(address: string): CapturedEmail[] {
+  return FakeEmailService.getInstance().getEmails(address);
+}
 
 /**
  * Creates an Express router that serves captured test emails.
@@ -30,8 +40,7 @@ export function createTestEmailRouter(): Router {
       res.status(400).json({ error: 'Invalid address parameter' });
       return;
     }
-    const emails = FakeEmailService.getInstance().getEmails(address);
-    res.json(emails);
+    res.json(listCapturedEmailsForAddress(address));
   });
 
   return router;

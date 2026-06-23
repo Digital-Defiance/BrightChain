@@ -1,0 +1,45 @@
+{
+  "name": "brightnexus-lib",
+  "sourceRoot": "brightnexus-lib/src",
+  "projectType": "library",
+  "tags": ["type:lib", "scope:brightnexus"],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/brightnexus-lib",
+        "main": "brightnexus-lib/src/index.ts",
+        "tsConfig": "brightnexus-lib/tsconfig.lib.json",
+        "assets": [
+          {
+            "input": "brightnexus-lib",
+            "glob": "*.md",
+            "output": "."
+          }
+        ]
+      },
+      "configurations": {
+        "development": {},
+        "production": {}
+      }
+    },
+    "publish": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npm publish --access public",
+        "cwd": "dist/brightnexus-lib"
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "brightnexus-lib/jest.config.cts"
+      }
+    }
+  }
+}

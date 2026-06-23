@@ -2861,6 +2861,48 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@brightchain/brightnexus-api-lib@npm:^0.32.1, @brightchain/brightnexus-api-lib@workspace:brightnexus-api-lib":
+  version: 0.0.0-use.local
+  resolution: "@brightchain/brightnexus-api-lib@workspace:brightnexus-api-lib"
+  dependencies:
+    "@brightchain/brightnexus-lib": "npm:^0.32.1"
+    "@brightchain/db": "npm:^0.32.1"
+    "@digitaldefiance/ecies-lib": "npm:5.2.2"
+    "@digitaldefiance/i18n-lib": "npm:4.7.5"
+    "@digitaldefiance/node-ecies-lib": "npm:5.2.2"
+    "@digitaldefiance/node-express-suite": "npm:4.28.3"
+    "@types/express": "npm:^5.0.3"
+    "@types/jest": "npm:^30.0.0"
+    "@types/node": "npm:^24.1.0"
+    express: "npm:^5.1.0"
+    tslib: "npm:^2.8.1"
+  languageName: unknown
+  linkType: soft
+
+"@brightchain/brightnexus-lib@npm:^0.32.1, @brightchain/brightnexus-lib@workspace:brightnexus-lib":
+  version: 0.0.0-use.local
+  resolution: "@brightchain/brightnexus-lib@workspace:brightnexus-lib"
+  dependencies:
+    tslib: "npm:^2.3.0"
+  languageName: unknown
+  linkType: soft
+
+"@brightchain/brightnexus-react-components@npm:^0.32.1, @brightchain/brightnexus-react-components@workspace:brightnexus-react-components":
+  version: 0.0.0-use.local
+  resolution: "@brightchain/brightnexus-react-components@workspace:brightnexus-react-components"
+  dependencies:
+    "@brightchain/brightnexus-lib": "npm:^0.32.1"
+    axios: "npm:^1.13.6"
+    tslib: "npm:^2.3.0"
+  peerDependencies:
+    "@emotion/react": ">=11.0.0"
+    "@emotion/styled": ">=11.0.0"
+    "@mui/material": ">=5.0.0"
+    react: ">=18.0.0"
+    react-dom: ">=18.0.0"
+  languageName: unknown
+  linkType: soft
+
 "@brightchain/brightpass-lib@npm:^0.32.1, @brightchain/brightpass-lib@workspace:brightpass-lib":
   version: 0.0.0-use.local
   resolution: "@brightchain/brightpass-lib@workspace:brightpass-lib"
@@ -15220,6 +15262,9 @@ __metadata:
     "@brightchain/brighthub-react-components": "npm:^0.32.1"
     "@brightchain/brightmail-lib": "npm:^0.32.1"
     "@brightchain/brightmail-react-components": "npm:^0.32.1"
+    "@brightchain/brightnexus-api-lib": "npm:^0.32.1"
+    "@brightchain/brightnexus-lib": "npm:^0.32.1"
+    "@brightchain/brightnexus-react-components": "npm:^0.32.1"
     "@brightchain/brightpass-lib": "npm:^0.32.1"
     "@brightchain/brightpass-react-components": "npm:^0.32.1"
     "@brightchain/db": "npm:^0.32.1"
