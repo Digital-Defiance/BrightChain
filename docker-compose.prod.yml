@@ -22,6 +22,8 @@ services:
     container_name: brightchain-node
     restart: unless-stopped
     env_file: .env.docker
+    environment:
+      TEMP_UPLOAD_STAGING_DIR: ${TEMP_UPLOAD_STAGING_DIR:-/tmp/staging}
     ports:
       # HTTP/WS — API + React frontend + WebSocket
       - '${PORT:-3000}:3000'

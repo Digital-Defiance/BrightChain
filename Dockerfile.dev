@@ -107,12 +107,13 @@ RUN cp -r /build/node_modules . && \
 # Lean image with only Node runtime + Postfix + OpenDKIM.
 FROM node:22-bookworm-slim AS runtime
 
-# Install Postfix, OpenDKIM, and minimal utilities
+# Install Postfix, OpenDKIM, SpamAssassin, and minimal utilities
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive \
     apt-get install -y --no-install-recommends \
       postfix libsasl2-modules \
       opendkim opendkim-tools \
+      spamassassin spamass-milter \
       netcat-openbsd gosu tini && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
@@ -138,6 +139,15 @@ RUN mkdir -p /etc/dkim && \
 # Ensure OpenDKIM run directory exists
 RUN mkdir -p /run/opendkim && \
     chown opendkim:opendkim /run/opendkim
+
+# SpamAssassin: socket directory (inside Postfix queue so chroot can reach it),
+# home dir for Bayesian DB, and trusted networks config
+RUN mkdir -p /var/spool/postfix/spamass && \
+    chown spamass-milter:spamass-milter /var/spool/postfix/spamass && \
+    chmod 750 /var/spool/postfix/spamass && \
+    mkdir -p /var/lib/spamassassin && \
+    chown debian-spamd:debian-spamd /var/lib/spamassassin && \
+    sa-update --nogpg || true
 
 # Ensure Postfix chroot dirs exist
 RUN mkdir -p /var/spool/postfix/pid && \
@@ -167,6 +177,9 @@ RUN chmod +x /usr/local/bin/entrypoint.sh
 # Allow node user to read mail drop (for InboundProcessor)
 RUN usermod -aG brightchain node
 
+# Writable staging dir for temp uploads (API runs as node, /app is root-owned)
+RUN mkdir -p /tmp/staging && chown node:node /tmp/staging
+
 # Environment defaults
 ENV NODE_ENV=production \
     PORT=3000 \
@@ -175,7 +188,8 @@ ENV NODE_ENV=production \
     REACT_DIST_DIR=/app/dist/react \
     EMAIL_SERVICE=SES \
     GATEWAY_MAIL_DROP_DIR=/var/spool/brightchain/incoming/ \
-    GATEWAY_ERROR_DIR=/var/spool/brightchain/errors/
+    GATEWAY_ERROR_DIR=/var/spool/brightchain/errors/ \
+    TEMP_UPLOAD_STAGING_DIR=/tmp/staging
 
 # Ports: HTTP/WS, SMTP, Submission
 EXPOSE 3000 25 587

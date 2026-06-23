@@ -181,6 +181,9 @@ RUN chmod +x /usr/local/bin/entrypoint.sh
 # Allow node user to read mail drop (for InboundProcessor)
 RUN usermod -aG brightchain node
 
+# Writable staging dir for temp uploads (API runs as node, /app is root-owned)
+RUN mkdir -p /tmp/staging && chown node:node /tmp/staging
+
 # Environment defaults
 ENV NODE_ENV=production \
     PORT=3000 \
@@ -190,7 +193,8 @@ ENV NODE_ENV=production \
     REACT_DIST_DIR=/app/dist/react \
     EMAIL_SERVICE=SES \
     GATEWAY_MAIL_DROP_DIR=/var/spool/brightchain/incoming/ \
-    GATEWAY_ERROR_DIR=/var/spool/brightchain/errors/
+    GATEWAY_ERROR_DIR=/var/spool/brightchain/errors/ \
+    TEMP_UPLOAD_STAGING_DIR=/tmp/staging
 
 # Ports: HTTP/WS, SMTP, Submission
 EXPOSE 3000 25 587

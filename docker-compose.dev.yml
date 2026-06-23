@@ -46,6 +46,10 @@ services:
         condition: service_healthy
     env_file: .env.docker
     environment:
+      # Dev defaults: skip spam filtering unless overridden in .env.docker
+      GATEWAY_TEST_SKIP_SPAM: ${GATEWAY_TEST_SKIP_SPAM:-true}
+      # Staging dir writable by node user (default /app/tmp is root-owned)
+      TEMP_UPLOAD_STAGING_DIR: ${TEMP_UPLOAD_STAGING_DIR:-/tmp/staging}
       # Override block store to use Azure driver pointing at Azurite
       BRIGHTCHAIN_BLOCKSTORE_TYPE: azure
       BRIGHTCHAIN_BLOCKSTORE_PATH: /data/blockstore

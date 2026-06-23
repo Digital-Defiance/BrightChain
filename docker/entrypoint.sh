@@ -50,25 +50,31 @@ else
 fi
 
 # ─── Start SpamAssassin ────────────────────────────────────────────────────
-echo "[entrypoint] Starting SpamAssassin (spamd)..."
-spamd --daemonize \
-  --helper-home-dir=/var/lib/spamassassin \
-  --username=debian-spamd \
-  --nouser-config \
-  --pidfile=/run/spamd.pid \
-  --listen=127.0.0.1 \
-  --port=783
+if [ "${GATEWAY_TEST_SKIP_SPAM:-false}" = "true" ]; then
+  echo "[entrypoint] Skipping SpamAssassin (GATEWAY_TEST_SKIP_SPAM=true)."
+elif command -v spamd >/dev/null 2>&1; then
+  echo "[entrypoint] Starting SpamAssassin (spamd)..."
+  spamd --daemonize \
+    --helper-home-dir=/var/lib/spamassassin \
+    --username=debian-spamd \
+    --nouser-config \
+    --pidfile=/run/spamd.pid \
+    --listen=127.0.0.1 \
+    --port=783
 
-echo "[entrypoint] Starting spamass-milter..."
-spamass-milter \
-  -P \
-  -x \
-  -r 10 \
-  -u spamass-milter \
-  -g spamass-milter \
-  -p /var/spool/postfix/spamass/spamass.sock \
-  -- \
-  -u debian-spamd &
+  echo "[entrypoint] Starting spamass-milter..."
+  spamass-milter \
+    -P \
+    -x \
+    -r 10 \
+    -u spamass-milter \
+    -g spamass-milter \
+    -p /var/spool/postfix/spamass/spamass.sock \
+    -- \
+    -u debian-spamd &
+else
+  echo "[entrypoint] WARNING: spamd not installed; skipping SpamAssassin."
+fi
 
 # ─── Start Postfix ──────────────────────────────────────────────────────────
 echo "[entrypoint] Starting Postfix..."
