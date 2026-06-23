@@ -23,7 +23,7 @@ RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
 RUN git clone https://github.com/FiloSottile/mkcert && cd mkcert && go build -ldflags "-X main.Version=$(git describe --tags)" && cp mkcert /usr/local/bin && cd .. && rm -rf mkcert && /usr/local/bin/mkcert -install
 
 # Install global npm packages and setup corepack
-RUN npm install -g nx @angular/cli typescript ts-node nodemon verdaccio && \
+RUN npm install -g nx @angular/cli typescript ts-node nodemon && \
     corepack enable && \
     corepack prepare yarn@4.13.0 --activate
 

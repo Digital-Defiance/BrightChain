@@ -5,7 +5,6 @@
     "dbaeumer.vscode-eslint",
     "firsttris.vscode-jest-runner",
     "ms-playwright.playwright",
-    "digitaldefiance.vscode-mcp-acs-verdaccio",
     "digitaldefiance.mcp-acs-testing"
   ]
 }

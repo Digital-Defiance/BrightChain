@@ -12,7 +12,7 @@ git config --global --add safe.directory ${WORKSPACE} 2>/dev/null || true
 
 cd ${WORKSPACE} && ./setup-nvm.sh
 cd ${WORKSPACE} && ./ensure-git-globals.sh
-#cd ${WORKSPACE} && ./fontawesome-npmrc.sh
+cd ${WORKSPACE} && ./fontawesome-npmrc.sh
 cd ${WORKSPACE} && ./recover-yarn.sh
 
 cd ${WORKSPACE} && export COREPACK_ENABLE_DOWNLOAD_PROMPT=0 && yes | corepack enable

@@ -18,8 +18,7 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-        #        FONTAWESOME_NPM_AUTH_TOKEN: ${FONTAWESOME_NPM_AUTH_TOKEN:-}
-        BRIGHTCHAIN_REGISTRY_TOKEN: ${BRIGHTCHAIN_REGISTRY_TOKEN:-}
+        FONTAWESOME_NPM_AUTH_TOKEN: ${FONTAWESOME_NPM_AUTH_TOKEN:-}
     container_name: brightchain-node
     restart: unless-stopped
     env_file: .env.docker

@@ -54,8 +54,7 @@
         "Graphite.gti-vscode",
         "Orta.vscode-jest",
         "saoudrizwan.claude-dev",
-        "bierner.markdown-mermaid",
-        "DigitalDefiance.vscode-mcp-acs-verdaccio"
+        "bierner.markdown-mermaid"
       ],
       // Set *default* container specific settings.json values on container create.
       "settings": {

@@ -17,8 +17,8 @@ fi
 # Set the desired Yarn version (default to 4.13.0 if not set)
 DEFAULT_YARN_VERSION=${DEFAULT_YARN_VERSION:-4.13.0}
 
-echo "Clearing .yarnrc, .yarnrc.yml, and .yarn"
-rm -rf .yarnrc .yarnrc.yml .yarn
+echo "Clearing legacy .yarnrc and .yarn (preserving committed .yarnrc.yml)"
+rm -rf .yarnrc .yarn
 
 echo "Enabling corepack"
 corepack enable
@@ -29,8 +29,9 @@ corepack prepare yarn@${DEFAULT_YARN_VERSION} --activate
 echo "Setting yarn version to ${DEFAULT_YARN_VERSION}"
 corepack yarn set version ${DEFAULT_YARN_VERSION}
 
-echo "Restoring .yarnrc.yml project settings..."
-cat > .yarnrc.yml << 'YARNRC'
+if [ ! -f .yarnrc.yml ]; then
+  echo "Creating default .yarnrc.yml (FontAwesome registry)..."
+  cat > .yarnrc.yml << 'YARNRC'
 compressionLevel: mixed
 enableGlobalCache: false
 enableScripts: true
@@ -44,15 +45,22 @@ unsafeHttpWhitelist:
   - "localhost"
 
 npmScopes:
-  "awesome.me":
-    npmAlwaysAuth: false
-    npmRegistryServer: "http://localhost:4873/"
+  fortawesome:
+    npmAlwaysAuth: true
+    npmRegistryServer: "https://npm.fontawesome.com/"
+    npmAuthToken: "${FONTAWESOME_NPM_AUTH_TOKEN}"
+  awesome.me:
+    npmAlwaysAuth: true
+    npmRegistryServer: "https://npm.fontawesome.com/"
+    npmAuthToken: "${FONTAWESOME_NPM_AUTH_TOKEN}"
 
 packageExtensions: {}
 YARNRC
-
-echo "Wrote .yarnrc.yml:"
-cat .yarnrc.yml
+  echo "Wrote .yarnrc.yml:"
+  cat .yarnrc.yml
+else
+  echo "Keeping existing .yarnrc.yml"
+fi
 
 echo "Yarn version after setup:"
 corepack yarn --version

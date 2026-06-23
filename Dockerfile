@@ -25,14 +25,8 @@
 FROM node:22-bookworm AS builder
 
 # FontAwesome Pro kit requires authentication
-#ARG FONTAWESOME_NPM_AUTH_TOKEN
-#ENV FONTAWESOME_NPM_AUTH_TOKEN=${FONTAWESOME_NPM_AUTH_TOKEN}
-
-# Private Verdaccio registry token (referenced by .yarnrc.yml as ${BRIGHTCHAIN_REGISTRY_TOKEN}).
-# Yarn evaluates .yarnrc.yml on every invocation, including `yarn config set`,
-# so this must be present in the environment for any yarn command to succeed.
-ARG BRIGHTCHAIN_REGISTRY_TOKEN
-ENV BRIGHTCHAIN_REGISTRY_TOKEN=${BRIGHTCHAIN_REGISTRY_TOKEN}
+ARG FONTAWESOME_NPM_AUTH_TOKEN
+ENV FONTAWESOME_NPM_AUTH_TOKEN=${FONTAWESOME_NPM_AUTH_TOKEN}
 
 WORKDIR /build
 
@@ -73,13 +67,12 @@ COPY digitalburnbag-react-components/package.json digitalburnbag-react-component
 COPY digitalburnbag-sync-client/package.json digitalburnbag-sync-client/
 
 # Configure FontAwesome registry (replaces local verdaccio for production)
-#RUN yarn config set 'npmScopes["awesome.me"].npmRegistryServer' "https://npm.fontawesome.com/" && \
-#   yarn config set 'npmScopes["awesome.me"].npmAlwaysAuth' true && \
-#    yarn config set 'npmScopes["awesome.me"].npmAuthToken' "${FONTAWESOME_NPM_AUTH_TOKEN}" && \
-RUN yarn config set 'npmScopes["awesome.me"].npmRegistryServer' "https://verdaccio-registry.nicefield-46a11a16.westus2.azurecontainerapps.io" && \
+RUN yarn config set 'npmScopes["awesome.me"].npmRegistryServer' "https://npm.fontawesome.com/" && \
     yarn config set 'npmScopes["awesome.me"].npmAlwaysAuth' true && \
-    yarn config set 'npmScopes["fortawesome"].npmRegistryServer' "https://verdaccio-registry.nicefield-46a11a16.westus2.azurecontainerapps.io" && \
+    yarn config set 'npmScopes["fortawesome"].npmRegistryServer' "https://npm.fontawesome.com/" && \
     yarn config set 'npmScopes["fortawesome"].npmAlwaysAuth' true && \
+    yarn config set "npmRegistries[\"https://npm.fontawesome.com/\"].npmAuthToken" "${FONTAWESOME_NPM_AUTH_TOKEN}" && \
+    yarn config set "npmRegistries[\"https://npm.fontawesome.com/\"].npmAlwaysAuth" true && \
     yarn config set nodeLinker node-modules
 
 # Install all dependencies (including devDependencies for the build)
