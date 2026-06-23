@@ -25,6 +25,8 @@
   "scripts": {
     "build": "npx nx build brightnexus-api-lib",
     "test": "npx nx test brightnexus-api-lib",
-    "lint": "npx nx lint brightnexus-api-lib"
+    "lint": "npx nx lint brightnexus-api-lib",
+    "build:dev": "npx nx build brightnexus-api-lib --configuration=development",
+    "build:prod": "npx nx build brightnexus-api-lib --configuration=production"
   }
 }
