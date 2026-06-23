@@ -27,6 +27,8 @@
   },
   "scripts": {
     "build": "npx nx build brightnexus-react-components",
-    "lint": "npx nx lint brightnexus-react-components"
+    "lint": "npx nx lint brightnexus-react-components",
+    "build:dev": "npx nx build brightnexus-react-components --configuration=development",
+    "build:prod": "npx nx build brightnexus-react-components --configuration=production"
   }
 }
