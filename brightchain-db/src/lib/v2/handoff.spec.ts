@@ -10,10 +10,11 @@ import { PortableBrightDb } from './portable-database';
 
 const WORKER = resolve(__dirname, '../../../test-support/v2-worker.ts');
 
-function run(args: string[]): Promise<string> {
+function run(args: string[], env: NodeJS.ProcessEnv = process.env): Promise<string> {
   return new Promise((resolvePromise, reject) => {
     const child = spawn(process.execPath, ['--import', 'tsx', WORKER, ...args], {
       stdio: ['ignore', 'pipe', 'pipe'],
+      env,
     });
     let out = '';
     let err = '';
@@ -27,9 +28,9 @@ function run(args: string[]): Promise<string> {
 
 const CPP_TOOL = process.env['BRIGHTDB_CPP_TOOL'];
 
-function runCpp(args: string[]): Promise<string> {
+function runCpp(args: string[], env: NodeJS.ProcessEnv = process.env): Promise<string> {
   return new Promise((resolvePromise, reject) => {
-    const child = spawn(CPP_TOOL as string, args, { stdio: ['ignore', 'pipe', 'pipe'] });
+    const child = spawn(CPP_TOOL as string, args, { stdio: ['ignore', 'pipe', 'pipe'], env });
     let out = '';
     let err = '';
     child.stdout.on('data', (chunk) => (out += chunk));
@@ -222,6 +223,46 @@ function normalize(dump: Dump): Dump {
       expect(JSON.parse(await runCpp(['findindex', p, 'docs', 'by_city', '{"equals":["Oslo"]}']))).toEqual(
         JSON.parse(await run(['findindex', p, 'docs', 'by_city', '{"equals":["Oslo"]}'])),
       );
+    }
+  });
+
+  it('shares an encrypted store between runtimes, forks it and merges replicas', async () => {
+    const key = Buffer.from(Array.from({ length: 32 }, (_, i) => i)).toString('hex');
+    const env = { ...process.env, BRIGHTDB_KEY: key };
+    const tsRun = (args: string[]) => run(args, env);
+    const cppRun = (args: string[]) => runCpp(args, env);
+    const a = join(dir, 'a');
+    const b = join(dir, 'b');
+    const secret = 'cross-runtime-secret-value';
+    const doc = (id: string, city: string) => JSON.stringify({ _id: id, city, note: secret });
+
+    await tsRun(['insertjson', a, 'people', doc('one', 'Oslo')]);
+    await cppRun(['insertjson', a, 'people', doc('two', 'Bergen')]);
+    await tsRun(['createindex', a, 'people', 'by_city', 'city']);
+    await cppRun(['insertjson', a, 'people', doc('three', 'Oslo')]);
+    expect(JSON.parse(await tsRun(['findindex', a, 'people', 'by_city', '{"equals":["Oslo"]}']))).toEqual(['one', 'three']);
+    expect(JSON.parse(await cppRun(['findindex', a, 'people', 'by_city', '{"equals":["Oslo"]}']))).toEqual(['one', 'three']);
+
+    // Without the key, or with the wrong one, neither runtime opens it.
+    await expect(run(['dump', a])).rejects.toThrow(/encrypted/u);
+    await expect(runCpp(['dump', a])).rejects.toThrow(/encrypted/u);
+    const wrong = { ...process.env, BRIGHTDB_KEY: 'ff'.repeat(32) };
+    await expect(run(['dump', a], wrong)).rejects.toThrow();
+    await expect(runCpp(['dump', a], wrong)).rejects.toThrow();
+
+    await cppRun(['fork', a, b]); // C++ forks a store TypeScript wrote to
+    await tsRun(['insertjson', a, 'people', doc('ts-a', 'Oslo')]);
+    await cppRun(['insertjson', b, 'people', doc('cpp-b', 'Bergen')]);
+    await tsRun(['merge', a, b]);
+    await cppRun(['merge', b, a]);
+    expect(JSON.parse(await tsRun(['root', a]))).toEqual(JSON.parse(await cppRun(['root', b])));
+    expect(JSON.parse(await cppRun(['root', a]))).toEqual(JSON.parse(await tsRun(['root', b])));
+
+    // Nothing on disk reveals the content.
+    for (const file of await readdir(a, { recursive: true, withFileTypes: true })) {
+      if (!file.isFile()) continue;
+      const bytes = await readFile(join(file.parentPath, file.name));
+      expect(bytes.includes(Buffer.from(secret))).toBe(false);
     }
   });
 

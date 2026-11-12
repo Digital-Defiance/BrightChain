@@ -9,7 +9,10 @@ import { PortableBrightDb } from '../src/lib/v2/portable-database';
 
 async function main(): Promise<void> {
   const [command, path, ...args] = process.argv.slice(2);
-  const db = await PortableBrightDb.open({ path });
+  // BRIGHTDB_KEY (64 hex digits) opens an encrypted database.
+  const hex = process.env['BRIGHTDB_KEY'];
+  const encryption = hex ? { key: Buffer.from(hex, 'hex') } : undefined;
+  const db = await PortableBrightDb.open({ path, encryption });
   try {
     switch (command) {
       case 'write': {
@@ -79,7 +82,7 @@ async function main(): Promise<void> {
       }
       case 'merge': {
         const [other, root] = args;
-        const source = await PortableBrightDb.open({ path: other });
+        const source = await PortableBrightDb.open({ path: other, encryption });
         try {
           const result = await db.merge(source, root ? { root } : {});
           console.log(JSON.stringify(result));
