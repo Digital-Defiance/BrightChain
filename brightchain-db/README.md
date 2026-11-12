@@ -91,6 +91,42 @@ import { createDbRouter } from '@brightchain/db';
 app.use('/api/db', createDbRouter(db));
 ```
 
+## How BrightDB compares to Fireproof
+
+[Fireproof](https://github.com/fireproof-storage/fireproof) is the closest
+project to BrightDB: an embedded JSON document database built on
+content-addressed blocks and a Merkle clock. The two overlap on storage design
+and differ most on where they run, how they sync and how you query them. The
+table splits BrightDB into the v1 engine you get from `new BrightDb(store)` and
+the v2 portable engine you get from `BrightDb.open({ path })`. Fireproof facts
+come from its public README, LLM docs and package READMEs as of November 2026
+(`@fireproof/core` 0.24.x).
+
+| | Fireproof | BrightDB v1 (`new BrightDb(store)`) | BrightDB v2 (`BrightDb.open`) |
+| --- | --- | --- | --- |
+| Runtimes | Browser, Node.js, Bun and Deno with one API. Deno is not yet tested in CI. | Node.js, over any BrightChain `IBlockStore`. | Node.js on Linux, macOS and BSD. Windows is refused, and there is no browser backend. |
+| Storage model | Encrypted, content-addressed blocks (IPFS-style CIDs). Each transaction writes a new immutable CAR file. Indexes use prolly trees, and a Merkle clock orders changes. | Each document is a JSON block in the BrightChain block store. Each write re-serializes the collection's metadata block. | A canonical Merkle tree of SHA3-512-addressed pages. Equal records give an equal root whatever the insert order. Each commit publishes one database root. |
+| Querying | Indexes from a field name or a map function, queried by `key`, `range` or `prefix`, with `descending` and `limit`. No MongoDB-style operators. | MongoDB-style filters (`$gt`, `$in`, `$regex`, `$elemMatch` and more), projection, sort, cursors, an aggregation pipeline, and unique and compound in-memory indexes. | `findById` by primary key. `find` and `findOne` accept the same filters but scan the whole collection. No secondary indexes, `$set`-style updates or aggregation yet. |
+| Live updates | `subscribe()`, plus React hooks (`useLiveQuery`, `useDocument`). | `collection.watch()` change listener. No framework bindings. | None yet. |
+| Atomic writes | Each commit is one CAR file. | Sessions buffer writes and apply them one by one on commit, with best-effort rollback. Not atomic across collections. | `writeBatch` commits inserts, replaces and deletes across collections as one root. |
+| Multi-writer and sync | Merkle CRDT with a deterministic winner per `_id`. Offline writes queue and merge later. Live sync goes through pluggable gateways: hosted Fireproof Cloud, a self-hosted Connect backend, and community connectors. | Gossip replication between BrightChain nodes, resolved by last-writer-wins on timestamps. | Several local processes can share one directory under an exclusive file lock. Deterministic merge by `(counter, writerId)` is specified in §6 of the format spec but not built. No network sync yet. |
+| Encryption at rest | On by default. Each blockstore has its own symmetric key. Key management is still maturing (the README flags a key-extraction default as deprecated). | Not in BrightDB itself. It depends on the BrightChain store and pool settings underneath. | None. Pages are stored in plain form. |
+| Integrity checks | Blocks are verified by their CIDs. | Blocks are addressed by checksum in the block store. | Every page is checked against its SHA3-512 digest. A missing or corrupt block raises an error instead of reading as empty. |
+| History | Git-like hash history is part of the core design. | Not exposed. | Every root is an immutable snapshot, but there is no API yet to read, diff or log past roots. |
+| Write authority | Not part of the core database. Access is handled by the sync backend. | Signed write ACLs on collection heads (`authorizedHeadRegistry`, `writeAclManager`). | Not yet ported to v2. |
+| Schema validation | Not built in. | Per-collection schemas validated on write. | Not yet. |
+| File attachments | `_files` on a document, encrypted and synced on demand. | Not built in. | Not built in. |
+| Compaction and GC | Compaction writes a new combined CAR file. Old files are kept, and cloud cleanup is not yet implemented. | Each write leaves an orphaned metadata block. No GC. | Unreachable pages are left in place. No GC yet. |
+| Other languages | JavaScript and TypeScript. | A separate C++ port reads and writes the v1 layout. | A byte-exact draft spec with golden fixtures for a second implementation. The C++ v2 port is not done yet. |
+| License | MIT or Apache 2.0 (the repo's metadata lists Apache-2.0). | MIT | MIT |
+
+Choose Fireproof today if you need a browser or React app with live queries,
+encrypted sync and a hosted backend. Choose BrightDB v1 if you need MongoDB-style
+queries and aggregation on a BrightChain cluster. BrightDB v2 is the base for a
+verifiable, embedded store with one root per commit, a canonical tree and a
+cross-language byte format. History, merge and sync are planned on top of it
+and aren't in the API yet.
+
 ## Architecture
 
 Documents are serialised to JSON and stored as blocks in the BrightChain block store.
