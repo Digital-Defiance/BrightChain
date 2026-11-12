@@ -14,7 +14,7 @@ import type {
 import { randomBytes } from 'node:crypto';
 import type { BrightDbV2BlockSource } from './block-source';
 import { digestPayload, encodeMetadata } from './codec';
-import { BrightDbV2AesCipher, BrightDbV2DecryptionError } from './encryption';
+import { BrightDbV2AesCipher, BrightDbV2DecryptionError, type BrightDbV2KeyRing } from './encryption';
 import { copyDatabase } from './merge';
 import {
   BrightDbV2MissingBlockError,
@@ -43,7 +43,7 @@ export interface BrightChainV2StorageOptions {
    * `encryption` option is refused for this storage, because it already
    * encrypts. Needs a store that implements `putInPoolWithId`.
    */
-  poolEncryption?: { key: Uint8Array };
+  poolEncryption?: { key: Uint8Array } | { keyRing: BrightDbV2KeyRing };
   /**
    * Declare that the pool encrypts blocks by itself and names them by their
    * ciphertext hash. That cannot hold a v2 database, so writes are refused
@@ -72,7 +72,9 @@ export class BrightChainV2Storage implements BrightDbV2Storage {
       throw new BrightDbV2StorageError('A writer ID must be 16 nonzero bytes');
     }
     this.writerId = Uint8Array.from(id);
-    this.cipher = options.poolEncryption ? new BrightDbV2AesCipher(options.poolEncryption.key) : null;
+    this.cipher = options.poolEncryption
+      ? new BrightDbV2AesCipher('keyRing' in options.poolEncryption ? options.poolEncryption.keyRing : options.poolEncryption.key)
+      : null;
     this.encryptsAtRest = options.poolEncrypts === true || this.cipher !== null;
     if (this.cipher && !options.store.putInPoolWithId) {
       throw new BrightDbV2StorageError('This store cannot hold named blocks, which an encrypting pool needs');

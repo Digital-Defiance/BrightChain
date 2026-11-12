@@ -46,7 +46,7 @@ import {
   indexRange,
   type IndexQuery,
 } from './index-key';
-import { BrightDbV2AesCipher } from './encryption';
+import { BrightDbV2AesCipher, type BrightDbV2KeyRing } from './encryption';
 import { V2IndexTree } from './index-tree';
 import type { BrightDbV2BlockSource } from './block-source';
 import { copyDatabase, mergeReplica, type PortableMergeResult } from './merge';
@@ -67,7 +67,7 @@ export interface PortableBrightDbOptions {
    * does, is refused so blocks are never encrypted twice. A directory created with a key can only be opened
    * with the same key, and one created without cannot be opened with a key.
    */
-  encryption?: { key: Uint8Array };
+  encryption?: { key: Uint8Array } | { keyRing: BrightDbV2KeyRing };
 }
 
 export type PortableWriteOperation =
@@ -850,7 +850,7 @@ export class PortableBrightDb {
       path,
       emptyRoot,
       undefined,
-      encryption ? new BrightDbV2AesCipher(encryption.key) : null,
+      encryption ? new BrightDbV2AesCipher('keyRing' in encryption ? encryption.keyRing : encryption.key) : null,
     );
     await readDatabaseRoot(store);
     return new PortableBrightDb(store);

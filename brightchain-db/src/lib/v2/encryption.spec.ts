@@ -145,4 +145,73 @@ describe('BrightDB v2 encrypted block-store profile', () => {
     a.close();
     b.close();
   });
+
+  describe('key rotation', () => {
+    const nameSecret = Buffer.alloc(32, 21);
+    const k1 = Buffer.alloc(32, 22);
+    const k2 = Buffer.alloc(32, 23);
+    const ring1 = { nameSecret, dataKeys: { 1: k1 }, currentVersion: 1 };
+    const ring2 = { nameSecret, dataKeys: { 1: k1, 2: k2 }, currentVersion: 2 };
+
+    it('keeps names stable, reads old blocks, and shuts out a holder of only the old key', () => {
+      const old = new BrightDbV2AesCipher(ring1);
+      const rotated = new BrightDbV2AesCipher(ring2);
+      const newOnly = new BrightDbV2AesCipher({ nameSecret, dataKeys: { 2: k2 }, currentVersion: 2 });
+      const plaintext = Buffer.from('a block');
+      const digest = digestPayload(plaintext);
+
+      // Names do not depend on the data keys.
+      expect(rotated.physicalName(digest)).toBe(old.physicalName(digest));
+      expect(newOnly.physicalName(digest)).toBe(old.physicalName(digest));
+
+      const sealedOld = old.seal(digest, plaintext);
+      const sealedNew = rotated.seal(digest, plaintext);
+      expect(sealedOld[0]).toBe(1);
+      expect(sealedNew[0]).toBe(2);
+      // The rotated ring reads both; the old key reads only the old block; the new-only ring only the new one.
+      expect(rotated.open(digest, sealedOld).equals(plaintext)).toBe(true);
+      expect(rotated.open(digest, sealedNew).equals(plaintext)).toBe(true);
+      expect(old.open(digest, sealedOld).equals(plaintext)).toBe(true);
+      expect(() => old.open(digest, sealedNew)).toThrow(/No key for encryption key version 2/u);
+      expect(newOnly.open(digest, sealedNew).equals(plaintext)).toBe(true);
+      expect(() => newOnly.open(digest, sealedOld)).toThrow(/No key for encryption key version 1/u);
+      // The head follows the current version.
+      const head = rotated.sealHead(digest);
+      expect(head[0]).toBe(2);
+      expect(rotated.openHead(head)).toBe(digest);
+      expect(() => old.openHead(head)).toThrow();
+    });
+
+    it('rejects malformed rings', () => {
+      expect(() => new BrightDbV2AesCipher({ nameSecret, dataKeys: { 1: k1 }, currentVersion: 2 })).toThrow(/current key version/u);
+      expect(() => new BrightDbV2AesCipher({ nameSecret, dataKeys: { 0: k1 }, currentVersion: 0 })).toThrow(/1 to 255/u);
+      expect(() => new BrightDbV2AesCipher({ nameSecret, dataKeys: { 256: k1 }, currentVersion: 256 })).toThrow(/1 to 255/u);
+      expect(() => new BrightDbV2AesCipher({ nameSecret: Buffer.alloc(8), dataKeys: { 1: k1 }, currentVersion: 1 })).toThrow(/32 bytes/u);
+    });
+
+    it('rotates a directory store: old data stays readable, new blocks use the new key, the old key is shut out', async () => {
+      const path = join(dir, 'rot');
+      const db = await PortableBrightDb.open({ path, encryption: { keyRing: ring1 } });
+      await db.collection('c').insertMany([{ _id: 'a', v: 1 }, { _id: 'b', v: 2 }]);
+      const before = new Set(await filesUnder(join(path, 'blocks')));
+      db.close();
+
+      const rotated = await PortableBrightDb.open({ path, encryption: { keyRing: ring2 } });
+      expect(await rotated.collection('c').findById('a')).toEqual({ _id: 'a', v: 1 });
+      await rotated.collection('c').insertOne({ _id: 'late', v: 3 });
+      expect((await rotated.collection('c').find({}).toArray()).map((d) => d['_id']).sort()).toEqual(['a', 'b', 'late']);
+      rotated.close();
+
+      // Old files still carry version 1, new files version 2, and no existing file was renamed.
+      const after = await filesUnder(join(path, 'blocks'));
+      const added = after.filter((f) => !before.has(f));
+      expect(added.length).toBeGreaterThan(0);
+      for (const file of added) expect((await readFile(file))[0]).toBe(2);
+      for (const file of before) expect((await readFile(file))[0]).toBe(1);
+      expect((await readFile(join(path, 'HEAD')))[0]).toBe(2);
+
+      // Someone holding only the old key can no longer open the store.
+      await expect(PortableBrightDb.open({ path, encryption: { keyRing: ring1 } })).rejects.toThrow(/Cannot decrypt HEAD/u);
+    });
+  });
 });

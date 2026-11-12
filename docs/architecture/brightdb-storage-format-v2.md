@@ -177,13 +177,13 @@ An optional profile encrypts every block at rest without changing any digest in 
 
 A store using the profile has an `ENCRYPTION` file holding exactly `BrightDB encryption 1\n`. A reader without a key rejects such a directory, and a reader with a key rejects a directory without the file. The `FORMAT`, `WRITER` and `LOCK` files keep their meaning and stay unencrypted.
 
-**Keys.** One 32-byte master key is the only secret. Two keys derive from it with HKDF-SHA256 using the salt `BrightDB v2 encryption` (ASCII) and the info strings `name` and `data`, each producing 32 bytes.
+**Keys.** The secrets are a 32-byte name secret and one or more numbered 32-byte data keys, with versions from 1 to 255 and one current version. A single 32-byte master key is shorthand for a name secret and data key 1 that both equal it. The name key derives from the name secret and each data key from its material, with HKDF-SHA256 using the salt `BrightDB v2 encryption` (ASCII) and the info strings `name` and `data`, each producing 32 bytes. The name secret never changes for a database, so blocks keep their names when the data key rotates.
 
 **Names.** A block with logical digest `D` is stored at `blocks/<hh>/<name>`, where `name` is the lowercase hexadecimal HMAC-SHA512 under the name key of the ASCII bytes `brightdb-v2-name` followed by the 64 raw bytes of `D`, and `<hh>` is the first two digits of `name`.
 
-**Blocks.** The file holds `0x01 | nonce (12 bytes) | ciphertext | tag (16 bytes)`. The cipher is AES-256-GCM under the data key with a fresh random nonce for every write. The associated data is the ASCII bytes `BDB2-block` followed by the 64 raw bytes of `D`. Decoders reject any other first byte. After decrypting, a reader still checks that the plaintext's SHA3-512 equals `D`, so a wrong key, a changed block and a block moved to another name all fail closed.
+**Blocks.** The file holds `version (1 byte) | nonce (12 bytes) | ciphertext | tag (16 bytes)`, where `version` is the data key version that sealed it. The cipher is AES-256-GCM under that data key with a fresh random nonce for every write. Writers use the current version. A reader looks the key up by the stored version and fails with a clear error when it does not hold that version, so a holder of only old versions reads old blocks but nothing sealed after a rotation. The associated data is the ASCII bytes `BDB2-block` followed by the 64 raw bytes of `D`. After decrypting, a reader still checks that the plaintext's SHA3-512 equals `D`, so a wrong key, a changed block and a block moved to another name all fail closed.
 
-**Head.** `HEAD` holds the same layout with the 64 raw bytes of the head digest as plaintext and the associated data `BDB2-head`, so the root digest is not visible. It is replaced atomically as in section 5.
+**Head.** `HEAD` holds the same layout, sealed under the current version, with the 64 raw bytes of the head digest as plaintext and the associated data `BDB2-head`, so the root digest is not visible. It is replaced atomically as in section 5.
 
 **Merge and fork.** Blocks cross between replicas as plaintext, so each side seals them under its own key. A fork keeps the source's key.
 

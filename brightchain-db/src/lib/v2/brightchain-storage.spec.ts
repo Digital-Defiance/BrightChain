@@ -242,3 +242,35 @@ describe('PooledMemoryBlockStore.putInPoolWithId', () => {
     await expect(store.putInPoolWithId('bad pool!', id, Buffer.from('x'))).rejects.toThrow(/Invalid pool ID/u);
   });
 });
+
+describe('BrightDB v2 in an encrypting pool across a key rotation', () => {
+  it('keeps names and old data, seals new data with the new key, and shuts out the old key', async () => {
+    const nameSecret = Buffer.alloc(32, 31);
+    const ring1 = { nameSecret, dataKeys: { 1: Buffer.alloc(32, 32) }, currentVersion: 1 };
+    const ring2 = { nameSecret, dataKeys: { 1: Buffer.alloc(32, 32), 2: Buffer.alloc(32, 33) }, currentVersion: 2 };
+    const base = {
+      store: new PooledMemoryBlockStore(BlockSize.Small),
+      poolId: 'secure',
+      headRegistry: new InMemoryHeadRegistry(),
+      dbName: 'app',
+    };
+    const first = await PortableBrightDb.open({
+      storage: await BrightChainV2Storage.openOrCreate({ ...base, poolEncryption: { keyRing: ring1 } }),
+    });
+    await first.collection('c').insertMany([{ _id: 'a' }, { _id: 'b' }]);
+    const root = await first.root();
+    first.close();
+
+    const rotated = await PortableBrightDb.open({
+      storage: await BrightChainV2Storage.openOrCreate({ ...base, poolEncryption: { keyRing: ring2 } }),
+    });
+    expect(await rotated.root()).toBe(root);
+    expect(await rotated.collection('c').findById('a')).toEqual({ _id: 'a' });
+    await rotated.collection('c').insertOne({ _id: 'c' });
+    expect((await rotated.collection('c').find({}).toArray()).map((d) => d['_id'])).toHaveLength(3);
+    rotated.close();
+
+    const old = new BrightChainV2Storage({ ...base, poolEncryption: { keyRing: ring1 } });
+    await expect(old.readHead()).rejects.toThrow(/Cannot decrypt the database head/u);
+  });
+});

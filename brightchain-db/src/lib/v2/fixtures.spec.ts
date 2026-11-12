@@ -495,8 +495,29 @@ async function buildVectors(): Promise<Json> {
   });
   const headNonce = Buffer.from(Array.from({ length: 12 }, (_, i) => 0xa0 + i));
   const headDigest = digestPayload(Buffer.from('head'));
+  // A key ring after one rotation: names are the same, new blocks use version 2, version 1 still opens.
+  const ringName = Buffer.from(Array.from({ length: 32 }, (_, i) => 100 + i));
+  const ringK1 = Buffer.from(Array.from({ length: 32 }, (_, i) => 150 + i));
+  const ringK2 = Buffer.from(Array.from({ length: 32 }, (_, i) => 200 + i));
+  const ringOld = new BrightDbV2AesCipher({ nameSecret: ringName, dataKeys: { 1: ringK1 }, currentVersion: 1 });
+  const ringNew = new BrightDbV2AesCipher({ nameSecret: ringName, dataKeys: { 1: ringK1, 2: ringK2 }, currentVersion: 2 });
+  const ringPlain = Buffer.from('ring block', 'utf8');
+  const ringDigest = digestPayload(ringPlain);
+  const ringNonce = Buffer.from(Array.from({ length: 12 }, (_, i) => 0x40 + i));
   const encryption = {
     key: encKey.toString('hex'),
+    ring: {
+      nameSecret: ringName.toString('hex'),
+      dataKeys: { '1': ringK1.toString('hex'), '2': ringK2.toString('hex') },
+      currentVersion: 2,
+      plaintext: ringPlain.toString('hex'),
+      digest: ringDigest,
+      nonce: ringNonce.toString('hex'),
+      physicalName: ringNew.physicalName(ringDigest),
+      sealedVersion1: ringOld.seal(ringDigest, ringPlain, ringNonce).toString('hex'),
+      sealedVersion2: ringNew.seal(ringDigest, ringPlain, ringNonce).toString('hex'),
+      sealedHeadVersion2: ringNew.sealHead(ringDigest, ringNonce).toString('hex'),
+    },
     cases: encCases,
     head: { digest: headDigest, nonce: headNonce.toString('hex'), sealed: encCipher.sealHead(headDigest, headNonce).toString('hex') },
   };
