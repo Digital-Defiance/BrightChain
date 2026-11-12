@@ -41,6 +41,7 @@ import {
   type IndexScalar,
 } from './index-key';
 import { V2IndexTree } from './index-tree';
+import { copyDatabase } from './merge';
 import { PortableBrightDb } from './portable-database';
 import { V2Tree, type V2TreeBlockStore } from './tree';
 
@@ -731,6 +732,55 @@ async function buildIndexedStore(path: string): Promise<Json> {
   };
 }
 
+
+const WRITER_A = '0a0b0c0d0e0f10111213141516171819';
+const WRITER_B = '1a1b1c1d1e1f20212223242526272829';
+
+/** Two replicas with fixed writer IDs that diverge and merge; both runtimes must reach the same roots. */
+async function buildMergeManifest(scratch: string): Promise<Json> {
+  const empty = encodeMetadata({ kind: 'database', databaseId: DATABASE_ID, clock: 0n, catalog: null });
+  const pathA = join(scratch, 'merge-a');
+  const pathB = join(scratch, 'merge-b');
+  await BrightDbV2DiskStore.create(pathA, empty, Buffer.from(WRITER_A, 'hex'));
+  const a = await PortableBrightDb.open({ path: pathA });
+  await a.writeBatch([
+    { type: 'insert', collection: 'people', document: { _id: 'p1', city: 'Oslo', age: 30 } },
+    { type: 'insert', collection: 'people', document: { _id: 'p2', city: 'Bergen', age: 40 } },
+    { type: 'createIndex', collection: 'people', name: 'by_city', fields: ['city'] },
+  ]);
+  const storeB = await BrightDbV2DiskStore.create(pathB, empty, Buffer.from(WRITER_B, 'hex'));
+  const storeA = await BrightDbV2DiskStore.open(pathA);
+  const head = await a.root();
+  await storeB.withWriteLock(async (writer) => {
+    await copyDatabase(storeB, writer, storeA, head);
+    await writer.publishHead(head);
+  });
+  const b = await PortableBrightDb.open({ path: pathB });
+  await a.collection('people').insertOne({ _id: 'p3', city: 'Oslo', age: 20 });
+  await a.collection('people').replaceById('p2', { _id: 'p2', city: 'Oslo', age: 41 });
+  await b.collection('people').insertOne({ _id: 'p4', city: 'Bergen', age: 25 });
+  await b.collection('people').createIndex('by_age', ['age']);
+  await b.collection('people').deleteById('p1');
+  const rootA = await a.root();
+  const rootB = await b.root();
+  const merged = (await a.merge(b)).root;
+  expect((await b.merge(a)).root).toBe(merged);
+  a.close();
+  b.close();
+  return {
+    description:
+      'Two replicas of one database with fixed writer IDs. Both start from: people p1, p2 and index by_city. ' +
+      'A inserts p3 and replaces p2; B inserts p4, creates index by_age and deletes p1. rootA and rootB are the ' +
+      'roots before merging; `merged` is the root both reach after merging in either direction.',
+    databaseId: DATABASE_ID,
+    writerA: WRITER_A,
+    writerB: WRITER_B,
+    rootA,
+    rootB,
+    merged,
+  };
+}
+
 async function listFiles(root: string): Promise<string[]> {
   const files: string[] = [];
   async function walk(directory: string): Promise<void> {
@@ -799,6 +849,18 @@ describe('BrightDB v2 golden fixtures', () => {
       }
     });
   }
+
+  it('match the merged replicas fixture', async () => {
+    const scratch = await mkdtemp(join(tmpdir(), 'brightdb-v2-merge-fixture-'));
+    try {
+      await checkOrWrite(
+        join(FIXTURE_ROOT, 'stores', 'merged.json'),
+        stringify(await buildMergeManifest(scratch)),
+      );
+    } finally {
+      await rm(scratch, { recursive: true, force: true });
+    }
+  });
 
   it('opens the checked-in store read-only and finds every expected document', async () => {
     const manifest = JSON.parse(

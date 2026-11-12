@@ -183,6 +183,48 @@ function normalize(dump: Dump): Dump {
     ).rejects.toThrow();
   });
 
+  it('forks in one runtime, writes in both, and merges to the same root in both directions', async () => {
+    const a = join(dir, 'a');
+    const b = join(dir, 'b');
+    const c = join(dir, 'c');
+    const doc = (id: string, v: number, extra: object = {}) => JSON.stringify({ _id: id, v, city: v % 2 ? 'Oslo' : 'Bergen', ...extra });
+    await run(['insertjson', a, 'docs', doc('one', 1)]);
+    await runCpp(['insertjson', a, 'docs', doc('two', 2)]);
+    await run(['createindex', a, 'docs', 'by_city', 'city']);
+
+    await runCpp(['fork', a, b]); // C++ forks a TypeScript-written database
+    await run(['fork', a, c]); // TypeScript forks a database C++ also wrote to
+
+    await run(['insertjson', a, 'docs', doc('ts-a', 3)]);
+    await runCpp(['insertjson', b, 'docs', doc('cpp-b', 4)]);
+    await run(['insertjson', c, 'docs', doc('ts-c', 5)]);
+    await runCpp(['delete', b, 'docs', 'two']);
+    await run(['createindex', c, 'docs', 'by_v', 'v']);
+
+    // Each runtime merges replicas the other runtime wrote.
+    await run(['merge', a, b]);
+    await runCpp(['merge', a, c]);
+    await runCpp(['merge', b, a]);
+    await run(['merge', b, c]);
+    await run(['merge', c, a]);
+    await runCpp(['merge', c, b]);
+    const roots = await Promise.all([a, b, c].map(async (p) => (JSON.parse(await run(['root', p])) as { root: string }).root));
+    expect(new Set(roots).size).toBe(1);
+    for (const p of [a, b, c]) {
+      expect(JSON.parse(await runCpp(['root', p]))).toEqual({ root: roots[0] });
+      const fromTs = normalize(JSON.parse(await run(['dump', p])));
+      const fromCpp = normalize(JSON.parse(await runCpp(['dump', p])));
+      expect(fromCpp).toEqual(fromTs);
+      expect(fromTs['docs'].map((d) => d._id)).toEqual(['cpp-b', 'one', 'ts-a', 'ts-c']);
+      expect(JSON.parse(await run(['findindex', p, 'docs', 'by_v', '{"gte":3}']))).toEqual(
+        JSON.parse(await runCpp(['findindex', p, 'docs', 'by_v', '{"gte":3}'])),
+      );
+      expect(JSON.parse(await runCpp(['findindex', p, 'docs', 'by_city', '{"equals":["Oslo"]}']))).toEqual(
+        JSON.parse(await run(['findindex', p, 'docs', 'by_city', '{"equals":["Oslo"]}'])),
+      );
+    }
+  });
+
   it('writes with TypeScript first, then C++, then TypeScript', () => leg('ts'));
   it('writes with C++ first, then TypeScript, then C++', () => leg('cpp'));
 

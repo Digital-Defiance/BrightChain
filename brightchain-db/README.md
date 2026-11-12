@@ -56,11 +56,12 @@ primary lookups, query scans, inserts, replacements and deletes by ID, and atomi
   `findByIndex('by_city_age', { equals: ['Oslo'], gte: 30, limit: 10 })`, using
   `equals`, `gt`, `gte`, `lt`, `lte`, `prefix` and `descending`. Index changes commit
   together with the documents that cause them.
+- **Fork and merge.** `await db.fork('./copy')` makes an independent replica, and `await db.merge(other)` brings another replica's changes in. The greater version of each document wins, a deletion beats an equal version, and merging in any order or direction gives the same root. This is how two copies converge without a server.
 - **Attachments.** `putAttachment(bytes, { type })` stores a file of up to 63 MiB as
   chunks. Put the returned reference under `_files` in a document, then read it with
   `getAttachment(ref)` or `streamAttachment(ref)`.
 
-BrightChain replication is planned for a later stage. Use a fresh directory for v2.
+Network sync and BrightChain replication are planned for a later stage; today you merge replicas that you can open locally. Use a fresh directory for v2.
 See the [storage format specification](https://github.brightchain.org/docs/architecture/brightdb-storage-format-v2/).
 
 ## Bring your own block store
@@ -125,7 +126,7 @@ come from its public README, LLM docs and package READMEs as of November 2026
 | Querying | Indexes from a field name or a map function, queried by `key`, `range` or `prefix`, with `descending` and `limit`. No MongoDB-style operators. | MongoDB-style filters (`$gt`, `$in`, `$regex`, `$elemMatch` and more), projection, sort, cursors, an aggregation pipeline, and unique and compound in-memory indexes. | `findById` by primary key. `find` and `findOne` accept the same filters but scan the whole collection. Ordered single and compound indexes are queried through `findByIndex` with exact, range and prefix bounds. No `$set`-style updates or aggregation yet. |
 | Live updates | `subscribe()`, plus React hooks (`useLiveQuery`, `useDocument`). | `collection.watch()` change listener. No framework bindings. | `subscribe()` reports each root change with its document-level diff. No framework bindings yet. |
 | Atomic writes | Each commit is one CAR file. | Sessions buffer writes and apply them one by one on commit, with best-effort rollback. Not atomic across collections. | `writeBatch` commits inserts, replaces and deletes across collections as one root. |
-| Multi-writer and sync | Merkle CRDT with a deterministic winner per `_id`. Offline writes queue and merge later. Live sync goes through pluggable gateways: hosted Fireproof Cloud, a self-hosted Connect backend, and community connectors. | Gossip replication between BrightChain nodes, resolved by last-writer-wins on timestamps. | Several local processes can share one directory under an exclusive file lock. Deterministic merge by `(counter, writerId)` is specified in §6 of the format spec but not built. No network sync yet. |
+| Multi-writer and sync | Merkle CRDT with a deterministic winner per `_id`. Offline writes queue and merge later. Live sync goes through pluggable gateways: hosted Fireproof Cloud, a self-hosted Connect backend, and community connectors. | Gossip replication between BrightChain nodes, resolved by last-writer-wins on timestamps. | Several local processes can share one directory under an exclusive file lock. `fork()` and `merge()` combine replicas deterministically by `(counter, writerId)` (§6 of the format spec). No network sync yet. |
 | Encryption at rest | On by default. Each blockstore has its own symmetric key. Key management is still maturing (the README flags a key-extraction default as deprecated). | Not in BrightDB itself. It depends on the BrightChain store and pool settings underneath. | None. Pages are stored in plain form. |
 | Integrity checks | Blocks are verified by their CIDs. | Blocks are addressed by checksum in the block store. | Every page is checked against its SHA3-512 digest. A missing or corrupt block raises an error instead of reading as empty. |
 | History | Git-like hash history is part of the core design. | Not exposed. | Every root is an immutable snapshot, but there is no API yet to read, diff or log past roots. |

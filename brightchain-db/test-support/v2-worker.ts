@@ -71,6 +71,23 @@ async function main(): Promise<void> {
         console.log(JSON.stringify({ size: bytes.length, sha3: digestPayload(bytes) }));
         break;
       }
+      case 'fork': {
+        const [target] = args;
+        (await db.fork(target)).close();
+        console.log(JSON.stringify({ ok: true }));
+        break;
+      }
+      case 'merge': {
+        const [other, root] = args;
+        const source = await PortableBrightDb.open({ path: other });
+        try {
+          const result = await db.merge(source, root ? { root } : {});
+          console.log(JSON.stringify(result));
+        } finally {
+          source.close();
+        }
+        break;
+      }
       case 'root': {
         console.log(JSON.stringify({ root: await db.root() }));
         break;

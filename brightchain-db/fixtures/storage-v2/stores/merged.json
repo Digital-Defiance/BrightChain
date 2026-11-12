@@ -1,0 +1,9 @@
+{
+  "description": "Two replicas of one database with fixed writer IDs. Both start from: people p1, p2 and index by_city. A inserts p3 and replaces p2; B inserts p4, creates index by_age and deletes p1. rootA and rootB are the roots before merging; `merged` is the root both reach after merging in either direction.",
+  "databaseId": "101112131415161718191a1b1c1d1e1f",
+  "writerA": "0a0b0c0d0e0f10111213141516171819",
+  "writerB": "1a1b1c1d1e1f20212223242526272829",
+  "rootA": "1de4bd65f6417f5fc2341d88d37a18c149b0ffed221c96e1209984df6f9dbc1183cdbbc160c65ef5dff423bd9b8c340aa65992263fc4de97b7416bfec76436a7",
+  "rootB": "5622809c61d294beb86328c82c8794bec05c1237d061081850196f1b3a9bc8f9beb484e37ff76815b4aea258bbd3b0b4551e1d62fdc886e4ca49c3e7052137fb",
+  "merged": "1d98ca93259dd160f6a9bd8f97fa88f5baf99b4f338d7072fe2b85aebbeeae7db8d3d5315ecdd19eb68ed7170f2d790637e422b0942b5bff7a42024214aed554"
+}
