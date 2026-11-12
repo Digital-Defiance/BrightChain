@@ -3,6 +3,8 @@
  * Usage: node --import tsx v2-worker.ts <command> <directory> [args]
  * Each command prints one JSON line on success.
  */
+import { readFileSync } from 'node:fs';
+import { digestPayload } from '../src/lib/v2/codec';
 import { PortableBrightDb } from '../src/lib/v2/portable-database';
 
 async function main(): Promise<void> {
@@ -38,6 +40,35 @@ async function main(): Promise<void> {
           );
         }
         console.log(JSON.stringify(out));
+        break;
+      }
+      case 'insertjson': {
+        const [collection, json] = args;
+        const result = await db.collection(collection).insertOne(JSON.parse(json));
+        console.log(JSON.stringify({ insertedId: result.insertedId }));
+        break;
+      }
+      case 'createindex': {
+        const [collection, name, ...fields] = args;
+        await db.collection(collection).createIndex(name, fields);
+        console.log(JSON.stringify({ ok: true }));
+        break;
+      }
+      case 'findindex': {
+        const [collection, index, query] = args;
+        const docs = await db.collection(collection).findByIndex(index, JSON.parse(query));
+        console.log(JSON.stringify(docs.map((d) => d['_id'])));
+        break;
+      }
+      case 'putfile': {
+        const [file, type] = args;
+        console.log(JSON.stringify(await db.putAttachment(readFileSync(file), { type })));
+        break;
+      }
+      case 'getfile': {
+        const [digest] = args;
+        const bytes = await db.getAttachment({ digest });
+        console.log(JSON.stringify({ size: bytes.length, sha3: digestPayload(bytes) }));
         break;
       }
       case 'root': {

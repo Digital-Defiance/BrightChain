@@ -3,7 +3,7 @@
  * between independent runtimes, concurrent writers, and crash recovery.
  */
 import { spawn } from 'node:child_process';
-import { mkdtemp, readdir, readFile, rm } from 'node:fs/promises';
+import { mkdtemp, readdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { PortableBrightDb } from './portable-database';
@@ -120,6 +120,67 @@ function normalize(dump: Dump): Dump {
       'other/o-0:added',
       'other/o-1:added',
     ]);
+  });
+
+  it('keeps indexes current when TypeScript and C++ take turns writing', async () => {
+    const path = join(dir, 'db');
+    const doc = (id: string, city: string, age: number, tags: string[]) =>
+      JSON.stringify({ _id: id, city, age, tags });
+    await run(['insertjson', path, 'people', doc('a', 'Oslo', 30, ['x', 'y'])]);
+    await runCpp(['insertjson', path, 'people', doc('b', 'Oslo', 20, ['y'])]);
+    await run(['createindex', path, 'people', 'by_city_age', 'city', 'age']);
+    await runCpp(['createindex', path, 'people', 'by_tag', 'tags']);
+    await run(['insertjson', path, 'people', doc('c', 'Bergen', 50, [])]);
+    await runCpp(['insertjson', path, 'people', doc('d', 'Oslo', 25, ['x'])]);
+    await run(['delete', path, 'people', 'b']);
+    await runCpp(['delete', path, 'people', 'a']);
+
+    const queries: Array<[string, object]> = [
+      ['by_city_age', {}],
+      ['by_city_age', { equals: ['Oslo'] }],
+      ['by_city_age', { equals: ['Oslo'], gt: 20 }],
+      ['by_city_age', { equals: ['Oslo'], descending: true }],
+      ['by_city_age', { prefix: 'B' }],
+      ['by_tag', {}],
+      ['by_tag', { equals: ['x'] }],
+      ['by_tag', { equals: ['y'] }],
+    ];
+    for (const [index, query] of queries) {
+      const q = JSON.stringify(query);
+      const fromTs = JSON.parse(await run(['findindex', path, 'people', index, q]));
+      const fromCpp = JSON.parse(await runCpp(['findindex', path, 'people', index, q]));
+      expect(fromCpp).toEqual(fromTs);
+    }
+    expect(JSON.parse(await run(['findindex', path, 'people', 'by_city_age', '{"equals":["Oslo"]}']))).toEqual(['d']);
+    expect(JSON.parse(await runCpp(['findindex', path, 'people', 'by_tag', '{"equals":["x"]}']))).toEqual(['d']);
+  });
+
+  it('shares attachments between runtimes in both directions', async () => {
+    const path = join(dir, 'db');
+    const small = join(dir, 'small.bin');
+    const large = join(dir, 'large.bin');
+    await writeFile(small, 'written by one runtime');
+    await writeFile(large, Buffer.alloc(2_200_000, 9));
+
+    const refTs = JSON.parse(await run(['putfile', path, small, 'text/plain']));
+    const refCpp = JSON.parse(await runCpp(['putfile', path, small, 'text/plain']));
+    expect(refCpp).toEqual(refTs);
+    const bigTs = JSON.parse(await run(['putfile', path, large]));
+    const bigCpp = JSON.parse(await runCpp(['putfile', path, large]));
+    expect(bigCpp).toEqual(bigTs);
+
+    // A document written by one runtime references a file stored by the other.
+    await runCpp(['insertjson', path, 'docs', JSON.stringify({ _id: 'x', _files: { f: refTs, g: bigTs } })]);
+    await run(['insertjson', path, 'docs', JSON.stringify({ _id: 'y', _files: { f: refCpp, g: bigCpp } })]);
+    for (const ref of [refTs, bigTs]) {
+      expect(JSON.parse(await run(['getfile', path, ref.digest]))).toEqual(
+        JSON.parse(await runCpp(['getfile', path, ref.digest])),
+      );
+    }
+    expect(JSON.parse(await runCpp(['getfile', path, bigTs.digest])).size).toBe(2_200_000);
+    await expect(
+      runCpp(['insertjson', path, 'docs', JSON.stringify({ _id: 'z', _files: { f: { digest: 'a'.repeat(128), size: 1 } } })]),
+    ).rejects.toThrow();
   });
 
   it('writes with TypeScript first, then C++, then TypeScript', () => leg('ts'));
