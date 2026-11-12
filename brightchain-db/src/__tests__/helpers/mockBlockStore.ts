@@ -25,6 +25,8 @@ import {
   PoolDeletionValidationResult,
   PoolId,
   PoolStats,
+  StoreError,
+  StoreErrorType,
   validatePoolId,
 } from '@brightchain/brightchain-lib';
 import { sha3_512 } from '@noble/hashes/sha3';
@@ -106,7 +108,10 @@ export class MockBlockStore implements IBlockStore {
     const k = String(key);
     const data = this.blocks.get(k);
     if (!data) {
-      throw new Error(`Block not found: ${k}`);
+      // Match real stores: a missing block is a KeyNotFound StoreError.
+      throw new StoreError(StoreErrorType.KeyNotFound, undefined, {
+        KEY: k,
+      });
     }
     return { data, fullData: data, idChecksum: key };
   }

@@ -23,6 +23,13 @@ import { MockBlockStore, MockPooledBlockStore } from './helpers/mockBlockStore';
 // Extended mocks for recovery testing
 // ══════════════════════════════════════════════════════════════
 
+// Head IDs that point at blocks absent from the store. They must be valid
+// hex checksums so the Collection treats them as missing (not corrupt).
+const MISSING_HEAD_A = 'a1'.repeat(64);
+const MISSING_HEAD_B = 'b2'.repeat(64);
+const MISSING_HEAD_C = 'c3'.repeat(64);
+const MISSING_HEAD_D = 'd4'.repeat(64);
+
 class RecoverableMockBlockStore extends MockBlockStore {
   public recoverBlockResult = { success: false };
   public recoverBlockCalled = false;
@@ -195,9 +202,9 @@ describe('CBLIndex recovery (Requirements 7.4, 7.5)', () => {
     it('should attempt FEC recovery when no snapshot is available', async () => {
       const store = new RecoverableMockBlockStore();
       store.recoverBlockResult = { success: true };
-      store.setRecoverTarget('head-block-123');
+      store.setRecoverTarget(MISSING_HEAD_A);
       const registry = InMemoryHeadRegistry.createIsolated();
-      await registry.setHead('testdb-fec', '__cbl_index__', 'head-block-123');
+      await registry.setHead('testdb-fec', '__cbl_index__', MISSING_HEAD_A);
 
       const db = new BrightDb(store as any, {
         name: 'testdb-fec',
@@ -219,7 +226,7 @@ describe('CBLIndex recovery (Requirements 7.4, 7.5)', () => {
       await registry.setHead(
         'testdb-fec-fail',
         '__cbl_index__',
-        'head-block-missing',
+        MISSING_HEAD_B,
       );
 
       const db = new BrightDb(store as any, {
@@ -401,7 +408,7 @@ describe('CBLIndex recovery (Requirements 7.4, 7.5)', () => {
         '__cbl_index_snapshot__',
         magnetUrl,
       );
-      await registry.setHead('testdb-order', '__cbl_index__', 'fake-head');
+      await registry.setHead('testdb-order', '__cbl_index__', MISSING_HEAD_C);
 
       const db = new BrightDb(store as any, {
         name: 'testdb-order',
@@ -424,7 +431,7 @@ describe('CBLIndex recovery (Requirements 7.4, 7.5)', () => {
       const store = new RecoverableMockBlockStore();
       store.recoverBlockResult = { success: false };
       const registry = InMemoryHeadRegistry.createIsolated();
-      await registry.setHead('testdb-nofec', '__cbl_index__', 'head-block-xyz');
+      await registry.setHead('testdb-nofec', '__cbl_index__', MISSING_HEAD_D);
 
       const db = new BrightDb(store as any, {
         name: 'testdb-nofec',
