@@ -7,7 +7,7 @@ permalink: /docs/architecture/brightdb-encryption/
 
 # BrightDB and Encryption
 
-**Status:** Recommendation, not yet built. It covers the v2 storage format on its own and on top of BrightChain.
+**Status:** Accepted. The standalone profile is specified in section 10 of the [format spec](./brightdb-storage-format-v2.md) and built in TypeScript and C++ (`BrightDb.open({ path, encryption: { key } })`). The BrightChain pool adapter will use the same profile and is not built yet. It covers the v2 storage format on its own and on top of BrightChain.
 
 ## The short version
 
@@ -16,7 +16,7 @@ Encrypt at exactly one layer, and make that layer the block store. BrightDB keep
 ## What exists today
 
 - **BrightChain pool encryption** (`EncryptionMode.PoolShared`) generates a random AES-256 key per pool, wraps it for each member with ECIES, and encrypts data with AES-256-GCM using a fresh random IV. Block IDs are hashes of the ciphertext, so lookups and Bloom filters work on encrypted pools. Key versions are kept so older blocks stay readable after rotation. `EncryptionAwareReplication` refuses to replicate node-specific pools and allows pool-shared ones once the key is distributed.
-- **Where it applies.** The key management, encrypt and decrypt pieces live in `brightchain-api-lib` (`EncryptedPoolKeyManager`, `PoolEncryptionService`). In the code I searched I found no block store that calls them on every `put`, and BrightDB's v1 engine writes document blocks through `IBlockStore` without any encryption step of its own. Pool encryption may therefore be built but not yet wired into BrightDB's path. That needs confirming with whoever owns the BrightChain side.
+- **Where it applies.** The key management, encrypt and decrypt pieces live in `brightchain-api-lib` (`EncryptedPoolKeyManager`, `PoolEncryptionService`). Pool encryption is applied to the metadata fields of block-list index entries (`encryptedMetadataService`) and its key manager is used when a member's pool is created. No block store calls it on `put`, so BrightDB's v1 document blocks, written through `IBlockStore`, are not encrypted by it today. The BrightChain team confirmed that this is their code, so wiring it into the write path is theirs to schedule.
 - **Owner-Free storage** (XOR tuples and CBL whitening) protects files and block lists. BrightDB documents do not use it today.
 - **BrightDB v2** has no encryption. Blocks are named by the SHA3-512 digest of their plaintext, and the standalone disk profile stores them as plain files.
 

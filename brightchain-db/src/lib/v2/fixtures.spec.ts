@@ -41,6 +41,7 @@ import {
   type IndexScalar,
 } from './index-key';
 import { V2IndexTree } from './index-tree';
+import { BrightDbV2AesCipher } from './encryption';
 import { copyDatabase } from './merge';
 import { PortableBrightDb } from './portable-database';
 import { V2Tree, type V2TreeBlockStore } from './tree';
@@ -470,6 +471,30 @@ async function buildVectors(): Promise<Json> {
     ),
   );
 
+
+  // ---- encryption known answers ---------------------------------------------
+  const encKey = Buffer.from(Array.from({ length: 32 }, (_, i) => i));
+  const encCipher = new BrightDbV2AesCipher(encKey);
+  const encCases = ['', 'hello', 'a block of é\u{1F600} text'].map((text, index) => {
+    const plaintext = Buffer.from(text, 'utf8');
+    const digest = digestPayload(plaintext);
+    const nonce = Buffer.from(Array.from({ length: 12 }, (_, i) => index * 16 + i + 1));
+    return {
+      plaintext: plaintext.toString('hex'),
+      digest,
+      nonce: nonce.toString('hex'),
+      physicalName: encCipher.physicalName(digest),
+      sealed: encCipher.seal(digest, plaintext, nonce).toString('hex'),
+    };
+  });
+  const headNonce = Buffer.from(Array.from({ length: 12 }, (_, i) => 0xa0 + i));
+  const headDigest = digestPayload(Buffer.from('head'));
+  const encryption = {
+    key: encKey.toString('hex'),
+    cases: encCases,
+    head: { digest: headDigest, nonce: headNonce.toString('hex'), sealed: encCipher.sealHead(headDigest, headNonce).toString('hex') },
+  };
+
   const trees: Json[] = [];
   const primaryRecords: V2Record[] = [];
   for (let index = 0; index < 400; index++) {
@@ -538,6 +563,7 @@ async function buildVectors(): Promise<Json> {
     indexKeys,
     indexRanges,
     indexTrees,
+    encryption,
   };
 }
 
@@ -781,6 +807,67 @@ async function buildMergeManifest(scratch: string): Promise<Json> {
   };
 }
 
+
+const ENCRYPTION_KEY = Buffer.from(Array.from({ length: 32 }, (_, i) => i));
+
+/** The `encrypted` store: same operations as a plain store, written under a key. Nonces are random, so only logical content is compared. */
+async function buildEncryptedStore(path: string): Promise<Json> {
+  const cipher = new BrightDbV2AesCipher(ENCRYPTION_KEY);
+  await BrightDbV2DiskStore.create(
+    path,
+    encodeMetadata({ kind: 'database', databaseId: DATABASE_ID, clock: 0n, catalog: null }),
+    Buffer.from(WRITER_ID, 'hex'),
+    cipher,
+  );
+  const db = await PortableBrightDb.open({ path, encryption: { key: ENCRYPTION_KEY } });
+  const store = await BrightDbV2DiskStore.open(path, cipher);
+  const heads: string[] = [];
+  const mark = async () => heads.push(await store.readHead());
+  await mark();
+  await db.writeBatch([
+    ...Array.from({ length: 40 }, (_, i) => ({
+      type: 'insert' as const,
+      collection: 'people',
+      document: { _id: `p${i.toString().padStart(3, '0')}`, city: CITIES[i % 4], age: 20 + (i % 30) },
+    })),
+    { type: 'createIndex', collection: 'people', name: 'by_city_age', fields: ['city', 'age'] },
+  ]);
+  await mark();
+  const ref = await db.putAttachment(Buffer.from('hello attachment', 'utf8'), { type: 'text/plain' });
+  await db.collection('people').replaceById('p001', {
+    _id: 'p001', city: 'Oslo', age: 99, _files: { note: { ...ref } },
+  });
+  await mark();
+  await db.collection('people').deleteById('p002');
+  await mark();
+  const queries = [
+    { collection: 'people', index: 'by_city_age', query: { equals: ['Oslo'] } },
+    { collection: 'people', index: 'by_city_age', query: { equals: ['Bergen'], gte: 25, lt: 35 } },
+  ] as Array<{ collection: string; index: string; query: IndexQuery }>;
+  const results = [];
+  for (const q of queries) {
+    const docs = await db.collection(q.collection).findByIndex(q.index, q.query);
+    results.push({ ...q, ids: docs.map((d) => d['_id']) });
+  }
+  const documents = (await db.collection('people').find({}).toArray()).sort((a, b) =>
+    Buffer.compare(encodeKey(String(a['_id'])), encodeKey(String(b['_id']))),
+  );
+  db.close();
+  return {
+    description:
+      'Written by the TypeScript production API under the key below (the bytes 0..31). Nonces are random, so ' +
+      'file bytes differ between builds; the logical heads, documents and query results are fixed.',
+    keyHex: ENCRYPTION_KEY.toString('hex'),
+    databaseId: DATABASE_ID,
+    writerId: WRITER_ID,
+    heads,
+    head: heads[heads.length - 1],
+    attachment: { ...ref } as Json,
+    queries: results as Json,
+    documents: documents as Json,
+  };
+}
+
 async function listFiles(root: string): Promise<string[]> {
   const files: string[] = [];
   async function walk(directory: string): Promise<void> {
@@ -849,6 +936,36 @@ describe('BrightDB v2 golden fixtures', () => {
       }
     });
   }
+
+  it('match the encrypted store, ignoring random nonces', async () => {
+    const scratch = await mkdtemp(join(tmpdir(), 'brightdb-v2-enc-fixture-'));
+    try {
+      const built = join(scratch, 'encrypted');
+      const manifest = stringify(await buildEncryptedStore(built));
+      const target = join(FIXTURE_ROOT, 'stores', 'encrypted');
+      if (UPDATE) {
+        await rm(target, { recursive: true, force: true });
+        for (const file of await listFiles(built)) {
+          await mkdir(resolve(target, file, '..'), { recursive: true });
+          await writeFile(join(target, file), await readFile(join(built, file)));
+        }
+        await writeFile(join(FIXTURE_ROOT, 'stores', 'encrypted.json'), manifest);
+      } else {
+        expect(await readFile(join(FIXTURE_ROOT, 'stores', 'encrypted.json'), 'utf8')).toBe(manifest);
+        // The checked-in directory opens with the key and holds the same logical state.
+        const checked = await PortableBrightDb.open({
+          path: target,
+          encryption: { key: ENCRYPTION_KEY },
+        });
+        const recorded = JSON.parse(manifest) as { head: string; documents: unknown[] };
+        expect(await checked.root()).toBe(recorded.head);
+        expect(await checked.collection('people').find({}).toArray()).toHaveLength(recorded.documents.length);
+        checked.close();
+      }
+    } finally {
+      await rm(scratch, { recursive: true, force: true });
+    }
+  });
 
   it('match the merged replicas fixture', async () => {
     const scratch = await mkdtemp(join(tmpdir(), 'brightdb-v2-merge-fixture-'));

@@ -65,6 +65,7 @@ export type { PortableMergeResult } from './lib/v2/merge';
 export { V2MergeError } from './lib/v2/merge';
 export { V2AttachmentError } from './lib/v2/attachments';
 export { V2IndexError } from './lib/v2/index-key';
+export { BrightDbV2DecryptionError } from './lib/v2/encryption';
 export {
   BrightDbV2CommitOutcomeUnknownError,
   BrightDbV2MissingBlockError,

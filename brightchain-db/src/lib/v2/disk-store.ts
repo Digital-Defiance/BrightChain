@@ -14,6 +14,12 @@ import {
 } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
 import { digestPayload, MAX_DOCUMENT_BYTES } from './codec';
+import {
+  BrightDbV2DecryptionError,
+  ENCRYPTION_MARKER,
+  SEAL_OVERHEAD,
+  type BrightDbV2BlockCipher,
+} from './encryption';
 
 const FORMAT = 'BrightDB storage 2\n';
 const BLOCK_WRITE_CONCURRENCY = 16;
@@ -209,15 +215,26 @@ export class BrightDbV2DiskStore {
   private constructor(
     readonly path: string,
     private readonly localWriterId: Uint8Array,
+    /** Present when blocks are encrypted at rest. */
+    readonly cipher: BrightDbV2BlockCipher | null = null,
   ) {
     this.blocksPath = join(path, 'blocks');
+  }
+
+  /** The directory and file name a logical digest is stored under. */
+  private blockLocation(digest: string): { directory: string; file: string } {
+    const name = this.cipher ? this.cipher.physicalName(digest) : digest;
+    return { directory: join(this.blocksPath, name.slice(0, 2)), file: name };
   }
 
   get writerId(): Uint8Array {
     return Uint8Array.from(this.localWriterId);
   }
 
-  static async open(path: string): Promise<BrightDbV2DiskStore> {
+  static async open(
+    path: string,
+    cipher: BrightDbV2BlockCipher | null = null,
+  ): Promise<BrightDbV2DiskStore> {
     const directory = resolve(path);
     try {
       await requireDirectory(directory);
@@ -243,7 +260,7 @@ export class BrightDbV2DiskStore {
         if (entries.includes('FORMAT')) {
           // An initializer may have replaced the previously empty directory
           // while this process was trying to read the marker.
-          return this.open(directory);
+          return this.open(directory, cipher);
         }
       }
       throw new BrightDbV2StorageError(
@@ -265,7 +282,32 @@ export class BrightDbV2DiskStore {
     );
     const writerId = Buffer.from(id, 'hex');
     assertWriterId(writerId);
-    const store = new BrightDbV2DiskStore(directory, writerId);
+    let encrypted = true;
+    try {
+      const marker = await readBoundedFile(
+        join(directory, 'ENCRYPTION'),
+        ENCRYPTION_MARKER.length,
+      );
+      if (marker.toString('latin1') !== ENCRYPTION_MARKER) {
+        throw new BrightDbV2StorageError(
+          `Unsupported BrightDB encryption profile: ${directory}`,
+        );
+      }
+    } catch (error) {
+      if (!isErrorCode(error, 'ENOENT')) throw error;
+      encrypted = false;
+    }
+    if (encrypted && !cipher) {
+      throw new BrightDbV2StorageError(
+        `BrightDB directory is encrypted; open it with an encryption key: ${directory}`,
+      );
+    }
+    if (!encrypted && cipher) {
+      throw new BrightDbV2StorageError(
+        `BrightDB directory is not encrypted; open it without an encryption key: ${directory}`,
+      );
+    }
+    const store = new BrightDbV2DiskStore(directory, writerId, cipher);
     await requireDirectory(store.blocksPath);
     if (!(await lstat(join(directory, 'LOCK'))).isFile()) {
       throw new BrightDbV2StorageError(
@@ -280,6 +322,7 @@ export class BrightDbV2DiskStore {
     path: string,
     initialRoot: Uint8Array,
     writerId: Uint8Array = randomBytes(WRITER_ID_LENGTH),
+    cipher: BrightDbV2BlockCipher | null = null,
   ): Promise<BrightDbV2DiskStore> {
     const directory = resolve(path);
     const id = Uint8Array.from(writerId);
@@ -289,13 +332,14 @@ export class BrightDbV2DiskStore {
     const createdParent = await mkdir(parent, { recursive: true });
     const stage = await mkdtemp(join(parent, '.brightdb-init-'));
     try {
-      const store = new BrightDbV2DiskStore(stage, id);
+      const store = new BrightDbV2DiskStore(stage, id, cipher);
       await mkdir(store.blocksPath, { mode: 0o700 });
       await writeSyncedFile(join(stage, 'LOCK'), '');
       await writeSyncedFile(
         join(stage, 'WRITER'),
         `${Buffer.from(id).toString('hex')}\n`,
       );
+      if (cipher) await writeSyncedFile(join(stage, 'ENCRYPTION'), ENCRYPTION_MARKER);
       await writeSyncedFile(join(stage, 'FORMAT'), FORMAT);
       const dirty = new Set<string>();
       const head = await store.installBlock(root, dirty);
@@ -324,7 +368,7 @@ export class BrightDbV2DiskStore {
           if (ancestor === existingAncestor) break;
         }
       }
-      return new BrightDbV2DiskStore(directory, id);
+      return new BrightDbV2DiskStore(directory, id, cipher);
     } finally {
       await rm(stage, { recursive: true, force: true });
     }
@@ -334,33 +378,59 @@ export class BrightDbV2DiskStore {
     path: string,
     initialRoot: Uint8Array,
     writerId?: Uint8Array,
+    cipher: BrightDbV2BlockCipher | null = null,
   ): Promise<BrightDbV2DiskStore> {
     try {
-      return await this.open(path);
+      return await this.open(path, cipher);
     } catch (error) {
       if (!(error instanceof UninitializedStoreError)) throw error;
     }
     try {
-      return await this.create(path, initialRoot, writerId);
+      return await this.create(path, initialRoot, writerId, cipher);
     } catch (error) {
       if (!(error instanceof StoreExistsError)) throw error;
-      return this.open(path);
+      return this.open(path, cipher);
     }
   }
 
-  readHead(): Promise<string> {
-    return readHexLine(join(this.path, 'HEAD'), DIGEST_LENGTH);
+  async readHead(): Promise<string> {
+    if (!this.cipher) return readHexLine(join(this.path, 'HEAD'), DIGEST_LENGTH);
+    const sealed = await readBoundedFile(join(this.path, 'HEAD'), this.cipher.sealedHeadBytes);
+    try {
+      return this.cipher.openHead(sealed);
+    } catch (error) {
+      if (error instanceof BrightDbV2DecryptionError) {
+        throw new BrightDbV2StorageError(`Cannot decrypt HEAD: ${error.message}`, { cause: error });
+      }
+      throw error;
+    }
   }
 
   async readBlock(digest: string): Promise<Uint8Array> {
     assertDigest(digest);
-    const path = join(this.blocksPath, digest.slice(0, 2), digest);
+    const { directory, file } = this.blockLocation(digest);
     let bytes: Buffer;
     try {
-      bytes = await readBoundedFile(path, MAX_DOCUMENT_BYTES);
+      bytes = await readBoundedFile(
+        join(directory, file),
+        MAX_DOCUMENT_BYTES + (this.cipher ? SEAL_OVERHEAD : 0),
+      );
     } catch (error) {
       if (!isErrorCode(error, 'ENOENT')) throw error;
       throw new BrightDbV2MissingBlockError(digest, { cause: error });
+    }
+    if (this.cipher) {
+      try {
+        bytes = this.cipher.open(digest, bytes);
+      } catch (error) {
+        if (error instanceof BrightDbV2DecryptionError) {
+          throw new BrightDbV2StorageError(
+            `BrightDB v2 block cannot be decrypted: ${digest} (${error.message})`,
+            { cause: error },
+          );
+        }
+        throw error;
+      }
     }
     if (digestPayload(bytes) !== digest) {
       throw new BrightDbV2StorageError(
@@ -462,7 +532,7 @@ export class BrightDbV2DiskStore {
       );
     }
     const digest = digestPayload(bytes);
-    const directory = join(this.blocksPath, digest.slice(0, 2));
+    const { directory, file } = this.blockLocation(digest);
     try {
       await this.readBlock(digest);
       dirty.add(directory);
@@ -479,9 +549,9 @@ export class BrightDbV2DiskStore {
     }
     const temporary = temporaryPath(directory);
     try {
-      await writeSyncedFile(temporary, bytes);
+      await writeSyncedFile(temporary, this.cipher ? this.cipher.seal(digest, bytes) : bytes);
       try {
-        await link(temporary, join(directory, digest));
+        await link(temporary, join(directory, file));
       } catch (error) {
         if (!isErrorCode(error, 'EEXIST')) throw error;
       }
@@ -505,7 +575,8 @@ export class BrightDbV2DiskStore {
   async hasBlock(digest: string): Promise<boolean> {
     assertDigest(digest);
     try {
-      const stat = await lstat(join(this.blocksPath, digest.slice(0, 2), digest));
+      const { directory, file } = this.blockLocation(digest);
+      const stat = await lstat(join(directory, file));
       return stat.isFile();
     } catch (error) {
       if (isErrorCode(error, 'ENOENT')) return false;
@@ -515,12 +586,15 @@ export class BrightDbV2DiskStore {
 
   private async publishHead(digest: string, dirty: Set<string>): Promise<void> {
     await this.readBlock(digest);
-    dirty.add(join(this.blocksPath, digest.slice(0, 2)));
+    dirty.add(this.blockLocation(digest).directory);
     await this.syncBlocks(dirty);
 
     const temporary = temporaryPath(this.path);
     try {
-      await writeSyncedFile(temporary, `${digest}\n`);
+      await writeSyncedFile(
+        temporary,
+        this.cipher ? this.cipher.sealHead(digest) : `${digest}\n`,
+      );
       await rename(temporary, join(this.path, 'HEAD'));
       try {
         await syncDirectory(this.path);

@@ -41,6 +41,7 @@ import {
   indexRange,
   type IndexQuery,
 } from './index-key';
+import { BrightDbV2AesCipher } from './encryption';
 import { V2IndexTree } from './index-tree';
 import { copyDatabase, mergeReplica, type PortableMergeResult } from './merge';
 import { V2Tree } from './tree';
@@ -48,6 +49,13 @@ import { V2Tree } from './tree';
 export interface PortableBrightDbOptions {
   /** Directory for the portable BrightDB v2 store. */
   path: string;
+  /**
+   * Encrypt every block at rest with AES-256-GCM, under a 32-byte master key.
+   * Do not set this when the store beneath BrightDB already encrypts, as a
+   * BrightChain pool does. A directory created with a key can only be opened
+   * with the same key, and one created without cannot be opened with a key.
+   */
+  encryption?: { key: Uint8Array };
 }
 
 export type PortableWriteOperation =
@@ -799,6 +807,7 @@ export class PortableBrightDb {
 
   static async open({
     path,
+    encryption,
   }: PortableBrightDbOptions): Promise<PortableBrightDb> {
     const emptyRoot = encodeMetadata({
       kind: 'database',
@@ -806,7 +815,12 @@ export class PortableBrightDb {
       clock: 0n,
       catalog: null,
     });
-    const store = await BrightDbV2DiskStore.openOrCreate(path, emptyRoot);
+    const store = await BrightDbV2DiskStore.openOrCreate(
+      path,
+      emptyRoot,
+      undefined,
+      encryption ? new BrightDbV2AesCipher(encryption.key) : null,
+    );
     await readDatabaseRoot(store);
     return new PortableBrightDb(store);
   }
@@ -924,6 +938,8 @@ export class PortableBrightDb {
         clock: 0n,
         catalog: null,
       }),
+      undefined,
+      this.store.cipher,
     );
     await store.withWriteLock(async (writer) => {
       await copyDatabase(store, writer, this.store, head);

@@ -162,9 +162,28 @@ Land the codec, portable disk adapter, golden fixtures, and local conformance te
 | Index keys and trees | The TypeScript encoder matches the published value encodings, entry keys, query ranges, and index-tree roots and pages. The C++ encoder independently matches them. Insertion order, batched updates and removals never change a root. |
 | Index maintenance | A store written by one runtime with several indexes (including compound, multikey and dotted paths) answers the recorded queries in the other runtime. Writes that fail on an unindexable value publish nothing. |
 | Attachments | Both runtimes produce identical manifest and chunk digests for the same bytes, reject `_files` references to missing blocks or wrong sizes, and read each other's files. |
+| Encrypted profile | The published known-answer vectors (key derivation inputs, physical names, sealed blocks and sealed head) decrypt and re-derive identically in both runtimes. A store written under a key by one runtime opens in the other. A missing key, a wrong key, a changed block and a swapped block each fail with an error. |
 | Replica merge | With independent stores, merge partitioned writes in both orders and check identical roots. Cover equal versions, out-of-order delivery, missing child pages, and deletes followed by stale writes or stale collection roots. Required before enabling v2 replication. |
 
 The previous native design and its vectors describe the flat metadata format. The handoff tests must call the production APIs in both implementations. A fixture that pre-serializes a block and has both runtimes hash it exercises checksum agreement only.
+
+## 10. Encrypted block-store profile
+
+An optional profile encrypts every block at rest without changing any digest in the graph. Roots, pages, document references, index roots and `_files` references all keep naming blocks by the SHA3-512 digest of their plaintext. Only the portable disk profile's file names and file contents change. Use it for a standalone store. A store that already encrypts beneath BrightDB, such as a BrightChain pool, must not enable it.
+
+A store using the profile has an `ENCRYPTION` file holding exactly `BrightDB encryption 1\n`. A reader without a key rejects such a directory, and a reader with a key rejects a directory without the file. The `FORMAT`, `WRITER` and `LOCK` files keep their meaning and stay unencrypted.
+
+**Keys.** One 32-byte master key is the only secret. Two keys derive from it with HKDF-SHA256 using the salt `BrightDB v2 encryption` (ASCII) and the info strings `name` and `data`, each producing 32 bytes.
+
+**Names.** A block with logical digest `D` is stored at `blocks/<hh>/<name>`, where `name` is the lowercase hexadecimal HMAC-SHA512 under the name key of the ASCII bytes `brightdb-v2-name` followed by the 64 raw bytes of `D`, and `<hh>` is the first two digits of `name`.
+
+**Blocks.** The file holds `0x01 | nonce (12 bytes) | ciphertext | tag (16 bytes)`. The cipher is AES-256-GCM under the data key with a fresh random nonce for every write. The associated data is the ASCII bytes `BDB2-block` followed by the 64 raw bytes of `D`. Decoders reject any other first byte. After decrypting, a reader still checks that the plaintext's SHA3-512 equals `D`, so a wrong key, a changed block and a block moved to another name all fail closed.
+
+**Head.** `HEAD` holds the same layout with the 64 raw bytes of the head digest as plaintext and the associated data `BDB2-head`, so the root digest is not visible. It is replaced atomically as in section 5.
+
+**Merge and fork.** Blocks cross between replicas as plaintext, so each side seals them under its own key. A fork keeps the source's key.
+
+**Not hidden.** Block sizes, block counts, access patterns and the `FORMAT`, `WRITER` and `LOCK` files are visible to whoever holds the directory.
 
 ## Appendix A. Encoding vectors
 
