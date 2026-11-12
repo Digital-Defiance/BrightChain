@@ -25,6 +25,99 @@ function run(args: string[]): Promise<string> {
   });
 }
 
+const CPP_TOOL = process.env['BRIGHTDB_CPP_TOOL'];
+
+function runCpp(args: string[]): Promise<string> {
+  return new Promise((resolvePromise, reject) => {
+    const child = spawn(CPP_TOOL as string, args, { stdio: ['ignore', 'pipe', 'pipe'] });
+    let out = '';
+    let err = '';
+    child.stdout.on('data', (chunk) => (out += chunk));
+    child.stderr.on('data', (chunk) => (err += chunk));
+    child.once('close', (code) =>
+      code === 0 ? resolvePromise(out.trim()) : reject(new Error(err || `exit ${code}`)),
+    );
+  });
+}
+
+type Dump = Record<string, Array<{ _id: string }>>;
+function normalize(dump: Dump): Dump {
+  const sorted: Dump = {};
+  for (const name of Object.keys(dump).sort()) {
+    sorted[name] = [...dump[name]].sort((a, b) =>
+      Buffer.compare(Buffer.from(a._id), Buffer.from(b._id)),
+    );
+  }
+  return sorted;
+}
+
+// Set BRIGHTDB_CPP_TOOL to the built brightdb_v2_tool to run the cross-runtime legs.
+(CPP_TOOL ? describe : describe.skip)('BrightDB v2 TypeScript and C++ handoff', () => {
+  jest.setTimeout(180_000);
+  let dir: string;
+  beforeEach(async () => {
+    dir = await mkdtemp(join(tmpdir(), 'brightdb-v2-cross-'));
+  });
+  afterEach(async () => {
+    await rm(dir, { recursive: true, force: true });
+  });
+
+  async function leg(first: 'ts' | 'cpp'): Promise<void> {
+    const path = join(dir, 'db');
+    const ts = (args: string[]) => run(args);
+    const cpp = (args: string[]) => runCpp(args);
+    const [a, b] = first === 'ts' ? [ts, cpp] : [cpp, ts];
+
+    await a(['write', path, 'docs', 'first', '4']);
+    const writer = (await readFile(join(path, 'WRITER'), 'utf8')).trim();
+    await b(['write', path, 'docs', 'second', '3']);
+    await b(['write', path, 'other', 'x', '2']);
+    expect(JSON.parse(await a(['delete', path, 'docs', 'first-1']))).toMatchObject({ deletedCount: 1 });
+    await a(['write', path, 'docs', 'third', '2']);
+    expect(JSON.parse(await b(['delete', path, 'docs', 'second-0']))).toMatchObject({ deletedCount: 1 });
+
+    expect((await readFile(join(path, 'WRITER'), 'utf8')).trim()).toBe(writer);
+    const fromTs = normalize(JSON.parse(await ts(['dump', path])));
+    const fromCpp = normalize(JSON.parse(await cpp(['dump', path])));
+    expect(fromCpp).toEqual(fromTs);
+    expect(fromTs['docs'].map((d) => d._id)).toEqual([
+      'first-0', 'first-2', 'first-3', 'second-1', 'second-2', 'third-0', 'third-1',
+    ]);
+    expect(fromTs['other']).toHaveLength(2);
+  }
+
+  it('writes with TypeScript first, then C++, then TypeScript', () => leg('ts'));
+  it('writes with C++ first, then TypeScript, then C++', () => leg('cpp'));
+
+  it('recovers whole batches after SIGKILL of a C++ writer and a TypeScript writer', async () => {
+    const path = join(dir, 'db');
+    await run(['write', path, 'seed', 'seed', '1']);
+    for (const runtime of ['cpp', 'ts', 'cpp'] as const) {
+      const child =
+        runtime === 'cpp'
+          ? spawn(CPP_TOOL as string, ['loop', path, 'docs', '20'], { stdio: ['ignore', 'pipe', 'inherit'] })
+          : spawn(process.execPath, ['--import', 'tsx', WORKER, 'loop', path, 'docs', '20'], {
+              stdio: ['ignore', 'pipe', 'inherit'],
+            });
+      await new Promise<void>((ready) => child.stdout.once('data', () => ready()));
+      await new Promise((r) => setTimeout(r, 400));
+      child.kill('SIGKILL');
+      await new Promise((r) => child.once('close', r));
+
+      for (const reader of [run, runCpp]) {
+        const dump = JSON.parse(await reader(['dump', path])) as Record<string, Array<{ batch: number }>>;
+        const perBatch = new Map<number, number>();
+        for (const d of dump['docs'] ?? []) perBatch.set(d.batch, (perBatch.get(d.batch) ?? 0) + 1);
+        for (const [batch, count] of perBatch) expect({ batch, count }).toEqual({ batch, count: 20 });
+      }
+      // The lock must be free for the next writer, and the next loop starts a fresh collection.
+      const db = await PortableBrightDb.open({ path });
+      await db.writeBatch([{ type: 'dropCollection', collection: 'docs' }]);
+      db.close();
+    }
+  });
+});
+
 describe('BrightDB v2 directory handoff and crash recovery', () => {
   jest.setTimeout(180_000);
   let dir: string;
