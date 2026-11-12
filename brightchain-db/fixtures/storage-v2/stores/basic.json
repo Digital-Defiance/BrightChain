@@ -1,0 +1,1047 @@
+{
+  "description": "Written by the TypeScript production API with fixed database and writer IDs. Commits in order: empty init; users alice+bob and notes n1 in one batch; replace bob; delete alice; insertMany 200 items; drop notes; recreate notes with n2, delete item-0007 and insert unicode in one batch.",
+  "databaseId": "101112131415161718191a1b1c1d1e1f",
+  "writerId": "000102030405060708090a0b0c0d0e0f",
+  "heads": [
+    "b1652c6a4b05f13c3b451ab6ca4f4680bd0541e3427a3125c3af8330af5cfa8fc5e92faa17f11171e300d1283c6ce4b2c2bf25aa65aebb903a24202e2bfabf87",
+    "3dfb899de15d3c34a2489cb94acbc3686692c3700b7020e0bdd535dde4dc72ee33a9231318606cf2df77527ec93e70da44f0ae0ed927b1f7712e4e73b9c28cca",
+    "15c69cf43d1d951c50f6f2f590ae11c95a4992641f861bf9619e28e587e33972f6c4038b09e2fb7a2277abf712385175e91b79daefe65bfcf75981481b3368af",
+    "9a7e0c93aae8a35fa15dc3f131e646d953ff66090c59f46152905a3531c564dae15e84c766a95de4c4f19d48c6914c5b8637bd24d4c2f6d0f2ae2e4a72512222",
+    "9bec1a9bd41d4b4cccee03d10cb0be7b0792da2c8b2a14d1ea836b0d86a2b1b65f099ebd7db74e20bbea6d483c161f7a4cb103fb90e4630d505972a839b75331",
+    "e1ff1443eb429ce238ac9059c1443fbeacda89853ffb7b4aba40803167de0b96b7bb55fb4c4b5ff8fec2eee05cce0554403e0a12375e1fe28cfeacf9d6d8e026",
+    "cf61e2032c5accc7bf7b80f93dcac37a3d1554d87f61cc0d61aa9cb7e000d26efed2d243342e60ade0c5bd8d8140dfea00cada25c5c5bbe5966944ffed3ddfac"
+  ],
+  "head": "cf61e2032c5accc7bf7b80f93dcac37a3d1554d87f61cc0d61aa9cb7e000d26efed2d243342e60ade0c5bd8d8140dfea00cada25c5c5bbe5966944ffed3ddfac",
+  "absent": {
+    "users": [
+      "alice"
+    ],
+    "notes": [
+      "n1"
+    ],
+    "items": [
+      "item-0007"
+    ]
+  },
+  "collections": {
+    "items": [
+      {
+        "_id": "item-0000",
+        "index": 0,
+        "label": "Item 0 é😀"
+      },
+      {
+        "_id": "item-0001",
+        "index": 1,
+        "label": "Item 1 é😀"
+      },
+      {
+        "_id": "item-0002",
+        "index": 2,
+        "label": "Item 2 é😀"
+      },
+      {
+        "_id": "item-0003",
+        "index": 3,
+        "label": "Item 3 é😀"
+      },
+      {
+        "_id": "item-0004",
+        "index": 4,
+        "label": "Item 4 é😀"
+      },
+      {
+        "_id": "item-0005",
+        "index": 5,
+        "label": "Item 5 é😀"
+      },
+      {
+        "_id": "item-0006",
+        "index": 6,
+        "label": "Item 6 é😀"
+      },
+      {
+        "_id": "item-0008",
+        "index": 8,
+        "label": "Item 8 é😀"
+      },
+      {
+        "_id": "item-0009",
+        "index": 9,
+        "label": "Item 9 é😀"
+      },
+      {
+        "_id": "item-0010",
+        "index": 10,
+        "label": "Item 10 é😀"
+      },
+      {
+        "_id": "item-0011",
+        "index": 11,
+        "label": "Item 11 é😀"
+      },
+      {
+        "_id": "item-0012",
+        "index": 12,
+        "label": "Item 12 é😀"
+      },
+      {
+        "_id": "item-0013",
+        "index": 13,
+        "label": "Item 13 é😀"
+      },
+      {
+        "_id": "item-0014",
+        "index": 14,
+        "label": "Item 14 é😀"
+      },
+      {
+        "_id": "item-0015",
+        "index": 15,
+        "label": "Item 15 é😀"
+      },
+      {
+        "_id": "item-0016",
+        "index": 16,
+        "label": "Item 16 é😀"
+      },
+      {
+        "_id": "item-0017",
+        "index": 17,
+        "label": "Item 17 é😀"
+      },
+      {
+        "_id": "item-0018",
+        "index": 18,
+        "label": "Item 18 é😀"
+      },
+      {
+        "_id": "item-0019",
+        "index": 19,
+        "label": "Item 19 é😀"
+      },
+      {
+        "_id": "item-0020",
+        "index": 20,
+        "label": "Item 20 é😀"
+      },
+      {
+        "_id": "item-0021",
+        "index": 21,
+        "label": "Item 21 é😀"
+      },
+      {
+        "_id": "item-0022",
+        "index": 22,
+        "label": "Item 22 é😀"
+      },
+      {
+        "_id": "item-0023",
+        "index": 23,
+        "label": "Item 23 é😀"
+      },
+      {
+        "_id": "item-0024",
+        "index": 24,
+        "label": "Item 24 é😀"
+      },
+      {
+        "_id": "item-0025",
+        "index": 25,
+        "label": "Item 25 é😀"
+      },
+      {
+        "_id": "item-0026",
+        "index": 26,
+        "label": "Item 26 é😀"
+      },
+      {
+        "_id": "item-0027",
+        "index": 27,
+        "label": "Item 27 é😀"
+      },
+      {
+        "_id": "item-0028",
+        "index": 28,
+        "label": "Item 28 é😀"
+      },
+      {
+        "_id": "item-0029",
+        "index": 29,
+        "label": "Item 29 é😀"
+      },
+      {
+        "_id": "item-0030",
+        "index": 30,
+        "label": "Item 30 é😀"
+      },
+      {
+        "_id": "item-0031",
+        "index": 31,
+        "label": "Item 31 é😀"
+      },
+      {
+        "_id": "item-0032",
+        "index": 32,
+        "label": "Item 32 é😀"
+      },
+      {
+        "_id": "item-0033",
+        "index": 33,
+        "label": "Item 33 é😀"
+      },
+      {
+        "_id": "item-0034",
+        "index": 34,
+        "label": "Item 34 é😀"
+      },
+      {
+        "_id": "item-0035",
+        "index": 35,
+        "label": "Item 35 é😀"
+      },
+      {
+        "_id": "item-0036",
+        "index": 36,
+        "label": "Item 36 é😀"
+      },
+      {
+        "_id": "item-0037",
+        "index": 37,
+        "label": "Item 37 é😀"
+      },
+      {
+        "_id": "item-0038",
+        "index": 38,
+        "label": "Item 38 é😀"
+      },
+      {
+        "_id": "item-0039",
+        "index": 39,
+        "label": "Item 39 é😀"
+      },
+      {
+        "_id": "item-0040",
+        "index": 40,
+        "label": "Item 40 é😀"
+      },
+      {
+        "_id": "item-0041",
+        "index": 41,
+        "label": "Item 41 é😀"
+      },
+      {
+        "_id": "item-0042",
+        "index": 42,
+        "label": "Item 42 é😀"
+      },
+      {
+        "_id": "item-0043",
+        "index": 43,
+        "label": "Item 43 é😀"
+      },
+      {
+        "_id": "item-0044",
+        "index": 44,
+        "label": "Item 44 é😀"
+      },
+      {
+        "_id": "item-0045",
+        "index": 45,
+        "label": "Item 45 é😀"
+      },
+      {
+        "_id": "item-0046",
+        "index": 46,
+        "label": "Item 46 é😀"
+      },
+      {
+        "_id": "item-0047",
+        "index": 47,
+        "label": "Item 47 é😀"
+      },
+      {
+        "_id": "item-0048",
+        "index": 48,
+        "label": "Item 48 é😀"
+      },
+      {
+        "_id": "item-0049",
+        "index": 49,
+        "label": "Item 49 é😀"
+      },
+      {
+        "_id": "item-0050",
+        "index": 50,
+        "label": "Item 50 é😀"
+      },
+      {
+        "_id": "item-0051",
+        "index": 51,
+        "label": "Item 51 é😀"
+      },
+      {
+        "_id": "item-0052",
+        "index": 52,
+        "label": "Item 52 é😀"
+      },
+      {
+        "_id": "item-0053",
+        "index": 53,
+        "label": "Item 53 é😀"
+      },
+      {
+        "_id": "item-0054",
+        "index": 54,
+        "label": "Item 54 é😀"
+      },
+      {
+        "_id": "item-0055",
+        "index": 55,
+        "label": "Item 55 é😀"
+      },
+      {
+        "_id": "item-0056",
+        "index": 56,
+        "label": "Item 56 é😀"
+      },
+      {
+        "_id": "item-0057",
+        "index": 57,
+        "label": "Item 57 é😀"
+      },
+      {
+        "_id": "item-0058",
+        "index": 58,
+        "label": "Item 58 é😀"
+      },
+      {
+        "_id": "item-0059",
+        "index": 59,
+        "label": "Item 59 é😀"
+      },
+      {
+        "_id": "item-0060",
+        "index": 60,
+        "label": "Item 60 é😀"
+      },
+      {
+        "_id": "item-0061",
+        "index": 61,
+        "label": "Item 61 é😀"
+      },
+      {
+        "_id": "item-0062",
+        "index": 62,
+        "label": "Item 62 é😀"
+      },
+      {
+        "_id": "item-0063",
+        "index": 63,
+        "label": "Item 63 é😀"
+      },
+      {
+        "_id": "item-0064",
+        "index": 64,
+        "label": "Item 64 é😀"
+      },
+      {
+        "_id": "item-0065",
+        "index": 65,
+        "label": "Item 65 é😀"
+      },
+      {
+        "_id": "item-0066",
+        "index": 66,
+        "label": "Item 66 é😀"
+      },
+      {
+        "_id": "item-0067",
+        "index": 67,
+        "label": "Item 67 é😀"
+      },
+      {
+        "_id": "item-0068",
+        "index": 68,
+        "label": "Item 68 é😀"
+      },
+      {
+        "_id": "item-0069",
+        "index": 69,
+        "label": "Item 69 é😀"
+      },
+      {
+        "_id": "item-0070",
+        "index": 70,
+        "label": "Item 70 é😀"
+      },
+      {
+        "_id": "item-0071",
+        "index": 71,
+        "label": "Item 71 é😀"
+      },
+      {
+        "_id": "item-0072",
+        "index": 72,
+        "label": "Item 72 é😀"
+      },
+      {
+        "_id": "item-0073",
+        "index": 73,
+        "label": "Item 73 é😀"
+      },
+      {
+        "_id": "item-0074",
+        "index": 74,
+        "label": "Item 74 é😀"
+      },
+      {
+        "_id": "item-0075",
+        "index": 75,
+        "label": "Item 75 é😀"
+      },
+      {
+        "_id": "item-0076",
+        "index": 76,
+        "label": "Item 76 é😀"
+      },
+      {
+        "_id": "item-0077",
+        "index": 77,
+        "label": "Item 77 é😀"
+      },
+      {
+        "_id": "item-0078",
+        "index": 78,
+        "label": "Item 78 é😀"
+      },
+      {
+        "_id": "item-0079",
+        "index": 79,
+        "label": "Item 79 é😀"
+      },
+      {
+        "_id": "item-0080",
+        "index": 80,
+        "label": "Item 80 é😀"
+      },
+      {
+        "_id": "item-0081",
+        "index": 81,
+        "label": "Item 81 é😀"
+      },
+      {
+        "_id": "item-0082",
+        "index": 82,
+        "label": "Item 82 é😀"
+      },
+      {
+        "_id": "item-0083",
+        "index": 83,
+        "label": "Item 83 é😀"
+      },
+      {
+        "_id": "item-0084",
+        "index": 84,
+        "label": "Item 84 é😀"
+      },
+      {
+        "_id": "item-0085",
+        "index": 85,
+        "label": "Item 85 é😀"
+      },
+      {
+        "_id": "item-0086",
+        "index": 86,
+        "label": "Item 86 é😀"
+      },
+      {
+        "_id": "item-0087",
+        "index": 87,
+        "label": "Item 87 é😀"
+      },
+      {
+        "_id": "item-0088",
+        "index": 88,
+        "label": "Item 88 é😀"
+      },
+      {
+        "_id": "item-0089",
+        "index": 89,
+        "label": "Item 89 é😀"
+      },
+      {
+        "_id": "item-0090",
+        "index": 90,
+        "label": "Item 90 é😀"
+      },
+      {
+        "_id": "item-0091",
+        "index": 91,
+        "label": "Item 91 é😀"
+      },
+      {
+        "_id": "item-0092",
+        "index": 92,
+        "label": "Item 92 é😀"
+      },
+      {
+        "_id": "item-0093",
+        "index": 93,
+        "label": "Item 93 é😀"
+      },
+      {
+        "_id": "item-0094",
+        "index": 94,
+        "label": "Item 94 é😀"
+      },
+      {
+        "_id": "item-0095",
+        "index": 95,
+        "label": "Item 95 é😀"
+      },
+      {
+        "_id": "item-0096",
+        "index": 96,
+        "label": "Item 96 é😀"
+      },
+      {
+        "_id": "item-0097",
+        "index": 97,
+        "label": "Item 97 é😀"
+      },
+      {
+        "_id": "item-0098",
+        "index": 98,
+        "label": "Item 98 é😀"
+      },
+      {
+        "_id": "item-0099",
+        "index": 99,
+        "label": "Item 99 é😀"
+      },
+      {
+        "_id": "item-0100",
+        "index": 100,
+        "label": "Item 100 é😀"
+      },
+      {
+        "_id": "item-0101",
+        "index": 101,
+        "label": "Item 101 é😀"
+      },
+      {
+        "_id": "item-0102",
+        "index": 102,
+        "label": "Item 102 é😀"
+      },
+      {
+        "_id": "item-0103",
+        "index": 103,
+        "label": "Item 103 é😀"
+      },
+      {
+        "_id": "item-0104",
+        "index": 104,
+        "label": "Item 104 é😀"
+      },
+      {
+        "_id": "item-0105",
+        "index": 105,
+        "label": "Item 105 é😀"
+      },
+      {
+        "_id": "item-0106",
+        "index": 106,
+        "label": "Item 106 é😀"
+      },
+      {
+        "_id": "item-0107",
+        "index": 107,
+        "label": "Item 107 é😀"
+      },
+      {
+        "_id": "item-0108",
+        "index": 108,
+        "label": "Item 108 é😀"
+      },
+      {
+        "_id": "item-0109",
+        "index": 109,
+        "label": "Item 109 é😀"
+      },
+      {
+        "_id": "item-0110",
+        "index": 110,
+        "label": "Item 110 é😀"
+      },
+      {
+        "_id": "item-0111",
+        "index": 111,
+        "label": "Item 111 é😀"
+      },
+      {
+        "_id": "item-0112",
+        "index": 112,
+        "label": "Item 112 é😀"
+      },
+      {
+        "_id": "item-0113",
+        "index": 113,
+        "label": "Item 113 é😀"
+      },
+      {
+        "_id": "item-0114",
+        "index": 114,
+        "label": "Item 114 é😀"
+      },
+      {
+        "_id": "item-0115",
+        "index": 115,
+        "label": "Item 115 é😀"
+      },
+      {
+        "_id": "item-0116",
+        "index": 116,
+        "label": "Item 116 é😀"
+      },
+      {
+        "_id": "item-0117",
+        "index": 117,
+        "label": "Item 117 é😀"
+      },
+      {
+        "_id": "item-0118",
+        "index": 118,
+        "label": "Item 118 é😀"
+      },
+      {
+        "_id": "item-0119",
+        "index": 119,
+        "label": "Item 119 é😀"
+      },
+      {
+        "_id": "item-0120",
+        "index": 120,
+        "label": "Item 120 é😀"
+      },
+      {
+        "_id": "item-0121",
+        "index": 121,
+        "label": "Item 121 é😀"
+      },
+      {
+        "_id": "item-0122",
+        "index": 122,
+        "label": "Item 122 é😀"
+      },
+      {
+        "_id": "item-0123",
+        "index": 123,
+        "label": "Item 123 é😀"
+      },
+      {
+        "_id": "item-0124",
+        "index": 124,
+        "label": "Item 124 é😀"
+      },
+      {
+        "_id": "item-0125",
+        "index": 125,
+        "label": "Item 125 é😀"
+      },
+      {
+        "_id": "item-0126",
+        "index": 126,
+        "label": "Item 126 é😀"
+      },
+      {
+        "_id": "item-0127",
+        "index": 127,
+        "label": "Item 127 é😀"
+      },
+      {
+        "_id": "item-0128",
+        "index": 128,
+        "label": "Item 128 é😀"
+      },
+      {
+        "_id": "item-0129",
+        "index": 129,
+        "label": "Item 129 é😀"
+      },
+      {
+        "_id": "item-0130",
+        "index": 130,
+        "label": "Item 130 é😀"
+      },
+      {
+        "_id": "item-0131",
+        "index": 131,
+        "label": "Item 131 é😀"
+      },
+      {
+        "_id": "item-0132",
+        "index": 132,
+        "label": "Item 132 é😀"
+      },
+      {
+        "_id": "item-0133",
+        "index": 133,
+        "label": "Item 133 é😀"
+      },
+      {
+        "_id": "item-0134",
+        "index": 134,
+        "label": "Item 134 é😀"
+      },
+      {
+        "_id": "item-0135",
+        "index": 135,
+        "label": "Item 135 é😀"
+      },
+      {
+        "_id": "item-0136",
+        "index": 136,
+        "label": "Item 136 é😀"
+      },
+      {
+        "_id": "item-0137",
+        "index": 137,
+        "label": "Item 137 é😀"
+      },
+      {
+        "_id": "item-0138",
+        "index": 138,
+        "label": "Item 138 é😀"
+      },
+      {
+        "_id": "item-0139",
+        "index": 139,
+        "label": "Item 139 é😀"
+      },
+      {
+        "_id": "item-0140",
+        "index": 140,
+        "label": "Item 140 é😀"
+      },
+      {
+        "_id": "item-0141",
+        "index": 141,
+        "label": "Item 141 é😀"
+      },
+      {
+        "_id": "item-0142",
+        "index": 142,
+        "label": "Item 142 é😀"
+      },
+      {
+        "_id": "item-0143",
+        "index": 143,
+        "label": "Item 143 é😀"
+      },
+      {
+        "_id": "item-0144",
+        "index": 144,
+        "label": "Item 144 é😀"
+      },
+      {
+        "_id": "item-0145",
+        "index": 145,
+        "label": "Item 145 é😀"
+      },
+      {
+        "_id": "item-0146",
+        "index": 146,
+        "label": "Item 146 é😀"
+      },
+      {
+        "_id": "item-0147",
+        "index": 147,
+        "label": "Item 147 é😀"
+      },
+      {
+        "_id": "item-0148",
+        "index": 148,
+        "label": "Item 148 é😀"
+      },
+      {
+        "_id": "item-0149",
+        "index": 149,
+        "label": "Item 149 é😀"
+      },
+      {
+        "_id": "item-0150",
+        "index": 150,
+        "label": "Item 150 é😀"
+      },
+      {
+        "_id": "item-0151",
+        "index": 151,
+        "label": "Item 151 é😀"
+      },
+      {
+        "_id": "item-0152",
+        "index": 152,
+        "label": "Item 152 é😀"
+      },
+      {
+        "_id": "item-0153",
+        "index": 153,
+        "label": "Item 153 é😀"
+      },
+      {
+        "_id": "item-0154",
+        "index": 154,
+        "label": "Item 154 é😀"
+      },
+      {
+        "_id": "item-0155",
+        "index": 155,
+        "label": "Item 155 é😀"
+      },
+      {
+        "_id": "item-0156",
+        "index": 156,
+        "label": "Item 156 é😀"
+      },
+      {
+        "_id": "item-0157",
+        "index": 157,
+        "label": "Item 157 é😀"
+      },
+      {
+        "_id": "item-0158",
+        "index": 158,
+        "label": "Item 158 é😀"
+      },
+      {
+        "_id": "item-0159",
+        "index": 159,
+        "label": "Item 159 é😀"
+      },
+      {
+        "_id": "item-0160",
+        "index": 160,
+        "label": "Item 160 é😀"
+      },
+      {
+        "_id": "item-0161",
+        "index": 161,
+        "label": "Item 161 é😀"
+      },
+      {
+        "_id": "item-0162",
+        "index": 162,
+        "label": "Item 162 é😀"
+      },
+      {
+        "_id": "item-0163",
+        "index": 163,
+        "label": "Item 163 é😀"
+      },
+      {
+        "_id": "item-0164",
+        "index": 164,
+        "label": "Item 164 é😀"
+      },
+      {
+        "_id": "item-0165",
+        "index": 165,
+        "label": "Item 165 é😀"
+      },
+      {
+        "_id": "item-0166",
+        "index": 166,
+        "label": "Item 166 é😀"
+      },
+      {
+        "_id": "item-0167",
+        "index": 167,
+        "label": "Item 167 é😀"
+      },
+      {
+        "_id": "item-0168",
+        "index": 168,
+        "label": "Item 168 é😀"
+      },
+      {
+        "_id": "item-0169",
+        "index": 169,
+        "label": "Item 169 é😀"
+      },
+      {
+        "_id": "item-0170",
+        "index": 170,
+        "label": "Item 170 é😀"
+      },
+      {
+        "_id": "item-0171",
+        "index": 171,
+        "label": "Item 171 é😀"
+      },
+      {
+        "_id": "item-0172",
+        "index": 172,
+        "label": "Item 172 é😀"
+      },
+      {
+        "_id": "item-0173",
+        "index": 173,
+        "label": "Item 173 é😀"
+      },
+      {
+        "_id": "item-0174",
+        "index": 174,
+        "label": "Item 174 é😀"
+      },
+      {
+        "_id": "item-0175",
+        "index": 175,
+        "label": "Item 175 é😀"
+      },
+      {
+        "_id": "item-0176",
+        "index": 176,
+        "label": "Item 176 é😀"
+      },
+      {
+        "_id": "item-0177",
+        "index": 177,
+        "label": "Item 177 é😀"
+      },
+      {
+        "_id": "item-0178",
+        "index": 178,
+        "label": "Item 178 é😀"
+      },
+      {
+        "_id": "item-0179",
+        "index": 179,
+        "label": "Item 179 é😀"
+      },
+      {
+        "_id": "item-0180",
+        "index": 180,
+        "label": "Item 180 é😀"
+      },
+      {
+        "_id": "item-0181",
+        "index": 181,
+        "label": "Item 181 é😀"
+      },
+      {
+        "_id": "item-0182",
+        "index": 182,
+        "label": "Item 182 é😀"
+      },
+      {
+        "_id": "item-0183",
+        "index": 183,
+        "label": "Item 183 é😀"
+      },
+      {
+        "_id": "item-0184",
+        "index": 184,
+        "label": "Item 184 é😀"
+      },
+      {
+        "_id": "item-0185",
+        "index": 185,
+        "label": "Item 185 é😀"
+      },
+      {
+        "_id": "item-0186",
+        "index": 186,
+        "label": "Item 186 é😀"
+      },
+      {
+        "_id": "item-0187",
+        "index": 187,
+        "label": "Item 187 é😀"
+      },
+      {
+        "_id": "item-0188",
+        "index": 188,
+        "label": "Item 188 é😀"
+      },
+      {
+        "_id": "item-0189",
+        "index": 189,
+        "label": "Item 189 é😀"
+      },
+      {
+        "_id": "item-0190",
+        "index": 190,
+        "label": "Item 190 é😀"
+      },
+      {
+        "_id": "item-0191",
+        "index": 191,
+        "label": "Item 191 é😀"
+      },
+      {
+        "_id": "item-0192",
+        "index": 192,
+        "label": "Item 192 é😀"
+      },
+      {
+        "_id": "item-0193",
+        "index": 193,
+        "label": "Item 193 é😀"
+      },
+      {
+        "_id": "item-0194",
+        "index": 194,
+        "label": "Item 194 é😀"
+      },
+      {
+        "_id": "item-0195",
+        "index": 195,
+        "label": "Item 195 é😀"
+      },
+      {
+        "_id": "item-0196",
+        "index": 196,
+        "label": "Item 196 é😀"
+      },
+      {
+        "_id": "item-0197",
+        "index": 197,
+        "label": "Item 197 é😀"
+      },
+      {
+        "_id": "item-0198",
+        "index": 198,
+        "label": "Item 198 é😀"
+      },
+      {
+        "_id": "item-0199",
+        "index": 199,
+        "label": "Item 199 é😀"
+      }
+    ],
+    "notes": [
+      {
+        "_id": "n2",
+        "text": "second generation"
+      }
+    ],
+    "unicode": [
+      {
+        "_id": "😀",
+        "v": [
+          1,
+          2.5,
+          "x"
+        ]
+      }
+    ],
+    "users": [
+      {
+        "_id": "bob",
+        "age": 28
+      }
+    ]
+  }
+}
