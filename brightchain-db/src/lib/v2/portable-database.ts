@@ -50,6 +50,7 @@ import { BrightDbV2AesCipher, type BrightDbV2KeyRing } from './encryption';
 import { V2IndexTree } from './index-tree';
 import type { BrightDbV2BlockSource } from './block-source';
 import { copyDatabase, mergeReplica, type PortableMergeResult } from './merge';
+import { collectReachable } from './reachable';
 import { V2Tree } from './tree';
 
 export interface PortableBrightDbOptions {
@@ -1024,6 +1025,46 @@ export class PortableBrightDb {
     });
     for (const wake of this.wakeups) wake();
     return result;
+  }
+
+  /**
+   * Delete blocks that no retained root reaches. The current root is always
+   * kept, plus any roots in `keepRoots` (older states you still want to read),
+   * and everything they reach, including documents, indexes and attachments.
+   * Blocks written less than `graceMs` ago (default one hour) are kept even if
+   * unreachable, so a file stored with `putAttachment` has time to be
+   * referenced by a document. Runs under the write lock, so no commit is in
+   * flight. `dryRun` reports what would be removed without removing it.
+   * Needs a directory store.
+   */
+  async collectGarbage(
+    options: { keepRoots?: readonly string[]; graceMs?: number; dryRun?: boolean } = {},
+  ): Promise<{ keptReachable: number; keptRecent: number; removed: number; bytesFreed: number }> {
+    this.requireOpen();
+    const store = this.store;
+    if (!(store instanceof BrightDbV2DiskStore)) {
+      throw new Error('Garbage collection needs a directory store');
+    }
+    const graceMs = options.graceMs ?? 3_600_000;
+    return store.withWriteLock(async () => {
+      const roots = [await store.readHead(), ...(options.keepRoots ?? [])];
+      const reachable = await collectReachable(store, roots);
+      const keep = new Set([...reachable].map((digest) => store.fileNameOf(digest)));
+      const now = Date.now();
+      const result = { keptReachable: 0, keptRecent: 0, removed: 0, bytesFreed: 0 };
+      for (const file of await store.listBlockFiles()) {
+        if (keep.has(file.name)) {
+          result.keptReachable++;
+        } else if (now - file.modifiedMs < graceMs) {
+          result.keptRecent++;
+        } else {
+          result.removed++;
+          result.bytesFreed += file.bytes;
+          if (!options.dryRun) await store.deleteBlockFile(file.name);
+        }
+      }
+      return result;
+    });
   }
 
   /**

@@ -591,6 +591,40 @@ export class BrightDbV2DiskStore implements BrightDbV2Storage {
     dirty.clear();
   }
 
+  /** The file name a logical digest is stored under (the digest itself, or its keyed name when encrypted). */
+  fileNameOf(digest: string): string {
+    return this.blockLocation(digest).file;
+  }
+
+  /** Every file under blocks/, including leftover temporary files, with size and modification time. */
+  async listBlockFiles(): Promise<Array<{ name: string; bytes: number; modifiedMs: number }>> {
+    const out: Array<{ name: string; bytes: number; modifiedMs: number }> = [];
+    for (const prefix of await readdir(this.blocksPath)) {
+      const directory = join(this.blocksPath, prefix);
+      for (const name of await readdir(directory)) {
+        const stat = await lstat(join(directory, name));
+        if (stat.isFile()) out.push({ name, bytes: stat.size, modifiedMs: stat.mtimeMs });
+      }
+    }
+    return out;
+  }
+
+  /** Remove one block file by its on-disk name. The caller must hold the write lock. */
+  async deleteBlockFile(name: string): Promise<void> {
+    const directory = join(this.blocksPath, name.startsWith('.') ? '' : name.slice(0, 2));
+    if (name.startsWith('.')) {
+      // A leftover temporary file may sit in any prefix directory.
+      for (const prefix of await readdir(this.blocksPath)) {
+        await unlink(join(this.blocksPath, prefix, name)).catch(() => undefined);
+      }
+      return;
+    }
+    if (!/^[0-9a-f]{128}$/u.test(name)) {
+      throw new BrightDbV2StorageError('Invalid block file name');
+    }
+    await unlink(join(directory, name));
+  }
+
   /** Whether a block file exists. It does not read or verify the block. */
   async hasBlock(digest: string): Promise<boolean> {
     assertDigest(digest);
