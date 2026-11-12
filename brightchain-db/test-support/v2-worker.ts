@@ -40,6 +40,20 @@ async function main(): Promise<void> {
         console.log(JSON.stringify(out));
         break;
       }
+      case 'root': {
+        console.log(JSON.stringify({ root: await db.root() }));
+        break;
+      }
+      case 'diff': {
+        // diff <from> <to>: sorted "collection/id:type" summaries
+        const [from, to] = args;
+        const lines: string[] = [];
+        for await (const change of db.diff(from, to)) {
+          lines.push(`${change.collection}/${change.id}:${change.type}`);
+        }
+        console.log(JSON.stringify(lines.sort()));
+        break;
+      }
       case 'loop': {
         // loop <collection> <batchSize>: commit batches forever until killed.
         const [collection, size] = args;

@@ -86,6 +86,42 @@ function normalize(dump: Dump): Dump {
     expect(fromTs['other']).toHaveLength(2);
   }
 
+  it('computes identical roots and diffs in both runtimes across a mixed history', async () => {
+    const path = join(dir, 'db');
+    const roots: string[] = [];
+    const rootOf = async (runner: (a: string[]) => Promise<string>) =>
+      (JSON.parse(await runner(['root', path])) as { root: string }).root;
+
+    await run(['write', path, 'docs', 'a', '3']);
+    roots.push(await rootOf(run));
+    await runCpp(['write', path, 'docs', 'b', '2']);
+    roots.push(await rootOf(runCpp));
+    await run(['delete', path, 'docs', 'a-1']);
+    roots.push(await rootOf(run));
+    await runCpp(['write', path, 'other', 'o', '2']);
+    roots.push(await rootOf(runCpp));
+    await runCpp(['delete', path, 'docs', 'b-0']);
+    roots.push(await rootOf(runCpp));
+
+    // Each runtime reads the root the other published.
+    expect(await rootOf(run)).toBe(await rootOf(runCpp));
+    expect(await rootOf(run)).toBe(roots[roots.length - 1]);
+
+    for (let i = 0; i < roots.length; i++) {
+      for (let j = 0; j < roots.length; j++) {
+        const fromTs = JSON.parse(await run(['diff', path, roots[i], roots[j]]));
+        const fromCpp = JSON.parse(await runCpp(['diff', path, roots[i], roots[j]]));
+        expect(fromCpp).toEqual(fromTs);
+      }
+    }
+    expect(JSON.parse(await run(['diff', path, roots[0], roots[4]]))).toEqual([
+      'docs/a-1:deleted',
+      'docs/b-1:added',
+      'other/o-0:added',
+      'other/o-1:added',
+    ]);
+  });
+
   it('writes with TypeScript first, then C++, then TypeScript', () => leg('ts'));
   it('writes with C++ first, then TypeScript, then C++', () => leg('cpp'));
 
