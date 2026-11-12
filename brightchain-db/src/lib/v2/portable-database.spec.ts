@@ -295,3 +295,61 @@ describe('PortableBrightDb roots, snapshots and diff', () => {
     db.close();
   });
 });
+
+describe('PortableBrightDb subscribe', () => {
+  let dir: string;
+  beforeEach(async () => {
+    dir = await mkdtemp(join(tmpdir(), 'brightdb-v2-sub-'));
+  });
+  afterEach(async () => {
+    await rm(dir, { recursive: true, force: true });
+  });
+
+  async function until(condition: () => boolean, ms = 5000): Promise<void> {
+    const start = Date.now();
+    while (!condition()) {
+      if (Date.now() - start > ms) throw new Error('Timed out waiting for condition');
+      await new Promise((r) => setTimeout(r, 10));
+    }
+  }
+
+  it('notifies about local commits with the changed documents', async () => {
+    const db = await PortableBrightDb.open({ path: dir });
+    const seen: string[] = [];
+    const stop = await db.subscribe(async (event) => {
+      for await (const change of event.changes()) seen.push(`${change.id}:${change.type}`);
+    });
+    await db.collection('c').insertOne({ _id: 'a', v: 1 });
+    await until(() => seen.length >= 1);
+    await db.collection('c').replaceById('a', { _id: 'a', v: 2 });
+    await until(() => seen.length >= 2);
+    expect(seen).toEqual(['a:added', 'a:modified']);
+    stop();
+    await db.collection('c').deleteById('a');
+    await new Promise((r) => setTimeout(r, 400));
+    expect(seen).toHaveLength(2);
+    db.close();
+  });
+
+  it('notifies about commits made through another handle and reports errors', async () => {
+    const writer = await PortableBrightDb.open({ path: dir });
+    const reader = await PortableBrightDb.open({ path: dir });
+    const roots: string[] = [];
+    const errors: unknown[] = [];
+    await reader.subscribe(
+      (event) => {
+        roots.push(event.root);
+        if (roots.length === 2) throw new Error('listener failed');
+      },
+      { intervalMs: 20, onError: (e) => errors.push(e) },
+    );
+    await writer.collection('c').insertOne({ _id: 'a' });
+    await until(() => roots.length === 1);
+    await writer.collection('c').insertOne({ _id: 'b' });
+    await until(() => errors.length === 1);
+    expect(roots).toEqual([...new Set(roots)]);
+    expect(roots[roots.length - 1]).toBe(await writer.root());
+    writer.close();
+    reader.close();
+  });
+});

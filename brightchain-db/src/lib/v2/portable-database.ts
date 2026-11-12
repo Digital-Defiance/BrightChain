@@ -57,6 +57,23 @@ export interface PortableChange<T extends BsonDocument = BsonDocument> {
   after?: T;
 }
 
+/** Delivered to a subscriber when the database root has moved. */
+export interface PortableChangeEvent {
+  /** The last root this subscriber saw (the root at subscription time at first). */
+  previous: string;
+  /** The root now current. Several commits may be covered by one event. */
+  root: string;
+  /** The document-level changes between `previous` and `root`. */
+  changes<T extends BsonDocument = BsonDocument>(): AsyncGenerator<PortableChange<T>>;
+}
+
+export interface PortableSubscribeOptions {
+  /** How often to look for commits made by other processes. Default 250 ms. */
+  intervalMs?: number;
+  /** Called when the listener throws or the root cannot be read. */
+  onError?: (error: unknown) => void;
+}
+
 export interface PortableCollection<T extends BsonDocument = BsonDocument>
   extends PortableReadCollection<T> {
   insertOne(document: T): Promise<InsertOneResult>;
@@ -509,7 +526,70 @@ export class PortableBrightDb {
   /** Prevent new operations on this handle. Operations already started may finish. */
   close(): void {
     this.closed = true;
+    for (const stop of [...this.subscribers]) stop();
   }
+
+  private readonly subscribers = new Set<() => void>();
+
+  /**
+   * Call `listener` after the database root moves, whether the commit came
+   * from this handle or from another process using the same directory. A
+   * burst of commits can arrive as one event; `event.changes()` diffs the
+   * whole span. Events for one subscriber are delivered one at a time and in
+   * order. Returns a function that stops the subscription.
+   */
+  async subscribe(
+    listener: (event: PortableChangeEvent) => void | Promise<void>,
+    { intervalMs = 250, onError }: PortableSubscribeOptions = {},
+  ): Promise<() => void> {
+    this.requireOpen();
+    let last = await this.store.readHead();
+    let stopped = false;
+    let running = false;
+    let again = false;
+    const check = async (): Promise<void> => {
+      if (stopped) return;
+      if (running) {
+        again = true;
+        return;
+      }
+      running = true;
+      try {
+        do {
+          again = false;
+          const root = await this.store.readHead();
+          if (root !== last) {
+            const previous = last;
+            last = root;
+            await listener({
+              previous,
+              root,
+              changes: <T extends BsonDocument = BsonDocument>() =>
+                this.diff<T>(previous, root),
+            });
+          }
+        } while (again && !stopped);
+      } catch (error) {
+        onError?.(error);
+      } finally {
+        running = false;
+      }
+    };
+    const timer = setInterval(() => void check(), intervalMs);
+    timer.unref();
+    const wake = () => void check();
+    this.wakeups.add(wake);
+    const stop = () => {
+      stopped = true;
+      clearInterval(timer);
+      this.wakeups.delete(wake);
+      this.subscribers.delete(stop);
+    };
+    this.subscribers.add(stop);
+    return stop;
+  }
+
+  private readonly wakeups = new Set<() => void>();
 
   /** The digest of the current database state. Equal roots mean equal data. */
   async root(): Promise<string> {
@@ -632,6 +712,10 @@ export class PortableBrightDb {
       const result = await stage(batch);
       const head = await batch.persist();
       if (head !== null) await writer.publishHead(head);
+      return result;
+    }).then((result) => {
+      // Tell this handle's subscribers now instead of at their next poll.
+      for (const wake of this.wakeups) wake();
       return result;
     });
   }

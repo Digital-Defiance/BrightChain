@@ -52,6 +52,8 @@ export type {
   PortableBrightDb,
   PortableBrightDbOptions,
   PortableChange,
+  PortableChangeEvent,
+  PortableSubscribeOptions,
   PortableCollection,
   PortableReadCollection,
   PortableSnapshot,
