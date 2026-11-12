@@ -117,7 +117,7 @@ come from its public README, LLM docs and package READMEs as of November 2026
 | Schema validation | Not built in. | Per-collection schemas validated on write. | Not yet. |
 | File attachments | `_files` on a document, encrypted and synced on demand. | Not built in. | Not built in. |
 | Compaction and GC | Compaction writes a new combined CAR file. Old files are kept, and cloud cleanup is not yet implemented. | Each write leaves an orphaned metadata block. No GC. | Unreachable pages are left in place. No GC yet. |
-| Other languages | JavaScript and TypeScript. | A separate C++ port reads and writes the v1 layout. | A byte-exact draft spec with golden fixtures for a second implementation. The C++ v2 port is not done yet. |
+| Other languages | JavaScript and TypeScript. | A separate C++ port reads and writes the v1 layout. | A byte-exact draft spec with golden fixtures. A C++ port (`brightdb_v2` in brightchain-cpp) reads and writes the same directory as TypeScript, with local read, insert, replace, delete and batch operations only. |
 | License | MIT or Apache 2.0 (the repo's metadata lists Apache-2.0). | MIT | MIT |
 
 Choose Fireproof today if you need a browser or React app with live queries,
