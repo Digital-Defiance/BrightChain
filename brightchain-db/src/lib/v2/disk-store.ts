@@ -208,8 +208,24 @@ async function flockExclusive(fd: number): Promise<void> {
   }
 }
 
+/**
+ * What a BrightDB v2 database needs from the storage beneath it: blocks named
+ * by their plaintext digest, one published head, and exclusive writes. The disk
+ * store is the first implementation. Others, such as a BrightChain pool, can
+ * implement this and report whether they already encrypt.
+ */
+export interface BrightDbV2Storage {
+  readonly writerId: Uint8Array;
+  /** True when the storage encrypts blocks itself. BrightDB then refuses to add a second layer. */
+  readonly encryptsAtRest: boolean;
+  readHead(): Promise<string>;
+  readBlock(digest: string): Promise<Uint8Array>;
+  hasBlock(digest: string): Promise<boolean>;
+  withWriteLock<T>(write: (writer: BrightDbV2DiskWriter) => Promise<T>): Promise<T>;
+}
+
 /** Durable, content-addressed storage using the BrightDB v2 POSIX disk profile. */
-export class BrightDbV2DiskStore {
+export class BrightDbV2DiskStore implements BrightDbV2Storage {
   private readonly blocksPath: string;
 
   private constructor(
@@ -229,6 +245,10 @@ export class BrightDbV2DiskStore {
 
   get writerId(): Uint8Array {
     return Uint8Array.from(this.localWriterId);
+  }
+
+  get encryptsAtRest(): boolean {
+    return this.cipher !== null;
   }
 
   static async open(

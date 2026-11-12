@@ -57,7 +57,7 @@ primary lookups, query scans, inserts, replacements and deletes by ID, and atomi
   `equals`, `gt`, `gte`, `lt`, `lte`, `prefix` and `descending`. Index changes commit
   together with the documents that cause them.
 - **Fork and merge.** `await db.fork('./copy')` makes an independent replica, and `await db.merge(other)` brings another replica's changes in. The greater version of each document wins, a deletion beats an equal version, and merging in any order or direction gives the same root. This is how two copies converge without a server.
-- **Optional encryption at rest.** `BrightDb.open({ path, encryption: { key } })` (a 32-byte key) encrypts every block with AES-256-GCM under a keyed file name, and hides the head. Do not use it on a store that already encrypts, such as a BrightChain pool. See the [encryption note](https://github.brightchain.org/docs/architecture/brightdb-encryption/).
+- **Optional encryption at rest.** `BrightDb.open({ path, encryption: { key } })` (a 32-byte key) encrypts every block with AES-256-GCM under a keyed file name, and hides the head. `open` refuses to add it over a storage that already encrypts, such as a BrightChain pool. See the [encryption note](https://github.brightchain.org/docs/architecture/brightdb-encryption/).
 - **Attachments.** `putAttachment(bytes, { type })` stores a file of any size as
   1 MiB chunks under a tree of manifests, and accepts a stream so the file never has to fit in memory. Put the returned reference under `_files` in a document, then read it with
   `getAttachment(ref)` or `streamAttachment(ref)`.

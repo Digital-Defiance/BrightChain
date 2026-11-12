@@ -66,6 +66,7 @@ export { V2MergeError } from './lib/v2/merge';
 export { V2AttachmentError } from './lib/v2/attachments';
 export { V2IndexError } from './lib/v2/index-key';
 export { BrightDbV2DecryptionError } from './lib/v2/encryption';
+export type { BrightDbV2DiskWriter, BrightDbV2Storage } from './lib/v2/disk-store';
 export {
   BrightDbV2CommitOutcomeUnknownError,
   BrightDbV2MissingBlockError,

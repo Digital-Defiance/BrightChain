@@ -14,7 +14,7 @@ import {
   type V2IndexDefinition,
   type V2Record,
 } from './codec';
-import type { BrightDbV2DiskStore, BrightDbV2DiskWriter } from './disk-store';
+import type { BrightDbV2DiskWriter, BrightDbV2Storage } from './disk-store';
 import { extractIndexKeys } from './index-key';
 import { V2IndexTree } from './index-tree';
 import { V2Tree, type V2TreeBlockStore } from './tree';
@@ -40,9 +40,9 @@ type TreeKind = 'catalog' | 'primary';
 /** Copies a block graph from one store to another, children before parents. */
 class ClosureCopier {
   constructor(
-    private readonly local: BrightDbV2DiskStore,
+    private readonly local: BrightDbV2Storage,
     private readonly writer: BrightDbV2DiskWriter,
-    private readonly remote: BrightDbV2DiskStore,
+    private readonly remote: BrightDbV2Storage,
   ) {}
 
   /**
@@ -152,7 +152,7 @@ function remoteWins(local: V2Record, remote: V2Record): boolean {
 }
 
 async function readDatabaseRoot(
-  store: BrightDbV2DiskStore,
+  store: BrightDbV2Storage,
   digest: Digest,
 ): Promise<V2DatabaseRoot> {
   const block = decodeMetadata(await store.readBlock(digest), digest);
@@ -185,9 +185,9 @@ async function readDefinitions(
  * every needed block was read and verified.
  */
 export async function mergeReplica(
-  local: BrightDbV2DiskStore,
+  local: BrightDbV2Storage,
   writer: BrightDbV2DiskWriter,
-  remote: BrightDbV2DiskStore,
+  remote: BrightDbV2Storage,
   remoteHead: Digest,
 ): Promise<{ root: Digest; adopted: number } | null> {
   const localHead = await local.readHead();
@@ -319,9 +319,9 @@ export async function mergeReplica(
 
 /** Copy a whole database state into an empty store. */
 export async function copyDatabase(
-  local: BrightDbV2DiskStore,
+  local: BrightDbV2Storage,
   writer: BrightDbV2DiskWriter,
-  remote: BrightDbV2DiskStore,
+  remote: BrightDbV2Storage,
   head: Digest,
 ): Promise<void> {
   await new ClosureCopier(local, writer, remote).ensureDatabase(head);

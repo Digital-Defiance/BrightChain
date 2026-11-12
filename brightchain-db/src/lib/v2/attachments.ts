@@ -11,7 +11,7 @@ import {
   MAX_BLOB_CHUNKS,
   type Digest,
 } from './codec';
-import type { BrightDbV2DiskStore, BrightDbV2DiskWriter } from './disk-store';
+import type { BrightDbV2DiskWriter, BrightDbV2Storage } from './disk-store';
 
 const DIGEST = /^[0-9a-f]{128}$/u;
 
@@ -97,7 +97,7 @@ export async function writeAttachment(
   return { digest, size: Number(total), ...(type === undefined ? {} : { type }) };
 }
 
-async function readManifest(store: BrightDbV2DiskStore, digest: string) {
+async function readManifest(store: BrightDbV2Storage, digest: string) {
   if (!DIGEST.test(digest)) throw new V2AttachmentError('Invalid attachment digest');
   const block = decodeMetadata(await store.readBlock(digest), digest);
   if (block.kind !== 'blob') {
@@ -108,7 +108,7 @@ async function readManifest(store: BrightDbV2DiskStore, digest: string) {
 
 /** Every chunk of a file, in order, with the length it must have. Checks manifest sizes on the way. */
 async function* blobChunks(
-  store: BrightDbV2DiskStore,
+  store: BrightDbV2Storage,
   digest: string,
   expectedSize?: bigint,
 ): AsyncGenerator<{ digest: string; length: number }> {
@@ -128,7 +128,7 @@ async function* blobChunks(
 
 /** Stream a file's chunks in order, verifying every digest and length. */
 export async function* streamAttachment(
-  store: BrightDbV2DiskStore,
+  store: BrightDbV2Storage,
   digest: string,
 ): AsyncGenerator<Buffer> {
   for await (const chunk of blobChunks(store, digest)) {
@@ -141,7 +141,7 @@ export async function* streamAttachment(
 }
 
 export async function readAttachment(
-  store: BrightDbV2DiskStore,
+  store: BrightDbV2Storage,
   digest: string,
 ): Promise<Buffer> {
   const parts: Buffer[] = [];
@@ -154,7 +154,7 @@ export async function readAttachment(
  * object of well-formed references whose manifests and chunks already exist.
  */
 export async function validateFileReferences(
-  store: BrightDbV2DiskStore,
+  store: BrightDbV2Storage,
   document: unknown,
 ): Promise<void> {
   if (document === null || typeof document !== 'object') return;

@@ -47,7 +47,7 @@ Cost: 29 bytes per block, one AES-GCM pass per read or write, and about 300 line
 
 - **Standalone:** `BrightDb.open({ path, encryption: { key } })`. Without `encryption` nothing changes. A directory records that it is encrypted (`FORMAT` stays the same, an `ENCRYPTION` marker file names the profile and key version), so opening it without a key fails with a clear error instead of reading garbage.
 - **On BrightChain:** do not pass `encryption`. The adapter that exposes a pool as a v2 store uses the pool key and pool naming through the same wrapper. BrightDB never asks the user for a second key.
-- **Both at once:** the standalone option refuses to start on a store that reports it already encrypts, so no one ends up with two layers by accident.
+- **Both at once:** `BrightDb.open` takes either a `path` or a `storage` object. A storage reports `encryptsAtRest`, and combining that with `encryption` is refused with a clear error, so no one ends up with two layers by accident. Today the guard is enforced in TypeScript. The C++ port gets it when it gains a second storage kind.
 
 ## What this leaves out
 

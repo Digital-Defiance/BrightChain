@@ -34,7 +34,12 @@ import {
   writeAttachment,
   type AttachmentRef,
 } from './attachments';
-import { BrightDbV2DiskStore, type BrightDbV2DiskWriter } from './disk-store';
+import {
+  BrightDbV2DiskStore,
+  BrightDbV2StorageError,
+  type BrightDbV2DiskWriter,
+  type BrightDbV2Storage,
+} from './disk-store';
 import {
   decodeIndexId,
   extractIndexKeys,
@@ -47,12 +52,18 @@ import { copyDatabase, mergeReplica, type PortableMergeResult } from './merge';
 import { V2Tree } from './tree';
 
 export interface PortableBrightDbOptions {
-  /** Directory for the portable BrightDB v2 store. */
-  path: string;
+  /** Directory for the portable BrightDB v2 store. Give this or `storage`. */
+  path?: string;
+  /**
+   * Use another storage instead of a directory, such as an adapter over a
+   * BrightChain pool. It must already hold an initialized database. A storage
+   * that reports `encryptsAtRest` cannot be combined with `encryption`.
+   */
+  storage?: BrightDbV2Storage;
   /**
    * Encrypt every block at rest with AES-256-GCM, under a 32-byte master key.
-   * Do not set this when the store beneath BrightDB already encrypts, as a
-   * BrightChain pool does. A directory created with a key can only be opened
+   * Setting this on a storage that already encrypts, as a BrightChain pool
+   * does, is refused so blocks are never encrypted twice. A directory created with a key can only be opened
    * with the same key, and one created without cannot be opened with a key.
    */
   encryption?: { key: Uint8Array };
@@ -118,7 +129,7 @@ export interface PortableCollection<T extends BsonDocument = BsonDocument>
   dropIndex(name: string): Promise<void>;
 }
 
-type BlockReader = Pick<BrightDbV2DiskStore, 'readBlock'>;
+type BlockReader = Pick<BrightDbV2Storage, 'readBlock'>;
 function readTree(store: BlockReader, kind: 'catalog' | 'primary'): V2Tree {
   return new V2Tree(
     {
@@ -156,7 +167,7 @@ async function readIndexDefinitions(
 }
 
 async function readDatabaseRoot(
-  store: BrightDbV2DiskStore,
+  store: BrightDbV2Storage,
 ): Promise<V2DatabaseRoot> {
   const head = await store.readHead();
   const root = decodeMetadata(await store.readBlock(head));
@@ -352,7 +363,7 @@ class WriteBatch {
     const { key: id, payload } = encodeDocumentForWrite(document, () =>
       randomUUID().replaceAll('-', ''),
     );
-    await validateFileReferences(this.store as BrightDbV2DiskStore, document);
+    await validateFileReferences(this.store as BrightDbV2Storage, document);
     const existing = await this.collection(name);
     const collection =
       existing.kind === 'live' ? existing : this.addCollection(name);
@@ -384,7 +395,7 @@ class WriteBatch {
       };
     }
     const { payload } = encodeDocumentForWrite(document, () => id, id);
-    await validateFileReferences(this.store as BrightDbV2DiskStore, document);
+    await validateFileReferences(this.store as BrightDbV2Storage, document);
     const target = digestPayload(payload);
     const changed = target !== record.target;
     if (changed) {
@@ -639,7 +650,7 @@ class WriteBatch {
 export class PortableSnapshot {
   /** @internal Use PortableBrightDb.at() or PortableBrightDb.snapshot(). */
   constructor(
-    private readonly store: BrightDbV2DiskStore,
+    private readonly store: BrightDbV2Storage,
     private readonly catalog: V2Tree,
     private readonly primary: V2Tree,
     private readonly indexTree: V2IndexTree,
@@ -799,7 +810,7 @@ export class PortableBrightDb {
   private readonly indexTree: V2IndexTree;
   private closed = false;
 
-  private constructor(private readonly store: BrightDbV2DiskStore) {
+  private constructor(private readonly store: BrightDbV2Storage) {
     this.catalog = readTree(store, 'catalog');
     this.primary = readTree(store, 'primary');
     this.indexTree = readIndexTree(store);
@@ -807,8 +818,27 @@ export class PortableBrightDb {
 
   static async open({
     path,
+    storage,
     encryption,
   }: PortableBrightDbOptions): Promise<PortableBrightDb> {
+    if (storage) {
+      if (path !== undefined) {
+        throw new Error('Give either a path or a storage, not both');
+      }
+      if (encryption && storage.encryptsAtRest) {
+        throw new BrightDbV2StorageError(
+          'This storage already encrypts at rest; do not also set encryption',
+        );
+      }
+      if (encryption) {
+        throw new BrightDbV2StorageError(
+          'BrightDB encryption applies only to its own directory store; the storage must encrypt itself',
+        );
+      }
+      await readDatabaseRoot(storage);
+      return new PortableBrightDb(storage);
+    }
+    if (path === undefined) throw new Error('Give a path or a storage');
     const emptyRoot = encodeMetadata({
       kind: 'database',
       databaseId: randomBytes(16).toString('hex'),
@@ -932,6 +962,10 @@ export class PortableBrightDb {
    */
   async fork(path: string): Promise<PortableBrightDb> {
     this.requireOpen();
+    const source = this.store;
+    if (!(source instanceof BrightDbV2DiskStore)) {
+      throw new Error('fork copies into a new directory and needs a directory store');
+    }
     const head = await this.store.readHead();
     const root = await readDatabaseRoot(this.store);
     const store = await BrightDbV2DiskStore.create(
@@ -943,7 +977,7 @@ export class PortableBrightDb {
         catalog: null,
       }),
       undefined,
-      this.store.cipher,
+      source.cipher,
     );
     await store.withWriteLock(async (writer) => {
       await copyDatabase(store, writer, this.store, head);

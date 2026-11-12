@@ -171,7 +171,7 @@ The previous native design and its vectors describe the flat metadata format. Th
 
 ## 10. Encrypted block-store profile
 
-An optional profile encrypts every block at rest without changing any digest in the graph. Roots, pages, document references, index roots and `_files` references all keep naming blocks by the SHA3-512 digest of their plaintext. Only the portable disk profile's file names and file contents change. Use it for a standalone store. A store that already encrypts beneath BrightDB, such as a BrightChain pool, must not enable it.
+An optional profile encrypts every block at rest without changing any digest in the graph. Roots, pages, document references, index roots and `_files` references all keep naming blocks by the SHA3-512 digest of their plaintext. Only the portable disk profile's file names and file contents change. Use it for a standalone store. A storage that already encrypts beneath BrightDB, such as a BrightChain pool, must not enable it: an implementation reports whether its storage encrypts at rest and refuses to combine that with this profile.
 
 A store using the profile has an `ENCRYPTION` file holding exactly `BrightDB encryption 1\n`. A reader without a key rejects such a directory, and a reader with a key rejects a directory without the file. The `FORMAT`, `WRITER` and `LOCK` files keep their meaning and stay unencrypted.
 
