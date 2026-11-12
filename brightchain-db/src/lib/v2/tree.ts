@@ -25,6 +25,21 @@ export interface V2TreeBlockStore {
   put(digest: Digest, bytes: Uint8Array): Promise<void>;
 }
 
+/** A record that differs between two trees. A missing side means the key is absent there. */
+export interface V2RecordChange {
+  key: string;
+  before?: V2Record;
+  after?: V2Record;
+}
+
+function sameRecord(left: V2Record, right: V2Record): boolean {
+  return (
+    left.version.counter === right.version.counter &&
+    left.version.writerId === right.version.writerId &&
+    left.target === right.target
+  );
+}
+
 interface RoutedRecord {
   record: V2Record;
   route: string;
@@ -147,6 +162,89 @@ export class V2Tree {
   /** Visit all records, including tombstones, in deterministic trie order. */
   async *entries(root: Digest | null): AsyncIterableIterator<V2Record> {
     if (root !== null) yield* this.iterate(root, '');
+  }
+
+  /**
+   * Records that differ between two roots, in key order within each page.
+   * Subtrees with equal digests are skipped without being read, so the cost
+   * is proportional to the change, not the collection size.
+   */
+  async *diff(
+    from: Digest | null,
+    to: Digest | null,
+  ): AsyncIterableIterator<V2RecordChange> {
+    yield* this.diffPages(from, to, '', undefined, undefined);
+  }
+
+  private async *diffPages(
+    from: Digest | null,
+    to: Digest | null,
+    prefix: string,
+    fromBytes: bigint | undefined,
+    toBytes: bigint | undefined,
+  ): AsyncIterableIterator<V2RecordChange> {
+    if (from === to) return;
+    if (from === null || to === null) {
+      const present = (from ?? to) as Digest;
+      for await (const record of this.iterate(
+        present,
+        prefix,
+        from === null ? toBytes : fromBytes,
+      )) {
+        yield from === null
+          ? { key: record.key, after: record }
+          : { key: record.key, before: record };
+      }
+      return;
+    }
+
+    const left = await this.readPage(from, prefix, fromBytes);
+    const right = await this.readPage(to, prefix, toBytes);
+    if (left.page.kind === 'branch' && right.page.kind === 'branch') {
+      for (let nibble = 0; nibble < 16; nibble++) {
+        const a = left.page.children.find((child) => child.nibble === nibble);
+        const b = right.page.children.find((child) => child.nibble === nibble);
+        if (!a && !b) continue;
+        yield* this.diffPages(
+          a?.digest ?? null,
+          b?.digest ?? null,
+          childPrefix(prefix, nibble),
+          a?.recordBytes,
+          b?.recordBytes,
+        );
+      }
+      return;
+    }
+
+    // One side is a leaf: the other side's records under this prefix are
+    // compared against it by key.
+    const gather = async (
+      digest: Digest,
+      page: TreePage,
+      recordBytes: bigint,
+    ): Promise<readonly V2Record[]> => {
+      if (page.kind !== 'branch') return page.records;
+      const records: V2Record[] = [];
+      for await (const record of this.iterate(digest, prefix, recordBytes)) {
+        records.push(record);
+      }
+      return records;
+    };
+    const before = new Map(
+      (await gather(from, left.page, left.recordBytes)).map((r) => [r.key, r]),
+    );
+    const after = new Map(
+      (await gather(to, right.page, right.recordBytes)).map((r) => [r.key, r]),
+    );
+    const keys = [...new Set([...before.keys(), ...after.keys()])].sort(
+      compareKeys,
+    );
+    for (const key of keys) {
+      const a = before.get(key);
+      const b = after.get(key);
+      if (a && b && sameRecord(a, b)) continue;
+      yield { key, before: a, after: b };
+    }
   }
 
   private async readPage(

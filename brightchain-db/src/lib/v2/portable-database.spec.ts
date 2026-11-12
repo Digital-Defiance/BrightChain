@@ -8,6 +8,7 @@ import {
 } from '../../index';
 import { digestPayload, encodeDocument } from './codec';
 import { BrightDbV2DiskStore } from './disk-store';
+import { PortableBrightDb } from './portable-database';
 
 const describePosix = process.platform === 'win32' ? describe.skip : describe;
 
@@ -169,4 +170,128 @@ describePosix('BrightDb.open', () => {
     expect(reads.mock.calls.length).toBeLessThanOrEqual(8);
     reopened.close();
   }, 30_000);
+});
+
+describe('PortableBrightDb roots, snapshots and diff', () => {
+  let dir: string;
+  beforeEach(async () => {
+    dir = await mkdtemp(join(tmpdir(), 'brightdb-v2-diff-'));
+  });
+  afterEach(async () => {
+    await rm(dir, { recursive: true, force: true });
+  });
+
+  async function collect<T>(iterable: AsyncIterable<T>): Promise<T[]> {
+    const items: T[] = [];
+    for await (const item of iterable) items.push(item);
+    return items;
+  }
+
+  it('identifies each state by its root and reads past states', async () => {
+    const db = await PortableBrightDb.open({ path: dir });
+    const empty = await db.root();
+    await db.collection('users').insertOne({ _id: 'a', n: 1 });
+    const first = await db.root();
+    await db.collection('users').replaceById('a', { _id: 'a', n: 2 });
+    await db.collection('users').insertOne({ _id: 'b', n: 3 });
+    const second = await db.root();
+    expect(new Set([empty, first, second]).size).toBe(3);
+
+    expect(await (await db.at(empty)).listCollections()).toEqual([]);
+    expect(await (await db.at(first)).collection('users').findById('a')).toEqual({ _id: 'a', n: 1 });
+    expect(await (await db.at(first)).collection('users').findById('b')).toBeNull();
+    expect(await (await db.at(second)).collection('users').find({}).toArray()).toHaveLength(2);
+
+    await expect(db.at('f'.repeat(128))).rejects.toThrow();
+    db.close();
+  });
+
+  it('keeps a snapshot stable while later commits are published', async () => {
+    const db = await PortableBrightDb.open({ path: dir });
+    await db.collection('c').insertOne({ _id: 'a', v: 1 });
+    const snapshot = await db.snapshot();
+    await db.collection('c').deleteById('a');
+    expect(await db.collection('c').findById('a')).toBeNull();
+    expect(await snapshot.collection('c').findById('a')).toEqual({ _id: 'a', v: 1 });
+    db.close();
+  });
+
+  it('reports added, modified and deleted documents between roots', async () => {
+    const db = await PortableBrightDb.open({ path: dir });
+    await db.collection('users').insertMany([
+      { _id: 'a', n: 1 },
+      { _id: 'b', n: 2 },
+      { _id: 'c', n: 3 },
+    ]);
+    const before = await db.root();
+    await db.writeBatch([
+      { type: 'replace', collection: 'users', id: 'a', document: { _id: 'a', n: 10 } },
+      { type: 'delete', collection: 'users', id: 'b' },
+      { type: 'insert', collection: 'users', document: { _id: 'd', n: 4 } },
+      { type: 'insert', collection: 'logs', document: { _id: 'l1', m: 'x' } },
+    ]);
+    const after = await db.root();
+
+    const changes = await collect(db.diff(before, after));
+    const summary = changes.map((c) => `${c.collection}/${c.id}:${c.type}`).sort();
+    expect(summary).toEqual([
+      'logs/l1:added',
+      'users/a:modified',
+      'users/b:deleted',
+      'users/d:added',
+    ]);
+    const modified = changes.find((c) => c.id === 'a');
+    expect(modified?.before).toEqual({ _id: 'a', n: 1 });
+    expect(modified?.after).toEqual({ _id: 'a', n: 10 });
+
+    expect(await collect(db.diff(after, after))).toEqual([]);
+    // Reversing the direction reverses every change.
+    const reversed = await collect(db.diff(after, before));
+    expect(reversed.map((c) => `${c.collection}/${c.id}:${c.type}`).sort()).toEqual([
+      'logs/l1:deleted',
+      'users/a:modified',
+      'users/b:added',
+      'users/d:deleted',
+    ]);
+    db.close();
+  });
+
+  it('reads only the changed paths when diffing a large collection', async () => {
+    jest.setTimeout(60_000);
+    const db = await PortableBrightDb.open({ path: dir });
+    const users = db.collection('users');
+    await users.insertMany(
+      Array.from({ length: 800 }, (_, i) => ({ _id: `u${i}`, n: i })),
+    );
+    const before = await db.root();
+    await users.replaceById('u433', { _id: 'u433', n: -1 });
+    const after = await db.root();
+
+    const reads: string[] = [];
+    const store = (db as unknown as { store: { readBlock: (d: string) => Promise<Uint8Array> } }).store;
+    const original = store.readBlock.bind(store);
+    store.readBlock = async (digest: string) => {
+      reads.push(digest);
+      return original(digest);
+    };
+    const changes = await collect(db.diff(before, after));
+    expect(changes).toHaveLength(1);
+    expect(changes[0]).toMatchObject({ id: 'u433', type: 'modified' });
+    // Two roots, two catalogs and collection roots, two page paths, two documents.
+    expect(reads.length).toBeLessThan(30);
+    db.close();
+  });
+
+  it('reports a dropped and recreated collection as deletions then additions', async () => {
+    const db = await PortableBrightDb.open({ path: dir });
+    await db.collection('c').insertOne({ _id: 'old', v: 1 });
+    const before = await db.root();
+    await db.writeBatch([
+      { type: 'dropCollection', collection: 'c' },
+      { type: 'insert', collection: 'c', document: { _id: 'new', v: 2 } },
+    ]);
+    const changes = await collect(db.diff(before, await db.root()));
+    expect(changes.map((c) => `${c.id}:${c.type}`).sort()).toEqual(['new:added', 'old:deleted']);
+    db.close();
+  });
 });

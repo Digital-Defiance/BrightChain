@@ -51,7 +51,10 @@ export type { BrightDbOptions } from './lib/database';
 export type {
   PortableBrightDb,
   PortableBrightDbOptions,
+  PortableChange,
   PortableCollection,
+  PortableReadCollection,
+  PortableSnapshot,
   PortableWriteOperation,
 } from './lib/v2/portable-database';
 export {
