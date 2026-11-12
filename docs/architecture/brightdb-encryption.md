@@ -56,6 +56,10 @@ Cost: 29 bytes per block, one AES-GCM pass per read or write, and about 300 line
 - **Sync between key holders:** all replicas of one database use the same master key. Replicas with different keys cannot read each other, by design.
 - **Cross-database dedup:** none, by design.
 
-## Open decision for BrightChain
+## The BrightChain adapter and encrypting pools
 
-Pool encryption names blocks by the hash of the ciphertext. v2 needs to look a block up by its logical digest. Before v2 runs on a BrightChain pool, its adapter must either keep a logical-to-physical mapping or adopt the HMAC naming above. The recommendation is the HMAC naming, because it needs no extra stored mapping and matches the standalone profile.
+`BrightChainV2Storage` (in `brightchain-db`) keeps a v2 database in a BrightChain pool. Blocks go through `IPooledBlockStore.putInPool` and come back through `getFromPool`, and the current root lives in the head registry under a pool-scoped name. A plain pool names each block by the SHA3-512 of its bytes, which is the v2 digest, so no mapping is needed. The adapter checks that the pool returns that exact name and refuses a pool that does not. `BrightChainV2Storage.joinFrom` lets a second node copy a database from any block source into its own pool, after which the nodes write independently and converge with `merge`, directly or over HTTP.
+
+**Encrypting pools are not supported yet, for a concrete reason.** `putInPool` chooses the block's name itself, as the hash of whatever bytes it stored. An encrypting pool stores ciphertext, so its names are ciphertext hashes. v2 parents refer to children by plaintext digest and must find a block from that digest alone, which a ciphertext-hash name cannot offer. The keyed naming described above therefore needs the pool to store a block under a name the caller supplies. The adapter declares this with `poolEncrypts`: BrightDB then refuses its own `encryption` option, and writes fail with a message naming this limit.
+
+**Recommended resolution.** Add `putInPoolWithId(pool, id, data)` for encrypting pools, where the id is the keyed name (`HMAC-SHA512(pool name key, plaintext digest)`) and the authenticated cipher's associated data is that id, so a block cannot be moved to another name. The pool's own AES-256-GCM key supplies the cipher, and the adapter derives names from the same key. That keeps one key, one layer and the same naming as the standalone profile. The alternative, a stored logical-to-physical map, adds a structure that every read would consult.

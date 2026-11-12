@@ -70,6 +70,12 @@ export type { BrightDbV2DiskWriter, BrightDbV2Storage } from './lib/v2/disk-stor
 export type { BlockServer, BrightDbV2BlockSource } from './lib/v2/block-source';
 export { HttpBlockSource, serveBlocks } from './lib/v2/block-source';
 export {
+  BrightChainV2Storage,
+  headCollection,
+  V2_HEAD_COLLECTION,
+  type BrightChainV2StorageOptions,
+} from './lib/v2/brightchain-storage';
+export {
   BrightDbV2CommitOutcomeUnknownError,
   BrightDbV2MissingBlockError,
   BrightDbV2StorageError,
