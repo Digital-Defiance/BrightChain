@@ -7,6 +7,8 @@ permalink: /docs/architecture/brightdb/
 
 # BrightDB — Architecture Reference
 
+This reference describes the current implementation. The [BrightDB Storage Format v2 draft](./brightdb-storage-format-v2.md) defines the successor for the reference TypeScript implementation and the C++ port.
+
 ## 1. Introduction
 
 BrightDB is the document-database layer of BrightChain. It provides a

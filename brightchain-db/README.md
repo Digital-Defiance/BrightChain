@@ -25,10 +25,32 @@ It supports:
 > - `@brightchain/db` — the npm package name (used in imports)
 > - `brightchain-db` — the directory and Nx project name
 
-## Quick Start
+## Standalone local database
+
+Open a new or existing v2 directory on a local POSIX filesystem. On Linux the
+adapter uses `flock` when available, with Perl as a fallback. On macOS and BSD it
+uses Perl. The v2 directory stores documents and metadata together.
 
 ```typescript
-import { BrightDb } from '@brightchain/brightchain-db';
+import { BrightDb } from '@brightchain/db';
+
+const db = await BrightDb.open({ path: './data' });
+const users = db.collection('users');
+const { insertedId } = await users.insertOne({ name: 'Alice' });
+console.log(await users.findById(insertedId));
+db.close();
+```
+
+Reopen the same directory to read the committed data. The local v2 API supports
+primary lookups, query scans, inserts, replacements and deletes by ID, and atomic
+`writeBatch` operations across collections. Secondary indexes and BrightChain
+replication are planned for later stages. Use a fresh directory for v2. See the
+[storage format specification](https://github.brightchain.org/docs/architecture/brightdb-storage-format-v2/).
+
+## Bring your own block store
+
+```typescript
+import { BrightDb } from '@brightchain/db';
 import { MemoryBlockStoreAdapter } from '@brightchain/brightchain-lib';
 import { BlockSize } from '@brightchain/brightchain-lib';
 
@@ -65,7 +87,7 @@ try {
 }
 
 // Express middleware
-import { createDbRouter } from '@brightchain/brightchain-db';
+import { createDbRouter } from '@brightchain/db';
 app.use('/api/db', createDbRouter(db));
 ```
 

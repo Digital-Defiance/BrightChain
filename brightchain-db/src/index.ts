@@ -48,6 +48,17 @@ export type {
 } from './lib/collection';
 export { BrightDb } from './lib/database';
 export type { BrightDbOptions } from './lib/database';
+export type {
+  PortableBrightDb,
+  PortableBrightDbOptions,
+  PortableCollection,
+  PortableWriteOperation,
+} from './lib/v2/portable-database';
+export {
+  BrightDbV2CommitOutcomeUnknownError,
+  BrightDbV2MissingBlockError,
+  BrightDbV2StorageError,
+} from './lib/v2/disk-store';
 
 // Head registries
 export {

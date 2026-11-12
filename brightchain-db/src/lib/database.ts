@@ -37,6 +37,10 @@ import {
   CursorSession,
   DocumentId,
 } from './types';
+import {
+  PortableBrightDb,
+  type PortableBrightDbOptions,
+} from './v2/portable-database';
 
 /**
  * Options for creating a BrightDb instance.
@@ -110,6 +114,11 @@ export interface BrightDbOptions {
  * The main database driver – analogous to MongoDB's `Db` class.
  */
 export class BrightDb {
+  /** Open or create a standalone database using the portable v2 disk format. */
+  static open(options: PortableBrightDbOptions): Promise<PortableBrightDb> {
+    return PortableBrightDb.open(options);
+  }
+
   public readonly name: string;
   private readonly store: IBlockStore;
   private readonly collections = new Map<string, Collection>();
