@@ -280,6 +280,61 @@ function normalize(dump: Dump): Dump {
     }
   });
 
+  /** Start `serve` in a runtime and return its URL and a way to stop it. */
+  function startServer(runtime: 'ts' | 'cpp', path: string, token?: string) {
+    const args = ['serve', path, '0', ...(token ? [token] : [])];
+    const child =
+      runtime === 'cpp'
+        ? spawn(CPP_TOOL as string, args, { stdio: ['pipe', 'pipe', 'inherit'] })
+        : spawn(process.execPath, ['--import', 'tsx', WORKER, ...args], { stdio: ['pipe', 'pipe', 'inherit'] });
+    return new Promise<{ url: string; stop: () => Promise<void> }>((resolvePromise, reject) => {
+      child.once('error', reject);
+      child.stdout.once('data', (chunk) => {
+        const { url } = JSON.parse(String(chunk));
+        resolvePromise({
+          url,
+          stop: () =>
+            new Promise<void>((done) => {
+              child.once('close', () => done());
+              child.stdin.end();
+            }),
+        });
+      });
+    });
+  }
+
+  it('syncs between runtimes over HTTP in both directions, with and without a token', async () => {
+    const a = join(dir, 'a');
+    const b = join(dir, 'b');
+    await run(['insertjson', a, 'docs', JSON.stringify({ _id: 'one', city: 'Oslo' })]);
+    await run(['createindex', a, 'docs', 'by_city', 'city']);
+    await run(['fork', a, b]);
+    await run(['insertjson', a, 'docs', JSON.stringify({ _id: 'ts-a', city: 'Oslo' })]);
+    await runCpp(['insertjson', b, 'docs', JSON.stringify({ _id: 'cpp-b', city: 'Bergen' })]);
+
+    const tsServer = await startServer('ts', a, 'tok');
+    const cppServer = await startServer('cpp', b);
+    try {
+      // C++ pulls from a TypeScript server, TypeScript pulls from a C++ server.
+      await expect(runCpp(['pull', b, tsServer.url])).rejects.toThrow(); // token missing
+      await runCpp(['pull', b, tsServer.url, 'tok']);
+      await run(['pull', a, cppServer.url]);
+      await run(['pull', a, cppServer.url]); // idempotent
+    } finally {
+      await tsServer.stop();
+      await cppServer.stop();
+    }
+    const roots = await Promise.all([
+      run(['root', a]).then((r) => JSON.parse(r).root),
+      runCpp(['root', b]).then((r) => JSON.parse(r).root),
+    ]);
+    expect(roots[0]).toBe(roots[1]);
+    for (const p of [a, b]) {
+      expect(JSON.parse(await run(['findindex', p, 'docs', 'by_city', '{"equals":["Oslo"]}']))).toEqual(['one', 'ts-a']);
+      expect(JSON.parse(await runCpp(['findindex', p, 'docs', 'by_city', '{"equals":["Bergen"]}']))).toEqual(['cpp-b']);
+    }
+  });
+
   it('writes with TypeScript first, then C++, then TypeScript', () => leg('ts'));
   it('writes with C++ first, then TypeScript, then C++', () => leg('cpp'));
 

@@ -5,6 +5,7 @@
  */
 import { readFileSync } from 'node:fs';
 import { digestPayload } from '../src/lib/v2/codec';
+import { HttpBlockSource, serveBlocks } from '../src/lib/v2/block-source';
 import { PortableBrightDb } from '../src/lib/v2/portable-database';
 
 async function main(): Promise<void> {
@@ -89,6 +90,27 @@ async function main(): Promise<void> {
         } finally {
           source.close();
         }
+        break;
+      }
+      case 'serve': {
+        // serve [port] [token]: serve this database read-only until stdin closes
+        const [port, token] = args;
+        const server = await serveBlocks(db.blockSource(), {
+          port: port ? Number(port) : 0,
+          token,
+        });
+        console.log(JSON.stringify({ url: server.url }));
+        await new Promise<void>((resolve) => {
+          process.stdin.resume();
+          process.stdin.on('end', resolve);
+        });
+        await server.close();
+        break;
+      }
+      case 'pull': {
+        // pull <url> [token]: merge a served replica into this one
+        const [url, token] = args;
+        console.log(JSON.stringify(await db.merge(new HttpBlockSource(url, { token }))));
         break;
       }
       case 'root': {
