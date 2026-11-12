@@ -42,6 +42,7 @@ import {
   type IndexQuery,
 } from './index-key';
 import { V2IndexTree } from './index-tree';
+import { copyDatabase, mergeReplica, type PortableMergeResult } from './merge';
 import { V2Tree } from './tree';
 
 export interface PortableBrightDbOptions {
@@ -904,6 +905,57 @@ export class PortableBrightDb {
   streamAttachment(ref: Pick<AttachmentRef, 'digest'>): AsyncGenerator<Buffer> {
     this.requireOpen();
     return streamAttachment(this.store, ref.digest);
+  }
+
+  /**
+   * Copy this database into a new directory as an independent replica. The
+   * copy keeps the database ID and gets its own writer ID, so both sides can
+   * write and later `merge` each other.
+   */
+  async fork(path: string): Promise<PortableBrightDb> {
+    this.requireOpen();
+    const head = await this.store.readHead();
+    const root = await readDatabaseRoot(this.store);
+    const store = await BrightDbV2DiskStore.create(
+      path,
+      encodeMetadata({
+        kind: 'database',
+        databaseId: root.databaseId,
+        clock: 0n,
+        catalog: null,
+      }),
+    );
+    await store.withWriteLock(async (writer) => {
+      await copyDatabase(store, writer, this.store, head);
+      await writer.publishHead(head);
+    });
+    return new PortableBrightDb(store);
+  }
+
+  /**
+   * Merge another replica of this database into this one. The other replica's
+   * current root is used unless `options.root` names an earlier one. Per
+   * document the greater version wins, a deletion beats an equal version, and
+   * for equal live versions the greater digest wins. A collection that was
+   * dropped or recreated with a greater generation replaces the older one.
+   * Merging in either direction, or in any order, gives the same root. Nothing
+   * is published if any block the merge needs is missing or fails its digest.
+   */
+  async merge(
+    other: PortableBrightDb,
+    options: { root?: string } = {},
+  ): Promise<PortableMergeResult> {
+    this.requireOpen();
+    const remoteHead = options.root ?? (await other.store.readHead());
+    const result = await this.store.withWriteLock(async (writer) => {
+      const previous = await this.store.readHead();
+      const merged = await mergeReplica(this.store, writer, other.store, remoteHead);
+      if (!merged) return { previous, root: previous, adopted: 0 };
+      await writer.publishHead(merged.root);
+      return { previous, root: merged.root, adopted: merged.adopted };
+    });
+    for (const wake of this.wakeups) wake();
+    return result;
   }
 
   /** The digest of the current database state. Equal roots mean equal data. */

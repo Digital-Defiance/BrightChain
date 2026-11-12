@@ -61,6 +61,8 @@ export type {
 } from './lib/v2/portable-database';
 export type { IndexQuery, IndexScalar } from './lib/v2/index-key';
 export type { AttachmentRef } from './lib/v2/attachments';
+export type { PortableMergeResult } from './lib/v2/merge';
+export { V2MergeError } from './lib/v2/merge';
 export { V2AttachmentError } from './lib/v2/attachments';
 export { V2IndexError } from './lib/v2/index-key';
 export {
