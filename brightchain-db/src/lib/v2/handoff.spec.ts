@@ -335,6 +335,32 @@ function normalize(dump: Dump): Dump {
     }
   });
 
+  it('lets either runtime collect garbage from a store the other wrote', async () => {
+    const path = join(dir, 'db');
+    const doc = (id: string, v: number) => JSON.stringify({ _id: id, v });
+    await run(['createindex', path, 'docs', 'by_v', 'v']);
+    for (let i = 0; i < 60; i++) await run(['insertjson', path, 'docs', doc(`d${i}`, i)]);
+    const file = join(dir, 'file.bin');
+    await writeFile(file, Buffer.alloc(1_300_000, 5));
+    const used = JSON.parse(await run(['putfile', path, file]));
+    await runCpp(['insertjson', path, 'docs', JSON.stringify({ _id: 'with-file', v: -1, _files: { f: used } })]);
+    const before = JSON.parse(await run(['dump', path])).docs.length;
+
+    const fromCpp = JSON.parse(await runCpp(['gc', path, '0']));
+    expect(fromCpp.removed).toBeGreaterThan(10);
+    expect(JSON.parse(await run(['dump', path])).docs).toHaveLength(before);
+    expect(JSON.parse(await run(['getfile', path, used.digest])).size).toBe(1_300_000);
+    expect(JSON.parse(await run(['findindex', path, 'docs', 'by_v', '{"gte":58}']))).toEqual(['d58', 'd59']);
+
+    for (let i = 0; i < 15; i++) await runCpp(['delete', path, 'docs', `d${i}`]);
+    const fromTs = JSON.parse(await run(['gc', path, '0']));
+    expect(fromTs.removed).toBeGreaterThan(10);
+    expect(JSON.parse(await runCpp(['dump', path])).docs).toHaveLength(before - 15);
+    expect(JSON.parse(await runCpp(['getfile', path, used.digest])).size).toBe(1_300_000);
+    expect(JSON.parse(await runCpp(['gc', path, '0'])).removed).toBe(0);
+    expect(JSON.parse(await run(['gc', path, '0'])).removed).toBe(0);
+  });
+
   it('writes with TypeScript first, then C++, then TypeScript', () => leg('ts'));
   it('writes with C++ first, then TypeScript, then C++', () => leg('cpp'));
 

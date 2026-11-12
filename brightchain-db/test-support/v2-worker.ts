@@ -113,6 +113,13 @@ async function main(): Promise<void> {
         console.log(JSON.stringify(await db.merge(new HttpBlockSource(url, { token }))));
         break;
       }
+      case 'gc': {
+        // gc [graceMs]: delete blocks the current root does not reach
+        const [grace] = args;
+        const r = await db.collectGarbage({ graceMs: grace ? Number(grace) : undefined });
+        console.log(JSON.stringify({ keptReachable: r.keptReachable, keptRecent: r.keptRecent, removed: r.removed }));
+        break;
+      }
       case 'root': {
         console.log(JSON.stringify({ root: await db.root() }));
         break;
