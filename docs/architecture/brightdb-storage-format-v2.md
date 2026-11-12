@@ -32,10 +32,14 @@ The table describes the bytes after the `BDB2` header and kind byte. Fields appe
 | Kind | Block | Payload |
 | --- | --- | --- |
 | `0x01` | Database root | `16-byte database ID` · `u64 clock` · `ref catalog` |
-| `0x02` | Collection root | `version generation` · `ref primary` |
+| `0x02` | Collection root | `version generation` · `ref primary` · `ref indexes` |
 | `0x03` | Branch | `u16 bitmap` · one `u64 recordBytes` and `digest` per set bit, in ascending bit order |
 | `0x04` | Primary leaf | `u16 count` · `count` primary records |
 | `0x05` | Catalog leaf | `u16 count` · `count` catalog records |
+| `0x06` | Index definitions | `u16 count` · `count` index definitions in ascending name order (section 7) |
+| `0x07` | Index leaf | `u16 count` · `count` index keys, each `u16 byteLength \| bytes`, in ascending byte order |
+| `0x08` | Index branch | `u16 skipNibbles` · `ceil(skipNibbles / 2)` packed prefix bytes · `u16 bitmap` · one `u64 entryBytes` and `digest` per set bit |
+| `0x09` | Blob manifest | `u64 size` · `u16 chunkCount` · `chunkCount` chunk `digest`s (section 8) |
 
 The database ID is assigned at initialization and stays fixed for all replicas of that database. The database clock starts at 0 and records the highest counter observed by the database. It must be at least as high as every counter in its catalog and primary trees.
 
@@ -103,13 +107,47 @@ Replication of v2 is a separate capability from local format interoperability. A
 - Merge catalog records by name. The greater version wins. At an identical version a tombstone wins over a live record. Two live entries at the same version refer to the same generation, so merge their primary trees. A dropped or recreated generation cannot absorb records from an earlier generation.
 - Use the maximum clock of the merged roots. Preserve record versions during merge. Do not use arrival time as a tie-breaker. Do not remove tombstones by age alone. Pruning requires a separate replication agreement that prevents stale peers from reintroducing retired records or generations.
 
-The existing BrightChain gossip, ACL, backup, and recovery paths need adapters that understand the v2 graph before cluster support can be enabled. The transport and retention protocol are outside this draft.
+The existing BrightChain gossip, ACL, backup, and recovery paths need adapters that understand the v2 graph before cluster support can be enabled. The v2 graph includes index trees and attachment blocks reachable from collection roots and `_files` references. The transport and retention protocol are outside this draft.
 
 ## 7. Secondary indexes
 
-This draft standardizes the catalog, primary index, document bytes, and commit boundary. Portable v2 stores use primary lookups and scans. A secondary-index extension must specify a new root format, ordered compound fields, cross-language value comparison and key encoding, and uniqueness behavior during replica merge. Publish secondary-index changes with the same database commit as their document changes. An implementation may use a disposable local query cache keyed by the root digest. Such a cache is derived data and never required to open a portable store.
+A collection can have named secondary indexes. An index is derived data: every entry follows from a live document and the index definition, so replicas merge primary records first and then repair index entries for documents whose records changed. Index changes are published in the same database commit as the document changes that cause them.
 
-## 8. Conformance and release order
+**Definitions.** A collection root's `indexes` ref names an index-definitions block, or is absent when the collection has no indexes. A definition is `key name · u8 fieldCount · fieldCount × key fieldPath · ref root`. Names are 1–1024 bytes of UTF-8 and unique, and definitions appear in ascending name order. An index has 1–8 distinct fields. A field path is 1–256 bytes of UTF-8 holding dot-separated property names. `root` is the root of the index's entry tree, absent while the index has no entries. An index-definitions block has at least one definition, and the whole block must fit the 4096-byte limit.
+
+**Values.** A path is resolved through plain objects only. A missing path or an empty array indexes as the *absent* value. A scalar indexes as itself. An array indexes one entry per distinct scalar element, so a document can have several entries. An object, or an array element that is an object or array, cannot be indexed and fails the write before publication. A document that produces more than 1,024 entries for one index, or an entry longer than 2,048 bytes, also fails the write.
+
+**Entry keys.** An entry key is the encoded value of each indexed field in order, followed by the encoded document `_id`. Each value has a one-byte tag followed by a self-delimiting body, and bytewise order of the encoding is the index order.
+
+| Value | Tag | Body |
+| --- | --- | --- |
+| Absent | `0x08` | none |
+| `null` | `0x10` | none |
+| `false` / `true` | `0x20` / `0x21` | none |
+| Number | `0x30` | 8 bytes: the IEEE 754 binary64 bits of the value with `-0` as `0`. If the sign bit is set, invert all 64 bits. Otherwise set the sign bit. |
+| String | `0x40` | The UTF-8 bytes with each `0x00` written as `0x00 0xFF`, then `0x00`. The `_id` uses this encoding. |
+
+Types order as absent, null, false, true, numbers, strings. Numbers order by value. Strings order by UTF-8 bytes. No entry key is a prefix of another because every body is self-delimiting and every key ends with a document `_id`.
+
+**Entry tree.** Entries are stored in an ordered, path-compressed 16-way trie over the nibbles of the key, high nibble first. Its shape is determined by the key set alone. Let `bytes` of a set of keys be the sum of `2 + length` over its keys, and let the prefix of a subtree at depth `d` be the first `d` nibbles shared by its keys.
+
+1. Use an absent reference for no keys.
+2. Use one index leaf when `7 + bytes <= 4096`. Its keys are in ascending order.
+3. Otherwise let `s` be the number of nibbles after depth `d` that are shared by all keys. Encode an index branch whose `skipNibbles` is `s`, whose prefix holds those nibbles (an odd final nibble is padded with a zero nibble that decoders must check), and whose children are the subtrees for each value of the nibble at depth `d + s`, built at depth `d + s + 1`. A branch has at least two children and its `entryBytes` are the child byte counts. A branch whose `bytes` fit a leaf must collapse into a leaf.
+
+A decoder rejects unsorted, duplicate or prefix-overlapping keys, keys outside 1–2,048 bytes, a branch with fewer than two children or an oversize skip, unknown padding, and child counts that disagree with their pages. Keys must match the path to the page that holds them.
+
+**Queries.** A query names an index and fixes some leading fields to exact values. It can bound the next field with `gt`, `gte`, `lt`, `lte`, or select strings with a given prefix, and it can ask for descending order and a limit. The reader derives a byte range from the encoded values and walks only the pages that can overlap it. A one-sided bound stays within the bound's type. A string equal to an equality value never matches a longer string that begins with the same bytes, so the upper end of a range that follows a string value is the value's encoding followed by `0xFF`. A document found through several entries is returned once.
+
+**Maintenance and merge.** A writer computes a document's old and new entries and applies only the difference. Creating an index scans the documents visible in the commit and adds all their entries. Dropping an index removes its definition. A merge applies section 6 to the primary trees and then, for each changed `_id` from the diff of the merged and original primary trees, replaces its old entries with entries from its merged document. Two replicas with equal primary trees and definitions therefore have equal index roots. An index definition conflicts only by name, and the greater collection generation wins.
+
+## 8. Attachments
+
+A document can reference binary files stored as blocks. The file's bytes are split into chunks of exactly 1,048,576 bytes, except the last, which holds the remainder. Each chunk is stored as a raw block named by its SHA3-512 digest. A blob manifest block (`0x09`) records the total `size` and the ordered chunk digests. A file of size 0 has no chunks. A manifest holds at most 63 chunks, so a file can be at most 66,060,288 bytes. The manifest's digest identifies the file.
+
+A document references files through the reserved `_files` property, an object whose values each have a `digest` (128 lowercase hexadecimal digits naming a blob manifest), a `size` (safe integer equal to the manifest's size) and an optional `type` (a string of up to 255 bytes). A write that sets `_files` fails before publication unless every referenced manifest and chunk block already exists in the store and the sizes agree. A reader fetches the manifest and then each chunk on demand and verifies every digest. The blocks reachable from a published root through `_files` are live data for garbage collection, replication and sync. Blocks written for a file that no document references yet are not reachable and can be collected.
+
+## 9. Conformance and release order
 
 Land the codec, portable disk adapter, golden fixtures, and local conformance tests in TypeScript first. TypeScript can release the local format once those tests pass. The C++ port consumes the same fixtures and runs the two-way production API handoff before advertising v2 interoperability. Treat a byte or behavior discrepancy as a conformance issue against this spec and the TypeScript fixtures. Any incompatible format revision requires a new format marker and new fixtures in the TypeScript repository.
 
@@ -120,6 +158,9 @@ Land the codec, portable disk adapter, golden fixtures, and local conformance te
 | Directory handoff | Use production APIs to write with TypeScript, reopen and write with C++, then reopen in TypeScript. Repeat with C++ as the first writer. Check documents, head bytes, and tombstones. Run each leg in a separate process. |
 | Commit failures | Interrupt a write before and around head publication. A fresh process reads either the previous complete transaction or the new complete transaction. An acknowledged commit survives a supported durable-disk restart. Inject a missing block and check for an error. |
 | Scaling | Load at least 100,000 live documents on the portable disk profile. A cold `_id` lookup reads only the needed paths. Updating one document leaves unrelated page digests unchanged. Record metadata bytes per update, p95 write latency, and cold lookup block reads at 1k, 10k, and 100k documents. |
+| Index keys and trees | The TypeScript encoder matches the published value encodings, entry keys, query ranges, and index-tree roots and pages. The C++ encoder independently matches them. Insertion order, batched updates and removals never change a root. |
+| Index maintenance | A store written by one runtime with several indexes (including compound, multikey and dotted paths) answers the recorded queries in the other runtime. Writes that fail on an unindexable value publish nothing. |
+| Attachments | Both runtimes produce identical manifest and chunk digests for the same bytes, reject `_files` references to missing blocks or wrong sizes, and read each other's files. |
 | Replica merge | With independent stores, merge partitioned writes in both orders and check identical roots. Cover equal versions, out-of-order delivery, missing child pages, and deletes followed by stale writes or stale collection roots. Required before enabling v2 replication. |
 
 The previous native design and its vectors describe the flat metadata format. The handoff tests must call the production APIs in both implementations. A fixture that pre-serializes a block and has both runtimes hash it exercises checksum agreement only.
@@ -140,16 +181,16 @@ primary
 2fc9a7a4140d71aa2e71df22d555a8ef04423613985454c890926d4ff7741b0b70f3e3c2a51c580e360c1b6a9ec2bc558e1a4cd1442a5ad9697c35ed075f5518
 
 collection
-42444232020000000000000001000102030405060708090a0b0c0d0e0f012fc9a7a4140d71aa2e71df22d555a8ef04423613985454c890926d4ff7741b0b70f3e3c2a51c580e360c1b6a9ec2bc558e1a4cd1442a5ad9697c35ed075f5518
-ac260b09cab9545121ee96d90d7cc34d431f3c3298c5d72b080334fbf315196e14967641b19f2376b61da54e0149b7394433ea1b7762f6020c08c5ebb8c86534
+42444232020000000000000001000102030405060708090a0b0c0d0e0f012fc9a7a4140d71aa2e71df22d555a8ef04423613985454c890926d4ff7741b0b70f3e3c2a51c580e360c1b6a9ec2bc558e1a4cd1442a5ad9697c35ed075f551800
+b5b7f590726a6081a407075830e6a2b629e7e2f69a460405b2890472344545f096940173a5a3ec2865883c483fd24c29cb19afd5cfc074ff88d0a6192163c213
 
 catalog
-424442320500010004646f63730000000000000001000102030405060708090a0b0c0d0e0f01ac260b09cab9545121ee96d90d7cc34d431f3c3298c5d72b080334fbf315196e14967641b19f2376b61da54e0149b7394433ea1b7762f6020c08c5ebb8c86534
-92721b9f0ab545100bd247c4b31895e31f0fdfb72fbeab8d39aabbbc785a5043da7568aeaa7fe3961e465f78d0355a17e2f559d9433dafa4545bfe1a07c9e831
+424442320500010004646f63730000000000000001000102030405060708090a0b0c0d0e0f01b5b7f590726a6081a407075830e6a2b629e7e2f69a460405b2890472344545f096940173a5a3ec2865883c483fd24c29cb19afd5cfc074ff88d0a6192163c213
+5ec7acc134ff4101a62c3a1ecf5a259b456fc33c10da83ca9e435f3ad7c7d3bbc0645d0d3ba78d4cbaa336b0e805116b8a3216a7c95c90e6d835aa68ebc44ec3
 
 database
-4244423201101112131415161718191a1b1c1d1e1f00200000000000010192721b9f0ab545100bd247c4b31895e31f0fdfb72fbeab8d39aabbbc785a5043da7568aeaa7fe3961e465f78d0355a17e2f559d9433dafa4545bfe1a07c9e831
-8877bb85ff7aa992697d53b4d623912a9eb7e351ee70228bcb83e7a79fbda378f87d0a0ca6bd435fbbab6a80acf2eba818af3f716b653c808299c9c46efaecbf
+4244423201101112131415161718191a1b1c1d1e1f0020000000000001015ec7acc134ff4101a62c3a1ecf5a259b456fc33c10da83ca9e435f3ad7c7d3bbc0645d0d3ba78d4cbaa336b0e805116b8a3216a7c95c90e6d835aa68ebc44ec3
+956ccf999210e2745290763780edd7151bd25460df70ab59875eb2f9c30bd5cd50a45452e16f02e5b95d985caf4babdd709c13190cfb5739064c7a90f1855be2
 
 empty
 4244423201101112131415161718191a1b1c1d1e1f000000000000000000

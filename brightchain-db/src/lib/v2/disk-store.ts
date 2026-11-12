@@ -45,6 +45,8 @@ class StoreExistsError extends BrightDbV2StorageError {}
 export interface BrightDbV2DiskWriter {
   writeBlock(payload: Uint8Array): Promise<string>;
   writeBlocks(payloads: Iterable<Uint8Array>): Promise<void>;
+  /** Make every block written so far durable without publishing a head. */
+  syncBlocks(): Promise<void>;
   publishHead(digest: string): Promise<void>;
 }
 
@@ -408,6 +410,7 @@ export class BrightDbV2DiskStore {
           },
           writeBlocks: (payloads) =>
             run(() => this.installBlocks(payloads, dirty)),
+          syncBlocks: () => run(() => this.syncBlocks(dirty)),
           publishHead: (digest) => run(() => this.publishHead(digest, dirty)),
         });
         active = false;
@@ -490,14 +493,30 @@ export class BrightDbV2DiskStore {
     return digest;
   }
 
-  private async publishHead(digest: string, dirty: Set<string>): Promise<void> {
-    await this.readBlock(digest);
-    dirty.add(join(this.blocksPath, digest.slice(0, 2)));
+  private async syncBlocks(dirty: Set<string>): Promise<void> {
     for (const directory of dirty) {
       await syncDirectory(directory);
     }
     await syncDirectory(this.blocksPath);
     dirty.clear();
+  }
+
+  /** Whether a block file exists. It does not read or verify the block. */
+  async hasBlock(digest: string): Promise<boolean> {
+    assertDigest(digest);
+    try {
+      const stat = await lstat(join(this.blocksPath, digest.slice(0, 2), digest));
+      return stat.isFile();
+    } catch (error) {
+      if (isErrorCode(error, 'ENOENT')) return false;
+      throw error;
+    }
+  }
+
+  private async publishHead(digest: string, dirty: Set<string>): Promise<void> {
+    await this.readBlock(digest);
+    dirty.add(join(this.blocksPath, digest.slice(0, 2)));
+    await this.syncBlocks(dirty);
 
     const temporary = temporaryPath(this.path);
     try {

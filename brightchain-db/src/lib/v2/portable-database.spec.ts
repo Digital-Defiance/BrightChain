@@ -353,3 +353,158 @@ describe('PortableBrightDb subscribe', () => {
     reader.close();
   });
 });
+
+describe('PortableBrightDb secondary indexes', () => {
+  let dir: string;
+  beforeEach(async () => {
+    dir = await mkdtemp(join(tmpdir(), 'brightdb-v2-index-'));
+  });
+  afterEach(async () => {
+    await rm(dir, { recursive: true, force: true });
+  });
+
+  const ids = (docs: Array<{ _id: string }>) => docs.map((d) => d._id);
+
+  it('keeps indexes current across inserts, replaces and deletes', async () => {
+    const db = await PortableBrightDb.open({ path: dir });
+    const users = db.collection<{ _id: string; city: string; age: number }>('users');
+    await users.insertMany([
+      { _id: 'a', city: 'Oslo', age: 30 },
+      { _id: 'b', city: 'Oslo', age: 20 },
+      { _id: 'c', city: 'Bergen', age: 50 },
+    ]);
+    await users.createIndex('by_city_age', ['city', 'age']);
+    expect(ids(await users.findByIndex('by_city_age', { equals: ['Oslo'] }))).toEqual(['b', 'a']);
+
+    await users.replaceById('a', { _id: 'a', city: 'Bergen', age: 10 });
+    await users.deleteById('b');
+    await users.insertOne({ _id: 'd', city: 'Bergen', age: 40 });
+    expect(ids(await users.findByIndex('by_city_age', { equals: ['Oslo'] }))).toEqual([]);
+    expect(ids(await users.findByIndex('by_city_age', { equals: ['Bergen'], gte: 20 }))).toEqual(['d', 'c']);
+    expect(ids(await users.findByIndex('by_city_age', { equals: ['Bergen'], descending: true, limit: 2 }))).toEqual(['c', 'd']);
+    expect(await users.listIndexes()).toEqual([{ name: 'by_city_age', fields: ['city', 'age'] }]);
+
+    // The index root equals the root of an index built from scratch on the same data.
+    const fresh = await PortableBrightDb.open({ path: join(dir, 'fresh') });
+    const copy = fresh.collection<{ _id: string; city: string; age: number }>('users');
+    await copy.insertMany(await users.find({}).toArray());
+    await copy.createIndex('by_city_age', ['city', 'age']);
+    const rootOf = async (db2: PortableBrightDb) => {
+      const snapshot = await db2.snapshot();
+      const collection = await snapshot.collectionRoot('users');
+      return collection?.indexes;
+    };
+    const live = await rootOf(db);
+    const rebuilt = await rootOf(fresh);
+    expect(live).toBeTruthy();
+    // Collection generations differ, but the definitions block (with the entry tree root) must match.
+    const store = (db as unknown as { store: { readBlock: (d: string) => Promise<Uint8Array> } }).store;
+    const freshStore = (fresh as unknown as { store: { readBlock: (d: string) => Promise<Uint8Array> } }).store;
+    expect(Buffer.from(await store.readBlock(live as string)).equals(Buffer.from(await freshStore.readBlock(rebuilt as string)))).toBe(true);
+    fresh.close();
+    db.close();
+  });
+
+  it('indexes array elements once per document and supports dotted paths', async () => {
+    const db = await PortableBrightDb.open({ path: dir });
+    const docs = db.collection<{ _id: string; tags?: string[]; profile?: { score: number } }>('docs');
+    await docs.createIndex('by_tag', ['tags']);
+    await docs.createIndex('by_score', ['profile.score']);
+    await docs.insertMany([
+      { _id: 'a', tags: ['x', 'y', 'x'], profile: { score: 5 } },
+      { _id: 'b', tags: ['y'] },
+      { _id: 'c', profile: { score: 7 } },
+    ]);
+    expect(ids(await docs.findByIndex('by_tag', { equals: ['y'] }))).toEqual(['a', 'b']);
+    expect(ids(await docs.findByIndex('by_tag', {}))).toEqual(expect.arrayContaining(['a', 'b', 'c']));
+    expect(ids(await docs.findByIndex('by_tag', {})).filter((id) => id === 'a')).toHaveLength(1);
+    expect(ids(await docs.findByIndex('by_score', { gte: 5, lte: 7 }))).toEqual(['a', 'c']);
+    db.close();
+  });
+
+  it('commits documents and index changes atomically, including a failed unindexable write', async () => {
+    const db = await PortableBrightDb.open({ path: dir });
+    const users = db.collection<{ _id: string; age: unknown }>('users');
+    await users.createIndex('by_age', ['age']);
+    await users.insertOne({ _id: 'a', age: 1 });
+    const before = await db.root();
+    await expect(
+      db.writeBatch([
+        { type: 'insert', collection: 'users', document: { _id: 'b', age: 2 } },
+        { type: 'insert', collection: 'users', document: { _id: 'c', age: { nested: true } } },
+      ]),
+    ).rejects.toThrow();
+    expect(await db.root()).toBe(before);
+    expect(ids(await users.findByIndex('by_age', {}))).toEqual(['a']);
+
+    await db.writeBatch([
+      { type: 'dropIndex', collection: 'users', name: 'by_age' },
+      { type: 'createIndex', collection: 'users', name: 'by_age2', fields: ['age'] },
+    ]);
+    await expect(users.findByIndex('by_age', {})).rejects.toThrow(/does not exist/u);
+    expect(ids(await users.findByIndex('by_age2', {}))).toEqual(['a']);
+    await expect(users.createIndex('by_age2', ['age'])).rejects.toThrow(/already exists/u);
+    await expect(users.createIndex('bad', ['a', 'a'])).rejects.toThrow();
+    db.close();
+  });
+
+  it('drops indexes together with their collection and reads indexes at past roots', async () => {
+    const db = await PortableBrightDb.open({ path: dir });
+    const c = db.collection<{ _id: string; n: number }>('c');
+    await c.createIndex('by_n', ['n']);
+    await c.insertOne({ _id: 'a', n: 1 });
+    const earlier = await db.root();
+    await db.writeBatch([{ type: 'dropCollection', collection: 'c' }]);
+    await c.insertOne({ _id: 'b', n: 2 });
+    expect(await c.listIndexes()).toEqual([]);
+    const snapshot = await db.at(earlier);
+    expect(ids(await snapshot.collection<{ _id: string }>('c').findByIndex('by_n', {}))).toEqual(['a']);
+    db.close();
+  });
+});
+
+describe('PortableBrightDb attachments', () => {
+  let dir: string;
+  beforeEach(async () => {
+    dir = await mkdtemp(join(tmpdir(), 'brightdb-v2-files-'));
+  });
+  afterEach(async () => {
+    await rm(dir, { recursive: true, force: true });
+  });
+
+  it('stores small and multi-chunk files and reads them back verified', async () => {
+    const db = await PortableBrightDb.open({ path: dir });
+    const big = Buffer.alloc(2_500_000, 7);
+    const small = await db.putAttachment(Buffer.from('hi'), { type: 'text/plain' });
+    const large = await db.putAttachment(big);
+    const empty = await db.putAttachment(new Uint8Array(0));
+    expect(large.size).toBe(2_500_000);
+    expect((await db.getAttachment(small)).toString()).toBe('hi');
+    expect((await db.getAttachment(large)).equals(big)).toBe(true);
+    expect((await db.getAttachment(empty)).length).toBe(0);
+    let chunks = 0;
+    for await (const chunk of db.streamAttachment(large)) chunks += chunk.length > 0 ? 1 : 0;
+    expect(chunks).toBe(3);
+    // Identical bytes give the same reference.
+    expect((await db.putAttachment(big)).digest).toBe(large.digest);
+    db.close();
+  });
+
+  it('only accepts documents whose _files reference stored attachments', async () => {
+    const db = await PortableBrightDb.open({ path: dir });
+    const ref = await db.putAttachment(Buffer.from('payload'), { type: 'text/plain' });
+    const docs = db.collection('docs');
+    await docs.insertOne({ _id: 'ok', _files: { a: { digest: ref.digest, size: ref.size, type: 'text/plain' } } });
+    expect(await docs.findById('ok')).toMatchObject({ _id: 'ok' });
+
+    const missing = 'a'.repeat(128);
+    await expect(docs.insertOne({ _id: 'x', _files: { a: { digest: missing, size: 1 } } })).rejects.toThrow(/missing/u);
+    await expect(docs.insertOne({ _id: 'x', _files: { a: { digest: ref.digest, size: 99 } } })).rejects.toThrow(/size/u);
+    await expect(docs.insertOne({ _id: 'x', _files: { a: { digest: ref.digest, size: ref.size, extra: 1 } } })).rejects.toThrow(/unknown/u);
+    await expect(docs.insertOne({ _id: 'x', _files: [] })).rejects.toThrow(/object/u);
+    await expect(docs.replaceById('ok', { _id: 'ok', _files: { a: { digest: missing, size: 1 } } })).rejects.toThrow(/missing/u);
+    expect(await docs.findById('x')).toBeNull();
+    await expect(db.getAttachment({ digest: 'b'.repeat(128) })).rejects.toThrow();
+    db.close();
+  });
+});

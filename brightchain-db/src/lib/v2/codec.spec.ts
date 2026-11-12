@@ -83,6 +83,7 @@ describe('BrightDB v2 codec', () => {
       kind: 'collection',
       generation,
       primary: primaryDigest,
+      indexes: null,
     };
     const collectionBytes = encodeMetadata(collection);
     const collectionDigest = expectGolden('collection', collectionBytes);
@@ -165,7 +166,7 @@ describe('BrightDB v2 codec', () => {
     expect(() => decodeMetadata(bytes.subarray(0, -1))).toThrow(/truncated/iu);
 
     const corrupt = Buffer.from(bytes);
-    corrupt[4] = 6;
+    corrupt[4] = 0x7f;
     expect(() => decodeMetadata(corrupt)).toThrow(/kind/u);
     corrupt[4] = 4;
     corrupt[9] = 0xff;
@@ -182,6 +183,7 @@ describe('BrightDB v2 codec', () => {
         kind: 'collection',
         generation: version(0n),
         primary: null,
+      indexes: null,
       }),
     ).toThrow(/positive/u);
     expect(() =>
@@ -189,6 +191,7 @@ describe('BrightDB v2 codec', () => {
         kind: 'collection',
         generation: version(MAX_U64 + 1n),
         primary: null,
+      indexes: null,
       }),
     ).toThrow(/64-bit/u);
     expect(() =>
@@ -196,6 +199,7 @@ describe('BrightDB v2 codec', () => {
         kind: 'collection',
         generation: { counter: 1n, writerId: '0'.repeat(32) },
         primary: null,
+      indexes: null,
       }),
     ).toThrow(/nonzero/u);
     expect(() =>

@@ -3,6 +3,12 @@ import { createHash } from 'node:crypto';
 export const MAX_U64 = (1n << 64n) - 1n;
 export const MAX_METADATA_BYTES = 4096;
 export const MAX_DOCUMENT_BYTES = 1_048_576;
+export const MAX_INDEX_KEY_BYTES = 2048;
+export const MAX_INDEX_FIELDS = 8;
+export const MAX_FIELD_PATH_BYTES = 256;
+/** Attachment chunk size: every chunk but the last is exactly this long. */
+export const BLOB_CHUNK_BYTES = 1_048_576;
+export const MAX_BLOB_CHUNKS = Math.floor((MAX_METADATA_BYTES - 5 - 8 - 2) / 64);
 const MAX_KEY_BYTES = 1024;
 const DIGEST_BYTES = 64;
 const ID_BYTES = 16;
@@ -41,6 +47,40 @@ export interface V2CollectionRoot {
   kind: 'collection';
   generation: V2Version;
   primary: Digest | null;
+  /** Digest of the collection's index definitions, or null when it has none. */
+  indexes: Digest | null;
+}
+
+export interface V2IndexDefinition {
+  name: string;
+  /** Dotted field paths in index order. */
+  fields: readonly string[];
+  /** Root of the index's ordered entry tree; null while empty. */
+  root: Digest | null;
+}
+
+export interface V2IndexSet {
+  kind: 'indexes';
+  definitions: readonly V2IndexDefinition[];
+}
+
+export interface V2IndexLeaf {
+  kind: 'index-leaf';
+  /** Encoded index keys in ascending byte order. */
+  entries: readonly Buffer[];
+}
+
+export interface V2IndexBranch {
+  kind: 'index-branch';
+  /** Nibbles shared by every key below this branch, after the parent's split. */
+  skip: readonly number[];
+  children: readonly V2BranchChild[];
+}
+
+export interface V2Blob {
+  kind: 'blob';
+  size: bigint;
+  chunks: readonly Digest[];
 }
 
 export interface V2BranchChild {
@@ -59,7 +99,15 @@ export interface V2Leaf {
   records: readonly V2Record[];
 }
 
-export type V2Metadata = V2DatabaseRoot | V2CollectionRoot | V2Branch | V2Leaf;
+export type V2Metadata =
+  | V2DatabaseRoot
+  | V2CollectionRoot
+  | V2Branch
+  | V2Leaf
+  | V2IndexSet
+  | V2IndexLeaf
+  | V2IndexBranch
+  | V2Blob;
 
 export type V2JsonValue =
   | null
@@ -181,6 +229,12 @@ class MetadataWriter {
     if (value !== null) this.digest(value);
   }
 
+  /** A u16-length-prefixed byte string. */
+  prefixed(value: Uint8Array): void {
+    this.u16(value.length);
+    this.bytes(value);
+  }
+
   version(value: V2Version): void {
     if (value.counter === 0n || value.writerId === ZERO_WRITER_ID) {
       throw new V2CodecError(
@@ -256,10 +310,14 @@ class MetadataReader {
     return { counter, writerId };
   }
 
-  key(): Buffer {
+  key({ maximum = MAX_KEY_BYTES } = {}): Buffer {
     const length = this.u16();
-    if (length < 1 || length > MAX_KEY_BYTES) {
-      throw new V2CodecError('A key must occupy 1–1024 UTF-8 bytes');
+    if (length < 1 || length > maximum) {
+      throw new V2CodecError(
+        maximum === MAX_KEY_BYTES
+          ? 'A key must occupy 1–1024 UTF-8 bytes'
+          : `A key must occupy 1–${maximum} bytes`,
+      );
     }
     return this.bytes(length);
   }
@@ -297,6 +355,217 @@ function validateBranch(children: readonly V2BranchChild[]): void {
       'A branch must collapse when its records fit in a leaf',
     );
   }
+}
+
+
+const LEAF_RECORD_BUDGET_BYTES = MAX_METADATA_BYTES - LEAF_HEADER_BYTES;
+
+function validateIndexFieldPath(path: string): Buffer {
+  const bytes = encodeKey(path);
+  if (bytes.length > MAX_FIELD_PATH_BYTES) {
+    throw new V2CodecError('An index field path must occupy 1–256 UTF-8 bytes');
+  }
+  return bytes;
+}
+
+function validateIndexSet(definitions: readonly V2IndexDefinition[]): void {
+  if (definitions.length === 0) {
+    throw new V2CodecError('An index set must contain at least one index');
+  }
+  let previous: Buffer | undefined;
+  for (const definition of definitions) {
+    const name = encodeKey(definition.name);
+    if (previous && Buffer.compare(previous, name) >= 0) {
+      throw new V2CodecError('Index names must be unique and ascending');
+    }
+    previous = name;
+    const count = definition.fields.length;
+    if (count < 1 || count > MAX_INDEX_FIELDS) {
+      throw new V2CodecError('An index must have 1–8 fields');
+    }
+    if (new Set(definition.fields).size !== count) {
+      throw new V2CodecError('An index cannot repeat a field');
+    }
+    for (const field of definition.fields) validateIndexFieldPath(field);
+  }
+}
+
+function encodeIndexSet(writer: MetadataWriter, set: V2IndexSet): void {
+  const definitions = [...set.definitions].sort((a, b) =>
+    Buffer.compare(encodeKey(a.name), encodeKey(b.name)),
+  );
+  validateIndexSet(definitions);
+  writer.u16(definitions.length);
+  for (const definition of definitions) {
+    writer.prefixed(encodeKey(definition.name));
+    writer.u8(definition.fields.length);
+    for (const field of definition.fields) {
+      writer.prefixed(validateIndexFieldPath(field));
+    }
+    writer.ref(definition.root);
+  }
+}
+
+function decodeIndexSet(reader: MetadataReader): V2IndexSet {
+  const count = reader.u16();
+  const definitions: V2IndexDefinition[] = [];
+  for (let index = 0; index < count; index++) {
+    const name = readUtf8(reader.key());
+    const fieldCount = reader.u8();
+    const fields: string[] = [];
+    for (let field = 0; field < fieldCount; field++) {
+      fields.push(readUtf8(reader.key()));
+    }
+    definitions.push({ name, fields, root: reader.ref() });
+  }
+  validateIndexSet(definitions);
+  return { kind: 'indexes', definitions };
+}
+
+/** Encoded size of one index entry inside a leaf or its branch byte counts. */
+export function indexEntryBytes(key: Uint8Array): number {
+  return 2 + key.length;
+}
+
+function validateIndexKeys(entries: readonly Buffer[]): void {
+  if (entries.length === 0) {
+    throw new V2CodecError('An index leaf must contain at least one entry');
+  }
+  let previous: Buffer | undefined;
+  for (const key of entries) {
+    if (key.length < 1 || key.length > MAX_INDEX_KEY_BYTES) {
+      throw new V2CodecError('An index key must occupy 1–2048 bytes');
+    }
+    if (previous) {
+      if (Buffer.compare(previous, key) >= 0) {
+        throw new V2CodecError('Index keys must be unique and ascending');
+      }
+      if (key.length > previous.length && key.subarray(0, previous.length).equals(previous)) {
+        throw new V2CodecError('An index key cannot be a prefix of another');
+      }
+    }
+    previous = key;
+  }
+}
+
+function encodeIndexLeaf(writer: MetadataWriter, leaf: V2IndexLeaf): void {
+  const entries = [...leaf.entries].sort(Buffer.compare);
+  validateIndexKeys(entries);
+  writer.u16(entries.length);
+  for (const key of entries) writer.prefixed(key);
+}
+
+function decodeIndexLeaf(reader: MetadataReader): V2IndexLeaf {
+  const count = reader.u16();
+  const entries: Buffer[] = [];
+  for (let index = 0; index < count; index++) {
+    entries.push(Buffer.from(reader.key({ maximum: MAX_INDEX_KEY_BYTES })));
+  }
+  validateIndexKeys(entries);
+  return { kind: 'index-leaf', entries };
+}
+
+function validateIndexBranch(
+  skip: readonly number[],
+  children: readonly V2BranchChild[],
+): void {
+  if (skip.length > MAX_INDEX_KEY_BYTES * 2) {
+    throw new V2CodecError('An index branch prefix is too long');
+  }
+  for (const nibble of skip) {
+    if (!Number.isInteger(nibble) || nibble < 0 || nibble > 15) {
+      throw new V2CodecError('Invalid index branch prefix nibble');
+    }
+  }
+  if (children.length < 2 || children.length > 16) {
+    throw new V2CodecError('An index branch must contain 2–16 children');
+  }
+  let total = 0n;
+  let previousNibble = -1;
+  for (const { nibble, recordBytes } of children) {
+    if (!Number.isInteger(nibble) || nibble <= previousNibble || nibble > 15) {
+      throw new V2CodecError('Invalid or duplicate branch nibble');
+    }
+    previousNibble = nibble;
+    if (typeof recordBytes !== 'bigint' || recordBytes <= 0n) {
+      throw new V2CodecError('Branch child record bytes must be positive');
+    }
+    total += recordBytes;
+    if (total > MAX_U64) {
+      throw new V2CodecError('Branch record byte total exceeds the unsigned 64-bit range');
+    }
+  }
+  if (total <= BigInt(LEAF_RECORD_BUDGET_BYTES)) {
+    throw new V2CodecError('A branch must collapse when its entries fit in a leaf');
+  }
+}
+
+function encodeIndexBranch(writer: MetadataWriter, branch: V2IndexBranch): void {
+  const children = [...branch.children].sort((a, b) => a.nibble - b.nibble);
+  validateIndexBranch(branch.skip, children);
+  writer.u16(branch.skip.length);
+  const packed = Buffer.alloc(Math.ceil(branch.skip.length / 2));
+  branch.skip.forEach((nibble, index) => {
+    packed[index >> 1] |= index % 2 === 0 ? nibble << 4 : nibble;
+  });
+  writer.bytes(packed);
+  let bitmap = 0;
+  for (const { nibble } of children) bitmap |= 1 << nibble;
+  writer.u16(bitmap);
+  for (const { recordBytes, digest } of children) {
+    writer.u64(recordBytes);
+    writer.digest(digest);
+  }
+}
+
+function decodeIndexBranch(reader: MetadataReader): V2IndexBranch {
+  const length = reader.u16();
+  if (length > MAX_INDEX_KEY_BYTES * 2) {
+    throw new V2CodecError('An index branch prefix is too long');
+  }
+  const packed = reader.bytes(Math.ceil(length / 2));
+  const skip: number[] = [];
+  for (let index = 0; index < length; index++) {
+    skip.push(index % 2 === 0 ? packed[index >> 1] >> 4 : packed[index >> 1] & 15);
+  }
+  if (length % 2 === 1 && (packed[packed.length - 1] & 15) !== 0) {
+    throw new V2CodecError('Nonzero padding in an index branch prefix');
+  }
+  const bitmap = reader.u16();
+  const children: V2BranchChild[] = [];
+  for (let nibble = 0; nibble < 16; nibble++) {
+    if ((bitmap & (1 << nibble)) !== 0) {
+      children.push({ nibble, recordBytes: reader.u64(), digest: reader.digest() });
+    }
+  }
+  validateIndexBranch(skip, children);
+  return { kind: 'index-branch', skip, children };
+}
+
+function validateBlob(size: bigint, chunks: readonly Digest[]): void {
+  if (typeof size !== 'bigint' || size < 0n || size > MAX_U64) {
+    throw new V2CodecError('Invalid blob size');
+  }
+  const expected = (size + BigInt(BLOB_CHUNK_BYTES) - 1n) / BigInt(BLOB_CHUNK_BYTES);
+  if (chunks.length > MAX_BLOB_CHUNKS || BigInt(chunks.length) !== expected) {
+    throw new V2CodecError('Blob chunk count does not match its size');
+  }
+}
+
+function encodeBlob(writer: MetadataWriter, blob: V2Blob): void {
+  validateBlob(blob.size, blob.chunks);
+  writer.u64(blob.size);
+  writer.u16(blob.chunks.length);
+  for (const chunk of blob.chunks) writer.digest(chunk);
+}
+
+function decodeBlob(reader: MetadataReader): V2Blob {
+  const size = reader.u64();
+  const count = reader.u16();
+  const chunks: Digest[] = [];
+  for (let index = 0; index < count; index++) chunks.push(reader.digest());
+  validateBlob(size, chunks);
+  return { kind: 'blob', size, chunks };
 }
 
 function encodeLeaf(writer: MetadataWriter, leaf: V2Leaf): void {
@@ -340,6 +609,7 @@ export function encodeMetadata(block: V2Metadata): Buffer {
       writer.u8(0x02);
       writer.version(block.generation);
       writer.ref(block.primary);
+      writer.ref(block.indexes);
       break;
     case 'branch': {
       writer.u8(0x03);
@@ -358,6 +628,22 @@ export function encodeMetadata(block: V2Metadata): Buffer {
     case 'catalog':
       writer.u8(block.kind === 'primary' ? 0x04 : 0x05);
       encodeLeaf(writer, block);
+      break;
+    case 'indexes':
+      writer.u8(0x06);
+      encodeIndexSet(writer, block);
+      break;
+    case 'index-leaf':
+      writer.u8(0x07);
+      encodeIndexLeaf(writer, block);
+      break;
+    case 'index-branch':
+      writer.u8(0x08);
+      encodeIndexBranch(writer, block);
+      break;
+    case 'blob':
+      writer.u8(0x09);
+      encodeBlob(writer, block);
       break;
     default:
       throw new V2CodecError('Unknown metadata block kind');
@@ -414,6 +700,7 @@ export function decodeMetadata(
         kind: 'collection',
         generation: reader.version(),
         primary: reader.ref(),
+        indexes: reader.ref(),
       };
       break;
     case 0x03: {
@@ -435,6 +722,18 @@ export function decodeMetadata(
     case 0x04:
     case 0x05:
       block = decodeLeaf(reader, kind === 0x04 ? 'primary' : 'catalog');
+      break;
+    case 0x06:
+      block = decodeIndexSet(reader);
+      break;
+    case 0x07:
+      block = decodeIndexLeaf(reader);
+      break;
+    case 0x08:
+      block = decodeIndexBranch(reader);
+      break;
+    case 0x09:
+      block = decodeBlob(reader);
       break;
     default:
       throw new V2CodecError('Unknown metadata block kind');

@@ -43,9 +43,25 @@ db.close();
 
 Reopen the same directory to read the committed data. The local v2 API supports
 primary lookups, query scans, inserts, replacements and deletes by ID, and atomic
-`writeBatch` operations across collections. Secondary indexes and BrightChain
-replication are planned for later stages. Use a fresh directory for v2. See the
-[storage format specification](https://github.brightchain.org/docs/architecture/brightdb-storage-format-v2/).
+`writeBatch` operations across collections. It also gives you:
+
+- **State as a hash.** `await db.root()` identifies the current state, `db.at(root)`
+  reads any earlier state, `db.snapshot()` pins the present one, and
+  `db.diff(from, to)` lists the added, modified and deleted documents between two
+  states while reading only the parts of the database that changed.
+- **Change notifications.** `await db.subscribe(listener)` runs when the root
+  moves, for commits from this handle or another process using the directory.
+- **Ordered indexes.** `createIndex('by_city_age', ['city', 'age'])` builds an index
+  over one or more fields (dotted paths and array fields work). Query it with
+  `findByIndex('by_city_age', { equals: ['Oslo'], gte: 30, limit: 10 })`, using
+  `equals`, `gt`, `gte`, `lt`, `lte`, `prefix` and `descending`. Index changes commit
+  together with the documents that cause them.
+- **Attachments.** `putAttachment(bytes, { type })` stores a file of up to 63 MiB as
+  chunks. Put the returned reference under `_files` in a document, then read it with
+  `getAttachment(ref)` or `streamAttachment(ref)`.
+
+BrightChain replication is planned for a later stage. Use a fresh directory for v2.
+See the [storage format specification](https://github.brightchain.org/docs/architecture/brightdb-storage-format-v2/).
 
 ## Bring your own block store
 
@@ -106,8 +122,8 @@ come from its public README, LLM docs and package READMEs as of November 2026
 | --- | --- | --- | --- |
 | Runtimes | Browser, Node.js, Bun and Deno with one API. Deno is not yet tested in CI. | Node.js, over any BrightChain `IBlockStore`. | Node.js on Linux, macOS and BSD. Windows is refused, and there is no browser backend. |
 | Storage model | Encrypted, content-addressed blocks (IPFS-style CIDs). Each transaction writes a new immutable CAR file. Indexes use prolly trees, and a Merkle clock orders changes. | Each document is a JSON block in the BrightChain block store. Each write re-serializes the collection's metadata block. | A canonical Merkle tree of SHA3-512-addressed pages. Equal records give an equal root whatever the insert order. Each commit publishes one database root. |
-| Querying | Indexes from a field name or a map function, queried by `key`, `range` or `prefix`, with `descending` and `limit`. No MongoDB-style operators. | MongoDB-style filters (`$gt`, `$in`, `$regex`, `$elemMatch` and more), projection, sort, cursors, an aggregation pipeline, and unique and compound in-memory indexes. | `findById` by primary key. `find` and `findOne` accept the same filters but scan the whole collection. No secondary indexes, `$set`-style updates or aggregation yet. |
-| Live updates | `subscribe()`, plus React hooks (`useLiveQuery`, `useDocument`). | `collection.watch()` change listener. No framework bindings. | None yet. |
+| Querying | Indexes from a field name or a map function, queried by `key`, `range` or `prefix`, with `descending` and `limit`. No MongoDB-style operators. | MongoDB-style filters (`$gt`, `$in`, `$regex`, `$elemMatch` and more), projection, sort, cursors, an aggregation pipeline, and unique and compound in-memory indexes. | `findById` by primary key. `find` and `findOne` accept the same filters but scan the whole collection. Ordered single and compound indexes are queried through `findByIndex` with exact, range and prefix bounds. No `$set`-style updates or aggregation yet. |
+| Live updates | `subscribe()`, plus React hooks (`useLiveQuery`, `useDocument`). | `collection.watch()` change listener. No framework bindings. | `subscribe()` reports each root change with its document-level diff. No framework bindings yet. |
 | Atomic writes | Each commit is one CAR file. | Sessions buffer writes and apply them one by one on commit, with best-effort rollback. Not atomic across collections. | `writeBatch` commits inserts, replaces and deletes across collections as one root. |
 | Multi-writer and sync | Merkle CRDT with a deterministic winner per `_id`. Offline writes queue and merge later. Live sync goes through pluggable gateways: hosted Fireproof Cloud, a self-hosted Connect backend, and community connectors. | Gossip replication between BrightChain nodes, resolved by last-writer-wins on timestamps. | Several local processes can share one directory under an exclusive file lock. Deterministic merge by `(counter, writerId)` is specified in §6 of the format spec but not built. No network sync yet. |
 | Encryption at rest | On by default. Each blockstore has its own symmetric key. Key management is still maturing (the README flags a key-extraction default as deprecated). | Not in BrightDB itself. It depends on the BrightChain store and pool settings underneath. | None. Pages are stored in plain form. |
@@ -115,7 +131,7 @@ come from its public README, LLM docs and package READMEs as of November 2026
 | History | Git-like hash history is part of the core design. | Not exposed. | Every root is an immutable snapshot, but there is no API yet to read, diff or log past roots. |
 | Write authority | Not part of the core database. Access is handled by the sync backend. | Signed write ACLs on collection heads (`authorizedHeadRegistry`, `writeAclManager`). | Not yet ported to v2. |
 | Schema validation | Not built in. | Per-collection schemas validated on write. | Not yet. |
-| File attachments | `_files` on a document, encrypted and synced on demand. | Not built in. | Not built in. |
+| File attachments | `_files` on a document, encrypted and synced on demand. | Not built in. | `_files` references chunked, content-addressed files, read on demand. Not encrypted by BrightDB. |
 | Compaction and GC | Compaction writes a new combined CAR file. Old files are kept, and cloud cleanup is not yet implemented. | Each write leaves an orphaned metadata block. No GC. | Unreachable pages are left in place. No GC yet. |
 | Other languages | JavaScript and TypeScript. | A separate C++ port reads and writes the v1 layout. | A byte-exact draft spec with golden fixtures. A C++ port (`brightdb_v2` in brightchain-cpp) reads and writes the same directory as TypeScript, with local read, insert, replace, delete and batch operations only. |
 | License | MIT or Apache 2.0 (the repo's metadata lists Apache-2.0). | MIT | MIT |

@@ -59,6 +59,10 @@ export type {
   PortableSnapshot,
   PortableWriteOperation,
 } from './lib/v2/portable-database';
+export type { IndexQuery, IndexScalar } from './lib/v2/index-key';
+export type { AttachmentRef } from './lib/v2/attachments';
+export { V2AttachmentError } from './lib/v2/attachments';
+export { V2IndexError } from './lib/v2/index-key';
 export {
   BrightDbV2CommitOutcomeUnknownError,
   BrightDbV2MissingBlockError,
