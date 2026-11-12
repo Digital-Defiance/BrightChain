@@ -49,7 +49,6 @@ export type {
 export { BrightDb } from './lib/database';
 export type { BrightDbOptions } from './lib/database';
 export type {
-  PortableBrightDb,
   PortableBrightDbOptions,
   PortableChange,
   PortableChangeEvent,
@@ -67,6 +66,7 @@ export { V2AttachmentError } from './lib/v2/attachments';
 export { V2IndexError } from './lib/v2/index-key';
 export { BrightDbV2DecryptionError, type BrightDbV2KeyRing } from './lib/v2/encryption';
 export type { BrightDbV2DiskWriter, BrightDbV2Storage } from './lib/v2/disk-store';
+export { PortableBrightDb } from './lib/v2/portable-database';
 export type { BlockServer, BrightDbV2BlockSource } from './lib/v2/block-source';
 export { HttpBlockSource, serveBlocks } from './lib/v2/block-source';
 export {
