@@ -42,6 +42,7 @@ import {
 } from './index-key';
 import { V2IndexTree } from './index-tree';
 import { BrightDbV2AesCipher } from './encryption';
+import { writeAttachment } from './attachments';
 import { copyDatabase } from './merge';
 import { PortableBrightDb } from './portable-database';
 import { V2Tree, type V2TreeBlockStore } from './tree';
@@ -500,6 +501,47 @@ async function buildVectors(): Promise<Json> {
     head: { digest: headDigest, nonce: headNonce.toString('hex'), sealed: encCipher.sealHead(headDigest, headNonce).toString('hex') },
   };
 
+
+  // ---- manifest trees over zero-filled files ----------------------------------
+  const MIB = 1_048_576;
+  const zeroBlock = Buffer.alloc(MIB);
+  const zeroDigests = new Map<number, string>();
+  const blobTrees: Json[] = [];
+  const treeSizes = [
+    0, 1, MIB - 1, MIB, MIB + 1, 62 * MIB + 1, 63 * MIB, 63 * MIB + 1, 64 * MIB,
+    126 * MIB, 126 * MIB + 5, 63 * 63 * MIB, 63 * 63 * MIB + 1, 63 * 63 * MIB + 63 * MIB + 7,
+  ];
+  for (const size of treeSizes) {
+    const manifests = new Map<string, V2Metadata>();
+    const writer = {
+      writeBlock: async (payload: Uint8Array) => {
+        let digest: string;
+        if (Buffer.compare(payload, zeroBlock.subarray(0, payload.length)) === 0) {
+          const known = zeroDigests.get(payload.length);
+          digest = known ?? digestPayload(payload);
+          zeroDigests.set(payload.length, digest);
+        } else {
+          digest = digestPayload(payload);
+          manifests.set(digest, decodeMetadata(Buffer.from(payload), digest));
+        }
+        return digest;
+      },
+      writeBlocks: async () => undefined,
+      syncBlocks: async () => undefined,
+      publishHead: async () => undefined,
+    };
+    async function* zeros(): AsyncGenerator<Uint8Array> {
+      for (let left = size; left > 0; left -= 700_000) yield zeroBlock.subarray(0, Math.min(left, 700_000));
+    }
+    const ref = await writeAttachment(writer, zeros());
+    const root = manifests.get(ref.digest);
+    blobTrees.push({
+      size,
+      root: ref.digest,
+      depth: root && root.kind === 'blob' ? root.depth : 0,
+    });
+  }
+
   const trees: Json[] = [];
   const primaryRecords: V2Record[] = [];
   for (let index = 0; index < 400; index++) {
@@ -568,6 +610,7 @@ async function buildVectors(): Promise<Json> {
     indexKeys,
     indexRanges,
     indexTrees,
+    blobTrees,
     encryption,
   };
 }

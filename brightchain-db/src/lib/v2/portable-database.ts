@@ -944,6 +944,16 @@ export class PortableBrightDb {
     );
   }
 
+  /** @internal Write a manifest block as given, for tests that need a malformed tree. */
+  async putAttachmentTree(manifest: { size: bigint; depth: number; entries: string[] }): Promise<string> {
+    this.requireOpen();
+    return this.store.withWriteLock(async (writer) => {
+      const digest = await writer.writeBlock(encodeMetadata({ kind: 'blob', ...manifest }));
+      await writer.syncBlocks();
+      return digest;
+    });
+  }
+
   /** Read a whole file. Use `streamAttachment` to avoid holding it in memory. */
   async getAttachment(ref: Pick<AttachmentRef, 'digest'>): Promise<Buffer> {
     this.requireOpen();

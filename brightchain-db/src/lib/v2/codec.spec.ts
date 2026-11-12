@@ -330,7 +330,7 @@ describe('BrightDB v2 codec', () => {
     expect(defaultKey).not.toHaveBeenCalled();
   });
 
-  it('validates blob manifests: entry counts, depth and minimal height', () => {
+  it('validates blob manifests: entry counts and depth', () => {
     const d = (n: number) => n.toString(16).padStart(2, '0').repeat(64);
     const MIB = 1_048_576n;
     const encode = (size: bigint, depth: number, count: number) =>
@@ -341,7 +341,8 @@ describe('BrightDB v2 codec', () => {
     expect(decodeMetadata(encode(63n * 63n * MIB + 1n, 2, 2))).toMatchObject({ depth: 2 });
     expect(() => encode(MIB + 1n, 0, 1)).toThrow(/entry count/u); // needs two chunks
     expect(() => encode(63n * MIB + MIB, 0, 64)).toThrow(/entry count/u); // too many entries
-    expect(() => encode(63n * MIB, 1, 1)).toThrow(/shallower/u); // fits one child, so depth 0
+    // Only a file's root must be minimal; an interior manifest may hold a small tail.
+    expect(decodeMetadata(encode(MIB, 1, 1))).toMatchObject({ depth: 1, size: MIB });
     expect(() => encode(10n, 8, 1)).toThrow(/depth/u);
     expect(() => encode(63n * MIB + 1n, 1, 3)).toThrow(/entry count/u);
     const bytes = encode(63n * MIB + 1n, 1, 2);

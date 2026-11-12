@@ -106,6 +106,13 @@ async function readManifest(store: BrightDbV2Storage, digest: string) {
   return block;
 }
 
+/** A file's root must be as shallow as possible. Interior manifests may hold a small tail. */
+function checkRoot(manifest: { depth: number; size: bigint }): void {
+  if (manifest.depth > 0 && manifest.size <= blobChildSpan(manifest.depth)) {
+    throw new V2AttachmentError('Attachment root manifest is deeper than its size needs');
+  }
+}
+
 /** Every chunk of a file, in order, with the length it must have. Checks manifest sizes on the way. */
 async function* blobChunks(
   store: BrightDbV2Storage,
@@ -116,6 +123,7 @@ async function* blobChunks(
   if (expectedSize !== undefined && manifest.size !== expectedSize) {
     throw new V2AttachmentError('Attachment manifest has the wrong size');
   }
+  if (expectedSize === undefined) checkRoot(manifest);
   const span = blobChildSpan(manifest.depth);
   let remaining = manifest.size;
   for (const entry of manifest.entries) {
@@ -184,6 +192,7 @@ export async function validateFileReferences(
       throw new V2AttachmentError(`_files.${name} references a missing attachment`);
     }
     const manifest = await readManifest(store, digest);
+    checkRoot(manifest);
     if (manifest.size !== BigInt(size as number)) {
       throw new V2AttachmentError(`_files.${name}.size does not match its attachment`);
     }

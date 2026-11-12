@@ -559,9 +559,6 @@ function validateBlob(size: bigint, depth: number, entries: readonly Digest[]): 
     throw new V2CodecError('Invalid blob depth');
   }
   const span = blobChildSpan(depth);
-  if (depth > 0 && size <= span) {
-    throw new V2CodecError('A blob that fits one child must use a shallower manifest');
-  }
   const expected = (size + span - 1n) / span;
   if (entries.length > MAX_BLOB_CHUNKS || BigInt(entries.length) !== expected) {
     throw new V2CodecError('Blob entry count does not match its size');
