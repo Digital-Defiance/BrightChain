@@ -67,6 +67,8 @@ export { V2AttachmentError } from './lib/v2/attachments';
 export { V2IndexError } from './lib/v2/index-key';
 export { BrightDbV2DecryptionError } from './lib/v2/encryption';
 export type { BrightDbV2DiskWriter, BrightDbV2Storage } from './lib/v2/disk-store';
+export type { BlockServer, BrightDbV2BlockSource } from './lib/v2/block-source';
+export { HttpBlockSource, serveBlocks } from './lib/v2/block-source';
 export {
   BrightDbV2CommitOutcomeUnknownError,
   BrightDbV2MissingBlockError,

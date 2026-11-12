@@ -48,6 +48,7 @@ import {
 } from './index-key';
 import { BrightDbV2AesCipher } from './encryption';
 import { V2IndexTree } from './index-tree';
+import type { BrightDbV2BlockSource } from './block-source';
 import { copyDatabase, mergeReplica, type PortableMergeResult } from './merge';
 import { V2Tree } from './tree';
 
@@ -987,7 +988,8 @@ export class PortableBrightDb {
   }
 
   /**
-   * Merge another replica of this database into this one. The other replica's
+   * Merge another replica of this database into this one. The other replica can
+   * be a database handle or any block source, such as an `HttpBlockSource`. Its
    * current root is used unless `options.root` names an earlier one. Per
    * document the greater version wins, a deletion beats an equal version, and
    * for equal live versions the greater digest wins. A collection that was
@@ -996,20 +998,31 @@ export class PortableBrightDb {
    * is published if any block the merge needs is missing or fails its digest.
    */
   async merge(
-    other: PortableBrightDb,
+    other: PortableBrightDb | BrightDbV2BlockSource,
     options: { root?: string } = {},
   ): Promise<PortableMergeResult> {
     this.requireOpen();
-    const remoteHead = options.root ?? (await other.store.readHead());
+    // A database, a storage and an HTTP source all answer "current root" and "block by digest".
+    const source: BrightDbV2BlockSource = other instanceof PortableBrightDb ? other.store : other;
+    const remoteHead = options.root ?? (await source.readHead());
     const result = await this.store.withWriteLock(async (writer) => {
       const previous = await this.store.readHead();
-      const merged = await mergeReplica(this.store, writer, other.store, remoteHead);
+      const merged = await mergeReplica(this.store, writer, source, remoteHead);
       if (!merged) return { previous, root: previous, adopted: 0 };
       await writer.publishHead(merged.root);
       return { previous, root: merged.root, adopted: merged.adopted };
     });
     for (const wake of this.wakeups) wake();
     return result;
+  }
+
+  /**
+   * This database as a block source, for `serveBlocks` or another database's
+   * `merge`. Blocks come out as plaintext, even from an encrypted directory.
+   */
+  blockSource(): BrightDbV2BlockSource {
+    this.requireOpen();
+    return this.store;
   }
 
   /** The digest of the current database state. Equal roots mean equal data. */

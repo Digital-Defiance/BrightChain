@@ -14,6 +14,7 @@ import {
   type V2IndexDefinition,
   type V2Record,
 } from './codec';
+import type { BrightDbV2BlockSource } from './block-source';
 import type { BrightDbV2DiskWriter, BrightDbV2Storage } from './disk-store';
 import { extractIndexKeys } from './index-key';
 import { V2IndexTree } from './index-tree';
@@ -42,7 +43,7 @@ class ClosureCopier {
   constructor(
     private readonly local: BrightDbV2Storage,
     private readonly writer: BrightDbV2DiskWriter,
-    private readonly remote: BrightDbV2Storage,
+    private readonly remote: BrightDbV2BlockSource,
   ) {}
 
   /**
@@ -152,7 +153,7 @@ function remoteWins(local: V2Record, remote: V2Record): boolean {
 }
 
 async function readDatabaseRoot(
-  store: BrightDbV2Storage,
+  store: BrightDbV2BlockSource,
   digest: Digest,
 ): Promise<V2DatabaseRoot> {
   const block = decodeMetadata(await store.readBlock(digest), digest);
@@ -187,7 +188,7 @@ async function readDefinitions(
 export async function mergeReplica(
   local: BrightDbV2Storage,
   writer: BrightDbV2DiskWriter,
-  remote: BrightDbV2Storage,
+  remote: BrightDbV2BlockSource,
   remoteHead: Digest,
 ): Promise<{ root: Digest; adopted: number } | null> {
   const localHead = await local.readHead();
@@ -321,7 +322,7 @@ export async function mergeReplica(
 export async function copyDatabase(
   local: BrightDbV2Storage,
   writer: BrightDbV2DiskWriter,
-  remote: BrightDbV2Storage,
+  remote: BrightDbV2BlockSource,
   head: Digest,
 ): Promise<void> {
   await new ClosureCopier(local, writer, remote).ensureDatabase(head);
