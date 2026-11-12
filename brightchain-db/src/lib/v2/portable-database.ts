@@ -968,6 +968,36 @@ export class PortableBrightDb {
   }
 
   /**
+   * Create a directory holding a copy of the database a block source serves
+   * (for example an `HttpBlockSource`), with its own writer ID. The two are then
+   * replicas that can write and `merge` each other. This is how a machine joins
+   * a database it has never held.
+   */
+  static async cloneFrom(
+    path: string,
+    source: BrightDbV2BlockSource,
+    options: { encryption?: { key: Uint8Array } | { keyRing: BrightDbV2KeyRing } } = {},
+  ): Promise<PortableBrightDb> {
+    const head = await source.readHead();
+    const root = decodeMetadata(await source.readBlock(head), head);
+    if (root.kind !== 'database') {
+      throw new BrightDbV2StorageError('The source head does not reference a database root');
+    }
+    const encryption = options.encryption;
+    const store = await BrightDbV2DiskStore.create(
+      path,
+      encodeMetadata({ kind: 'database', databaseId: root.databaseId, clock: 0n, catalog: null }),
+      undefined,
+      encryption ? new BrightDbV2AesCipher('keyRing' in encryption ? encryption.keyRing : encryption.key) : null,
+    );
+    await store.withWriteLock(async (writer) => {
+      await copyDatabase(store, writer, source, head);
+      await writer.publishHead(head);
+    });
+    return new PortableBrightDb(store);
+  }
+
+  /**
    * Copy this database into a new directory as an independent replica. The
    * copy keeps the database ID and gets its own writer ID, so both sides can
    * write and later `merge` each other.

@@ -361,6 +361,35 @@ function normalize(dump: Dump): Dump {
     expect(JSON.parse(await run(['gc', path, '0'])).removed).toBe(0);
   });
 
+  it('clones a served database into a new directory across runtimes, and filters agree', async () => {
+    const a = join(dir, 'a');
+    const people = [
+      { _id: 'p1', name: 'alice', age: 30, tags: ['x'] },
+      { _id: 'p2', name: 'bob', age: 41, tags: ['x', 'y'] },
+      { _id: 'p3', name: 'carol', age: 25, tags: [] },
+    ];
+    for (const p of people) await run(['insertjson', a, 'people', JSON.stringify(p)]);
+    const tsServer = await startServer('ts', a);
+    const cppServer = await startServer('cpp', a);
+    try {
+      const fromTs = join(dir, 'cloned-by-cpp');
+      const fromCpp = join(dir, 'cloned-by-ts');
+      await runCpp(['clone', fromTs, tsServer.url]); // C++ clones from a TypeScript server
+      await run(['clone', fromCpp, cppServer.url]); // TypeScript clones from a C++ server
+      const root = JSON.parse(await run(['root', a])).root;
+      expect(JSON.parse(await runCpp(['root', fromTs])).root).toBe(root);
+      expect(JSON.parse(await run(['root', fromCpp])).root).toBe(root);
+      for (const filter of ['{"age":{"$gt":28}}', '{"tags":"x"}', '{"$or":[{"name":"carol"},{"age":41}]}', '{"tags":{"$size":0}}']) {
+        const ts = JSON.parse(await run(['find', fromCpp, 'people', filter]));
+        const cpp = JSON.parse(await runCpp(['find', fromTs, 'people', filter]));
+        expect(cpp).toEqual(ts);
+      }
+    } finally {
+      await tsServer.stop();
+      await cppServer.stop();
+    }
+  });
+
   it('writes with TypeScript first, then C++, then TypeScript', () => leg('ts'));
   it('writes with C++ first, then TypeScript, then C++', () => leg('cpp'));
 

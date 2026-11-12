@@ -42,6 +42,7 @@ import {
 } from './index-key';
 import { V2IndexTree } from './index-tree';
 import { BrightDbV2AesCipher } from './encryption';
+import { matchesFilter } from '../queryEngine';
 import { writeAttachment } from './attachments';
 import { copyDatabase } from './merge';
 import { PortableBrightDb } from './portable-database';
@@ -937,6 +938,87 @@ async function buildEncryptedStore(path: string): Promise<Json> {
   };
 }
 
+
+/** Documents and filters whose results both runtimes must agree on (see filter.hpp for the one string-ordering difference). */
+function buildFilterVectors(): Json {
+  const names = ['alice', 'bob', 'carol', 'dave', 'erin', 'frank', 'grace', 'heidi'];
+  const documents: Array<Record<string, Json>> = Array.from({ length: 24 }, (_, i) => ({
+    _id: `u${i.toString().padStart(2, '0')}`,
+    name: names[i % names.length],
+    age: 20 + ((i * 7) % 40),
+    active: i % 3 !== 0,
+    score: i % 5 === 0 ? null : (i * 1.5) % 17,
+    tags: i % 4 === 0 ? [] : i % 4 === 1 ? ['a'] : i % 4 === 2 ? ['a', 'b'] : ['b', 'c', 'd'],
+    address: { city: ['oslo', 'bergen', 'tromso'][i % 3], zip: 1000 + i },
+    items: [{ sku: `s${i % 3}`, qty: i % 4 }, { sku: `s${(i + 1) % 3}`, qty: (i + 2) % 4 }],
+    ...(i % 6 === 0 ? {} : { nickname: `n${i % 5}` }),
+  }));
+  const filters: Json[] = [
+    {},
+    { name: 'alice' },
+    { age: 27 },
+    { active: true },
+    { active: false },
+    { score: null },
+    { nickname: { $exists: false } },
+    { nickname: { $exists: true } },
+    { age: { $gt: 40 } },
+    { age: { $gte: 41, $lt: 55 } },
+    { age: { $lte: 20 } },
+    { age: { $ne: 27 } },
+    { name: { $in: ['alice', 'dave'] } },
+    { name: { $nin: ['alice', 'dave', 'erin'] } },
+    { age: { $in: [20, 27, 34] } },
+    { 'address.city': 'oslo' },
+    { 'address.zip': { $gt: 1010 } },
+    { 'address.city': { $in: ['bergen', 'tromso'] }, active: true },
+    { tags: 'a' },
+    { tags: ['a', 'b'] },
+    { tags: { $in: ['c', 'z'] } },
+    { tags: { $nin: ['a'] } },
+    { tags: { $size: 2 } },
+    { tags: { $size: 0 } },
+    { tags: { $all: ['b', 'd'] } },
+    { tags: { $elemMatch: { $gte: 'c' } } },
+    { items: { $elemMatch: { sku: 's1', qty: { $gte: 2 } } } },
+    { 'items.sku': 's2' },
+    { 'items.0.qty': 3 },
+    { $and: [{ age: { $gt: 30 } }, { active: true }] },
+    { $or: [{ name: 'bob' }, { age: { $gt: 55 } }] },
+    { $nor: [{ name: 'bob' }, { active: true }] },
+    { $not: { name: 'alice' } },
+    { age: { $not: { $gt: 40 } } },
+    { name: { $regex: '^a' } },
+    { name: { $regex: 'e$' } },
+    { name: { $regex: '^[bc]' } },
+    { score: { $type: 'number' } },
+    { score: { $type: 'null' } },
+    { tags: { $type: 'array' } },
+    { address: { $type: 'object' } },
+    { name: { $gt: 'carol' } },
+    { name: { $lte: 'bob' } },
+    { name: { $gt: 'carol' }, age: { $lt: 40 } },
+    { _id: 'u07' },
+    { _id: { $in: ['u01', 'u02', 'nope'] } },
+    { nickname: { $in: ['n1', 'n3'] }, active: true },
+    { unknownField: 1 },
+    { unknownField: { $exists: false } },
+  ];
+  return {
+    description:
+      'Documents and MongoDB-style filters with the matching _ids as computed by the TypeScript query engine. ' +
+      'Strings used for ordering are lowercase ASCII, where locale and bytewise collation agree.',
+    documents: documents as Json,
+    cases: filters.map((filter) => ({
+      filter,
+      ids: documents
+        .filter((doc) => matchesFilter(doc as never, filter as never))
+        .map((doc) => doc['_id'])
+        .sort() as Json,
+    })),
+  };
+}
+
 async function listFiles(root: string): Promise<string[]> {
   const files: string[] = [];
   async function walk(directory: string): Promise<void> {
@@ -1034,6 +1116,10 @@ describe('BrightDB v2 golden fixtures', () => {
     } finally {
       await rm(scratch, { recursive: true, force: true });
     }
+  });
+
+  it('match the filter vectors computed by the TypeScript query engine', async () => {
+    await checkOrWrite(join(FIXTURE_ROOT, 'filters.json'), stringify(buildFilterVectors()));
   });
 
   it('match the merged replicas fixture', async () => {

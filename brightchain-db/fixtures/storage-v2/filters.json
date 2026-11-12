@@ -1,0 +1,1564 @@
+{
+  "description": "Documents and MongoDB-style filters with the matching _ids as computed by the TypeScript query engine. Strings used for ordering are lowercase ASCII, where locale and bytewise collation agree.",
+  "documents": [
+    {
+      "_id": "u00",
+      "name": "alice",
+      "age": 20,
+      "active": false,
+      "score": null,
+      "tags": [],
+      "address": {
+        "city": "oslo",
+        "zip": 1000
+      },
+      "items": [
+        {
+          "sku": "s0",
+          "qty": 0
+        },
+        {
+          "sku": "s1",
+          "qty": 2
+        }
+      ]
+    },
+    {
+      "_id": "u01",
+      "name": "bob",
+      "age": 27,
+      "active": true,
+      "score": 1.5,
+      "tags": [
+        "a"
+      ],
+      "address": {
+        "city": "bergen",
+        "zip": 1001
+      },
+      "items": [
+        {
+          "sku": "s1",
+          "qty": 1
+        },
+        {
+          "sku": "s2",
+          "qty": 3
+        }
+      ],
+      "nickname": "n1"
+    },
+    {
+      "_id": "u02",
+      "name": "carol",
+      "age": 34,
+      "active": true,
+      "score": 3,
+      "tags": [
+        "a",
+        "b"
+      ],
+      "address": {
+        "city": "tromso",
+        "zip": 1002
+      },
+      "items": [
+        {
+          "sku": "s2",
+          "qty": 2
+        },
+        {
+          "sku": "s0",
+          "qty": 0
+        }
+      ],
+      "nickname": "n2"
+    },
+    {
+      "_id": "u03",
+      "name": "dave",
+      "age": 41,
+      "active": false,
+      "score": 4.5,
+      "tags": [
+        "b",
+        "c",
+        "d"
+      ],
+      "address": {
+        "city": "oslo",
+        "zip": 1003
+      },
+      "items": [
+        {
+          "sku": "s0",
+          "qty": 3
+        },
+        {
+          "sku": "s1",
+          "qty": 1
+        }
+      ],
+      "nickname": "n3"
+    },
+    {
+      "_id": "u04",
+      "name": "erin",
+      "age": 48,
+      "active": true,
+      "score": 6,
+      "tags": [],
+      "address": {
+        "city": "bergen",
+        "zip": 1004
+      },
+      "items": [
+        {
+          "sku": "s1",
+          "qty": 0
+        },
+        {
+          "sku": "s2",
+          "qty": 2
+        }
+      ],
+      "nickname": "n4"
+    },
+    {
+      "_id": "u05",
+      "name": "frank",
+      "age": 55,
+      "active": true,
+      "score": null,
+      "tags": [
+        "a"
+      ],
+      "address": {
+        "city": "tromso",
+        "zip": 1005
+      },
+      "items": [
+        {
+          "sku": "s2",
+          "qty": 1
+        },
+        {
+          "sku": "s0",
+          "qty": 3
+        }
+      ],
+      "nickname": "n0"
+    },
+    {
+      "_id": "u06",
+      "name": "grace",
+      "age": 22,
+      "active": false,
+      "score": 9,
+      "tags": [
+        "a",
+        "b"
+      ],
+      "address": {
+        "city": "oslo",
+        "zip": 1006
+      },
+      "items": [
+        {
+          "sku": "s0",
+          "qty": 2
+        },
+        {
+          "sku": "s1",
+          "qty": 0
+        }
+      ]
+    },
+    {
+      "_id": "u07",
+      "name": "heidi",
+      "age": 29,
+      "active": true,
+      "score": 10.5,
+      "tags": [
+        "b",
+        "c",
+        "d"
+      ],
+      "address": {
+        "city": "bergen",
+        "zip": 1007
+      },
+      "items": [
+        {
+          "sku": "s1",
+          "qty": 3
+        },
+        {
+          "sku": "s2",
+          "qty": 1
+        }
+      ],
+      "nickname": "n2"
+    },
+    {
+      "_id": "u08",
+      "name": "alice",
+      "age": 36,
+      "active": true,
+      "score": 12,
+      "tags": [],
+      "address": {
+        "city": "tromso",
+        "zip": 1008
+      },
+      "items": [
+        {
+          "sku": "s2",
+          "qty": 0
+        },
+        {
+          "sku": "s0",
+          "qty": 2
+        }
+      ],
+      "nickname": "n3"
+    },
+    {
+      "_id": "u09",
+      "name": "bob",
+      "age": 43,
+      "active": false,
+      "score": 13.5,
+      "tags": [
+        "a"
+      ],
+      "address": {
+        "city": "oslo",
+        "zip": 1009
+      },
+      "items": [
+        {
+          "sku": "s0",
+          "qty": 1
+        },
+        {
+          "sku": "s1",
+          "qty": 3
+        }
+      ],
+      "nickname": "n4"
+    },
+    {
+      "_id": "u10",
+      "name": "carol",
+      "age": 50,
+      "active": true,
+      "score": null,
+      "tags": [
+        "a",
+        "b"
+      ],
+      "address": {
+        "city": "bergen",
+        "zip": 1010
+      },
+      "items": [
+        {
+          "sku": "s1",
+          "qty": 2
+        },
+        {
+          "sku": "s2",
+          "qty": 0
+        }
+      ],
+      "nickname": "n0"
+    },
+    {
+      "_id": "u11",
+      "name": "dave",
+      "age": 57,
+      "active": true,
+      "score": 16.5,
+      "tags": [
+        "b",
+        "c",
+        "d"
+      ],
+      "address": {
+        "city": "tromso",
+        "zip": 1011
+      },
+      "items": [
+        {
+          "sku": "s2",
+          "qty": 3
+        },
+        {
+          "sku": "s0",
+          "qty": 1
+        }
+      ],
+      "nickname": "n1"
+    },
+    {
+      "_id": "u12",
+      "name": "erin",
+      "age": 24,
+      "active": false,
+      "score": 1,
+      "tags": [],
+      "address": {
+        "city": "oslo",
+        "zip": 1012
+      },
+      "items": [
+        {
+          "sku": "s0",
+          "qty": 0
+        },
+        {
+          "sku": "s1",
+          "qty": 2
+        }
+      ]
+    },
+    {
+      "_id": "u13",
+      "name": "frank",
+      "age": 31,
+      "active": true,
+      "score": 2.5,
+      "tags": [
+        "a"
+      ],
+      "address": {
+        "city": "bergen",
+        "zip": 1013
+      },
+      "items": [
+        {
+          "sku": "s1",
+          "qty": 1
+        },
+        {
+          "sku": "s2",
+          "qty": 3
+        }
+      ],
+      "nickname": "n3"
+    },
+    {
+      "_id": "u14",
+      "name": "grace",
+      "age": 38,
+      "active": true,
+      "score": 4,
+      "tags": [
+        "a",
+        "b"
+      ],
+      "address": {
+        "city": "tromso",
+        "zip": 1014
+      },
+      "items": [
+        {
+          "sku": "s2",
+          "qty": 2
+        },
+        {
+          "sku": "s0",
+          "qty": 0
+        }
+      ],
+      "nickname": "n4"
+    },
+    {
+      "_id": "u15",
+      "name": "heidi",
+      "age": 45,
+      "active": false,
+      "score": null,
+      "tags": [
+        "b",
+        "c",
+        "d"
+      ],
+      "address": {
+        "city": "oslo",
+        "zip": 1015
+      },
+      "items": [
+        {
+          "sku": "s0",
+          "qty": 3
+        },
+        {
+          "sku": "s1",
+          "qty": 1
+        }
+      ],
+      "nickname": "n0"
+    },
+    {
+      "_id": "u16",
+      "name": "alice",
+      "age": 52,
+      "active": true,
+      "score": 7,
+      "tags": [],
+      "address": {
+        "city": "bergen",
+        "zip": 1016
+      },
+      "items": [
+        {
+          "sku": "s1",
+          "qty": 0
+        },
+        {
+          "sku": "s2",
+          "qty": 2
+        }
+      ],
+      "nickname": "n1"
+    },
+    {
+      "_id": "u17",
+      "name": "bob",
+      "age": 59,
+      "active": true,
+      "score": 8.5,
+      "tags": [
+        "a"
+      ],
+      "address": {
+        "city": "tromso",
+        "zip": 1017
+      },
+      "items": [
+        {
+          "sku": "s2",
+          "qty": 1
+        },
+        {
+          "sku": "s0",
+          "qty": 3
+        }
+      ],
+      "nickname": "n2"
+    },
+    {
+      "_id": "u18",
+      "name": "carol",
+      "age": 26,
+      "active": false,
+      "score": 10,
+      "tags": [
+        "a",
+        "b"
+      ],
+      "address": {
+        "city": "oslo",
+        "zip": 1018
+      },
+      "items": [
+        {
+          "sku": "s0",
+          "qty": 2
+        },
+        {
+          "sku": "s1",
+          "qty": 0
+        }
+      ]
+    },
+    {
+      "_id": "u19",
+      "name": "dave",
+      "age": 33,
+      "active": true,
+      "score": 11.5,
+      "tags": [
+        "b",
+        "c",
+        "d"
+      ],
+      "address": {
+        "city": "bergen",
+        "zip": 1019
+      },
+      "items": [
+        {
+          "sku": "s1",
+          "qty": 3
+        },
+        {
+          "sku": "s2",
+          "qty": 1
+        }
+      ],
+      "nickname": "n4"
+    },
+    {
+      "_id": "u20",
+      "name": "erin",
+      "age": 40,
+      "active": true,
+      "score": null,
+      "tags": [],
+      "address": {
+        "city": "tromso",
+        "zip": 1020
+      },
+      "items": [
+        {
+          "sku": "s2",
+          "qty": 0
+        },
+        {
+          "sku": "s0",
+          "qty": 2
+        }
+      ],
+      "nickname": "n0"
+    },
+    {
+      "_id": "u21",
+      "name": "frank",
+      "age": 47,
+      "active": false,
+      "score": 14.5,
+      "tags": [
+        "a"
+      ],
+      "address": {
+        "city": "oslo",
+        "zip": 1021
+      },
+      "items": [
+        {
+          "sku": "s0",
+          "qty": 1
+        },
+        {
+          "sku": "s1",
+          "qty": 3
+        }
+      ],
+      "nickname": "n1"
+    },
+    {
+      "_id": "u22",
+      "name": "grace",
+      "age": 54,
+      "active": true,
+      "score": 16,
+      "tags": [
+        "a",
+        "b"
+      ],
+      "address": {
+        "city": "bergen",
+        "zip": 1022
+      },
+      "items": [
+        {
+          "sku": "s1",
+          "qty": 2
+        },
+        {
+          "sku": "s2",
+          "qty": 0
+        }
+      ],
+      "nickname": "n2"
+    },
+    {
+      "_id": "u23",
+      "name": "heidi",
+      "age": 21,
+      "active": true,
+      "score": 0.5,
+      "tags": [
+        "b",
+        "c",
+        "d"
+      ],
+      "address": {
+        "city": "tromso",
+        "zip": 1023
+      },
+      "items": [
+        {
+          "sku": "s2",
+          "qty": 3
+        },
+        {
+          "sku": "s0",
+          "qty": 1
+        }
+      ],
+      "nickname": "n3"
+    }
+  ],
+  "cases": [
+    {
+      "filter": {},
+      "ids": [
+        "u00",
+        "u01",
+        "u02",
+        "u03",
+        "u04",
+        "u05",
+        "u06",
+        "u07",
+        "u08",
+        "u09",
+        "u10",
+        "u11",
+        "u12",
+        "u13",
+        "u14",
+        "u15",
+        "u16",
+        "u17",
+        "u18",
+        "u19",
+        "u20",
+        "u21",
+        "u22",
+        "u23"
+      ]
+    },
+    {
+      "filter": {
+        "name": "alice"
+      },
+      "ids": [
+        "u00",
+        "u08",
+        "u16"
+      ]
+    },
+    {
+      "filter": {
+        "age": 27
+      },
+      "ids": [
+        "u01"
+      ]
+    },
+    {
+      "filter": {
+        "active": true
+      },
+      "ids": [
+        "u01",
+        "u02",
+        "u04",
+        "u05",
+        "u07",
+        "u08",
+        "u10",
+        "u11",
+        "u13",
+        "u14",
+        "u16",
+        "u17",
+        "u19",
+        "u20",
+        "u22",
+        "u23"
+      ]
+    },
+    {
+      "filter": {
+        "active": false
+      },
+      "ids": [
+        "u00",
+        "u03",
+        "u06",
+        "u09",
+        "u12",
+        "u15",
+        "u18",
+        "u21"
+      ]
+    },
+    {
+      "filter": {
+        "score": null
+      },
+      "ids": [
+        "u00",
+        "u05",
+        "u10",
+        "u15",
+        "u20"
+      ]
+    },
+    {
+      "filter": {
+        "nickname": {
+          "$exists": false
+        }
+      },
+      "ids": [
+        "u00",
+        "u06",
+        "u12",
+        "u18"
+      ]
+    },
+    {
+      "filter": {
+        "nickname": {
+          "$exists": true
+        }
+      },
+      "ids": [
+        "u01",
+        "u02",
+        "u03",
+        "u04",
+        "u05",
+        "u07",
+        "u08",
+        "u09",
+        "u10",
+        "u11",
+        "u13",
+        "u14",
+        "u15",
+        "u16",
+        "u17",
+        "u19",
+        "u20",
+        "u21",
+        "u22",
+        "u23"
+      ]
+    },
+    {
+      "filter": {
+        "age": {
+          "$gt": 40
+        }
+      },
+      "ids": [
+        "u03",
+        "u04",
+        "u05",
+        "u09",
+        "u10",
+        "u11",
+        "u15",
+        "u16",
+        "u17",
+        "u21",
+        "u22"
+      ]
+    },
+    {
+      "filter": {
+        "age": {
+          "$gte": 41,
+          "$lt": 55
+        }
+      },
+      "ids": [
+        "u03",
+        "u04",
+        "u09",
+        "u10",
+        "u15",
+        "u16",
+        "u21",
+        "u22"
+      ]
+    },
+    {
+      "filter": {
+        "age": {
+          "$lte": 20
+        }
+      },
+      "ids": [
+        "u00"
+      ]
+    },
+    {
+      "filter": {
+        "age": {
+          "$ne": 27
+        }
+      },
+      "ids": [
+        "u00",
+        "u02",
+        "u03",
+        "u04",
+        "u05",
+        "u06",
+        "u07",
+        "u08",
+        "u09",
+        "u10",
+        "u11",
+        "u12",
+        "u13",
+        "u14",
+        "u15",
+        "u16",
+        "u17",
+        "u18",
+        "u19",
+        "u20",
+        "u21",
+        "u22",
+        "u23"
+      ]
+    },
+    {
+      "filter": {
+        "name": {
+          "$in": [
+            "alice",
+            "dave"
+          ]
+        }
+      },
+      "ids": [
+        "u00",
+        "u03",
+        "u08",
+        "u11",
+        "u16",
+        "u19"
+      ]
+    },
+    {
+      "filter": {
+        "name": {
+          "$nin": [
+            "alice",
+            "dave",
+            "erin"
+          ]
+        }
+      },
+      "ids": [
+        "u01",
+        "u02",
+        "u05",
+        "u06",
+        "u07",
+        "u09",
+        "u10",
+        "u13",
+        "u14",
+        "u15",
+        "u17",
+        "u18",
+        "u21",
+        "u22",
+        "u23"
+      ]
+    },
+    {
+      "filter": {
+        "age": {
+          "$in": [
+            20,
+            27,
+            34
+          ]
+        }
+      },
+      "ids": [
+        "u00",
+        "u01",
+        "u02"
+      ]
+    },
+    {
+      "filter": {
+        "address.city": "oslo"
+      },
+      "ids": [
+        "u00",
+        "u03",
+        "u06",
+        "u09",
+        "u12",
+        "u15",
+        "u18",
+        "u21"
+      ]
+    },
+    {
+      "filter": {
+        "address.zip": {
+          "$gt": 1010
+        }
+      },
+      "ids": [
+        "u11",
+        "u12",
+        "u13",
+        "u14",
+        "u15",
+        "u16",
+        "u17",
+        "u18",
+        "u19",
+        "u20",
+        "u21",
+        "u22",
+        "u23"
+      ]
+    },
+    {
+      "filter": {
+        "address.city": {
+          "$in": [
+            "bergen",
+            "tromso"
+          ]
+        },
+        "active": true
+      },
+      "ids": [
+        "u01",
+        "u02",
+        "u04",
+        "u05",
+        "u07",
+        "u08",
+        "u10",
+        "u11",
+        "u13",
+        "u14",
+        "u16",
+        "u17",
+        "u19",
+        "u20",
+        "u22",
+        "u23"
+      ]
+    },
+    {
+      "filter": {
+        "tags": "a"
+      },
+      "ids": [
+        "u01",
+        "u02",
+        "u05",
+        "u06",
+        "u09",
+        "u10",
+        "u13",
+        "u14",
+        "u17",
+        "u18",
+        "u21",
+        "u22"
+      ]
+    },
+    {
+      "filter": {
+        "tags": [
+          "a",
+          "b"
+        ]
+      },
+      "ids": [
+        "u02",
+        "u06",
+        "u10",
+        "u14",
+        "u18",
+        "u22"
+      ]
+    },
+    {
+      "filter": {
+        "tags": {
+          "$in": [
+            "c",
+            "z"
+          ]
+        }
+      },
+      "ids": [
+        "u03",
+        "u07",
+        "u11",
+        "u15",
+        "u19",
+        "u23"
+      ]
+    },
+    {
+      "filter": {
+        "tags": {
+          "$nin": [
+            "a"
+          ]
+        }
+      },
+      "ids": [
+        "u00",
+        "u03",
+        "u04",
+        "u07",
+        "u08",
+        "u11",
+        "u12",
+        "u15",
+        "u16",
+        "u19",
+        "u20",
+        "u23"
+      ]
+    },
+    {
+      "filter": {
+        "tags": {
+          "$size": 2
+        }
+      },
+      "ids": [
+        "u02",
+        "u06",
+        "u10",
+        "u14",
+        "u18",
+        "u22"
+      ]
+    },
+    {
+      "filter": {
+        "tags": {
+          "$size": 0
+        }
+      },
+      "ids": [
+        "u00",
+        "u04",
+        "u08",
+        "u12",
+        "u16",
+        "u20"
+      ]
+    },
+    {
+      "filter": {
+        "tags": {
+          "$all": [
+            "b",
+            "d"
+          ]
+        }
+      },
+      "ids": [
+        "u03",
+        "u07",
+        "u11",
+        "u15",
+        "u19",
+        "u23"
+      ]
+    },
+    {
+      "filter": {
+        "tags": {
+          "$elemMatch": {
+            "$gte": "c"
+          }
+        }
+      },
+      "ids": []
+    },
+    {
+      "filter": {
+        "items": {
+          "$elemMatch": {
+            "sku": "s1",
+            "qty": {
+              "$gte": 2
+            }
+          }
+        }
+      },
+      "ids": [
+        "u00",
+        "u07",
+        "u09",
+        "u10",
+        "u12",
+        "u19",
+        "u21",
+        "u22"
+      ]
+    },
+    {
+      "filter": {
+        "items.sku": "s2"
+      },
+      "ids": [
+        "u01",
+        "u02",
+        "u04",
+        "u05",
+        "u07",
+        "u08",
+        "u10",
+        "u11",
+        "u13",
+        "u14",
+        "u16",
+        "u17",
+        "u19",
+        "u20",
+        "u22",
+        "u23"
+      ]
+    },
+    {
+      "filter": {
+        "items.0.qty": 3
+      },
+      "ids": [
+        "u03",
+        "u07",
+        "u11",
+        "u15",
+        "u19",
+        "u23"
+      ]
+    },
+    {
+      "filter": {
+        "$and": [
+          {
+            "age": {
+              "$gt": 30
+            }
+          },
+          {
+            "active": true
+          }
+        ]
+      },
+      "ids": [
+        "u02",
+        "u04",
+        "u05",
+        "u08",
+        "u10",
+        "u11",
+        "u13",
+        "u14",
+        "u16",
+        "u17",
+        "u19",
+        "u20",
+        "u22"
+      ]
+    },
+    {
+      "filter": {
+        "$or": [
+          {
+            "name": "bob"
+          },
+          {
+            "age": {
+              "$gt": 55
+            }
+          }
+        ]
+      },
+      "ids": [
+        "u01",
+        "u09",
+        "u11",
+        "u17"
+      ]
+    },
+    {
+      "filter": {
+        "$nor": [
+          {
+            "name": "bob"
+          },
+          {
+            "active": true
+          }
+        ]
+      },
+      "ids": [
+        "u00",
+        "u03",
+        "u06",
+        "u12",
+        "u15",
+        "u18",
+        "u21"
+      ]
+    },
+    {
+      "filter": {
+        "$not": {
+          "name": "alice"
+        }
+      },
+      "ids": [
+        "u01",
+        "u02",
+        "u03",
+        "u04",
+        "u05",
+        "u06",
+        "u07",
+        "u09",
+        "u10",
+        "u11",
+        "u12",
+        "u13",
+        "u14",
+        "u15",
+        "u17",
+        "u18",
+        "u19",
+        "u20",
+        "u21",
+        "u22",
+        "u23"
+      ]
+    },
+    {
+      "filter": {
+        "age": {
+          "$not": {
+            "$gt": 40
+          }
+        }
+      },
+      "ids": [
+        "u00",
+        "u01",
+        "u02",
+        "u06",
+        "u07",
+        "u08",
+        "u12",
+        "u13",
+        "u14",
+        "u18",
+        "u19",
+        "u20",
+        "u23"
+      ]
+    },
+    {
+      "filter": {
+        "name": {
+          "$regex": "^a"
+        }
+      },
+      "ids": [
+        "u00",
+        "u08",
+        "u16"
+      ]
+    },
+    {
+      "filter": {
+        "name": {
+          "$regex": "e$"
+        }
+      },
+      "ids": [
+        "u00",
+        "u03",
+        "u06",
+        "u08",
+        "u11",
+        "u14",
+        "u16",
+        "u19",
+        "u22"
+      ]
+    },
+    {
+      "filter": {
+        "name": {
+          "$regex": "^[bc]"
+        }
+      },
+      "ids": [
+        "u01",
+        "u02",
+        "u09",
+        "u10",
+        "u17",
+        "u18"
+      ]
+    },
+    {
+      "filter": {
+        "score": {
+          "$type": "number"
+        }
+      },
+      "ids": [
+        "u01",
+        "u02",
+        "u03",
+        "u04",
+        "u06",
+        "u07",
+        "u08",
+        "u09",
+        "u11",
+        "u12",
+        "u13",
+        "u14",
+        "u16",
+        "u17",
+        "u18",
+        "u19",
+        "u21",
+        "u22",
+        "u23"
+      ]
+    },
+    {
+      "filter": {
+        "score": {
+          "$type": "null"
+        }
+      },
+      "ids": [
+        "u00",
+        "u05",
+        "u10",
+        "u15",
+        "u20"
+      ]
+    },
+    {
+      "filter": {
+        "tags": {
+          "$type": "array"
+        }
+      },
+      "ids": [
+        "u00",
+        "u01",
+        "u02",
+        "u03",
+        "u04",
+        "u05",
+        "u06",
+        "u07",
+        "u08",
+        "u09",
+        "u10",
+        "u11",
+        "u12",
+        "u13",
+        "u14",
+        "u15",
+        "u16",
+        "u17",
+        "u18",
+        "u19",
+        "u20",
+        "u21",
+        "u22",
+        "u23"
+      ]
+    },
+    {
+      "filter": {
+        "address": {
+          "$type": "object"
+        }
+      },
+      "ids": [
+        "u00",
+        "u01",
+        "u02",
+        "u03",
+        "u04",
+        "u05",
+        "u06",
+        "u07",
+        "u08",
+        "u09",
+        "u10",
+        "u11",
+        "u12",
+        "u13",
+        "u14",
+        "u15",
+        "u16",
+        "u17",
+        "u18",
+        "u19",
+        "u20",
+        "u21",
+        "u22",
+        "u23"
+      ]
+    },
+    {
+      "filter": {
+        "name": {
+          "$gt": "carol"
+        }
+      },
+      "ids": [
+        "u03",
+        "u04",
+        "u05",
+        "u06",
+        "u07",
+        "u11",
+        "u12",
+        "u13",
+        "u14",
+        "u15",
+        "u19",
+        "u20",
+        "u21",
+        "u22",
+        "u23"
+      ]
+    },
+    {
+      "filter": {
+        "name": {
+          "$lte": "bob"
+        }
+      },
+      "ids": [
+        "u00",
+        "u01",
+        "u08",
+        "u09",
+        "u16",
+        "u17"
+      ]
+    },
+    {
+      "filter": {
+        "name": {
+          "$gt": "carol"
+        },
+        "age": {
+          "$lt": 40
+        }
+      },
+      "ids": [
+        "u06",
+        "u07",
+        "u12",
+        "u13",
+        "u14",
+        "u19",
+        "u23"
+      ]
+    },
+    {
+      "filter": {
+        "_id": "u07"
+      },
+      "ids": [
+        "u07"
+      ]
+    },
+    {
+      "filter": {
+        "_id": {
+          "$in": [
+            "u01",
+            "u02",
+            "nope"
+          ]
+        }
+      },
+      "ids": [
+        "u01",
+        "u02"
+      ]
+    },
+    {
+      "filter": {
+        "nickname": {
+          "$in": [
+            "n1",
+            "n3"
+          ]
+        },
+        "active": true
+      },
+      "ids": [
+        "u01",
+        "u08",
+        "u11",
+        "u13",
+        "u16",
+        "u23"
+      ]
+    },
+    {
+      "filter": {
+        "unknownField": 1
+      },
+      "ids": []
+    },
+    {
+      "filter": {
+        "unknownField": {
+          "$exists": false
+        }
+      },
+      "ids": [
+        "u00",
+        "u01",
+        "u02",
+        "u03",
+        "u04",
+        "u05",
+        "u06",
+        "u07",
+        "u08",
+        "u09",
+        "u10",
+        "u11",
+        "u12",
+        "u13",
+        "u14",
+        "u15",
+        "u16",
+        "u17",
+        "u18",
+        "u19",
+        "u20",
+        "u21",
+        "u22",
+        "u23"
+      ]
+    }
+  ]
+}

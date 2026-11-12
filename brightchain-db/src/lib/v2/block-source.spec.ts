@@ -133,3 +133,44 @@ describe('BrightDB v2 block sources', () => {
     fork.close();
   });
 });
+
+describe('BrightDB v2 cloneFrom', () => {
+  let dir: string;
+  beforeEach(async () => {
+    dir = await mkdtemp(join(tmpdir(), 'brightdb-v2-clone-'));
+  });
+  afterEach(async () => {
+    await rm(dir, { recursive: true, force: true });
+  });
+
+  it('copies a served database into a new directory, then stays mergeable', async () => {
+    const a = await PortableBrightDb.open({ path: join(dir, 'a') });
+    await a.collection('docs').createIndex('by_n', ['n']);
+    await a.collection('docs').insertMany(Array.from({ length: 100 }, (_, i) => ({ _id: `d${i}`, n: i })));
+    const ref = await a.putAttachment(Buffer.alloc(1_200_000, 6));
+    await a.collection('docs').insertOne({ _id: 'file', n: -1, _files: { f: { ...ref } } });
+    const server = await serveBlocks(a.blockSource(), { token: 'tok' });
+    try {
+      await expect(PortableBrightDb.cloneFrom(join(dir, 'denied'), new HttpBlockSource(server.url))).rejects.toThrow(/HTTP 401/u);
+      const source = new HttpBlockSource(server.url, { token: 'tok' });
+      const b = await PortableBrightDb.cloneFrom(join(dir, 'b'), source);
+      expect(await b.root()).toBe(await a.root());
+      expect((await b.getAttachment(ref)).length).toBe(ref.size);
+      expect((await b.collection('docs').findByIndex('by_n', { gte: 98 })).map((d) => d['_id'])).toEqual(['d98', 'd99']);
+
+      await a.collection('docs').insertOne({ _id: 'from-a', n: 500 });
+      await b.collection('docs').insertOne({ _id: 'from-b', n: 600 });
+      await b.merge(source);
+      await a.merge(b);
+      expect(await a.root()).toBe(await b.root());
+
+      const c = await PortableBrightDb.cloneFrom(join(dir, 'c'), source, { encryption: { key: Buffer.alloc(32, 8) } });
+      expect(await c.collection('docs').findById('from-a')).toMatchObject({ n: 500 });
+      await expect(PortableBrightDb.open({ path: join(dir, 'c') })).rejects.toThrow(/encrypted/u);
+      for (const db of [b, c]) db.close();
+    } finally {
+      await server.close();
+    }
+    a.close();
+  });
+});

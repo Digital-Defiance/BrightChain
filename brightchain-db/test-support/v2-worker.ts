@@ -10,6 +10,14 @@ import { PortableBrightDb } from '../src/lib/v2/portable-database';
 
 async function main(): Promise<void> {
   const [command, path, ...args] = process.argv.slice(2);
+  if (command === 'clone') {
+    // clone <target directory> <url> [token]: copy a served database into a new directory
+    const [url, token] = args;
+    const keyHex = process.env['BRIGHTDB_KEY'];
+    (await PortableBrightDb.cloneFrom(path, new HttpBlockSource(url, { token }), keyHex ? { encryption: { key: Buffer.from(keyHex, 'hex') } } : {})).close();
+    console.log(JSON.stringify({ ok: true }));
+    return;
+  }
   // BRIGHTDB_KEY (64 hex digits) opens an encrypted database.
   const hex = process.env['BRIGHTDB_KEY'];
   const encryption = hex ? { key: Buffer.from(hex, 'hex') } : undefined;
@@ -111,6 +119,13 @@ async function main(): Promise<void> {
         // pull <url> [token]: merge a served replica into this one
         const [url, token] = args;
         console.log(JSON.stringify(await db.merge(new HttpBlockSource(url, { token }))));
+        break;
+      }
+      case 'find': {
+        // find <collection> <filter json>: ids of matching documents, sorted
+        const [collection, filter] = args;
+        const docs = await db.collection(collection).find(JSON.parse(filter)).toArray();
+        console.log(JSON.stringify(docs.map((d) => d['_id']).sort()));
         break;
       }
       case 'gc': {
