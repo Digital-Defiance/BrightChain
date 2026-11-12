@@ -198,6 +198,34 @@ export class PooledMemoryBlockStore
     return hash;
   }
 
+  /** Store a block under a caller-chosen name (see IPooledBlockStore.putInPoolWithId). */
+  public async putInPoolWithId(
+    pool: PoolId,
+    id: string,
+    data: Uint8Array,
+    options?: BlockStoreOptions,
+  ): Promise<void> {
+    validatePoolId(pool);
+    if (!/^[0-9a-f]{128}$/u.test(id)) {
+      throw new Error('A named block id must be 128 lowercase hexadecimal digits');
+    }
+    const key = makeStorageKey(pool, id);
+    if (this.poolBlocks.has(key)) {
+      this.touchPool(pool);
+      return; // idempotent
+    }
+    this.poolBlocks.set(key, new Uint8Array(data));
+    const metadata = createDefaultBlockMetadata(toStorageKey(id), data.length, id, options, pool);
+    try {
+      await this.getMetadataStore().create(metadata);
+    } catch {
+      if (this.getMetadataStore().has(id)) {
+        await this.getMetadataStore().update(toStorageKey(id), { poolId: pool });
+      }
+    }
+    this.recordPut(pool, data.length);
+  }
+
   public async deleteFromPool(pool: PoolId, hash: string): Promise<void> {
     validatePoolId(pool);
     const key = makeStorageKey(pool, hash);

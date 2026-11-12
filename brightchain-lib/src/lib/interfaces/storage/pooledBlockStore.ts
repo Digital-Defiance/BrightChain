@@ -130,6 +130,21 @@ export interface IPooledBlockStore extends IBlockStore {
     options?: BlockStoreOptions,
   ): Promise<string>;
 
+  /**
+   * Store block data under a name the caller chooses, for pools that encrypt
+   * their blocks. Such a pool cannot name a block by the hash of its contents,
+   * because the contents are ciphertext the reader cannot hash back to a known
+   * name. `id` must be 128 lowercase hexadecimal digits. Reading and existence
+   * checks use the same name through getFromPool and hasInPool. Optional: a
+   * store without it cannot hold named blocks.
+   */
+  putInPoolWithId?(
+    pool: PoolId,
+    id: string,
+    data: Uint8Array,
+    options?: BlockStoreOptions,
+  ): Promise<void>;
+
   /** Delete a block from a specific pool */
   deleteFromPool(pool: PoolId, hash: string): Promise<void>;
 

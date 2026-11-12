@@ -3,6 +3,7 @@ import { InMemoryHeadRegistry } from '../headRegistry';
 import { HttpBlockSource, serveBlocks } from './block-source';
 import { BrightChainV2Storage, headCollection } from './brightchain-storage';
 import { BrightDbV2StorageError } from './disk-store';
+import { BrightDbV2AesCipher } from './encryption';
 import { PortableBrightDb } from './portable-database';
 
 describe('BrightDB v2 over a BrightChain pool', () => {
@@ -129,8 +130,115 @@ describe('BrightDB v2 over a BrightChain pool', () => {
     expect(marked.encryptsAtRest).toBe(true);
     await expect(PortableBrightDb.open({ storage: marked, encryption: { key: Buffer.alloc(32, 1) } })).rejects.toThrow(/already encrypts/u);
     const db = await PortableBrightDb.open({ storage: marked });
-    await expect(db.collection('c').insertOne({ _id: 'a' })).rejects.toThrow(/encrypting pool is not supported yet/u);
+    await expect(db.collection('c').insertOne({ _id: 'a' })).rejects.toThrow(/ciphertext hash/u);
     db.close();
     expect(() => new BrightChainV2Storage({ store, poolId: 'p', headRegistry, dbName: 'x', writerId: Buffer.alloc(16) })).toThrow(BrightDbV2StorageError);
+  });
+});
+
+describe('BrightDB v2 over an encrypting BrightChain pool', () => {
+  const key = Buffer.alloc(32, 5);
+  const options = (extra: object = {}) => ({
+    store: new PooledMemoryBlockStore(BlockSize.Small),
+    poolId: 'secure',
+    headRegistry: new InMemoryHeadRegistry(),
+    dbName: 'app',
+    poolEncryption: { key },
+    ...extra,
+  });
+
+  it('keeps sealed blocks under keyed names so the pool never sees a plaintext digest', async () => {
+    const opts = options();
+    const storage = await BrightChainV2Storage.openOrCreate(opts);
+    const db = await PortableBrightDb.open({ storage });
+    await db.collection('people').createIndex('by_city', ['city']);
+    const secret = 'pool-secret-note';
+    await db.collection('people').insertMany([
+      { _id: 'a', city: 'Oslo', note: secret },
+      { _id: 'b', city: 'Bergen', note: secret },
+    ]);
+    const ref = await db.putAttachment(Buffer.from(`file ${secret}`));
+    await db.collection('people').insertOne({ _id: 'c', city: 'Oslo', _files: { f: { ...ref } } });
+    expect((await db.collection('people').findByIndex('by_city', { equals: ['Oslo'] })).map((d) => d['_id'])).toEqual(['a', 'c']);
+    expect((await db.getAttachment(ref)).toString()).toContain(secret);
+
+    // Nothing in the pool is named by a plaintext digest or contains plaintext.
+    const root = await db.root();
+    expect(await opts.store.hasInPool('secure', root)).toBe(false);
+    const registryValue = opts.headRegistry.getHead('app', headCollection('secure')) as string;
+    expect(registryValue).not.toBe(root);
+    expect(registryValue).not.toContain(root);
+    let blocks = 0;
+    for await (const name of opts.store.listBlocksInPool('secure')) {
+      const bytes = await opts.store.getFromPool('secure', name);
+      expect(Buffer.from(bytes).includes(Buffer.from(secret))).toBe(false);
+      expect(await storage.hasBlock(name)).toBe(false); // names are not digests
+      blocks++;
+    }
+    expect(blocks).toBeGreaterThan(5);
+    db.close();
+
+    // Reopening needs the same key.
+    const again = await PortableBrightDb.open({ storage: await BrightChainV2Storage.openOrCreate(opts) });
+    expect(await again.root()).toBe(root);
+    again.close();
+    const wrong = new BrightChainV2Storage({ ...opts, poolEncryption: { key: Buffer.alloc(32, 6) } });
+    await expect(wrong.readHead()).rejects.toThrow(/Cannot decrypt the database head/u);
+  });
+
+  it('detects a block moved to another name, refuses BrightDB encryption, and needs named-block support', async () => {
+    const opts = options();
+    const storage = await BrightChainV2Storage.openOrCreate(opts);
+    await expect(PortableBrightDb.open({ storage, encryption: { key } })).rejects.toThrow(/already encrypts/u);
+    const db = await PortableBrightDb.open({ storage });
+    await db.collection('c').insertOne({ _id: 'a', v: 1 });
+    const older = await db.root();
+    await db.collection('c').insertOne({ _id: 'b', v: 2 });
+    const newer = await db.root();
+    expect((await storage.readBlock(older)).length).toBeGreaterThan(0);
+
+    // Put the newer root's sealed bytes under the older root's name: the seal is bound to the name.
+    const cipher = new BrightDbV2AesCipher(key);
+    const olderName = cipher.physicalName(older);
+    const newerBytes = await opts.store.getFromPool('secure', cipher.physicalName(newer));
+    await opts.store.deleteFromPool('secure', olderName);
+    await (opts.store.putInPoolWithId as NonNullable<typeof opts.store.putInPoolWithId>)('secure', olderName, newerBytes);
+    await expect(storage.readBlock(older)).rejects.toThrow(/cannot be decrypted/u);
+    db.close();
+
+    const withoutNamed = Object.create(opts.store) as PooledMemoryBlockStore;
+    (withoutNamed as unknown as { putInPoolWithId?: unknown }).putInPoolWithId = undefined;
+    expect(() => new BrightChainV2Storage({ ...opts, store: withoutNamed })).toThrow(/named blocks/u);
+  });
+
+  it('syncs an encrypting pool node with another node holding the same key, through merge', async () => {
+    const a = await PortableBrightDb.open({ storage: await BrightChainV2Storage.openOrCreate(options()) });
+    await a.collection('docs').insertMany([{ _id: 'one' }, { _id: 'two' }]);
+    const b = await PortableBrightDb.open({
+      storage: await BrightChainV2Storage.joinFrom(options(), a.blockSource()),
+    });
+    expect(await b.root()).toBe(await a.root());
+    await a.collection('docs').insertOne({ _id: 'from-a' });
+    await b.collection('docs').insertOne({ _id: 'from-b' });
+    await a.merge(b);
+    await b.merge(a);
+    expect(await a.root()).toBe(await b.root());
+    expect((await a.collection('docs').find({}).toArray()).map((d) => d['_id']).sort()).toEqual(['from-a', 'from-b', 'one', 'two']);
+    a.close();
+    b.close();
+  });
+});
+
+describe('PooledMemoryBlockStore.putInPoolWithId', () => {
+  it('stores bytes under the given name, idempotently, and rejects malformed names', async () => {
+    const store = new PooledMemoryBlockStore(BlockSize.Small);
+    const id = 'cd'.repeat(64);
+    await store.putInPoolWithId('p', id, Buffer.from('ciphertext'));
+    await store.putInPoolWithId('p', id, Buffer.from('ignored second write'));
+    expect(Buffer.from(await store.getFromPool('p', id)).toString()).toBe('ciphertext');
+    expect(await store.hasInPool('p', id)).toBe(true);
+    expect(await store.hasInPool('other', id)).toBe(false);
+    await expect(store.putInPoolWithId('p', 'not-hex', Buffer.from('x'))).rejects.toThrow(/128 lowercase/u);
+    await expect(store.putInPoolWithId('bad pool!', id, Buffer.from('x'))).rejects.toThrow(/Invalid pool ID/u);
   });
 });

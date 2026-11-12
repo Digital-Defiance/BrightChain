@@ -206,6 +206,13 @@ class MockPooledStore {
     return hash;
   }
 
+  readonly namedCalls: Array<{ pool: PoolId; id: string }> = [];
+  putInPoolWithId?: (pool: PoolId, id: string, data: Uint8Array) => Promise<void> = async (pool, id, data) => {
+    this.poolBlocks.set(`${pool}:${id}`, new Uint8Array(data));
+    this.namedCalls.push({ pool, id });
+    this.metadataMap.set(id, { blockId: id, poolId: pool });
+  };
+
   async getFromPool(pool: PoolId, hash: string): Promise<Uint8Array> {
     const data = this.poolBlocks.get(`${pool}:${hash}`);
     if (!data) throw new Error(`Block not found in pool "${pool}": ${hash}`);
@@ -407,6 +414,52 @@ describe('BlockFetcher', () => {
 
       expect(result.success).toBe(false);
       expect(result.attemptedNodes[0].error).toContain('Checksum mismatch');
+    });
+  });
+
+  describe('encrypting pools: blocks named by something other than their content hash', () => {
+    const keyedName = 'ab'.repeat(64); // a name that is not the hash of the bytes below
+    const build = (encrypted: boolean) => {
+      const setup = createTestSetup();
+      const fetcher = new BlockFetcher(
+        setup.transport,
+        setup.availability as unknown as IAvailabilityService,
+        setup.store as unknown as IBlockStore & IPooledBlockStore,
+        { ...DEFAULT_BLOCK_FETCHER_CONFIG, maxRetries: 0, nodeCooldownMs: 1000 },
+        undefined,
+        undefined,
+        encrypted ? (pool) => pool === 'secure' : undefined,
+      );
+      setup.transport.responses.set(keyedName, makeBlockData(9));
+      setup.availability.locations.set(keyedName, [
+        { nodeId: 'node-1', lastSeen: brightDateNow(), isAuthoritative: true },
+      ]);
+      return { ...setup, fetcher };
+    };
+
+    it('saves a fetched block under the name it was requested by, without a content-hash check', async () => {
+      const setup = build(true);
+      const result = await setup.fetcher.fetchBlock(keyedName, 'secure');
+      expect(result.success).toBe(true);
+      expect(setup.store.namedCalls).toEqual([{ pool: 'secure', id: keyedName }]);
+      expect(setup.store.putCalls).toHaveLength(0);
+      expect(await setup.store.hasInPool('secure', keyedName)).toBe(true);
+    });
+
+    it('still checks the content hash in pools that are not encrypting', async () => {
+      const setup = build(true);
+      const result = await setup.fetcher.fetchBlock(keyedName, 'plain-pool');
+      expect(result.success).toBe(false);
+      expect(setup.store.namedCalls).toHaveLength(0);
+      const withoutOption = build(false);
+      expect((await withoutOption.fetcher.fetchBlock(keyedName, 'secure')).success).toBe(false);
+    });
+
+    it('fails clearly when the store cannot hold named blocks', async () => {
+      const setup = build(true);
+      setup.store.putInPoolWithId = undefined;
+      const result = await setup.fetcher.fetchBlock(keyedName, 'secure');
+      expect(result.success).toBe(false);
     });
   });
 

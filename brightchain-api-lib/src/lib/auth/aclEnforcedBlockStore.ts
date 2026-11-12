@@ -83,6 +83,22 @@ export class ACLEnforcedBlockStore {
   }
 
   /**
+   * Store a block under a caller-chosen name after verifying Write permission.
+   */
+  async putInPoolWithId(
+    pool: PoolId,
+    id: string,
+    data: Uint8Array,
+    options?: BlockStoreOptions,
+  ): Promise<void> {
+    await this.checkPermission(pool, PoolPermission.Write);
+    if (!this.inner.putInPoolWithId) {
+      throw new Error('The underlying store cannot hold named blocks');
+    }
+    return this.inner.putInPoolWithId(pool, id, data, options);
+  }
+
+  /**
    * Delete a block from a pool after verifying Write permission.
    */
   async deleteFromPool(pool: PoolId, hash: string): Promise<void> {

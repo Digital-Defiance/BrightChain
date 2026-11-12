@@ -1314,6 +1314,32 @@ export abstract class CloudBlockStoreBase
     return hash;
   }
 
+  /** Store a block under a caller-chosen name (see IPooledBlockStore.putInPoolWithId). */
+  public async putInPoolWithId(
+    pool: PoolId,
+    id: string,
+    data: Uint8Array,
+    options?: BlockStoreOptions,
+  ): Promise<void> {
+    validatePoolId(pool);
+    if (!/^[0-9a-f]{128}$/u.test(id)) {
+      throw new Error('A named block id must be 128 lowercase hexadecimal digits');
+    }
+    const objectKey = this.buildObjectKey(id, pool);
+    const exists = await this.withRetry('putInPoolWithId.exists', id, () =>
+      this.objectExists(objectKey),
+    );
+    if (exists) return; // idempotent
+    await this.withRetry('putInPoolWithId.upload', id, () =>
+      this.uploadObject(objectKey, data),
+    );
+    const metadata = createDefaultBlockMetadata(toStorageKey(id), data.length, id, options, pool);
+    const metaKey = this.buildMetaKey(id, pool);
+    await this.withRetry('putInPoolWithId.meta', id, () =>
+      this.uploadObject(metaKey, this.serializeMetadata(metadata)),
+    );
+  }
+
   public async deleteFromPool(pool: PoolId, hash: string): Promise<void> {
     validatePoolId(pool);
     const objectKey = this.buildObjectKey(hash, pool);

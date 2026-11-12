@@ -60,6 +60,13 @@ export class BlockFetcher implements IBlockFetcher {
     private readonly config: BlockFetcherConfig = DEFAULT_BLOCK_FETCHER_CONFIG,
     private readonly gossipService?: IGossipService,
     private readonly fetchQueue?: IFetchQueue,
+    /**
+     * Pools whose blocks are named by something other than the hash of their
+     * contents (encrypting pools). Their blocks cannot be checked against the
+     * name here and are saved under the name they were fetched by; the reader
+     * authenticates them when it decrypts.
+     */
+    private readonly isPoolEncrypted?: (poolId: PoolId) => boolean,
   ) {}
 
   /**
@@ -147,19 +154,22 @@ export class BlockFetcher implements IBlockFetcher {
           poolId,
         );
 
-        // Verify checksum matches blockId
-        const computedChecksum = this.checksumService
-          .calculateChecksum(data)
-          .toHex();
-        if (computedChecksum !== blockId) {
-          const msg = `Checksum mismatch: expected ${blockId}, got ${computedChecksum}`;
-          attemptedNodes.push({ nodeId, error: msg });
-          this.markNodeUnavailable(nodeId);
-          return null;
+        // Verify checksum matches blockId, except in encrypting pools where the name is not a content hash
+        const namedBlock = poolId !== undefined && this.isPoolEncrypted?.(poolId) === true;
+        if (!namedBlock) {
+          const computedChecksum = this.checksumService
+            .calculateChecksum(data)
+            .toHex();
+          if (computedChecksum !== blockId) {
+            const msg = `Checksum mismatch: expected ${blockId}, got ${computedChecksum}`;
+            attemptedNodes.push({ nodeId, error: msg });
+            this.markNodeUnavailable(nodeId);
+            return null;
+          }
         }
 
         // Store the block in the correct pool
-        await this.storeBlock(blockId, data, poolId);
+        await this.storeBlock(blockId, data, poolId, namedBlock);
 
         // Validate pool metadata if poolId was specified (Req 7.2, 7.3)
         if (poolId) {
@@ -206,8 +216,16 @@ export class BlockFetcher implements IBlockFetcher {
     blockId: string,
     data: Uint8Array,
     poolId?: PoolId,
+    namedBlock = false,
   ): Promise<void> {
     if (poolId && isPooledBlockStore(this.store)) {
+      if (namedBlock) {
+        if (!this.store.putInPoolWithId) {
+          throw new Error('The store cannot hold named blocks, so an encrypting pool cannot be fetched into it');
+        }
+        await this.store.putInPoolWithId(poolId, blockId, data);
+        return;
+      }
       await this.store.putInPool(poolId, data);
     } else {
       await this.store.put(blockId, data);

@@ -1061,6 +1061,35 @@ export class DiskBlockAsyncStore
     return hash;
   }
 
+  /** Store a block under a caller-chosen name (see IPooledBlockStore.putInPoolWithId). */
+  public async putInPoolWithId(
+    pool: PoolId,
+    id: string,
+    data: Uint8Array,
+    options?: BlockStoreOptions,
+  ): Promise<void> {
+    validatePoolId(pool);
+    if (!/^[0-9a-f]{128}$/u.test(id)) {
+      throw new Error('A named block id must be 128 lowercase hexadecimal digits');
+    }
+    const checksum = Checksum.fromHex(id);
+    const fitting = this._supportedBlockSizes.find((s) => data.length <= (s as number));
+    const blockSize = fitting ?? this._supportedBlockSizes[0];
+    const filePath = this.poolBlockPath(pool, checksum, blockSize);
+    if (existsSync(filePath)) return; // idempotent
+    this.ensurePoolBlockPath(pool, checksum, blockSize);
+    await writeFile(filePath, Buffer.from(data));
+    const keyHex = this.keyToHex(checksum);
+    const metadata = createDefaultBlockMetadata(keyHex, data.length, keyHex, options, pool);
+    try {
+      await this.metadataStore.create(metadata);
+    } catch {
+      if (this.metadataStore.has(keyHex)) {
+        await this.metadataStore.update(keyHex, { poolId: pool });
+      }
+    }
+  }
+
   /** Delete a block from a specific pool */
   public async deleteFromPool(pool: PoolId, hash: string): Promise<void> {
     validatePoolId(pool);

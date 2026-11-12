@@ -14,6 +14,7 @@ import type {
 import { randomBytes } from 'node:crypto';
 import type { BrightDbV2BlockSource } from './block-source';
 import { digestPayload, encodeMetadata } from './codec';
+import { BrightDbV2AesCipher, BrightDbV2DecryptionError } from './encryption';
 import { copyDatabase } from './merge';
 import {
   BrightDbV2MissingBlockError,
@@ -35,10 +36,18 @@ export interface BrightChainV2StorageOptions {
   /** 16 nonzero bytes identifying this writer. Defaults to a random value for each construction. */
   writerId?: Uint8Array;
   /**
-   * Declare that the pool encrypts blocks. BrightDB then refuses its own
-   * `encryption` option. Writing to such a pool is not supported yet, because
-   * the pool names blocks by their ciphertext hash and v2 names them by their
-   * plaintext digest.
+   * Encrypt blocks for a pool that encrypts. Blocks are sealed with AES-256-GCM
+   * under keys derived from `key` (32 bytes, normally the pool's secret) and
+   * stored under keyed names with `putInPoolWithId`, so the pool never sees a
+   * plaintext digest. The same key must be used to read them. BrightDB's own
+   * `encryption` option is refused for this storage, because it already
+   * encrypts. Needs a store that implements `putInPoolWithId`.
+   */
+  poolEncryption?: { key: Uint8Array };
+  /**
+   * Declare that the pool encrypts blocks by itself and names them by their
+   * ciphertext hash. That cannot hold a v2 database, so writes are refused
+   * with a message saying so. Use `poolEncryption` instead.
    */
   poolEncrypts?: boolean;
 }
@@ -55,6 +64,7 @@ export class BrightChainV2Storage implements BrightDbV2Storage {
   readonly writerId: Uint8Array;
   readonly encryptsAtRest: boolean;
   private readonly lockKey: string;
+  private readonly cipher: BrightDbV2AesCipher | null;
 
   constructor(private readonly options: BrightChainV2StorageOptions) {
     const id = options.writerId ?? randomBytes(16);
@@ -62,7 +72,11 @@ export class BrightChainV2Storage implements BrightDbV2Storage {
       throw new BrightDbV2StorageError('A writer ID must be 16 nonzero bytes');
     }
     this.writerId = Uint8Array.from(id);
-    this.encryptsAtRest = options.poolEncrypts === true;
+    this.cipher = options.poolEncryption ? new BrightDbV2AesCipher(options.poolEncryption.key) : null;
+    this.encryptsAtRest = options.poolEncrypts === true || this.cipher !== null;
+    if (this.cipher && !options.store.putInPoolWithId) {
+      throw new BrightDbV2StorageError('This store cannot hold named blocks, which an encrypting pool needs');
+    }
     this.lockKey = `${options.poolId}:${options.dbName}`;
   }
 
@@ -117,22 +131,45 @@ export class BrightChainV2Storage implements BrightDbV2Storage {
         `No BrightDB v2 database named ${this.options.dbName} in pool ${this.options.poolId}`,
       );
     }
-    return head;
+    if (!this.cipher) return head;
+    try {
+      // The registry holds the sealed head, so the root digest is not visible there.
+      return this.cipher.openHead(Buffer.from(head, 'hex'));
+    } catch (error) {
+      throw new BrightDbV2StorageError('Cannot decrypt the database head: wrong key or damaged registry entry', { cause: error });
+    }
+  }
+
+  private nameOf(digest: string): string {
+    return this.cipher ? this.cipher.physicalName(digest) : digest;
   }
 
   async hasBlock(digest: string): Promise<boolean> {
-    return this.options.store.hasInPool(this.options.poolId, digest);
+    return this.options.store.hasInPool(this.options.poolId, this.nameOf(digest));
   }
 
   async readBlock(digest: string): Promise<Uint8Array> {
     let bytes: Uint8Array;
     try {
-      bytes = await this.options.store.getFromPool(this.options.poolId, digest);
+      bytes = await this.options.store.getFromPool(this.options.poolId, this.nameOf(digest));
     } catch (error) {
       if (isNotFound(error) && !(await this.hasBlock(digest))) {
         throw new BrightDbV2MissingBlockError(digest, { cause: error });
       }
       throw error;
+    }
+    if (this.cipher) {
+      try {
+        bytes = this.cipher.open(digest, bytes);
+      } catch (error) {
+        if (error instanceof BrightDbV2DecryptionError) {
+          throw new BrightDbV2StorageError(
+            `BrightChain block cannot be decrypted: ${digest} (${error.message})`,
+            { cause: error },
+          );
+        }
+        throw error;
+      }
     }
     if (digestPayload(bytes) !== digest) {
       throw new BrightDbV2StorageError(`BrightChain block digest mismatch: ${digest}`);
@@ -141,12 +178,21 @@ export class BrightChainV2Storage implements BrightDbV2Storage {
   }
 
   private async putBlock(payload: Uint8Array): Promise<string> {
-    if (this.encryptsAtRest) {
+    if (this.options.poolEncrypts && !this.cipher) {
       throw new BrightDbV2StorageError(
-        'Writing BrightDB v2 to an encrypting pool is not supported yet: the pool names blocks by ciphertext hash',
+        'This pool names blocks by their ciphertext hash, which cannot hold a BrightDB v2 database. Use poolEncryption with a store that supports putInPoolWithId',
       );
     }
     const expected = digestPayload(payload);
+    if (this.cipher) {
+      // The pool keeps the sealed bytes under the keyed name; the plaintext digest never reaches it.
+      await (this.options.store.putInPoolWithId as NonNullable<IPooledBlockStore['putInPoolWithId']>)(
+        this.options.poolId,
+        this.cipher.physicalName(expected),
+        this.cipher.seal(expected, payload),
+      );
+      return expected;
+    }
     const id = await this.options.store.putInPool(this.options.poolId, payload);
     if (id !== expected) {
       throw new BrightDbV2StorageError(
@@ -169,7 +215,8 @@ export class BrightChainV2Storage implements BrightDbV2Storage {
       syncBlocks: async () => undefined,
       publishHead: async (digest) => {
         if (!(await this.hasBlock(digest))) throw new BrightDbV2MissingBlockError(digest);
-        await this.options.headRegistry.setHead(this.options.dbName, headCollection(this.options.poolId), digest);
+        const value = this.cipher ? this.cipher.sealHead(digest).toString('hex') : digest;
+        await this.options.headRegistry.setHead(this.options.dbName, headCollection(this.options.poolId), value);
       },
     };
     const run = previous.then(() => write(writer));
