@@ -898,11 +898,15 @@ export class PortableBrightDb {
   private readonly wakeups = new Set<() => void>();
 
   /**
-   * Store a file and return a reference to put under `_files` in a document.
-   * Files over 1 MiB are split into chunks. The blocks are durable at once but
+   * Store a file of any size and return a reference to put under `_files` in a
+   * document. Pass a stream to avoid holding the file in memory. Files over
+   * 1 MiB are split into chunks under a tree of manifests. The blocks are durable at once but
    * are not part of the database until a committed document references them.
    */
-  async putAttachment(bytes: Uint8Array, options: { type?: string } = {}): Promise<AttachmentRef> {
+  async putAttachment(
+    bytes: Uint8Array | AsyncIterable<Uint8Array>,
+    options: { type?: string } = {},
+  ): Promise<AttachmentRef> {
     this.requireOpen();
     return this.store.withWriteLock((writer) =>
       writeAttachment(writer, bytes, options.type),

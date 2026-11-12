@@ -6,7 +6,7 @@ import {
   BrightDbV2MissingBlockError,
   DuplicateKeyError,
 } from '../../index';
-import { digestPayload, encodeDocument } from './codec';
+import { decodeMetadata, digestPayload, encodeDocument } from './codec';
 import { BrightDbV2DiskStore } from './disk-store';
 import { PortableBrightDb } from './portable-database';
 
@@ -487,6 +487,39 @@ describe('PortableBrightDb attachments', () => {
     expect(chunks).toBe(3);
     // Identical bytes give the same reference.
     expect((await db.putAttachment(big)).digest).toBe(large.digest);
+    db.close();
+  });
+
+  it('stores a file of any size under a tree of manifests, from a stream', async () => {
+    jest.setTimeout(120_000);
+    const db = await PortableBrightDb.open({ path: dir });
+    const total = 64 * 1_048_576 + 1234; // 65 chunks: one more than a single manifest holds
+    const part = 300_000;
+    const make = (start: number, end: number) => {
+      const bytes = Buffer.alloc(end - start);
+      for (let i = 0; i < bytes.length; i += 4096) bytes[i] = ((start + i) / 4096) % 251;
+      bytes[0] = (start >> 12) & 255;
+      return bytes;
+    };
+    async function* stream() {
+      for (let at = 0; at < total; at += part) yield make(at, Math.min(total, at + part));
+    }
+    const ref = await db.putAttachment(stream(), { type: 'application/octet-stream' });
+    expect(ref.size).toBe(total);
+    const store = (db as unknown as { store: { readBlock: (d: string) => Promise<Uint8Array> } }).store;
+    const root = decodeMetadata(await store.readBlock(ref.digest));
+    expect(root).toMatchObject({ kind: 'blob', depth: 1, size: BigInt(total) });
+    expect((root as unknown as { entries: string[] }).entries).toHaveLength(2);
+
+    let streamed = 0;
+    for await (const chunk of db.streamAttachment(ref)) streamed += chunk.length;
+    expect(streamed).toBe(total);
+    await db.collection('docs').insertOne({ _id: 'big', _files: { f: { ...ref } } });
+    expect(await db.collection('docs').findById('big')).toMatchObject({ _id: 'big' });
+
+    // The same bytes from one buffer give the same reference.
+    const whole = Buffer.concat(Array.from({ length: Math.ceil(total / part) }, (_, i) => make(i * part, Math.min(total, (i + 1) * part))));
+    expect((await db.putAttachment(whole)).digest).toBe(ref.digest);
     db.close();
   });
 

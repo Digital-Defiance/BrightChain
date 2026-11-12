@@ -131,9 +131,11 @@ class ClosureCopier {
     const bytes = await this.remote.readBlock(digest);
     const manifest = decodeMetadata(bytes, digest);
     if (manifest.kind !== 'blob') throw new V2MergeError('Not an attachment manifest');
-    for (const chunk of manifest.chunks) {
-      if (await this.missing(chunk)) {
-        await this.writer.writeBlock(await this.remote.readBlock(chunk));
+    for (const entry of manifest.entries) {
+      if (manifest.depth > 0) {
+        await this.ensureBlob(entry);
+      } else if (await this.missing(entry)) {
+        await this.writer.writeBlock(await this.remote.readBlock(entry));
       }
     }
     await this.writer.writeBlock(bytes);

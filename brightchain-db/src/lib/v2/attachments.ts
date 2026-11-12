@@ -3,6 +3,7 @@
  * manifest, referenced from documents through the reserved `_files` property.
  */
 import {
+  blobChildSpan,
   BLOB_CHUNK_BYTES,
   decodeMetadata,
   digestPayload,
@@ -12,7 +13,6 @@ import {
 } from './codec';
 import type { BrightDbV2DiskStore, BrightDbV2DiskWriter } from './disk-store';
 
-export const MAX_ATTACHMENT_BYTES = BLOB_CHUNK_BYTES * MAX_BLOB_CHUNKS;
 const DIGEST = /^[0-9a-f]{128}$/u;
 
 /** A stored file. Put it under `_files` in a document to attach it. */
@@ -30,30 +30,71 @@ export class V2AttachmentError extends Error {
   }
 }
 
-/** Write a file's chunks and manifest. The blocks are durable but unreachable until a document references them. */
+/** Re-cut an input into chunks of exactly BLOB_CHUNK_BYTES, except the last. */
+async function* chunked(input: Uint8Array | AsyncIterable<Uint8Array>): AsyncGenerator<Uint8Array> {
+  if (input instanceof Uint8Array) {
+    for (let offset = 0; offset < input.length; offset += BLOB_CHUNK_BYTES) {
+      yield input.subarray(offset, offset + BLOB_CHUNK_BYTES);
+    }
+    return;
+  }
+  let pending: Buffer[] = [];
+  let length = 0;
+  for await (const part of input) {
+    pending.push(Buffer.from(part));
+    length += part.length;
+    while (length >= BLOB_CHUNK_BYTES) {
+      const joined = Buffer.concat(pending);
+      yield joined.subarray(0, BLOB_CHUNK_BYTES);
+      const rest = joined.subarray(BLOB_CHUNK_BYTES);
+      pending = rest.length > 0 ? [Buffer.from(rest)] : [];
+      length = rest.length;
+    }
+  }
+  if (length > 0) yield Buffer.concat(pending);
+}
+
+/**
+ * Write a file of any size as 1 MiB chunks under a tree of manifests (like a
+ * super block list), and return its reference. The blocks are durable but
+ * unreachable until a document references them. A stream is written as it is
+ * read, so the file never has to fit in memory.
+ */
 export async function writeAttachment(
   writer: BrightDbV2DiskWriter,
-  bytes: Uint8Array,
+  input: Uint8Array | AsyncIterable<Uint8Array>,
   type?: string,
 ): Promise<AttachmentRef> {
-  if (bytes.length > MAX_ATTACHMENT_BYTES) {
-    throw new V2AttachmentError(
-      `An attachment can be at most ${MAX_ATTACHMENT_BYTES} bytes`,
-    );
-  }
   if (type !== undefined && Buffer.byteLength(type, 'utf8') > 255) {
     throw new V2AttachmentError('An attachment type can be at most 255 bytes');
   }
-  const chunks: Digest[] = [];
-  for (let offset = 0; offset < bytes.length; offset += BLOB_CHUNK_BYTES) {
-    const chunk = bytes.subarray(offset, offset + BLOB_CHUNK_BYTES);
-    chunks.push(await writer.writeBlock(chunk));
+  let level: Array<{ digest: Digest; size: bigint }> = [];
+  for await (const chunk of chunked(input)) {
+    level.push({ digest: await writer.writeBlock(chunk), size: BigInt(chunk.length) });
+  }
+  const total = level.reduce((sum, entry) => sum + entry.size, 0n);
+  let depth = 0;
+  while (level.length > MAX_BLOB_CHUNKS) {
+    const next: typeof level = [];
+    for (let start = 0; start < level.length; start += MAX_BLOB_CHUNKS) {
+      const run = level.slice(start, start + MAX_BLOB_CHUNKS);
+      const size = run.reduce((sum, entry) => sum + entry.size, 0n);
+      const digest = await writer.writeBlock(
+        encodeMetadata({ kind: 'blob', size, depth, entries: run.map((e) => e.digest) }),
+      );
+      next.push({ digest, size });
+    }
+    level = next;
+    depth++;
   }
   const digest = await writer.writeBlock(
-    encodeMetadata({ kind: 'blob', size: BigInt(bytes.length), chunks }),
+    encodeMetadata({ kind: 'blob', size: total, depth, entries: level.map((e) => e.digest) }),
   );
   await writer.syncBlocks();
-  return { digest, size: bytes.length, ...(type === undefined ? {} : { type }) };
+  if (total > BigInt(Number.MAX_SAFE_INTEGER)) {
+    throw new V2AttachmentError('An attachment can be at most 2^53 - 1 bytes');
+  }
+  return { digest, size: Number(total), ...(type === undefined ? {} : { type }) };
 }
 
 async function readManifest(store: BrightDbV2DiskStore, digest: string) {
@@ -65,21 +106,36 @@ async function readManifest(store: BrightDbV2DiskStore, digest: string) {
   return block;
 }
 
-/** Stream a file's chunks in order, verifying every digest. */
+/** Every chunk of a file, in order, with the length it must have. Checks manifest sizes on the way. */
+async function* blobChunks(
+  store: BrightDbV2DiskStore,
+  digest: string,
+  expectedSize?: bigint,
+): AsyncGenerator<{ digest: string; length: number }> {
+  const manifest = await readManifest(store, digest);
+  if (expectedSize !== undefined && manifest.size !== expectedSize) {
+    throw new V2AttachmentError('Attachment manifest has the wrong size');
+  }
+  const span = blobChildSpan(manifest.depth);
+  let remaining = manifest.size;
+  for (const entry of manifest.entries) {
+    const size = remaining < span ? remaining : span;
+    if (manifest.depth === 0) yield { digest: entry, length: Number(size) };
+    else yield* blobChunks(store, entry, size);
+    remaining -= size;
+  }
+}
+
+/** Stream a file's chunks in order, verifying every digest and length. */
 export async function* streamAttachment(
   store: BrightDbV2DiskStore,
   digest: string,
 ): AsyncGenerator<Buffer> {
-  const manifest = await readManifest(store, digest);
-  let remaining = manifest.size;
-  for (const chunk of manifest.chunks) {
-    const bytes = Buffer.from(await store.readBlock(chunk));
-    const expected =
-      remaining < BigInt(BLOB_CHUNK_BYTES) ? Number(remaining) : BLOB_CHUNK_BYTES;
-    if (bytes.length !== expected) {
+  for await (const chunk of blobChunks(store, digest)) {
+    const bytes = Buffer.from(await store.readBlock(chunk.digest));
+    if (bytes.length !== chunk.length) {
       throw new V2AttachmentError('Attachment chunk has the wrong length');
     }
-    remaining -= BigInt(bytes.length);
     yield bytes;
   }
 }
@@ -131,8 +187,8 @@ export async function validateFileReferences(
     if (manifest.size !== BigInt(size as number)) {
       throw new V2AttachmentError(`_files.${name}.size does not match its attachment`);
     }
-    for (const chunk of manifest.chunks) {
-      if (!(await store.hasBlock(chunk))) {
+    for await (const chunk of blobChunks(store, digest, manifest.size)) {
+      if (!(await store.hasBlock(chunk.digest))) {
         throw new V2AttachmentError(`_files.${name} is missing a chunk`);
       }
     }

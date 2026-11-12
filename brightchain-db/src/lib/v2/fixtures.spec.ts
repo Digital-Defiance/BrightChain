@@ -128,7 +128,7 @@ function jsonMetadata(block: V2Metadata): Json {
         })),
       };
     case 'blob':
-      return { kind: block.kind, size: block.size.toString(), chunks: [...block.chunks] };
+      return { kind: block.kind, size: block.size.toString(), depth: block.depth, entries: [...block.entries] };
     default:
       return { kind: block.kind, records: block.records.map(jsonRecord) };
   }
@@ -373,10 +373,15 @@ async function buildVectors(): Promise<Json> {
     ],
   };
   addBlock('index-branch', jsonMetadata(indexBranch), encodeMetadata(indexBranch));
-  const blob: V2Metadata = { kind: 'blob', size: 1_048_577n, chunks: ['33'.repeat(64), '44'.repeat(64)] };
+  const blob: V2Metadata = { kind: 'blob', size: 1_048_577n, depth: 0, entries: ['33'.repeat(64), '44'.repeat(64)] };
   addBlock('blob', jsonMetadata(blob), encodeMetadata(blob));
-  const blobEmpty: V2Metadata = { kind: 'blob', size: 0n, chunks: [] };
+  const blobEmpty: V2Metadata = { kind: 'blob', size: 0n, depth: 0, entries: [] };
   addBlock('blob-empty', jsonMetadata(blobEmpty), encodeMetadata(blobEmpty));
+  // A file just over one manifest's reach (63 chunks) needs a second level.
+  const blobDeep: V2Metadata = { kind: 'blob', size: 63n * 1_048_576n + 1n, depth: 1, entries: ['55'.repeat(64), '66'.repeat(64)] };
+  addBlock('blob-deep', jsonMetadata(blobDeep), encodeMetadata(blobDeep));
+  const blobFull: V2Metadata = { kind: 'blob', size: 63n * 1_048_576n, depth: 0, entries: Array.from({ length: 63 }, (_, i) => i.toString(16).padStart(2, '0').repeat(64)) };
+  addBlock('blob-full', jsonMetadata(blobFull), encodeMetadata(blobFull));
   const collectionWithIndexes: V2Metadata = {
     kind: 'collection',
     generation,

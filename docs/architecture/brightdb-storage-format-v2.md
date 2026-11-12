@@ -39,7 +39,7 @@ The table describes the bytes after the `BDB2` header and kind byte. Fields appe
 | `0x06` | Index definitions | `u16 count` · `count` index definitions in ascending name order (section 7) |
 | `0x07` | Index leaf | `u16 count` · `count` index keys, each `u16 byteLength \| bytes`, in ascending byte order |
 | `0x08` | Index branch | `u16 skipNibbles` · `ceil(skipNibbles / 2)` packed prefix bytes · `u16 bitmap` · one `u64 entryBytes` and `digest` per set bit |
-| `0x09` | Blob manifest | `u64 size` · `u16 chunkCount` · `chunkCount` chunk `digest`s (section 8) |
+| `0x09` | Blob manifest | `u64 size` · `u8 depth` · `u16 entryCount` · `entryCount` `digest`s (section 8) |
 
 The database ID is assigned at initialization and stays fixed for all replicas of that database. The database clock starts at 0 and records the highest counter observed by the database. It must be at least as high as every counter in its catalog and primary trees.
 
@@ -144,9 +144,11 @@ A decoder rejects unsorted, duplicate or prefix-overlapping keys, keys outside 1
 
 ## 8. Attachments
 
-A document can reference binary files stored as blocks. The file's bytes are split into chunks of exactly 1,048,576 bytes, except the last, which holds the remainder. Each chunk is stored as a raw block named by its SHA3-512 digest. A blob manifest block (`0x09`) records the total `size` and the ordered chunk digests. A file of size 0 has no chunks. A manifest holds at most 63 chunks, so a file can be at most 66,060,288 bytes. The manifest's digest identifies the file.
+A document can reference binary files of any size stored as blocks. The file's bytes are split into chunks of exactly 1,048,576 bytes, except the last, which holds the remainder. Each chunk is stored as a raw block named by its SHA3-512 digest. Blob manifest blocks (`0x09`) form a tree over the chunks, in the same way a super block list does: a manifest of `depth` 0 lists chunk digests, and a manifest of `depth` _n_ greater than 0 lists manifests of depth _n_ - 1. A manifest holds at most 63 entries.
 
-A document references files through the reserved `_files` property, an object whose values each have a `digest` (128 lowercase hexadecimal digits naming a blob manifest), a `size` (safe integer equal to the manifest's size) and an optional `type` (a string of up to 255 bytes). A write that sets `_files` fails before publication unless every referenced manifest and chunk block already exists in the store and the sizes agree. A reader fetches the manifest and then each chunk on demand and verifies every digest. The blocks reachable from a published root through `_files` are live data for garbage collection, replication and sync. Blocks written for a file that no document references yet are not reachable and can be collected.
+Let `childSpan(depth)` be 1,048,576 × 63^`depth` bytes. A manifest's `size` is the number of file bytes beneath it, and every entry but the last covers exactly `childSpan(depth)` bytes. A manifest must have `entryCount` equal to `ceil(size / childSpan(depth))`, a `depth` of at most 7, and, when `depth` is greater than 0, a `size` greater than `childSpan(depth)`, so the tree is as shallow as it can be. A file of size 0 is a depth 0 manifest with no entries. The file's reference is the digest of its root manifest. Writing builds the tree bottom-up: chunk digests go into depth 0 manifests of 63 entries, those manifests into depth 1 manifests of 63 entries, and so on until one manifest remains. The same bytes therefore always give the same root digest.
+
+A document references files through the reserved `_files` property, an object whose values each have a `digest` (128 lowercase hexadecimal digits naming a root manifest), a `size` (a non-negative safe integer equal to the root manifest's size) and an optional `type` (a string of up to 255 bytes). A write that sets `_files` fails before publication unless every referenced manifest and chunk block already exists in the store and the sizes agree. A reader fetches manifests and chunks on demand and verifies every digest and length. The blocks reachable from a published root through `_files` are live data for garbage collection, replication and sync. Blocks written for a file that no document references yet are not reachable and can be collected.
 
 ## 9. Conformance and release order
 

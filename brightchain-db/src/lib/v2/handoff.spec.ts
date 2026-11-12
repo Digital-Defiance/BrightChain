@@ -170,6 +170,20 @@ function normalize(dump: Dump): Dump {
     const bigCpp = JSON.parse(await runCpp(['putfile', path, large]));
     expect(bigCpp).toEqual(bigTs);
 
+    // A file past one manifest's reach (65 chunks) gets the same tree in both runtimes.
+    const huge = join(dir, 'huge.bin');
+    const hugeBytes = Buffer.alloc(64 * 1_048_576 + 1234);
+    for (let i = 0; i < hugeBytes.length; i += 4096) hugeBytes[i] = (i / 4096) % 251;
+    hugeBytes[hugeBytes.length - 1] = 7;
+    await writeFile(huge, hugeBytes);
+    const hugeTs = JSON.parse(await run(['putfile', path, huge]));
+    const hugeCpp = JSON.parse(await runCpp(['putfile', path, huge]));
+    expect(hugeCpp).toEqual(hugeTs);
+    expect(JSON.parse(await runCpp(['getfile', path, hugeTs.digest]))).toEqual(
+      JSON.parse(await run(['getfile', path, hugeTs.digest])),
+    );
+    await runCpp(['insertjson', path, 'docs', JSON.stringify({ _id: 'huge', _files: { h: hugeTs } })]);
+
     // A document written by one runtime references a file stored by the other.
     await runCpp(['insertjson', path, 'docs', JSON.stringify({ _id: 'x', _files: { f: refTs, g: bigTs } })]);
     await run(['insertjson', path, 'docs', JSON.stringify({ _id: 'y', _files: { f: refCpp, g: bigCpp } })]);
@@ -373,6 +387,9 @@ describe('BrightDB v2 directory handoff and crash recovery', () => {
     }
     // The lock must not be left held by the killed process.
     await run(['write', path, 'after', 'a', '1']);
-    expect((await readdir(path)).filter((n) => n.startsWith('.brightdb-'))).toEqual([]);
+    // A writer killed while publishing can leave a temporary HEAD file behind. It is never read.
+    const leftovers = (await readdir(path)).filter((n) => n.startsWith('.brightdb-'));
+    expect(leftovers.every((n) => n.endsWith('.tmp'))).toBe(true);
+    expect(JSON.parse(await run(['dump', path]))['after']).toHaveLength(1);
   });
 });

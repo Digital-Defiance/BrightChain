@@ -8,7 +8,14 @@ export const MAX_INDEX_FIELDS = 8;
 export const MAX_FIELD_PATH_BYTES = 256;
 /** Attachment chunk size: every chunk but the last is exactly this long. */
 export const BLOB_CHUNK_BYTES = 1_048_576;
-export const MAX_BLOB_CHUNKS = Math.floor((MAX_METADATA_BYTES - 5 - 8 - 2) / 64);
+/** Entries per blob manifest: (4096 - magic, kind, size, depth, count) / 64-byte digests. */
+export const MAX_BLOB_CHUNKS = Math.floor((MAX_METADATA_BYTES - 5 - 8 - 1 - 2) / 64);
+export const MAX_BLOB_DEPTH = 7;
+
+/** Bytes covered by each entry of a manifest at `depth` (every entry but the last is full). */
+export function blobChildSpan(depth: number): bigint {
+  return BigInt(BLOB_CHUNK_BYTES) * BigInt(MAX_BLOB_CHUNKS) ** BigInt(depth);
+}
 const MAX_KEY_BYTES = 1024;
 const DIGEST_BYTES = 64;
 const ID_BYTES = 16;
@@ -80,7 +87,9 @@ export interface V2IndexBranch {
 export interface V2Blob {
   kind: 'blob';
   size: bigint;
-  chunks: readonly Digest[];
+  /** 0: entries are chunk blocks. n > 0: entries are manifests of depth n - 1. */
+  depth: number;
+  entries: readonly Digest[];
 }
 
 export interface V2BranchChild {
@@ -542,30 +551,39 @@ function decodeIndexBranch(reader: MetadataReader): V2IndexBranch {
   return { kind: 'index-branch', skip, children };
 }
 
-function validateBlob(size: bigint, chunks: readonly Digest[]): void {
+function validateBlob(size: bigint, depth: number, entries: readonly Digest[]): void {
   if (typeof size !== 'bigint' || size < 0n || size > MAX_U64) {
     throw new V2CodecError('Invalid blob size');
   }
-  const expected = (size + BigInt(BLOB_CHUNK_BYTES) - 1n) / BigInt(BLOB_CHUNK_BYTES);
-  if (chunks.length > MAX_BLOB_CHUNKS || BigInt(chunks.length) !== expected) {
-    throw new V2CodecError('Blob chunk count does not match its size');
+  if (!Number.isInteger(depth) || depth < 0 || depth > MAX_BLOB_DEPTH) {
+    throw new V2CodecError('Invalid blob depth');
+  }
+  const span = blobChildSpan(depth);
+  if (depth > 0 && size <= span) {
+    throw new V2CodecError('A blob that fits one child must use a shallower manifest');
+  }
+  const expected = (size + span - 1n) / span;
+  if (entries.length > MAX_BLOB_CHUNKS || BigInt(entries.length) !== expected) {
+    throw new V2CodecError('Blob entry count does not match its size');
   }
 }
 
 function encodeBlob(writer: MetadataWriter, blob: V2Blob): void {
-  validateBlob(blob.size, blob.chunks);
+  validateBlob(blob.size, blob.depth, blob.entries);
   writer.u64(blob.size);
-  writer.u16(blob.chunks.length);
-  for (const chunk of blob.chunks) writer.digest(chunk);
+  writer.u8(blob.depth);
+  writer.u16(blob.entries.length);
+  for (const entry of blob.entries) writer.digest(entry);
 }
 
 function decodeBlob(reader: MetadataReader): V2Blob {
   const size = reader.u64();
+  const depth = reader.u8();
   const count = reader.u16();
-  const chunks: Digest[] = [];
-  for (let index = 0; index < count; index++) chunks.push(reader.digest());
-  validateBlob(size, chunks);
-  return { kind: 'blob', size, chunks };
+  const entries: Digest[] = [];
+  for (let index = 0; index < count; index++) entries.push(reader.digest());
+  validateBlob(size, depth, entries);
+  return { kind: 'blob', size, depth, entries };
 }
 
 function encodeLeaf(writer: MetadataWriter, leaf: V2Leaf): void {
