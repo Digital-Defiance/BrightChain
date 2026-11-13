@@ -14,6 +14,8 @@ import type {
 import {
   Checksum,
   IBlockStore,
+  StoreError,
+  StoreErrorType,
   brightDateNow,
   dateToBrightDate,
   normalizeToBrightDate,
@@ -298,13 +300,25 @@ export class Collection<T extends BsonDocument = BsonDocument> {
           this.indexManager.restoreFromJSON(meta.indexes, docs);
         }
       } catch (err: unknown) {
-        // Head block not found or failed to parse – start fresh
         const msg = err instanceof Error ? err.message : String(err);
-        console.warn(
-          `[Collection:${this.name}] loadFromStore failed for head ${headBlockId}: ${msg}`,
-        );
-        if (err instanceof Error && err.stack) {
-          console.warn(err.stack);
+        // Only a head block that is genuinely absent from the store is
+        // treated as a new, empty collection. Any other failure (I/O error,
+        // corrupt or unparseable metadata, a failed document read) must not
+        // be swallowed: starting from an empty in-memory state would make
+        // the next write persist a head that drops every existing document.
+        if (
+          err instanceof StoreError &&
+          err.type === StoreErrorType.KeyNotFound
+        ) {
+          console.warn(
+            `[Collection:${this.name}] head block ${headBlockId} not found; starting empty: ${msg}`,
+          );
+        } else {
+          this.docIndex.clear();
+          this.docTimestamps.clear();
+          this.docTombstones.clear();
+          this.docCache.clear();
+          throw err;
         }
       }
     }
