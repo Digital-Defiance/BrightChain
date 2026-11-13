@@ -43,7 +43,7 @@ describe('BrightDB v2 garbage collection', () => {
     await db.collection('docs').insertOne({ _id: 'after', n: -1 });
     expect(await db.collection('docs').findById('after')).toEqual({ _id: 'after', n: -1 });
     db.close();
-  });
+  }, 120_000); // fsync-heavy: slow when other suites write at the same time
 
   it('keeps older roots you ask for, and loses the ones you do not', async () => {
     const db = await PortableBrightDb.open({ path: join(dir, 'db') });

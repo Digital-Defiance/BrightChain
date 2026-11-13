@@ -190,4 +190,41 @@ export class PortableBrightDb extends PortableBrightDbCore {
       return result;
     });
   }
+
+  /**
+   * After a key rotation, rewrite every block reachable from the current root
+   * (and `keepRoots`) under the current data key, so the old key can be removed
+   * from the ring. File names do not change, each file is replaced atomically,
+   * and the run is safe to repeat or resume after a crash. Blocks no root
+   * reaches are not touched: run `collectGarbage` first (or after) so none is
+   * left sealed with the old key. The HEAD file is re-sealed at the end if it
+   * still uses an old key. Runs under the write lock. Needs an encrypted
+   * directory store.
+   */
+  async resealBlocks(
+    options: { keepRoots?: readonly string[]; dryRun?: boolean } = {},
+  ): Promise<{ resealed: number; alreadyCurrent: number; headResealed: boolean }> {
+    this.requireOpen();
+    const store = this.store;
+    if (!(store instanceof BrightDbV2DiskStore) || !store.isEncrypted) {
+      throw new Error('Re-sealing needs an encrypted directory store');
+    }
+    return store.withWriteLock(async (writer) => {
+      const head = await store.readHead();
+      const reachable = await collectReachable(store, [head, ...(options.keepRoots ?? [])]);
+      const result = { resealed: 0, alreadyCurrent: 0, headResealed: false };
+      for (const digest of reachable) {
+        if (options.dryRun) {
+          if (await store.needsReseal(digest)) result.resealed++;
+          else result.alreadyCurrent++;
+        } else if (await store.resealBlock(digest)) result.resealed++;
+        else result.alreadyCurrent++;
+      }
+      if (!options.dryRun && (await store.headNeedsReseal())) {
+        await writer.publishHead(head);
+        result.headResealed = true;
+      }
+      return result;
+    });
+  }
 }

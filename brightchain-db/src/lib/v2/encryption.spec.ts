@@ -189,6 +189,44 @@ describe('BrightDB v2 encrypted block-store profile', () => {
       expect(() => new BrightDbV2AesCipher({ nameSecret: Buffer.alloc(8), dataKeys: { 1: k1 }, currentVersion: 1 })).toThrow(/32 bytes/u);
     });
 
+    it('re-seals reachable blocks under the new key so the old key can be dropped', async () => {
+      const path = join(dir, 'reseal');
+      const db = await PortableBrightDb.open({ path, encryption: { keyRing: ring1 } });
+      await db.collection('c').createIndex('by_v', ['v']);
+      await db.collection('c').insertMany(Array.from({ length: 40 }, (_, i) => ({ _id: `d${i}`, v: i })));
+      const ref = await db.putAttachment(Buffer.alloc(1_300_000, 7));
+      await db.collection('c').insertOne({ _id: 'file', v: -1, _files: { f: { ...ref } } });
+      db.close();
+
+      const rotated = await PortableBrightDb.open({ path, encryption: { keyRing: ring2 } });
+      await rotated.collection('c').insertOne({ _id: 'late', v: 99 });
+      // Superseded states are unreachable and would keep the old key, so collect them first.
+      await rotated.collectGarbage({ graceMs: 0 });
+      const names = await filesUnder(join(path, 'blocks'));
+      const versions = async () => (await Promise.all(names.map(async (f) => (await readFile(f))[0]))).filter((v) => v === 1).length;
+      expect(await versions()).toBeGreaterThan(0);
+
+      const dry = await rotated.resealBlocks({ dryRun: true });
+      expect(dry.resealed).toBeGreaterThan(0);
+      expect(await versions()).toBeGreaterThan(0); // a dry run changes nothing
+
+      const done = await rotated.resealBlocks();
+      expect(done.resealed).toBe(dry.resealed);
+      expect(await versions()).toBe(0);
+      expect(await filesUnder(join(path, 'blocks'))).toEqual(names); // no file added or renamed
+      const again = await rotated.resealBlocks();
+      expect(again.resealed).toBe(0); // safe to repeat
+      rotated.close();
+
+      // The old key is no longer needed: a ring with only version 2 opens everything.
+      const newOnly = await PortableBrightDb.open({ path, encryption: { keyRing: { nameSecret, dataKeys: { 2: k2 }, currentVersion: 2 } } });
+      expect((await newOnly.collection('c').find({}).toArray()).length).toBe(42);
+      expect(await newOnly.collection('c').findByIndex('by_v', { equals: [5] })).toEqual([{ _id: 'd5', v: 5 }]);
+      const back = Buffer.from(await newOnly.getAttachment(ref));
+      expect(back.equals(Buffer.alloc(1_300_000, 7))).toBe(true);
+      newOnly.close();
+    });
+
     it('rotates a directory store: old data stays readable, new blocks use the new key, the old key is shut out', async () => {
       const path = join(dir, 'rot');
       const db = await PortableBrightDb.open({ path, encryption: { keyRing: ring1 } });

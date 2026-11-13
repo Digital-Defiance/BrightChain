@@ -35,6 +35,13 @@ export interface BrightDbV2BlockCipher {
   seal(logicalDigest: string, plaintext: Uint8Array): Buffer;
   /** Decrypt a stored block. Throws BrightDbV2DecryptionError on a wrong key or tampering. */
   open(logicalDigest: string, sealed: Uint8Array): Buffer;
+  /**
+   * Re-encrypt a stored block under the current data key. Returns null when the
+   * block already uses the current key. Same logical digest, same file name.
+   */
+  reseal(logicalDigest: string, sealed: Uint8Array): Buffer | null;
+  /** The data key version new blocks and the head are sealed with. */
+  readonly currentKeyVersion: number;
   /** Encrypt the published head digest for the HEAD file. */
   sealHead(digest: string): Buffer;
   openHead(sealed: Uint8Array): string;
@@ -141,6 +148,15 @@ export class BrightDbV2AesCipher implements BrightDbV2BlockCipher {
       Buffer.concat([BLOCK_AAD, Buffer.from(logicalDigest, 'hex')]),
       sealed,
     );
+  }
+
+  get currentKeyVersion(): number {
+    return this.currentVersion;
+  }
+
+  reseal(logicalDigest: string, sealed: Uint8Array): Buffer | null {
+    if (sealed[0] === this.currentVersion) return null;
+    return this.seal(logicalDigest, this.open(logicalDigest, sealed));
   }
 
   sealHead(digest: string, nonce: Buffer = randomBytes(12)): Buffer {

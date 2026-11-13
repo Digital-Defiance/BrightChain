@@ -600,6 +600,52 @@ export class BrightDbV2DiskStore implements BrightDbV2Storage {
     await unlink(join(directory, name));
   }
 
+  /**
+   * Re-encrypt one block under the cipher's current data key, replacing the file
+   * atomically (temporary file, fsync, rename). The name does not change. Returns
+   * whether the block was rewritten. The caller must hold the write lock.
+   */
+  async resealBlock(digest: string): Promise<boolean> {
+    assertDigest(digest);
+    if (!this.cipher) throw new BrightDbV2StorageError('Re-sealing needs an encrypted store');
+    const { directory, file } = this.blockLocation(digest);
+    const path = join(directory, file);
+    const sealed = await readBoundedFile(path, MAX_DOCUMENT_BYTES + SEAL_OVERHEAD);
+    const next = this.cipher.reseal(digest, sealed);
+    if (next === null) return false;
+    const temporary = temporaryPath(directory);
+    try {
+      await writeSyncedFile(temporary, next);
+      await rename(temporary, path);
+      await syncDirectory(directory);
+    } catch (error) {
+      await unlink(temporary).catch(() => undefined);
+      throw error;
+    }
+    await this.readBlock(digest); // verify the new file decrypts to the right digest
+    return true;
+  }
+
+  get isEncrypted(): boolean {
+    return this.cipher !== null;
+  }
+
+  /** Whether a block is sealed with an older data key than the current one. */
+  async needsReseal(digest: string): Promise<boolean> {
+    assertDigest(digest);
+    if (!this.cipher) return false;
+    const { directory, file } = this.blockLocation(digest);
+    const sealed = await readBoundedFile(join(directory, file), MAX_DOCUMENT_BYTES + SEAL_OVERHEAD);
+    return sealed[0] !== this.cipher.currentKeyVersion;
+  }
+
+  /** Whether HEAD is sealed with an older data key than the current one. */
+  async headNeedsReseal(): Promise<boolean> {
+    if (!this.cipher) return false;
+    const sealed = await readBoundedFile(join(this.path, 'HEAD'), this.cipher.sealedHeadBytes);
+    return sealed[0] !== this.cipher.currentKeyVersion;
+  }
+
   /** Whether a block file exists. It does not read or verify the block. */
   async hasBlock(digest: string): Promise<boolean> {
     assertDigest(digest);
