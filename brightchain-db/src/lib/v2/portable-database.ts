@@ -186,7 +186,7 @@ export class PortableBrightDb extends PortableBrightDbCore {
    * flight. `dryRun` reports what would be removed without removing it.
    * Needs a directory store.
    */
-  async collectGarbage(
+  override async collectGarbage(
     options: { keepRoots?: readonly string[]; graceMs?: number; dryRun?: boolean } = {},
   ): Promise<{ keptReachable: number; keptRecent: number; removed: number; bytesFreed: number }> {
     this.requireOpen();
