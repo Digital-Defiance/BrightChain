@@ -237,6 +237,70 @@ async function main(): Promise<void> {
     return { ids };
   });
 
+  await step('migrates a database created by the first (version 1) IndexedDB schema', async () => {
+    // Build real data in memory, then lay it out exactly as the version 1 code did: two object
+    // stores (blocks keyed by digest, meta with writerId and head) and no `times` store.
+    const source = MemoryV2Storage.create();
+    const seed = await BrightDbBrowser.fromStorage(source);
+    await seed.collection('c').createIndex('by_n', ['n']);
+    await seed.collection('c').insertMany(Array.from({ length: 80 }, (_, i) => ({ _id: `d${i}`, n: i })));
+    for (let i = 0; i < 5; i++) await seed.collection('c').replaceById(`d${i}`, { _id: `d${i}`, n: 900 + i });
+    const ref = await seed.putAttachment(new Uint8Array(1_200_000).fill(4));
+    await seed.collection('c').insertOne({ _id: 'file', n: -1, _files: { f: { ...ref } } });
+    const legacy = `${name}-legacy`;
+    await new Promise<void>((resolve, reject) => {
+      const open = indexedDB.open(`brightdb-v2:${legacy}`, 1);
+      open.onupgradeneeded = () => {
+        open.result.createObjectStore('blocks');
+        open.result.createObjectStore('meta');
+      };
+      open.onerror = () => reject(open.error);
+      open.onsuccess = async () => {
+        const db = open.result;
+        const tx = db.transaction(['blocks', 'meta'], 'readwrite');
+        for (const [digest, bytes] of source.blocks) tx.objectStore('blocks').put(bytes, digest);
+        tx.objectStore('meta').put(crypto.getRandomValues(new Uint8Array(16)), 'writerId');
+        tx.objectStore('meta').put(await source.readHead(), 'head');
+        tx.oncomplete = () => {
+          db.close();
+          resolve();
+        };
+        tx.onerror = () => reject(tx.error);
+      };
+    });
+    const version = (dbName: string) =>
+      new Promise<{ version: number; stores: string[] }>((resolve, reject) => {
+        const open = indexedDB.open(`brightdb-v2:${dbName}`);
+        open.onerror = () => reject(open.error);
+        open.onsuccess = () => {
+          const info = { version: open.result.version, stores: [...open.result.objectStoreNames].sort() };
+          open.result.close();
+          resolve(info);
+        };
+      });
+    const before = await version(legacy);
+    assert(before.version === 1 && before.stores.join() === 'blocks,meta', `not a v1 database: ${JSON.stringify(before)}`);
+
+    // Open with the current code: the schema upgrades in place and all data is intact.
+    const db = await openBrowserDb(legacy);
+    const after = await version(legacy);
+    assert(after.version >= 2 && after.stores.includes('times'), `not upgraded: ${JSON.stringify(after)}`);
+    assert((await db.root()) === (await seed.root()), 'root changed by the upgrade');
+    assert((await db.collection('c').find({}).toArray()).length === 81, 'documents lost in the upgrade');
+    assert((await db.collection('c').findByIndex('by_n', { equals: [903] })).length === 1, 'index lost in the upgrade');
+    assert((await db.getAttachment(ref)).length === 1_200_000, 'attachment lost in the upgrade');
+    // It keeps working: new writes, a reopen, and garbage collection (old blocks have no timestamp, so
+    // they count as old and are collectable; live data must survive).
+    await db.collection('c').insertOne({ _id: 'after-upgrade', n: 5 });
+    const gc = await db.collectGarbage({ graceMs: 0 });
+    const reopened = await openBrowserDb(legacy);
+    assert((await reopened.collection('c').find({}).toArray()).length === 82, 'documents lost after upgrade + GC');
+    assert((await reopened.collection('c').findById('d3'))?.['n'] === 903, 'update lost after upgrade + GC');
+    assert((await reopened.getAttachment(ref)).length === 1_200_000, 'attachment lost after upgrade + GC');
+    // A second connection opened before the upgrade finished does not block it (versionchange closes it).
+    return { from: before, to: after, gcRemoved: gc.removed };
+  });
+
   const url = params.get('url');
   if (url) {
     const token = params.get('token') ?? undefined;
