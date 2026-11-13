@@ -28,6 +28,14 @@ export {
 } from './portable-core';
 
 export interface PortableBrightDbOptions {
+  /**
+   * Write new blocks into pack files (one fsync per commit instead of one per
+   * block), which makes bulk imports several times faster. Adds a `PACKED`
+   * marker to the directory. Software that does not support packs cannot read
+   * packed blocks, so turn this on only where every reader supports it.
+   * Existing loose blocks keep working. See `compactPacks`.
+   */
+  packed?: boolean;
   /** Directory for the portable BrightDB v2 store. Give this or `storage`. */
   path?: string;
   /**
@@ -55,6 +63,7 @@ export class PortableBrightDb extends PortableBrightDbCore {
     path,
     storage,
     encryption,
+    packed,
   }: PortableBrightDbOptions): Promise<PortableBrightDb> {
     if (storage) {
       if (path !== undefined) {
@@ -86,6 +95,7 @@ export class PortableBrightDb extends PortableBrightDbCore {
       undefined,
       encryption ? new BrightDbV2AesCipher('keyRing' in encryption ? encryption.keyRing : encryption.key) : null,
     );
+    if (packed) await store.enablePacks();
     await readDatabaseRoot(store);
     return new PortableBrightDb(store);
   }
@@ -99,7 +109,7 @@ export class PortableBrightDb extends PortableBrightDbCore {
   static async cloneFrom(
     path: string,
     source: BrightDbV2BlockSource,
-    options: { encryption?: { key: Uint8Array } | { keyRing: BrightDbV2KeyRing } } = {},
+    options: { encryption?: { key: Uint8Array } | { keyRing: BrightDbV2KeyRing }; packed?: boolean } = {},
   ): Promise<PortableBrightDb> {
     const head = await source.readHead();
     const root = decodeMetadata(await source.readBlock(head), head);
@@ -113,6 +123,7 @@ export class PortableBrightDb extends PortableBrightDbCore {
       undefined,
       encryption ? new BrightDbV2AesCipher('keyRing' in encryption ? encryption.keyRing : encryption.key) : null,
     );
+    if (options.packed) await store.enablePacks();
     await store.withWriteLock(async (writer) => {
       await copyDatabase(store, writer, source, head);
       await writer.publishHead(head);
@@ -144,11 +155,25 @@ export class PortableBrightDb extends PortableBrightDbCore {
       undefined,
       source.cipher,
     );
+    if (source.isPacked) await store.enablePacks();
     await store.withWriteLock(async (writer) => {
       await copyDatabase(store, writer, this.store, head);
       await writer.publishHead(head);
     });
     return new PortableBrightDb(store);
+  }
+
+  /**
+   * Merge every pack file into one, so many small commits do not leave many
+   * small files to open. Runs under the write lock. Needs a packed directory store.
+   */
+  async compactPacks(): Promise<{ before: number; after: number }> {
+    this.requireOpen();
+    const store = this.store;
+    if (!(store instanceof BrightDbV2DiskStore) || !store.isPacked) {
+      throw new Error('Compaction needs a packed directory store');
+    }
+    return store.withWriteLock(() => store.compactPacks());
   }
 
   /**
@@ -176,6 +201,7 @@ export class PortableBrightDb extends PortableBrightDbCore {
       const keep = new Set([...reachable].map((digest) => store.fileNameOf(digest)));
       const now = Date.now();
       const result = { keptReachable: 0, keptRecent: 0, removed: 0, bytesFreed: 0 };
+      const doomed: string[] = [];
       for (const file of await store.listBlockFiles()) {
         if (keep.has(file.name)) {
           result.keptReachable++;
@@ -184,9 +210,10 @@ export class PortableBrightDb extends PortableBrightDbCore {
         } else {
           result.removed++;
           result.bytesFreed += file.bytes;
-          if (!options.dryRun) await store.deleteBlockFile(file.name);
+          doomed.push(file.name);
         }
       }
+      if (!options.dryRun) await store.deleteBlockFiles(doomed);
       return result;
     });
   }
@@ -212,14 +239,8 @@ export class PortableBrightDb extends PortableBrightDbCore {
     return store.withWriteLock(async (writer) => {
       const head = await store.readHead();
       const reachable = await collectReachable(store, [head, ...(options.keepRoots ?? [])]);
-      const result = { resealed: 0, alreadyCurrent: 0, headResealed: false };
-      for (const digest of reachable) {
-        if (options.dryRun) {
-          if (await store.needsReseal(digest)) result.resealed++;
-          else result.alreadyCurrent++;
-        } else if (await store.resealBlock(digest)) result.resealed++;
-        else result.alreadyCurrent++;
-      }
+      const counts = await store.resealBlocks(reachable, options.dryRun);
+      const result = { ...counts, headResealed: false };
       if (!options.dryRun && (await store.headNeedsReseal())) {
         await writer.publishHead(head);
         result.headResealed = true;

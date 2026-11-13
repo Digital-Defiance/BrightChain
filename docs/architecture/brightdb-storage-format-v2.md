@@ -98,6 +98,29 @@ On POSIX, writers acquire an exclusive `flock` on `LOCK` before reading the head
 
 Install a block from a temporary file in the same directory after writing and syncing its payload. Verify any existing block before reusing it. Sync the affected directories, including parents of newly created directories, before publishing a reference to those blocks. Publish `HEAD` by writing and syncing a temporary file in the root directory, renaming it over `HEAD`, and syncing the root directory. A durable commit requires a local filesystem that provides these atomic replacement and sync semantics. Portable readers resolve blocks by digest and require no sidecar files.
 
+### 5.1 Packed extension (optional)
+
+A directory can opt in to packed writes. It then holds one extra marker file, `PACKED`, containing exactly `BrightDB packs 1\n`. (The name differs from the `packs/` directory in more than case, so it is safe on case-insensitive filesystems.) A packed writer collects the blocks a commit adds and installs them as one pack file under `packs/`, with one `fsync`, instead of one temporary file and `fsync` per block. Bulk loads are several times faster (3,000 documents: 15 s loose, 0.7 s packed in the TypeScript reference).
+
+**Readers.** A block named by digest (or keyed name, when encrypted) lives either as a loose file `blocks/<hh>/<name>` or as an entry in a pack. An implementation that supports the extension resolves a name through packs and loose files alike, and verifies the digest as always. Software that does not know packs cannot find packed blocks and reports them missing; it never reads wrong data. Opt in only where every reader supports it. A directory may mix loose and packed blocks, and turning the extension on does not rewrite existing blocks.
+
+**Pack file** (integers big-endian):
+
+| Part | Contents |
+| --- | --- |
+| Header | `BrightDB pack 1\n` (16 bytes) |
+| Entries | The stored bytes of each block, concatenated. These are the bytes a loose file with that name would hold: the plaintext payload, or the sealed bytes in an encrypted store. |
+| Index | One row per entry: name (64 raw bytes, the decoded 128-digit file name), offset (u64), length (u32). |
+| Trailer | entry count (u32), index offset (u64), `BDBPEND\n` (8 bytes) |
+
+Pack files are named `<32 lowercase hex digits>.pack`. A reader validates the trailer, that the index fits the file exactly, and that every entry lies inside the entry area. A pack that fails validation is an error, never silently skipped.
+
+**Writing.** Write the pack to a temporary file in `packs/` (hidden name starting with `.`), sync it, rename it to its final name, and sync `packs/` (and the root, when `packs/` was just created) before publishing a head that references its blocks. A crash before the rename leaves only a temporary file, which readers ignore and garbage collection removes. A writer flushes a pack when about 32 MiB or 4,096 blocks are waiting, and always before publishing a head or syncing.
+
+**Reading.** Look a name up in the in-memory pack index first, then as a loose file; on a miss, re-list `packs/` for packs written by other processes and try again. Another process may remove a pack after rewriting it, so a read that finds its pack gone re-lists and retries.
+
+**Maintenance.** Garbage collection and re-sealing must rewrite packs. To remove blocks, write a new pack holding the survivors (keeping the old pack's modification time so grace periods do not restart), make it durable, then delete the old pack; a pack that loses every block is just deleted. Re-sealing rewrites each affected pack the same way, with the new sealed bytes. Compaction merges all packs into one so many small commits do not leave many small files. Duplicate names across packs (or between a pack and a loose file) are harmless because every copy decodes to the same plaintext; they disappear at the next rewrite or collection.
+
 ## 6. Replica merge semantics
 
 Replication of v2 is a separate capability from local format interoperability. A v2 replication implementation must retain divergent heads until it has verified and merged them. A collection-wide or database-wide timestamp comparison cannot discard a divergent root. Peers must agree on the database ID and format version. Validate authorization and fetch the referenced blocks before making a remote root visible. Retain the last verified root while dependencies are missing and retry when they arrive.

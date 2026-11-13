@@ -11,9 +11,17 @@ import {
   rename,
   rm,
   unlink,
+  utimes,
 } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
 import './node-hash';
+import {
+  encodePack,
+  PACKS_MARKER,
+  readPackEntry,
+  readPackIndex,
+  type PackEntryLocation,
+} from './pack-file';
 import { digestPayload, MAX_DOCUMENT_BYTES } from './codec';
 import {
   BrightDbV2CommitOutcomeUnknownError,
@@ -43,6 +51,9 @@ const BLOCK_WRITE_CONCURRENCY = 16;
 const DIGEST_LENGTH = 128;
 const WRITER_ID_LENGTH = 16;
 const HEX = /^[0-9a-f]+$/;
+/** A packed write scope flushes a pack once this many bytes or blocks are waiting. */
+const PACK_FLUSH_BYTES = 32 * 1024 * 1024;
+const PACK_FLUSH_BLOCKS = 4096;
 
 class UninitializedStoreError extends BrightDbV2StorageError {}
 class StoreExistsError extends BrightDbV2StorageError {}
@@ -202,6 +213,16 @@ async function flockExclusive(fd: number): Promise<void> {
 /** Durable, content-addressed storage using the BrightDB v2 POSIX disk profile. */
 export class BrightDbV2DiskStore implements BrightDbV2Storage {
   private readonly blocksPath: string;
+  private readonly packsPath: string;
+  /** Packed extension: new blocks are written into pack files, one fsync per pack. */
+  private packed = false;
+  private readonly packIndex = new Map<string, { pack: string; location: PackEntryLocation }>();
+  private readonly packMtimes = new Map<string, number>();
+  private readonly packEntries = new Map<string, Map<string, PackEntryLocation>>();
+  /** Blocks of the current write scope not yet in a pack. Only set inside `withWriteLock`. */
+  private pending: Map<string, Buffer> | null = null;
+  private pendingBytes = 0;
+  private flushChain: Promise<void> = Promise.resolve();
 
   private constructor(
     readonly path: string,
@@ -210,6 +231,30 @@ export class BrightDbV2DiskStore implements BrightDbV2Storage {
     readonly cipher: BrightDbV2BlockCipher | null = null,
   ) {
     this.blocksPath = join(path, 'blocks');
+    this.packsPath = join(path, 'packs');
+  }
+
+  /** Whether new blocks are written into pack files. */
+  get isPacked(): boolean {
+    return this.packed;
+  }
+
+  /**
+   * Turn on the packed extension for this directory: a `PACKED` marker file is
+   * added and new blocks go into pack files. Existing loose blocks stay where
+   * they are and keep working. Software that does not know about packs cannot
+   * find packed blocks, so enable this only where every reader supports it.
+   */
+  async enablePacks(): Promise<void> {
+    if (!this.packed) {
+      try {
+        await writeSyncedFile(join(this.path, 'PACKED'), PACKS_MARKER);
+        await syncDirectory(this.path);
+      } catch (error) {
+        if (!isErrorCode(error, 'EEXIST')) throw error;
+      }
+      this.packed = true;
+    }
   }
 
   /** The directory and file name a logical digest is stored under. */
@@ -304,6 +349,15 @@ export class BrightDbV2DiskStore implements BrightDbV2Storage {
     }
     const store = new BrightDbV2DiskStore(directory, writerId, cipher);
     await requireDirectory(store.blocksPath);
+    try {
+      const packsMarker = await readBoundedFile(join(directory, 'PACKED'), PACKS_MARKER.length);
+      if (packsMarker.toString('latin1') !== PACKS_MARKER) {
+        throw new BrightDbV2StorageError(`Unsupported BrightDB packs profile: ${directory}`);
+      }
+      store.packed = true;
+    } catch (error) {
+      if (!isErrorCode(error, 'ENOENT')) throw error;
+    }
     if (!(await lstat(join(directory, 'LOCK'))).isFile()) {
       throw new BrightDbV2StorageError(
         `Invalid BrightDB v2 lock file: ${directory}`,
@@ -404,16 +458,8 @@ export class BrightDbV2DiskStore implements BrightDbV2Storage {
   async readBlock(digest: string): Promise<Uint8Array> {
     assertDigest(digest);
     const { directory, file } = this.blockLocation(digest);
-    let bytes: Buffer;
-    try {
-      bytes = await readBoundedFile(
-        join(directory, file),
-        MAX_DOCUMENT_BYTES + (this.cipher ? SEAL_OVERHEAD : 0),
-      );
-    } catch (error) {
-      if (!isErrorCode(error, 'ENOENT')) throw error;
-      throw new BrightDbV2MissingBlockError(digest, { cause: error });
-    }
+    let bytes = await this.readStored(file, directory);
+    if (bytes === null) throw new BrightDbV2MissingBlockError(digest);
     if (this.cipher) {
       try {
         bytes = this.cipher.open(digest, bytes);
@@ -450,6 +496,8 @@ export class BrightDbV2DiskStore implements BrightDbV2Storage {
       }
       await flockExclusive(file.fd);
       const dirty = new Set<string>();
+      this.pending = this.packed ? new Map() : null;
+      this.pendingBytes = 0;
       let active = true;
       let pending: Promise<unknown> = Promise.resolve();
       const run = <R>(operation: () => Promise<R>): Promise<R> => {
@@ -480,10 +528,13 @@ export class BrightDbV2DiskStore implements BrightDbV2Storage {
         });
         active = false;
         await pending;
+        await this.flushPending();
         return result;
       } finally {
         active = false;
         await pending.catch(() => undefined);
+        this.pending = null;
+        this.pendingBytes = 0;
       }
     } finally {
       await file.close();
@@ -536,6 +587,16 @@ export class BrightDbV2DiskStore implements BrightDbV2Storage {
       if (!(error instanceof BrightDbV2MissingBlockError)) throw error;
     }
 
+    if (this.pending) {
+      const stored = this.cipher ? this.cipher.seal(digest, bytes) : bytes;
+      this.pending.set(file, stored);
+      this.pendingBytes += stored.byteLength;
+      if (this.pendingBytes >= PACK_FLUSH_BYTES || this.pending.size >= PACK_FLUSH_BLOCKS) {
+        await this.flushPending();
+      }
+      return digest;
+    }
+
     try {
       await mkdir(directory, { mode: 0o700 });
     } catch (error) {
@@ -559,8 +620,14 @@ export class BrightDbV2DiskStore implements BrightDbV2Storage {
   }
 
   private async syncBlocks(dirty: Set<string>): Promise<void> {
+    await this.flushPending();
     for (const directory of dirty) {
-      await syncDirectory(directory);
+      try {
+        await syncDirectory(directory);
+      } catch (error) {
+        // A packed block has no loose directory; there is nothing to sync.
+        if (!isErrorCode(error, 'ENOENT')) throw error;
+      }
     }
     await syncDirectory(this.blocksPath);
     dirty.clear();
@@ -571,7 +638,11 @@ export class BrightDbV2DiskStore implements BrightDbV2Storage {
     return this.blockLocation(digest).file;
   }
 
-  /** Every file under blocks/, including leftover temporary files, with size and modification time. */
+  /**
+   * Every stored block, loose or packed, plus leftover temporary files, with size
+   * and modification time. A packed block reports its pack's modification time,
+   * and a name present both loose and packed is listed twice.
+   */
   async listBlockFiles(): Promise<Array<{ name: string; bytes: number; modifiedMs: number }>> {
     const out: Array<{ name: string; bytes: number; modifiedMs: number }> = [];
     for (const prefix of await readdir(this.blocksPath)) {
@@ -581,62 +652,305 @@ export class BrightDbV2DiskStore implements BrightDbV2Storage {
         if (stat.isFile()) out.push({ name, bytes: stat.size, modifiedMs: stat.mtimeMs });
       }
     }
+    await this.refreshPacks();
+    for (const [name, { pack, location }] of this.packIndex) {
+      out.push({ name, bytes: location.length, modifiedMs: this.packMtimes.get(pack) ?? 0 });
+    }
+    for (const name of await this.readPacksDirectory()) {
+      if (name.startsWith('.')) {
+        const stat = await lstat(join(this.packsPath, name));
+        if (stat.isFile()) out.push({ name, bytes: stat.size, modifiedMs: stat.mtimeMs });
+      }
+    }
     return out;
   }
 
-  /** Remove one block file by its on-disk name. The caller must hold the write lock. */
+  /** Remove one block by its on-disk name. The caller must hold the write lock. */
   async deleteBlockFile(name: string): Promise<void> {
-    const directory = join(this.blocksPath, name.startsWith('.') ? '' : name.slice(0, 2));
-    if (name.startsWith('.')) {
-      // A leftover temporary file may sit in any prefix directory.
-      for (const prefix of await readdir(this.blocksPath)) {
-        await unlink(join(this.blocksPath, prefix, name)).catch(() => undefined);
-      }
-      return;
-    }
-    if (!/^[0-9a-f]{128}$/u.test(name)) {
-      throw new BrightDbV2StorageError('Invalid block file name');
-    }
-    await unlink(join(directory, name));
+    await this.deleteBlockFiles([name]);
   }
 
   /**
-   * Re-encrypt one block under the cipher's current data key, replacing the file
-   * atomically (temporary file, fsync, rename). The name does not change. Returns
-   * whether the block was rewritten. The caller must hold the write lock.
+   * Remove blocks by their on-disk names, loose or packed. Packs that lose some
+   * but not all of their blocks are rewritten without them, and a pack that
+   * loses all of them is deleted. The caller must hold the write lock.
    */
-  async resealBlock(digest: string): Promise<boolean> {
-    assertDigest(digest);
-    if (!this.cipher) throw new BrightDbV2StorageError('Re-sealing needs an encrypted store');
-    const { directory, file } = this.blockLocation(digest);
-    const path = join(directory, file);
-    const sealed = await readBoundedFile(path, MAX_DOCUMENT_BYTES + SEAL_OVERHEAD);
-    const next = this.cipher.reseal(digest, sealed);
-    if (next === null) return false;
+  async deleteBlockFiles(names: Iterable<string>): Promise<void> {
+    const packed = new Set<string>();
+    for (const name of names) {
+      if (name.startsWith('.')) {
+        // A leftover temporary file may sit in any prefix directory or in packs/.
+        for (const prefix of await readdir(this.blocksPath)) {
+          await unlink(join(this.blocksPath, prefix, name)).catch(() => undefined);
+        }
+        await unlink(join(this.packsPath, name)).catch(() => undefined);
+        continue;
+      }
+      if (!/^[0-9a-f]{128}$/u.test(name)) {
+        throw new BrightDbV2StorageError('Invalid block file name');
+      }
+      try {
+        await unlink(join(this.blocksPath, name.slice(0, 2), name));
+      } catch (error) {
+        if (!isErrorCode(error, 'ENOENT')) throw error;
+      }
+      packed.add(name);
+    }
+    if (packed.size === 0) return;
+    await this.refreshPacks();
+    const byPack = new Map<string, number>();
+    for (const name of packed) {
+      const entry = this.packIndex.get(name);
+      if (entry) byPack.set(entry.pack, (byPack.get(entry.pack) ?? 0) + 1);
+    }
+    for (const pack of byPack.keys()) {
+      await this.rewritePack(pack, (name) => (packed.has(name) ? null : undefined));
+    }
+  }
+
+  /**
+   * Merge every pack into one, so many small commits do not leave many small
+   * files to open. The caller must hold the write lock. Returns the number of
+   * packs before and after.
+   */
+  async compactPacks(): Promise<{ before: number; after: number }> {
+    await this.refreshPacks();
+    const before = [...this.packMtimes.keys()];
+    if (before.length <= 1) return { before: before.length, after: before.length };
+    const entries = new Map<string, Buffer>();
+    for (const [name, { pack, location }] of this.packIndex) {
+      if (!entries.has(name)) entries.set(name, await readPackEntry(join(this.packsPath, pack), location, this.maxStoredBytes()));
+    }
+    const created = await this.writePack([...entries].map(([name, bytes]) => ({ name, bytes })));
+    for (const pack of before) {
+      if (pack !== created) await unlink(join(this.packsPath, pack)).catch(() => undefined);
+    }
+    await syncDirectory(this.packsPath);
+    await this.refreshPacks();
+    return { before: before.length, after: 1 };
+  }
+
+  /**
+   * Re-encrypt the given blocks under the cipher's current data key, wherever
+   * they are stored: loose files are replaced one by one (temporary file, fsync,
+   * rename) and each affected pack is rewritten once. Names do not change.
+   * `dryRun` only counts. The caller must hold the write lock.
+   */
+  async resealBlocks(
+    digests: Iterable<string>,
+    dryRun = false,
+  ): Promise<{ resealed: number; alreadyCurrent: number }> {
+    const cipher = this.cipher;
+    if (!cipher) throw new BrightDbV2StorageError('Re-sealing needs an encrypted store');
+    await this.refreshPacks();
+    const byName = new Map<string, string>();
+    for (const digest of digests) {
+      assertDigest(digest);
+      byName.set(this.blockLocation(digest).file, digest);
+    }
+    const touched = new Set<string>();
+    const stale = new Set<string>();
+    for (const [name, digest] of byName) {
+      const { directory, file } = this.blockLocation(digest);
+      let loose: Buffer | null = null;
+      try {
+        loose = await readBoundedFile(join(directory, file), MAX_DOCUMENT_BYTES + SEAL_OVERHEAD);
+      } catch (error) {
+        if (!isErrorCode(error, 'ENOENT')) throw error;
+      }
+      if (loose !== null && loose[0] !== cipher.currentKeyVersion) {
+        stale.add(name);
+        if (!dryRun) await this.replaceLooseBlock(digest, directory, file, loose);
+      }
+      const entry = this.packIndex.get(name);
+      if (entry) {
+        const sealed = await readPackEntry(join(this.packsPath, entry.pack), entry.location, this.maxStoredBytes());
+        if (sealed[0] !== cipher.currentKeyVersion) {
+          stale.add(name);
+          touched.add(entry.pack);
+        }
+      }
+    }
+    if (!dryRun) {
+      for (const pack of touched) {
+        await this.rewritePack(pack, (name, bytes) => {
+          const digest = byName.get(name);
+          if (digest === undefined || bytes[0] === cipher.currentKeyVersion) return undefined;
+          return cipher.reseal(digest, bytes) ?? undefined;
+        });
+      }
+      for (const [, digest] of byName) await this.readBlock(digest); // verify every block still opens
+    }
+    return { resealed: stale.size, alreadyCurrent: byName.size - stale.size };
+  }
+
+  private async replaceLooseBlock(digest: string, directory: string, file: string, sealed: Buffer): Promise<void> {
+    const next = (this.cipher as BrightDbV2BlockCipher).reseal(digest, sealed);
+    if (next === null) return;
     const temporary = temporaryPath(directory);
     try {
       await writeSyncedFile(temporary, next);
-      await rename(temporary, path);
+      await rename(temporary, join(directory, file));
       await syncDirectory(directory);
     } catch (error) {
       await unlink(temporary).catch(() => undefined);
       throw error;
     }
-    await this.readBlock(digest); // verify the new file decrypts to the right digest
-    return true;
   }
 
   get isEncrypted(): boolean {
     return this.cipher !== null;
   }
 
-  /** Whether a block is sealed with an older data key than the current one. */
-  async needsReseal(digest: string): Promise<boolean> {
-    assertDigest(digest);
-    if (!this.cipher) return false;
-    const { directory, file } = this.blockLocation(digest);
-    const sealed = await readBoundedFile(join(directory, file), MAX_DOCUMENT_BYTES + SEAL_OVERHEAD);
-    return sealed[0] !== this.cipher.currentKeyVersion;
+  private maxStoredBytes(): number {
+    return MAX_DOCUMENT_BYTES + (this.cipher ? SEAL_OVERHEAD : 0);
+  }
+
+  private async readPacksDirectory(): Promise<string[]> {
+    try {
+      return await readdir(this.packsPath);
+    } catch (error) {
+      if (isErrorCode(error, 'ENOENT')) return [];
+      throw error;
+    }
+  }
+
+  /**
+   * Pick up packs written since this process last looked, and forget packs that
+   * are gone. Returns whether any new pack was added.
+   */
+  private async refreshPacks(): Promise<boolean> {
+    const present = new Set((await this.readPacksDirectory()).filter((n) => n.endsWith('.pack') && !n.startsWith('.')));
+    let removed = false;
+    for (const pack of [...this.packMtimes.keys()]) {
+      if (!present.has(pack)) {
+        this.packMtimes.delete(pack);
+        this.packEntries.delete(pack);
+        removed = true;
+      }
+    }
+    if (removed) {
+      // A block may also live in a pack that stays: rebuild the lookup from the packs that remain.
+      this.packIndex.clear();
+      for (const [pack, entries] of this.packEntries) {
+        for (const [name, location] of entries) if (!this.packIndex.has(name)) this.packIndex.set(name, { pack, location });
+      }
+    }
+    let added = false;
+    for (const pack of present) {
+      if (this.packMtimes.has(pack)) continue;
+      const path = join(this.packsPath, pack);
+      let index;
+      try {
+        index = await readPackIndex(path);
+      } catch (error) {
+        if (isErrorCode(error, 'ENOENT')) continue; // removed while listing
+        throw error;
+      }
+      this.packMtimes.set(pack, (await lstat(path)).mtimeMs);
+      this.packEntries.set(pack, index.entries);
+      for (const [name, location] of index.entries) {
+        if (!this.packIndex.has(name)) this.packIndex.set(name, { pack, location });
+      }
+      added = true;
+    }
+    return added;
+  }
+
+  /** The stored bytes of a block (sealed when encrypted), from this write scope, a pack or a loose file; null when absent. */
+  private async readStored(name: string, directory: string): Promise<Buffer | null> {
+    const waiting = this.pending?.get(name);
+    if (waiting) return waiting;
+    for (let attempt = 0; attempt < 2; attempt++) {
+      const entry = this.packIndex.get(name);
+      if (entry) {
+        try {
+          return await readPackEntry(join(this.packsPath, entry.pack), entry.location, this.maxStoredBytes());
+        } catch (error) {
+          if (!isErrorCode(error, 'ENOENT')) throw error;
+          await this.refreshPacks(); // the pack was rewritten or removed by another process
+        }
+      }
+      try {
+        return await readBoundedFile(join(directory, name), this.maxStoredBytes());
+      } catch (error) {
+        if (!isErrorCode(error, 'ENOENT')) throw error;
+      }
+      if (!(await this.refreshPacks()) && !this.packIndex.has(name)) return null;
+    }
+    return null;
+  }
+
+  /** Write the waiting blocks of this scope into one pack (one fsync) and index it. Calls queue up. */
+  private flushPending(): Promise<void> {
+    const run = this.flushChain.then(async () => {
+      const waiting = this.pending;
+      if (!waiting || waiting.size === 0) return;
+      const entries = [...waiting].map(([name, bytes]) => ({ name, bytes }));
+      await this.writePack(entries);
+      for (const { name, bytes } of entries) {
+        if (waiting.get(name) === bytes) {
+          waiting.delete(name);
+          this.pendingBytes -= bytes.byteLength;
+        }
+      }
+    });
+    this.flushChain = run.catch(() => undefined);
+    return run;
+  }
+
+  /** Durably create a pack file holding the entries, register it, and return its file name. */
+  private async writePack(entries: ReadonlyArray<{ name: string; bytes: Uint8Array }>, mtime?: Date): Promise<string> {
+    const created = await mkdir(this.packsPath, { mode: 0o700, recursive: true });
+    if (created !== undefined) await syncDirectory(this.path);
+    const file = `${randomBytes(16).toString('hex')}.pack`;
+    const temporary = temporaryPath(this.packsPath);
+    try {
+      await writeSyncedFile(temporary, encodePack(entries));
+      if (mtime) await utimes(temporary, mtime, mtime);
+      await rename(temporary, join(this.packsPath, file));
+      await syncDirectory(this.packsPath);
+    } catch (error) {
+      await unlink(temporary).catch(() => undefined);
+      throw error;
+    }
+    await this.refreshPacks();
+    return file;
+  }
+
+  /**
+   * Replace a pack with a rewritten one. `change` returns new bytes for an
+   * entry, null to drop it, or undefined to keep it. Nothing is rewritten when
+   * nothing changes. The new pack is durable before the old one is removed, and
+   * keeps the old pack's modification time so garbage-collection grace periods
+   * do not restart.
+   */
+  private async rewritePack(
+    pack: string,
+    change: (name: string, bytes: Buffer) => Buffer | null | undefined,
+  ): Promise<void> {
+    const path = join(this.packsPath, pack);
+    const index = await readPackIndex(path);
+    const kept: Array<{ name: string; bytes: Buffer }> = [];
+    let changed = false;
+    for (const [name, location] of index.entries) {
+      const bytes = await readPackEntry(path, location, this.maxStoredBytes());
+      const next = change(name, bytes);
+      if (next === null) {
+        changed = true;
+      } else if (next === undefined) {
+        kept.push({ name, bytes });
+      } else {
+        changed = true;
+        kept.push({ name, bytes: next });
+      }
+    }
+    if (!changed) return;
+    const mtime = new Date((await lstat(path)).mtimeMs);
+    if (kept.length > 0) await this.writePack(kept, mtime);
+    await unlink(path);
+    await syncDirectory(this.packsPath);
+    await this.refreshPacks();
   }
 
   /** Whether HEAD is sealed with an older data key than the current one. */
@@ -646,20 +960,21 @@ export class BrightDbV2DiskStore implements BrightDbV2Storage {
     return sealed[0] !== this.cipher.currentKeyVersion;
   }
 
-  /** Whether a block file exists. It does not read or verify the block. */
+  /** Whether a block exists, loose or packed. It does not read or verify the block. */
   async hasBlock(digest: string): Promise<boolean> {
     assertDigest(digest);
+    const { directory, file } = this.blockLocation(digest);
+    if (this.pending?.has(file) || this.packIndex.has(file)) return true;
     try {
-      const { directory, file } = this.blockLocation(digest);
-      const stat = await lstat(join(directory, file));
-      return stat.isFile();
+      if ((await lstat(join(directory, file))).isFile()) return true;
     } catch (error) {
-      if (isErrorCode(error, 'ENOENT')) return false;
-      throw error;
+      if (!isErrorCode(error, 'ENOENT')) throw error;
     }
+    return (await this.refreshPacks()) && this.packIndex.has(file);
   }
 
   private async publishHead(digest: string, dirty: Set<string>): Promise<void> {
+    await this.flushPending();
     await this.readBlock(digest);
     dirty.add(this.blockLocation(digest).directory);
     await this.syncBlocks(dirty);

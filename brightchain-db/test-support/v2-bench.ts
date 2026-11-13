@@ -1,6 +1,6 @@
 /**
  * Scaling benchmark for the BrightDB v2 portable disk profile.
- * Usage: node --import tsx v2-bench.ts [sizes=1000,10000,100000]
+ * Usage: [BRIGHTDB_BENCH_PACKED=1] node --import tsx v2-bench.ts [sizes=1000,10000,100000]
  * Prints one JSON object per size, then a summary table.
  */
 import { mkdtemp, readdir, rm } from 'node:fs/promises';
@@ -44,7 +44,7 @@ async function main(): Promise<void> {
     const dir = await mkdtemp(join(tmpdir(), 'brightdb-v2-bench-'));
     try {
       const path = join(dir, 'db');
-      const db = await PortableBrightDb.open({ path });
+      const db = await PortableBrightDb.open({ path, packed: process.env['BRIGHTDB_BENCH_PACKED'] === '1' });
       const users = db.collection<{ _id: string; n: number; pad: string }>('users');
       const loadStart = performance.now();
       const chunk = 1000;
