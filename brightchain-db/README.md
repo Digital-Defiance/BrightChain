@@ -13,7 +13,7 @@ It supports:
 - **Rich query operators** – `$eq`, `$ne`, `$gt`, `$gte`, `$lt`, `$lte`, `$in`, `$nin`, `$regex`, `$exists`, `$and`, `$or`, `$not`, `$nor`, `$elemMatch`
 - **Projection & sorting** – field selection, multi-field sort
 - **Indexes** – unique, compound, and single-field indexes for fast lookups
-- **Transactions** – multi-document ACID-like transactions with commit/abort
+- **Transactions** – multi-document transactions with commit/abort (v2 storage: atomic single-head commits and per-record versioned merge; no multi-writer transactions)
 - **Aggregation pipeline** – `$match`, `$group`, `$sort`, `$limit`, `$skip`, `$project`, `$unwind`, `$count`, `$addFields`, `$lookup`
 - **Cursor API** – lazy iteration with `skip`, `limit`, `sort`, `toArray`
 - **Express middleware** – drop-in router for REST access to collections
@@ -112,6 +112,14 @@ try {
 import { createDbRouter } from '@brightchain/db';
 app.use('/api/db', createDbRouter(db));
 ```
+
+## In the browser, and React hooks
+
+`@brightchain/brightchain-db/browser` runs the v2 format in a page: `openBrowserDb(name)` stores blocks in IndexedDB (Web Locks serialise writers across tabs), `MemoryV2Storage` keeps everything in memory, and `joinFromSource` joins and merges a database served over HTTP (`serveBlocks` or the C++ `brightdb_v2_tool serve`, both with an optional CORS origin and a Bearer token). Verified in a real browser against both servers.
+
+Limits: the browser build has no encryption, garbage collection or fork, and bundlers need a global `Buffer` polyfill.
+
+`brightchain-react-components` exports `BrightDbProvider`, `useLiveQuery`, `useIndexQuery` and `useDocument`, which re-run when `subscribe` reports a commit.
 
 ## How BrightDB compares to Fireproof
 
