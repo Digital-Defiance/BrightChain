@@ -1,6 +1,6 @@
 {
   "name": "@brightchain/brightchat-react-components",
-  "version": "0.32.1",
+  "version": "0.33.0",
   "description": "BrightChat React UI components for BrightChain real-time communication interface",
   "main": "src/index.js",
   "types": "src/index.d.ts",
@@ -27,8 +27,8 @@
   "author": "Digital Defiance",
   "license": "MIT",
   "peerDependencies": {
-    "@brightchain/brightchain-lib": "^0.32.1",
-    "@brightchain/brightchat-lib": "^0.32.1",
+    "@brightchain/brightchain-lib": "^0.33.0",
+    "@brightchain/brightchat-lib": "^0.33.0",
     "@digitaldefiance/express-suite-react-components": "4.30.1",
     "@mui/icons-material": "*",
     "@mui/material": "*",

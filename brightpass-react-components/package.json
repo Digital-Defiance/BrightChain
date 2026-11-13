@@ -1,6 +1,6 @@
 {
   "name": "@brightchain/brightpass-react-components",
-  "version": "0.32.1",
+  "version": "0.33.0",
   "description": "BrightPass React UI components for BrightChain password manager",
   "main": "src/index.js",
   "types": "src/index.d.ts",
@@ -27,7 +27,7 @@
   "author": "Digital Defiance",
   "license": "MIT",
   "peerDependencies": {
-    "@brightchain/brightchain-lib": "^0.32.1",
+    "@brightchain/brightchain-lib": "^0.33.0",
     "@digitaldefiance/express-suite-react-components": "4.30.1",
     "@digitaldefiance/i18n-lib": "4.7.5",
     "@mui/icons-material": "*",

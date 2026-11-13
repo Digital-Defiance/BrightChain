@@ -1,12 +1,12 @@
 {
   "name": "@brightchain/brightchain-react-components",
-  "version": "0.32.1",
+  "version": "0.33.0",
   "type": "commonjs",
   "main": "./src/index.js",
   "browser": "./src/browser.ts",
   "types": "./src/index.d.ts",
   "dependencies": {
-    "@brightchain/brightchain-lib": "^0.32.1",
+    "@brightchain/brightchain-lib": "^0.33.0",
     "@digitaldefiance/ecies-lib": "5.2.2",
     "@digitaldefiance/express-suite-react-components": "4.30.1",
     "@digitaldefiance/i18n-lib": "4.7.5",

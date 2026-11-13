@@ -1,6 +1,6 @@
 {
   "name": "@brightchain/brightchain-api-lib",
-  "version": "0.32.1",
+  "version": "0.33.0",
   "main": "./src/index.js",
   "types": "./src/index.d.ts",
   "files": [
@@ -9,12 +9,12 @@
   ],
   "dependencies": {
     "@aws-sdk/client-ses": "^3.859.0",
-    "@brightchain/brightchain-identity": "^0.32.1",
-    "@brightchain/brightchain-lib": "^0.32.1",
-    "@brightchain/brightnexus-api-lib": "^0.32.1",
-    "@brightchain/brightnexus-lib": "^0.32.1",
-    "@brightchain/db": "^0.32.1",
-    "@brightchain/node-express-suite": "^0.32.1",
+    "@brightchain/brightchain-identity": "^0.33.0",
+    "@brightchain/brightchain-lib": "^0.33.0",
+    "@brightchain/brightnexus-api-lib": "^0.33.0",
+    "@brightchain/brightnexus-lib": "^0.33.0",
+    "@brightchain/db": "^0.33.0",
+    "@brightchain/node-express-suite": "^0.33.0",
     "@digitaldefiance/branded-enum": "0.0.7",
     "@digitaldefiance/ecies-lib": "5.2.2",
     "@digitaldefiance/enclave-bridge-client": "^1.1.0",

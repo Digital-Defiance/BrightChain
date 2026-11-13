@@ -1,6 +1,6 @@
 {
   "name": "@brightchain/brightledger-assets-react-components",
-  "version": "0.32.1",
+  "version": "0.33.0",
   "description": "React UI components for the BrightChain Programmable Asset Ledger",
   "main": "src/index.js",
   "types": "src/index.d.ts",
@@ -27,8 +27,8 @@
   "author": "Digital Defiance",
   "license": "MIT",
   "peerDependencies": {
-    "@brightchain/brightchain-lib": "^0.32.1",
-    "@brightchain/brightledger-assets-lib": "^0.32.1",
+    "@brightchain/brightchain-lib": "^0.33.0",
+    "@brightchain/brightledger-assets-lib": "^0.33.0",
     "react": "^18.0.0",
     "react-dom": "^18.0.0"
   },

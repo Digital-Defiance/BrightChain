@@ -1,6 +1,6 @@
 {
   "name": "@brightchain/digitalburnbag-api-lib",
-  "version": "0.32.1",
+  "version": "0.33.0",
   "type": "commonjs",
   "main": "./src/index.js",
   "types": "./src/index.d.ts",
@@ -9,8 +9,8 @@
     "README.md"
   ],
   "dependencies": {
-    "@brightchain/brightchain-lib": "^0.32.1",
-    "@brightchain/digitalburnbag-lib": "^0.32.1",
+    "@brightchain/brightchain-lib": "^0.33.0",
+    "@brightchain/digitalburnbag-lib": "^0.33.0",
     "@digitaldefiance/ecies-lib": "5.2.2",
     "@digitaldefiance/i18n-lib": "4.7.5",
     "@digitaldefiance/node-ecies-lib": "5.2.2",

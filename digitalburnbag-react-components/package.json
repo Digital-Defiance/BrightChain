@@ -1,6 +1,6 @@
 {
   "name": "@brightchain/digitalburnbag-react-components",
-  "version": "0.32.1",
+  "version": "0.33.0",
   "description": "React components for the Digital Burnbag module",
   "main": "./index.js",
   "module": "./index.mjs",
@@ -14,7 +14,7 @@
   },
   "peerDependencies": {
     "@awesome.me/kit-a20d532681": "^1.0.23",
-    "@brightchain/brightchain-lib": "^0.32.1",
+    "@brightchain/brightchain-lib": "^0.33.0",
     "@emotion/react": ">=11.0.0",
     "@emotion/styled": ">=11.0.0",
     "@fortawesome/fontawesome-svg-core": "^7.2.0",

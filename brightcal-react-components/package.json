@@ -1,6 +1,6 @@
 {
   "name": "@brightchain/brightcal-react-components",
-  "version": "0.32.1",
+  "version": "0.33.0",
   "description": "BrightCal React UI components for BrightChain shared calendar interface",
   "main": "src/index.js",
   "types": "src/index.d.ts",
@@ -27,8 +27,8 @@
   "author": "Digital Defiance",
   "license": "MIT",
   "peerDependencies": {
-    "@brightchain/brightcal-lib": "^0.32.1",
-    "@brightchain/brightchain-lib": "^0.32.1",
+    "@brightchain/brightcal-lib": "^0.33.0",
+    "@brightchain/brightchain-lib": "^0.33.0",
     "react": "^18.0.0",
     "react-dom": "^18.0.0"
   },

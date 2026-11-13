@@ -1,6 +1,6 @@
 {
   "name": "@brightchain/brightpass-lib",
-  "version": "0.32.1",
+  "version": "0.33.0",
   "description": "BrightPass shared library - i18n strings, request interfaces and types for BrightChain password manager",
   "main": "src/index.js",
   "types": "src/index.d.ts",
@@ -31,7 +31,7 @@
     "@digitaldefiance/i18n-lib": "4.7.5"
   },
   "peerDependencies": {
-    "@brightchain/brightchain-lib": "^0.32.1"
+    "@brightchain/brightchain-lib": "^0.33.0"
   },
   "scripts": {
     "build": "npx nx build brightpass-lib",
