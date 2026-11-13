@@ -46,7 +46,7 @@ import {
 } from './index-key';
 import { V2IndexTree } from './index-tree';
 import type { BrightDbV2BlockSource } from './block-source';
-import { mergeReplica, type PortableMergeResult } from './merge';
+import { copyDatabase, mergeReplica, type PortableMergeResult } from './merge';
 import { V2Tree } from './tree';
 
 export type PortableWriteOperation =
@@ -859,7 +859,8 @@ export class PortableBrightDbCore {
       }
     };
     const timer = setInterval(() => void check(), intervalMs);
-    timer.unref();
+    // Node timers can be unref'd so they do not hold the process open; browser timers are numbers.
+    (timer as { unref?: () => void }).unref?.();
     const wake = () => void check();
     this.wakeups.add(wake);
     const stop = () => {
@@ -1162,4 +1163,22 @@ export class PortableBrightDbCore {
         (await read()).findByIndex(indexName, query),
     };
   }
+}
+
+/**
+ * Join a database held elsewhere: copy the state a block source serves into
+ * `storage` and make it the head. `storage` should be freshly created and empty
+ * (a new IndexedDbV2Storage or MemoryV2Storage). Afterwards the two are replicas
+ * that can write and `merge` each other. Works in browsers and in Node.
+ */
+export async function joinFromSource(
+  storage: BrightDbV2Storage,
+  source: BrightDbV2BlockSource,
+): Promise<PortableBrightDbCore> {
+  await storage.withWriteLock(async (writer) => {
+    const head = await source.readHead();
+    await copyDatabase(storage, writer, source, head);
+    await writer.publishHead(head);
+  });
+  return PortableBrightDbCore.fromStorage(storage);
 }

@@ -10,6 +10,7 @@ export * from './contexts/BrightDateContext';
 export * from './HeroBadge';
 export * from './hooks/useBrightDateDisplay';
 export * from './hooks/useFormattedDate';
+export * from './hooks/brightdb';
 export * from './identity';
 export * from './interfaces';
 export * from './joule';

@@ -2,6 +2,8 @@ module.exports = {
   displayName: 'brightchain-db',
   preset: '../jest.preset.js',
   testEnvironment: 'node',
+  // Disk-backed v2 specs fsync many blocks; 5s is too tight on a loaded machine.
+  testTimeout: 30000,
   transform: {
     '^.+\\.[tj]s$': ['ts-jest', { tsconfig: './tsconfig.spec.json' }],
   },

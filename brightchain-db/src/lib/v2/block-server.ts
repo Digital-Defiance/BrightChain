@@ -16,20 +16,32 @@ export interface BlockServer {
 
 /**
  * Serve a replica read-only over HTTP: `GET /head` and `GET /blocks/<digest>`.
- * The server returns blocks exactly as the storage reads them (plaintext for an
+ * Set `corsOrigin` (for example `https://app.example.com`, or `*`) to let a
+ * browser page on that origin read it. The server returns blocks exactly as the storage reads them (plaintext for an
  * encrypted directory), so put it behind TLS and set a token whenever the
  * network is not trusted.
  */
 export async function serveBlocks(
   source: BrightDbV2BlockSource,
-  options: { port?: number; host?: string; token?: string } = {},
+  options: { port?: number; host?: string; token?: string; corsOrigin?: string } = {},
 ): Promise<BlockServer> {
   const handle = async (request: IncomingMessage, response: ServerResponse) => {
     const send = (status: number, body: string | Uint8Array = '', type = 'text/plain') => {
-      response.writeHead(status, { 'content-type': type });
+      response.writeHead(status, {
+        'content-type': type,
+        ...(options.corsOrigin
+          ? {
+              'access-control-allow-origin': options.corsOrigin,
+              'access-control-allow-headers': 'authorization',
+              'access-control-allow-methods': 'GET, OPTIONS',
+              vary: 'origin',
+            }
+          : {}),
+      });
       response.end(body);
     };
     try {
+      if (request.method === 'OPTIONS' && options.corsOrigin) return send(204);
       if (request.method !== 'GET') return send(405);
       if (options.token && request.headers.authorization !== `Bearer ${options.token}`) {
         return send(401);

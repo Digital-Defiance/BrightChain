@@ -990,7 +990,7 @@ export function decodeDocument(
   } catch {
     throw new V2CodecError('Invalid document JSON');
   }
-  if (!encodeDocument(value, expectedKey).equals(bytes)) {
+  if (!encodeDocument(value, expectedKey).equals(Buffer.from(bytes))) {
     throw new V2CodecError('Document JSON is not canonical');
   }
   // encodeDocument validates every value and requires a string _id.

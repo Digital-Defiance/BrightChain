@@ -27,7 +27,8 @@ export class HttpBlockSource implements BrightDbV2BlockSource {
     options: { token?: string; fetch?: typeof fetch } = {},
   ) {
     this.base = baseUrl.replace(/\/+$/u, '');
-    this.fetcher = options.fetch ?? fetch;
+    // Calling the global fetch as a method of another object throws "Illegal invocation" in browsers.
+    this.fetcher = options.fetch ?? ((input, init) => fetch(input, init));
     this.token = options.token;
   }
 
