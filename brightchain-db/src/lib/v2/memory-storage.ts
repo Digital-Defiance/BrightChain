@@ -11,6 +11,7 @@ import {
 
 export class MemoryV2Storage implements BrightDbV2Storage {
   readonly blocks = new Map<string, Uint8Array>();
+  private readonly times = new Map<string, number>();
   private head = '';
   private chain: Promise<unknown> = Promise.resolve();
 
@@ -35,11 +36,27 @@ export class MemoryV2Storage implements BrightDbV2Storage {
     const copy = new MemoryV2Storage(writerId ?? globalThis.crypto.getRandomValues(new Uint8Array(16)), this.encryptsAtRest);
     for (const [digest, bytes] of this.blocks) copy.blocks.set(digest, bytes);
     copy.head = this.head;
+    for (const [name, time] of this.times) copy.times.set(name, time);
     return copy;
   }
 
   async readHead(): Promise<string> {
     return this.head;
+  }
+
+  async listBlocks(): Promise<Array<{ name: string; bytes: number; modifiedMs: number }>> {
+    return [...this.blocks].map(([name, bytes]) => ({ name, bytes: bytes.length, modifiedMs: this.times.get(name) ?? 0 }));
+  }
+
+  async nameOf(digest: string): Promise<string> {
+    return digest;
+  }
+
+  async deleteBlocks(names: string[]): Promise<void> {
+    for (const name of names) {
+      this.blocks.delete(name);
+      this.times.delete(name);
+    }
   }
 
   async readBlock(digest: string): Promise<Uint8Array> {
@@ -58,10 +75,15 @@ export class MemoryV2Storage implements BrightDbV2Storage {
         writeBlock: async (payload) => {
           const digest = digestPayload(payload);
           this.blocks.set(digest, Uint8Array.from(payload));
+          this.times.set(digest, Date.now());
           return digest;
         },
         writeBlocks: async (payloads) => {
-          for (const payload of payloads) this.blocks.set(digestPayload(payload), Uint8Array.from(payload));
+          for (const payload of payloads) {
+            const digest = digestPayload(payload);
+            this.blocks.set(digest, Uint8Array.from(payload));
+            this.times.set(digest, Date.now());
+          }
         },
         syncBlocks: async () => undefined,
         publishHead: async (digest) => {

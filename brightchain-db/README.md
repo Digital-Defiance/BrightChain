@@ -121,7 +121,9 @@ app.use('/api/db', createDbRouter(db));
 
 `@brightchain/brightchain-db/browser` runs the v2 format in a page: `openBrowserDb(name)` stores blocks in IndexedDB (Web Locks serialise writers across tabs), `MemoryV2Storage` keeps everything in memory, and `joinFromSource` joins and merges a database served over HTTP (`serveBlocks` or the C++ `brightdb_v2_tool serve`, both with an optional CORS origin and a Bearer token). Verified in a real browser against both servers.
 
-Limits: the browser build has no encryption, garbage collection or fork, and bundlers need a global `Buffer` polyfill.
+The browser build also has garbage collection (`db.collectGarbage({ graceMs, keepRoots, dryRun })`), forking (`forkBrowserDb(db, name)` or `db.forkInto(storage)`), and encryption at rest in IndexedDB (`openBrowserDb(name, { encryption: { key } })`, or a key ring). The encrypted format is the same one the Node and C++ builds use, so the bytes are identical; the key lives in the page, so this protects data at rest in the browser profile, not against a compromised page. A database created with a key can only be opened with it.
+
+Limits: re-sealing after key rotation and packed storage are Node and C++ only, and bundlers need a global `Buffer` polyfill.
 
 `brightchain-react-components` exports `BrightDbProvider`, `useLiveQuery`, `useIndexQuery` and `useDocument`, which re-run when `subscribe` reports a commit.
 

@@ -35,6 +35,7 @@ import {
 } from './attachments';
 import {
   BrightDbV2StorageError,
+  isGarbageStorage,
   type BrightDbV2DiskWriter,
   type BrightDbV2Storage,
 } from './storage';
@@ -47,6 +48,7 @@ import {
 import { V2IndexTree } from './index-tree';
 import type { BrightDbV2BlockSource } from './block-source';
 import { copyDatabase, mergeReplica, type PortableMergeResult } from './merge';
+import { collectReachable } from './reachable';
 import { V2Tree } from './tree';
 
 export type PortableWriteOperation =
@@ -804,6 +806,59 @@ export class PortableBrightDbCore {
 
   protected requireOpen(): void {
     if (this.closed) throw new Error('BrightDB database is closed');
+  }
+
+  /**
+   * Copy this database into an empty storage as an independent replica with the
+   * storage's own writer ID. Both sides can then write and `merge` each other.
+   * The target must be a fresh storage (for example `IndexedDbV2Storage.open`
+   * under a new name or `MemoryV2Storage.create()`); its database ID is replaced
+   * by this database's.
+   */
+  async forkInto(target: BrightDbV2Storage): Promise<PortableBrightDbCore> {
+    this.requireOpen();
+    return joinFromSource(target, this.store);
+  }
+
+  /**
+   * Delete blocks that no retained root reaches. The current root is always
+   * kept, plus any roots in `keepRoots`, and everything they reach. Blocks
+   * written less than `graceMs` ago (default one hour) are kept so a file stored
+   * with `putAttachment` has time to be referenced by a document. Runs under the
+   * storage's write lock. `dryRun` reports without deleting. Needs a storage
+   * that can list and delete blocks (the in-memory and IndexedDB storages can).
+   */
+  async collectGarbage(
+    options: { keepRoots?: readonly string[]; graceMs?: number; dryRun?: boolean } = {},
+  ): Promise<{ keptReachable: number; keptRecent: number; removed: number; bytesFreed: number }> {
+    this.requireOpen();
+    const store = this.store;
+    if (!isGarbageStorage(store)) {
+      throw new BrightDbV2StorageError('This storage cannot list and delete blocks, so it cannot be garbage collected');
+    }
+    const graceMs = options.graceMs ?? 3_600_000;
+    return store.withWriteLock(async () => {
+      const roots = [await store.readHead(), ...(options.keepRoots ?? [])];
+      const reachable = await collectReachable(store, roots);
+      const keep = new Set<string>();
+      for (const digest of reachable) keep.add(await store.nameOf(digest));
+      const now = Date.now();
+      const result = { keptReachable: 0, keptRecent: 0, removed: 0, bytesFreed: 0 };
+      const doomed: string[] = [];
+      for (const block of await store.listBlocks()) {
+        if (keep.has(block.name)) {
+          result.keptReachable++;
+        } else if (now - block.modifiedMs < graceMs) {
+          result.keptRecent++;
+        } else {
+          result.removed++;
+          result.bytesFreed += block.bytes;
+          doomed.push(block.name);
+        }
+      }
+      if (!options.dryRun) await store.deleteBlocks(doomed);
+      return result;
+    });
   }
 
   /** Prevent new operations on this handle. Operations already started may finish. */

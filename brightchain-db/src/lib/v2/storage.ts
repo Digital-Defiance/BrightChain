@@ -30,6 +30,25 @@ export interface BrightDbV2DiskWriter {
 }
 
 /**
+ * Optional contract for storages that can enumerate and delete their blocks, so
+ * `collectGarbage` works on them. Blocks are listed by their stored name: the
+ * digest, or a keyed name when the storage encrypts (see `nameOf`).
+ */
+export interface BrightDbV2GarbageStorage {
+  /** Every stored block with its size and the time it was written (0 when unknown). */
+  listBlocks(): Promise<Array<{ name: string; bytes: number; modifiedMs: number }>>;
+  /** The stored name of a block with this logical digest. */
+  nameOf(digest: string): Promise<string>;
+  /** Delete blocks by stored name. Call only inside `withWriteLock`. */
+  deleteBlocks(names: string[]): Promise<void>;
+}
+
+export function isGarbageStorage(storage: unknown): storage is BrightDbV2GarbageStorage {
+  const s = storage as Partial<BrightDbV2GarbageStorage>;
+  return typeof s?.listBlocks === 'function' && typeof s.nameOf === 'function' && typeof s.deleteBlocks === 'function';
+}
+
+/**
  * What a BrightDB v2 database needs from the storage beneath it: blocks named
  * by their plaintext digest, one published head, and exclusive writes. The disk
  * store is the first implementation. Others, such as a BrightChain pool, can

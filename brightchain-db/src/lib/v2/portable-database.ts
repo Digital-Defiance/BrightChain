@@ -192,7 +192,7 @@ export class PortableBrightDb extends PortableBrightDbCore {
     this.requireOpen();
     const store = this.store;
     if (!(store instanceof BrightDbV2DiskStore)) {
-      throw new Error('Garbage collection needs a directory store');
+      return super.collectGarbage(options); // any storage that can list and delete blocks
     }
     const graceMs = options.graceMs ?? 3_600_000;
     return store.withWriteLock(async () => {

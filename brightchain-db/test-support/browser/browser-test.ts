@@ -9,6 +9,7 @@ import {
   HttpBlockSource,
   IndexedDbV2Storage,
   MemoryV2Storage,
+  forkBrowserDb,
   joinFromSource,
   openBrowserDb,
 } from '../../src/browser';
@@ -131,6 +132,109 @@ async function main(): Promise<void> {
     assert((await db.root()) === mid, 'a failed batch moved the head');
     assert((await db.collection('atomic').findById('new1')) === null, 'a failed batch left a document');
     return { movedByFirst: before !== mid };
+  });
+
+  const rawBlocks = (dbName: string) =>
+    new Promise<Array<{ key: string; value: Uint8Array }>>((resolve, reject) => {
+      const open = indexedDB.open(`brightdb-v2:${dbName}`);
+      open.onerror = () => reject(open.error);
+      open.onsuccess = () => {
+        const out: Array<{ key: string; value: Uint8Array }> = [];
+        const cursor = open.result.transaction('blocks', 'readonly').objectStore('blocks').openCursor();
+        cursor.onsuccess = () => {
+          const at = cursor.result;
+          if (!at) {
+            open.result.close();
+            return resolve(out);
+          }
+          out.push({ key: String(at.key), value: at.value as Uint8Array });
+          at.continue();
+        };
+        cursor.onerror = () => reject(cursor.error);
+      };
+    });
+
+  await step('encrypted IndexedDB: round-trips, hides the data, refuses a missing or wrong key', async () => {
+    const encName = `${name}-enc`;
+    const key = crypto.getRandomValues(new Uint8Array(32));
+    const db = await openBrowserDb(encName, { encryption: { key } });
+    await db.collection('c').createIndex('by_n', ['n']);
+    await db.collection('c').insertMany(Array.from({ length: 50 }, (_, i) => ({ _id: `d${i}`, n: i, note: 'plainly-visible-marker' })));
+    const ref = await db.putAttachment(new Uint8Array(1_500_000).fill(9));
+    await db.collection('c').insertOne({ _id: 'file', n: -1, _files: { f: { ...ref } } });
+    // Nothing readable is stored: names are keyed hashes and no value contains the marker.
+    const raw = await rawBlocks(encName);
+    const marker = new TextEncoder().encode('plainly-visible-marker');
+    const contains = (hay: Uint8Array) => {
+      outer: for (let i = 0; i + marker.length <= hay.length; i++) {
+        for (let j = 0; j < marker.length; j++) if (hay[i + j] !== marker[j]) continue outer;
+        return true;
+      }
+      return false;
+    };
+    assert(raw.length > 5, 'no stored blocks');
+    assert(raw.every((b) => /^[0-9a-f]{128}$/u.test(b.key)), 'a stored name is not a keyed hash');
+    assert(!raw.some((b) => contains(b.value)), 'plaintext found in stored bytes');
+    // Reopen with the key: all data, the index and the attachment come back.
+    const again = await openBrowserDb(encName, { encryption: { key } });
+    assert((await again.collection('c').find({}).toArray()).length === 51, 'documents lost');
+    assert((await again.collection('c').findByIndex('by_n', { equals: [7] })).length === 1, 'index lost');
+    assert((await again.getAttachment(ref)).length === 1_500_000, 'attachment lost');
+    // No key, a wrong key and a plain database opened with a key are all refused.
+    let refused = 0;
+    await openBrowserDb(encName).catch(() => refused++);
+    await openBrowserDb(encName, { encryption: { key: crypto.getRandomValues(new Uint8Array(32)) } }).catch(() => refused++);
+    await openBrowserDb(name, { encryption: { key } }).catch(() => refused++);
+    assert(refused === 3, `expected 3 refusals, got ${refused}`);
+    return { storedBlocks: raw.length, refused };
+  });
+
+  await step('garbage collection in IndexedDB removes dead blocks, honors the grace period, keeps live data', async () => {
+    const gcName = `${name}-gc`;
+    const db = await openBrowserDb(gcName);
+    await db.collection('c').insertMany(Array.from({ length: 100 }, (_, i) => ({ _id: `d${i}`, n: i })));
+    for (let i = 0; i < 10; i++) await db.collection('c').replaceById(`d${i}`, { _id: `d${i}`, n: 1000 + i });
+    await db.collection('c').deleteById('d99');
+    const before = (await rawBlocks(gcName)).length;
+    const recent = await db.collectGarbage(); // the default one-hour grace keeps what was just written
+    assert(recent.removed <= 1, `grace period not honored: removed ${recent.removed}`);
+    const dry = await db.collectGarbage({ graceMs: 0, dryRun: true });
+    assert(dry.removed > 10 && (await rawBlocks(gcName)).length === before, 'dry run changed something');
+    const real = await db.collectGarbage({ graceMs: 0 });
+    assert(real.removed === dry.removed, 'dry run and real run disagree');
+    const reopened = await openBrowserDb(gcName);
+    assert((await reopened.collection('c').find({}).toArray()).length === 99, 'live documents lost');
+    assert((await reopened.collection('c').findById('d3'))?.['n'] === 1003, 'live update lost');
+    return { before, after: (await rawBlocks(gcName)).length, removed: real.removed };
+  });
+
+  await step('garbage collection also works on an encrypted database', async () => {
+    const key = crypto.getRandomValues(new Uint8Array(32));
+    const encGc = `${name}-encgc`;
+    const db = await openBrowserDb(encGc, { encryption: { key } });
+    await db.collection('c').insertMany(Array.from({ length: 60 }, (_, i) => ({ _id: `d${i}`, n: i })));
+    for (let i = 0; i < 10; i++) await db.collection('c').replaceById(`d${i}`, { _id: `d${i}`, n: 500 + i });
+    const real = await db.collectGarbage({ graceMs: 0 });
+    assert(real.removed > 5, `nothing collected: ${JSON.stringify(real)}`);
+    const reopened = await openBrowserDb(encGc, { encryption: { key } });
+    assert((await reopened.collection('c').find({}).toArray()).length === 60, 'live documents lost');
+    return { removed: real.removed };
+  });
+
+  await step('fork into a new IndexedDB database, write on both sides, merge back (also into an encrypted copy)', async () => {
+    const original = await openBrowserDb(`${name}-orig`);
+    await original.collection('c').insertMany([{ _id: 'a', v: 1 }, { _id: 'b', v: 2 }]);
+    const copy = await forkBrowserDb(original, `${name}-copy`);
+    assert((await copy.root()) === (await original.root()), 'fork root differs');
+    await copy.collection('c').insertOne({ _id: 'from-copy', v: 3 });
+    await original.collection('c').insertOne({ _id: 'from-original', v: 4 });
+    await original.merge(copy.blockSource());
+    const ids = (await original.collection('c').find({}).toArray()).map((d) => d['_id']).sort();
+    assert(JSON.stringify(ids) === JSON.stringify(['a', 'b', 'from-copy', 'from-original']), `merged ids ${ids}`);
+    const key = crypto.getRandomValues(new Uint8Array(32));
+    const sealed = await forkBrowserDb(original, `${name}-sealed`, { encryption: { key } });
+    assert((await sealed.collection('c').find({}).toArray()).length === 4, 'encrypted fork lost documents');
+    return { ids };
   });
 
   const url = params.get('url');
