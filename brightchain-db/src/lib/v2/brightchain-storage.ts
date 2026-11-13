@@ -21,7 +21,7 @@ import {
   BrightDbV2StorageError,
   type BrightDbV2DiskWriter,
   type BrightDbV2Storage,
-} from './disk-store';
+} from './storage';
 
 /** The head registry collection that holds a database's current root in a pool. Scoped by pool, because the registry is not. */
 export const V2_HEAD_COLLECTION = '__brightdb_v2_head__';

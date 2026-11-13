@@ -1,7 +1,8 @@
 import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { HttpBlockSource, serveBlocks, type BlockServer } from './block-source';
+import { HttpBlockSource } from './block-source';
+import { serveBlocks, type BlockServer } from './block-server';
 import { BrightDbV2MissingBlockError } from './disk-store';
 import { PortableBrightDb } from './portable-database';
 

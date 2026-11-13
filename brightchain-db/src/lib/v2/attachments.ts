@@ -11,7 +11,7 @@ import {
   MAX_BLOB_CHUNKS,
   type Digest,
 } from './codec';
-import type { BrightDbV2DiskWriter, BrightDbV2Storage } from './disk-store';
+import type { BrightDbV2DiskWriter, BrightDbV2Storage } from './storage';
 
 const DIGEST = /^[0-9a-f]{128}$/u;
 

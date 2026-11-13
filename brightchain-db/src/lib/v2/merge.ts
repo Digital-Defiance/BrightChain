@@ -15,7 +15,7 @@ import {
   type V2Record,
 } from './codec';
 import type { BrightDbV2BlockSource } from './block-source';
-import type { BrightDbV2DiskWriter, BrightDbV2Storage } from './disk-store';
+import type { BrightDbV2DiskWriter, BrightDbV2Storage } from './storage';
 import { extractIndexKeys } from './index-key';
 import { V2IndexTree } from './index-tree';
 import { V2Tree, type V2TreeBlockStore } from './tree';

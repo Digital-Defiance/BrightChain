@@ -1,6 +1,7 @@
 import { BlockSize, PooledMemoryBlockStore } from '@brightchain/brightchain-lib';
 import { InMemoryHeadRegistry } from '../headRegistry';
-import { HttpBlockSource, serveBlocks } from './block-source';
+import { serveBlocks } from './block-server';
+import { HttpBlockSource } from './block-source';
 import { BrightChainV2Storage, headCollection } from './brightchain-storage';
 import { BrightDbV2StorageError } from './disk-store';
 import { BrightDbV2AesCipher } from './encryption';

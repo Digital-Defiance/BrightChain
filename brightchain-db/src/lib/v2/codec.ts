@@ -1,4 +1,4 @@
-import { createHash } from 'node:crypto';
+import { sha3_512 } from '@noble/hashes/sha3';
 
 export const MAX_U64 = (1n << 64n) - 1n;
 export const MAX_METADATA_BYTES = 4096;
@@ -135,8 +135,18 @@ export class V2CodecError extends Error {
   }
 }
 
+let sha3: (bytes: Uint8Array) => Uint8Array = sha3_512;
+
+/**
+ * Replace the SHA3-512 implementation. The default is pure JavaScript and runs
+ * in browsers. Node entry points install the native one (see node-hash.ts).
+ */
+export function setSha3Implementation(implementation: (bytes: Uint8Array) => Uint8Array): void {
+  sha3 = implementation;
+}
+
 export function digestPayload(bytes: Uint8Array): Digest {
-  return createHash('sha3-512').update(bytes).digest('hex');
+  return Buffer.from(sha3(bytes)).toString('hex');
 }
 
 /** Encode raw key bytes, without the length prefix used inside a page. */

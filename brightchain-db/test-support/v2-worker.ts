@@ -5,7 +5,8 @@
  */
 import { readFileSync } from 'node:fs';
 import { digestPayload } from '../src/lib/v2/codec';
-import { HttpBlockSource, serveBlocks } from '../src/lib/v2/block-source';
+import { serveBlocks } from '../src/lib/v2/block-server';
+import { HttpBlockSource } from '../src/lib/v2/block-source';
 import { PortableBrightDb } from '../src/lib/v2/portable-database';
 
 async function main(): Promise<void> {
