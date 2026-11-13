@@ -502,6 +502,48 @@ describe('BrightDB v2 directory handoff and crash recovery', () => {
     }
   });
 
+  it('recovers whole batches from a packed store after SIGKILL of a C++ writer and a TypeScript writer', async () => {
+    const path = join(dir, 'db');
+    const env = { ...process.env, BRIGHTDB_PACKED: '1' };
+    await run(['write', path, 'seed', 'seed', '1'], env);
+    for (const runtime of ['cpp', 'ts', 'cpp', 'ts'] as const) {
+      const child =
+        runtime === 'cpp'
+          ? spawn(CPP_TOOL as string, ['loop', path, 'docs', '20'], { stdio: ['ignore', 'pipe', 'inherit'], env })
+          : spawn(process.execPath, ['--import', 'tsx', WORKER, 'loop', path, 'docs', '20'], {
+              stdio: ['ignore', 'pipe', 'inherit'],
+              env,
+            });
+      await new Promise<void>((ready) => child.stdout.once('data', () => ready()));
+      await new Promise((r) => setTimeout(r, 300));
+      child.kill('SIGKILL');
+      await new Promise((r) => child.once('close', r));
+
+      // Either runtime reads whole batches only: no half-written pack, no partial batch.
+      for (const reader of [(a: string[]) => run(a, env), (a: string[]) => runCpp(a, env)]) {
+        const dump = JSON.parse(await reader(['dump', path])) as Record<string, Array<{ batch: number }>>;
+        const perBatch = new Map<number, number>();
+        for (const d of dump['docs'] ?? []) perBatch.set(d.batch, (perBatch.get(d.batch) ?? 0) + 1);
+        for (const [batch, count] of perBatch) expect({ batch, count }).toEqual({ batch, count: 20 });
+        expect([...perBatch.keys()].sort((a, b) => a - b)).toEqual(Array.from({ length: perBatch.size }, (_, i) => i));
+      }
+      // Everything in packs/ is a complete pack or a hidden temporary file that is never read.
+      for (const name of await readdir(join(path, 'packs'))) {
+        expect(name.endsWith('.pack') || (name.startsWith('.') && name.endsWith('.tmp'))).toBe(true);
+      }
+      // Garbage collection sweeps what the crash left behind and keeps every committed batch.
+      const before = normalize(JSON.parse(await run(['dump', path], env)));
+      await runCpp(['gc', path, '0'], env);
+      await run(['gc', path, '0'], env);
+      expect((await readdir(join(path, 'packs'))).filter((n) => n.startsWith('.'))).toEqual([]);
+      expect(normalize(JSON.parse(await runCpp(['dump', path], env)))).toEqual(before);
+      // The write lock is free for the next writer, which starts a fresh collection.
+      const db = await PortableBrightDb.open({ path });
+      await db.writeBatch([{ type: 'dropCollection', collection: 'docs' }]);
+      db.close();
+    }
+  });
+
   it('recovers a complete committed state after SIGKILL during continuous writes', async () => {
     const path = join(dir, 'db');
     await run(['write', path, 'seed', 'seed', '1']);

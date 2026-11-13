@@ -1,4 +1,4 @@
-import { appendFile, mkdtemp, readdir, readFile, rm, truncate, writeFile } from 'node:fs/promises';
+import { appendFile, copyFile, mkdtemp, open, readdir, readFile, rm, truncate, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { BrightDbV2StorageError } from './storage';
@@ -167,6 +167,39 @@ describe('BrightDB v2 packed extension', () => {
       PortableBrightDb.open({ path }).then((d) => d.collection('c').find({}).toArray()),
     ).rejects.toThrow(BrightDbV2StorageError);
     await appendFile(join(path, 'packs', victim), 'x');
+  });
+
+  it('survives a crash between writing a rewritten pack and removing the old one (duplicate blocks)', async () => {
+    const path = join(dir, 'db');
+    const db = await PortableBrightDb.open({ path, packed: true });
+    await db.collection('c').insertMany(docs(100));
+    const root = await db.root();
+    // Copy every pack under a new name: the state a crash leaves after a rewrite wrote the new pack but not yet removed the old.
+    for (const pack of await packsOf(path)) await copyFile(join(path, 'packs', pack), join(path, 'packs', `${'0'.repeat(31)}${pack.slice(0, 1)}.pack`));
+    const again = await PortableBrightDb.open({ path });
+    expect((await again.collection('c').find({}).toArray()).length).toBe(100);
+    expect(await again.root()).toBe(root);
+    expect((await again.compactPacks()).after).toBe(1);
+    expect((await again.collection('c').find({}).toArray()).length).toBe(100);
+    again.close();
+    db.close();
+  });
+
+  it('never returns wrong data: a flipped byte inside a pack is an error', async () => {
+    const path = join(dir, 'db');
+    const db = await PortableBrightDb.open({ path, packed: true });
+    await db.collection('c').insertMany(docs(30));
+    db.close();
+    const [victim] = await packsOf(path);
+    const handle = await open(join(path, 'packs', victim), 'r+');
+    const byte = Buffer.alloc(1);
+    await handle.read(byte, 0, 1, 40); // inside the first entry, past the 16-byte header
+    byte[0] ^= 0xff;
+    await handle.write(byte, 0, 1, 40);
+    await handle.close();
+    const reopened = await PortableBrightDb.open({ path });
+    await expect(reopened.collection('c').find({}).toArray()).rejects.toThrow(/digest mismatch|cannot be decrypted/u);
+    reopened.close();
   });
 
   it('keeps the packed setting through fork and clone', async () => {
