@@ -98,6 +98,8 @@
     "prettier:check": "prettier --check '**/*.{ts,tsx}'",
     "prettier:fix": "prettier --write '**/*.{ts,tsx}'",
     "codacy:upload": "./codacy-upload.sh",
+    "docker:build": "./scripts/docker/build.sh",
+    "docker:publish": "./scripts/docker/publish.sh",
     "aws:configure": "aws configure",
     "aws:credentials": "aws sts get-session-token --duration-seconds 43200",
     "aws:install": "./install-aws.sh",

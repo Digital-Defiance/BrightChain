@@ -11,9 +11,12 @@
 # Inbound email is received by Postfix and deposited into the mail drop.
 #
 # Build:
-#   docker build \
-#     --build-arg FONTAWESOME_NPM_AUTH_TOKEN=<token> \
-#     -t ghcr.io/digital-defiance/brightchain-node:latest .
+#   ./scripts/docker/build.sh [tag]
+#   export FONTAWESOME_NPM_AUTH_TOKEN=<token>
+#
+# Publish to Docker Hub (digitaldefiance/brightchain:<tag>):
+#   docker login
+#   ./scripts/docker/publish.sh [tag]
 #
 # Run:
 #   docker compose -f docker-compose.prod.yml up -d
