@@ -390,6 +390,48 @@ function normalize(dump: Dump): Dump {
     }
   });
 
+  it('takes turns on a packed store, collects garbage and compacts across runtimes', async () => {
+    const path = join(dir, 'db');
+    const env = { ...process.env, BRIGHTDB_PACKED: '1' };
+    const ts = (args: string[]) => run(args, env);
+    const cpp = (args: string[]) => runCpp(args, env);
+    const rootOf = async (runner: (a: string[]) => Promise<string>) =>
+      (JSON.parse(await runner(['root', path])) as { root: string }).root;
+    const packs = async () => (await readdir(join(path, 'packs'))).filter((n) => n.endsWith('.pack')).length;
+    const loose = async () => {
+      let n = 0;
+      for (const prefix of await readdir(join(path, 'blocks'))) n += (await readdir(join(path, 'blocks', prefix))).length;
+      return n;
+    };
+
+    await ts(['write', path, 'docs', 'a', '40']);
+    const looseAfterInit = await loose(); // only the initial root is loose
+    await cpp(['write', path, 'docs', 'b', '30']);
+    await ts(['delete', path, 'docs', 'a-1']);
+    await cpp(['delete', path, 'docs', 'b-1']);
+    await ts(['write', path, 'other', 'o', '5']);
+    expect(await loose()).toBe(looseAfterInit); // both runtimes wrote packs
+    expect(await packs()).toBeGreaterThanOrEqual(5);
+    expect(await readFile(join(path, 'PACKED'), 'utf8')).toBe('BrightDB packs 1\n');
+
+    // Each runtime reads the packs the other wrote and computes the same root.
+    expect(await rootOf(ts)).toBe(await rootOf(cpp));
+    expect(normalize(JSON.parse(await cpp(['dump', path])))).toEqual(normalize(JSON.parse(await ts(['dump', path]))));
+
+    // One runtime collects garbage in packs the other wrote, the other compacts, both still agree.
+    const gc = JSON.parse(await cpp(['gc', path, '0'])) as { removed: number };
+    expect(gc.removed).toBeGreaterThan(0);
+    expect(await rootOf(ts)).toBe(await rootOf(cpp));
+    expect(normalize(JSON.parse(await ts(['dump', path])))).toEqual(normalize(JSON.parse(await cpp(['dump', path]))));
+    expect(JSON.parse(await ts(['compact', path]))).toMatchObject({ after: 1 });
+    expect(await packs()).toBe(1);
+    expect(normalize(JSON.parse(await cpp(['dump', path])))).toEqual(normalize(JSON.parse(await ts(['dump', path]))));
+    expect(JSON.parse(await ts(['gc', path, '0'])).removed).toBe(0);
+    await cpp(['write', path, 'docs', 'c', '2']);
+    expect(await rootOf(ts)).toBe(await rootOf(cpp));
+    expect((JSON.parse(await ts(['dump', path])) as Dump)['docs'].map((d) => d._id)).toContain('c-1');
+  });
+
   it('writes with TypeScript first, then C++, then TypeScript', () => leg('ts'));
   it('writes with C++ first, then TypeScript, then C++', () => leg('cpp'));
 

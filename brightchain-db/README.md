@@ -113,6 +113,10 @@ import { createDbRouter } from '@brightchain/db';
 app.use('/api/db', createDbRouter(db));
 ```
 
+## Faster bulk loads: packed storage
+
+`PortableBrightDb.open({ path, packed: true })` (C++: `Database::enablePacks()`) writes each commit's new blocks into one pack file with one fsync, instead of one file and one fsync per block. A 3,000-document load goes from 15 s to 0.7 s, and a single update from about 58 ms to 26 ms. It adds a `PACKED` marker to the directory; existing loose blocks keep working, and `compactPacks()` merges many small packs into one. Garbage collection, re-sealing, fork, clone and merge all understand packs, and TypeScript and C++ read and write each other's packs. Software without pack support cannot find packed blocks, so turn it on only where every reader supports it. Format: section 5.1 of the storage format spec.
+
 ## In the browser, and React hooks
 
 `@brightchain/brightchain-db/browser` runs the v2 format in a page: `openBrowserDb(name)` stores blocks in IndexedDB (Web Locks serialise writers across tabs), `MemoryV2Storage` keeps everything in memory, and `joinFromSource` joins and merges a database served over HTTP (`serveBlocks` or the C++ `brightdb_v2_tool serve`, both with an optional CORS origin and a Bearer token). Verified in a real browser against both servers.

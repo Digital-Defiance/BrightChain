@@ -100,7 +100,7 @@ Install a block from a temporary file in the same directory after writing and sy
 
 ### 5.1 Packed extension (optional)
 
-A directory can opt in to packed writes. It then holds one extra marker file, `PACKED`, containing exactly `BrightDB packs 1\n`. (The name differs from the `packs/` directory in more than case, so it is safe on case-insensitive filesystems.) A packed writer collects the blocks a commit adds and installs them as one pack file under `packs/`, with one `fsync`, instead of one temporary file and `fsync` per block. Bulk loads are several times faster (3,000 documents: 15 s loose, 0.7 s packed in the TypeScript reference).
+A directory can opt in to packed writes. It then holds one extra marker file, `PACKED`, containing exactly `BrightDB packs 1\n`. (The name differs from the `packs/` directory in more than case, so it is safe on case-insensitive filesystems.) A packed writer collects the blocks a commit adds and installs them as one pack file under `packs/`, with one `fsync`, instead of one temporary file and `fsync` per block. Bulk loads are several times faster (3,000 documents: 15 s loose, 0.7 s packed in the TypeScript reference; the C++ port reads and writes the same packs).
 
 **Readers.** A block named by digest (or keyed name, when encrypted) lives either as a loose file `blocks/<hh>/<name>` or as an entry in a pack. An implementation that supports the extension resolves a name through packs and loose files alike, and verifies the digest as always. Software that does not know packs cannot find packed blocks and reports them missing; it never reads wrong data. Opt in only where every reader supports it. A directory may mix loose and packed blocks, and turning the extension on does not rewrite existing blocks.
 

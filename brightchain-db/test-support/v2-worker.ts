@@ -22,7 +22,8 @@ async function main(): Promise<void> {
   // BRIGHTDB_KEY (64 hex digits) opens an encrypted database.
   const hex = process.env['BRIGHTDB_KEY'];
   const encryption = hex ? { key: Buffer.from(hex, 'hex') } : undefined;
-  const db = await PortableBrightDb.open({ path, encryption });
+  // BRIGHTDB_PACKED=1 turns on the packed extension (spec section 5.1) for this directory.
+  const db = await PortableBrightDb.open({ path, encryption, packed: process.env['BRIGHTDB_PACKED'] === '1' });
   try {
     switch (command) {
       case 'write': {
@@ -127,6 +128,10 @@ async function main(): Promise<void> {
         const [collection, filter] = args;
         const docs = await db.collection(collection).find(JSON.parse(filter)).toArray();
         console.log(JSON.stringify(docs.map((d) => d['_id']).sort()));
+        break;
+      }
+      case 'compact': {
+        console.log(JSON.stringify(await db.compactPacks()));
         break;
       }
       case 'gc': {
