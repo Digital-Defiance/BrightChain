@@ -27,7 +27,11 @@ import express, { Express } from 'express';
 import http from 'http';
 import * as jwt from 'jsonwebtoken';
 import request from 'supertest';
-import { IBrightChainApplication } from '../../interfaces/application';
+import {
+  createMockAuthProvider,
+  createMockControllerApplication,
+} from '../../__tests__/helpers/controller-application.mock';
+import { IBrightChainControllerApplication } from '../../interfaces/application';
 import { EventNotificationSystem } from '../../services/eventNotificationSystem';
 import { MessagePassingService } from '../../services/messagePassingService';
 import { EmailController } from './emails';
@@ -135,66 +139,17 @@ function createMockMetadataStore() {
   };
 }
 
-function createMockApplication(): IBrightChainApplication {
-  return {
-    db: { connection: { readyState: 1 } },
-    environment: {
-      mongo: { useTransactions: false },
-      blockStorePath: '/tmp',
-      debug: false,
-      jwtSecret: JWT_SECRET,
-    },
-    constants: {},
-    ready: true,
-    services: {},
-    plugins: {},
-    authProvider: {
-      verifyToken: async (token: string) => {
-        try {
-          const decoded = jwt.verify(token, JWT_SECRET) as { memberId: string };
-          return { userId: decoded.memberId };
-        } catch {
-          return null;
-        }
-      },
-      findUserById: async (userId: string) => ({
-        id: userId,
-        accountStatus: 'Active',
-        email: 'test@example.com',
-        timezone: 'UTC',
-      }),
-      buildRequestUserDTO: async (userId: string) => ({
-        id: userId,
-        username: userId,
-        email: 'test@example.com',
-        roles: [],
-        rolePrivileges: {
-          admin: false,
-          member: true,
-          child: false,
-          system: false,
-        },
-        emailVerified: true,
-        timezone: 'UTC',
-        siteLanguage: 'en',
-        darkMode: false,
-        currency: 'USD',
-        directChallenge: false,
-      }),
-    },
-    getModel: () => {
-      throw new Error('not implemented');
-    },
-    getController: () => {
-      throw new Error('not implemented');
-    },
-    setController: () => {
-      /* noop */
-    },
-    start: async () => {
-      /* noop */
-    },
-  } as unknown as IBrightChainApplication;
+function createMockApplication(): IBrightChainControllerApplication {
+  return createMockControllerApplication({
+    authProvider: createMockAuthProvider((token) => {
+      try {
+        const decoded = jwt.verify(token, JWT_SECRET) as { memberId: string };
+        return decoded.memberId;
+      } catch {
+        return null;
+      }
+    }),
+  });
 }
 
 // ─── Test helpers ───────────────────────────────────────────────────────────

@@ -19,10 +19,11 @@ import {
   ApiErrorResponse,
   IStatusCodeResponse,
 } from '@digitaldefiance/node-express-suite';
+import { createMockControllerApplication } from '../../__tests__/helpers/controller-application.mock';
 import { AvailabilityService } from '../../availability/availabilityService';
 import { HeartbeatMonitor } from '../../availability/heartbeatMonitor';
 import { PoolDiscoveryService } from '../../availability/poolDiscoveryService';
-import { IBrightChainApplication } from '../../interfaces/application';
+import { IBrightChainControllerApplication } from '../../interfaces/application';
 import {
   INodeStatusApiResponse,
   IPeerListApiResponse,
@@ -55,25 +56,8 @@ function makeRequest(memberContext?: IMemberContext): TestRequest {
   return { memberContext };
 }
 
-function makeApplication(): IBrightChainApplication<GuidV4Buffer> {
-  return {
-    services: { get: jest.fn() },
-    db: {
-      connection: {
-        startSession: jest.fn(),
-      },
-    },
-    environment: {
-      mongo: { useTransactions: false },
-    },
-    constants: {},
-    plugins: { get: jest.fn() },
-    ready: true,
-    start: jest.fn(),
-    getModel: jest.fn(),
-    getController: jest.fn(),
-    setController: jest.fn(),
-  } as unknown as IBrightChainApplication<GuidV4Buffer>;
+function makeApplication(): IBrightChainControllerApplication<GuidV4Buffer> {
+  return createMockControllerApplication<GuidV4Buffer>();
 }
 
 function makeConfig(

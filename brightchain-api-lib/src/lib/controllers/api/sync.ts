@@ -25,7 +25,7 @@ import {
   IReplicateBlockRequest,
   ISyncRequestBody,
 } from '../../interfaces';
-import { IBrightChainApplication } from '../../interfaces/application';
+import { IBrightChainControllerApplication } from '../../interfaces/application';
 import {
   IBlockDataResponse,
   IBlockLocationsResponse,
@@ -128,13 +128,19 @@ interface SyncHandlers extends TypedHandlers {
  */
 export class SyncController<
   TID extends PlatformID = DefaultBackendIdType,
-> extends BaseController<TID, SyncApiResponse, SyncHandlers, CoreLanguageCode> {
+> extends BaseController<
+  TID,
+  SyncApiResponse,
+  SyncHandlers,
+  CoreLanguageCode,
+  IBrightChainControllerApplication<TID>
+> {
   private availabilityService: IAvailabilityService | null = null;
   private reconciliationService: IReconciliationService | null = null;
   private eventSystem: EventNotificationSystem | null = null;
   private blockStore: IBlockStore | null = null;
 
-  constructor(application: IBrightChainApplication<TID>) {
+  constructor(application: IBrightChainControllerApplication<TID>) {
     super(application);
   }
 

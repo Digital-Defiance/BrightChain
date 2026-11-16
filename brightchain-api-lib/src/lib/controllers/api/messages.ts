@@ -19,7 +19,7 @@ import {
   QueryMessagesRequest,
   SendMessageRequest,
 } from '../../interfaces';
-import { IBrightChainApplication } from '../../interfaces/application';
+import { IBrightChainControllerApplication } from '../../interfaces/application';
 import { DeleteMessageRequest } from '../../interfaces/requests/deleteMessagesRequest';
 import { MessagePassingService } from '../../services/messagePassingService';
 import { DefaultBackendIdType } from '../../shared-types';
@@ -101,11 +101,12 @@ export class MessagesController<
   TID,
   MessageApiResponse,
   MessagesHandlers,
-  CoreLanguageCode
+  CoreLanguageCode,
+  IBrightChainControllerApplication<TID>
 > {
   private messageService: MessagePassingService | null = null;
 
-  constructor(application: IBrightChainApplication<TID>) {
+  constructor(application: IBrightChainControllerApplication<TID>) {
     super(application);
   }
 

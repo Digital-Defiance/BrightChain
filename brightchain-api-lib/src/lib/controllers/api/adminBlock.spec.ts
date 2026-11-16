@@ -12,7 +12,8 @@ import {
   ApiErrorResponse,
   IApiMessageResponse,
 } from '@digitaldefiance/node-express-suite';
-import { IBrightChainApplication } from '../../interfaces';
+import { createMockControllerApplication } from '../../__tests__/helpers/controller-application.mock';
+import { IBrightChainControllerApplication } from '../../interfaces';
 import { AdminBlockController } from './adminBlock';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -164,32 +165,14 @@ function createMockDiscoveryProtocol() {
 function createMockApplication(
   blockStore: ReturnType<typeof createMockPooledBlockStore>,
   discoveryProtocol?: ReturnType<typeof createMockDiscoveryProtocol>,
-): IBrightChainApplication {
+): IBrightChainControllerApplication {
   const services = new Map<string, unknown>();
   services.set('blockStore', blockStore);
   if (discoveryProtocol) {
     services.set('discoveryProtocol', discoveryProtocol);
   }
 
-  return {
-    db: { connection: { readyState: 1 } },
-    environment: { mongo: { useTransactions: false }, debug: false },
-    constants: {},
-    ready: true,
-    services: {
-      get: (name: string) => services.get(name),
-      has: (name: string) => services.has(name),
-    },
-    plugins: {},
-    getModel: () => {
-      throw new Error('not implemented');
-    },
-    getController: () => {
-      throw new Error('not implemented');
-    },
-    setController: () => {},
-    start: async () => {},
-  } as unknown as IBrightChainApplication;
+  return createMockControllerApplication({ services });
 }
 
 function createController(blocks?: MockBlock[], withDiscovery = true) {

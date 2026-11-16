@@ -28,6 +28,9 @@ import type {
   IAuthenticatedUser,
   IAuthenticationProvider,
   ICryptoAuthResult,
+  IEnvironmentPort,
+  IJwtServiceEnvironment,
+  IServicesPort,
 } from '@digitaldefiance/node-express-suite';
 import type {
   ICombinedRolePrivileges,
@@ -38,7 +41,6 @@ import type {
 import * as bcrypt from 'bcrypt';
 import { verify } from 'jsonwebtoken';
 import { SchemaCollection } from '../enumerations/schema-collection';
-import { IBrightChainApplication } from '../interfaces';
 import type { ITokenPayload } from '../interfaces/token-payload';
 
 // ── Helpers ──────────────────────────────────────────────────────────
@@ -103,7 +105,10 @@ export class BrightChainAuthenticationProvider<
   TLanguage extends string = string,
 > implements IAuthenticationProvider<TID, TLanguage>
 {
-  constructor(private readonly application: IBrightChainApplication<TID>) {}
+  constructor(
+    private readonly application: IServicesPort &
+      IEnvironmentPort<IJwtServiceEnvironment>,
+  ) {}
 
   /** Resolve MemberStore from the service container. */
   private getMemberStore(): MemberStore<TID> {

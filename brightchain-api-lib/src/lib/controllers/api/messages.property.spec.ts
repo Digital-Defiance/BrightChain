@@ -30,37 +30,13 @@ import {
   ReplicationStatus,
 } from '@brightchain/brightchain-lib';
 import * as fc from 'fast-check';
-import { IBrightChainApplication } from '../../interfaces';
+import { createMockControllerApplication } from '../../__tests__/helpers/controller-application.mock';
 import { MessagePassingService } from '../../services/messagePassingService';
 import { MessagesController } from './messages';
 
 // Mock application for testing
 const createMockApplication = () => {
-  return {
-    db: {
-      connection: {
-        readyState: 1,
-      },
-    },
-    environment: {
-      mongo: {
-        useTransactions: false,
-      },
-      debug: false,
-    },
-    constants: {},
-    ready: true,
-    services: new Map(),
-    plugins: {},
-    getModel: () => {
-      throw new Error('not implemented');
-    },
-    getController: () => {
-      throw new Error('not implemented');
-    },
-    setController: () => {},
-    start: async () => {},
-  } as unknown as IBrightChainApplication;
+  return createMockControllerApplication();
 };
 
 // Type for accessing private handlers

@@ -12,7 +12,7 @@ import { PlatformID } from '@digitaldefiance/node-ecies-lib';
 import { RouteConfig } from '@digitaldefiance/node-express-suite';
 import { Request } from 'express';
 import { body, query } from 'express-validator';
-import { IBrightChainApplication } from '../../interfaces';
+import { IBrightChainControllerApplication } from '../../interfaces';
 import { DefaultBackendIdType } from '../../shared-types';
 import { BaseController } from '../base';
 
@@ -115,10 +115,16 @@ function isStoreError(error: unknown): error is StoreError {
  */
 export class CBLController<
   TID extends PlatformID = DefaultBackendIdType,
-> extends BaseController<TID, any, CBLHandlers, CoreLanguageCode> {
+> extends BaseController<
+  TID,
+  any,
+  CBLHandlers,
+  CoreLanguageCode,
+  IBrightChainControllerApplication<TID>
+> {
   private readonly blockStore: IBlockStore;
 
-  constructor(application: IBrightChainApplication<TID>) {
+  constructor(application: IBrightChainControllerApplication<TID>) {
     super(application);
 
     const registeredStore = this.application.services.get('blockStore') as

@@ -20,7 +20,8 @@ import {
   IApiMessageResponse,
 } from '@digitaldefiance/node-express-suite';
 import * as fc from 'fast-check';
-import { IBrightChainApplication } from '../../../interfaces';
+import { createMockControllerApplication } from '../../../__tests__/helpers/controller-application.mock';
+import { IBrightChainControllerApplication } from '../../../interfaces';
 import { HealthcareRoleController } from './healthcareRoleController';
 import { InvitationController } from './invitationController';
 import { OrganizationController } from './organizationController';
@@ -252,27 +253,13 @@ export function createInMemoryDb() {
 
 // ─── Application & Controller Factories ──────────────────────────────────────
 
-/** Creates a mock IBrightChainApplication wired to the given in-memory DB */
-export function createMockApplication(db: InMemoryDb): IBrightChainApplication {
-  return {
-    db: { connection: { readyState: 1 } },
-    environment: { mongo: { useTransactions: false }, debug: false },
-    constants: {},
-    ready: true,
-    services: {
-      has: (name: string) => name === 'db',
-      get: (name: string) => (name === 'db' ? db : undefined),
-    },
-    plugins: {},
-    getModel: () => {
-      throw new Error('not implemented');
-    },
-    getController: () => {
-      throw new Error('not implemented');
-    },
-    setController: () => {},
-    start: async () => {},
-  } as unknown as IBrightChainApplication;
+/** Creates a mock IBrightChainControllerApplication wired to the given in-memory DB */
+export function createMockApplication(
+  db: InMemoryDb,
+): IBrightChainControllerApplication {
+  return createMockControllerApplication({
+    services: new Map<string, unknown>([['db', db]]),
+  });
 }
 
 /**

@@ -33,7 +33,7 @@ import {
   TypedHandlers,
   routeConfig,
 } from '@digitaldefiance/node-express-suite';
-import { IBrightChainApplication } from '../../interfaces/application';
+import { IBrightChainControllerApplication } from '../../interfaces/application';
 import { DefaultBackendIdType } from '../../shared-types';
 import {
   deleteConversationMessageValidation,
@@ -113,11 +113,12 @@ export class DirectMessageController<
   TID,
   ConversationApiResponse,
   DirectMessageHandlers,
-  CoreLanguageCode
+  CoreLanguageCode,
+  IBrightChainControllerApplication<TID>
 > {
   private conversationService: ConversationService | null = null;
 
-  constructor(application: IBrightChainApplication<TID>) {
+  constructor(application: IBrightChainControllerApplication<TID>) {
     super(application);
   }
 

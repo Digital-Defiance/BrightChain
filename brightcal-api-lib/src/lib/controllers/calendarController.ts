@@ -21,7 +21,7 @@ import {
 } from '@brightchain/brightcal-lib';
 import {
   BaseController,
-  type IBrightChainApplication,
+  type IBrightChainControllerApplication,
   forbiddenError,
   handleError,
   notFoundError,
@@ -200,11 +200,12 @@ export class CalendarController<
   TID,
   CalendarApiResponse,
   CalendarHandlers,
-  CoreLanguageCode
+  CoreLanguageCode,
+  IBrightChainControllerApplication<TID>
 > {
   private calendarService: ICalendarEngineService | null = null;
 
-  constructor(application: IBrightChainApplication<TID>) {
+  constructor(application: IBrightChainControllerApplication<TID>) {
     super(application);
   }
 

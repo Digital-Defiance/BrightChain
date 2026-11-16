@@ -1,5 +1,9 @@
 import { PlatformID } from '@digitaldefiance/node-ecies-lib';
-import { IApplication } from '@digitaldefiance/node-express-suite';
+import {
+  IApplication,
+  IControllerApplication,
+  IServicesPort,
+} from '@digitaldefiance/node-express-suite';
 import { Environment } from '../environment';
 import { DefaultBackendIdType } from '../types/backend-id';
 
@@ -44,3 +48,13 @@ export interface IBrightChainApplication<
    */
   reseedDevStore(): Promise<unknown>;
 }
+
+/**
+ * The application members BrightChain controllers need when they only read
+ * the service container: `constants`, `database`, `authProvider` and
+ * `services`. A plain object literal can satisfy this type, so plugins and
+ * tests can build one without a cast.
+ */
+export type IBrightChainControllerApplication<
+  TID extends PlatformID = DefaultBackendIdType,
+> = IControllerApplication<TID> & IServicesPort;

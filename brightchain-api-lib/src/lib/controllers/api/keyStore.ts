@@ -35,7 +35,7 @@ import {
   routeConfig,
   TypedHandlers,
 } from '@digitaldefiance/node-express-suite';
-import { IBrightChainApplication } from '../../interfaces/application';
+import { IBrightChainControllerApplication } from '../../interfaces/application';
 import { DefaultBackendIdType } from '../../shared-types';
 import {
   handleError,
@@ -76,14 +76,15 @@ export class KeyStoreController<
   TID,
   KeyStoreApiResponse,
   KeyStoreHandlers,
-  CoreLanguageCode
+  CoreLanguageCode,
+  IBrightChainControllerApplication<TID>
 > {
   private keyStore: IKeyStore<string> | null = null;
   private gpgKeyManager: GpgKeyManager | null = null;
   private smimeCertificateManager: SmimeCertificateManager | null = null;
   private keyserverUrl = 'https://keys.openpgp.org';
 
-  constructor(application: IBrightChainApplication<TID>) {
+  constructor(application: IBrightChainControllerApplication<TID>) {
     super(application);
   }
 

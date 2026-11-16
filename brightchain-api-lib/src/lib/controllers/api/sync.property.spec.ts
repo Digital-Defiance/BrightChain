@@ -35,7 +35,7 @@ import {
 } from '@brightchain/brightchain-lib';
 import { ApiErrorResponse } from '@digitaldefiance/node-express-suite';
 import * as fc from 'fast-check';
-import { IBrightChainApplication } from '../../interfaces';
+import { createMockControllerApplication } from '../../__tests__/helpers/controller-application.mock';
 import {
   IBlockLocationsResponse,
   IReconcileApiResponse,
@@ -46,35 +46,7 @@ import { SyncController } from './sync';
 
 // Mock application for testing
 const createMockApplication = () => {
-  const mockServices = {
-    get: () => undefined,
-  };
-
-  return {
-    db: {
-      connection: {
-        readyState: 1,
-      },
-    },
-    environment: {
-      mongo: {
-        useTransactions: false,
-      },
-      debug: false,
-    },
-    constants: {},
-    ready: true,
-    services: mockServices,
-    plugins: {},
-    getModel: () => {
-      throw new Error('not implemented');
-    },
-    getController: () => {
-      throw new Error('not implemented');
-    },
-    setController: () => {},
-    start: async () => {},
-  } as unknown as IBrightChainApplication;
+  return createMockControllerApplication();
 };
 
 // Mock AvailabilityService with configurable block locations

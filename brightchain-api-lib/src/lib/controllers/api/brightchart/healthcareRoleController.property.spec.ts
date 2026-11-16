@@ -33,7 +33,8 @@ import {
   IApiMessageResponse,
 } from '@digitaldefiance/node-express-suite';
 import * as fc from 'fast-check';
-import { IBrightChainApplication } from '../../../interfaces';
+import { createMockControllerApplication } from '../../../__tests__/helpers/controller-application.mock';
+import { IBrightChainControllerApplication } from '../../../interfaces';
 import { HealthcareRoleController } from './healthcareRoleController';
 import { OrganizationController } from './organizationController';
 
@@ -258,26 +259,10 @@ function createInMemoryDb() {
 
 function createMockApplication(
   mockDb: ReturnType<typeof createInMemoryDb>,
-): IBrightChainApplication {
-  return {
-    db: { connection: { readyState: 1 } },
-    environment: { mongo: { useTransactions: false }, debug: false },
-    constants: {},
-    ready: true,
-    services: {
-      has: (name: string) => name === 'db',
-      get: (name: string) => (name === 'db' ? mockDb : undefined),
-    },
-    plugins: {},
-    getModel: () => {
-      throw new Error('not implemented');
-    },
-    getController: () => {
-      throw new Error('not implemented');
-    },
-    setController: () => {},
-    start: async () => {},
-  } as unknown as IBrightChainApplication;
+): IBrightChainControllerApplication {
+  return createMockControllerApplication({
+    services: new Map<string, unknown>([['db', mockDb]]),
+  });
 }
 
 function createTestControllers(db?: ReturnType<typeof createInMemoryDb>) {

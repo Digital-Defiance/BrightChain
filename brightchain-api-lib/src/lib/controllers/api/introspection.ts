@@ -35,7 +35,7 @@ import {
 import { AvailabilityService } from '../../availability/availabilityService';
 import { HeartbeatMonitor } from '../../availability/heartbeatMonitor';
 import { PoolDiscoveryService } from '../../availability/poolDiscoveryService';
-import { IBrightChainApplication } from '../../interfaces/application';
+import { IBrightChainControllerApplication } from '../../interfaces/application';
 import {
   IBlockStoreStatsApiResponse,
   IEnergyAccountApiResponse,
@@ -122,13 +122,14 @@ export class IntrospectionController<
   TID,
   IntrospectionApiResponse,
   IntrospectionHandlers,
-  CoreLanguageCode
+  CoreLanguageCode,
+  IBrightChainControllerApplication<TID>
 > {
   private config: IntrospectionControllerConfig;
   private readonly startTime: Date;
 
   constructor(
-    application: IBrightChainApplication<TID>,
+    application: IBrightChainControllerApplication<TID>,
     config: IntrospectionControllerConfig,
   ) {
     super(application);

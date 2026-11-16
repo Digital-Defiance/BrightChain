@@ -13,12 +13,15 @@
  * @see Requirements 11.1, 11.2, 11.3, 11.4, 11.5, 13.1, 13.2
  */
 
-import type { IBrightChainApplication } from '@brightchain/brightchain-api-lib';
+import {
+  Constants,
+  type IBrightChainApplication,
+  type IBrightChainControllerApplication,
+} from '@brightchain/brightchain-api-lib';
 import type {
   IAppSubsystemPlugin,
   ISubsystemContext,
 } from '@brightchain/brightchain-lib';
-import type { ServiceContainer } from '@digitaldefiance/node-express-suite';
 import type { Router } from 'express';
 import { HolidayCatalogController } from '../controllers/holidayCatalogController.js';
 import { createCalendarRouter } from '../router/calendarRouter.js';
@@ -35,38 +38,31 @@ interface IApiRouterHandle {
 /**
  * The application members the calendar code reads at runtime: the calendar
  * controllers, brightchain-api-lib's BaseController (`services`) and the
- * upstream BaseController and auth middlewares (`environment`,
- * `authProvider`, `database`). `constants` is also read upstream, but only on
- * error paths, and the shim has never provided it (see below).
+ * upstream BaseController and auth middlewares (`constants`, `database`,
+ * `authProvider`). The compiler checks the shim against this type.
  */
-type IAppShimCore = Pick<
-  IBrightChainApplication,
-  'environment' | 'services' | 'authProvider' | 'database'
->;
+type IAppShimCore = IBrightChainControllerApplication;
 type IAppShimMembers = IAppShimCore & {
+  environment: ISubsystemContext['environment'];
   expressApp: ISubsystemContext['expressApp'];
   db: ISubsystemContext['brightDb'];
   getModel: ISubsystemContext['getModel'];
 };
-
 export class BrightCalSubsystemPlugin implements IAppSubsystemPlugin {
   public readonly name = 'brightcal';
   public readonly isOptional = true;
 
   public async initialize(context: ISubsystemContext): Promise<void> {
-    // createCalendarRouter and HolidayCatalogController expect an
-    // IBrightChainApplication (the full App instance). Build a minimal
-    // shim from the ISubsystemContext so the plugin doesn't need a
-    // compile-time dependency on brightchain-api-lib's App class.
+    // createCalendarRouter and the calendar controllers need only
+    // IBrightChainControllerApplication (constants, database, authProvider,
+    // services). Build that from the ISubsystemContext so the plugin doesn't
+    // need the full App class.
 
     const apiRouterHandle = context.apiRouter as IApiRouterHandle | null;
     const shimMembers: IAppShimMembers = {
       expressApp: context.expressApp,
       environment: context.environment,
-      // ISubsystemContext declares the container through IServiceContainer,
-      // which has the same shape as the ServiceContainer class the
-      // application exposes. This is an assertion, not a compiler check.
-      services: context.services as ServiceContainer,
+      services: context.services,
       db: context.brightDb,
       getModel: context.getModel,
       // The auth provider lives on the apiRouter's application reference.
@@ -77,28 +73,17 @@ export class BrightCalSubsystemPlugin implements IAppSubsystemPlugin {
       // No database adapter is exposed to plugins, so controller handlers run
       // without a transaction, as they always have with this shim.
       database: undefined,
+      // Without constants, upstream BaseController throws "Constants not
+      // initialized" on error paths. Use the same object App uses.
+      constants: Constants,
     };
-    // What the compiler checks, and what it does not:
-    // - `authProvider` and `database` are checked against
-    //   IBrightChainApplication through IAppShimCore.
-    // - `environment` comes from ISubsystemContext, which declares it as
-    //   `any`, so its check is nominal only.
-    // - `services` is asserted from IServiceContainer to the ServiceContainer
-    //   class above. The class has private fields, so no structural value can
-    //   satisfy it without an assertion.
-    // - `expressApp`, `db` and `getModel` are typed from ISubsystemContext and
-    //   are not part of IBrightChainApplication.
-    // - Every other member (`constants`, `ready`, `plugins`, `start`,
-    //   `getController`, `setController`, `getNodeId`, `reseedDevStore`) is
-    //   absent at runtime.
-    // The downcast below is an assertion. The controllers extend
-    // brightchain-api-lib's BaseController, whose upstream base class requires
-    // the full IApplication (including the private-field PluginManager and
-    // ServiceContainer classes), so a narrower port cannot be passed through
-    // without changing @digitaldefiance/node-express-suite.
-    const checkedShim: IAppShimCore = shimMembers;
-    const appShim = checkedShim as IBrightChainApplication;
-
+    // The compiler checks `services`, `authProvider`, `database` and
+    // `constants` against IBrightChainControllerApplication. `environment`
+    // comes from ISubsystemContext, which declares it as `any`; `expressApp`,
+    // `db` and `getModel` are typed from ISubsystemContext and are not part
+    // of the port. Every other IBrightChainApplication member is absent at
+    // runtime, and the controllers do not read them.
+    const appShim: IBrightChainControllerApplication = shimMembers;
     const calendarResult = createCalendarRouter(appShim, context.brightDb);
 
     // Mount calendar controllers on the API router (not expressApp) so

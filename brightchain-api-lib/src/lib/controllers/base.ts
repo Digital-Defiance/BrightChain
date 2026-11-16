@@ -3,21 +3,20 @@ import {
   ApiResponse,
   BaseController as UpstreamBaseController,
 } from '@digitaldefiance/node-express-suite';
-import { IBrightChainApplication } from '../interfaces/application';
+import {
+  IBrightChainApplication,
+  IBrightChainControllerApplication,
+} from '../interfaces/application';
 
 export abstract class BaseController<
   TID extends PlatformID,
   T extends ApiResponse,
   THandler extends object,
   TLanguage extends string,
-> extends UpstreamBaseController<
-  T,
-  THandler,
-  TLanguage,
-  TID,
-  IBrightChainApplication<TID>
-> {
-  public constructor(application: IBrightChainApplication<TID>) {
+  TApplication extends
+    IBrightChainControllerApplication<TID> = IBrightChainApplication<TID>,
+> extends UpstreamBaseController<T, THandler, TLanguage, TID, TApplication> {
+  public constructor(application: TApplication) {
     super(application);
   }
 

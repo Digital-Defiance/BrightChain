@@ -54,7 +54,7 @@ import {
   TypedHandlers,
   routeConfig,
 } from '@digitaldefiance/node-express-suite';
-import { IBrightChainApplication } from '../../interfaces/application';
+import { IBrightChainControllerApplication } from '../../interfaces/application';
 import { DefaultBackendIdType } from '../../shared-types';
 import {
   addGroupMembersValidation,
@@ -197,12 +197,13 @@ export class GroupController<
   TID,
   GroupApiResponse,
   GroupHandlers,
-  CoreLanguageCode
+  CoreLanguageCode,
+  IBrightChainControllerApplication<TID>
 > {
   private groupService: GroupService | null = null;
   private permissionService: PermissionService | null = null;
 
-  constructor(application: IBrightChainApplication<TID>) {
+  constructor(application: IBrightChainControllerApplication<TID>) {
     super(application);
   }
 

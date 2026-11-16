@@ -24,7 +24,8 @@ import {
 } from '@brightchain/brightchain-lib';
 import { ApiErrorResponse } from '@digitaldefiance/node-express-suite';
 import { beforeEach, describe, expect, it } from '@jest/globals';
-import { IBrightChainApplication } from '../../../interfaces/application';
+import { createMockControllerApplication } from '../../../__tests__/helpers/controller-application.mock';
+import { IBrightChainControllerApplication } from '../../../interfaces/application';
 import { ServerController } from '../servers';
 
 type HandlerResult<T> = Promise<{
@@ -43,17 +44,8 @@ function dataOf<T>(response: IApiEnvelope<T> | ApiErrorResponse): T {
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-function createMockApplication(): IBrightChainApplication {
-  return {
-    db: { connection: { readyState: 1 } },
-    environment: { mongo: { useTransactions: false }, debug: false },
-    constants: {},
-    ready: true,
-    services: { get: () => undefined, has: () => false },
-    getModel: () => {
-      throw new Error('not implemented');
-    },
-  } as unknown as IBrightChainApplication;
+function createMockApplication(): IBrightChainControllerApplication {
+  return createMockControllerApplication();
 }
 function authReq(userId: string, extra: Record<string, unknown> = {}) {
   return { user: { id: userId }, ...extra };

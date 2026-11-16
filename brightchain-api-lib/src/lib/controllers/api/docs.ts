@@ -11,7 +11,7 @@ import {
   TypedHandlers,
   routeConfig,
 } from '@digitaldefiance/node-express-suite';
-import { IBrightChainApplication } from '../../interfaces/application';
+import { IBrightChainControllerApplication } from '../../interfaces/application';
 // Import to trigger schema registration
 import '../../openapi/schemas';
 import { DefaultBackendIdType } from '../../shared-types';
@@ -67,11 +67,17 @@ interface DocsHandlers extends TypedHandlers {
  */
 export class DocsController<
   TID extends PlatformID = DefaultBackendIdType,
-> extends BaseController<TID, DocsApiResponse, DocsHandlers, CoreLanguageCode> {
+> extends BaseController<
+  TID,
+  DocsApiResponse,
+  DocsHandlers,
+  CoreLanguageCode,
+  IBrightChainControllerApplication<TID>
+> {
   private static readonly API_VERSION = '0.13.0';
   private readonly builder: OpenAPIBuilder;
 
-  constructor(application: IBrightChainApplication<TID>) {
+  constructor(application: IBrightChainControllerApplication<TID>) {
     super(application);
 
     this.builder = new OpenAPIBuilder({

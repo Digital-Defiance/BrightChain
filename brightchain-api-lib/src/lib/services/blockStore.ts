@@ -11,7 +11,10 @@ import {
   TranslatableBrightChainError,
 } from '@brightchain/brightchain-lib';
 import { PlatformID } from '@digitaldefiance/node-ecies-lib';
-import { IBrightChainApplication } from '../interfaces';
+import type {
+  IDatabasePort,
+  IServicesPort,
+} from '@digitaldefiance/node-express-suite';
 import { DefaultBackendIdType } from '../shared-types';
 import { BaseService } from './base';
 
@@ -30,10 +33,10 @@ import { BaseService } from './base';
  */
 export class BlockStoreService<
   TID extends PlatformID = DefaultBackendIdType,
-> extends BaseService<TID> {
+> extends BaseService<TID, IServicesPort & IDatabasePort> {
   private readonly store: IBlockStore;
 
-  constructor(application: IBrightChainApplication<TID>) {
+  constructor(application: IServicesPort & IDatabasePort) {
     super(application);
     const registeredStore = this.application.services.get('blockStore') as
       | IBlockStore

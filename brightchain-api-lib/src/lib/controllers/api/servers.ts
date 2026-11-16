@@ -52,7 +52,7 @@ import {
   routeConfig,
 } from '@digitaldefiance/node-express-suite';
 import type { RequestHandler } from 'express';
-import { IBrightChainApplication } from '../../interfaces/application';
+import { IBrightChainControllerApplication } from '../../interfaces/application';
 import {
   createDeferredVaultAccessAuditMiddleware,
   type IVaultAccessAuditDeps,
@@ -242,7 +242,8 @@ export class ServerController<
   TID,
   ServerApiResponse,
   ServerHandlers,
-  CoreLanguageCode
+  CoreLanguageCode,
+  IBrightChainControllerApplication<TID>
 > {
   private serverService: ServerService | null = null;
   private iconDeps: IServerIconControllerDeps | null = null;
@@ -273,7 +274,7 @@ export class ServerController<
     return true;
   }
 
-  constructor(application: IBrightChainApplication<TID>) {
+  constructor(application: IBrightChainControllerApplication<TID>) {
     super(application);
   }
 

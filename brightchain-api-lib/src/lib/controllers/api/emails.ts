@@ -53,7 +53,7 @@ import {
   routeConfig,
   TypedHandlers,
 } from '@digitaldefiance/node-express-suite';
-import { IBrightChainApplication } from '../../interfaces/application';
+import { IBrightChainControllerApplication } from '../../interfaces/application';
 import { MessagePassingService } from '../../services/messagePassingService';
 import { DefaultBackendIdType } from '../../shared-types';
 import {
@@ -321,7 +321,8 @@ export class EmailController<
   TID,
   EmailApiResponse,
   EmailHandlers,
-  CoreLanguageCode
+  CoreLanguageCode,
+  IBrightChainControllerApplication<TID>
 > {
   private messagePassingService: MessagePassingService | null = null;
 
@@ -344,7 +345,7 @@ export class EmailController<
    */
   private emailDomain = 'brightchain.org';
 
-  constructor(application: IBrightChainApplication<TID>) {
+  constructor(application: IBrightChainControllerApplication<TID>) {
     super(application);
   }
 

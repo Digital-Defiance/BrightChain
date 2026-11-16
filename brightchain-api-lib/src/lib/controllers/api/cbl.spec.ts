@@ -22,7 +22,10 @@ import fc from 'fast-check';
 import { mkdirSync, rmSync } from 'fs';
 import { join } from 'path';
 import request from 'supertest';
-import { IBrightChainApplication } from '../../interfaces';
+import {
+  createMockAuthProvider,
+  createMockControllerApplication,
+} from '../../__tests__/helpers/controller-application.mock';
 import { DiskBlockAsyncStore } from '../../stores';
 import { CBLController } from './cbl';
 
@@ -88,72 +91,14 @@ describe('CBL Controller API Integration Tests', () => {
     mkdirSync(testDir, { recursive: true });
 
     // Create mock application with required properties
-    const mockApp = {
-      db: {
-        connection: {
-          readyState: 1,
-        },
-      },
-      environment: {
-        mongo: {
-          useTransactions: false,
-        },
-        blockStorePath: testDir,
-        blockStoreBlockSize: BlockSize.Small,
-      },
-      constants: {},
-      ready: true,
-      services: (() => {
-        const blockStore = new DiskBlockAsyncStore({
-          storePath: testDir,
-          supportedBlockSizes: [BlockSize.Small],
-        });
-        const map = new Map<string, unknown>([['blockStore', blockStore]]);
-        return {
-          get: <T>(key: string) => map.get(key) as T,
-          has: (key: string) => map.has(key),
-          register: () => {},
-        };
-      })(),
-      plugins: {},
-      authProvider: {
-        verifyToken: async (token: string) => ({
-          userId: token || 'test-user',
-        }),
-        findUserById: async (userId: string) => ({
-          id: userId,
-          accountStatus: 'Active',
-          email: 'test@example.com',
-          timezone: 'UTC',
-        }),
-        buildRequestUserDTO: async (userId: string) => ({
-          id: userId,
-          username: userId,
-          email: 'test@example.com',
-          roles: [],
-          rolePrivileges: {
-            admin: false,
-            member: true,
-            child: false,
-            system: false,
-          },
-          emailVerified: true,
-          timezone: 'UTC',
-          siteLanguage: 'en',
-          darkMode: false,
-          currency: 'USD',
-          directChallenge: false,
-        }),
-      },
-      getModel: () => {
-        throw new Error('not implemented');
-      },
-      getController: () => {
-        throw new Error('not implemented');
-      },
-      setController: () => {},
-      start: async () => {},
-    } as unknown as IBrightChainApplication;
+    const blockStore = new DiskBlockAsyncStore({
+      storePath: testDir,
+      supportedBlockSizes: [BlockSize.Small],
+    });
+    const mockApp = createMockControllerApplication({
+      services: new Map<string, unknown>([['blockStore', blockStore]]),
+      authProvider: createMockAuthProvider(),
+    });
 
     // Create controller (it creates its own block store from environment)
     const controller = new CBLController(mockApp);

@@ -40,10 +40,11 @@ import express, { Express } from 'express';
 import { Server } from 'http';
 import request from 'supertest';
 import { WebSocket } from 'ws';
+import { createMockControllerApplication } from '../__tests__/helpers/controller-application.mock';
 import { ChannelController } from '../controllers/api/channels';
 import { DirectMessageController } from '../controllers/api/conversations';
 import { GroupController } from '../controllers/api/groups';
-import { IBrightChainApplication } from '../interfaces/application';
+import { IBrightChainControllerApplication } from '../interfaces/application';
 import { EventNotificationSystem } from './eventNotificationSystem';
 import { CommunicationTestEventSystem } from './eventNotificationSystem.test-helpers';
 import { PresenceService } from './presenceService';
@@ -74,32 +75,9 @@ function ensureI18nContext(): void {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-/** Minimal mock application satisfying IBrightChainApplication for controller construction */
-function createMockApplication(): IBrightChainApplication {
-  return {
-    db: { connection: { readyState: 1 } },
-    environment: {
-      mongo: { useTransactions: false },
-      blockStorePath: '/tmp',
-      debug: false,
-    },
-    constants: {},
-    ready: true,
-    services: {},
-    plugins: {},
-    getModel: () => {
-      throw new Error('not implemented');
-    },
-    getController: () => {
-      throw new Error('not implemented');
-    },
-    setController: () => {
-      /* noop */
-    },
-    start: async () => {
-      /* noop */
-    },
-  } as unknown as IBrightChainApplication;
+/** Minimal mock application satisfying IBrightChainControllerApplication for controller construction */
+function createMockApplication(): IBrightChainControllerApplication {
+  return createMockControllerApplication();
 }
 
 /** Create a mock WebSocket in OPEN state for event verification */

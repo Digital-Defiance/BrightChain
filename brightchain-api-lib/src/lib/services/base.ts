@@ -1,5 +1,9 @@
 import { PlatformID } from '@digitaldefiance/node-ecies-lib';
-import { BaseService as UpstreamBaseService } from '@digitaldefiance/node-express-suite';
+import {
+  IDatabasePort,
+  IServicesPort,
+  BaseService as UpstreamBaseService,
+} from '@digitaldefiance/node-express-suite';
 import { IBrightChainApplication } from '../interfaces/application';
 import { DefaultBackendIdType } from '../shared-types';
 
@@ -8,8 +12,10 @@ import { DefaultBackendIdType } from '../shared-types';
  */
 export abstract class BaseService<
   TID extends PlatformID = DefaultBackendIdType,
-> extends UpstreamBaseService<TID, IBrightChainApplication<TID>> {
-  constructor(application: IBrightChainApplication<TID>) {
+  TApplication extends IServicesPort &
+    IDatabasePort = IBrightChainApplication<TID>,
+> extends UpstreamBaseService<TID, TApplication> {
+  constructor(application: TApplication) {
     super(application);
   }
 }

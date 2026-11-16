@@ -25,7 +25,7 @@ import {
 } from '@brightchain/brightcal-lib';
 import {
   BaseController,
-  type IBrightChainApplication,
+  type IBrightChainControllerApplication,
   forbiddenError,
   handleError,
   notFoundError,
@@ -264,11 +264,12 @@ export class EventController<
   TID,
   EventApiResponse,
   EventHandlers,
-  CoreLanguageCode
+  CoreLanguageCode,
+  IBrightChainControllerApplication<TID>
 > {
   private eventService: IEventEngineService | null = null;
 
-  constructor(application: IBrightChainApplication<TID>) {
+  constructor(application: IBrightChainControllerApplication<TID>) {
     super(application);
   }
 

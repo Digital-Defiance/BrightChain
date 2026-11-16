@@ -20,7 +20,7 @@ import {
 } from '@brightchain/brightcal-lib';
 import {
   BaseController,
-  type IBrightChainApplication,
+  type IBrightChainControllerApplication,
   handleError,
   unauthorizedError,
   validationError,
@@ -180,11 +180,12 @@ export class InvitationController<
   TID,
   InvitationApiResponse,
   InvitationHandlers,
-  CoreLanguageCode
+  CoreLanguageCode,
+  IBrightChainControllerApplication<TID>
 > {
   private invitationService: IInvitationService | null = null;
 
-  constructor(application: IBrightChainApplication<TID>) {
+  constructor(application: IBrightChainControllerApplication<TID>) {
     super(application);
   }
 

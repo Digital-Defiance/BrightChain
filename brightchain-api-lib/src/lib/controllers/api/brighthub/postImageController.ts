@@ -18,7 +18,7 @@ import {
   routeConfig,
 } from '@digitaldefiance/node-express-suite';
 import type { RequestHandler } from 'express';
-import { IBrightChainApplication } from '../../../interfaces/application';
+import { IBrightChainControllerApplication } from '../../../interfaces/application';
 import {
   createDeferredVaultAccessAuditMiddleware,
   type IVaultAccessAuditDeps,
@@ -70,12 +70,18 @@ interface ServeImageRequestParams {
  */
 export class PostImageController<
   TID extends PlatformID = DefaultBackendIdType,
-> extends BaseController<TID, PostImageApiResponse, PostImageHandlers, string> {
+> extends BaseController<
+  TID,
+  PostImageApiResponse,
+  PostImageHandlers,
+  string,
+  IBrightChainControllerApplication<TID>
+> {
   private deps: IPostImageControllerDeps | null = null;
   private _setAuditDeps: ((deps: IVaultAccessAuditDeps<TID>) => void) | null =
     null;
 
-  constructor(application: IBrightChainApplication<TID>) {
+  constructor(application: IBrightChainControllerApplication<TID>) {
     super(application);
   }
 

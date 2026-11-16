@@ -1,12 +1,15 @@
 import { I18nEngine, LanguageRegistry } from '@digitaldefiance/i18n-lib';
-import type { IApplication } from '@digitaldefiance/node-express-suite';
-import express, {
-  Express,
-  NextFunction,
-  Request,
-  Response,
-  Router,
-} from 'express';
+import {
+  createExpressConstants,
+  type IAuthenticatedUser,
+  type IAuthenticationProvider,
+  type IControllerApplication,
+} from '@digitaldefiance/node-express-suite';
+import type {
+  IRequestUserDTO,
+  ITokenUser,
+} from '@digitaldefiance/suite-core-lib';
+import express, { Express, Router } from 'express';
 import { registerBrightNexusRoutesOnRouter } from '../../controllers/register-routes';
 import { createBrightNexusDeps } from '../../wiring/create-brightnexus-deps';
 import {
@@ -31,44 +34,54 @@ if (!I18nEngine.hasInstance()) {
   new I18nEngine([testLang]);
 }
 
-function createStubApplication() {
+/** Treats the bearer token as the user id and accepts every token. */
+class StubAuthProvider implements IAuthenticationProvider<string> {
+  async verifyToken<TTokenUser extends ITokenUser = ITokenUser>(
+    token: string,
+  ): Promise<TTokenUser | null> {
+    const tokenUser: ITokenUser = { userId: token, roles: [] };
+    // TTokenUser only ever widens ITokenUser; the stub has no extra fields.
+    return tokenUser as TTokenUser;
+  }
+
+  async findUserById(
+    userId: string,
+  ): Promise<IAuthenticatedUser<string, string>> {
+    return {
+      id: userId,
+      accountStatus: 'Active',
+      email: 'test@example.com',
+      timezone: 'UTC',
+    };
+  }
+
+  async buildRequestUserDTO(userId: string): Promise<IRequestUserDTO> {
+    return {
+      id: userId,
+      username: userId,
+      email: 'test@example.com',
+      roles: [],
+      rolePrivileges: {
+        admin: false,
+        member: true,
+        child: false,
+        system: false,
+      },
+      emailVerified: true,
+      timezone: 'UTC',
+      siteLanguage: 'en-US',
+      darkMode: false,
+      currency: 'USD',
+      directChallenge: false,
+    };
+  }
+}
+
+function createStubApplication(): IControllerApplication<string> {
   return {
-    authenticationMiddleware: (
-      req: Request,
-      _res: Response,
-      next: NextFunction,
-    ) => {
-      const auth = req.headers.authorization;
-      if (typeof auth === 'string' && auth.startsWith('Bearer ')) {
-        const userId = auth.slice('Bearer '.length).trim();
-        req.user = { id: userId } as Request['user'];
-      }
-      next();
-    },
-    cryptoAuthenticationMiddleware: (
-      _req: Request,
-      _res: Response,
-      next: NextFunction,
-    ) => next(),
-    environment: { enabledFeatures: [], debug: false },
-    authProvider: {
-      verifyToken: async (token: string) => ({ userId: token }),
-      findUserById: async (userId: string) => ({
-        id: userId,
-        accountStatus: 'Active',
-        email: 'test@example.com',
-        timezone: 'UTC',
-      }),
-      buildRequestUserDTO: async (userId: string) => ({
-        id: userId,
-        username: userId,
-        email: 'test@example.com',
-        roles: [],
-        timezone: 'UTC',
-        siteLanguage: 'en-US',
-      }),
-    },
-    constants: {},
+    authProvider: new StubAuthProvider(),
+    constants: createExpressConstants(),
+    database: undefined,
   };
 }
 
@@ -99,7 +112,7 @@ export function createBrightNexusTestServer(): IBrightNexusTestServer {
   const application = createStubApplication();
   registerBrightNexusRoutesOnRouter(
     router,
-    application as unknown as IApplication<string>,
+    application,
     deps,
     '/brightnexus/location',
   );

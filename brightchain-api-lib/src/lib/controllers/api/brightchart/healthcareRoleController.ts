@@ -19,7 +19,7 @@ import {
   TypedHandlers,
 } from '@digitaldefiance/node-express-suite';
 import { SchemaCollection } from '../../../enumerations/schema-collection';
-import { IBrightChainApplication } from '../../../interfaces/application';
+import { IBrightChainControllerApplication } from '../../../interfaces/application';
 import { orgAdminGuard } from '../../../middlewares/orgAdminGuard';
 import { DefaultBackendIdType } from '../../../shared-types';
 import {
@@ -73,9 +73,10 @@ export class HealthcareRoleController<
   TID,
   RoleApiResponse,
   HealthcareRoleHandlers,
-  CoreLanguageCode
+  CoreLanguageCode,
+  IBrightChainControllerApplication<TID>
 > {
-  constructor(application: IBrightChainApplication<TID>) {
+  constructor(application: IBrightChainControllerApplication<TID>) {
     super(application);
   }
 

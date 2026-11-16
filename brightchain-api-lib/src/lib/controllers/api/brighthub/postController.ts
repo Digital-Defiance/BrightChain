@@ -20,7 +20,7 @@ import {
   TypedHandlers,
   routeConfig,
 } from '@digitaldefiance/node-express-suite';
-import { IBrightChainApplication } from '../../../interfaces/application';
+import { IBrightChainControllerApplication } from '../../../interfaces/application';
 import { IStatusCodeResponse } from '../../../interfaces/responses';
 import {
   IPostApiResponse,
@@ -76,13 +76,14 @@ export class BrightHubPostController<
   TID,
   PostApiResponseType,
   IPostHandlers,
-  CoreLanguageCode
+  CoreLanguageCode,
+  IBrightChainControllerApplication<TID>
 > {
   private postService: IPostService | null = null;
   private threadService: IThreadService | null = null;
   private userProfileService: IUserProfileService | null = null;
 
-  constructor(application: IBrightChainApplication<TID>) {
+  constructor(application: IBrightChainControllerApplication<TID>) {
     super(application);
   }
 

@@ -15,7 +15,7 @@
  * @see Requirements: All API requirements
  */
 
-import type { IBrightChainApplication } from '@brightchain/brightchain-api-lib';
+import type { IBrightChainControllerApplication } from '@brightchain/brightchain-api-lib';
 import type { BrightDb } from '@brightchain/db';
 
 import { CalDavMiddleware } from '../caldav/calDavMiddleware.js';
@@ -103,7 +103,7 @@ export interface ICalendarRouterResult {
  * ```
  */
 export function createCalendarRouter(
-  app: IBrightChainApplication,
+  app: IBrightChainControllerApplication,
   db: BrightDb,
 ): ICalendarRouterResult {
   // ── 1. Create BrightDb models ───────────────────────────────────────────

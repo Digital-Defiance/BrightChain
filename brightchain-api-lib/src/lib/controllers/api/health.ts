@@ -10,7 +10,7 @@ import {
 } from '@digitaldefiance/node-express-suite';
 import { readFileSync } from 'fs';
 import { join } from 'path';
-import { IBrightChainApplication } from '../../interfaces/application';
+import { IBrightChainControllerApplication } from '../../interfaces/application';
 import {
   IDetailedHealthApiResponse,
   IHealthApiResponse,
@@ -95,7 +95,8 @@ export class HealthController<
   TID,
   HealthApiResponse,
   IHealthHandlers,
-  CoreLanguageCode
+  CoreLanguageCode,
+  IBrightChainControllerApplication<TID>
 > {
   /** Version loaded from package.json at module load time */
   private static readonly VERSION: string = loadVersion();
@@ -104,7 +105,7 @@ export class HealthController<
   /** Tracks whether the server has completed initialization */
   private static isStarting: boolean = true;
 
-  constructor(application: IBrightChainApplication<TID>) {
+  constructor(application: IBrightChainControllerApplication<TID>) {
     super(application);
     // Mark as no longer starting after a brief initialization period
     // In production, this would be set when all services are ready

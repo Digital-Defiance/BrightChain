@@ -15,7 +15,7 @@
 import { BrightCalStrings, translate } from '@brightchain/brightcal-lib';
 import {
   BaseController,
-  type IBrightChainApplication,
+  type IBrightChainControllerApplication,
   handleError,
   unauthorizedError,
   validationError,
@@ -99,11 +99,12 @@ export class SearchController<
   TID,
   SearchApiResponse,
   SearchHandlers,
-  CoreLanguageCode
+  CoreLanguageCode,
+  IBrightChainControllerApplication<TID>
 > {
   private searchService: ISearchService | null = null;
 
-  constructor(application: IBrightChainApplication<TID>) {
+  constructor(application: IBrightChainControllerApplication<TID>) {
     super(application);
   }
 

@@ -29,8 +29,12 @@ import { jest } from '@jest/globals';
 import express, { Express } from 'express';
 import { Server } from 'http';
 import request from 'supertest';
+import {
+  createMockAuthProvider,
+  createMockControllerApplication,
+} from '../__tests__/helpers/controller-application.mock';
 import { EmailController } from '../controllers/api/emails';
-import { IBrightChainApplication } from '../interfaces/application';
+import { IBrightChainControllerApplication } from '../interfaces/application';
 import { EventNotificationSystem } from './eventNotificationSystem';
 import { MessagePassingService } from './messagePassingService';
 
@@ -64,59 +68,11 @@ function ensureI18nContext(): void {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-/** Minimal mock application satisfying IBrightChainApplication for controller construction */
-function createMockApplication(): IBrightChainApplication {
-  return {
-    db: { connection: { readyState: 1 } },
-    environment: {
-      mongo: { useTransactions: false },
-      blockStorePath: '/tmp',
-      debug: false,
-    },
-    constants: {},
-    ready: true,
-    services: {},
-    plugins: {},
-    authProvider: {
-      verifyToken: async (token: string) => ({ userId: token || 'test-user' }),
-      findUserById: async (userId: string) => ({
-        id: userId,
-        accountStatus: 'Active',
-        email: 'test@example.com',
-        timezone: 'UTC',
-      }),
-      buildRequestUserDTO: async (userId: string) => ({
-        id: userId,
-        username: userId,
-        email: 'test@example.com',
-        roles: [],
-        rolePrivileges: {
-          admin: false,
-          member: true,
-          child: false,
-          system: false,
-        },
-        emailVerified: true,
-        timezone: 'UTC',
-        siteLanguage: 'en',
-        darkMode: false,
-        currency: 'USD',
-        directChallenge: false,
-      }),
-    },
-    getModel: () => {
-      throw new Error('not implemented');
-    },
-    getController: () => {
-      throw new Error('not implemented');
-    },
-    setController: () => {
-      /* noop */
-    },
-    start: async () => {
-      /* noop */
-    },
-  } as unknown as IBrightChainApplication;
+/** Minimal mock application satisfying IBrightChainControllerApplication for controller construction */
+function createMockApplication(): IBrightChainControllerApplication {
+  return createMockControllerApplication({
+    authProvider: createMockAuthProvider(),
+  });
 }
 
 function createMockGossipService(): IGossipService {

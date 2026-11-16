@@ -75,7 +75,7 @@ import {
   TypedHandlers,
   routeConfig,
 } from '@digitaldefiance/node-express-suite';
-import { IBrightChainApplication } from '../../interfaces/application';
+import { IBrightChainControllerApplication } from '../../interfaces/application';
 import { DefaultBackendIdType } from '../../shared-types';
 import {
   addChannelReactionValidation,
@@ -277,13 +277,14 @@ export class ChannelController<
   TID,
   ChannelApiResponse,
   ChannelHandlers,
-  CoreLanguageCode
+  CoreLanguageCode,
+  IBrightChainControllerApplication<TID>
 > {
   private channelService: ChannelService | null = null;
   private permissionService: PermissionService | null = null;
   private serverService: ServerService | null = null;
 
-  constructor(application: IBrightChainApplication<TID>) {
+  constructor(application: IBrightChainControllerApplication<TID>) {
     super(application);
   }
 

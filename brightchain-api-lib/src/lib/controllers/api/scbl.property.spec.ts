@@ -32,7 +32,10 @@ import * as fc from 'fast-check';
 import { existsSync, mkdirSync, rmSync } from 'fs';
 import { join } from 'path';
 import request from 'supertest';
-import { IBrightChainApplication } from '../../interfaces';
+import {
+  createMockAuthProvider,
+  createMockControllerApplication,
+} from '../../__tests__/helpers/controller-application.mock';
 import { DiskBlockAsyncStore } from '../../stores';
 import { SCBLController } from './scbl';
 
@@ -84,60 +87,10 @@ const createMockApplication = (storePath: string) => {
   });
   services.set('blockStore', blockStore);
 
-  return {
-    db: {
-      connection: {
-        readyState: 1,
-      },
-    },
-    environment: {
-      mongo: {
-        useTransactions: false,
-      },
-      debug: false,
-      blockStorePath: storePath,
-      blockStoreBlockSize: BlockSize.Small,
-    },
-    constants: {},
-    ready: true,
+  return createMockControllerApplication({
     services,
-    plugins: {},
-    authProvider: {
-      verifyToken: async (token: string) => ({ userId: token || 'test-user' }),
-      findUserById: async (userId: string) => ({
-        id: userId,
-        accountStatus: 'Active',
-        email: 'test@example.com',
-        timezone: 'UTC',
-      }),
-      buildRequestUserDTO: async (userId: string) => ({
-        id: userId,
-        username: userId,
-        email: 'test@example.com',
-        roles: [],
-        rolePrivileges: {
-          admin: false,
-          member: true,
-          child: false,
-          system: false,
-        },
-        emailVerified: true,
-        timezone: 'UTC',
-        siteLanguage: 'en',
-        darkMode: false,
-        currency: 'USD',
-        directChallenge: false,
-      }),
-    },
-    getModel: () => {
-      throw new Error('not implemented');
-    },
-    getController: () => {
-      throw new Error('not implemented');
-    },
-    setController: () => {},
-    start: async () => {},
-  } as unknown as IBrightChainApplication;
+    authProvider: createMockAuthProvider(),
+  });
 };
 
 // Helper to create Express app with SCBL controller

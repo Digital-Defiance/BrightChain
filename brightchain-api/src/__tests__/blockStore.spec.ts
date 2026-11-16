@@ -1,9 +1,5 @@
+import { BlockStoreService } from '@brightchain/brightchain-api-lib';
 import {
-  BlockStoreService,
-  IBrightChainApplication,
-} from '@brightchain/brightchain-api-lib';
-import {
-  BlockSize,
   ChecksumService,
   lengthToClosestBlockSize,
   MemoryBlockStore,
@@ -11,7 +7,10 @@ import {
   ServiceLocator,
   validBlockSizes,
 } from '@brightchain/brightchain-lib';
-import { PlatformID } from '@digitaldefiance/node-ecies-lib';
+import type {
+  IDatabasePort,
+  IServicesPort,
+} from '@digitaldefiance/node-express-suite';
 
 jest.mock('file-type', () => ({
   fileTypeFromBuffer: async () => null,
@@ -38,30 +37,23 @@ describe('BlockStoreService', () => {
   });
 
   it('stores and retrieves a block round-trip with checksum-derived id', async () => {
-    const blockSize = BlockSize.Small;
     const memoryStore = new MemoryBlockStore([...validBlockSizes]);
 
     // Create a mock app with a memory-backed block store
-    const mockApp = {
-      id: 'test-app',
-      environment: {
-        blockStoreBlockSize: blockSize,
+    const services = new Map<string, unknown>([['blockStore', memoryStore]]);
+    const mockApp: IServicesPort & IDatabasePort = {
+      database: undefined,
+      services: {
+        register: () => undefined,
+        // The service container resolves by key; the stub returns whatever
+        // was registered under it.
+        get: <T>(key: string): T => services.get(key) as T,
+        has: (key: string) => services.has(key),
       },
-      services: new Map([['blockStore', memoryStore]]),
-      getController: () => {
-        throw new Error('not implemented');
-      },
-      setController: () => {},
-      getModel: () => {
-        throw new Error('not implemented');
-      },
-      nodeAgent: {},
-      clusterAgentPublicKeys: [],
     };
 
-    const service = new BlockStoreService(
-      mockApp as unknown as IBrightChainApplication<PlatformID>,
-    );
+    const service = new BlockStoreService(mockApp);
+
     const payload = Buffer.from('hello-world');
 
     const blockId = await service.storeBlock(payload);

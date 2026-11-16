@@ -17,7 +17,7 @@ import { RouteConfig } from '@digitaldefiance/node-express-suite';
 import { Request } from 'express';
 import { body, query } from 'express-validator';
 import {
-  IBrightChainApplication,
+  IBrightChainControllerApplication,
   StoreSCBLRequestBody,
 } from '../../interfaces';
 import { DefaultBackendIdType } from '../../shared-types';
@@ -77,12 +77,18 @@ interface SCBLHandlers {
  */
 export class SCBLController<
   TID extends PlatformID = DefaultBackendIdType,
-> extends BaseController<TID, any, SCBLHandlers, CoreLanguageCode> {
+> extends BaseController<
+  TID,
+  any,
+  SCBLHandlers,
+  CoreLanguageCode,
+  IBrightChainControllerApplication<TID>
+> {
   private readonly blockStore: IBlockStore;
   private readonly cblService: CBLService<TID>;
   private readonly checksumService: ChecksumService;
 
-  constructor(application: IBrightChainApplication<TID>) {
+  constructor(application: IBrightChainControllerApplication<TID>) {
     super(application);
 
     const registeredStore = this.application.services.get('blockStore') as

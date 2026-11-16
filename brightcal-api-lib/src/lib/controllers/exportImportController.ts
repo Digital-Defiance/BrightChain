@@ -15,7 +15,7 @@
 import { BrightCalStrings, translate } from '@brightchain/brightcal-lib';
 import {
   BaseController,
-  type IBrightChainApplication,
+  type IBrightChainControllerApplication,
   forbiddenError,
   handleError,
   unauthorizedError,
@@ -94,11 +94,12 @@ export class ExportImportController<
   TID,
   ExportImportApiResponse,
   ExportImportHandlers,
-  CoreLanguageCode
+  CoreLanguageCode,
+  IBrightChainControllerApplication<TID>
 > {
   private exportImportService: IExportImportService | null = null;
 
-  constructor(application: IBrightChainApplication<TID>) {
+  constructor(application: IBrightChainControllerApplication<TID>) {
     super(application);
   }
 

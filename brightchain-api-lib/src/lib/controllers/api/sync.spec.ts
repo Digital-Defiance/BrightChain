@@ -31,42 +31,15 @@ import {
   SyncVectorEntry,
 } from '@brightchain/brightchain-lib';
 import { ApiErrorResponse } from '@digitaldefiance/node-express-suite';
-import { IBrightChainApplication } from '../../interfaces';
+import { createMockControllerApplication } from '../../__tests__/helpers/controller-application.mock';
+import { IBrightChainControllerApplication } from '../../interfaces';
 import { IBlockDataResponse } from '../../interfaces/responses/block-data-response';
 import { SyncController } from './sync';
 
 // ─── Mock Factories ───────────────────────────────────────────────────────────
 
-const createMockApplication = (): IBrightChainApplication => {
-  const mockServices = {
-    get: () => undefined,
-  };
-
-  return {
-    db: {
-      connection: {
-        readyState: 1,
-      },
-    },
-    environment: {
-      mongo: {
-        useTransactions: false,
-      },
-      debug: false,
-    },
-    constants: {},
-    ready: true,
-    services: mockServices,
-    plugins: {},
-    getModel: () => {
-      throw new Error('not implemented');
-    },
-    getController: () => {
-      throw new Error('not implemented');
-    },
-    setController: () => {},
-    start: async () => {},
-  } as unknown as IBrightChainApplication;
+const createMockApplication = (): IBrightChainControllerApplication => {
+  return createMockControllerApplication();
 };
 
 const createMockAvailabilityService = (

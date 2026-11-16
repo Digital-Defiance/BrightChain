@@ -34,7 +34,6 @@ import type { IApplication } from '@digitaldefiance/node-express-suite';
 import { randomBytes } from 'crypto';
 import { brightchainDatabaseInit } from '../databaseInit';
 import type { Environment } from '../environment';
-import type { IBrightChainApplication } from '../interfaces/application';
 import type { IBrightChainMemberInitConfig } from '../interfaces/member-init-config';
 import { BrightChainMemberInitService } from '../services';
 import { BrightChainAuthenticationProvider } from '../services/brightchain-authentication-provider';
@@ -156,12 +155,10 @@ export class BrightChainDatabasePlugin<
    * Creates the BrightChainAuthenticationProvider and stores it
    * as the authenticationProvider property.
    *
-   * @param app - The application instance (must implement IBrightChainApplication).
+   * @param app - The application instance (only services and environment are read).
    */
   override async init(app: IApplication<TID>): Promise<void> {
-    this._authProvider = new BrightChainAuthenticationProvider(
-      app as IBrightChainApplication<TID>,
-    );
+    this._authProvider = new BrightChainAuthenticationProvider(app);
 
     // Register the SAME MemberStore instance that connect() created
     // (this._memberStore) rather than letting the base class create a

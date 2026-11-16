@@ -35,7 +35,8 @@ import { mkdtemp, rm } from 'fs/promises';
 import { tmpdir } from 'os';
 import { join } from 'path';
 import sharp from 'sharp';
-import { IBrightChainApplication } from '../../../interfaces/application';
+import { createMockControllerApplication } from '../../../__tests__/helpers/controller-application.mock';
+import { IBrightChainControllerApplication } from '../../../interfaces/application';
 import type { IStagingServiceDeps } from '../../../services/staging/stagingService';
 import { StagingService } from '../../../services/staging/stagingService';
 import { IServerIconControllerDeps, ServerController } from '../servers';
@@ -129,23 +130,8 @@ function createStagingConfig(
   };
 }
 
-function createMockApplication(): IBrightChainApplication {
-  return {
-    db: { connection: { readyState: 1 } },
-    environment: { mongo: { useTransactions: false }, debug: false },
-    constants: {},
-    ready: true,
-    services: { get: () => undefined, has: () => false },
-    plugins: {},
-    getModel: () => {
-      throw new Error('not implemented');
-    },
-    getController: () => {
-      throw new Error('not implemented');
-    },
-    setController: () => {},
-    start: async () => {},
-  } as unknown as IBrightChainApplication;
+function createMockApplication(): IBrightChainControllerApplication {
+  return createMockControllerApplication();
 }
 
 const storedFiles = new Map<string, Buffer>();

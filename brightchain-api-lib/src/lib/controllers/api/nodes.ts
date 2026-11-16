@@ -21,7 +21,7 @@ import {
   IGetNodeRequest,
   IRegisterNodeRequest,
 } from '../../interfaces';
-import { IBrightChainApplication } from '../../interfaces/application';
+import { IBrightChainControllerApplication } from '../../interfaces/application';
 import {
   IDiscoverBlockApiResponse,
   IGetNodeApiResponse,
@@ -109,7 +109,8 @@ export class NodesController<
   TID,
   NodesApiResponse,
   NodesHandlers,
-  CoreLanguageCode
+  CoreLanguageCode,
+  IBrightChainControllerApplication<TID>
 > {
   private discoveryProtocol: IDiscoveryProtocol | null = null;
   private availabilityService: IAvailabilityService | null = null;
@@ -119,7 +120,7 @@ export class NodesController<
    */
   private registeredNodes: Map<string, string> = new Map();
 
-  constructor(application: IBrightChainApplication<TID>) {
+  constructor(application: IBrightChainControllerApplication<TID>) {
     super(application);
   }
 

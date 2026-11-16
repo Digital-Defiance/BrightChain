@@ -18,7 +18,7 @@ import type {
   IUserProfileService,
 } from '@brightchain/brighthub-lib';
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
-import type { IBrightChainApplication } from '../../../../interfaces/application';
+import { createMockControllerApplication } from '../../../../__tests__/helpers/controller-application.mock';
 import type { IThreadApiResponse } from '../../../../interfaces/responses/brighthub';
 import { BrightHubPostController } from '../postController';
 
@@ -91,16 +91,7 @@ const PROFILES: ProfileMap = {
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function createMockApplication() {
-  return {
-    db: { connection: { readyState: 1 } },
-    environment: { mongo: { useTransactions: false }, debug: false },
-    constants: {},
-    ready: true,
-    services: { get: () => undefined, has: () => false },
-    getModel: () => {
-      throw new Error('not implemented');
-    },
-  } as unknown as IBrightChainApplication;
+  return createMockControllerApplication();
 }
 
 function createMockPostService(): IPostService {

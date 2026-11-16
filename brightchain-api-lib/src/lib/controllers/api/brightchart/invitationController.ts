@@ -19,7 +19,7 @@ import {
   TypedHandlers,
 } from '@digitaldefiance/node-express-suite';
 import { SchemaCollection } from '../../../enumerations/schema-collection';
-import { IBrightChainApplication } from '../../../interfaces/application';
+import { IBrightChainControllerApplication } from '../../../interfaces/application';
 import { DefaultBackendIdType } from '../../../shared-types';
 import {
   forbiddenError,
@@ -69,9 +69,10 @@ export class InvitationController<
   TID,
   InvitationApiResponse,
   InvitationHandlers,
-  CoreLanguageCode
+  CoreLanguageCode,
+  IBrightChainControllerApplication<TID>
 > {
-  constructor(application: IBrightChainApplication<TID>) {
+  constructor(application: IBrightChainControllerApplication<TID>) {
     super(application);
   }
 

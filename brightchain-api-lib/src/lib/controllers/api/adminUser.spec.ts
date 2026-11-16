@@ -11,7 +11,8 @@ import {
   ApiErrorResponse,
   IApiMessageResponse,
 } from '@digitaldefiance/node-express-suite';
-import { IBrightChainApplication } from '../../interfaces';
+import { createMockControllerApplication } from '../../__tests__/helpers/controller-application.mock';
+import { IBrightChainControllerApplication } from '../../interfaces';
 import { AdminUserController } from './adminUser';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -111,7 +112,7 @@ function createMockUsersCollection(users: typeof mockUsers = mockUsers) {
 
 function createMockApplication(
   usersCollection: ReturnType<typeof createMockUsersCollection>,
-): IBrightChainApplication {
+): IBrightChainControllerApplication {
   const mockDb = {
     collection: (name: string) => {
       if (name === 'users') return usersCollection;
@@ -119,25 +120,9 @@ function createMockApplication(
     },
   };
 
-  return {
-    db: { connection: { readyState: 1 } },
-    environment: { mongo: { useTransactions: false }, debug: false },
-    constants: {},
-    ready: true,
-    services: {
-      has: (name: string) => name === 'db',
-      get: (name: string) => (name === 'db' ? mockDb : undefined),
-    },
-    plugins: {},
-    getModel: () => {
-      throw new Error('not implemented');
-    },
-    getController: () => {
-      throw new Error('not implemented');
-    },
-    setController: () => {},
-    start: async () => {},
-  } as unknown as IBrightChainApplication;
+  return createMockControllerApplication({
+    services: new Map<string, unknown>([['db', mockDb]]),
+  });
 }
 
 function createController(users?: typeof mockUsers) {

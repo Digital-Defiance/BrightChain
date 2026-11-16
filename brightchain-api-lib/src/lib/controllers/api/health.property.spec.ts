@@ -17,7 +17,7 @@
 
 import { HealthStatus } from '@brightchain/brightchain-lib';
 import * as fc from 'fast-check';
-import { IBrightChainApplication } from '../../interfaces';
+import { createMockControllerApplication } from '../../__tests__/helpers/controller-application.mock';
 import {
   IDetailedHealthApiResponse,
   IHealthApiResponse,
@@ -26,35 +26,7 @@ import { HealthController } from './health';
 
 // Mock application for testing
 const createMockApplication = (services: Map<string, unknown> = new Map()) => {
-  const mockServices = {
-    get: (name: string) => services.get(name),
-  };
-
-  return {
-    db: {
-      connection: {
-        readyState: 1,
-      },
-    },
-    environment: {
-      mongo: {
-        useTransactions: false,
-      },
-      debug: false,
-    },
-    constants: {},
-    ready: true,
-    services: mockServices,
-    plugins: {},
-    getModel: () => {
-      throw new Error('not implemented');
-    },
-    getController: () => {
-      throw new Error('not implemented');
-    },
-    setController: () => {},
-    start: async () => {},
-  } as unknown as IBrightChainApplication;
+  return createMockControllerApplication({ services });
 };
 
 // Type for accessing private handlers
@@ -77,7 +49,7 @@ const createTestController = (services: Map<string, unknown> = new Map()) => {
   // Reset static state before each test
   HealthController.markReady();
   HealthController.resetStartTime();
-  return new HealthController(mockApp as never);
+  return new HealthController(mockApp);
 };
 
 describe('Health Endpoint Property Tests', () => {

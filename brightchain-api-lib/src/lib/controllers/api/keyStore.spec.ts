@@ -16,7 +16,8 @@ import {
   MessageEncryptionScheme,
 } from '@brightchain/brightchain-lib';
 import { IApiMessageResponse } from '@digitaldefiance/node-express-suite';
-import { IBrightChainApplication } from '../../interfaces';
+import { createMockControllerApplication } from '../../__tests__/helpers/controller-application.mock';
+import { IBrightChainControllerApplication } from '../../interfaces';
 import { KeyStoreController } from './keyStore';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -204,23 +205,8 @@ function createMockSmimeCertManager() {
   };
 }
 
-function createMockApplication(): IBrightChainApplication {
-  return {
-    db: { connection: { readyState: 1 } },
-    environment: { mongo: { useTransactions: false }, debug: false },
-    constants: {},
-    ready: true,
-    services: { get: () => undefined },
-    plugins: {},
-    getModel: () => {
-      throw new Error('not implemented');
-    },
-    getController: () => {
-      throw new Error('not implemented');
-    },
-    setController: () => {},
-    start: async () => {},
-  } as unknown as IBrightChainApplication;
+function createMockApplication(): IBrightChainControllerApplication {
+  return createMockControllerApplication();
 }
 
 function createController() {

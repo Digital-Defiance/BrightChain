@@ -1,6 +1,6 @@
 import { PlatformID } from '@digitaldefiance/ecies-lib';
 import { PlatformID as NodePlatformID } from '@digitaldefiance/node-ecies-lib';
-import type { IApplication } from '@digitaldefiance/node-express-suite';
+import type { IControllerApplication } from '@digitaldefiance/node-express-suite';
 import { Router, type RequestHandler } from 'express';
 import {
   createBrightNexusDiscoveryRouter,
@@ -28,7 +28,7 @@ export function registerBrightNexusRoutesOnRouter<
   TID extends NodePlatformID = NodePlatformID,
 >(
   router: Router,
-  application: IApplication<TID>,
+  application: IControllerApplication<TID>,
   deps: IAllBrightNexusControllerDeps<TID>,
   prefix = '/brightnexus/location',
   options: IRegisterBrightNexusRoutesOptions = {},

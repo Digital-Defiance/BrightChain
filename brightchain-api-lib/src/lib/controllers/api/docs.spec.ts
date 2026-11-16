@@ -13,7 +13,8 @@ import {
 } from '@digitaldefiance/node-express-suite';
 import express, { Express } from 'express';
 import request from 'supertest';
-import { IBrightChainApplication } from '../../interfaces/application';
+import { createMockControllerApplication } from '../../__tests__/helpers/controller-application.mock';
+import { IBrightChainControllerApplication } from '../../interfaces/application';
 import { DocsController } from './docs';
 
 /**
@@ -46,22 +47,13 @@ function ensureI18nContext(): void {
 }
 
 // Mock application factory
-const createMockApplication = (): IBrightChainApplication<Buffer> => {
-  return {
-    environment: {
-      mongo: { useTransactions: false },
-    },
-    db: {
-      connection: {},
-    },
-    services: new Map(),
-    constants: {},
-  } as unknown as IBrightChainApplication<Buffer>;
+const createMockApplication = (): IBrightChainControllerApplication<Buffer> => {
+  return createMockControllerApplication<Buffer>();
 };
 
 describe('DocsController', () => {
   let app: Express;
-  let mockApplication: IBrightChainApplication<Buffer>;
+  let mockApplication: IBrightChainControllerApplication<Buffer>;
   let controller: DocsController<Buffer>;
 
   beforeEach(() => {

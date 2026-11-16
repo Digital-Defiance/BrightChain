@@ -20,7 +20,7 @@ import {
 } from '@brightchain/brightcal-lib';
 import {
   BaseController,
-  type IBrightChainApplication,
+  type IBrightChainControllerApplication,
   handleError,
   unauthorizedError,
   validationError,
@@ -156,11 +156,12 @@ export class SchedulingController<
   TID,
   SchedulingApiResponse,
   SchedulingHandlers,
-  CoreLanguageCode
+  CoreLanguageCode,
+  IBrightChainControllerApplication<TID>
 > {
   private schedulingService: ISchedulingService | null = null;
 
-  constructor(application: IBrightChainApplication<TID>) {
+  constructor(application: IBrightChainControllerApplication<TID>) {
     super(application);
   }
 

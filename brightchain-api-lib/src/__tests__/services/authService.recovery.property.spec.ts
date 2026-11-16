@@ -117,7 +117,9 @@ function createIsolatedAuthServiceAndStore(): {
     },
   } as unknown as SESEmailService;
 
-  const authProvider = new BrightChainAuthenticationProvider(mockApp);
+  const authProvider = new BrightChainAuthenticationProvider<GuidV4Buffer>(
+    mockApp,
+  );
 
   const authService = new AuthService(
     mockApp,

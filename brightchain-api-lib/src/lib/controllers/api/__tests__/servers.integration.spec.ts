@@ -25,7 +25,8 @@ import {
   ServerService,
 } from '@brightchain/brightchain-lib';
 import { ApiErrorResponse } from '@digitaldefiance/node-express-suite';
-import { IBrightChainApplication } from '../../../interfaces/application';
+import { createMockControllerApplication } from '../../../__tests__/helpers/controller-application.mock';
+import { IBrightChainControllerApplication } from '../../../interfaces/application';
 import { ServerController } from '../servers';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -67,23 +68,8 @@ function dataOf<T>(response: IApiEnvelope<T> | ApiErrorResponse): T {
   return data;
 }
 
-function createMockApplication(): IBrightChainApplication {
-  return {
-    db: { connection: { readyState: 1 } },
-    environment: { mongo: { useTransactions: false }, debug: false },
-    constants: {},
-    ready: true,
-    services: { get: () => undefined },
-    plugins: {},
-    getModel: () => {
-      throw new Error('not implemented');
-    },
-    getController: () => {
-      throw new Error('not implemented');
-    },
-    setController: () => {},
-    start: async () => {},
-  } as unknown as IBrightChainApplication;
+function createMockApplication(): IBrightChainControllerApplication {
+  return createMockControllerApplication();
 }
 
 /** Documents are keyed by `id`, or `token` for invite tokens. */

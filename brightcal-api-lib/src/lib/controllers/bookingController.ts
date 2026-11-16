@@ -17,7 +17,7 @@
 import { BrightCalStrings, translate } from '@brightchain/brightcal-lib';
 import {
   BaseController,
-  type IBrightChainApplication,
+  type IBrightChainControllerApplication,
   handleError,
   unauthorizedError,
   validationError,
@@ -132,11 +132,12 @@ export class BookingController<
   TID,
   BookingApiResponse,
   BookingHandlers,
-  CoreLanguageCode
+  CoreLanguageCode,
+  IBrightChainControllerApplication<TID>
 > {
   private bookingService: IBookingService | null = null;
 
-  constructor(application: IBrightChainApplication<TID>) {
+  constructor(application: IBrightChainControllerApplication<TID>) {
     super(application);
   }
 

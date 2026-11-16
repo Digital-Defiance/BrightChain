@@ -19,7 +19,7 @@ import {
   IStatusCodeResponse,
   TypedHandlers,
   routeConfig,
-  type IApplication,
+  type IControllerApplication,
 } from '@digitaldefiance/node-express-suite';
 import type { Request as ExpressRequest } from 'express';
 import type { BslpSignatureVerifier } from '../services/bslp-signature-verifier';
@@ -93,10 +93,10 @@ export class LocationController<
   ILocationHandlers,
   CoreLanguageCode,
   TID,
-  IApplication<TID>
+  IControllerApplication<TID>
 > {
   constructor(
-    application: IApplication<TID>,
+    application: IControllerApplication<TID>,
     private readonly deps: ILocationControllerDeps<TID>,
   ) {
     super(application);

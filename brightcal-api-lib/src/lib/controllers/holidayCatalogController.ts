@@ -10,7 +10,7 @@
 import type { IHolidayFeedEntry } from '@brightchain/brightcal-lib';
 import {
   BaseController,
-  type IBrightChainApplication,
+  type IBrightChainControllerApplication,
 } from '@brightchain/brightchain-api-lib';
 import { PlatformID } from '@digitaldefiance/node-ecies-lib';
 import {
@@ -58,9 +58,10 @@ export class HolidayCatalogController<
   TID,
   HolidayCatalogApiResponse,
   HolidayCatalogHandlers,
-  string
+  string,
+  IBrightChainControllerApplication<TID>
 > {
-  constructor(application: IBrightChainApplication<TID>) {
+  constructor(application: IBrightChainControllerApplication<TID>) {
     super(application);
   }
 

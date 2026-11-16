@@ -16,7 +16,7 @@ import {
   routeConfig,
   TypedHandlers,
 } from '@digitaldefiance/node-express-suite';
-import { IBrightChainApplication } from '../../interfaces/application';
+import { IBrightChainControllerApplication } from '../../interfaces/application';
 import { DefaultBackendIdType } from '../../shared-types';
 import {
   handleError,
@@ -79,9 +79,10 @@ export class AdminBlockController<
   TID,
   AdminBlockApiResponse,
   AdminBlockHandlers,
-  CoreLanguageCode
+  CoreLanguageCode,
+  IBrightChainControllerApplication<TID>
 > {
-  constructor(application: IBrightChainApplication<TID>) {
+  constructor(application: IBrightChainControllerApplication<TID>) {
     super(application);
   }
 
