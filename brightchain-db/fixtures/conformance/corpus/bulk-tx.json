@@ -1,0 +1,118 @@
+{
+  "cases": [
+    {
+      "id": "bulk-tx.writeBatch.acrossCollections.001",
+      "family": "bulk-tx",
+      "description": "One batch writes several collections and publishes one root",
+      "requires": ["batch.atomic", "docs.read"],
+      "kind": "positive",
+      "runtimes": ["node"],
+      "topologies": ["memory", "disk"],
+      "ordering": "strict",
+      "steps": [
+        {
+          "op": "writeBatch",
+          "args": {
+            "operations": [
+              { "type": "insert", "collection": "left", "document": { "_id": "l1" } },
+              { "type": "insert", "collection": "right", "document": { "_id": "r1" } }
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "state": {
+          "collections": {
+            "left": { "docs": [{ "_id": "l1" }] },
+            "right": { "docs": [{ "_id": "r1" }] }
+          }
+        }
+      },
+      "source": "reviewed"
+    },
+    {
+      "id": "bulk-tx.writeBatch.empty.001",
+      "family": "bulk-tx",
+      "requires": ["batch.atomic"],
+      "kind": "boundary",
+      "runtimes": ["node"],
+      "topologies": ["memory", "disk"],
+      "ordering": "strict",
+      "initial": { "collections": { "items": { "docs": [{ "_id": "a" }] } } },
+      "steps": [{ "op": "writeBatch", "args": { "operations": [] } }],
+      "expect": { "state": { "collections": { "items": { "docs": [{ "_id": "a" }] } } } },
+      "source": "reviewed"
+    },
+    {
+      "id": "bulk-tx.writeBatch.readsOwnWrites.001",
+      "family": "bulk-tx",
+      "description": "Later operations in a batch see earlier ones: insert then replace in one commit",
+      "requires": ["batch.atomic", "docs.replaceById"],
+      "kind": "boundary",
+      "runtimes": ["node"],
+      "topologies": ["memory", "disk"],
+      "ordering": "strict",
+      "steps": [
+        {
+          "op": "writeBatch",
+          "args": {
+            "operations": [
+              { "type": "insert", "collection": "items", "document": { "_id": "a", "n": 1 } },
+              { "type": "replace", "collection": "items", "id": "a", "document": { "n": 2 } }
+            ]
+          }
+        }
+      ],
+      "expect": { "state": { "collections": { "items": { "docs": [{ "_id": "a", "n": 2 }] } } } },
+      "source": "reviewed"
+    },
+    {
+      "id": "bulk-tx.writeBatch.duplicateRollsBackAll.001",
+      "family": "bulk-tx",
+      "description": "A failing operation leaves no trace of the operations before it, in any collection",
+      "requires": ["batch.atomic"],
+      "kind": "error",
+      "runtimes": ["node"],
+      "topologies": ["memory", "disk"],
+      "ordering": "strict",
+      "steps": [
+        {
+          "op": "writeBatch",
+          "args": {
+            "operations": [
+              { "type": "insert", "collection": "left", "document": { "_id": "first" } },
+              { "type": "insert", "collection": "right", "document": { "_id": "second" } },
+              { "type": "insert", "collection": "left", "document": { "_id": "first" } }
+            ]
+          },
+          "expect": { "error": { "category": "DuplicateKey" } }
+        }
+      ],
+      "expect": { "state": { "collections": {} } },
+      "source": "reviewed"
+    },
+    {
+      "id": "bulk-tx.writeBatch.rootUnchangedOnFailure.001",
+      "family": "bulk-tx",
+      "description": "The published root does not move when a batch fails",
+      "requires": ["batch.atomic", "history.snapshot"],
+      "kind": "error",
+      "runtimes": ["node"],
+      "topologies": ["memory", "disk"],
+      "ordering": "strict",
+      "initial": { "collections": { "items": { "docs": [{ "_id": "a" }] } } },
+      "steps": [
+        { "op": "saveRoot", "args": { "name": "before" } },
+        {
+          "op": "writeBatch",
+          "args": { "operations": [{ "type": "insert", "collection": "items", "document": { "_id": "a" } }] },
+          "expect": { "error": { "category": "DuplicateKey" } }
+        },
+        { "op": "rootsEqual", "args": { "savedRoot": "before" }, "expect": { "returns": true } },
+        { "op": "findAt", "collection": "items", "args": { "root": "before", "filter": {} }, "expect": { "returns": [{ "_id": "a" }] } }
+      ],
+      "expect": { "state": { "collections": { "items": { "docs": [{ "_id": "a" }] } } } },
+      "source": "reviewed"
+    }
+  ]
+}

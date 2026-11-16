@@ -1,0 +1,141 @@
+{
+  "cases": [
+    {
+      "id": "replication.merge.disjointWrites.001",
+      "family": "replication",
+      "description": "Two replicas write different documents, merge both ways, and end with equal roots",
+      "requires": ["replication.merge", "docs.insert", "docs.read"],
+      "kind": "positive",
+      "runtimes": ["node"],
+      "topologies": ["memory", "disk"],
+      "ordering": "strict",
+      "initial": { "collections": { "items": { "docs": [{ "_id": "base" }] } } },
+      "steps": [
+        { "op": "fork", "args": { "as": "b" } },
+        { "op": "insertOne", "collection": "items", "args": { "document": { "_id": "from-a" } } },
+        { "op": "insertOne", "db": "b", "collection": "items", "args": { "document": { "_id": "from-b" } } },
+        { "op": "merge", "args": { "from": "b" } },
+        { "op": "merge", "db": "b", "args": { "from": "main" } },
+        { "op": "rootsEqual", "args": { "other": "b" }, "expect": { "returns": true } }
+      ],
+      "expect": {
+        "state": { "collections": { "items": { "docs": [{ "_id": "base" }, { "_id": "from-a" }, { "_id": "from-b" }] } } }
+      },
+      "source": "reviewed"
+    },
+    {
+      "id": "replication.merge.idempotent.001",
+      "family": "replication",
+      "description": "Merging the same replica again changes nothing",
+      "requires": ["replication.merge", "history.snapshot"],
+      "kind": "boundary",
+      "runtimes": ["node"],
+      "topologies": ["memory", "disk"],
+      "ordering": "strict",
+      "initial": { "collections": { "items": { "docs": [{ "_id": "base" }] } } },
+      "steps": [
+        { "op": "fork", "args": { "as": "b" } },
+        { "op": "insertOne", "db": "b", "collection": "items", "args": { "document": { "_id": "x" } } },
+        { "op": "merge", "args": { "from": "b" } },
+        { "op": "saveRoot", "args": { "name": "afterFirst" } },
+        { "op": "merge", "args": { "from": "b" } },
+        { "op": "rootsEqual", "args": { "savedRoot": "afterFirst" }, "expect": { "returns": true } },
+        { "op": "findAt", "collection": "items", "args": { "root": "afterFirst", "filter": {} }, "expect": { "returns": [{ "_id": "base" }, { "_id": "x" }] } }
+      ],
+      "expect": { "state": { "collections": { "items": { "docs": [{ "_id": "base" }, { "_id": "x" }] } } } },
+      "source": "reviewed"
+    },
+    {
+      "id": "replication.merge.deleteWinsOverStale.001",
+      "family": "replication",
+      "description": "A delete on one replica is not undone by a stale copy on the other",
+      "requires": ["replication.merge", "docs.deleteById"],
+      "kind": "boundary",
+      "runtimes": ["node"],
+      "topologies": ["memory", "disk"],
+      "ordering": "strict",
+      "initial": { "collections": { "items": { "docs": [{ "_id": "a" }, { "_id": "keep" }] } } },
+      "steps": [
+        { "op": "fork", "args": { "as": "b" } },
+        { "op": "deleteById", "collection": "items", "args": { "id": "a" } },
+        { "op": "merge", "db": "b", "args": { "from": "main" } },
+        { "op": "merge", "args": { "from": "b" } },
+        { "op": "rootsEqual", "args": { "other": "b" }, "expect": { "returns": true } }
+      ],
+      "expect": { "state": { "collections": { "items": { "docs": [{ "_id": "keep" }] } } } },
+      "source": "reviewed"
+    },
+    {
+      "id": "replication.merge.sameCounterConverges.001",
+      "family": "replication",
+      "description": "Two replicas rewrite the same record at the same counter. After merging both ways they hold one of the two versions, the same one",
+      "requires": ["replication.merge", "docs.replaceById", "docs.read"],
+      "kind": "boundary",
+      "runtimes": ["node"],
+      "topologies": ["memory", "disk"],
+      "ordering": "strict",
+      "initial": { "collections": { "items": { "docs": [{ "_id": "x", "v": "base" }] } } },
+      "steps": [
+        { "op": "fork", "args": { "as": "b" } },
+        { "op": "fork", "args": { "as": "c" } },
+        { "op": "replaceById", "db": "b", "collection": "items", "args": { "id": "x", "document": { "v": "from-b" } }, "expect": { "returns": { "$partial": true, "modifiedCount": 1 } } },
+        { "op": "replaceById", "db": "c", "collection": "items", "args": { "id": "x", "document": { "v": "from-c" } }, "expect": { "returns": { "$partial": true, "modifiedCount": 1 } } },
+        { "op": "merge", "db": "b", "args": { "from": "c" } },
+        { "op": "merge", "db": "c", "args": { "from": "b" } },
+        { "op": "rootsEqual", "db": "b", "args": { "other": "c" }, "expect": { "returns": true } },
+        { "op": "find", "db": "b", "collection": "items", "args": { "filter": { "v": { "$in": ["from-b", "from-c"] } } }, "expect": { "returns": [{ "_id": "x", "v": "$bind:winner" }] } },
+        { "op": "find", "db": "c", "collection": "items", "args": { "filter": { "v": { "$in": ["from-b", "from-c"] } } }, "expect": { "returns": [{ "_id": "x", "v": "$bind:winner" }] } }
+      ],
+      "expect": { "state": { "collections": { "items": { "docs": [{ "_id": "x", "v": "base" }] } } } },
+      "source": "reviewed"
+    },
+    {
+      "id": "replication.merge.sameCounterHigherWriterWins.001",
+      "family": "replication",
+      "description": "At the same counter the higher writer ID wins, whichever side merges and in whichever direction. Writer IDs follow creation order (main 1, b 2, c 3), so c beats b. Memory only: a directory store picks random writer IDs",
+      "requires": ["replication.merge", "docs.replaceById", "docs.read"],
+      "kind": "boundary",
+      "runtimes": ["node"],
+      "topologies": ["memory"],
+      "ordering": "strict",
+      "initial": { "collections": { "items": { "docs": [{ "_id": "x", "v": "base" }] } } },
+      "steps": [
+        { "op": "fork", "args": { "as": "b" } },
+        { "op": "fork", "args": { "as": "c" } },
+        { "op": "replaceById", "db": "b", "collection": "items", "args": { "id": "x", "document": { "v": "from-b" } }, "expect": { "returns": { "$partial": true, "modifiedCount": 1 } } },
+        { "op": "replaceById", "db": "c", "collection": "items", "args": { "id": "x", "document": { "v": "from-c" } }, "expect": { "returns": { "$partial": true, "modifiedCount": 1 } } },
+        { "op": "merge", "db": "b", "args": { "from": "c" } },
+        { "op": "findById", "db": "b", "collection": "items", "args": { "id": "x" }, "expect": { "returns": { "_id": "x", "v": "from-c" } } },
+        { "op": "merge", "db": "c", "args": { "from": "b" } },
+        { "op": "findById", "db": "c", "collection": "items", "args": { "id": "x" }, "expect": { "returns": { "_id": "x", "v": "from-c" } } },
+        { "op": "rootsEqual", "db": "b", "args": { "other": "c" }, "expect": { "returns": true } }
+      ],
+      "expect": {
+        "state": { "collections": { "items": { "docs": [{ "_id": "x", "v": "base" }] } } },
+        "databases": {
+          "b": { "collections": { "items": { "docs": [{ "_id": "x", "v": "from-c" }] } } },
+          "c": { "collections": { "items": { "docs": [{ "_id": "x", "v": "from-c" }] } } }
+        }
+      },
+      "source": "reviewed"
+    },
+    {
+      "id": "replication.merge.wrongDatabase.001",
+      "family": "replication",
+      "description": "Merging an unrelated database is refused and changes nothing",
+      "requires": ["replication.merge"],
+      "kind": "error",
+      "runtimes": ["node"],
+      "topologies": ["memory", "disk"],
+      "ordering": "strict",
+      "initial": { "collections": { "items": { "docs": [{ "_id": "a" }] } } },
+      "steps": [
+        { "op": "create", "args": { "as": "stranger" } },
+        { "op": "insertOne", "db": "stranger", "collection": "items", "args": { "document": { "_id": "z" } } },
+        { "op": "merge", "args": { "from": "stranger" }, "expect": { "error": { "category": "WrongDatabase" } } }
+      ],
+      "expect": { "state": { "collections": { "items": { "docs": [{ "_id": "a" }] } } } },
+      "source": "reviewed"
+    }
+  ]
+}

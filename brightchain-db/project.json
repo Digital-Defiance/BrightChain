@@ -3,19 +3,12 @@
   "$schema": "../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "brightchain-db/src",
   "projectType": "library",
-  "tags": [
-    "type:lib",
-    "scope:db"
-  ],
-  "implicitDependencies": [
-    "brightchain-lib"
-  ],
+  "tags": ["type:lib", "scope:db"],
+  "implicitDependencies": ["brightchain-lib"],
   "targets": {
     "build": {
       "executor": "@nx/js:tsc",
-      "outputs": [
-        "{options.outputPath}"
-      ],
+      "outputs": ["{options.outputPath}"],
       "options": {
         "outputPath": "dist/brightchain-db",
         "main": "brightchain-db/src/index.ts",
@@ -33,9 +26,7 @@
           }
         ]
       },
-      "dependsOn": [
-        "^build"
-      ],
+      "dependsOn": ["^build"],
       "configurations": {
         "development": {},
         "production": {}
@@ -46,14 +37,35 @@
     },
     "test": {
       "executor": "@nx/jest:jest",
-      "outputs": [
-        "{workspaceRoot}/coverage/{projectRoot}"
-      ],
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
       "options": {
         "jestConfig": "brightchain-db/jest.config.ts",
         "passWithNoTests": true
       },
       "cache": true
+    },
+    "conformance-pr": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "brightchain-db/jest.config.ts",
+        "testPathPatterns": [
+          "src/lib/v2/conformance",
+          "src/__tests__/conformance"
+        ],
+        "passWithNoTests": false
+      },
+      "cache": false
+    },
+    "conformance-replay": {
+      "executor": "nx:run-commands",
+      "options": {
+        "forwardAllArgs": false,
+        "env": {
+          "CONFORMANCE_REPLAY": "1"
+        },
+        "command": "yarn nx test brightchain-db --testPathPatterns=src/lib/v2/conformance/replay --skip-nx-cache"
+      }
     },
     "publish": {
       "executor": "nx:run-commands",

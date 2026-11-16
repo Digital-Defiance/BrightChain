@@ -1,0 +1,77 @@
+{
+  "cases": [
+    {
+      "id": "history-files.snapshot.readsOldState.001",
+      "family": "history-files",
+      "description": "A saved root keeps showing the database as it was",
+      "requires": ["history.snapshot", "docs.insert", "docs.read"],
+      "kind": "positive",
+      "runtimes": ["node"],
+      "topologies": ["memory", "disk"],
+      "ordering": "strict",
+      "initial": { "collections": { "items": { "docs": [{ "_id": "a" }] } } },
+      "steps": [
+        { "op": "saveRoot", "args": { "name": "v1" } },
+        { "op": "insertOne", "collection": "items", "args": { "document": { "_id": "b" } } },
+        { "op": "findAt", "collection": "items", "args": { "root": "v1", "filter": {} }, "expect": { "returns": [{ "_id": "a" }] } },
+        { "op": "find", "collection": "items", "args": { "filter": {} }, "expect": { "returns": [{ "_id": "a" }, { "_id": "b" }] } }
+      ],
+      "source": "reviewed"
+    },
+    {
+      "id": "history-files.snapshot.survivesDelete.001",
+      "family": "history-files",
+      "description": "A document deleted after the snapshot is still visible in it",
+      "requires": ["history.snapshot", "docs.deleteById"],
+      "kind": "boundary",
+      "runtimes": ["node"],
+      "topologies": ["memory", "disk"],
+      "ordering": "strict",
+      "initial": { "collections": { "items": { "docs": [{ "_id": "a", "n": 1 }] } } },
+      "steps": [
+        { "op": "saveRoot", "args": { "name": "v1" } },
+        { "op": "deleteById", "collection": "items", "args": { "id": "a" } },
+        { "op": "findAt", "collection": "items", "args": { "root": "v1", "filter": {} }, "expect": { "returns": [{ "_id": "a", "n": 1 }] } }
+      ],
+      "expect": { "state": { "collections": { "items": { "docs": [] } } } },
+      "source": "reviewed"
+    },
+    {
+      "id": "history-files.snapshot.rootMovesOnWrite.001",
+      "family": "history-files",
+      "description": "The root changes after a write and equal states share a root",
+      "requires": ["history.snapshot", "docs.insert", "replication.merge"],
+      "kind": "boundary",
+      "runtimes": ["node"],
+      "topologies": ["memory", "disk"],
+      "ordering": "strict",
+      "initial": { "collections": { "items": { "docs": [{ "_id": "a" }] } } },
+      "steps": [
+        { "op": "fork", "args": { "as": "twin" } },
+        { "op": "rootsEqual", "args": { "other": "twin" }, "expect": { "returns": true } },
+        { "op": "insertOne", "collection": "items", "args": { "document": { "_id": "b" } } },
+        { "op": "rootsEqual", "args": { "other": "twin" }, "expect": { "returns": false } }
+      ],
+      "source": "reviewed"
+    },
+    {
+      "id": "history-files.snapshot.unknownRoot.001",
+      "family": "history-files",
+      "description": "A root that does not exist in the store fails with MissingBlock",
+      "requires": ["history.snapshot"],
+      "kind": "error",
+      "runtimes": ["node"],
+      "topologies": ["memory", "disk"],
+      "ordering": "strict",
+      "steps": [
+        {
+          "op": "findAt",
+          "collection": "items",
+          "args": { "root": "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000", "filter": {} },
+          "expect": { "error": { "category": "MissingBlock" } }
+        }
+      ],
+      "source": "reviewed"
+    }
+  ]
+}

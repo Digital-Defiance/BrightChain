@@ -1,0 +1,178 @@
+{
+  "cases": [
+    {
+      "id": "docs.read.nullMatchesMissing.001",
+      "family": "docs",
+      "description": "{ n: null } matches documents where n is null or absent",
+      "requires": ["docs.read"],
+      "kind": "boundary",
+      "runtimes": ["node"],
+      "topologies": ["memory", "disk"],
+      "ordering": "unordered",
+      "initial": { "collections": { "items": { "docs": [{ "_id": "a", "n": null }, { "_id": "b" }, { "_id": "c", "n": 1 }] } } },
+      "steps": [
+        { "op": "find", "collection": "items", "args": { "filter": { "n": null } }, "expect": { "returns": [{ "_id": "a", "n": null }, { "_id": "b" }] } }
+      ],
+      "source": "reviewed"
+    },
+    {
+      "id": "docs.read.existsFalse.001",
+      "family": "docs",
+      "description": "$exists: false matches absent fields but not explicit null",
+      "requires": ["docs.read"],
+      "kind": "boundary",
+      "runtimes": ["node"],
+      "topologies": ["memory", "disk"],
+      "ordering": "unordered",
+      "initial": { "collections": { "items": { "docs": [{ "_id": "a", "n": null }, { "_id": "b" }, { "_id": "c", "n": 1 }] } } },
+      "steps": [
+        { "op": "find", "collection": "items", "args": { "filter": { "n": { "$exists": false } } }, "expect": { "returns": [{ "_id": "b" }] } },
+        { "op": "find", "collection": "items", "args": { "filter": { "n": { "$exists": true } } }, "expect": { "returns": [{ "_id": "a", "n": null }, { "_id": "c", "n": 1 }] } }
+      ],
+      "source": "reviewed"
+    },
+    {
+      "id": "docs.read.notEqualIncludesMissing.001",
+      "family": "docs",
+      "description": "$ne matches documents that lack the field",
+      "requires": ["docs.read"],
+      "kind": "boundary",
+      "runtimes": ["node"],
+      "topologies": ["memory", "disk"],
+      "ordering": "unordered",
+      "initial": { "collections": { "items": { "docs": [{ "_id": "a", "n": 1 }, { "_id": "b", "n": 2 }, { "_id": "c" }] } } },
+      "steps": [
+        { "op": "find", "collection": "items", "args": { "filter": { "n": { "$ne": 2 } } }, "expect": { "returns": [{ "_id": "a", "n": 1 }, { "_id": "c" }] } }
+      ],
+      "source": "reviewed"
+    },
+    {
+      "id": "docs.read.rangeIsTypeBracketed.001",
+      "family": "docs",
+      "description": "A range over a string does not match numbers, and the reverse",
+      "requires": ["docs.read"],
+      "kind": "boundary",
+      "runtimes": ["node"],
+      "topologies": ["memory", "disk"],
+      "ordering": "unordered",
+      "initial": { "collections": { "items": { "docs": [{ "_id": "a", "n": 1 }, { "_id": "b", "n": "z" }] } } },
+      "steps": [
+        { "op": "find", "collection": "items", "args": { "filter": { "n": { "$gt": "a" } } }, "expect": { "returns": [{ "_id": "b", "n": "z" }] } }
+      ],
+      "source": "reviewed"
+    },
+    {
+      "id": "docs.read.numericRangeSkipsStrings.001",
+      "family": "docs",
+      "description": "A numeric range must not match strings. Today { n: { $gt: 0 } } also returns a document whose n is the string \"z\", so type bracketing works for string operands but not numeric ones.",
+      "requires": ["docs.read"],
+      "kind": "boundary",
+      "runtimes": ["node"],
+      "topologies": ["memory", "disk"],
+      "ordering": "unordered",
+      "initial": { "collections": { "items": { "docs": [{ "_id": "a", "n": 1 }, { "_id": "b", "n": "z" }] } } },
+      "steps": [
+        { "op": "find", "collection": "items", "args": { "filter": { "n": { "$gt": 0 } } }, "expect": { "returns": [{ "_id": "a", "n": 1 }] } }
+      ],
+      "source": "reviewed",
+      "tags": ["knownDivergence"]
+    },
+    {
+      "id": "docs.insertOne.nonStringId.001",
+      "family": "docs",
+      "description": "_id must be a string",
+      "requires": ["docs.insert"],
+      "kind": "error",
+      "runtimes": ["node"],
+      "topologies": ["memory", "disk"],
+      "ordering": "strict",
+      "steps": [
+        { "op": "insertOne", "collection": "items", "args": { "document": { "_id": 7 } }, "expect": { "error": { "category": "InvalidDocument" } } }
+      ],
+      "expect": { "state": { "collections": {} } },
+      "source": "reviewed"
+    },
+    {
+      "id": "docs.insertOne.emptyId.001",
+      "family": "docs",
+      "description": "_id must be 1 to 1024 UTF-8 bytes",
+      "requires": ["docs.insert"],
+      "kind": "error",
+      "runtimes": ["node"],
+      "topologies": ["memory", "disk"],
+      "ordering": "strict",
+      "steps": [
+        { "op": "insertOne", "collection": "items", "args": { "document": { "_id": "" } }, "expect": { "error": { "category": "InvalidDocument" } } }
+      ],
+      "expect": { "state": { "collections": {} } },
+      "source": "reviewed"
+    },
+    {
+      "id": "docs.read.rangeSkipsMissingAndNull.001",
+      "family": "docs",
+      "description": "A range never matches a missing or null field. Today the shared compare treats null and undefined as smaller than everything, so { n: { $lt: 5 } } matches documents with no n.",
+      "requires": ["docs.read"],
+      "kind": "boundary",
+      "runtimes": ["node"],
+      "topologies": ["memory", "disk"],
+      "ordering": "unordered",
+      "initial": { "collections": { "items": { "docs": [{ "_id": "a", "n": 1 }, { "_id": "b" }, { "_id": "c", "n": null }] } } },
+      "steps": [
+        { "op": "find", "collection": "items", "args": { "filter": { "n": { "$lt": 5 } } }, "expect": { "returns": [{ "_id": "a", "n": 1 }] } },
+        { "op": "find", "collection": "items", "args": { "filter": { "n": { "$lte": -1 } } }, "expect": { "returns": [] } }
+      ],
+      "source": "reviewed",
+      "tags": ["knownDivergence"]
+    },
+    {
+      "id": "docs.read.stringRangeIsBinary.001",
+      "family": "docs",
+      "description": "Strings compare by UTF-8 bytes, so \"B\" sorts before \"a\". Today strings compare with localeCompare, which is locale-dependent.",
+      "requires": ["docs.read"],
+      "kind": "boundary",
+      "runtimes": ["node"],
+      "topologies": ["memory", "disk"],
+      "ordering": "unordered",
+      "initial": { "collections": { "items": { "docs": [{ "_id": "a", "s": "a" }, { "_id": "b", "s": "B" }] } } },
+      "steps": [
+        { "op": "find", "collection": "items", "args": { "filter": { "s": { "$gt": "a" } } }, "expect": { "returns": [] } },
+        { "op": "find", "collection": "items", "args": { "filter": { "s": { "$lt": "a" } } }, "expect": { "returns": [{ "_id": "b", "s": "B" }] } }
+      ],
+      "source": "reviewed",
+      "tags": ["knownDivergence"]
+    },
+    {
+      "id": "docs.replaceById.mismatchedIdOnMissingDocument.001",
+      "family": "docs",
+      "description": "A replacement naming a different _id is invalid whether or not the target exists. Today it is refused only when the target exists; against a missing target it succeeds as a no-op.",
+      "requires": ["docs.replaceById"],
+      "kind": "error",
+      "runtimes": ["node"],
+      "topologies": ["memory", "disk"],
+      "ordering": "strict",
+      "initial": { "collections": { "items": { "docs": [{ "_id": "a" }] } } },
+      "steps": [
+        { "op": "replaceById", "collection": "items", "args": { "id": "nope", "document": { "_id": "other" } }, "expect": { "error": { "category": "ImmutableId" } } }
+      ],
+      "expect": { "state": { "collections": { "items": { "docs": [{ "_id": "a" }] } } } },
+      "source": "reviewed",
+      "tags": ["knownDivergence"]
+    },
+    {
+      "id": "docs.read.unknownOperator.001",
+      "family": "docs",
+      "description": "An unknown operator must be rejected. Today it is silently ignored and the filter matches everything, which would make a filter-based delete wipe the collection.",
+      "requires": ["docs.read"],
+      "kind": "error",
+      "runtimes": ["node"],
+      "topologies": ["memory", "disk"],
+      "ordering": "strict",
+      "initial": { "collections": { "items": { "docs": [{ "_id": "a", "n": 1 }] } } },
+      "steps": [
+        { "op": "find", "collection": "items", "args": { "filter": { "n": { "$bogus": 1 } } }, "expect": { "error": { "category": "InvalidFilter" } } }
+      ],
+      "source": "reviewed",
+      "tags": ["knownDivergence"]
+    }
+  ]
+}

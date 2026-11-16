@@ -1,0 +1,70 @@
+{
+  "cases": [
+    {
+      "id": "lifecycle.reopen.persistsDocuments.001",
+      "family": "lifecycle",
+      "description": "Documents and an index survive close and reopen",
+      "requires": ["lifecycle.reopen", "docs.insert", "docs.read"],
+      "kind": "positive",
+      "runtimes": ["node"],
+      "topologies": ["memory", "disk"],
+      "ordering": "strict",
+      "steps": [
+        { "op": "insertOne", "collection": "items", "args": { "document": { "_id": "a", "n": 1 } } },
+        { "op": "reopen" },
+        { "op": "findById", "collection": "items", "args": { "id": "a" }, "expect": { "returns": { "_id": "a", "n": 1 } } }
+      ],
+      "expect": { "state": { "collections": { "items": { "docs": [{ "_id": "a", "n": 1 }] } } } },
+      "source": "reviewed"
+    },
+    {
+      "id": "lifecycle.reopen.emptyDatabase.001",
+      "family": "lifecycle",
+      "description": "An empty database reopens empty",
+      "requires": ["lifecycle.reopen", "collection.lifecycle"],
+      "kind": "boundary",
+      "runtimes": ["node"],
+      "topologies": ["memory", "disk"],
+      "ordering": "strict",
+      "steps": [
+        { "op": "reopen" },
+        { "op": "listCollections", "expect": { "returns": [] } }
+      ],
+      "expect": { "state": { "collections": {} } },
+      "source": "reviewed"
+    },
+    {
+      "id": "lifecycle.reopen.tombstonesSurvive.001",
+      "family": "lifecycle",
+      "description": "A deleted document stays deleted after reopen",
+      "requires": ["lifecycle.reopen", "docs.deleteById", "docs.read"],
+      "kind": "boundary",
+      "runtimes": ["node"],
+      "topologies": ["memory", "disk"],
+      "ordering": "strict",
+      "initial": { "collections": { "items": { "docs": [{ "_id": "a" }, { "_id": "b" }] } } },
+      "steps": [
+        { "op": "deleteById", "collection": "items", "args": { "id": "a" } },
+        { "op": "reopen" },
+        { "op": "findById", "collection": "items", "args": { "id": "a" }, "expect": { "returns": null } }
+      ],
+      "expect": { "state": { "collections": { "items": { "docs": [{ "_id": "b" }] } } } },
+      "source": "reviewed"
+    },
+    {
+      "id": "lifecycle.reopen.useAfterClose.001",
+      "family": "lifecycle",
+      "description": "Operations on a closed database fail with Closed",
+      "requires": ["lifecycle.reopen", "docs.read"],
+      "kind": "error",
+      "runtimes": ["node"],
+      "topologies": ["memory", "disk"],
+      "ordering": "strict",
+      "steps": [
+        { "op": "close" },
+        { "op": "findById", "collection": "items", "args": { "id": "a" }, "expect": { "error": { "category": "Closed" } } }
+      ],
+      "source": "reviewed"
+    }
+  ]
+}

@@ -1,0 +1,332 @@
+{
+  "cases": [
+    {
+      "id": "docs.collection.create.001",
+      "family": "docs",
+      "requires": ["collection.lifecycle"],
+      "kind": "positive",
+      "runtimes": ["node"],
+      "topologies": ["memory", "disk"],
+      "ordering": "strict",
+      "steps": [
+        { "op": "createCollection", "collection": "items" },
+        { "op": "listCollections", "expect": { "returns": ["items"] } }
+      ],
+      "expect": { "state": { "collections": { "items": { "docs": [] } } } },
+      "source": "reviewed"
+    },
+    {
+      "id": "docs.collection.dropAndRecreate.001",
+      "family": "docs",
+      "description": "A dropped collection comes back empty when recreated",
+      "requires": ["collection.lifecycle", "docs.read"],
+      "kind": "boundary",
+      "runtimes": ["node"],
+      "topologies": ["memory", "disk"],
+      "ordering": "strict",
+      "initial": { "collections": { "items": { "docs": [{ "_id": "a" }] } } },
+      "steps": [
+        { "op": "dropCollection", "collection": "items" },
+        { "op": "listCollections", "expect": { "returns": [] } },
+        { "op": "createCollection", "collection": "items" },
+        { "op": "find", "collection": "items", "args": { "filter": {} }, "expect": { "returns": [] } }
+      ],
+      "expect": { "state": { "collections": { "items": { "docs": [] } } } },
+      "source": "reviewed"
+    },
+    {
+      "id": "docs.collection.createTwice.001",
+      "family": "docs",
+      "requires": ["collection.lifecycle"],
+      "kind": "error",
+      "runtimes": ["node"],
+      "topologies": ["memory", "disk"],
+      "ordering": "strict",
+      "steps": [
+        { "op": "createCollection", "collection": "items" },
+        { "op": "createCollection", "collection": "items", "expect": { "error": { "category": "AlreadyExists" } } }
+      ],
+      "expect": { "state": { "collections": { "items": { "docs": [] } } } },
+      "source": "reviewed"
+    },
+    {
+      "id": "docs.insertOne.generatedId.001",
+      "family": "docs",
+      "description": "A document without _id gets a generated 32-hex id, and the id insertOne returns is the id it stored",
+      "requires": ["docs.insert", "docs.read"],
+      "kind": "positive",
+      "runtimes": ["node"],
+      "topologies": ["memory", "disk"],
+      "ordering": "strict",
+      "steps": [
+        {
+          "op": "insertOne",
+          "collection": "items",
+          "args": { "document": { "n": 1 } },
+          "expect": { "returns": { "$partial": true, "acknowledged": true, "insertedId": "$id:inserted" } }
+        },
+        { "op": "find", "collection": "items", "args": { "filter": {} }, "expect": { "returns": [{ "_id": "$id:inserted", "n": 1 }] } }
+      ],
+      "expect": { "state": { "collections": { "items": { "docs": [{ "_id": "$id:inserted", "n": 1 }] } } } },
+      "source": "reviewed"
+    },
+    {
+      "id": "docs.insertOne.createsCollection.001",
+      "family": "docs",
+      "description": "Inserting into a missing collection creates it",
+      "requires": ["docs.insert", "collection.lifecycle"],
+      "kind": "boundary",
+      "runtimes": ["node"],
+      "topologies": ["memory", "disk"],
+      "ordering": "strict",
+      "steps": [
+        { "op": "insertOne", "collection": "fresh", "args": { "document": { "_id": "a" } } },
+        { "op": "listCollections", "expect": { "returns": ["fresh"] } }
+      ],
+      "source": "reviewed"
+    },
+    {
+      "id": "docs.insertOne.unicode.001",
+      "family": "docs",
+      "description": "Unicode ids, values and collection names round-trip",
+      "requires": ["docs.insert", "docs.read"],
+      "kind": "boundary",
+      "runtimes": ["node"],
+      "topologies": ["memory", "disk"],
+      "ordering": "strict",
+      "steps": [
+        { "op": "insertOne", "collection": "Items/新", "args": { "document": { "_id": "ключ-新", "v": "héllo 😀" } } },
+        { "op": "findById", "collection": "Items/新", "args": { "id": "ключ-新" }, "expect": { "returns": { "_id": "ключ-新", "v": "héllo 😀" } } }
+      ],
+      "source": "reviewed"
+    },
+    {
+      "id": "docs.insertOne.duplicateId.001",
+      "family": "docs",
+      "requires": ["docs.insert"],
+      "kind": "error",
+      "runtimes": ["node"],
+      "topologies": ["memory", "disk"],
+      "ordering": "strict",
+      "initial": { "collections": { "items": { "docs": [{ "_id": "a", "n": 1 }] } } },
+      "steps": [
+        { "op": "insertOne", "collection": "items", "args": { "document": { "_id": "a", "n": 2 } }, "expect": { "error": { "category": "DuplicateKey" } } }
+      ],
+      "expect": { "state": { "collections": { "items": { "docs": [{ "_id": "a", "n": 1 }] } } } },
+      "source": "reviewed"
+    },
+    {
+      "id": "docs.insertMany.explicitIds.001",
+      "family": "docs",
+      "requires": ["docs.insert", "docs.read"],
+      "kind": "positive",
+      "runtimes": ["node"],
+      "topologies": ["memory", "disk"],
+      "ordering": "strict",
+      "steps": [
+        {
+          "op": "insertMany",
+          "collection": "items",
+          "args": { "documents": [{ "_id": "a" }, { "_id": "b" }] },
+          "expect": { "returns": { "$partial": true, "insertedCount": 2 } }
+        }
+      ],
+      "expect": { "state": { "collections": { "items": { "docs": [{ "_id": "a" }, { "_id": "b" }] } } } },
+      "source": "reviewed"
+    },
+    {
+      "id": "docs.insertMany.empty.001",
+      "family": "docs",
+      "description": "insertMany of nothing inserts nothing",
+      "requires": ["docs.insert"],
+      "kind": "boundary",
+      "runtimes": ["node"],
+      "topologies": ["memory", "disk"],
+      "ordering": "strict",
+      "steps": [
+        { "op": "insertMany", "collection": "items", "args": { "documents": [] }, "expect": { "returns": { "$partial": true, "insertedCount": 0 } } }
+      ],
+      "source": "reviewed"
+    },
+    {
+      "id": "docs.insertMany.duplicateRollsBack.001",
+      "family": "docs",
+      "description": "insertMany is atomic: a duplicate inside the call leaves nothing behind",
+      "requires": ["docs.insert"],
+      "kind": "error",
+      "runtimes": ["node"],
+      "topologies": ["memory", "disk"],
+      "ordering": "strict",
+      "initial": { "collections": { "items": { "docs": [] } } },
+      "steps": [
+        {
+          "op": "insertMany",
+          "collection": "items",
+          "args": { "documents": [{ "_id": "a" }, { "_id": "b" }, { "_id": "a" }] },
+          "expect": { "error": { "category": "DuplicateKey" } }
+        }
+      ],
+      "expect": { "state": { "collections": { "items": { "docs": [] } } } },
+      "source": "reviewed"
+    },
+    {
+      "id": "docs.replaceById.replaces.001",
+      "family": "docs",
+      "requires": ["docs.replaceById", "docs.read"],
+      "kind": "positive",
+      "runtimes": ["node"],
+      "topologies": ["memory", "disk"],
+      "ordering": "strict",
+      "initial": { "collections": { "items": { "docs": [{ "_id": "a", "n": 1, "old": true }] } } },
+      "steps": [
+        {
+          "op": "replaceById",
+          "collection": "items",
+          "args": { "id": "a", "document": { "n": 2 } },
+          "expect": { "returns": { "$partial": true, "matchedCount": 1, "modifiedCount": 1 } }
+        }
+      ],
+      "expect": { "state": { "collections": { "items": { "docs": [{ "_id": "a", "n": 2 }] } } } },
+      "source": "reviewed"
+    },
+    {
+      "id": "docs.replaceById.sameIdAllowed.001",
+      "family": "docs",
+      "description": "A replacement may restate the same _id",
+      "requires": ["docs.replaceById"],
+      "kind": "boundary",
+      "runtimes": ["node"],
+      "topologies": ["memory", "disk"],
+      "ordering": "strict",
+      "initial": { "collections": { "items": { "docs": [{ "_id": "a", "n": 1 }] } } },
+      "steps": [
+        { "op": "replaceById", "collection": "items", "args": { "id": "a", "document": { "_id": "a", "n": 3 } } }
+      ],
+      "expect": { "state": { "collections": { "items": { "docs": [{ "_id": "a", "n": 3 }] } } } },
+      "source": "reviewed"
+    },
+    {
+      "id": "docs.replaceById.changeId.001",
+      "family": "docs",
+      "description": "_id is immutable",
+      "requires": ["docs.replaceById"],
+      "kind": "error",
+      "runtimes": ["node"],
+      "topologies": ["memory", "disk"],
+      "ordering": "strict",
+      "initial": { "collections": { "items": { "docs": [{ "_id": "a", "n": 1 }] } } },
+      "steps": [
+        { "op": "replaceById", "collection": "items", "args": { "id": "a", "document": { "_id": "b" } }, "expect": { "error": { "category": "ImmutableId" } } }
+      ],
+      "expect": { "state": { "collections": { "items": { "docs": [{ "_id": "a", "n": 1 }] } } } },
+      "source": "reviewed"
+    },
+    {
+      "id": "docs.deleteById.deletes.001",
+      "family": "docs",
+      "requires": ["docs.deleteById", "docs.read"],
+      "kind": "positive",
+      "runtimes": ["node"],
+      "topologies": ["memory", "disk"],
+      "ordering": "strict",
+      "initial": { "collections": { "items": { "docs": [{ "_id": "a" }, { "_id": "b" }] } } },
+      "steps": [
+        { "op": "deleteById", "collection": "items", "args": { "id": "a" }, "expect": { "returns": { "$partial": true, "deletedCount": 1 } } },
+        { "op": "findById", "collection": "items", "args": { "id": "a" }, "expect": { "returns": null } }
+      ],
+      "expect": { "state": { "collections": { "items": { "docs": [{ "_id": "b" }] } } } },
+      "source": "reviewed"
+    },
+    {
+      "id": "docs.deleteById.missing.001",
+      "family": "docs",
+      "requires": ["docs.deleteById"],
+      "kind": "boundary",
+      "runtimes": ["node"],
+      "topologies": ["memory", "disk"],
+      "ordering": "strict",
+      "initial": { "collections": { "items": { "docs": [{ "_id": "a" }] } } },
+      "steps": [
+        { "op": "deleteById", "collection": "items", "args": { "id": "nope" }, "expect": { "returns": { "$partial": true, "deletedCount": 0 } } }
+      ],
+      "expect": { "state": { "collections": { "items": { "docs": [{ "_id": "a" }] } } } },
+      "source": "reviewed"
+    },
+    {
+      "id": "docs.deleteById.afterClose.001",
+      "family": "docs",
+      "requires": ["docs.deleteById", "lifecycle.reopen"],
+      "kind": "error",
+      "runtimes": ["node"],
+      "topologies": ["memory", "disk"],
+      "ordering": "strict",
+      "initial": { "collections": { "items": { "docs": [{ "_id": "a" }] } } },
+      "steps": [
+        { "op": "close" },
+        { "op": "deleteById", "collection": "items", "args": { "id": "a" }, "expect": { "error": { "category": "Closed" } } }
+      ],
+      "source": "reviewed"
+    },
+    {
+      "id": "docs.read.filterRange.001",
+      "family": "docs",
+      "requires": ["docs.read"],
+      "kind": "positive",
+      "runtimes": ["node"],
+      "topologies": ["memory", "disk"],
+      "ordering": "unordered",
+      "initial": { "collections": { "items": { "docs": [{ "_id": "a", "n": 1 }, { "_id": "b", "n": 3 }, { "_id": "c", "n": 5 }] } } },
+      "steps": [
+        { "op": "find", "collection": "items", "args": { "filter": { "n": { "$gt": 2 } } }, "expect": { "returns": [{ "_id": "b", "n": 3 }, { "_id": "c", "n": 5 }] } },
+        { "op": "findOne", "collection": "items", "args": { "filter": { "_id": "a" } }, "expect": { "returns": { "_id": "a", "n": 1 } } }
+      ],
+      "source": "reviewed"
+    },
+    {
+      "id": "docs.read.noMatch.001",
+      "family": "docs",
+      "requires": ["docs.read"],
+      "kind": "boundary",
+      "runtimes": ["node"],
+      "topologies": ["memory", "disk"],
+      "ordering": "strict",
+      "initial": { "collections": { "items": { "docs": [{ "_id": "a", "n": 1 }] } } },
+      "steps": [
+        { "op": "findById", "collection": "items", "args": { "id": "zzz" }, "expect": { "returns": null } },
+        { "op": "findOne", "collection": "items", "args": { "filter": { "n": 99 } }, "expect": { "returns": null } },
+        { "op": "find", "collection": "items", "args": { "filter": { "n": 99 } }, "expect": { "returns": [] } }
+      ],
+      "source": "reviewed"
+    },
+    {
+      "id": "docs.read.missingCollection.001",
+      "family": "docs",
+      "description": "Reading a collection that does not exist is empty, not an error",
+      "requires": ["docs.read"],
+      "kind": "boundary",
+      "runtimes": ["node"],
+      "topologies": ["memory", "disk"],
+      "ordering": "strict",
+      "steps": [
+        { "op": "findById", "collection": "ghost", "args": { "id": "a" }, "expect": { "returns": null } },
+        { "op": "find", "collection": "ghost", "args": { "filter": {} }, "expect": { "returns": [] } }
+      ],
+      "expect": { "state": { "collections": {} } },
+      "source": "reviewed"
+    },
+    {
+      "id": "docs.read.afterClose.001",
+      "family": "docs",
+      "requires": ["docs.read", "lifecycle.reopen"],
+      "kind": "error",
+      "runtimes": ["node"],
+      "topologies": ["memory", "disk"],
+      "ordering": "strict",
+      "steps": [
+        { "op": "close" },
+        { "op": "find", "collection": "items", "args": { "filter": {} }, "expect": { "error": { "category": "Closed" } } }
+      ],
+      "source": "reviewed"
+    }
+  ]
+}

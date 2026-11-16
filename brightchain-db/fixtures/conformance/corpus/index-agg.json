@@ -1,0 +1,156 @@
+{
+  "cases": [
+    {
+      "id": "index-agg.index.createAndQuery.001",
+      "family": "index-agg",
+      "description": "An index built over existing documents returns them in index order",
+      "requires": ["index.basic"],
+      "kind": "positive",
+      "runtimes": ["node"],
+      "topologies": ["memory", "disk"],
+      "ordering": "strict",
+      "initial": { "collections": { "items": { "docs": [{ "_id": "a", "n": 3 }, { "_id": "b", "n": 1 }, { "_id": "c", "n": 2 }] } } },
+      "steps": [
+        { "op": "createIndex", "collection": "items", "args": { "name": "byN", "fields": ["n"] } },
+        { "op": "listIndexes", "collection": "items", "expect": { "returns": [{ "name": "byN", "fields": ["n"] }] } },
+        {
+          "op": "findByIndex",
+          "collection": "items",
+          "args": { "name": "byN" },
+          "expect": { "returns": [{ "_id": "b", "n": 1 }, { "_id": "c", "n": 2 }, { "_id": "a", "n": 3 }] }
+        }
+      ],
+      "source": "reviewed"
+    },
+    {
+      "id": "index-agg.index.equalsQuery.001",
+      "family": "index-agg",
+      "requires": ["index.basic"],
+      "kind": "positive",
+      "runtimes": ["node"],
+      "topologies": ["memory", "disk"],
+      "ordering": "unordered",
+      "initial": {
+        "collections": {
+          "items": {
+            "docs": [{ "_id": "a", "n": 1 }, { "_id": "b", "n": 2 }, { "_id": "c", "n": 2 }],
+            "indexes": [{ "name": "byN", "fields": ["n"] }]
+          }
+        }
+      },
+      "steps": [
+        { "op": "findByIndex", "collection": "items", "args": { "name": "byN", "query": { "equals": [2] } }, "expect": { "returns": [{ "_id": "b", "n": 2 }, { "_id": "c", "n": 2 }] } }
+      ],
+      "source": "reviewed"
+    },
+    {
+      "id": "index-agg.index.maintainedByWrites.001",
+      "family": "index-agg",
+      "description": "Insert, replace and delete keep the index current",
+      "requires": ["index.basic", "docs.insert", "docs.replaceById", "docs.deleteById"],
+      "kind": "boundary",
+      "runtimes": ["node"],
+      "topologies": ["memory", "disk"],
+      "ordering": "strict",
+      "initial": {
+        "collections": {
+          "items": { "docs": [{ "_id": "a", "n": 1 }], "indexes": [{ "name": "byN", "fields": ["n"] }] }
+        }
+      },
+      "steps": [
+        { "op": "insertOne", "collection": "items", "args": { "document": { "_id": "b", "n": 2 } } },
+        { "op": "replaceById", "collection": "items", "args": { "id": "a", "document": { "n": 9 } } },
+        { "op": "findByIndex", "collection": "items", "args": { "name": "byN" }, "expect": { "returns": [{ "_id": "b", "n": 2 }, { "_id": "a", "n": 9 }] } },
+        { "op": "deleteById", "collection": "items", "args": { "id": "b" } },
+        { "op": "findByIndex", "collection": "items", "args": { "name": "byN" }, "expect": { "returns": [{ "_id": "a", "n": 9 }] } }
+      ],
+      "source": "reviewed"
+    },
+    {
+      "id": "index-agg.index.survivesReopen.001",
+      "family": "index-agg",
+      "requires": ["index.basic", "lifecycle.reopen"],
+      "kind": "boundary",
+      "runtimes": ["node"],
+      "topologies": ["memory", "disk"],
+      "ordering": "strict",
+      "initial": {
+        "collections": {
+          "items": { "docs": [{ "_id": "a", "n": 2 }, { "_id": "b", "n": 1 }], "indexes": [{ "name": "byN", "fields": ["n"] }] }
+        }
+      },
+      "steps": [
+        { "op": "reopen" },
+        { "op": "findByIndex", "collection": "items", "args": { "name": "byN" }, "expect": { "returns": [{ "_id": "b", "n": 1 }, { "_id": "a", "n": 2 }] } }
+      ],
+      "source": "reviewed"
+    },
+    {
+      "id": "index-agg.index.multikeyDedup.001",
+      "family": "index-agg",
+      "description": "A document with several array entries appears once",
+      "requires": ["index.basic"],
+      "kind": "boundary",
+      "runtimes": ["node"],
+      "topologies": ["memory", "disk"],
+      "ordering": "strict",
+      "initial": {
+        "collections": {
+          "items": { "docs": [{ "_id": "a", "tags": ["x", "y"] }], "indexes": [{ "name": "byTag", "fields": ["tags"] }] }
+        }
+      },
+      "steps": [
+        { "op": "findByIndex", "collection": "items", "args": { "name": "byTag" }, "expect": { "returns": [{ "_id": "a", "tags": ["x", "y"] }] } }
+      ],
+      "source": "reviewed"
+    },
+    {
+      "id": "index-agg.index.dropIndex.001",
+      "family": "index-agg",
+      "requires": ["index.basic"],
+      "kind": "boundary",
+      "runtimes": ["node"],
+      "topologies": ["memory", "disk"],
+      "ordering": "strict",
+      "initial": {
+        "collections": { "items": { "docs": [{ "_id": "a", "n": 1 }], "indexes": [{ "name": "byN", "fields": ["n"] }] } }
+      },
+      "steps": [
+        { "op": "dropIndex", "collection": "items", "args": { "name": "byN" } },
+        { "op": "listIndexes", "collection": "items", "expect": { "returns": [] } }
+      ],
+      "source": "reviewed"
+    },
+    {
+      "id": "index-agg.index.duplicateName.001",
+      "family": "index-agg",
+      "requires": ["index.basic"],
+      "kind": "error",
+      "runtimes": ["node"],
+      "topologies": ["memory", "disk"],
+      "ordering": "strict",
+      "initial": {
+        "collections": { "items": { "docs": [], "indexes": [{ "name": "byN", "fields": ["n"] }] } }
+      },
+      "steps": [
+        { "op": "createIndex", "collection": "items", "args": { "name": "byN", "fields": ["m"] }, "expect": { "error": { "category": "AlreadyExists" } } }
+      ],
+      "expect": { "state": { "collections": { "items": { "docs": [], "indexes": [{ "name": "byN", "fields": ["n"] }] } } } },
+      "source": "reviewed"
+    },
+    {
+      "id": "index-agg.index.dropMissing.001",
+      "family": "index-agg",
+      "requires": ["index.basic"],
+      "kind": "error",
+      "runtimes": ["node"],
+      "topologies": ["memory", "disk"],
+      "ordering": "strict",
+      "initial": { "collections": { "items": { "docs": [] } } },
+      "steps": [
+        { "op": "dropIndex", "collection": "items", "args": { "name": "ghost" }, "expect": { "error": { "category": "NotFound" } } }
+      ],
+      "source": "reviewed"
+    }
+  ]
+}
