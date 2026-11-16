@@ -35,7 +35,7 @@ import {
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Badge, useTheme } from '@mui/material';
 import { FC, memo, useCallback, useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import './BrightHub.scss';
 import {
   DetailPanelProvider,

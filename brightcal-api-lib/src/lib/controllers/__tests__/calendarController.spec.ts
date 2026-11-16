@@ -13,7 +13,7 @@ import { CalendarPermissionLevel } from '@brightchain/brightcal-lib';
 import {
   CalendarController,
   ICalendarEngineService,
-} from '../calendarController.ts';
+} from '../calendarController.js';
 
 // ─── Mock application ────────────────────────────────────────────────────────
 

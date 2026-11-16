@@ -22,12 +22,11 @@ import {
 } from '../../services/blockFormatService';
 import { ServiceProvider } from '../../services/service.provider';
 import { initializeTestServices } from '../../test/service.initializer.helper';
+import { brightDateNow } from '../../utils/brightDateConversions';
 import { ConstituentBlockListBlock } from '../cbl';
 import { RawDataBlock } from '../rawData';
 import { TarballConstituentBlockListBlock, isTcbl } from './tcbl';
 import { TcblBuilder } from './tcblBuilder';
-import { brightDateNow } from '../../utils/brightDateConversions';
-import type { BrightDateTimestamp } from '../../types/brightDateTimestamp';
 
 // Mock CBLBase to avoid signature validation issues in tests
 jest.mock('../cblBase', () => {

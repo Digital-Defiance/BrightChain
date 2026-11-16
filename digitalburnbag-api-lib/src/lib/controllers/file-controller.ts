@@ -256,7 +256,7 @@ export class FileController<
           ),
         } as unknown as BurnbagResponse,
       };
-    const fileId = this.safeParseId(req.params.id as string);
+    const fileId = this.safeParseId(req.params['id'] as string);
     if (!fileId)
       return {
         statusCode: 400,
@@ -309,7 +309,7 @@ export class FileController<
           ),
         } as unknown as BurnbagResponse,
       };
-    const fileId = this.safeParseId(req.params.id as string);
+    const fileId = this.safeParseId(req.params['id'] as string);
     if (!fileId)
       return {
         statusCode: 400,
@@ -348,7 +348,7 @@ export class FileController<
           ),
         } as unknown as BurnbagResponse,
       };
-    const fileId = this.safeParseId(req.params.id as string);
+    const fileId = this.safeParseId(req.params['id'] as string);
     if (!fileId)
       return {
         statusCode: 400,
@@ -361,7 +361,7 @@ export class FileController<
           ),
         } as unknown as BurnbagResponse,
       };
-    const versionId = this.safeParseId(req.params.versionId as string);
+    const versionId = this.safeParseId(req.params['versionId'] as string);
     if (!versionId)
       return {
         statusCode: 400,
@@ -401,7 +401,7 @@ export class FileController<
           ),
         } as unknown as BurnbagResponse,
       };
-    const fileId = this.safeParseId(req.params.id as string);
+    const fileId = this.safeParseId(req.params['id'] as string);
     if (!fileId)
       return {
         statusCode: 400,
@@ -453,7 +453,7 @@ export class FileController<
           ),
         } as unknown as BurnbagResponse,
       };
-    const fileId = this.safeParseId(req.params.id as string);
+    const fileId = this.safeParseId(req.params['id'] as string);
     if (!fileId)
       return {
         statusCode: 400,
@@ -492,7 +492,7 @@ export class FileController<
           ),
         } as unknown as BurnbagResponse,
       };
-    const fileId = this.safeParseId(req.params.id as string);
+    const fileId = this.safeParseId(req.params['id'] as string);
     if (!fileId)
       return {
         statusCode: 400,
@@ -554,7 +554,7 @@ export class FileController<
           ),
         } as unknown as BurnbagResponse,
       };
-    const fileId = this.safeParseId(req.params.id as string);
+    const fileId = this.safeParseId(req.params['id'] as string);
     if (!fileId)
       return {
         statusCode: 400,
@@ -615,7 +615,7 @@ export class FileController<
           ),
         } as unknown as BurnbagResponse,
       };
-    const fileId = this.safeParseId(req.params.id as string);
+    const fileId = this.safeParseId(req.params['id'] as string);
     if (!fileId)
       return {
         statusCode: 400,
@@ -693,7 +693,7 @@ export class FileController<
           ),
         } as unknown as BurnbagResponse,
       };
-    const fileId = this.safeParseId(req.params.id as string);
+    const fileId = this.safeParseId(req.params['id'] as string);
     if (!fileId)
       return {
         statusCode: 400,
@@ -733,7 +733,7 @@ export class FileController<
           ),
         } as unknown as BurnbagResponse,
       };
-    const fileId = this.safeParseId(req.params.id as string);
+    const fileId = this.safeParseId(req.params['id'] as string);
     if (!fileId)
       return {
         statusCode: 400,
@@ -766,7 +766,7 @@ export class FileController<
           ),
         } as unknown as BurnbagResponse,
       };
-    const fileId = this.safeParseId(req.params.id as string);
+    const fileId = this.safeParseId(req.params['id'] as string);
     if (!fileId)
       return {
         statusCode: 400,

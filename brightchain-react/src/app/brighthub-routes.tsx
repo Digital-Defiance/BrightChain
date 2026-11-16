@@ -68,13 +68,7 @@ import {
   Typography,
 } from '@mui/material';
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
-import {
-  Outlet,
-  Route,
-  Routes,
-  useNavigate,
-  useParams,
-} from 'react-router-dom';
+import { Outlet, Route, Routes, useNavigate, useParams } from 'react-router';
 
 /* ── Stub / default data ───────────────────────────────────── */
 
@@ -578,7 +572,7 @@ const TimelinePage: FC = () => {
         setIsSubmitting(false);
       }
     },
-    [api, userId],
+    [api, userId, currentUser],
   );
 
   const handleLike = useCallback(
@@ -837,14 +831,21 @@ const TimelinePage: FC = () => {
               if (!post) return;
               const isPinned = post.isPinned;
               const req = isPinned
-                ? api.delete(`/brighthub/posts/${postId}/pin`, { data: { userId } })
+                ? api.delete(`/brighthub/posts/${postId}/pin`, {
+                    data: { userId },
+                  })
                 : api.post(`/brighthub/posts/${postId}/pin`, { userId });
               req
                 .then(() => {
                   setPosts((prev) =>
                     prev.map((p) => ({
                       ...p,
-                      isPinned: p._id === postId ? !isPinned : (isPinned ? p.isPinned : false),
+                      isPinned:
+                        p._id === postId
+                          ? !isPinned
+                          : isPinned
+                            ? p.isPinned
+                            : false,
                     })),
                   );
                 })
@@ -1386,7 +1387,7 @@ const HubDetailPage: FC = () => {
         setIsSubmitting(false);
       }
     },
-    [api, userId, hub],
+    [api, userId, hub, currentUser],
   );
 
   if (loading) {

@@ -29,6 +29,16 @@ interface AdminUserControllerHandlers {
   };
 }
 
+/** User fields the admin user endpoints return. */
+interface IAdminUserSummary {
+  _id: string;
+  username: string;
+  email: string;
+  accountStatus: string;
+  emailVerified: boolean;
+  lastLogin: unknown;
+}
+
 // ─── Mock Data ───────────────────────────────────────────────────────────────
 
 const mockUsers = [
@@ -154,7 +164,7 @@ describe('AdminUserController', () => {
 
       expect(result.statusCode).toBe(200);
       const body = result.response as IApiMessageResponse & {
-        users: Array<Record<string, unknown>>;
+        users: IAdminUserSummary[];
         total: number;
         page: number;
         limit: number;
@@ -188,7 +198,7 @@ describe('AdminUserController', () => {
 
       expect(result.statusCode).toBe(200);
       const body = result.response as IApiMessageResponse & {
-        users: Array<Record<string, unknown>>;
+        users: IAdminUserSummary[];
         total: number;
       };
       expect(body.total).toBe(1);
@@ -211,7 +221,7 @@ describe('AdminUserController', () => {
 
       expect(result.statusCode).toBe(200);
       const body = result.response as IApiMessageResponse & {
-        user: Record<string, unknown>;
+        user: IAdminUserSummary;
       };
       expect(body.user.accountStatus).toBe('AdminLock');
       expect(collection.updateOne).toHaveBeenCalledWith(
@@ -232,7 +242,7 @@ describe('AdminUserController', () => {
 
       expect(result.statusCode).toBe(200);
       const body = result.response as IApiMessageResponse & {
-        user: Record<string, unknown>;
+        user: IAdminUserSummary;
       };
       expect(body.user.accountStatus).toBe('Active');
       expect(collection.updateOne).toHaveBeenCalledWith(

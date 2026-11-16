@@ -1,6 +1,5 @@
 import { DigitalBurnbagStrings } from '@brightchain/digitalburnbag-lib';
 import { useI18n } from '@digitaldefiance/express-suite-react-components';
-import { formatDateWithBD } from '../utils/formatBrightDate';
 import AddIcon from '@mui/icons-material/Add';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import RefreshIcon from '@mui/icons-material/Refresh';
@@ -26,6 +25,7 @@ import {
   IApiProviderConnectionDTO,
   IApiProviderConnectionsSummaryDTO,
 } from '../services/burnbag-api-client';
+import { formatDateWithBD } from '../utils/formatBrightDate';
 import {
   ConnectionStatus,
   ProviderConnectionStatus,

@@ -90,13 +90,10 @@ test.describe('Folder Export to TCBL', () => {
     const folder = (contents.subfolders as { id: string; name: string }[]).find(
       (f) => f.name === testFolderName,
     );
-    expect(folder).toBeDefined();
+    if (!folder) throw new Error(`Test folder "${testFolderName}" not found`);
 
     const result = await api.exportFolderToTCBL(folder.id);
     expect(result).toHaveProperty('tcblHandle');
-    // entryCount is nested under manifestSummary
-    const entryCount =
-      result.entryCount ?? result.manifestSummary?.entryCount ?? 0;
-    expect(entryCount).toBeGreaterThan(0);
+    expect(result.manifestSummary.entryCount).toBeGreaterThan(0);
   });
 });

@@ -11,6 +11,7 @@
  */
 
 import {
+  BlockId,
   BlockSize,
   brightDateNow,
   dateToBrightDate,
@@ -37,7 +38,7 @@ const arbHexString = (minLength: number, maxLength: number) =>
 /**
  * Generate a valid block ID (hex string of at least 32 characters)
  */
-const arbBlockId = arbHexString(32, 64);
+const arbBlockId = arbHexString(32, 64).map((id) => id as BlockId);
 
 /**
  * Generate a valid durability level
@@ -127,19 +128,13 @@ describe('DiskBlockMetadataStore Serialization Property Tests', () => {
             // Verify all fields are preserved
             expect(retrieved).not.toBeNull();
             expect(retrieved!.blockId).toBe(metadata.blockId);
-            expect(retrieved!.createdAt).toBeCloseTo(
-              metadata.createdAt,
-              3,
-            );
+            expect(retrieved!.createdAt).toBeCloseTo(metadata.createdAt, 3);
 
             if (metadata.expiresAt === null) {
               expect(retrieved!.expiresAt).toBeNull();
             } else {
               expect(retrieved!.expiresAt).not.toBeNull();
-              expect(retrieved!.expiresAt!).toBeCloseTo(
-                metadata.expiresAt,
-                3,
-              );
+              expect(retrieved!.expiresAt!).toBeCloseTo(metadata.expiresAt, 3);
             }
 
             expect(retrieved!.durabilityLevel).toBe(metadata.durabilityLevel);
@@ -216,19 +211,13 @@ describe('DiskBlockMetadataStore Serialization Property Tests', () => {
               expect(typeof retrieved!.createdAt).toBe('number');
               expect(typeof retrieved!.lastAccessedAt).toBe('number');
               expect(retrieved!.createdAt).toBeCloseTo(createdAt, 3);
-              expect(retrieved!.lastAccessedAt).toBeCloseTo(
-                lastAccessedAt,
-                3,
-              );
+              expect(retrieved!.lastAccessedAt).toBeCloseTo(lastAccessedAt, 3);
 
               if (expiresAt === null) {
                 expect(retrieved!.expiresAt).toBeNull();
               } else {
                 expect(typeof retrieved!.expiresAt).toBe('number');
-                expect(retrieved!.expiresAt!).toBeCloseTo(
-                  expiresAt,
-                  3,
-                );
+                expect(retrieved!.expiresAt!).toBeCloseTo(expiresAt, 3);
               }
             } finally {
               rmSync(iterTestDir, { recursive: true, force: true });

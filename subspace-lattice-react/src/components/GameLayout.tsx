@@ -1,13 +1,14 @@
+import './GameLayout.css';
+
+import { useAuth } from '@digitaldefiance/express-suite-react-components';
 import React, { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router';
+import { PlayerColor } from 'subspace-lattice';
 import { useGameSync } from '../hooks/useGameSync';
 import { Board } from './Board';
 import { Chat } from './Chat';
 import { Lobby } from './Lobby';
 import { RulesDialog } from './RulesDialog';
-import './GameLayout.css';
-import { PlayerColor } from 'subspace-lattice';
-import { useAuth } from '@digitaldefiance/express-suite-react-components';
 
 export const GameLayout: React.FC = () => {
   const { userData } = useAuth();
@@ -24,7 +25,7 @@ export const GameLayout: React.FC = () => {
     hydrateFromRoomCode,
     sendMove,
     sendChatMessage,
-    sendPlacement
+    sendPlacement,
   } = useGameSync(localPlayerId);
 
   // Hydrate from URL: if the route includes a roomCode and we don't already
@@ -69,8 +70,8 @@ export const GameLayout: React.FC = () => {
     activeRoom?.whitePlayerId === localPlayerId || isCreator
       ? PlayerColor.White
       : activeRoom?.blackPlayerId === localPlayerId
-      ? PlayerColor.Black
-      : 'OBSERVER';
+        ? PlayerColor.Black
+        : 'OBSERVER';
 
   if (!activeRoom || !engine) {
     // If we've hydrated an activeRoom from the URL but the user isn't seated
@@ -91,11 +92,15 @@ export const GameLayout: React.FC = () => {
       {showRules && <RulesDialog onClose={() => setShowRules(false)} />}
       <div className="game-info">
         <div className="game-header">
-            <h2>{activeRoom.name}</h2>
-            <button className="rules-btn" onClick={() => setShowRules(true)}>View Rules</button>
+          <h2>{activeRoom.name}</h2>
+          <button className="rules-btn" onClick={() => setShowRules(true)}>
+            View Rules
+          </button>
         </div>
         <div className="room-code-share">
-          <span>Room Code: <strong>{activeRoom.roomCode}</strong></span>
+          <span>
+            Room Code: <strong>{activeRoom.roomCode}</strong>
+          </span>
           <button
             className="copy-code-btn"
             title="Copy join link"
@@ -108,12 +113,16 @@ export const GameLayout: React.FC = () => {
             Copy Link
           </button>
         </div>
-        <p>Your Role: <strong>{localPlayerColor}</strong></p>
-        <p>Current Turn: <strong>{engine.getState().currentPlayer}</strong></p>
+        <p>
+          Your Role: <strong>{localPlayerColor}</strong>
+        </p>
+        <p>
+          Current Turn: <strong>{engine.getState().currentPlayer}</strong>
+        </p>
         {engine.getState().winner && (
-            <p className="winner-announcement">
-                <strong>WINNER: {engine.getState().winner}!</strong>
-            </p>
+          <p className="winner-announcement">
+            <strong>WINNER: {engine.getState().winner}!</strong>
+          </p>
         )}
       </div>
       <div className="game-main-panel">

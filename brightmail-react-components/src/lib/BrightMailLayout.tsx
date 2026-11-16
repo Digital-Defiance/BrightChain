@@ -28,7 +28,7 @@ import { useTheme } from '@mui/material';
 import Box from '@mui/material/Box';
 import Fab from '@mui/material/Fab';
 import { FC, memo, useCallback, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import './BrightMail.scss';
 import { BrightMailProvider, useBrightMail } from './BrightMailContext';
 import ComposeModal from './ComposeModal';

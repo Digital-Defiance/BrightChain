@@ -308,6 +308,7 @@ const EntryForm: React.FC<EntryFormProps> = ({
       vaultId,
       onSave,
       t,
+      getVaultKey,
     ],
   );
 

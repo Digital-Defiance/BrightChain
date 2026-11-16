@@ -53,6 +53,10 @@ import {
 import { IBrightTrustStateMachine } from '../interfaces/services/brightTrustStateMachine';
 import { RedistributionConfig } from '../interfaces/services/redistributionConfig';
 import { Vote, VoteInput } from '../interfaces/vote';
+import {
+  brightDateNow,
+  normalizeToBrightDate,
+} from '../utils/brightDateConversions';
 import { AliasRegistry } from './aliasRegistry';
 import { AuditLogService } from './auditLogService';
 import { BanListCache } from './banListCache';
@@ -62,7 +66,6 @@ import {
 } from './banProposalValidator';
 import { ChecksumService } from './checksum.service';
 import { SealingService } from './sealing.service';
-import { brightDateNow, normalizeToBrightDate } from '../utils/brightDateConversions';
 
 /**
  * Constant-time comparison of two Uint8Array buffers.

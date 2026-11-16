@@ -45,6 +45,7 @@ import { DirectMessageController } from '../controllers/api/conversations';
 import { GroupController } from '../controllers/api/groups';
 import { IBrightChainApplication } from '../interfaces/application';
 import { EventNotificationSystem } from './eventNotificationSystem';
+import { CommunicationTestEventSystem } from './eventNotificationSystem.test-helpers';
 import { PresenceService } from './presenceService';
 
 // ─── i18n bootstrap ─────────────────────────────────────────────────────────
@@ -65,7 +66,7 @@ function ensureI18nContext(): void {
   }
   const ctx = GlobalActiveContext.getInstance();
   try {
-    ctx.context;
+    void ctx.context; // throws if the default context is missing
   } catch {
     ctx.createContext('en-US');
   }
@@ -165,7 +166,7 @@ async function buildMultiNodeEnv(count: number): Promise<{
 }> {
   ensureI18nContext();
   const permissionService = new PermissionService();
-  const eventSystem = new EventNotificationSystem();
+  const eventSystem = new CommunicationTestEventSystem();
   const messageOps = new MessageOperationsService(permissionService);
 
   const conversationService = new ConversationService(null, eventSystem);
@@ -243,6 +244,10 @@ async function buildMultiNodeEnv(count: number): Promise<{
 
     // Bypass JWT auth for e2e tests: override authenticateRequest to just call next()
     // while populating req.user from body/query memberId/senderId so getMemberId() works.
+    /** Controllers expose authenticateRequest as an overridable hook. */
+    interface IAuthOverridable {
+      authenticateRequest: typeof bypassAuth;
+    }
     const bypassAuth = async (
       _route: unknown,
       req: {
@@ -253,21 +258,22 @@ async function buildMultiNodeEnv(count: number): Promise<{
       _res: unknown,
       next: () => void,
     ) => {
-      const id =
-        req.body?.senderId ??
-        req.body?.memberId ??
-        req.body?.requesterId ??
-        req.query?.memberId;
+      const candidate =
+        req.body?.['senderId'] ??
+        req.body?.['memberId'] ??
+        req.body?.['requesterId'] ??
+        req.query?.['memberId'];
+      const id = typeof candidate === 'string' ? candidate : undefined;
       if (id) {
         req.user = { id, email: `${id}@test.local` };
       }
       next();
     };
-    (convController as unknown as Record<string, unknown>).authenticateRequest =
+    (convController as unknown as IAuthOverridable).authenticateRequest =
       bypassAuth;
-    (grpController as unknown as Record<string, unknown>).authenticateRequest =
+    (grpController as unknown as IAuthOverridable).authenticateRequest =
       bypassAuth;
-    (chController as unknown as Record<string, unknown>).authenticateRequest =
+    (chController as unknown as IAuthOverridable).authenticateRequest =
       bypassAuth;
 
     app.use('/api/brightchat/conversations', convController.router);
@@ -992,13 +998,14 @@ describe('Communication API – Multi-Node E2E Integration', () => {
           })
           .expect(201);
 
-        chId = ch.body.data.id;
+        const channelId: string = ch.body.data.id;
+        chId = channelId;
         await request(node1.app)
           .post(`/api/brightchat/channels/${chId}/join`)
           .send({ memberId: 'bob' })
           .expect(200);
 
-        const oldKey = env.channelService.getSymmetricKey(chId)!;
+        const oldKey = env.channelService.getSymmetricKey(channelId)!;
 
         // Kick via node-1
         await request(node1.app)
@@ -1006,7 +1013,7 @@ describe('Communication API – Multi-Node E2E Integration', () => {
           .send({ memberId: 'alice' })
           .expect(200);
 
-        const newKey = env.channelService.getSymmetricKey(chId)!;
+        const newKey = env.channelService.getSymmetricKey(channelId)!;
         expect(Buffer.compare(oldKey, newKey)).not.toBe(0);
 
         // Bob cannot send via node-2

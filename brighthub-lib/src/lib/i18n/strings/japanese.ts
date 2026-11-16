@@ -55,7 +55,8 @@ export const BrightHubJapaneseStrings: ComponentStrings<BrightHubStringKey> = {
   [BrightHubStrings.PostComposer_Uploading]: 'アップロード中...',
   [BrightHubStrings.PostComposer_InsertImage]: '画像を挿入',
   [BrightHubStrings.PostComposer_RemoveAttachment]: '添付を削除',
-  [BrightHubStrings.PostComposer_AttachmentLimitReached]: '投稿あたり最大4件の添付',
+  [BrightHubStrings.PostComposer_AttachmentLimitReached]:
+    '投稿あたり最大4件の添付',
   [BrightHubStrings.PostComposer_EditAltText]: '代替テキストを編集',
   [BrightHubStrings.PostComposer_AltText]: '代替テキスト',
   [BrightHubStrings.PostComposer_Save]: '保存',
@@ -642,7 +643,8 @@ export const BrightHubJapaneseStrings: ComponentStrings<BrightHubStringKey> = {
   [BrightHubStrings.EditProfileDialog_Title]: 'プロフィールを編集',
   [BrightHubStrings.EditProfileDialog_DisplayName]: '表示名',
   [BrightHubStrings.EditProfileDialog_Bio]: '自己紹介',
-  [BrightHubStrings.EditProfileDialog_BioPlaceholder]: '自己紹介を書いてください。Markdownとアイコンがサポートされています。',
+  [BrightHubStrings.EditProfileDialog_BioPlaceholder]:
+    '自己紹介を書いてください。Markdownとアイコンがサポートされています。',
   [BrightHubStrings.EditProfileDialog_BioCharCountTemplate]: '{CURRENT}/{MAX}',
   [BrightHubStrings.EditProfileDialog_BioPreview]: 'プレビュー',
   [BrightHubStrings.EditProfileDialog_Location]: '場所',
@@ -650,8 +652,10 @@ export const BrightHubJapaneseStrings: ComponentStrings<BrightHubStringKey> = {
   [BrightHubStrings.EditProfileDialog_Save]: '保存',
   [BrightHubStrings.EditProfileDialog_Cancel]: 'キャンセル',
   [BrightHubStrings.EditProfileDialog_Saving]: '保存中\u2026',
-  [BrightHubStrings.EditProfileDialog_ErrorBioTooLong]: '自己紹介が最大文字数 {MAX} を超えています。',
-  [BrightHubStrings.EditProfileDialog_ErrorBioContainsImage]: '自己紹介に画像のMarkdown構文を含めることはできません。',
+  [BrightHubStrings.EditProfileDialog_ErrorBioTooLong]:
+    '自己紹介が最大文字数 {MAX} を超えています。',
+  [BrightHubStrings.EditProfileDialog_ErrorBioContainsImage]:
+    '自己紹介に画像のMarkdown構文を含めることはできません。',
 
   // UserProfileCard
   [BrightHubStrings.UserProfileCard_EditProfile]: 'プロフィールを編集',

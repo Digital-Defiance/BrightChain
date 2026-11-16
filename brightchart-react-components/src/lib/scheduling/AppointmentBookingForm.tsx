@@ -11,6 +11,7 @@
  *
  * @module scheduling/AppointmentBookingForm
  */
+import { useFormattedDate } from '@brightchain/brightchain-react-components';
 import type {
   IAppointmentResource,
   ISchedulingSpecialtyExtension,
@@ -21,7 +22,6 @@ import {
   BrightChartStrings,
   ParticipationStatus,
 } from '@brightchain/brightchart-lib';
-import { useFormattedDate } from '@brightchain/brightchain-react-components';
 import * as React from 'react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useBrightChartTranslation } from '../hooks/useBrightChartTranslation';
@@ -180,7 +180,7 @@ export const AppointmentBookingForm: React.FC<AppointmentBookingFormProps> = ({
         formatSlotDateTime(s.start).toLowerCase().includes(lower) ||
         formatSlotDateTime(s.end).toLowerCase().includes(lower),
     );
-  }, [availableSlots, slotFilter]);
+  }, [availableSlots, slotFilter, formatSlotDateTime]);
 
   // Build the appointment resource on submit
   const handleSubmit = useCallback(

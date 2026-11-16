@@ -72,8 +72,6 @@ function makeFileStream() {
 // ── Tests ────────────────────────────────────────────────────────────────────
 
 describe('PathController — public vault', () => {
-  const user = createTestUser({ id: 'owner-1' });
-
   it('GET /path/:vaultId — lists root folder without auth', async () => {
     const { app, deps } = createTestServer();
     deps.vaultContainerService.getContainer.mockResolvedValueOnce(
@@ -250,8 +248,6 @@ describe('PathController — private vault', () => {
 });
 
 describe('PathController — path resolution edge cases', () => {
-  const user = createTestUser({ id: 'owner-1' });
-
   it('resolves nested path segments correctly', async () => {
     const { app, deps } = createTestServer();
     deps.vaultContainerService.getContainer.mockResolvedValueOnce(

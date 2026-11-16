@@ -20,7 +20,10 @@ import { createMockStorageProvider } from './mockStorageProvider';
 function createServices() {
   const permissionService = new PermissionService();
   const channelService = new ChannelService(permissionService);
-  const serverService = new ServerService({ channelService, storageProvider: createMockStorageProvider() });
+  const serverService = new ServerService({
+    channelService,
+    storageProvider: createMockStorageProvider(),
+  });
   return { permissionService, channelService, serverService };
 }
 
@@ -175,16 +178,14 @@ describe('ServerService — unit tests', () => {
       });
 
       // Create additional channels in the server
-      const ch1 = await serverService.createChannelInServer(
-        server.id,
-        ownerId,
-        { name: 'channel-one', visibility: ChannelVisibility.PUBLIC },
-      );
-      const ch2 = await serverService.createChannelInServer(
-        server.id,
-        ownerId,
-        { name: 'channel-two', visibility: ChannelVisibility.PUBLIC },
-      );
+      await serverService.createChannelInServer(server.id, ownerId, {
+        name: 'channel-one',
+        visibility: ChannelVisibility.PUBLIC,
+      });
+      await serverService.createChannelInServer(server.id, ownerId, {
+        name: 'channel-two',
+        visibility: ChannelVisibility.PUBLIC,
+      });
 
       // Collect all channel IDs (default general + 2 new)
       const refreshed = await serverService.getServer(server.id);
@@ -213,7 +214,10 @@ describe('ServerService — unit tests', () => {
       // Need a fresh ChannelService for the second server to avoid channel name conflicts
       const perm2 = new PermissionService();
       const ch2 = new ChannelService(perm2);
-      const ss2 = new ServerService({ channelService: ch2, storageProvider: createMockStorageProvider() });
+      const ss2 = new ServerService({
+        channelService: ch2,
+        storageProvider: createMockStorageProvider(),
+      });
       const s2 = await ss2.createServer(owner, { name: 'Server-B' });
 
       await serverService.addMembers(s1.id, owner, [member]);

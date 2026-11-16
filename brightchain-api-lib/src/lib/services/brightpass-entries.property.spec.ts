@@ -17,6 +17,8 @@ import {
   arbitraryLoginEntry,
   arbitrarySecureNoteEntry,
   arbitraryVaultEntry,
+  asEntryInput,
+  asPlaintextEntry,
   createServiceWithVault,
 } from './brightpass.property.helpers';
 
@@ -30,8 +32,10 @@ describe('BrightPassService – Entry CRUD', () => {
         fc.asyncProperty(arbitraryVaultEntry(), async (entry) => {
           const { service, vaultId } = await createServiceWithVault();
 
-          const added = await service.addEntry(vaultId, entry);
-          const retrieved = await service.getEntry(vaultId, added.id);
+          const added = await service.addEntry(vaultId, asEntryInput(entry));
+          const retrieved = asPlaintextEntry(
+            await service.getEntry(vaultId, added.id),
+          );
 
           expect(retrieved.id).toBe(added.id);
           expect(retrieved.type).toBe(entry.type);
@@ -83,16 +87,20 @@ describe('BrightPassService – Entry CRUD', () => {
           async (entry, newTitle) => {
             const { service, vaultId } = await createServiceWithVault();
 
-            const added = await service.addEntry(vaultId, entry);
-            const updated = await service.updateEntry(vaultId, added.id, {
-              title: newTitle,
-            });
+            const added = await service.addEntry(vaultId, asEntryInput(entry));
+            const updated = await service.updateEntry(
+              vaultId,
+              added.id,
+              asEntryInput({ title: newTitle }),
+            );
 
             expect(updated.title).toBe(newTitle);
             expect(updated.id).toBe(added.id);
             expect(updated.type).toBe(entry.type);
 
-            const retrieved = await service.getEntry(vaultId, added.id);
+            const retrieved = asPlaintextEntry(
+              await service.getEntry(vaultId, added.id),
+            );
             expect(retrieved.title).toBe(newTitle);
 
             const results = await service.searchEntries(vaultId, {
@@ -119,8 +127,14 @@ describe('BrightPassService – Entry CRUD', () => {
             const { service, vaultId, memberId, password } =
               await createServiceWithVault();
 
-            const added1 = await service.addEntry(vaultId, entry1);
-            const added2 = await service.addEntry(vaultId, entry2);
+            const added1 = await service.addEntry(
+              vaultId,
+              asEntryInput(entry1),
+            );
+            const added2 = await service.addEntry(
+              vaultId,
+              asEntryInput(entry2),
+            );
 
             const beforeOpen = await service.openVault(
               memberId,
@@ -165,7 +179,7 @@ describe('BrightPassService – Entry CRUD', () => {
             const { service, vaultId } = await createServiceWithVault();
 
             for (const entry of entries) {
-              await service.addEntry(vaultId, entry);
+              await service.addEntry(vaultId, asEntryInput(entry));
             }
 
             const searchTitle = entries[0].title;
@@ -196,8 +210,8 @@ describe('BrightPassService – Entry CRUD', () => {
           async (loginEntry, noteEntry) => {
             const { service, vaultId } = await createServiceWithVault();
 
-            await service.addEntry(vaultId, loginEntry);
-            await service.addEntry(vaultId, noteEntry);
+            await service.addEntry(vaultId, asEntryInput(loginEntry));
+            await service.addEntry(vaultId, asEntryInput(noteEntry));
 
             const loginResults = await service.searchEntries(vaultId, {
               type: 'login',
@@ -246,8 +260,8 @@ describe('BrightPassService – Entry CRUD', () => {
         updatedAt: new Date(),
       };
 
-      await service.addEntry(vaultId, favEntry);
-      await service.addEntry(vaultId, nonFavEntry);
+      await service.addEntry(vaultId, asEntryInput(favEntry));
+      await service.addEntry(vaultId, asEntryInput(nonFavEntry));
 
       const favResults = await service.searchEntries(vaultId, {
         favorite: true,
@@ -267,7 +281,7 @@ describe('BrightPassService – Entry CRUD', () => {
           const { service, vaultId, memberId, password } =
             await createServiceWithVault();
 
-          await service.addEntry(vaultId, entry);
+          await service.addEntry(vaultId, asEntryInput(entry));
 
           const opened = await service.openVault(memberId, vaultId, password);
           expect(opened.propertyRecords.length).toBe(1);
@@ -296,11 +310,10 @@ describe('BrightPassService – Entry CRUD', () => {
         fc.asyncProperty(arbitraryLoginEntry(), async (entry) => {
           const { service, vaultId } = await createServiceWithVault();
 
-          const added = await service.addEntry(vaultId, entry);
-          const retrieved = (await service.getEntry(
-            vaultId,
-            added.id,
-          )) as LoginEntry;
+          const added = await service.addEntry(vaultId, asEntryInput(entry));
+          const retrieved = asPlaintextEntry<LoginEntry>(
+            await service.getEntry(vaultId, added.id),
+          );
 
           expect(retrieved.siteUrl).toBe(entry.siteUrl);
           expect(retrieved.username).toBe(entry.username);
@@ -315,11 +328,10 @@ describe('BrightPassService – Entry CRUD', () => {
         fc.asyncProperty(arbitraryCreditCardEntry(), async (entry) => {
           const { service, vaultId } = await createServiceWithVault();
 
-          const added = await service.addEntry(vaultId, entry);
-          const retrieved = (await service.getEntry(
-            vaultId,
-            added.id,
-          )) as CreditCardEntry;
+          const added = await service.addEntry(vaultId, asEntryInput(entry));
+          const retrieved = asPlaintextEntry<CreditCardEntry>(
+            await service.getEntry(vaultId, added.id),
+          );
 
           expect(retrieved.cardholderName).toBe(entry.cardholderName);
           expect(retrieved.cardNumber).toBe(entry.cardNumber);
@@ -340,8 +352,10 @@ describe('BrightPassService – Entry CRUD', () => {
         fc.asyncProperty(arbitraryVaultEntry(), async (entry) => {
           const { service, vaultId } = await createServiceWithVault();
 
-          const added = await service.addEntry(vaultId, entry);
-          const retrieved = await service.getEntry(vaultId, added.id);
+          const added = await service.addEntry(vaultId, asEntryInput(entry));
+          const retrieved = asPlaintextEntry(
+            await service.getEntry(vaultId, added.id),
+          );
 
           expect(retrieved.type).toBe(entry.type);
           expect(retrieved.title).toBe(entry.title);

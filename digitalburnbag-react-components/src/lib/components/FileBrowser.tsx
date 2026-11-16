@@ -1,6 +1,5 @@
 import { DigitalBurnbagStrings } from '@brightchain/digitalburnbag-lib';
 import { useI18n } from '@digitaldefiance/express-suite-react-components';
-import { formatDateWithBD } from '../utils/formatBrightDate';
 import CreateNewFolderIcon from '@mui/icons-material/CreateNewFolder';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import FolderIcon from '@mui/icons-material/Folder';
@@ -37,6 +36,7 @@ import type {
   MouseEvent as ReactMouseEvent,
 } from 'react';
 import { useCallback, useState } from 'react';
+import { formatDateWithBD } from '../utils/formatBrightDate';
 import { AccessIndicator } from './AccessIndicator';
 import { EncryptionBadge } from './EncryptionBadge';
 
@@ -182,17 +182,6 @@ export function FileBrowser({
       width: '160px',
     },
   ];
-
-  // Write actions are suppressed when the vault is sealed
-  const WRITE_ACTIONS = new Set([
-    'rename',
-    'move',
-    'copy',
-    'paste',
-    'delete',
-    'uploadNewVersion',
-    'duplicate',
-  ]);
 
   const CONTEXT_ACTIONS: { action: string; labelKey: string }[] = [
     { action: 'preview', labelKey: DigitalBurnbagStrings.Action_Preview },

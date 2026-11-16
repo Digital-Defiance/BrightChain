@@ -23,6 +23,8 @@
 
 import {
   AvailabilityState,
+  BlockId,
+  brightDateNow,
   DeliveryStatus,
   DurabilityLevel,
   IMessageMetadata,
@@ -46,7 +48,7 @@ import {
 const createMetadata = (
   overrides?: Partial<IMessageMetadata>,
 ): IMessageMetadata => ({
-  blockId: 'block-1',
+  blockId: 'block-1' as BlockId,
   messageType: 'test',
   senderId: 'sender-1',
   recipients: ['recipient-1'],
@@ -56,12 +58,12 @@ const createMetadata = (
   encryptionScheme: MessageEncryptionScheme.NONE,
   isCBL: false,
   cblBlockIds: [],
-  createdAt: new Date(),
+  createdAt: brightDateNow(),
   expiresAt: null,
   durabilityLevel: DurabilityLevel.Standard,
   parityBlockIds: [],
   accessCount: 0,
-  lastAccessedAt: new Date(),
+  lastAccessedAt: brightDateNow(),
   replicationStatus: ReplicationStatus.Pending,
   targetReplicationFactor: 3,
   replicaNodeIds: [],
@@ -361,7 +363,9 @@ describe('WebSocket Events Property Tests', () => {
             const system = new EventNotificationSystem();
             const mockWs = createMockWebSocket();
 
-            const uniqueAllowedTypes = [...new Set(allowedTypes)];
+            const uniqueAllowedTypes: MessageEventType[] = [
+              ...new Set(allowedTypes),
+            ];
             const filter: IEventFilter = { types: uniqueAllowedTypes };
             system.subscribe(mockWs, filter);
 

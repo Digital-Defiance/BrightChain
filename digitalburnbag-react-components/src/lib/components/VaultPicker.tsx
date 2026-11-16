@@ -11,7 +11,6 @@
  */
 import { DigitalBurnbagStrings } from '@brightchain/digitalburnbag-lib';
 import { useI18n } from '@digitaldefiance/express-suite-react-components';
-import { formatDateOnlyWithBD } from '../utils/formatBrightDate';
 import AddIcon from '@mui/icons-material/Add';
 import LinkIcon from '@mui/icons-material/Link';
 import LockIcon from '@mui/icons-material/Lock';
@@ -34,6 +33,7 @@ import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import { useCallback, useState } from 'react';
 import type { IApiVaultContainerSummaryDTO } from '../services/burnbag-api-client';
+import { formatDateOnlyWithBD } from '../utils/formatBrightDate';
 
 export interface IVaultPickerProps {
   vaults: IApiVaultContainerSummaryDTO[];

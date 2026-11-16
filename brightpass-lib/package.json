@@ -28,7 +28,7 @@
   "author": "Digital Defiance",
   "license": "MIT",
   "dependencies": {
-    "@digitaldefiance/i18n-lib": "4.7.5"
+    "@digitaldefiance/i18n-lib": "4.8.0"
   },
   "peerDependencies": {
     "@brightchain/brightchain-lib": "^0.33.0"

@@ -167,7 +167,7 @@ export class ACLController<
   private async handleListPermissionSets(
     req: ExpressRequest,
   ): Promise<IStatusCodeResponse<BurnbagResponse>> {
-    const organizationId = req.query.organizationId as unknown as
+    const organizationId = req.query['organizationId'] as unknown as
       | TID
       | undefined;
     const sets = await this.deps.aclService.listPermissionSets(organizationId);
@@ -182,8 +182,8 @@ export class ACLController<
   private async handleGetEffectivePermission(
     req: ExpressRequest,
   ): Promise<IStatusCodeResponse<BurnbagResponse>> {
-    const targetType = req.params.targetType as 'file' | 'folder';
-    const targetId = this.safeParseId(req.params.targetId as string);
+    const targetType = req.params['targetType'] as 'file' | 'folder';
+    const targetId = this.safeParseId(req.params['targetId'] as string);
     if (!targetId)
       return {
         statusCode: 400,
@@ -196,7 +196,7 @@ export class ACLController<
           ),
         } as unknown as BurnbagResponse,
       };
-    const principalId = this.safeParseId(req.params.principalId as string);
+    const principalId = this.safeParseId(req.params['principalId'] as string);
     if (!principalId)
       return {
         statusCode: 400,
@@ -227,8 +227,8 @@ export class ACLController<
   private async handleGetACL(
     req: ExpressRequest,
   ): Promise<IStatusCodeResponse<BurnbagResponse>> {
-    const targetType = req.params.targetType as 'file' | 'folder';
-    const targetId = this.safeParseId(req.params.targetId as string);
+    const targetType = req.params['targetType'] as 'file' | 'folder';
+    const targetId = this.safeParseId(req.params['targetId'] as string);
     if (!targetId)
       return {
         statusCode: 400,
@@ -266,8 +266,8 @@ export class ACLController<
           ),
         } as unknown as BurnbagResponse,
       };
-    const targetType = req.params.targetType as 'file' | 'folder';
-    const targetId = this.safeParseId(req.params.targetId as string);
+    const targetType = req.params['targetType'] as 'file' | 'folder';
+    const targetId = this.safeParseId(req.params['targetId'] as string);
     if (!targetId)
       return {
         statusCode: 400,

@@ -10,12 +10,12 @@
  * Requirements: 7.3, 7.4
  */
 
+import type { BrightDateTimestamp } from '@brightchain/brightchain-lib';
 import {
+  brightDateNow,
   CommunicationEventType,
   PresenceStatus,
 } from '@brightchain/brightchain-lib';
-import type { BrightDateTimestamp } from '@brightchain/brightchain-lib';
-import { brightDateNow } from '@brightchain/brightchain-lib';
 import { WebSocket } from 'ws';
 
 /**

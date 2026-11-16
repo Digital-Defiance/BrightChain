@@ -19,7 +19,7 @@ let lastCropperOnCropComplete:
 
 // Mock react-easy-crop (doesn't work in jsdom)
 jest.mock('react-easy-crop', () => {
-  const React = require('react');
+  const React = jest.requireActual<typeof import('react')>('react');
   return {
     __esModule: true,
     default: (props: any) => {

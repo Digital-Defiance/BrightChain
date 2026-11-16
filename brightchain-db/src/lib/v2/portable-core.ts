@@ -10,6 +10,14 @@ import type {
   ReplaceResult,
 } from '../types';
 import {
+  readAttachment,
+  streamAttachment,
+  validateFileReferences,
+  writeAttachment,
+  type AttachmentRef,
+} from './attachments';
+import type { BrightDbV2BlockSource } from './block-source';
+import {
   compareKeys,
   compareVersions,
   decodeDocument,
@@ -27,28 +35,20 @@ import {
   type V2Version,
 } from './codec';
 import {
-  readAttachment,
-  streamAttachment,
-  validateFileReferences,
-  writeAttachment,
-  type AttachmentRef,
-} from './attachments';
-import {
-  BrightDbV2StorageError,
-  isGarbageStorage,
-  type BrightDbV2DiskWriter,
-  type BrightDbV2Storage,
-} from './storage';
-import {
   decodeIndexId,
   extractIndexKeys,
   indexRange,
   type IndexQuery,
 } from './index-key';
 import { V2IndexTree } from './index-tree';
-import type { BrightDbV2BlockSource } from './block-source';
 import { copyDatabase, mergeReplica, type PortableMergeResult } from './merge';
 import { collectReachable } from './reachable';
+import {
+  BrightDbV2StorageError,
+  isGarbageStorage,
+  type BrightDbV2DiskWriter,
+  type BrightDbV2Storage,
+} from './storage';
 import { V2Tree } from './tree';
 
 export type PortableWriteOperation =
@@ -56,7 +56,12 @@ export type PortableWriteOperation =
   | { type: 'insert'; collection: string; document: BsonDocument }
   | { type: 'replace'; collection: string; id: string; document: BsonDocument }
   | { type: 'delete'; collection: string; id: string }
-  | { type: 'createIndex'; collection: string; name: string; fields: readonly string[] }
+  | {
+      type: 'createIndex';
+      collection: string;
+      name: string;
+      fields: readonly string[];
+    }
   | { type: 'dropIndex'; collection: string; name: string };
 
 /** The read-only half of a collection. A snapshot exposes only this. */
@@ -90,7 +95,9 @@ export interface PortableChangeEvent {
   /** The root now current. Several commits may be covered by one event. */
   root: string;
   /** The document-level changes between `previous` and `root`. */
-  changes<T extends BsonDocument = BsonDocument>(): AsyncGenerator<PortableChange<T>>;
+  changes<T extends BsonDocument = BsonDocument>(): AsyncGenerator<
+    PortableChange<T>
+  >;
 }
 
 export interface PortableSubscribeOptions {
@@ -143,7 +150,9 @@ async function readIndexDefinitions(
     collection.indexes,
   );
   if (set.kind !== 'indexes') {
-    throw new Error('BrightDB collection indexes do not reference an index set');
+    throw new Error(
+      'BrightDB collection indexes do not reference an index set',
+    );
   }
   return [...set.definitions];
 }
@@ -215,7 +224,10 @@ type PendingCollection =
   | LiveCollection
   | { kind: 'missing'; dropVersion?: V2Version };
 
-function liveCollection(root: V2CollectionRoot, created: boolean): LiveCollection {
+function liveCollection(
+  root: V2CollectionRoot,
+  created: boolean,
+): LiveCollection {
   return {
     kind: 'live',
     root,
@@ -411,7 +423,6 @@ class WriteBatch {
     return { acknowledged: true, deletedCount: 1 };
   }
 
-
   private async documentBytes(digest: Digest): Promise<Uint8Array> {
     return this.documents.get(digest) ?? (await this.store.readBlock(digest));
   }
@@ -436,7 +447,8 @@ class WriteBatch {
   ): void {
     const hex = key.toString('hex');
     const adds = collection.indexAdds.get(index) ?? new Map<string, Buffer>();
-    const removes = collection.indexRemoves.get(index) ?? new Map<string, Buffer>();
+    const removes =
+      collection.indexRemoves.get(index) ?? new Map<string, Buffer>();
     collection.indexAdds.set(index, adds);
     collection.indexRemoves.set(index, removes);
     if (kind === 'add') {
@@ -493,7 +505,8 @@ class WriteBatch {
     encodeKey(indexName);
     const existing = await this.collection(name);
     // Like inserting, creating an index creates a missing collection.
-    const collection = existing.kind === 'live' ? existing : this.addCollection(name);
+    const collection =
+      existing.kind === 'live' ? existing : this.addCollection(name);
     const definitions = await this.definitions(collection);
     if (definitions.some((definition) => definition.name === indexName)) {
       throw new Error(`BrightDB index already exists: ${indexName}`);
@@ -517,7 +530,10 @@ class WriteBatch {
       if (effective.target !== null) {
         addDocument(
           record.key,
-          decodeDocument(await this.documentBytes(effective.target), record.key),
+          decodeDocument(
+            await this.documentBytes(effective.target),
+            record.key,
+          ),
         );
       }
     }
@@ -542,7 +558,8 @@ class WriteBatch {
     }
     const definitions = await this.definitions(collection);
     const position = definitions.findIndex((d) => d.name === indexName);
-    if (position < 0) throw new Error(`BrightDB index does not exist: ${indexName}`);
+    if (position < 0)
+      throw new Error(`BrightDB index does not exist: ${indexName}`);
     definitions.splice(position, 1);
     collection.indexAdds.delete(indexName);
     collection.indexRemoves.delete(indexName);
@@ -680,7 +697,8 @@ export class PortableSnapshot {
 
     if (typeof exactId === 'string') {
       const record = await this.primary.get(collection.primary, exactId);
-      const document = record && (await this.readDocument<T>(record, collection));
+      const document =
+        record && (await this.readDocument<T>(record, collection));
       if (document && matchesFilter(document, filter)) yield document;
       return;
     }
@@ -730,7 +748,10 @@ export class PortableSnapshot {
         );
         if (!collection) return [];
         return (await readIndexDefinitions(this.store, collection)).map(
-          ({ name: indexName, fields }) => ({ name: indexName, fields: [...fields] }),
+          ({ name: indexName, fields }) => ({
+            name: indexName,
+            fields: [...fields],
+          }),
         );
       },
       findByIndex: async (indexName, query = {}) => {
@@ -740,11 +761,13 @@ export class PortableSnapshot {
           this.rootBlock,
           name,
         );
-        if (!collection) throw new Error(`BrightDB collection does not exist: ${name}`);
-        const definition = (await readIndexDefinitions(this.store, collection)).find(
-          (candidate) => candidate.name === indexName,
-        );
-        if (!definition) throw new Error(`BrightDB index does not exist: ${indexName}`);
+        if (!collection)
+          throw new Error(`BrightDB collection does not exist: ${name}`);
+        const definition = (
+          await readIndexDefinitions(this.store, collection)
+        ).find((candidate) => candidate.name === indexName);
+        if (!definition)
+          throw new Error(`BrightDB index does not exist: ${indexName}`);
         const { lo, hi } = indexRange(definition.fields.length, query);
         const limit = query.limit ?? Number.POSITIVE_INFINITY;
         const seen = new Set<string>();
@@ -760,9 +783,13 @@ export class PortableSnapshot {
           if (seen.has(id)) continue;
           seen.add(id);
           const record = await this.primary.get(collection.primary, id);
-          const document = record ? await this.readDocument<T>(record, collection) : null;
+          const document = record
+            ? await this.readDocument<T>(record, collection)
+            : null;
           if (!document) {
-            throw new Error(`BrightDB index ${indexName} references a missing document`);
+            throw new Error(
+              `BrightDB index ${indexName} references a missing document`,
+            );
           }
           documents.push(document);
         }
@@ -799,7 +826,9 @@ export class PortableBrightDbCore {
   }
 
   /** Wrap a storage that already holds an initialized database. */
-  static async fromStorage(storage: BrightDbV2Storage): Promise<PortableBrightDbCore> {
+  static async fromStorage(
+    storage: BrightDbV2Storage,
+  ): Promise<PortableBrightDbCore> {
     await readDatabaseRoot(storage);
     return new PortableBrightDbCore(storage);
   }
@@ -829,12 +858,23 @@ export class PortableBrightDbCore {
    * that can list and delete blocks (the in-memory and IndexedDB storages can).
    */
   async collectGarbage(
-    options: { keepRoots?: readonly string[]; graceMs?: number; dryRun?: boolean } = {},
-  ): Promise<{ keptReachable: number; keptRecent: number; removed: number; bytesFreed: number }> {
+    options: {
+      keepRoots?: readonly string[];
+      graceMs?: number;
+      dryRun?: boolean;
+    } = {},
+  ): Promise<{
+    keptReachable: number;
+    keptRecent: number;
+    removed: number;
+    bytesFreed: number;
+  }> {
     this.requireOpen();
     const store = this.store;
     if (!isGarbageStorage(store)) {
-      throw new BrightDbV2StorageError('This storage cannot list and delete blocks, so it cannot be garbage collected');
+      throw new BrightDbV2StorageError(
+        'This storage cannot list and delete blocks, so it cannot be garbage collected',
+      );
     }
     const graceMs = options.graceMs ?? 3_600_000;
     return store.withWriteLock(async () => {
@@ -843,7 +883,12 @@ export class PortableBrightDbCore {
       const keep = new Set<string>();
       for (const digest of reachable) keep.add(await store.nameOf(digest));
       const now = Date.now();
-      const result = { keptReachable: 0, keptRecent: 0, removed: 0, bytesFreed: 0 };
+      const result = {
+        keptReachable: 0,
+        keptRecent: 0,
+        removed: 0,
+        bytesFreed: 0,
+      };
       const doomed: string[] = [];
       for (const block of await store.listBlocks()) {
         if (keep.has(block.name)) {
@@ -947,10 +992,16 @@ export class PortableBrightDbCore {
   }
 
   /** @internal Write a manifest block as given, for tests that need a malformed tree. */
-  async putAttachmentTree(manifest: { size: bigint; depth: number; entries: string[] }): Promise<string> {
+  async putAttachmentTree(manifest: {
+    size: bigint;
+    depth: number;
+    entries: string[];
+  }): Promise<string> {
     this.requireOpen();
     return this.store.withWriteLock(async (writer) => {
-      const digest = await writer.writeBlock(encodeMetadata({ kind: 'blob', ...manifest }));
+      const digest = await writer.writeBlock(
+        encodeMetadata({ kind: 'blob', ...manifest }),
+      );
       await writer.syncBlocks();
       return digest;
     });
@@ -984,7 +1035,8 @@ export class PortableBrightDbCore {
   ): Promise<PortableMergeResult> {
     this.requireOpen();
     // A database, a storage and an HTTP source all answer "current root" and "block by digest".
-    const source: BrightDbV2BlockSource = other instanceof PortableBrightDbCore ? other.store : other;
+    const source: BrightDbV2BlockSource =
+      other instanceof PortableBrightDbCore ? other.store : other;
     const remoteHead = options.root ?? (await source.readHead());
     const result = await this.store.withWriteLock(async (writer) => {
       const previous = await this.store.readHead();
@@ -1117,23 +1169,25 @@ export class PortableBrightDbCore {
     stage: (batch: WriteBatch) => Promise<T>,
   ): Promise<T> {
     this.requireOpen();
-    return this.store.withWriteLock(async (writer) => {
-      const root = await readDatabaseRoot(this.store);
-      const batch = new WriteBatch(
-        this.store,
-        writer,
-        root,
-        Buffer.from(this.store.writerId).toString('hex'),
-      );
-      const result = await stage(batch);
-      const head = await batch.persist();
-      if (head !== null) await writer.publishHead(head);
-      return result;
-    }).then((result) => {
-      // Tell this handle's subscribers now instead of at their next poll.
-      for (const wake of this.wakeups) wake();
-      return result;
-    });
+    return this.store
+      .withWriteLock(async (writer) => {
+        const root = await readDatabaseRoot(this.store);
+        const batch = new WriteBatch(
+          this.store,
+          writer,
+          root,
+          Buffer.from(this.store.writerId).toString('hex'),
+        );
+        const result = await stage(batch);
+        const head = await batch.persist();
+        if (head !== null) await writer.publishHead(head);
+        return result;
+      })
+      .then((result) => {
+        // Tell this handle's subscribers now instead of at their next poll.
+        for (const wake of this.wakeups) wake();
+        return result;
+      });
   }
 
   /** Apply a batch in order and publish all of its changes as one commit. */
@@ -1160,7 +1214,11 @@ export class PortableBrightDbCore {
             await batch.delete(collection, operation.id);
             break;
           case 'createIndex':
-            await batch.createIndex(collection, operation.name, operation.fields);
+            await batch.createIndex(
+              collection,
+              operation.name,
+              operation.fields,
+            );
             break;
           case 'dropIndex':
             await batch.dropIndex(collection, operation.name);
@@ -1188,7 +1246,7 @@ export class PortableBrightDbCore {
       findById: async (id) => (await read()).findById(id),
       findOne: async (filter = {}) => (await read()).findOne(filter),
       find: (filter = {}) =>
-        new Cursor<T>(async () => (await (await read()).find(filter).toArray())),
+        new Cursor<T>(async () => await (await read()).find(filter).toArray()),
       insertOne: (document) =>
         this.commit(async (batch) => ({
           acknowledged: true,

@@ -8,12 +8,9 @@ import { BlockDataType } from './enumerations/blockDataType';
 import { BlockSize } from './enumerations/blockSize';
 import { BlockType } from './enumerations/blockType';
 import { IEphemeralBlockMetadata } from './interfaces/blocks/metadata/ephemeralBlockMetadata';
-import type { BrightDateTimestamp } from './types/brightDateTimestamp';
 import { getGlobalServiceProvider } from './services/globalServiceProvider';
-import {
-  brightDateNow,
-  normalizeToBrightDate,
-} from './utils/brightDateConversions';
+import type { BrightDateTimestamp } from './types/brightDateTimestamp';
+import { normalizeToBrightDate } from './utils/brightDateConversions';
 import { parseEphemeralBlockMetadataJson } from './utils/typeGuards';
 
 export class EphemeralBlockMetadata<TID extends PlatformID = Uint8Array>

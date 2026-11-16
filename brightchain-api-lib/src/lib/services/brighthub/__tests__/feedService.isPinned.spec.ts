@@ -1,28 +1,36 @@
 import { FeedService } from '../feedService';
 
+/** A stored document: arbitrary fields keyed by name. */
+type MockDoc = Record<string, unknown>;
+
+/** A post fixture; `_id` is always present, other fields vary per test. */
+interface IMockPost extends MockDoc {
+  _id: string;
+}
+
 /**
  * Mock collection factory — mirrors the Collection<T> interface used by FeedService.
  */
 function createMockCollection() {
-  const store = new Map();
+  const store = new Map<string, MockDoc>();
   return {
-    create: jest.fn(async (record: any) => {
-      store.set(record._id, record);
+    create: jest.fn(async (record: MockDoc) => {
+      store.set(String(record['_id']), record);
       return record;
     }),
-    findOne: jest.fn((filter: any) => ({
-      exec: jest.fn(async () => store.get(filter._id) ?? null),
+    findOne: jest.fn((filter: MockDoc) => ({
+      exec: jest.fn(async () => store.get(String(filter['_id'])) ?? null),
     })),
-    find: jest.fn((filter: any) => ({
+    find: jest.fn((filter: MockDoc | undefined) => ({
       sort: jest.fn().mockReturnThis(),
       skip: jest.fn().mockReturnThis(),
       limit: jest.fn().mockReturnThis(),
       exec: jest.fn(async () => {
-        const results: any[] = [];
+        const results: MockDoc[] = [];
         for (const doc of store.values()) {
           let match = true;
           for (const [key, val] of Object.entries(filter || {})) {
-            if ((doc as any)[key] !== val) {
+            if (doc[key] !== val) {
               match = false;
               break;
             }
@@ -32,17 +40,17 @@ function createMockCollection() {
         return results;
       }),
     })),
-    updateOne: jest.fn((_filter: any, _update: any) => ({
+    updateOne: jest.fn((_filter: MockDoc, _update: MockDoc) => ({
       exec: jest.fn(async () => ({ modifiedCount: 1 })),
     })),
-    deleteOne: jest.fn((_filter: any) => ({
+    deleteOne: jest.fn((_filter: MockDoc) => ({
       exec: jest.fn(async () => ({ deletedCount: 1 })),
     })),
     _store: store,
   };
 }
 
-function makePost(overrides: Record<string, unknown> = {}) {
+function makePost(overrides: MockDoc = {}): IMockPost {
   const now = new Date().toISOString();
   return {
     _id: `post-${Math.random().toString(36).slice(2, 10)}`,
@@ -97,7 +105,9 @@ describe('FeedService — isPinned field', () => {
 
   beforeEach(() => {
     app = createMockApplication();
-    feedService = new FeedService(app as any);
+    feedService = new FeedService(
+      app as unknown as ConstructorParameters<typeof FeedService>[0],
+    );
   });
 
   it('getUserFeed returns posts with isPinned field preserved', async () => {
@@ -124,16 +134,13 @@ describe('FeedService — isPinned field', () => {
     const regularPost = makePost({ _id: 'post-regular', isPinned: false });
     const noFlagPost = makePost({ _id: 'post-noflag' });
     // noFlagPost has no isPinned set (undefined via makePost default)
-    delete (noFlagPost as any).isPinned;
+    delete noFlagPost['isPinned'];
 
     app._collections['brighthub_posts']._store.set(
       regularPost._id,
       regularPost,
     );
-    app._collections['brighthub_posts']._store.set(
-      noFlagPost._id,
-      noFlagPost,
-    );
+    app._collections['brighthub_posts']._store.set(noFlagPost._id, noFlagPost);
 
     const result = await feedService.getUserFeed('author-1');
 

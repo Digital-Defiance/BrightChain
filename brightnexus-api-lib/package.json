@@ -7,20 +7,20 @@
   "dependencies": {
     "@brightchain/brightnexus-lib": "^0.33.0",
     "@brightchain/db": "^0.33.0",
-    "@digitaldefiance/ecies-lib": "5.2.2",
-    "@digitaldefiance/i18n-lib": "4.7.5",
-    "@digitaldefiance/node-ecies-lib": "5.2.2",
-    "@digitaldefiance/node-express-suite": "4.28.3",
+    "@digitaldefiance/ecies-lib": "5.2.3",
+    "@digitaldefiance/i18n-lib": "4.8.0",
+    "@digitaldefiance/node-ecies-lib": "5.2.3",
+    "@digitaldefiance/node-express-suite": "5.1.0",
     "express": "^5.1.0",
     "tslib": "^2.8.1"
   },
   "devDependencies": {
     "@brightchain/brightchain-lib": "^0.33.0",
     "@types/express": "^5.0.3",
-    "@types/supertest": "^6.0.3",
-    "supertest": "^7.1.4",
     "@types/jest": "^30.0.0",
-    "@types/node": "^24.1.0"
+    "@types/node": "^24.1.0",
+    "@types/supertest": "^6.0.3",
+    "supertest": "^7.1.4"
   },
   "scripts": {
     "build": "npx nx build brightnexus-api-lib",

@@ -18,6 +18,7 @@ import fc from 'fast-check';
 import {
   createPostService,
   POST_MAX_CHARACTERS,
+  PostRecord,
   PostService,
 } from './postService';
 import {
@@ -42,13 +43,11 @@ const validContentArb = fc
 describe('Property 2: Preservation — Public Post Operations & Other Stats Unchanged', () => {
   let service: PostService;
   let mockApp: ReturnType<typeof createMockApplication>;
-  let postsCollection: MockCollection<{ _id: string }>;
-  let likesCollection: MockCollection<{ _id: string }>;
+  let postsCollection: MockCollection<PostRecord>;
 
   beforeEach(() => {
     mockApp = createMockApplication();
-    postsCollection = mockApp.collections.get('brighthub_posts')!;
-    likesCollection = mockApp.collections.get('brighthub_likes')!;
+    postsCollection = mockApp.getModel<PostRecord>('brighthub_posts');
     service = createPostService(mockApp);
   });
 

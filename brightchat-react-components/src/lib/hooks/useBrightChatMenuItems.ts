@@ -17,8 +17,8 @@ import type {
   MenuType,
 } from '@digitaldefiance/express-suite-react-components';
 import { MenuTypes } from '@digitaldefiance/express-suite-react-components';
-import { createElement, useMemo } from 'react';
 import type { ReactNode } from 'react';
+import { createElement, useMemo } from 'react';
 
 /** Maximum number of servers shown in the menu. */
 const MAX_SERVERS = 5;

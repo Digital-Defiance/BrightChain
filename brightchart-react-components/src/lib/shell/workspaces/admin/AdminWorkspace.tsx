@@ -5,7 +5,7 @@
  */
 
 import React from 'react';
-import { Route, Routes } from 'react-router-dom';
+import { Route, Routes } from 'react-router';
 import { OrganizationRoutes } from '../../../organizations/OrganizationRoutes';
 import { AuditLogViewer } from './AuditLogViewer';
 import { RoleConfiguration } from './RoleConfiguration';

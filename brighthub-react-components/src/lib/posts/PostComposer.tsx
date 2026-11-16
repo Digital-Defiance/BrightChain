@@ -9,7 +9,11 @@
  * Implements Requirement 12.2
  */
 
-import { CONSTANTS, type ITempUploadResponse } from '@brightchain/brightchain-lib';
+import {
+  CONSTANTS,
+  type ITempUploadResponse,
+} from '@brightchain/brightchain-lib';
+import { IEnvironment } from '@brightchain/brightchain-react-components';
 import {
   BrightHubStrings,
   countInlineImages,
@@ -72,7 +76,6 @@ import FontAwesomeIconPicker from './FontAwesomeIconPicker';
 import ImageCropDialog from './ImageCropDialog';
 import { extractMarkdownImages, updateAltText } from './inlineImageUtils';
 import { MarkupHelpDialog } from './MarkupHelpDialog';
-import { IEnvironment } from '@brightchain/brightchain-react-components';
 
 /** Default maximum character count for a post */
 const DEFAULT_MAX_CHAR_COUNT = 280;
@@ -360,22 +363,18 @@ export function PostComposer({
       // Enforce the per-post attachment limit using the latest state.
       let availableSlots = MAX_POST_ATTACHMENTS - attachments.length;
       if (availableSlots <= 0) {
-        setUploadError(
-          t(BrightHubStrings.PostComposer_AttachmentLimitReached),
-        );
+        setUploadError(t(BrightHubStrings.PostComposer_AttachmentLimitReached));
         return;
       }
       if (imageFiles.length > availableSlots) {
-        setUploadError(
-          t(BrightHubStrings.PostComposer_AttachmentLimitReached),
-        );
+        setUploadError(t(BrightHubStrings.PostComposer_AttachmentLimitReached));
       }
 
       for (const file of imageFiles) {
         if (availableSlots <= 0) break;
         availableSlots -= 1;
         // Sequential awaits so chip ordering matches selection order.
-        // eslint-disable-next-line no-await-in-loop
+
         await stageAttachmentFile(file);
       }
     },
@@ -396,9 +395,7 @@ export function PostComposer({
             }
           }
           if (target.commitToken && stagingApi) {
-            stagingApi
-              .discardFile(target.commitToken)
-              .catch(() => undefined);
+            stagingApi.discardFile(target.commitToken).catch(() => undefined);
           }
         }
         return prev.filter((a) => a.id !== id);
@@ -908,9 +905,7 @@ export function PostComposer({
                       sx={{ width: 24, height: 24 }}
                     />
                   ) : null}
-                  {att.uploading ? (
-                    <CircularProgress size={14} />
-                  ) : null}
+                  {att.uploading ? <CircularProgress size={14} /> : null}
                   <Typography
                     variant="caption"
                     sx={{

@@ -23,15 +23,6 @@ function formatLocal(d: Date): string {
   );
 }
 
-function parseDate(s: string): Date {
-  const cleaned = s.replace(/Z$/, '');
-  const parts = cleaned.split('T');
-  const dp = parts[0].split('-').map(Number);
-  if (parts.length === 1) return new Date(dp[0], dp[1] - 1, dp[2]);
-  const tp = parts[1].split(':').map((p) => parseInt(p, 10));
-  return new Date(dp[0], dp[1] - 1, dp[2], tp[0] || 0, tp[1] || 0, tp[2] || 0);
-}
-
 let uidCounter = 0;
 function makeEvent(overrides: Partial<ICalendarEventDTO>): ICalendarEventDTO {
   uidCounter++;

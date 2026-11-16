@@ -1,4 +1,3 @@
-import { formatDateWithBD } from '../utils/formatBrightDate';
 import CheckIcon from '@mui/icons-material/Check';
 import ReplyIcon from '@mui/icons-material/Reply';
 import {
@@ -13,6 +12,7 @@ import {
   Typography,
 } from '@mui/material';
 import { useCallback, useState } from 'react';
+import { formatDateWithBD } from '../utils/formatBrightDate';
 
 export interface IComment {
   id: string;

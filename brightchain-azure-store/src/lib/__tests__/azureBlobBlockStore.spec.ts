@@ -281,7 +281,7 @@ describe('AzureBlobBlockStore', () => {
         BlockStoreFactory.createAzureStore({
           region: 'eastus',
           containerOrBucketName: 'test',
-          blockSize: BlockSize.Small,
+          supportedBlockSizes: [BlockSize.Small],
         }),
       ).toThrow(StoreError);
 
@@ -295,7 +295,7 @@ describe('AzureBlobBlockStore', () => {
       const config: IAzureBlobBlockStoreConfig = {
         region: 'eastus',
         containerOrBucketName: 'test-container',
-        blockSize: BlockSize.Small,
+        supportedBlockSizes: [BlockSize.Small],
         connectionString: 'DefaultEndpointsProtocol=https;AccountName=test;',
       };
 
@@ -310,7 +310,7 @@ describe('AzureBlobBlockStore', () => {
         BlockStoreFactory.createAzureStore({
           region: 'eastus',
           containerOrBucketName: 'test',
-          blockSize: BlockSize.Small,
+          supportedBlockSizes: [BlockSize.Small],
         }),
       );
       expect(error).toBeInstanceOf(StoreError);

@@ -11,7 +11,7 @@
 
 import { ADMIN } from '@brightchain/brightchart-lib';
 import React from 'react';
-import { Route, Routes, useParams } from 'react-router-dom';
+import { Route, Routes, useParams } from 'react-router';
 import { AccessDenied } from '../shell/components/AccessDenied';
 import { useActiveContext } from '../shell/contexts/ActiveContext';
 import { InvitationRedeemForm } from './components/InvitationRedeemForm';

@@ -23,11 +23,11 @@ import { BrightTrustEpoch } from '../interfaces/brightTrustEpoch';
 import { IdentityRecoveryRecord } from '../interfaces/identityRecoveryRecord';
 import { IBrightTrustDatabase } from '../interfaces/services/brightTrustDatabase';
 import { IBrightTrustMember } from '../interfaces/services/brightTrustService';
+import { brightDateNow } from '../utils/brightDateConversions';
 import { AliasRegistry } from './aliasRegistry';
 import { IdentitySealingPipeline } from './identitySealingPipeline';
 import { SealingService } from './sealing.service';
 import { ServiceProvider } from './service.provider';
-import { brightDateNow } from '../utils/brightDateConversions';
 
 jest.setTimeout(30000);
 

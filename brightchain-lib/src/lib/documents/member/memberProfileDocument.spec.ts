@@ -17,8 +17,8 @@ import {
   IPublicMemberProfileHydratedData,
 } from '../../interfaces/member/profileStorage';
 import { ServiceProvider } from '../../services/service.provider';
-import { normalizeToBrightDate } from '../../utils/brightDateConversions';
 import { Checksum } from '../../types/checksum';
+import { normalizeToBrightDate } from '../../utils/brightDateConversions';
 import { MemberProfileDocument } from './memberProfileDocument';
 
 describe('MemberProfileDocument', () => {

@@ -10,8 +10,7 @@
  */
 
 import type { ISubsystemContext } from '@brightchain/brightchain-lib';
-import { describe, expect, it, jest } from '@jest/globals';
-import { BrightCalSubsystemPlugin } from '../brightCalSubsystemPlugin.ts';
+import { BrightCalSubsystemPlugin } from '../brightCalSubsystemPlugin.js';
 
 // Mock the heavy dependencies so the test doesn't need a real DB or Express app.
 // createCalendarRouter returns a result with stub controllers, middleware, and services.
@@ -59,7 +58,9 @@ function createMockContext(): {
       register: jest.fn((key: string, factory: () => unknown) => {
         registered.set(key, factory());
       }),
-      get: jest.fn((key: string) => registered.get(key)),
+      get: jest.fn((key: string) =>
+        registered.get(key),
+      ) as unknown as ISubsystemContext['services']['get'],
       has: jest.fn((key: string) => registered.has(key)),
     },
     apiRouter: {
@@ -97,7 +98,7 @@ describe('BrightCalSubsystemPlugin', () => {
 
   it('should not define a stop() method', () => {
     const plugin = new BrightCalSubsystemPlugin();
-    expect(plugin.stop).toBeUndefined();
+    expect('stop' in plugin).toBe(false);
   });
 
   it('should register calendarEngine and eventEngine on initialize', async () => {

@@ -3,9 +3,9 @@
  * Identical to playwright.config.ts but adds the custom progress reporter
  * so e2e-with-progress.mjs gets per-test events via the shared JSONL file.
  */
-import baseConfig from './playwright.config';
 import { workspaceRoot } from '@nx/devkit';
 import path from 'path';
+import baseConfig from './playwright.config';
 
 export default {
   ...baseConfig,

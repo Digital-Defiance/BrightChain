@@ -148,6 +148,13 @@ describe('SqliteOfflineQueue', () => {
         getRemoteChanges: jest.fn(),
         downloadFile: jest.fn(),
         uploadFile: jest.fn(),
+        downloadFileContent: jest.fn(),
+        uploadFileContent: jest.fn(),
+        listFolder: jest.fn(),
+        listRootFolder: jest.fn(),
+        createRemoteFolder: jest.fn(),
+        deleteRemoteEntry: jest.fn(),
+        renameRemoteEntry: jest.fn(),
         propagateLocalChange: jest.fn().mockResolvedValue(undefined),
       };
 
@@ -176,6 +183,13 @@ describe('SqliteOfflineQueue', () => {
         getRemoteChanges: jest.fn(),
         downloadFile: jest.fn(),
         uploadFile: jest.fn(),
+        downloadFileContent: jest.fn(),
+        uploadFileContent: jest.fn(),
+        listFolder: jest.fn(),
+        listRootFolder: jest.fn(),
+        createRemoteFolder: jest.fn(),
+        deleteRemoteEntry: jest.fn(),
+        renameRemoteEntry: jest.fn(),
         propagateLocalChange: jest
           .fn()
           .mockRejectedValue(new Error('network error')),

@@ -39,8 +39,8 @@ const servers = [
     memberIds: ['u1'],
     channelIds: [],
     categories: [],
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    createdAt: 0,
+    updatedAt: 0,
   },
 ];
 
@@ -62,11 +62,7 @@ describe('generateBrightChatMenuOptions — serverIcon', () => {
   });
 
   it('server entries do not have icon when serverIcon is omitted', () => {
-    const { options } = generateBrightChatMenuOptions(
-      chatMenu,
-      servers,
-      0,
-    );
+    const { options } = generateBrightChatMenuOptions(chatMenu, servers, 0);
 
     const serverEntry = options.find((o) => o.id === 'brightchat-server-srv-1');
     expect(serverEntry).toBeDefined();
@@ -82,9 +78,7 @@ describe('generateBrightChatMenuOptions — serverIcon', () => {
       'chat-icon',
     );
 
-    const dmEntry = options.find(
-      (o) => o.id === 'brightchat-direct-messages',
-    );
+    const dmEntry = options.find((o) => o.id === 'brightchat-direct-messages');
     expect(dmEntry).toBeDefined();
     expect(dmEntry!.icon).toBeUndefined();
   });

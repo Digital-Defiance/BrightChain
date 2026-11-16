@@ -29,6 +29,15 @@ function makeConfig(
 ): IEmailGatewayConfig {
   return {
     canonicalDomain: 'brightchain.org',
+    testMode: {
+      enabled: false,
+      catchallEnabled: false,
+      catchallDirectory: '',
+      skipDkim: false,
+      skipSpamFilter: false,
+      acceptAllRecipients: false,
+      testRecipients: [],
+    },
     postfixHost: 'localhost',
     postfixPort: 25,
     dkimKeyPath: '/etc/dkim/private.key',
@@ -307,10 +316,7 @@ describe('RecipientLookupService TCP server', () => {
     await service.start();
     const port = getPort(service);
 
-    const response = await sendRequest(
-      port,
-      'virtual nobody@brightchain.org',
-    );
+    const response = await sendRequest(port, 'virtual nobody@brightchain.org');
     expect(response).toBe('NOTFOUND ');
   });
 

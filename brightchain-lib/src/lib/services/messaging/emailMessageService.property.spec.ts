@@ -19,12 +19,12 @@
 import fc from 'fast-check';
 import type { IGossipService } from '../../interfaces/availability/gossipService';
 import { createMailbox } from '../../interfaces/messaging/emailAddress';
+import { brightDateNow } from '../../utils/brightDateConversions';
 import {
   EmailMessageService,
   type IEmailMetadataStore,
 } from './emailMessageService';
 import type { MessageCBLService } from './messageCBLService';
-import { brightDateNow } from '../../utils/brightDateConversions';
 
 // Feature: email-messaging-protocol, Property 3: Message-ID Uniqueness and Format
 

@@ -25,19 +25,38 @@ export async function startFakeS3(): Promise<FakeS3> {
     request.on('data', (chunk) => chunks.push(chunk));
     request.on('end', () => {
       const url = new URL(request.url ?? '/', 'http://localhost');
-      const [bucket, ...rest] = decodeURIComponent(url.pathname).split('/').filter(Boolean);
+      const [bucket, ...rest] = decodeURIComponent(url.pathname)
+        .split('/')
+        .filter(Boolean);
       const key = rest.join('/');
-      const send = (status: number, body: string | Buffer = '', headers: Record<string, string> = {}) => {
-        response.writeHead(status, { 'content-length': Buffer.byteLength(body), ...headers });
+      const send = (
+        status: number,
+        body: string | Buffer = '',
+        headers: Record<string, string> = {},
+      ) => {
+        response.writeHead(status, {
+          'content-length': Buffer.byteLength(body),
+          ...headers,
+        });
         response.end(request.method === 'HEAD' ? undefined : body);
       };
       const missing = (code: string) =>
-        send(404, xml(`<Error><Code>${code}</Code><Message>${code}</Message></Error>`), { 'content-type': 'application/xml' });
+        send(
+          404,
+          xml(`<Error><Code>${code}</Code><Message>${code}</Message></Error>`),
+          { 'content-type': 'application/xml' },
+        );
 
       if (!bucket) return send(404);
       if (!key) {
-        if (request.method === 'PUT') { buckets.add(bucket); return send(200); }
-        if (request.method === 'DELETE') { buckets.delete(bucket); return send(204); }
+        if (request.method === 'PUT') {
+          buckets.add(bucket);
+          return send(200);
+        }
+        if (request.method === 'DELETE') {
+          buckets.delete(bucket);
+          return send(204);
+        }
         if (request.method === 'GET') {
           if (!buckets.has(bucket)) return missing('NoSuchBucket');
           const prefix = url.searchParams.get('prefix') ?? '';
@@ -55,8 +74,15 @@ export async function startFakeS3(): Promise<FakeS3> {
             xml(
               `<ListBucketResult><Name>${escapeXml(bucket)}</Name><Prefix>${escapeXml(prefix)}</Prefix>` +
                 `<KeyCount>${page.length}</KeyCount><MaxKeys>${max}</MaxKeys><IsTruncated>${truncated}</IsTruncated>` +
-                (truncated ? `<NextContinuationToken>${escapeXml(page[page.length - 1])}</NextContinuationToken>` : '') +
-                page.map((name) => `<Contents><Key>${escapeXml(name)}</Key><Size>${objects.get(`${bucket}/${name}`)?.length ?? 0}</Size></Contents>`).join('') +
+                (truncated
+                  ? `<NextContinuationToken>${escapeXml(page[page.length - 1])}</NextContinuationToken>`
+                  : '') +
+                page
+                  .map(
+                    (name) =>
+                      `<Contents><Key>${escapeXml(name)}</Key><Size>${objects.get(`${bucket}/${name}`)?.length ?? 0}</Size></Contents>`,
+                  )
+                  .join('') +
                 '</ListBucketResult>',
             ),
             { 'content-type': 'application/xml' },
@@ -71,7 +97,12 @@ export async function startFakeS3(): Promise<FakeS3> {
           return send(200, '', { etag: '"fake"' });
         case 'GET': {
           const bytes = objects.get(full);
-          return bytes ? send(200, bytes, { 'content-type': 'application/octet-stream', etag: '"fake"' }) : missing('NoSuchKey');
+          return bytes
+            ? send(200, bytes, {
+                'content-type': 'application/octet-stream',
+                etag: '"fake"',
+              })
+            : missing('NoSuchKey');
         }
         case 'HEAD': {
           const bytes = objects.get(full);

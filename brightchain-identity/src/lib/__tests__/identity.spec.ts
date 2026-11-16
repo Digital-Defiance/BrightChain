@@ -1,5 +1,5 @@
-import { ECIESService, Member } from '@digitaldefiance/node-ecies-lib';
 import { MemberType, SecureString } from '@digitaldefiance/ecies-lib';
+import { ECIESService, Member } from '@digitaldefiance/node-ecies-lib';
 
 import { BrightChainIdentityError } from '../errors';
 import { BrightChainIdentity } from '../identity';
@@ -105,7 +105,7 @@ describe('BrightChainIdentity', () => {
     });
   });
 
-  describe('describe', () => {
+  describe('BrightChainIdentity.describe', () => {
     it('produces a JSON-safe descriptor with no private-key fields', () => {
       const bundle = BrightChainIdentity.create(NAME, EMAIL);
       try {

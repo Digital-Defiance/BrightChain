@@ -10,6 +10,7 @@
 
 import {
   BlockSize,
+  brightDateNow,
   createWriteProofPayload,
   type IAclDocument,
   initializeBrightChain,
@@ -30,9 +31,17 @@ import * as crypto from 'crypto';
 import { ECDSANodeAuthenticator } from '../lib/auth/ecdsaNodeAuthenticator';
 import {
   createMemberPoolAcl,
+  IStoredPoolSecurityDocument,
   loadPoolSecurity,
   savePoolSecurity,
 } from '../lib/services/poolSecurityService';
+
+/** User document written by these tests. */
+interface IUserDocument {
+  [key: string]: unknown;
+  _id: string;
+  name: string;
+}
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -134,7 +143,7 @@ describe('Member Pool Security — Adversarial E2E Tests', () => {
       systemUser.privateKey,
     );
 
-    const coll = db.collection('users');
+    const coll = db.collection<IUserDocument>('users');
     await expect(
       coll.insertOne({ _id: 'user1', name: 'Alice' }),
     ).resolves.not.toThrow();
@@ -236,7 +245,7 @@ describe('Member Pool Security — Adversarial E2E Tests', () => {
     const aclManager = new WriteAclManager(store, authenticator);
     aclManager.setCachedAcl(acl);
 
-    const registry = HeadRegistry.createIsolated();
+    const registry = InMemoryHeadRegistry.createIsolated();
     const authorizedRegistry = new AuthorizedHeadRegistry(
       registry,
       aclManager,
@@ -252,6 +261,8 @@ describe('Member Pool Security — Adversarial E2E Tests', () => {
     const proof: IWriteProof = {
       signerPublicKey: systemUser.publicKey,
       signature,
+      dbName: POOL_NAME,
+      collectionName: 'users',
       blockId: 'blockA',
       nonce: 1,
     };
@@ -269,7 +280,7 @@ describe('Member Pool Security — Adversarial E2E Tests', () => {
     const aclManager = new WriteAclManager(store, authenticator);
     aclManager.setCachedAcl(acl);
 
-    const registry = HeadRegistry.createIsolated();
+    const registry = InMemoryHeadRegistry.createIsolated();
     const authorizedRegistry = new AuthorizedHeadRegistry(
       registry,
       aclManager,
@@ -290,6 +301,8 @@ describe('Member Pool Security — Adversarial E2E Tests', () => {
     const proof: IWriteProof = {
       signerPublicKey: systemUser.publicKey,
       signature,
+      dbName: POOL_NAME,
+      collectionName: 'users',
       blockId: 'original-block',
       nonce: 1,
     };
@@ -467,7 +480,7 @@ describe('Member Pool Security — Adversarial E2E Tests', () => {
       ...acl,
       authorizedWriters: [...acl.authorizedWriters, attacker.publicKey],
       version: acl.version + 1,
-      updatedAt: new Date(),
+      updatedAt: brightDateNow(),
     };
 
     // Attacker signs with their own key (not an admin)
@@ -630,6 +643,8 @@ describe('Member Pool Security — Gossip Head Update Tests', () => {
     const badProof: IWriteProof = {
       signerPublicKey: attacker.publicKey,
       signature: attackerSig,
+      dbName: POOL_NAME,
+      collectionName: 'users',
       blockId: 'gossip-block-1',
       nonce: 1,
     };
@@ -640,7 +655,7 @@ describe('Member Pool Security — Gossip Head Update Tests', () => {
         POOL_NAME,
         'users',
         'gossip-block-1',
-        new Date(),
+        brightDateNow(),
         badProof,
       ),
     ).rejects.toThrow(/authorization/i);
@@ -678,6 +693,8 @@ describe('Member Pool Security — Gossip Head Update Tests', () => {
     const goodProof: IWriteProof = {
       signerPublicKey: systemUser.publicKey,
       signature: validSig,
+      dbName: POOL_NAME,
+      collectionName: 'users',
       blockId: 'gossip-block-2',
       nonce: 1,
     };
@@ -687,7 +704,7 @@ describe('Member Pool Security — Gossip Head Update Tests', () => {
       POOL_NAME,
       'users',
       'gossip-block-2',
-      new Date(),
+      brightDateNow(),
       goodProof,
     );
 
@@ -725,7 +742,8 @@ describe('Member Pool Security — ACL Integrity on Load', () => {
     await savePoolSecurity(db, validAcl, 'sys-tamper-test');
 
     // Tamper with the stored document directly
-    const securityColl = db.collection('__pool_security__');
+    const securityColl =
+      db.collection<IStoredPoolSecurityDocument>('__pool_security__');
     const storedDoc = await securityColl.findOne({ _id: 'pool_acl' });
     expect(storedDoc).toBeDefined();
 
@@ -789,7 +807,8 @@ describe('Member Pool Security — Runtime Startup Rejects Tampered ACL (Task 7.
 
     // 2. Tamper with the stored ACL — add an attacker's key to the writers list
     const attacker = generateKeyPair();
-    const securityColl = db.collection('__pool_security__');
+    const securityColl =
+      db.collection<IStoredPoolSecurityDocument>('__pool_security__');
     const storedDoc = await securityColl.findOne({ _id: 'pool_acl' });
     expect(storedDoc).toBeDefined();
 
@@ -911,7 +930,8 @@ describe('Member Pool Security — Init Service Rejects Tampered ACL (Task 7.2)'
 
     // b) Tamper with the stored ACL — add an attacker's key to the writers list
     const attacker = generateKeyPair();
-    const securityColl = db.collection('__pool_security__');
+    const securityColl =
+      db.collection<IStoredPoolSecurityDocument>('__pool_security__');
     const storedDoc = await securityColl.findOne({ _id: 'pool_acl' });
     expect(storedDoc).toBeDefined();
 

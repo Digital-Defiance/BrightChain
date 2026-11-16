@@ -54,7 +54,11 @@ const SafeFaIcon: FC<SafeFaIconProps> = ({
     <span
       ref={containerRef}
       data-testid={testId}
-      style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
     />
   );
 };

@@ -161,7 +161,7 @@ describe('S3BlockStore', () => {
       const configNoRegion: IS3BlockStoreConfig = {
         region: '',
         containerOrBucketName: 'test-bucket',
-        blockSize: BlockSize.Small,
+        supportedBlockSizes: [BlockSize.Small],
         useIamRole: true,
       };
 
@@ -310,7 +310,7 @@ describe('S3BlockStore', () => {
         BlockStoreFactory.createS3Store({
           region: 'us-east-1',
           containerOrBucketName: 'test',
-          blockSize: BlockSize.Small,
+          supportedBlockSizes: [BlockSize.Small],
         }),
       ).toThrow(StoreError);
 
@@ -323,7 +323,7 @@ describe('S3BlockStore', () => {
       const config: IS3BlockStoreConfig = {
         region: 'us-east-1',
         containerOrBucketName: 'test-bucket',
-        blockSize: BlockSize.Small,
+        supportedBlockSizes: [BlockSize.Small],
         accessKeyId: 'AKIAIOSFODNN7EXAMPLE',
         secretAccessKey: 'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY',
       };
@@ -339,7 +339,7 @@ describe('S3BlockStore', () => {
         BlockStoreFactory.createS3Store({
           region: 'us-east-1',
           containerOrBucketName: 'test',
-          blockSize: BlockSize.Small,
+          supportedBlockSizes: [BlockSize.Small],
         }),
       );
       expect(error).toBeInstanceOf(StoreError);

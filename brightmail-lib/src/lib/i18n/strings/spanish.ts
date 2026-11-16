@@ -280,8 +280,7 @@ export const BrightMailSpanishStrings: RequiredBrandedStringsCollection<
   [BrightMailStrings.CalInvite_AddToCalendar]: 'Agregar al calendario',
   [BrightMailStrings.CalInvite_ViewInCalendar]: 'Ver en el calendario',
   [BrightMailStrings.CalInvite_AlreadyResponded]: 'Ya ha respondido',
-  [BrightMailStrings.CalInvite_ResponseTemplate]:
-    'Su respuesta: {RESPONSE}',
+  [BrightMailStrings.CalInvite_ResponseTemplate]: 'Su respuesta: {RESPONSE}',
   [BrightMailStrings.CalInvite_Cancelled]: 'Evento cancelado',
   [BrightMailStrings.CalInvite_CancelledBody]:
     'El organizador ha cancelado este evento.',
@@ -291,8 +290,7 @@ export const BrightMailSpanishStrings: RequiredBrandedStringsCollection<
   [BrightMailStrings.CalInvite_Counter]: 'Contrapropuesta',
   [BrightMailStrings.CalInvite_CounterBody]:
     'Un asistente ha propuesto un nuevo horario.',
-  [BrightMailStrings.CalInvite_ErrorRsvp]:
-    'No se pudo enviar la confirmación',
+  [BrightMailStrings.CalInvite_ErrorRsvp]: 'No se pudo enviar la confirmación',
   [BrightMailStrings.CalInvite_ErrorImport]:
     'No se pudo importar el evento al calendario',
   [BrightMailStrings.CalInvite_SuccessAccepted]: 'Invitación aceptada',

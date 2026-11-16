@@ -49,9 +49,16 @@ type HandlerParams = Parameters<HandlerFn>;
 /**
  * Subclass that exposes the protected handlers for testing.
  */
+/** The UserController handlers exercised by these tests. */
+interface IUserControllerTestHandlers {
+  register: HandlerFn;
+  getProfile: HandlerFn;
+  updateProfile: HandlerFn;
+}
+
 class TestableUserController extends UserController {
-  public get testHandlers() {
-    return this.handlers;
+  public get testHandlers(): IUserControllerTestHandlers {
+    return this.handlers as unknown as IUserControllerTestHandlers;
   }
 }
 

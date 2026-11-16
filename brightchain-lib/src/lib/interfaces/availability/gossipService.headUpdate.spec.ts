@@ -7,13 +7,13 @@
  * Validates: Requirements 2.1
  */
 
+import { brightDateNow } from '../../utils/brightDateConversions';
 import type { BlockId } from '../branded/primitives/blockId';
 import {
   BlockAnnouncement,
   HeadUpdateMetadata,
   validateBlockAnnouncement,
 } from './gossipService';
-import { brightDateNow } from '../../utils/brightDateConversions';
 
 /** Cast a test string to BlockId without validation — for test data only. */
 const bid = (s: string) => s as unknown as BlockId;

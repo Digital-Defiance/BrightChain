@@ -127,17 +127,17 @@ test.describe('Error Handling', () => {
   }) => {
     // Seed and immediately destroy a file
     const file = await api.seedFile(`e2e-error-${Date.now()}.txt`);
-      await api.softDeleteFile(file.id);
-      await api.destroyFile(file.id);
+    await api.softDeleteFile(file.id);
+    await api.destroyFile(file.id);
 
-      // Try to get metadata of destroyed file
-      try {
-        await api.getFileMetadata(file.id);
-        // If it succeeds, the file wasn't fully destroyed yet
-      } catch (err) {
-        // Expected — destroyed files should return 410 or 404
-        expect(String(err)).toMatch(/4[01][04]/);
-      }
+    // Try to get metadata of destroyed file
+    try {
+      await api.getFileMetadata(file.id);
+      // If it succeeds, the file wasn't fully destroyed yet
+    } catch (err) {
+      // Expected — destroyed files should return 410 or 404
+      expect(String(err)).toMatch(/4[01][04]/);
+    }
   });
 
   test('concurrent section navigation does not corrupt state', async ({

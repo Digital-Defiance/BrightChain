@@ -35,7 +35,7 @@ describe('GpgKeyManager', () => {
       expect(result.metadata.userId).toContain('test@example.com');
       expect(result.metadata.keyId).toBeTruthy();
       expect(result.metadata.fingerprint).toBeTruthy();
-      expect(typeof result.metadata.createdAt).toBe("number");
+      expect(typeof result.metadata.createdAt).toBe('number');
       expect(result.metadata.algorithm).toBeTruthy();
     }, 30000);
 
@@ -76,7 +76,7 @@ describe('GpgKeyManager', () => {
       expect(metadata.fingerprint).toBeTruthy();
       expect(metadata.userId).toContain('Import Test');
       expect(metadata.userId).toContain('import@example.com');
-      expect(typeof metadata.createdAt).toBe("number");
+      expect(typeof metadata.createdAt).toBe('number');
       expect(metadata.algorithm).toBeTruthy();
     });
 
@@ -355,7 +355,7 @@ describe('GpgKeyManager', () => {
           privateKeyArmored,
           'wrong-passphrase',
         );
-        fail('Expected decrypt to throw');
+        throw new Error('Expected decrypt to throw');
       } catch (error) {
         expect(error).toBeInstanceOf(EmailError);
         expect((error as EmailError).errorType).toBe(
@@ -369,7 +369,7 @@ describe('GpgKeyManager', () => {
 
       try {
         await manager.encrypt(plaintext, ['not-a-valid-key']);
-        fail('Expected encrypt to throw');
+        throw new Error('Expected encrypt to throw');
       } catch (error) {
         expect(error).toBeInstanceOf(EmailError);
         expect((error as EmailError).errorType).toBe(

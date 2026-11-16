@@ -7,6 +7,7 @@
  * @see Requirements 3.1, 3.3, 4.1, 4.2, 5.1, 5.3, 7.1, 8.1, 8.2, 9.1, 9.3
  */
 import 'reflect-metadata';
+
 import * as x509 from '@peculiar/x509';
 import { EmailErrorType } from '../../enumerations/messaging/emailErrorType';
 import { MessageEncryptionScheme } from '../../enumerations/messaging/messageEncryptionScheme';

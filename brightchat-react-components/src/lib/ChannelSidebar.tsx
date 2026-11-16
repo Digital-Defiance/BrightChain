@@ -142,7 +142,9 @@ const ChannelSidebar: FC<ChannelSidebarProps> = ({
             borderColor: 'divider',
           }}
         >
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 0 }}>
+          <Box
+            sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 0 }}
+          >
             {serverIconFaClass ? (
               <Avatar
                 sx={{

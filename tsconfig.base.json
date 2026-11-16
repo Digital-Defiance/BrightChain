@@ -107,6 +107,9 @@
       "@brightchain/brightchain-react-components": [
         "brightchain-react-components/src/index.ts"
       ],
+      "@brightchain/brightchain-react-components/*": [
+        "brightchain-react-components/src/*"
+      ],
       "@brightchain/brightchart-react-components": [
         "brightchart-react-components/src/index.ts"
       ],

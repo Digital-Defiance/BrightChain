@@ -9,20 +9,20 @@ import {
   IReconciliationService,
   Ledger,
   LedgerEntrySerializer,
-  MemberSignerAdapter,
   MemberStore,
   QuorumType,
   ServiceProvider,
   SignerRole,
   SignerStatus,
   type IAppSubsystemPlugin,
+  type ILedgerSigner,
   type ISubsystemContext,
 } from '@brightchain/brightchain-lib';
 import { BrightDbApplication } from '@brightchain/node-express-suite';
+import type { SignatureUint8Array } from '@digitaldefiance/ecies-lib';
 import {
-  PlatformID,
   getEnhancedNodeIdProvider,
-  IIdProvider,
+  PlatformID,
 } from '@digitaldefiance/node-ecies-lib';
 import {
   debugLog,
@@ -58,12 +58,12 @@ import { BrightChainDatabasePlugin } from './plugins/brightchain-database-plugin
 import { configureBrightChainApp } from './plugins/configure-brightchain-app';
 import { BrightChatSubsystemPlugin } from './plugins/subsystems/brightChatSubsystemPlugin';
 import { BrightHubSubsystemPlugin } from './plugins/subsystems/brightHubSubsystemPlugin';
+import { BrightNexusSubsystemPlugin } from './plugins/subsystems/brightNexusSubsystemPlugin';
 import { BrightPassSubsystemPlugin } from './plugins/subsystems/brightPassSubsystemPlugin';
 import { BrightTrustSubsystemPlugin } from './plugins/subsystems/brightTrustSubsystemPlugin';
-import { BrightNexusSubsystemPlugin } from './plugins/subsystems/brightNexusSubsystemPlugin';
 import { BurnbagSubsystemPlugin } from './plugins/subsystems/burnbagSubsystemPlugin';
-import { EmailSubsystemPlugin } from './plugins/subsystems/emailSubsystemPlugin';
 import { EmailGatewaySubsystemPlugin } from './plugins/subsystems/emailGatewaySubsystemPlugin';
+import { EmailSubsystemPlugin } from './plugins/subsystems/emailSubsystemPlugin';
 import { ApiRouter } from './routers/api';
 import { AppRouter } from './routers/app';
 import {
@@ -95,12 +95,7 @@ const idProvider = getEnhancedNodeIdProvider();
  * via configureBrightChainApp() during construction.
  */
 export class App<TID extends PlatformID>
-  extends BrightDbApplication<
-    TID,
-    Environment<TID>,
-    IConstants,
-    AppRouter<TID>
-  >
+  extends BrightDbApplication<TID, Environment<TID>, IConstants, AppRouter<TID>>
   implements IBrightChainApplication<TID>
 {
   private controllers: Map<string, unknown> = new Map();
@@ -600,7 +595,7 @@ export class App<TID extends PlatformID>
       const brightCalModuleName = ['@brightchain', 'brightcal-api-lib'].join(
         '/',
       );
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-require-imports -- intentional runtime require, see above
       const brightCalModule: any = require(brightCalModuleName);
       const resolved =
         brightCalModule.BrightCalSubsystemPlugin ??
@@ -629,7 +624,7 @@ export class App<TID extends PlatformID>
           '@brightchain',
           'brightledger-assets-api-lib',
         ].join('/');
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-require-imports -- intentional runtime require, see above
         const assetsModule: any = require(assetsModuleName);
         const AssetsPlugin =
           assetsModule.AssetsSubsystemPlugin ??
@@ -642,11 +637,19 @@ export class App<TID extends PlatformID>
         // Production deployments should rotate to a proper N-of-M quorum
         // after first launch by submitting a governance transaction.
         const systemUser = SystemUserService.getSystemUser(
-          this.environment as any,
+          this.environment,
           this.constants,
         );
-        const signer = new MemberSignerAdapter(systemUser as any);
-
+        // node-ecies-lib's Member returns a Buffer-branded SignatureBuffer
+        // while ILedgerSigner expects the Uint8Array-branded signature. The
+        // brands are type-only, so the bytes are identical at runtime.
+        const signer: ILedgerSigner = {
+          publicKey: new Uint8Array(systemUser.publicKey),
+          sign: (data: Uint8Array): SignatureUint8Array =>
+            systemUser.sign(
+              Buffer.from(data),
+            ) as Uint8Array as SignatureUint8Array,
+        };
         const ledger = new Ledger(
           pluginContext.blockStore,
           BlockSize.Medium,
@@ -706,13 +709,23 @@ export class App<TID extends PlatformID>
               ownerId: PlatformID;
               visibility?: string;
             }): Promise<{ id: PlatformID; rootFolderId: PlatformID }>;
-            listContainers(
-              ownerId: PlatformID,
-            ): Promise<Array<{ container: { id: PlatformID; name: string; rootFolderId: PlatformID } }>>;
+            listContainers(ownerId: PlatformID): Promise<
+              Array<{
+                container: {
+                  id: PlatformID;
+                  name: string;
+                  rootFolderId: PlatformID;
+                };
+              }>
+            >;
             getContainer(
               containerId: PlatformID,
               requesterId: PlatformID,
-            ): Promise<{ id: PlatformID; ownerId: PlatformID; rootFolderId: PlatformID }>;
+            ): Promise<{
+              id: PlatformID;
+              ownerId: PlatformID;
+              rootFolderId: PlatformID;
+            }>;
           };
           const uploadService = this.services.get('burnbagUploadService') as {
             createSession(params: {

@@ -34,6 +34,14 @@ import {
 } from './block-document-store';
 import { DocumentRecord } from './document-store';
 
+/** Access checks compare hex member IDs, as stored in the encryption metadata. */
+function toHexId(id: GuidV4Buffer): HexString {
+  return ServiceProvider.getInstance<GuidV4Buffer>().idProvider.toString(
+    id,
+    'hex',
+  ) as HexString;
+}
+
 // Set a longer timeout for all tests in this file
 jest.setTimeout(60000);
 
@@ -116,7 +124,7 @@ describe('BlockDocumentStore Access Control Property Tests', () => {
 
             // Create 3 members
             const memberData: IMemberWithMnemonic<GuidV4Buffer>[] = [];
-            const memberIds: HexString[] = [];
+            const memberIds: GuidV4Buffer[] = [];
 
             for (let i = 0; i < 3; i++) {
               const uniqueSuffix = `${timestamp}${random}${i}`;
@@ -158,18 +166,22 @@ describe('BlockDocumentStore Access Control Property Tests', () => {
               createdDocs.push(doc);
             }
 
-            // Check access for member 0
-            const member0Id = memberIds[0];
+            // Check access for member 0 (access checks use hex member IDs)
+            const member0Id = toHexId(memberIds[0]);
             const accessibleToMember0 =
               await collection.findAccessibleBy(member0Id);
 
             // Member 0 should have access to documents where they are in the member list
-            for (const doc of createdDocs) {
+            for (let i = 0; i < createdDocs.length; i++) {
+              const doc = createdDocs[i];
               const hasAccess = await collection.hasAccess(doc._id!, member0Id);
               const isInAccessibleList = accessibleToMember0.some(
                 (d) => d._id === doc._id,
               );
+              // Doc i is shared with members i % 3 and (i + 1) % 3
+              const member0IsListed = i % 3 === 0 || (i + 1) % 3 === 0;
 
+              expect(hasAccess).toBe(member0IsListed);
               // If member has access, document should be in the accessible list
               // If member doesn't have access, document should not be in the accessible list
               expect(isInAccessibleList).toBe(hasAccess);
@@ -205,7 +217,7 @@ describe('BlockDocumentStore Access Control Property Tests', () => {
             const random = Math.floor(Math.random() * 1000000);
 
             // Create 2 members
-            const memberIds: HexString[] = [];
+            const memberIds: GuidV4Buffer[] = [];
             for (let i = 0; i < 2; i++) {
               const uniqueSuffix = `${timestamp}${random}${i}`;
               const memberWithMnemonic = createTestMember(
@@ -233,7 +245,10 @@ describe('BlockDocumentStore Access Control Property Tests', () => {
 
             // Both members should have access
             for (const memberId of memberIds) {
-              const hasAccess = await collection.hasAccess(doc._id!, memberId);
+              const hasAccess = await collection.hasAccess(
+                doc._id!,
+                toHexId(memberId),
+              );
               expect(hasAccess).toBe(true);
             }
 

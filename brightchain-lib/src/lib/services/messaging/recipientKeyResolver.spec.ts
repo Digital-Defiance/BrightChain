@@ -2,8 +2,8 @@ import { EmailErrorType } from '../../enumerations/messaging/emailErrorType';
 import { MessageEncryptionScheme } from '../../enumerations/messaging/messageEncryptionScheme';
 import { EmailError } from '../../errors/messaging/emailError';
 import { IKeyStore, IKeyStoreEntry } from '../../interfaces/messaging/keyStore';
-import { RecipientKeyResolver } from './recipientKeyResolver';
 import { brightDateNow } from '../../utils/brightDateConversions';
+import { RecipientKeyResolver } from './recipientKeyResolver';
 
 /**
  * Unit tests for RecipientKeyResolver.
@@ -326,7 +326,7 @@ describe('RecipientKeyResolver', () => {
           ['missing@example.com'],
           MessageEncryptionScheme.GPG,
         );
-        fail('Expected EmailError to be thrown');
+        throw new Error('Expected EmailError to be thrown');
       } catch (err) {
         const emailErr = err as EmailError;
         expect(emailErr.details?.['scheme']).toBe('gpg');

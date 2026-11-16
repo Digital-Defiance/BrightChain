@@ -8,8 +8,8 @@
  * @see Requirements 9.1, 9.2, 9.3, 9.4, 9.5, 9.6, 9.7, 9.8, 10.1, 10.2, 10.3, 10.4, 10.5
  */
 
-import type { BlockId } from '../branded/primitives/blockId';
 import type { BrightDateTimestamp } from '../../types/brightDateTimestamp';
+import type { BlockId } from '../branded/primitives/blockId';
 import { PoolId } from '../storage/pooledBlockStore';
 
 /**
@@ -209,8 +209,16 @@ export type ReconciliationEventHandler = (event: ReconciliationEvent) => void;
  * Events emitted during reconciliation.
  */
 export type ReconciliationEvent =
-  | { type: 'reconciliation_started'; timestamp: BrightDateTimestamp; peerIds: string[] }
-  | { type: 'peer_reconciliation_started'; timestamp: BrightDateTimestamp; peerId: string }
+  | {
+      type: 'reconciliation_started';
+      timestamp: BrightDateTimestamp;
+      peerIds: string[];
+    }
+  | {
+      type: 'peer_reconciliation_started';
+      timestamp: BrightDateTimestamp;
+      peerId: string;
+    }
   | {
       type: 'peer_reconciliation_completed';
       timestamp: BrightDateTimestamp;

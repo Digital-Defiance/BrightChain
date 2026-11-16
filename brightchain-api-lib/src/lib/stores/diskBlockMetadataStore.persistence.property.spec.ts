@@ -12,6 +12,7 @@
  */
 
 import {
+  BlockId,
   BlockSize,
   brightDateNow,
   dateToBrightDate,
@@ -39,7 +40,7 @@ const arbHexString = (minLength: number, maxLength: number) =>
 /**
  * Generate a valid block ID (hex string of at least 32 characters)
  */
-const arbBlockId = arbHexString(32, 64);
+const arbBlockId = arbHexString(32, 64).map((id) => id as BlockId);
 
 /**
  * Generate a valid durability level
@@ -270,9 +271,13 @@ describe('DiskBlockMetadataStore Persistence Property Tests', () => {
               const retrieved = await store.get(blockId);
               expect(retrieved).not.toBeNull();
               expect(retrieved!.accessCount).toBe(accessCount);
-              expect(
-                retrieved!.lastAccessedAt,
-              ).toBeGreaterThanOrEqual(initialTime);
+              // lastAccessedAt is persisted as an ISO 8601 string, which is
+              // ms-precision, so an access in the same millisecond as
+              // initialTime can read back slightly below it. Allow the
+              // workspace's BrightDate round-trip tolerance (1e-6 day ≈ 86 ms).
+              expect(retrieved!.lastAccessedAt).toBeGreaterThanOrEqual(
+                initialTime - 1e-6,
+              );
             } finally {
               rmSync(iterTestDir, { recursive: true, force: true });
             }

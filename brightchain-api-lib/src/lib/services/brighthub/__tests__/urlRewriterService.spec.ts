@@ -123,6 +123,7 @@ function createMockDeps(
           id: MOCK_CONTAINER_ID,
           rootFolderId: MOCK_ROOT_FOLDER_ID,
         }),
+      listContainers: jest.fn().mockResolvedValue([]),
     },
 
     uploadService: {

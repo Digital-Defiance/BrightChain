@@ -88,17 +88,18 @@ function makeMockFolderRepository(): jest.Mocked<IFolderRepository<string>> {
     updateParentFolder: jest.fn(),
     updateFileFolder: jest.fn(),
     updateFolderName: jest.fn(),
+    softDeleteFolder: jest.fn(),
   };
 }
 
 function makeMockDeps(
   overrides: Partial<IPhixServiceDeps<string>> = {},
-): jest.Mocked<IPhixServiceDeps<string>> {
+): jest.Mocked<Required<IPhixServiceDeps<string>>> {
   return {
     checkPermissionFlag: jest.fn().mockResolvedValue(true),
     onAuditLog: jest.fn().mockResolvedValue(undefined),
     ...overrides,
-  } as jest.Mocked<IPhixServiceDeps<string>>;
+  } as jest.Mocked<Required<IPhixServiceDeps<string>>>;
 }
 
 function createService() {
@@ -461,7 +462,7 @@ describe('PhixService', () => {
       await service.execute(plan, 'user-1');
 
       expect(deps.onAuditLog).toHaveBeenCalledTimes(1);
-      const auditEntry = deps.onAuditLog!.mock.calls[0][0];
+      const auditEntry = deps.onAuditLog.mock.calls[0][0];
       expect(auditEntry.operationType).toBe(FileAuditOperationType.FilePhixed);
       expect(auditEntry.actorId).toBe('user-1');
       expect(auditEntry.targetId).toBe('file-1');
@@ -548,7 +549,7 @@ describe('PhixService', () => {
       await service.execute(plan, 'user-1');
 
       expect(deps.onAuditLog).toHaveBeenCalledTimes(1);
-      const auditEntry = deps.onAuditLog!.mock.calls[0][0];
+      const auditEntry = deps.onAuditLog.mock.calls[0][0];
       expect(auditEntry.operationType).toBe(
         FileAuditOperationType.FolderPhixed,
       );

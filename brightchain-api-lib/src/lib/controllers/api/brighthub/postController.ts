@@ -1,3 +1,4 @@
+import type { IBaseUserProfile } from '@brightchain/brighthub-lib';
 import {
   IBasePostData,
   ICreatePostOptions,
@@ -9,7 +10,6 @@ import {
   ThreadErrorCode,
   ThreadServiceError,
 } from '@brightchain/brighthub-lib';
-import type { IBaseUserProfile } from '@brightchain/brighthub-lib';
 import { CoreLanguageCode } from '@digitaldefiance/i18n-lib';
 import { PlatformID } from '@digitaldefiance/node-ecies-lib';
 import {
@@ -314,7 +314,8 @@ export class BrightHubPostController<
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Pin a post to profile',
-          description: 'Pin a post to the author\'s profile. Only the post author can pin their own posts.',
+          description:
+            "Pin a post to the author's profile. Only the post author can pin their own posts.",
           tags: ['BrightHub Posts'],
           responses: {
             200: { schema: 'MessageResponse', description: 'Post pinned' },
@@ -328,7 +329,7 @@ export class BrightHubPostController<
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Unpin a post from profile',
-          description: 'Unpin a post from the author\'s profile.',
+          description: "Unpin a post from the author's profile.",
           tags: ['BrightHub Posts'],
           responses: {
             200: { schema: 'MessageResponse', description: 'Post unpinned' },
@@ -503,9 +504,10 @@ export class BrightHubPostController<
   /**
    * Resolve author profiles for all posts in a thread.
    */
-  private async resolveThreadAuthors(
-    thread: { rootPost: IBasePostData<string>; replies: IBasePostData<string>[] },
-  ): Promise<Record<string, IBaseUserProfile<string>>> {
+  private async resolveThreadAuthors(thread: {
+    rootPost: IBasePostData<string>;
+    replies: IBasePostData<string>[];
+  }): Promise<Record<string, IBaseUserProfile<string>>> {
     if (!this.userProfileService) return {};
 
     const authorIds = new Set<string>();
@@ -966,7 +968,11 @@ export class BrightHubPostController<
       if (!userId) return validationError('Missing required field: userId');
 
       const service = this.getPostService();
-      await (service as unknown as { pinPost(postId: string, userId: string): Promise<void> }).pinPost(id, userId);
+      await (
+        service as unknown as {
+          pinPost(postId: string, userId: string): Promise<void>;
+        }
+      ).pinPost(id, userId);
 
       // Update user profile's pinnedPostId
       if (this.userProfileService) {
@@ -1007,7 +1013,11 @@ export class BrightHubPostController<
       if (!userId) return validationError('Missing required field: userId');
 
       const service = this.getPostService();
-      await (service as unknown as { unpinPost(postId: string, userId: string): Promise<void> }).unpinPost(id, userId);
+      await (
+        service as unknown as {
+          unpinPost(postId: string, userId: string): Promise<void>;
+        }
+      ).unpinPost(id, userId);
 
       // Clear user profile's pinnedPostId
       if (this.userProfileService) {

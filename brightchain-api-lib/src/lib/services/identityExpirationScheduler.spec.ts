@@ -200,6 +200,12 @@ function createMockDatabase(options?: {
     deleteJournalEntries: jest.fn(async () => {}),
     saveOperationalState: jest.fn(async () => {}),
     getOperationalState: jest.fn(async () => null),
+    // Ban records (not exercised by the expiration scheduler)
+    saveBanRecord: jest.fn(async () => {}),
+    deleteBanRecord: jest.fn(async () => {}),
+    getBanRecord: jest.fn(async () => null),
+    getAllBanRecords: jest.fn(async () => []),
+    getMemberAdmissionProposerId: jest.fn(async () => null),
     withTransaction: jest.fn(async <R>(fn: () => Promise<R>) => fn()),
     isAvailable: jest.fn(async () => true),
   };

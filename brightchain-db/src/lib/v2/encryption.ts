@@ -112,7 +112,12 @@ export class BrightDbV2AesCipher implements BrightDbV2BlockCipher {
     );
     cipher.setAAD(aad);
     const body = Buffer.concat([cipher.update(plaintext), cipher.final()]);
-    return Buffer.concat([Buffer.from([this.currentVersion]), nonce, body, cipher.getAuthTag()]);
+    return Buffer.concat([
+      Buffer.from([this.currentVersion]),
+      nonce,
+      body,
+      cipher.getAuthTag(),
+    ]);
   }
 
   private decrypt(aad: Buffer, sealed: Uint8Array): Buffer {
@@ -122,20 +127,35 @@ export class BrightDbV2AesCipher implements BrightDbV2BlockCipher {
     }
     const key = this.dataKeys.get(bytes[0]);
     if (!key) {
-      throw new BrightDbV2DecryptionError(`No key for encryption key version ${bytes[0]}`);
+      throw new BrightDbV2DecryptionError(
+        `No key for encryption key version ${bytes[0]}`,
+      );
     }
     try {
-      const decipher = createDecipheriv('aes-256-gcm', key, bytes.subarray(1, 13));
+      const decipher = createDecipheriv(
+        'aes-256-gcm',
+        key,
+        bytes.subarray(1, 13),
+      );
       decipher.setAAD(aad);
       decipher.setAuthTag(bytes.subarray(bytes.length - 16));
-      return Buffer.concat([decipher.update(bytes.subarray(13, bytes.length - 16)), decipher.final()]);
+      return Buffer.concat([
+        decipher.update(bytes.subarray(13, bytes.length - 16)),
+        decipher.final(),
+      ]);
     } catch {
-      throw new BrightDbV2DecryptionError('Wrong key, or the block was changed or swapped');
+      throw new BrightDbV2DecryptionError(
+        'Wrong key, or the block was changed or swapped',
+      );
     }
   }
 
   /** `nonce` is for known-answer tests only; callers should leave it unset. */
-  seal(logicalDigest: string, plaintext: Uint8Array, nonce: Buffer = randomBytes(12)): Buffer {
+  seal(
+    logicalDigest: string,
+    plaintext: Uint8Array,
+    nonce: Buffer = randomBytes(12),
+  ): Buffer {
     return this.encrypt(
       Buffer.concat([BLOCK_AAD, Buffer.from(logicalDigest, 'hex')]),
       plaintext,

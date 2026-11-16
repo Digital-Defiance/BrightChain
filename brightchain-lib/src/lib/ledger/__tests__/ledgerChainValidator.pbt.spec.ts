@@ -99,7 +99,9 @@ function arbLedgerChain(maxLength: number): fc.Arbitrary<ILedgerEntry[]> {
 
         const partial = {
           sequenceNumber: i,
-          timestamp: normalizeToBrightDate(new Date(fields.baseTimestamp + i * 1000)),
+          timestamp: normalizeToBrightDate(
+            new Date(fields.baseTimestamp + i * 1000),
+          ),
           previousEntryHash,
           signerPublicKey: fields.signerPublicKey,
           payload: fields.payloads[i],
@@ -147,7 +149,9 @@ function arbLedgerChainRange(
 
         const partial = {
           sequenceNumber: i,
-          timestamp: normalizeToBrightDate(new Date(fields.baseTimestamp + i * 1000)),
+          timestamp: normalizeToBrightDate(
+            new Date(fields.baseTimestamp + i * 1000),
+          ),
           previousEntryHash,
           signerPublicKey: fields.signerPublicKey,
           payload: fields.payloads[i],

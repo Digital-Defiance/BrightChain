@@ -25,6 +25,15 @@ function makeConfig(
 ): IEmailGatewayConfig {
   return {
     canonicalDomain: CANONICAL_DOMAIN,
+    testMode: {
+      enabled: false,
+      catchallEnabled: false,
+      catchallDirectory: '',
+      skipDkim: false,
+      skipSpamFilter: false,
+      acceptAllRecipients: false,
+      testRecipients: [],
+    },
     postfixHost: 'localhost',
     postfixPort: 25,
     dkimKeyPath: '/etc/dkim/private.key',

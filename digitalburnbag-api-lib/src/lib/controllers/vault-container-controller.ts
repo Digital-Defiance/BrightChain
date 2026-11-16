@@ -288,7 +288,7 @@ export class VaultContainerController<
           ),
         },
       };
-    const containerId = this.safeParseId(req.params.id as string);
+    const containerId = this.safeParseId(req.params['id'] as string);
     if (!containerId)
       return {
         statusCode: 400,
@@ -336,7 +336,7 @@ export class VaultContainerController<
           ),
         },
       };
-    const containerId = this.safeParseId(req.params.id as string);
+    const containerId = this.safeParseId(req.params['id'] as string);
     if (!containerId)
       return {
         statusCode: 400,
@@ -378,7 +378,7 @@ export class VaultContainerController<
           ),
         },
       };
-    const containerId = this.safeParseId(req.params.id as string);
+    const containerId = this.safeParseId(req.params['id'] as string);
     if (!containerId)
       return {
         statusCode: 400,
@@ -433,7 +433,7 @@ export class VaultContainerController<
           ),
         },
       };
-    const containerId = this.safeParseId(req.params.id as string);
+    const containerId = this.safeParseId(req.params['id'] as string);
     if (!containerId)
       return {
         statusCode: 400,
@@ -465,7 +465,12 @@ export class VaultContainerController<
       }
 
       // Immediate deletion result
-      const { destructionResult, certificate, certificateOmittedReason, accessedFileIds } = result;
+      const {
+        destructionResult,
+        certificate,
+        certificateOmittedReason,
+        accessedFileIds,
+      } = result;
 
       // Determine status code: 207 if partial failure, 200 otherwise
       const hasFailures = destructionResult.failed.length > 0;
@@ -526,7 +531,7 @@ export class VaultContainerController<
           ),
         },
       };
-    const containerId = this.safeParseId(req.params.id as string);
+    const containerId = this.safeParseId(req.params['id'] as string);
     if (!containerId)
       return {
         statusCode: 400,
@@ -580,7 +585,7 @@ export class VaultContainerController<
           ),
         },
       };
-    const containerId = this.safeParseId(req.params.id as string);
+    const containerId = this.safeParseId(req.params['id'] as string);
     if (!containerId)
       return {
         statusCode: 400,
@@ -634,7 +639,7 @@ export class VaultContainerController<
           ),
         },
       };
-    const containerId = this.safeParseId(req.params.id as string);
+    const containerId = this.safeParseId(req.params['id'] as string);
     if (!containerId)
       return {
         statusCode: 400,
@@ -678,9 +683,7 @@ export class VaultContainerController<
   /**
    * Map deletion-related errors to appropriate HTTP status codes.
    */
-  private mapDeletionError(
-    err: unknown,
-  ): IStatusCodeResponse<BurnbagResponse> {
+  private mapDeletionError(err: unknown): IStatusCodeResponse<BurnbagResponse> {
     if (err instanceof VaultContainerDestroyedError) {
       return {
         statusCode: 410,
@@ -758,8 +761,7 @@ export class VaultContainerController<
       return {
         statusCode: 403,
         response: {
-          message:
-            (err as { message?: string }).message ?? 'Forbidden',
+          message: (err as { message?: string }).message ?? 'Forbidden',
           error: getDigitalBurnbagTranslation(
             DigitalBurnbagStrings.Api_Http_Forbidden,
           ),

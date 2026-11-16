@@ -41,13 +41,13 @@ export const SubspaceLatticeLogoI18N: FC<SubspaceLatticeLogoI18NProps> = ({
     'en-US': [t(BrightChainStrings.Subspace), t(BrightChainStrings.Lattice)],
     'en-GB': [t(BrightChainStrings.Subspace), t(BrightChainStrings.Lattice)],
     // TreillisSubspatial
-    'fr': [t(BrightChainStrings.Lattice), t(BrightChainStrings.Subspace)],
+    fr: [t(BrightChainStrings.Lattice), t(BrightChainStrings.Subspace)],
     // SubraumGitter
-    'de': [t(BrightChainStrings.Subspace), t(BrightChainStrings.Lattice)],
+    de: [t(BrightChainStrings.Subspace), t(BrightChainStrings.Lattice)],
     // RedSubespacial
-    'es': [t(BrightChainStrings.Lattice), t(BrightChainStrings.Subspace)],
+    es: [t(BrightChainStrings.Lattice), t(BrightChainStrings.Subspace)],
     // サブスペース格子
-    'ja': [t(BrightChainStrings.Subspace), t(BrightChainStrings.Lattice)],
+    ja: [t(BrightChainStrings.Subspace), t(BrightChainStrings.Lattice)],
     // 子空间格
     'zh-ZH': [t(BrightChainStrings.Subspace), t(BrightChainStrings.Lattice)],
     // ПідпросторРешітка

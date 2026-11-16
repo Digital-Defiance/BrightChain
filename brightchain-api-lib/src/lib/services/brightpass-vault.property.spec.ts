@@ -12,6 +12,7 @@ import {
 } from './brightpass';
 import {
   arbitraryLoginEntry,
+  asEntryInput,
   masterPasswordArb,
   memberIdArb,
   vaultNameArb,
@@ -163,7 +164,7 @@ describe('BrightPassService – Vault CRUD', () => {
             );
 
             for (const entry of entries) {
-              await service.addEntry(metadata.id, entry);
+              await service.addEntry(metadata.id, asEntryInput(entry));
             }
 
             const listed = await service.listVaults(memberId);

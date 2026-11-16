@@ -14,9 +14,7 @@ import type {
   IGpgKeyMetadata,
   ISmimeCertificateMetadata,
 } from '@brightchain/brightchain-lib';
-import {
-  MessageEncryptionScheme,
-} from '@brightchain/brightchain-lib';
+import { MessageEncryptionScheme } from '@brightchain/brightchain-lib';
 import { useFormattedDate } from '@brightchain/brightchain-react-components';
 import { BrightMailStrings } from '@brightchain/brightmail-lib';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -226,7 +224,7 @@ const KeyManagementSettings: FC<KeyManagementSettingsProps> = ({
         if (smimeInputRef.current) smimeInputRef.current.value = '';
       }
     },
-    [onUpdate],
+    [onUpdate, t],
   );
 
   // ── GPG upload handler ────────────────────────────────────────────────
@@ -251,7 +249,7 @@ const KeyManagementSettings: FC<KeyManagementSettingsProps> = ({
         if (gpgInputRef.current) gpgInputRef.current.value = '';
       }
     },
-    [onUpdate],
+    [onUpdate, t],
   );
 
   // ── Delete handlers ───────────────────────────────────────────────────
@@ -265,7 +263,7 @@ const KeyManagementSettings: FC<KeyManagementSettingsProps> = ({
     } finally {
       setUpdating(false);
     }
-  }, [onUpdate]);
+  }, [onUpdate, t]);
 
   const handleDeleteGpg = useCallback(async () => {
     setGpgError(null);
@@ -277,7 +275,7 @@ const KeyManagementSettings: FC<KeyManagementSettingsProps> = ({
     } finally {
       setUpdating(false);
     }
-  }, [onUpdate]);
+  }, [onUpdate, t]);
 
   // ── GPG generate keypair handler ──────────────────────────────────────
   const handleGenerateGpgKeyPair = useCallback(async () => {
@@ -293,7 +291,7 @@ const KeyManagementSettings: FC<KeyManagementSettingsProps> = ({
     } finally {
       setUpdating(false);
     }
-  }, [onGenerateGpgKeyPair, passphrase]);
+  }, [onGenerateGpgKeyPair, passphrase, t]);
 
   // ── GPG export public key handler ─────────────────────────────────────
   const handleExportGpgPublicKey = useCallback(async () => {
@@ -310,7 +308,7 @@ const KeyManagementSettings: FC<KeyManagementSettingsProps> = ({
     } catch {
       setGpgError(t(BrightMailStrings.KeyMgmt_ErrorExportKey));
     }
-  }, [onExportGpgPublicKey]);
+  }, [onExportGpgPublicKey, t]);
 
   // ── GPG publish to keyserver handler ──────────────────────────────────
   const handlePublishGpgKey = useCallback(async () => {
@@ -323,7 +321,7 @@ const KeyManagementSettings: FC<KeyManagementSettingsProps> = ({
     } finally {
       setUpdating(false);
     }
-  }, [onPublishGpgKey]);
+  }, [onPublishGpgKey, t]);
 
   // ── GPG import by email handler ───────────────────────────────────────
   const handleImportGpgByEmail = useCallback(async () => {
@@ -339,7 +337,7 @@ const KeyManagementSettings: FC<KeyManagementSettingsProps> = ({
     } finally {
       setUpdating(false);
     }
-  }, [onImportGpgByEmail, importEmail]);
+  }, [onImportGpgByEmail, importEmail, t]);
 
   // ── S/MIME PKCS#12 file select handler ────────────────────────────────
   const handlePkcs12FileSelect = useCallback(
@@ -369,7 +367,7 @@ const KeyManagementSettings: FC<KeyManagementSettingsProps> = ({
     } finally {
       setUpdating(false);
     }
-  }, [onImportSmimePkcs12, pkcs12Password]);
+  }, [onImportSmimePkcs12, pkcs12Password, t]);
 
   // ── Default preference handler ────────────────────────────────────────
   const handlePreferenceChange = useCallback(
@@ -412,8 +410,7 @@ const KeyManagementSettings: FC<KeyManagementSettingsProps> = ({
                 Fingerprint: {gpgKeyMetadata.fingerprint}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Created:{' '}
-                {formatDate(gpgKeyMetadata.createdAt)}
+                Created: {formatDate(gpgKeyMetadata.createdAt)}
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 User ID: {gpgKeyMetadata.userId}
@@ -638,12 +635,10 @@ const KeyManagementSettings: FC<KeyManagementSettingsProps> = ({
                 Serial: {smimeCertMetadata.serialNumber}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Valid From:{' '}
-                {formatDate(smimeCertMetadata.validFrom)}
+                Valid From: {formatDate(smimeCertMetadata.validFrom)}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Valid To:{' '}
-                {formatDate(smimeCertMetadata.validTo)}
+                Valid To: {formatDate(smimeCertMetadata.validTo)}
               </Typography>
               {smimeCertMetadata.emailAddresses.length > 0 && (
                 <Typography variant="body2" color="text.secondary">

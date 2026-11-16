@@ -28,6 +28,14 @@
 
 import { BrightDbAuthenticationProvider } from '@brightchain/node-express-suite';
 
+/** A stored document: arbitrary fields keyed by name. */
+type MockDoc = Record<string, unknown>;
+
+/** The database handle the provider under test is constructed with. */
+type ProviderDb = ConstructorParameters<
+  typeof BrightDbAuthenticationProvider
+>[0];
+
 /**
  * Lightweight in-memory mock for BrightDb.
  *
@@ -36,16 +44,16 @@ import { BrightDbAuthenticationProvider } from '@brightchain/node-express-suite'
  * document whose fields match every key/value pair in the filter.
  */
 function createMockDb() {
-  const collections = new Map<string, Map<string, any>>();
+  const collections = new Map<string, Map<string, MockDoc>>();
 
   function getCollection(name: string) {
     if (!collections.has(name)) collections.set(name, new Map());
     const store = collections.get(name)!;
     return {
-      findOne: jest.fn(async (filter: any) => {
+      findOne: jest.fn(async (filter: MockDoc) => {
         for (const doc of store.values()) {
           const matches = Object.entries(filter).every(
-            ([k, v]) => (doc as any)[k] === v,
+            ([k, v]) => doc[k] === v,
           );
           if (matches) return doc;
         }
@@ -57,13 +65,13 @@ function createMockDb() {
   return {
     collection: jest.fn((name: string) => getCollection(name)),
     _collections: collections,
-    seed: (collectionName: string, docs: any[]) => {
+    seed: (collectionName: string, docs: MockDoc[]) => {
       if (!collections.has(collectionName))
         collections.set(collectionName, new Map());
       const store = collections.get(collectionName)!;
       for (const doc of docs) {
         store.set(
-          doc._id ?? doc.userId ?? Math.random().toString(),
+          String(doc['_id'] ?? doc['userId'] ?? Math.random().toString()),
           doc,
         );
       }
@@ -118,7 +126,7 @@ describe('BrightChainAuthenticationProvider – userId format lookup', () => {
     ]);
 
     const provider = new BrightDbAuthenticationProvider(
-      mockDb as any,
+      mockDb as unknown as ProviderDb,
       JWT_SECRET,
     );
     const result = await provider.buildRequestUserDTO(PLAIN_HEX_USER_ID);
@@ -142,7 +150,7 @@ describe('BrightChainAuthenticationProvider – userId format lookup', () => {
     ]);
 
     const provider = new BrightDbAuthenticationProvider(
-      mockDb as any,
+      mockDb as unknown as ProviderDb,
       JWT_SECRET,
     );
     const result = await provider.buildRequestUserDTO(PLAIN_HEX_USER_ID);
@@ -168,7 +176,7 @@ describe('BrightChainAuthenticationProvider – userId format lookup', () => {
     ]);
 
     const provider = new BrightDbAuthenticationProvider(
-      mockDb as any,
+      mockDb as unknown as ProviderDb,
       JWT_SECRET,
     );
     const result = await provider.buildRequestUserDTO(PLAIN_HEX_USER_ID);
@@ -187,7 +195,7 @@ describe('BrightChainAuthenticationProvider – userId format lookup', () => {
     // No users seeded
 
     const provider = new BrightDbAuthenticationProvider(
-      mockDb as any,
+      mockDb as unknown as ProviderDb,
       JWT_SECRET,
     );
     const result = await provider.buildRequestUserDTO(PLAIN_HEX_USER_ID);

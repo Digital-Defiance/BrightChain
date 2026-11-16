@@ -20,8 +20,8 @@ import { AliasRecord } from '../interfaces/aliasRecord';
 import { BrightTrustEpoch } from '../interfaces/brightTrustEpoch';
 import { IdentityMode } from '../interfaces/contentWithIdentity';
 import { IBrightTrustDatabase } from '../interfaces/services/brightTrustDatabase';
-import { IdentitySealingPipeline } from './identitySealingPipeline';
 import { brightDateNow } from '../utils/brightDateConversions';
+import { IdentitySealingPipeline } from './identitySealingPipeline';
 
 /**
  * AliasRegistry manages pseudonymous alias registration, deregistration,

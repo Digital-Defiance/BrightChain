@@ -13,7 +13,11 @@ import type {
   CBLIndexManifest,
   ICBLIndexEntry,
 } from '@brightchain/brightchain-lib';
-import { brightDateNow, CBLVisibility, dateToBrightDate } from '@brightchain/brightchain-lib';
+import {
+  brightDateNow,
+  CBLVisibility,
+  dateToBrightDate,
+} from '@brightchain/brightchain-lib';
 import { CBLIndex } from '../lib/cblIndex';
 import { BrightDb } from '../lib/database';
 import { InMemoryHeadRegistry } from '../lib/headRegistry';
@@ -59,7 +63,7 @@ describe('CBLIndex – getCBLIndexManifest (Req 8.4)', () => {
     expect(manifest.poolId).toBe('pool-a');
     expect(manifest.nodeId).toBe('node-1');
     expect(manifest.entries).toHaveLength(0);
-    expect(typeof manifest.generatedAt).toBe("number");
+    expect(typeof manifest.generatedAt).toBe('number');
   });
 
   it('should return manifest entries for the specified pool only', async () => {

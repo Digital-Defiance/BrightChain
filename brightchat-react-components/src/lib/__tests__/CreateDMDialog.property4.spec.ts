@@ -18,15 +18,6 @@ interface TestConversation {
   participantIds: string[];
 }
 
-/** Generate a conversation with 2+ participants. */
-const conversationArb = (
-  participantPool: fc.Arbitrary<string>,
-): fc.Arbitrary<TestConversation> =>
-  fc.record({
-    id: fc.uuid(),
-    participantIds: fc.array(participantPool, { minLength: 1, maxLength: 6 }),
-  });
-
 // ─── Property 4: Existing conversation deduplication ────────────────────────
 
 describe('Feature: brightchat-navigation-ux, Property 4: Existing conversation deduplication', () => {

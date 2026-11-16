@@ -22,16 +22,16 @@ import {
   validBlockSizes,
 } from '@brightchain/brightchain-lib';
 import { BrightDb, InMemoryHeadRegistry } from '@brightchain/db';
-import type { ICreateEventBody } from '../../controllers/eventController.ts';
-import { createCalendarCollectionModel } from '../../models/calendarCollection.model.ts';
-import { createCalendarEventModel } from '../../models/calendarEvent.model.ts';
-import { createCalendarReminderModel } from '../../models/calendarReminder.model.ts';
-import { createCalendarShareModel } from '../../models/calendarShare.model.ts';
-import { CalendarEngineService } from '../calendarEngineService.ts';
-import { CalendarNotificationService } from '../calendarNotificationService.ts';
-import { CalendarPermissionService } from '../calendarPermissionService.ts';
-import { EncryptionService } from '../encryptionService.ts';
-import { EventEngineService } from '../eventEngineService.ts';
+import type { ICreateEventBody } from '../../controllers/eventController.js';
+import { createCalendarCollectionModel } from '../../models/calendarCollection.model.js';
+import { createCalendarEventModel } from '../../models/calendarEvent.model.js';
+import { createCalendarReminderModel } from '../../models/calendarReminder.model.js';
+import { createCalendarShareModel } from '../../models/calendarShare.model.js';
+import { CalendarEngineService } from '../calendarEngineService.js';
+import { CalendarNotificationService } from '../calendarNotificationService.js';
+import { CalendarPermissionService } from '../calendarPermissionService.js';
+import { EncryptionService } from '../encryptionService.js';
+import { EventEngineService } from '../eventEngineService.js';
 
 // ─── Setup ───────────────────────────────────────────────────────────────────
 
@@ -43,8 +43,7 @@ beforeAll(() => {
 function makeDb(name = 'testdb'): BrightDb {
   const store = new MemoryBlockStore(validBlockSizes);
   const registry = InMemoryHeadRegistry.createIsolated();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return new BrightDb(store as any, { name, headRegistry: registry });
+  return new BrightDb(store, { name, headRegistry: registry });
 }
 
 function createServices() {
@@ -645,7 +644,7 @@ describe('CalendarNotificationService', () => {
         { action: 'EMAIL', triggerMinutesBefore: 10 },
       ]);
 
-      const all = await reminderModel.find({} as any).toArray();
+      const all = await reminderModel.find({}).toArray();
       expect(all).toHaveLength(2);
       expect(all.every((r) => r.eventId === eventId)).toBe(true);
       expect(all.every((r) => r.delivered === false)).toBe(true);
@@ -659,7 +658,7 @@ describe('CalendarNotificationService', () => {
         { action: 'DISPLAY', triggerMinutesBefore: 30 },
       ]);
 
-      const all = await reminderModel.find({} as any).toArray();
+      const all = await reminderModel.find({}).toArray();
       expect(all[0].triggerAt.getTime()).toBe(
         eventStart.getTime() - 30 * 60 * 1000,
       );
@@ -674,7 +673,7 @@ describe('CalendarNotificationService', () => {
         [{ action: 'EMAIL', triggerMinutesBefore: 15 }],
       );
 
-      const all = await reminderModel.find({} as any).toArray();
+      const all = await reminderModel.find({}).toArray();
       expect(all[0].channels).toEqual(['email']);
     });
 
@@ -687,7 +686,7 @@ describe('CalendarNotificationService', () => {
         [{ action: 'DISPLAY', triggerMinutesBefore: 5 }],
       );
 
-      const all = await reminderModel.find({} as any).toArray();
+      const all = await reminderModel.find({}).toArray();
       expect(all[0].channels).toEqual(['push']);
     });
   });
@@ -707,12 +706,12 @@ describe('CalendarNotificationService', () => {
       );
 
       // Verify reminders exist
-      let all = await reminderModel.find({} as any).toArray();
+      let all = await reminderModel.find({}).toArray();
       expect(all).toHaveLength(2);
 
       await notificationService.cancelReminders(eventId);
 
-      all = await reminderModel.find({} as any).toArray();
+      all = await reminderModel.find({}).toArray();
       expect(all.filter((r) => r.eventId === eventId)).toHaveLength(0);
     });
 
@@ -732,7 +731,7 @@ describe('CalendarNotificationService', () => {
 
       await notificationService.cancelReminders('event-A');
 
-      const all = await reminderModel.find({} as any).toArray();
+      const all = await reminderModel.find({}).toArray();
       expect(all).toHaveLength(1);
       expect(all[0].eventId).toBe('event-B');
     });
@@ -784,7 +783,7 @@ describe('CalendarNotificationService', () => {
         [{ action: 'DISPLAY', triggerMinutesBefore: 10 }],
       );
 
-      const all = await reminderModel.find({} as any).toArray();
+      const all = await reminderModel.find({}).toArray();
       expect(all[0].delivered).toBe(false);
 
       await notificationService.markReminderDelivered(all[0].id);

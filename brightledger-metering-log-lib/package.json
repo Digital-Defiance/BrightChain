@@ -31,7 +31,7 @@
   "license": "MIT",
   "dependencies": {
     "@brightchain/brightchain-lib": "^0.33.0",
-    "@digitaldefiance/ecies-lib": "5.2.2",
+    "@digitaldefiance/ecies-lib": "5.2.3",
     "@noble/curves": "^1.9.0",
     "@noble/hashes": "^1.8.0",
     "cbor-x": "^1.6.0"

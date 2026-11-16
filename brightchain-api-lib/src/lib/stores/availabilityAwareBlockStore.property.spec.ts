@@ -24,11 +24,16 @@ import {
   BlockFetcherConfig,
   BlockFetchResult,
   BlockHandle,
+  BlockId,
   BlockManifest,
   BlockSize,
   BlockStoreOptions,
   BloomFilter,
+  brightDateNow,
+  BrightDateTimestamp,
   BrightenResult,
+  BrightTrustProposalMetadata,
+  BrightTrustVoteMetadata,
   CBLMagnetComponents,
   CBLStorageResult,
   CBLWhiteningOptions,
@@ -48,7 +53,7 @@ import {
   ILocationRecord,
   initializeBrightChain,
   IReconciliationService,
-  brightDateNow,
+  LocationQueryResult,
   MessageDeliveryMetadata,
   PendingBlockError,
   PendingSyncItem,
@@ -99,7 +104,7 @@ const arbHexString = (minLength: number, maxLength: number) =>
 /**
  * Generate a valid block ID (hex string of at least 32 characters)
  */
-const arbBlockId = arbHexString(32, 64);
+const arbBlockId = arbHexString(32, 64).map((id) => id as BlockId);
 
 /**
  * Generate a valid node ID
@@ -117,17 +122,17 @@ const arbBlockData = fc.uint8Array({ minLength: 64, maxLength: 256 });
  * Mock BlockRegistry for testing
  */
 class MockBlockRegistry implements IBlockRegistry {
-  private blocks = new Set<string>();
+  private blocks = new Set<BlockId>();
 
-  hasLocal(blockId: string): boolean {
+  hasLocal(blockId: BlockId): boolean {
     return this.blocks.has(blockId);
   }
 
-  addLocal(blockId: string): void {
+  addLocal(blockId: BlockId): void {
     this.blocks.add(blockId);
   }
 
-  removeLocal(blockId: string): void {
+  removeLocal(blockId: BlockId): void {
     this.blocks.delete(blockId);
   }
 
@@ -135,7 +140,7 @@ class MockBlockRegistry implements IBlockRegistry {
     return this.blocks.size;
   }
 
-  getLocalBlockIds(): string[] {
+  getLocalBlockIds(): BlockId[] {
     return Array.from(this.blocks);
   }
 
@@ -145,14 +150,14 @@ class MockBlockRegistry implements IBlockRegistry {
       hashCount: 7,
       bitCount: 1000,
       itemCount: this.blocks.size,
-      mightContain: (blockId: string) => this.blocks.has(blockId),
+      mightContain: (blockId: BlockId) => this.blocks.has(blockId),
     };
   }
 
   exportManifest(): BlockManifest {
     return {
       nodeId: 'test-node',
-      blockIds: this.getLocalBlockIds(),
+      blockIds: this.getLocalBlockIds() as BlockId[],
       generatedAt: 9000,
       checksum: 'test-checksum',
     };
@@ -324,9 +329,9 @@ class MockBlockStore implements IBlockStore {
     _randomBlockCount: number,
   ): Promise<BrightenResult> {
     return {
-      brightenedBlockId: 'brightened-block-id',
+      brightenedBlockId: 'brightened-block-id' as BlockId,
       randomBlockIds: [],
-      originalBlockId: 'original-block-id',
+      originalBlockId: 'original-block-id' as BlockId,
     };
   }
 
@@ -336,8 +341,8 @@ class MockBlockStore implements IBlockStore {
     _options?: CBLWhiteningOptions,
   ): Promise<CBLStorageResult> {
     return {
-      blockId1: 'mock-block-id-1',
-      blockId2: 'mock-block-id-2',
+      blockId1: 'mock-block-id-1' as BlockId,
+      blockId2: 'mock-block-id-2' as BlockId,
       blockSize: BlockSize.Small,
       magnetUrl:
         'magnet:?xt=urn:brightchain:cbl&bs=256&b1=mock-block-id-1&b2=mock-block-id-2',
@@ -355,8 +360,8 @@ class MockBlockStore implements IBlockStore {
 
   parseCBLMagnetUrl(_magnetUrl: string): CBLMagnetComponents {
     return {
-      blockId1: 'mock-block-id-1',
-      blockId2: 'mock-block-id-2',
+      blockId1: 'mock-block-id-1' as BlockId,
+      blockId2: 'mock-block-id-2' as BlockId,
       blockSize: BlockSize.Small,
       isEncrypted: false,
     };
@@ -410,7 +415,7 @@ class MockAvailabilityService implements IAvailabilityService {
     return locations;
   }
 
-  async queryBlockLocation(blockId: string) {
+  async queryBlockLocation(blockId: BlockId): Promise<LocationQueryResult> {
     return {
       blockId,
       state: await this.getAvailabilityState(blockId),
@@ -420,10 +425,10 @@ class MockAvailabilityService implements IAvailabilityService {
     };
   }
 
-  async listBlocksByState(state: AvailabilityState): Promise<string[]> {
-    const result: string[] = [];
+  async listBlocksByState(state: AvailabilityState): Promise<BlockId[]> {
+    const result: BlockId[] = [];
     for (const [blockId, s] of this.blockStates) {
-      if (s === state) result.push(blockId);
+      if (s === state) result.push(blockId as BlockId);
     }
     return result;
   }
@@ -632,6 +637,25 @@ class MockGossipService implements IGossipService {
     this.announcedBlocks = [];
     this.removedBlocks = [];
   }
+
+  async announceBrightTrustProposal(
+    _metadata: BrightTrustProposalMetadata,
+  ): Promise<void> {}
+  async announceBrightTrustVote(
+    _metadata: BrightTrustVoteMetadata,
+  ): Promise<void> {}
+  onBrightTrustProposal(
+    _handler: (announcement: BlockAnnouncement) => void,
+  ): void {}
+  offBrightTrustProposal(
+    _handler: (announcement: BlockAnnouncement) => void,
+  ): void {}
+  onBrightTrustVote(
+    _handler: (announcement: BlockAnnouncement) => void,
+  ): void {}
+  offBrightTrustVote(
+    _handler: (announcement: BlockAnnouncement) => void,
+  ): void {}
 }
 
 /**
@@ -663,7 +687,7 @@ class MockReconciliationService implements IReconciliationService {
 
   updateSyncVector(
     _peerId: string,
-    _timestamp: Date,
+    _timestamp: BrightDateTimestamp,
     _manifestChecksum: string,
   ): void {}
 
@@ -773,7 +797,9 @@ describe('AvailabilityAwareBlockStore Property Tests', () => {
           await store.setData(block);
 
           // Verify registry was updated
-          expect(registry.hasLocal(blockId.padEnd(128, '0'))).toBe(true);
+          expect(registry.hasLocal(blockId.padEnd(128, '0') as BlockId)).toBe(
+            true,
+          );
 
           return true;
         }),
@@ -786,7 +812,7 @@ describe('AvailabilityAwareBlockStore Property Tests', () => {
         fc.asyncProperty(arbBlockId, arbBlockData, async (blockId, data) => {
           const { store, availabilityService } = createTestStore();
           const block = createMockBlock(blockId, data);
-          const fullBlockId = blockId.padEnd(128, '0');
+          const fullBlockId = blockId.padEnd(128, '0') as BlockId;
 
           // Store block
           await store.setData(block);
@@ -810,7 +836,7 @@ describe('AvailabilityAwareBlockStore Property Tests', () => {
           async (blockId, data, localNodeId) => {
             const { store, availabilityService } = createTestStore(localNodeId);
             const block = createMockBlock(blockId, data);
-            const fullBlockId = blockId.padEnd(128, '0');
+            const fullBlockId = blockId.padEnd(128, '0') as BlockId;
 
             // Store block
             await store.setData(block);
@@ -835,7 +861,7 @@ describe('AvailabilityAwareBlockStore Property Tests', () => {
         fc.asyncProperty(arbBlockId, arbBlockData, async (blockId, data) => {
           const { store, gossipService } = createTestStore();
           const block = createMockBlock(blockId, data);
-          const fullBlockId = blockId.padEnd(128, '0');
+          const fullBlockId = blockId.padEnd(128, '0') as BlockId;
 
           // Store block
           await store.setData(block);
@@ -865,7 +891,7 @@ describe('AvailabilityAwareBlockStore Property Tests', () => {
       await fc.assert(
         fc.asyncProperty(arbBlockId, arbBlockData, async (blockId, data) => {
           const { store, registry, innerStore } = createTestStore();
-          const fullBlockId = blockId.padEnd(128, '0');
+          const fullBlockId = blockId.padEnd(128, '0') as BlockId;
           const checksum = Checksum.fromUint8Array(
             hexToUint8Array(fullBlockId),
           );
@@ -895,7 +921,7 @@ describe('AvailabilityAwareBlockStore Property Tests', () => {
           async (blockId, data, localNodeId) => {
             const { store, availabilityService, registry, innerStore } =
               createTestStore(localNodeId);
-            const fullBlockId = blockId.padEnd(128, '0');
+            const fullBlockId = blockId.padEnd(128, '0') as BlockId;
             const checksum = Checksum.fromUint8Array(
               hexToUint8Array(fullBlockId),
             );
@@ -928,7 +954,7 @@ describe('AvailabilityAwareBlockStore Property Tests', () => {
         fc.asyncProperty(arbBlockId, arbBlockData, async (blockId, data) => {
           const { store, gossipService, registry, innerStore } =
             createTestStore();
-          const fullBlockId = blockId.padEnd(128, '0');
+          const fullBlockId = blockId.padEnd(128, '0') as BlockId;
           const checksum = Checksum.fromUint8Array(
             hexToUint8Array(fullBlockId),
           );
@@ -974,7 +1000,9 @@ describe('AvailabilityAwareBlockStore Property Tests', () => {
           await store.setData(block);
 
           // Verify block was stored
-          expect(registry.hasLocal(blockId.padEnd(128, '0'))).toBe(true);
+          expect(registry.hasLocal(blockId.padEnd(128, '0') as BlockId)).toBe(
+            true,
+          );
 
           return true;
         }),
@@ -987,7 +1015,7 @@ describe('AvailabilityAwareBlockStore Property Tests', () => {
         fc.asyncProperty(arbBlockId, arbBlockData, async (blockId, data) => {
           const { store, availabilityService, innerStore, registry } =
             createTestStore();
-          const fullBlockId = blockId.padEnd(128, '0');
+          const fullBlockId = blockId.padEnd(128, '0') as BlockId;
           const checksum = Checksum.fromUint8Array(
             hexToUint8Array(fullBlockId),
           );
@@ -1017,7 +1045,7 @@ describe('AvailabilityAwareBlockStore Property Tests', () => {
       await fc.assert(
         fc.asyncProperty(arbBlockId, arbBlockData, async (blockId, data) => {
           const { store, availabilityService, innerStore } = createTestStore();
-          const fullBlockId = blockId.padEnd(128, '0');
+          const fullBlockId = blockId.padEnd(128, '0') as BlockId;
           const checksum = Checksum.fromUint8Array(
             hexToUint8Array(fullBlockId),
           );
@@ -1046,7 +1074,7 @@ describe('AvailabilityAwareBlockStore Property Tests', () => {
       await fc.assert(
         fc.asyncProperty(arbBlockId, arbBlockData, async (blockId, data) => {
           const { store, availabilityService, innerStore } = createTestStore();
-          const fullBlockId = blockId.padEnd(128, '0');
+          const fullBlockId = blockId.padEnd(128, '0') as BlockId;
           const checksum = Checksum.fromUint8Array(
             hexToUint8Array(fullBlockId),
           );
@@ -1088,7 +1116,7 @@ describe('AvailabilityAwareBlockStore Property Tests', () => {
           const { store, availabilityService, reconciliationService } =
             createTestStore();
           const block = createMockBlock(blockId, data);
-          const fullBlockId = blockId.padEnd(128, '0');
+          const fullBlockId = blockId.padEnd(128, '0') as BlockId;
 
           // Enter partition mode
           availabilityService.setPartitionMode(true);
@@ -1122,7 +1150,7 @@ describe('AvailabilityAwareBlockStore Property Tests', () => {
             innerStore,
             registry,
           } = createTestStore();
-          const fullBlockId = blockId.padEnd(128, '0');
+          const fullBlockId = blockId.padEnd(128, '0') as BlockId;
           const checksum = Checksum.fromUint8Array(
             hexToUint8Array(fullBlockId),
           );
@@ -1231,7 +1259,7 @@ describe('AvailabilityAwareBlockStore Property Tests', () => {
       await fc.assert(
         fc.asyncProperty(arbBlockId, async (blockId) => {
           const { store, innerStore } = createTestStore();
-          const fullBlockId = blockId.padEnd(128, '0');
+          const fullBlockId = blockId.padEnd(128, '0') as BlockId;
           const checksum = Checksum.fromUint8Array(
             hexToUint8Array(fullBlockId),
           );
@@ -1254,7 +1282,7 @@ describe('AvailabilityAwareBlockStore Property Tests', () => {
         fc.asyncProperty(arbBlockId, arbBlockData, async (blockId, data) => {
           const { store, innerStore, registry } = createTestStore();
           const block = createMockBlock(blockId, data);
-          const fullBlockId = blockId.padEnd(128, '0');
+          const fullBlockId = blockId.padEnd(128, '0') as BlockId;
 
           // Configure inner store to throw
           innerStore.shouldThrowOnStore = true;
@@ -1279,7 +1307,7 @@ describe('AvailabilityAwareBlockStore Property Tests', () => {
       await fc.assert(
         fc.asyncProperty(arbBlockId, arbBlockData, async (blockId, data) => {
           const { store, innerStore, registry } = createTestStore();
-          const fullBlockId = blockId.padEnd(128, '0');
+          const fullBlockId = blockId.padEnd(128, '0') as BlockId;
           const checksum = Checksum.fromUint8Array(
             hexToUint8Array(fullBlockId),
           );
@@ -1349,7 +1377,7 @@ describe('AvailabilityAwareBlockStore Property Tests', () => {
           async (blockId, data, state) => {
             const { store, availabilityService, innerStore } =
               createTestStore();
-            const fullBlockId = blockId.padEnd(128, '0');
+            const fullBlockId = blockId.padEnd(128, '0') as BlockId;
             const checksum = Checksum.fromUint8Array(
               hexToUint8Array(fullBlockId),
             );
@@ -1375,7 +1403,7 @@ describe('AvailabilityAwareBlockStore Property Tests', () => {
           arbNonLocalState,
           async (blockId, state) => {
             const { store, availabilityService } = createTestStore();
-            const fullBlockId = blockId.padEnd(128, '0');
+            const fullBlockId = blockId.padEnd(128, '0') as BlockId;
             const checksum = Checksum.fromUint8Array(
               hexToUint8Array(fullBlockId),
             );
@@ -1400,7 +1428,7 @@ describe('AvailabilityAwareBlockStore Property Tests', () => {
           arbNonLocalState,
           async (blockId, state) => {
             const { store, availabilityService } = createTestStore();
-            const fullBlockId = blockId.padEnd(128, '0');
+            const fullBlockId = blockId.padEnd(128, '0') as BlockId;
             const checksum = Checksum.fromUint8Array(
               hexToUint8Array(fullBlockId),
             );
@@ -1550,7 +1578,7 @@ describe('AvailabilityAwareBlockStore Property Tests', () => {
             const fetcher = new MockBlockFetcher({ resultData: data });
             const { store, availabilityService, innerStore } =
               createTestStoreWithFetcher(fetcher);
-            const fullBlockId = blockId.padEnd(128, '0');
+            const fullBlockId = blockId.padEnd(128, '0') as BlockId;
             const checksum = Checksum.fromUint8Array(
               hexToUint8Array(fullBlockId),
             );
@@ -1583,7 +1611,7 @@ describe('AvailabilityAwareBlockStore Property Tests', () => {
           });
           const { store, availabilityService } =
             createTestStoreWithFetcher(fetcher);
-          const fullBlockId = blockId.padEnd(128, '0');
+          const fullBlockId = blockId.padEnd(128, '0') as BlockId;
           const checksum = Checksum.fromUint8Array(
             hexToUint8Array(fullBlockId),
           );
@@ -1626,7 +1654,7 @@ describe('AvailabilityAwareBlockStore Property Tests', () => {
           });
           const { store, availabilityService } =
             createTestStoreWithFetcher(fetcher);
-          const fullBlockId = blockId.padEnd(128, '0');
+          const fullBlockId = blockId.padEnd(128, '0') as BlockId;
           const checksum = Checksum.fromUint8Array(
             hexToUint8Array(fullBlockId),
           );
@@ -1671,7 +1699,7 @@ describe('AvailabilityAwareBlockStore Property Tests', () => {
           });
           const { store, availabilityService } =
             createTestStoreWithFetcher(fetcher);
-          const fullBlockId = blockId.padEnd(128, '0');
+          const fullBlockId = blockId.padEnd(128, '0') as BlockId;
           const checksum = Checksum.fromUint8Array(
             hexToUint8Array(fullBlockId),
           );
@@ -1829,7 +1857,7 @@ describe('AvailabilityAwareBlockStore Property Tests', () => {
           });
           const { store, availabilityService } =
             createTestStoreWithFetcherP6(fetcher);
-          const fullBlockId = blockId.padEnd(128, '0');
+          const fullBlockId = blockId.padEnd(128, '0') as BlockId;
           const checksum = Checksum.fromUint8Array(
             hexToUint8Array(fullBlockId),
           );
@@ -1868,7 +1896,7 @@ describe('AvailabilityAwareBlockStore Property Tests', () => {
           });
           const { store, availabilityService } =
             createTestStoreWithFetcherP6(fetcher);
-          const fullBlockId = blockId.padEnd(128, '0');
+          const fullBlockId = blockId.padEnd(128, '0') as BlockId;
           const checksum = Checksum.fromUint8Array(
             hexToUint8Array(fullBlockId),
           );
@@ -1916,7 +1944,7 @@ describe('AvailabilityAwareBlockStore Property Tests', () => {
           });
           const { store, availabilityService } =
             createTestStoreWithFetcherP6(fetcher);
-          const fullBlockId = blockId.padEnd(128, '0');
+          const fullBlockId = blockId.padEnd(128, '0') as BlockId;
           const checksum = Checksum.fromUint8Array(
             hexToUint8Array(fullBlockId),
           );
@@ -2046,7 +2074,7 @@ describe('AvailabilityAwareBlockStore Property Tests', () => {
             const fetcher = new MockBlockFetcherP15();
             const { store, availabilityService } =
               createTestStoreWithFetcherP15(fetcher);
-            const fullBlockId = blockId.padEnd(128, '0');
+            const fullBlockId = blockId.padEnd(128, '0') as BlockId;
             const checksum = Checksum.fromUint8Array(
               hexToUint8Array(fullBlockId),
             );
@@ -2093,7 +2121,7 @@ describe('AvailabilityAwareBlockStore Property Tests', () => {
             const fetcher = new MockBlockFetcherP15();
             const { store, availabilityService } =
               createTestStoreWithFetcherP15(fetcher);
-            const fullBlockId = blockId.padEnd(128, '0');
+            const fullBlockId = blockId.padEnd(128, '0') as BlockId;
             const checksum = Checksum.fromUint8Array(
               hexToUint8Array(fullBlockId),
             );

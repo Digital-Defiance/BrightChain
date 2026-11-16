@@ -20,9 +20,11 @@ jest.mock('@digitaldefiance/express-suite-react-components', () => ({
 // Imports
 // ---------------------------------------------------------------------------
 
-import { ProviderCategory } from '@brightchain/digitalburnbag-lib';
+import {
+  ProviderCategory,
+  type ICanaryProviderConfig,
+} from '@brightchain/digitalburnbag-lib';
 import { fireEvent, render, screen, within } from '@testing-library/react';
-import React from 'react';
 import type { IProviderMarketplaceProps } from '../../components/ProviderMarketplace';
 import { ProviderMarketplace } from '../../components/ProviderMarketplace';
 
@@ -48,7 +50,10 @@ function makeProvider(
     category: overrides.category ?? ProviderCategory.DEVELOPER,
     icon: 'icon-test',
     baseUrl: 'https://api.test.com',
-    auth: { type: (overrides.authType ?? 'oauth2') as 'oauth2' | 'api_key' | 'webhook' | 'session' },
+    auth: {
+      type: (overrides.authType ??
+        'oauth2') as ICanaryProviderConfig<string>['auth']['type'],
+    },
     endpoints: {
       activity: {
         path: '/activity',
@@ -59,7 +64,11 @@ function makeProvider(
           timestampFormat: 'iso8601' as const,
         },
       },
-      healthCheck: { path: '/health', method: 'GET' as const, expectedStatus: 200 },
+      healthCheck: {
+        path: '/health',
+        method: 'GET' as const,
+        expectedStatus: 200,
+      },
     },
     defaultLookbackMs: 86400000,
     minCheckIntervalMs: 3600000,
@@ -101,7 +110,12 @@ const SLACK_PROVIDER = makeProvider({
   supportsWebhooks: true,
 });
 
-const ALL_PROVIDERS = [GITHUB_PROVIDER, FITBIT_PROVIDER, SPOTIFY_PROVIDER, SLACK_PROVIDER];
+const ALL_PROVIDERS = [
+  GITHUB_PROVIDER,
+  FITBIT_PROVIDER,
+  SPOTIFY_PROVIDER,
+  SLACK_PROVIDER,
+];
 
 function renderMarketplace(overrides: Partial<IProviderMarketplaceProps> = {}) {
   const defaultProps: IProviderMarketplaceProps = {
@@ -158,8 +172,12 @@ describe('ProviderMarketplace', () => {
   describe('Req 11.2 — provider card fields', () => {
     it('renders provider name on each card', () => {
       renderMarketplace();
-      expect(screen.getByTestId('provider-name-github')).toHaveTextContent('GitHub');
-      expect(screen.getByTestId('provider-name-fitbit')).toHaveTextContent('Fitbit');
+      expect(screen.getByTestId('provider-name-github')).toHaveTextContent(
+        'GitHub',
+      );
+      expect(screen.getByTestId('provider-name-fitbit')).toHaveTextContent(
+        'Fitbit',
+      );
     });
 
     it('renders provider icon on each card', () => {
@@ -176,9 +194,9 @@ describe('ProviderMarketplace', () => {
 
     it('renders provider description on each card', () => {
       renderMarketplace();
-      expect(screen.getByTestId('provider-description-github')).toHaveTextContent(
-        'Monitor commits, pull requests, and issues',
-      );
+      expect(
+        screen.getByTestId('provider-description-github'),
+      ).toHaveTextContent('Monitor commits, pull requests, and issues');
     });
 
     it('renders auth method chips on each card', () => {
@@ -202,9 +220,15 @@ describe('ProviderMarketplace', () => {
 
     it('renders correct category label in category badge', () => {
       renderMarketplace();
-      expect(screen.getByTestId('category-badge-github')).toHaveTextContent('Development');
-      expect(screen.getByTestId('category-badge-fitbit')).toHaveTextContent('Health & Fitness');
-      expect(screen.getByTestId('category-badge-spotify')).toHaveTextContent('Entertainment');
+      expect(screen.getByTestId('category-badge-github')).toHaveTextContent(
+        'Development',
+      );
+      expect(screen.getByTestId('category-badge-fitbit')).toHaveTextContent(
+        'Health & Fitness',
+      );
+      expect(screen.getByTestId('category-badge-spotify')).toHaveTextContent(
+        'Entertainment',
+      );
     });
   });
 
@@ -214,10 +238,18 @@ describe('ProviderMarketplace', () => {
     it('renders category sidebar with all available categories', () => {
       renderMarketplace();
       // Should have sidebar entries for each category present in providers
-      expect(screen.getByTestId('category-filter-developer')).toBeInTheDocument();
-      expect(screen.getByTestId('category-filter-health_fitness')).toBeInTheDocument();
-      expect(screen.getByTestId('category-filter-entertainment')).toBeInTheDocument();
-      expect(screen.getByTestId('category-filter-communication')).toBeInTheDocument();
+      expect(
+        screen.getByTestId('category-filter-developer'),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByTestId('category-filter-health_fitness'),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByTestId('category-filter-entertainment'),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByTestId('category-filter-communication'),
+      ).toBeInTheDocument();
     });
 
     it('shows provider counts per category in sidebar', () => {
@@ -233,7 +265,9 @@ describe('ProviderMarketplace', () => {
       // GitHub (developer) should be visible
       expect(screen.getByTestId('provider-card-github')).toBeInTheDocument();
       // Fitbit (health_fitness) should NOT be visible
-      expect(screen.queryByTestId('provider-card-fitbit')).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId('provider-card-fitbit'),
+      ).not.toBeInTheDocument();
     });
 
     it('shows all providers when "All Providers" is selected', () => {
@@ -250,8 +284,12 @@ describe('ProviderMarketplace', () => {
 
     it('renders category sections grouped by category', () => {
       renderMarketplace();
-      expect(screen.getByTestId('category-section-developer')).toBeInTheDocument();
-      expect(screen.getByTestId('category-section-health_fitness')).toBeInTheDocument();
+      expect(
+        screen.getByTestId('category-section-developer'),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByTestId('category-section-health_fitness'),
+      ).toBeInTheDocument();
     });
   });
 
@@ -260,7 +298,9 @@ describe('ProviderMarketplace', () => {
   describe('Req 11.4 — real-time search filtering', () => {
     it('renders a search bar', () => {
       renderMarketplace();
-      expect(screen.getByTestId('marketplace-search-input')).toBeInTheDocument();
+      expect(
+        screen.getByTestId('marketplace-search-input'),
+      ).toBeInTheDocument();
     });
 
     it('filters providers by name as user types', () => {
@@ -268,7 +308,9 @@ describe('ProviderMarketplace', () => {
       const searchInput = screen.getByTestId('marketplace-search-input');
       fireEvent.change(searchInput, { target: { value: 'GitHub' } });
       expect(screen.getByTestId('provider-card-github')).toBeInTheDocument();
-      expect(screen.queryByTestId('provider-card-fitbit')).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId('provider-card-fitbit'),
+      ).not.toBeInTheDocument();
     });
 
     it('filters providers by description as user types', () => {
@@ -277,7 +319,9 @@ describe('ProviderMarketplace', () => {
       fireEvent.change(searchInput, { target: { value: 'heart rate' } });
       // Fitbit description contains "heart rate"
       expect(screen.getByTestId('provider-card-fitbit')).toBeInTheDocument();
-      expect(screen.queryByTestId('provider-card-github')).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId('provider-card-github'),
+      ).not.toBeInTheDocument();
     });
 
     it('search is case-insensitive', () => {
@@ -290,7 +334,9 @@ describe('ProviderMarketplace', () => {
     it('shows empty state when no providers match search', () => {
       renderMarketplace();
       const searchInput = screen.getByTestId('marketplace-search-input');
-      fireEvent.change(searchInput, { target: { value: 'xyznonexistentprovider' } });
+      fireEvent.change(searchInput, {
+        target: { value: 'xyznonexistentprovider' },
+      });
       expect(screen.getByTestId('marketplace-empty-state')).toBeInTheDocument();
     });
 
@@ -333,18 +379,26 @@ describe('ProviderMarketplace', () => {
     it('shows "Connected" badge on already-connected providers', () => {
       renderMarketplace({ connectedProviderIds: ['github'] });
       expect(screen.getByTestId('connected-badge-github')).toBeInTheDocument();
-      expect(screen.getByTestId('connected-badge-github')).toHaveTextContent('Connected');
+      expect(screen.getByTestId('connected-badge-github')).toHaveTextContent(
+        'Connected',
+      );
     });
 
     it('does not show "Connected" badge on unconnected providers', () => {
       renderMarketplace({ connectedProviderIds: ['github'] });
-      expect(screen.queryByTestId('connected-badge-fitbit')).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId('connected-badge-fitbit'),
+      ).not.toBeInTheDocument();
     });
 
     it('shows no connected badges when connectedProviderIds is empty', () => {
       renderMarketplace({ connectedProviderIds: [] });
-      expect(screen.queryByTestId('connected-badge-github')).not.toBeInTheDocument();
-      expect(screen.queryByTestId('connected-badge-fitbit')).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId('connected-badge-github'),
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId('connected-badge-fitbit'),
+      ).not.toBeInTheDocument();
     });
 
     it('shows connected badge with success color (green indicator)', () => {
@@ -369,18 +423,26 @@ describe('ProviderMarketplace', () => {
   describe('Req 11.7 — Recommended badge', () => {
     it('shows "Recommended" badge on recommended providers', () => {
       renderMarketplace({ recommendedProviderIds: ['github'] });
-      expect(screen.getByTestId('recommended-badge-github')).toBeInTheDocument();
-      expect(screen.getByTestId('recommended-badge-github')).toHaveTextContent('Recommended');
+      expect(
+        screen.getByTestId('recommended-badge-github'),
+      ).toBeInTheDocument();
+      expect(screen.getByTestId('recommended-badge-github')).toHaveTextContent(
+        'Recommended',
+      );
     });
 
     it('does not show "Recommended" badge on non-recommended providers', () => {
       renderMarketplace({ recommendedProviderIds: ['github'] });
-      expect(screen.queryByTestId('recommended-badge-fitbit')).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId('recommended-badge-fitbit'),
+      ).not.toBeInTheDocument();
     });
 
     it('shows no recommended badges when recommendedProviderIds is empty', () => {
       renderMarketplace({ recommendedProviderIds: [] });
-      expect(screen.queryByTestId('recommended-badge-github')).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId('recommended-badge-github'),
+      ).not.toBeInTheDocument();
     });
 
     it('can show both connected and recommended badges simultaneously', () => {
@@ -389,7 +451,9 @@ describe('ProviderMarketplace', () => {
         recommendedProviderIds: ['github'],
       });
       expect(screen.getByTestId('connected-badge-github')).toBeInTheDocument();
-      expect(screen.getByTestId('recommended-badge-github')).toBeInTheDocument();
+      expect(
+        screen.getByTestId('recommended-badge-github'),
+      ).toBeInTheDocument();
     });
   });
 
@@ -428,17 +492,29 @@ describe('ProviderMarketplace', () => {
 
     it('renders separate sections for each category', () => {
       renderMarketplace();
-      expect(screen.getByTestId('category-section-developer')).toBeInTheDocument();
-      expect(screen.getByTestId('category-section-health_fitness')).toBeInTheDocument();
-      expect(screen.getByTestId('category-section-entertainment')).toBeInTheDocument();
-      expect(screen.getByTestId('category-section-communication')).toBeInTheDocument();
+      expect(
+        screen.getByTestId('category-section-developer'),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByTestId('category-section-health_fitness'),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByTestId('category-section-entertainment'),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByTestId('category-section-communication'),
+      ).toBeInTheDocument();
     });
 
     it('shows correct provider count in sidebar for each category', () => {
       renderMarketplace({
         providers: [
           ...ALL_PROVIDERS,
-          makeProvider({ id: 'gitlab', name: 'GitLab', category: ProviderCategory.DEVELOPER }),
+          makeProvider({
+            id: 'gitlab',
+            name: 'GitLab',
+            category: ProviderCategory.DEVELOPER,
+          }),
         ],
       });
       // Developer category now has 2 providers
@@ -449,7 +525,9 @@ describe('ProviderMarketplace', () => {
     it('renders category count badge in section header', () => {
       renderMarketplace();
       const devSection = screen.getByTestId('category-section-developer');
-      expect(screen.getByTestId('category-count-developer')).toBeInTheDocument();
+      expect(
+        screen.getByTestId('category-count-developer'),
+      ).toBeInTheDocument();
       expect(within(devSection).getByText(/1 provider/)).toBeInTheDocument();
     });
   });
@@ -460,7 +538,9 @@ describe('ProviderMarketplace', () => {
     it('renders empty state when no providers are provided', () => {
       renderMarketplace({ providers: [] });
       // No provider cards should be rendered
-      expect(screen.queryByTestId('provider-card-github')).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId('provider-card-github'),
+      ).not.toBeInTheDocument();
     });
 
     it('renders all providers when no filters are active', () => {
@@ -490,7 +570,9 @@ describe('ProviderMarketplace', () => {
       fireEvent.change(searchInput, { target: { value: 'GitHub' } });
       // Only GitHub should be visible
       expect(screen.getByTestId('provider-card-github')).toBeInTheDocument();
-      expect(screen.queryByTestId('provider-card-gitlab')).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId('provider-card-gitlab'),
+      ).not.toBeInTheDocument();
     });
   });
 });

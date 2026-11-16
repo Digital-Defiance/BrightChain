@@ -25,9 +25,8 @@ import fc from 'fast-check';
 import { BlockEncryptionType } from '../enumerations/blockEncryptionType';
 import { BlockSize } from '../enumerations/blockSize';
 import { ServiceProvider } from '../services/service.provider';
-import { ConstituentBlockListBlock } from './cbl';
 import { brightDateNow } from '../utils/brightDateConversions';
-import type { BrightDateTimestamp } from '../types/brightDateTimestamp';
+import { ConstituentBlockListBlock } from './cbl';
 
 // Set a longer timeout for all tests in this file
 jest.setTimeout(60000);

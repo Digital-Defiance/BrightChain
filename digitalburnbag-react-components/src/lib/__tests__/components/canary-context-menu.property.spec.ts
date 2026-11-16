@@ -62,22 +62,22 @@ describe('Feature: canary-provider-expansion, Property 21: Context menu binding 
 
   it('badge count equals the exact number of bindings regardless of binding content', () => {
     fc.assert(
-      fc.property(
-        fc.integer({ min: 0, max: 100 }),
-        (n) => {
-          // Generate exactly N bindings
-          const bindings: ICanaryBinding[] = Array.from({ length: n }, (_, i) => ({
+      fc.property(fc.integer({ min: 0, max: 100 }), (n) => {
+        // Generate exactly N bindings
+        const bindings: ICanaryBinding[] = Array.from(
+          { length: n },
+          (_, i) => ({
             id: `binding-${i}`,
             providerId: `provider-${i}`,
             providerDisplayName: `Provider ${i}`,
             condition: i % 2 === 0 ? 'ABSENCE' : 'DURESS',
             action: 'notify',
             absenceThresholdHours: 24,
-          }));
-          const badgeCount = getBindingCountBadge(bindings);
-          expect(badgeCount).toBe(n);
-        },
-      ),
+          }),
+        );
+        const badgeCount = getBindingCountBadge(bindings);
+        expect(badgeCount).toBe(n);
+      }),
       { numRuns: 100 },
     );
   });

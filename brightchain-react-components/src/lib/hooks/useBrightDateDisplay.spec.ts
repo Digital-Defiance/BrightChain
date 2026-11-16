@@ -40,7 +40,9 @@ describe('useBrightDateDisplay', () => {
 
     it('returns different brightDateStrings for different values', () => {
       const { result: r1 } = renderHook(() => useBrightDateDisplay(0));
-      const { result: r2 } = renderHook(() => useBrightDateDisplay(KNOWN_VALUE));
+      const { result: r2 } = renderHook(() =>
+        useBrightDateDisplay(KNOWN_VALUE),
+      );
       expect(r1.current.brightDateString).not.toBe(r2.current.brightDateString);
     });
   });
@@ -63,9 +65,7 @@ describe('useBrightDateDisplay', () => {
     });
 
     it('returns different locale strings for different values', () => {
-      const { result: r1 } = renderHook(() =>
-        useBrightDateDisplay(0, 'en-US'),
-      );
+      const { result: r1 } = renderHook(() => useBrightDateDisplay(0, 'en-US'));
       const { result: r2 } = renderHook(() =>
         useBrightDateDisplay(KNOWN_VALUE, 'en-US'),
       );
@@ -179,8 +179,7 @@ describe('useBrightDateDisplay', () => {
 
     it('updates localeString when value changes', () => {
       const { result, rerender } = renderHook(
-        ({ value }: { value: number }) =>
-          useBrightDateDisplay(value, 'en-US'),
+        ({ value }: { value: number }) => useBrightDateDisplay(value, 'en-US'),
         { initialProps: { value: 0 } },
       );
 

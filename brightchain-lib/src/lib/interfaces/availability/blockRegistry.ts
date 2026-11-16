@@ -7,9 +7,9 @@
  * @see Requirements 3.1, 3.5, 3.6, 3.7, 4.5
  */
 
+import type { BrightDateTimestamp } from '../../types/brightDateTimestamp';
 import type { BlockId } from '../branded/primitives/blockId';
 import { PoolId } from '../storage/pooledBlockStore';
-import type { BrightDateTimestamp } from '../../types/brightDateTimestamp';
 
 /**
  * Bloom filter for efficient block existence queries.

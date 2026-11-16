@@ -117,11 +117,15 @@ describe('PostImageController', () => {
 
       expect(result.statusCode).toBe(200);
 
-      const response = result.response as Record<string, unknown>;
+      const response = result.response as {
+        _binary: boolean;
+        _buffer: Buffer;
+        _headers: Record<string, string>;
+      };
       expect(response._binary).toBe(true);
       expect(response._buffer).toEqual(FILE_BUFFER);
 
-      const headers = response._headers as Record<string, string>;
+      const headers = response._headers;
       expect(headers['Content-Type']).toBe(MIME_TYPE);
       expect(headers['Cache-Control']).toBe(
         'public, max-age=31536000, immutable',
@@ -159,7 +163,7 @@ describe('PostImageController', () => {
       const response = result.response as {
         _headers: Record<string, string>;
       };
-      expect(response._headers.ETag).toBe(`"${FILE_ID}"`);
+      expect(response._headers['ETag']).toBe(`"${FILE_ID}"`);
     });
 
     it('returns 400 when fileId param is missing', async () => {

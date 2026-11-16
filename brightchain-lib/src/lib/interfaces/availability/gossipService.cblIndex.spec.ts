@@ -6,12 +6,12 @@
  * Validates: Requirements 8.1, 8.6
  */
 
+import { brightDateNow } from '../../utils/brightDateConversions';
 import type { BlockId } from '../branded/primitives/blockId';
 import type { ICBLIndexEntry } from '../storage/cblIndex';
 import { CBLVisibility } from '../storage/cblIndex';
 import type { BlockAnnouncement } from './gossipService';
 import { validateBlockAnnouncement } from './gossipService';
-import { brightDateNow } from '../../utils/brightDateConversions';
 
 /** Cast a test string to BlockId without validation — for test data only. */
 const bid = (s: string) => s as unknown as BlockId;
@@ -41,7 +41,7 @@ function makeBaseAnnouncement(
     type: 'cbl_index_update',
     blockId: bid(''),
     nodeId: 'node-001',
-    timestamp: brightDateNow(),  // BlockAnnouncement.timestamp migrated in task 9.4
+    timestamp: brightDateNow(), // BlockAnnouncement.timestamp migrated in task 9.4
     ttl: 3,
     poolId: 'test-pool',
     cblIndexEntry: makeCBLIndexEntry(),

@@ -22,10 +22,10 @@ import { ChecksumMismatchError } from '../errors/checksumMismatch';
 import { initializeBrightChain } from '../init';
 import { ChecksumService } from '../services/checksum.service';
 import { ServiceProvider } from '../services/service.provider';
-import { Checksum } from '../types/checksum';
-import { EncryptedBlock } from './encrypted';
-import { brightDateNow } from '../utils/brightDateConversions';
 import type { BrightDateTimestamp } from '../types/brightDateTimestamp';
+import { Checksum } from '../types/checksum';
+import { brightDateNow } from '../utils/brightDateConversions';
+import { EncryptedBlock } from './encrypted';
 
 class TestEncryptedBlock extends EncryptedBlock<Uint8Array> {
   public static override async from<TID extends PlatformID = Uint8Array>(

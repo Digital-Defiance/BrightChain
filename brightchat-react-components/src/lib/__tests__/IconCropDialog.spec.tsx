@@ -7,24 +7,50 @@
  * Validates: Requirements 5.1–5.10, 9.1–9.6
  */
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 // ─── Mocks ──────────────────────────────────────────────────────────────────
+
+// Crop area the mock cropper reports once mounted (null = reports nothing,
+// as when the image has not loaded yet). Set per test.
+let mockReportedArea: {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+} | null = null;
 
 // Mock react-easy-crop (doesn't work in jsdom)
 jest.mock('react-easy-crop', () => {
-  const React = require('react');
+  const React = jest.requireActual<typeof import('react')>('react');
   return {
     __esModule: true,
-    default: (props: any) => {
-      // Store props for test assertions
-      return React.createElement('div', {
-        'data-testid': 'mock-cropper',
-        'data-zoom': props.zoom,
-        'data-aspect': props.aspect,
-        'data-crop-shape': props.cropShape,
-        'data-image': props.image,
-      });
+    default: function MockCropper(
+      props: import('react-easy-crop').CropperProps,
+    ) {
+      const { onCropComplete, mediaProps = {} } = props;
+      React.useEffect(() => {
+        if (mockReportedArea) {
+          onCropComplete?.(mockReportedArea, mockReportedArea);
+        }
+        // Report once on mount, like the real cropper after image load.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+      }, []);
+      // Store props for test assertions. The <img> carries the cropper's
+      // media error handler so a test can fire a load failure on it.
+      return React.createElement(
+        'div',
+        {
+          'data-testid': 'mock-cropper',
+          'data-zoom': props.zoom,
+          'data-aspect': props.aspect,
+          'data-crop-shape': props.cropShape,
+          'data-image': props.image,
+        },
+        React.createElement('img', {
+          'data-testid': 'mock-cropper-media',
+          alt: '',
+          onError: mediaProps.onError,
+        }),
+      );
     },
   };
 });
@@ -54,9 +80,36 @@ jest.mock('@digitaldefiance/express-suite-react-components', () => ({
   }),
 }));
 
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+// Canvas cropping is unavailable in jsdom; the real helper is unit-tested
+// separately (clampCropArea below), so stub only the canvas step here.
+jest.mock('../IconCropDialog.helpers', () => ({
+  ...jest.requireActual<typeof import('../IconCropDialog.helpers')>(
+    '../IconCropDialog.helpers',
+  ),
+  cropImageToFile: jest.fn(),
+}));
+
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from '@testing-library/react';
 import type { IconCropDialogProps } from '../IconCropDialog';
 import IconCropDialog from '../IconCropDialog';
+import {
+  clampCropArea,
+  cropImageToFile,
+  IconCropError,
+} from '../IconCropDialog.helpers';
+
+const mockCropImageToFile = jest.mocked(cropImageToFile);
+
+afterEach(() => {
+  mockReportedArea = null;
+  mockCropImageToFile.mockReset();
+});
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -230,7 +283,9 @@ describe('IconCropDialog', () => {
     });
   });
 
-  it('calls onCropComplete with commitToken on confirm', async () => {
+  it('calls onCropComplete with the cropped commitToken on confirm', async () => {
+    mockReportedArea = { x: 0, y: 0, width: 10, height: 10 };
+    mockCropImageToFile.mockResolvedValue(createFile('server-icon.png', 64));
     const onCropComplete = jest.fn();
     const chatApi = createMockChatApi();
     renderDialog({ chatApi, onCropComplete });
@@ -241,14 +296,17 @@ describe('IconCropDialog', () => {
       target: { files: [createFile('icon.png', 1024)] },
     });
 
+    // Confirm enables once the cropper has reported its area.
     await waitFor(() => {
-      expect(screen.getByTestId('mock-cropper')).toBeTruthy();
+      expect(
+        screen.getByText('Server_Icon_CropConfirm').hasAttribute('disabled'),
+      ).toBe(false);
     });
-
     // Click confirm
     fireEvent.click(screen.getByText('Server_Icon_CropConfirm'));
-
-    expect(onCropComplete).toHaveBeenCalledWith('test-commit-token-123');
+    await waitFor(() => {
+      expect(onCropComplete).toHaveBeenCalledWith('test-commit-token-123');
+    });
   });
 
   it('calls onClose on cancel without calling onCropComplete', () => {
@@ -300,6 +358,8 @@ describe('IconCropDialog', () => {
   });
 
   it('handles Enter key to confirm (Req 9.2)', async () => {
+    mockReportedArea = { x: 0, y: 0, width: 10, height: 10 };
+    mockCropImageToFile.mockResolvedValue(createFile('server-icon.png', 64));
     const onCropComplete = jest.fn();
     renderDialog({
       onCropComplete,
@@ -309,8 +369,62 @@ describe('IconCropDialog', () => {
 
     const dialog = screen.getByRole('dialog');
     fireEvent.keyDown(dialog, { key: 'Enter' });
+    await waitFor(() => {
+      expect(onCropComplete).toHaveBeenCalledWith('test-commit-token-123');
+    });
+  });
 
-    expect(onCropComplete).toHaveBeenCalledWith('token');
+  it('keeps Confirm disabled and ignores Enter until the cropper reports an area', () => {
+    // mockReportedArea stays null: the image has not loaded yet.
+    const onCropComplete = jest.fn();
+    renderDialog({
+      onCropComplete,
+      initialPreviewUrl: '/api/temp-upload/token/preview',
+      initialCommitToken: 'token',
+    });
+    expect(
+      screen.getByText('Server_Icon_CropConfirm').hasAttribute('disabled'),
+    ).toBe(true);
+    fireEvent.keyDown(screen.getByRole('dialog'), { key: 'Enter' });
+    expect(mockCropImageToFile).not.toHaveBeenCalled();
+    expect(onCropComplete).not.toHaveBeenCalled();
+  });
+
+  it('disables Confirm again when a new file is selected, until its area is reported', async () => {
+    mockReportedArea = { x: 0, y: 0, width: 10, height: 10 };
+    renderDialog({
+      initialPreviewUrl: '/api/temp-upload/token/preview',
+      initialCommitToken: 'token',
+    });
+    expect(
+      screen.getByText('Server_Icon_CropConfirm').hasAttribute('disabled'),
+    ).toBe(false);
+    // The new image's cropper reports nothing, so the old rectangle must not linger.
+    mockReportedArea = null;
+    fireEvent.change(screen.getByTestId('icon-file-input'), {
+      target: { files: [createFile('next.png', 1024)] },
+    });
+    await waitFor(() => {
+      expect(
+        screen.getByText('Server_Icon_CropConfirm').hasAttribute('disabled'),
+      ).toBe(true);
+    });
+  });
+
+  it('shows a translated error and keeps Confirm disabled when the preview image fails to load', () => {
+    // mockReportedArea stays null: a failed image never reports an area.
+    renderDialog({
+      initialPreviewUrl: '/api/temp-upload/token/preview',
+      initialCommitToken: 'token',
+    });
+    expect(screen.queryByTestId('icon-crop-error')).toBeNull();
+    fireEvent.error(screen.getByTestId('mock-cropper-media'));
+    expect(screen.getByTestId('icon-crop-error').textContent).toBe(
+      'Server_Icon_PreviewLoadFailed',
+    );
+    expect(
+      screen.getByText('Server_Icon_CropConfirm').hasAttribute('disabled'),
+    ).toBe(true);
   });
 
   it('handles Escape key to cancel (Req 9.2)', () => {
@@ -321,5 +435,192 @@ describe('IconCropDialog', () => {
     fireEvent.keyDown(dialog, { key: 'Escape' });
 
     expect(onClose).toHaveBeenCalled();
+  });
+});
+
+describe('IconCropDialog — applying the crop on confirm', () => {
+  const croppedStagingResponse = {
+    ...mockStagingResponse,
+    commitToken: 'cropped-commit-token',
+    previewUrl: '/api/temp-upload/cropped-commit-token/preview',
+  };
+
+  it('crops the selection, stages the cropped file and completes with its token', async () => {
+    mockReportedArea = { x: 10, y: 20, width: 100, height: 100 };
+    const croppedFile = createFile('server-icon.png', 512);
+    mockCropImageToFile.mockResolvedValue(croppedFile);
+    const chatApi = createMockChatApi({
+      stageFile: jest.fn().mockResolvedValue(croppedStagingResponse),
+    });
+    const onImageStaged = jest.fn();
+    const onCropComplete = jest.fn();
+    renderDialog({
+      chatApi,
+      onImageStaged,
+      onCropComplete,
+      initialPreviewUrl: '/api/temp-upload/raw-token/preview',
+      initialCommitToken: 'raw-token',
+    });
+
+    fireEvent.click(screen.getByText('Server_Icon_CropConfirm'));
+
+    await waitFor(() => {
+      expect(onCropComplete).toHaveBeenCalledWith('cropped-commit-token');
+    });
+    expect(mockCropImageToFile).toHaveBeenCalledWith(
+      '/api/temp-upload/raw-token/preview',
+      mockReportedArea,
+    );
+    expect(chatApi.stageFile).toHaveBeenCalledWith(croppedFile);
+    // The parent's preview switches to the cropped image.
+    expect(onImageStaged).toHaveBeenCalledWith(
+      'cropped-commit-token',
+      '/api/temp-upload/cropped-commit-token/preview',
+    );
+    expect(onCropComplete).not.toHaveBeenCalledWith('raw-token');
+  });
+
+  it('keeps the dialog open with an error and never sends the uncropped image when cropping fails', async () => {
+    mockReportedArea = { x: 0, y: 0, width: 50, height: 50 };
+    mockCropImageToFile.mockRejectedValue(new Error('Canvas export failed'));
+    const chatApi = createMockChatApi();
+    const onCropComplete = jest.fn();
+    renderDialog({
+      chatApi,
+      onCropComplete,
+      initialPreviewUrl: '/api/temp-upload/raw-token/preview',
+      initialCommitToken: 'raw-token',
+    });
+
+    fireEvent.click(screen.getByText('Server_Icon_CropConfirm'));
+
+    await waitFor(() => {
+      expect(screen.getByTestId('icon-crop-error').textContent).toBe(
+        'Server_Icon_CropFailed',
+      );
+    });
+    expect(onCropComplete).not.toHaveBeenCalled();
+    expect(chatApi.stageFile).not.toHaveBeenCalled();
+  });
+
+  it('shows the too-large message when the cropped icon exceeds the size limit', async () => {
+    mockReportedArea = { x: 0, y: 0, width: 50, height: 50 };
+    mockCropImageToFile.mockRejectedValue(
+      new IconCropError('too-large', 'Cropped icon exceeds the size limit'),
+    );
+    const chatApi = createMockChatApi();
+    renderDialog({
+      chatApi,
+      initialPreviewUrl: '/api/temp-upload/raw-token/preview',
+      initialCommitToken: 'raw-token',
+    });
+    fireEvent.click(screen.getByText('Server_Icon_CropConfirm'));
+    await waitFor(() => {
+      expect(screen.getByTestId('icon-crop-error').textContent).toBe(
+        'Server_Icon_FileTooLarge',
+      );
+    });
+    expect(chatApi.stageFile).not.toHaveBeenCalled();
+  });
+
+  it('shows a generic staging error and does not complete when the cropped upload fails', async () => {
+    mockReportedArea = { x: 0, y: 0, width: 50, height: 50 };
+    mockCropImageToFile.mockResolvedValue(createFile('server-icon.png', 256));
+    const chatApi = createMockChatApi({
+      stageFile: jest.fn().mockRejectedValue(new Error('Network error')),
+    });
+    const onCropComplete = jest.fn();
+    renderDialog({
+      chatApi,
+      onCropComplete,
+      initialPreviewUrl: '/api/temp-upload/raw-token/preview',
+      initialCommitToken: 'raw-token',
+    });
+    fireEvent.click(screen.getByText('Server_Icon_CropConfirm'));
+    await waitFor(() => {
+      expect(screen.getByTestId('icon-crop-error').textContent).toBe(
+        'Server_Icon_StagingFailed',
+      );
+    });
+    expect(onCropComplete).not.toHaveBeenCalled();
+  });
+  it('crops, stages and completes once when confirm is triggered twice while staging is pending', async () => {
+    mockReportedArea = { x: 0, y: 0, width: 50, height: 50 };
+    mockCropImageToFile.mockResolvedValue(createFile('server-icon.png', 256));
+    let resolveStage: (value: typeof mockStagingResponse) => void = () => {
+      throw new Error('stageFile was not called');
+    };
+    const chatApi = createMockChatApi({
+      stageFile: jest.fn().mockReturnValue(
+        new Promise<typeof mockStagingResponse>((resolve) => {
+          resolveStage = resolve;
+        }),
+      ),
+    });
+    const onCropComplete = jest.fn();
+    renderDialog({
+      chatApi,
+      onCropComplete,
+      initialPreviewUrl: '/api/temp-upload/raw-token/preview',
+      initialCommitToken: 'raw-token',
+    });
+    const confirmBtn = screen.getByText('Server_Icon_CropConfirm');
+    // Both clicks run before React re-renders the button as disabled.
+    act(() => {
+      confirmBtn.click();
+      confirmBtn.click();
+    });
+    await waitFor(() => expect(chatApi.stageFile).toHaveBeenCalledTimes(1));
+    // A further confirm while the upload is still pending is also ignored.
+    fireEvent.click(confirmBtn);
+    fireEvent.keyDown(screen.getByRole('dialog'), { key: 'Enter' });
+    resolveStage(mockStagingResponse);
+    await waitFor(() => expect(onCropComplete).toHaveBeenCalledTimes(1));
+    expect(mockCropImageToFile).toHaveBeenCalledTimes(1);
+    expect(chatApi.stageFile).toHaveBeenCalledTimes(1);
+    expect(onCropComplete).toHaveBeenCalledWith(
+      mockStagingResponse.commitToken,
+    );
+  });
+});
+describe('clampCropArea', () => {
+  it('keeps an area that lies inside the image, rounding each edge to whole pixels', () => {
+    // Edges: left 10.4→10, right 60.6→61, top 5.6→6, bottom 56.3→56.
+    expect(
+      clampCropArea({ x: 10.4, y: 5.6, width: 50.2, height: 50.7 }, 200, 100),
+    ).toEqual({
+      x: 10,
+      y: 6,
+      width: 51,
+      height: 50,
+    });
+  });
+
+  it('trims an area that overhangs the right and bottom edges', () => {
+    expect(
+      clampCropArea({ x: 150, y: 80, width: 100, height: 100 }, 200, 100),
+    ).toEqual({
+      x: 150,
+      y: 80,
+      width: 50,
+      height: 20,
+    });
+  });
+
+  it('trims an area that overhangs the left and top edges instead of shifting it', () => {
+    expect(
+      clampCropArea({ x: -5, y: -3, width: 20, height: 20 }, 100, 100),
+    ).toEqual({
+      x: 0,
+      y: 0,
+      width: 15,
+      height: 17,
+    });
+  });
+
+  it('returns null when the area is entirely outside the image', () => {
+    expect(
+      clampCropArea({ x: 300, y: 0, width: 10, height: 10 }, 200, 100),
+    ).toBeNull();
   });
 });

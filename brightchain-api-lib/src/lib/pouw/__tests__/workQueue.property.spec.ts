@@ -459,9 +459,9 @@ describe('WorkQueue Property Tests', () => {
             expect(newItems.length).toBe(newCount);
 
             // Verify ordering: all partial items have indices before all new items
-            const lastPartialIndex = dequeued.findLastIndex(
-              (d) => d.isPartialTree,
-            );
+            const lastPartialIndex = dequeued
+              .map((d) => d.isPartialTree)
+              .lastIndexOf(true);
             const firstNewIndex = dequeued.findIndex((d) => !d.isPartialTree);
 
             if (partialCount > 0 && newCount > 0) {

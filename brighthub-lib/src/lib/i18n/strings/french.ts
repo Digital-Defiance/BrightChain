@@ -67,7 +67,8 @@ export const BrightHubFrenchStrings: ComponentStrings<BrightHubStringKey> = {
   [BrightHubStrings.PostComposer_Save]: 'Enregistrer',
   [BrightHubStrings.PostComposer_Cancel]: 'Annuler',
   [BrightHubStrings.PostComposer_InsertIcon]: 'Insérer une icône',
-  [BrightHubStrings.PostComposer_IconSearchPlaceholder]: 'Rechercher des icônes...',
+  [BrightHubStrings.PostComposer_IconSearchPlaceholder]:
+    'Rechercher des icônes...',
   [BrightHubStrings.PostComposer_IconNoMatchTemplate]:
     'Aucune icône ne correspond à \u00ab {0} \u00bb',
   [BrightHubStrings.PostComposer_IconStyleOptions]: 'Options de style',
@@ -684,7 +685,8 @@ export const BrightHubFrenchStrings: ComponentStrings<BrightHubStringKey> = {
   [BrightHubStrings.EditProfileDialog_Title]: 'Modifier le profil',
   [BrightHubStrings.EditProfileDialog_DisplayName]: "Nom d'affichage",
   [BrightHubStrings.EditProfileDialog_Bio]: 'Bio',
-  [BrightHubStrings.EditProfileDialog_BioPlaceholder]: 'Parlez de vous. Markdown et icônes pris en charge.',
+  [BrightHubStrings.EditProfileDialog_BioPlaceholder]:
+    'Parlez de vous. Markdown et icônes pris en charge.',
   [BrightHubStrings.EditProfileDialog_BioCharCountTemplate]: '{CURRENT}/{MAX}',
   [BrightHubStrings.EditProfileDialog_BioPreview]: 'Aperçu',
   [BrightHubStrings.EditProfileDialog_Location]: 'Lieu',
@@ -692,8 +694,10 @@ export const BrightHubFrenchStrings: ComponentStrings<BrightHubStringKey> = {
   [BrightHubStrings.EditProfileDialog_Save]: 'Enregistrer',
   [BrightHubStrings.EditProfileDialog_Cancel]: 'Annuler',
   [BrightHubStrings.EditProfileDialog_Saving]: 'Enregistrement\u2026',
-  [BrightHubStrings.EditProfileDialog_ErrorBioTooLong]: 'La bio dépasse la longueur maximale de {MAX} caractères.',
-  [BrightHubStrings.EditProfileDialog_ErrorBioContainsImage]: 'La bio ne peut pas contenir de syntaxe Markdown pour les images.',
+  [BrightHubStrings.EditProfileDialog_ErrorBioTooLong]:
+    'La bio dépasse la longueur maximale de {MAX} caractères.',
+  [BrightHubStrings.EditProfileDialog_ErrorBioContainsImage]:
+    'La bio ne peut pas contenir de syntaxe Markdown pour les images.',
 
   // UserProfileCard
   [BrightHubStrings.UserProfileCard_EditProfile]: 'Modifier le profil',

@@ -12,17 +12,23 @@
 
 import type { NextFunction, Request, Response } from 'express';
 import { BrightDbUserController } from '../lib/controllers/user';
-import type { IBrightDbApplication } from '../lib/interfaces/bright-db-application';
 import { MemoryDocumentStore } from '../lib/datastore/memory-document-store';
-import { ServiceProvider } from '@brightchain/brightchain-lib';
+import type { IBrightDbApplication } from '../lib/interfaces/bright-db-application';
 
+/** Fields of the user document that the TOTP endpoints read and write. */
+interface ITotpUserDoc {
+  totpEnabled?: boolean;
+  totpSecret?: string | null;
+  totpPendingSecret?: string | null;
+}
 // ─── Constants ──────────────────────────────────────────────────────────────
 
 const TEST_USER_ID = 'abcdef01234567890abcdef012345678'; // 32-char hex
 const TEST_EMAIL = 'user@example.com';
 const TEST_SECRET = 'JBSWY3DPEHPK3PXP';
 const TEST_ENCRYPTED_HEX = Buffer.from(TEST_SECRET, 'utf-8').toString('hex');
-const TEST_PROVISIONING_URI = 'otpauth://totp/BrightChain:user@example.com?secret=JBSWY3DPEHPK3PXP&issuer=BrightChain';
+const TEST_PROVISIONING_URI =
+  'otpauth://totp/BrightChain:user@example.com?secret=JBSWY3DPEHPK3PXP&issuer=BrightChain';
 
 // ─── Mocks ──────────────────────────────────────────────────────────────────
 
@@ -70,7 +76,9 @@ const mockTotpService = {
   generateProvisioningUri: jest.fn().mockReturnValue(TEST_PROVISIONING_URI),
 };
 
-function buildMockApplication(db: MemoryDocumentStore): IBrightDbApplication<Buffer> {
+function buildMockApplication(
+  db: MemoryDocumentStore,
+): IBrightDbApplication<Buffer> {
   return {
     services: {
       get: jest.fn().mockImplementation((key: string) => {
@@ -90,7 +98,9 @@ function buildMockApplication(db: MemoryDocumentStore): IBrightDbApplication<Buf
   } as unknown as IBrightDbApplication<Buffer>;
 }
 
-function buildAuthenticatedRequest(body: Record<string, unknown> = {}): Request {
+function buildAuthenticatedRequest(
+  body: Record<string, unknown> = {},
+): Request {
   return {
     body,
     user: {
@@ -109,7 +119,9 @@ function buildAuthenticatedRequest(body: Record<string, unknown> = {}): Request 
   } as unknown as Request;
 }
 
-function buildUnauthenticatedRequest(body: Record<string, unknown> = {}): Request {
+function buildUnauthenticatedRequest(
+  body: Record<string, unknown> = {},
+): Request {
   return { body } as unknown as Request;
 }
 
@@ -126,7 +138,9 @@ describe('BrightDbUserController — TOTP endpoints', () => {
     jest.clearAllMocks();
     mockTotpService.generateSecret.mockReturnValue(TEST_SECRET);
     mockTotpService.verifyCode.mockReturnValue(true);
-    mockTotpService.generateProvisioningUri.mockReturnValue(TEST_PROVISIONING_URI);
+    mockTotpService.generateProvisioningUri.mockReturnValue(
+      TEST_PROVISIONING_URI,
+    );
 
     memoryStore = new MemoryDocumentStore();
     controller = new BrightDbUserController(buildMockApplication(memoryStore));
@@ -146,7 +160,11 @@ describe('BrightDbUserController — TOTP endpoints', () => {
       const result = await controller.totpSetup(req, mockRes, mockNext);
 
       expect(result.statusCode).toBe(200);
-      const response = result.response as { provisioningUri: string; secret: string; message: string };
+      const response = result.response as {
+        provisioningUri: string;
+        secret: string;
+        message: string;
+      };
       expect(response.secret).toBe(TEST_SECRET);
       expect(response.provisioningUri).toBe(TEST_PROVISIONING_URI);
       expect(response.message).toBe('TOTP setup initiated');
@@ -160,7 +178,9 @@ describe('BrightDbUserController — TOTP endpoints', () => {
       const col = memoryStore.collection('users');
       const doc = await col.findOne({ _id: TEST_USER_ID } as never);
       expect(doc).not.toBeNull();
-      expect((doc as Record<string, unknown>)?.totpPendingSecret).toBe(TEST_ENCRYPTED_HEX);
+      expect((doc as ITotpUserDoc | null)?.totpPendingSecret).toBe(
+        TEST_ENCRYPTED_HEX,
+      );
     });
 
     it('updates existing document with totpPendingSecret', async () => {
@@ -173,7 +193,9 @@ describe('BrightDbUserController — TOTP endpoints', () => {
 
       // Verify the pending secret was set
       const doc = await col.findOne({ _id: TEST_USER_ID } as never);
-      expect((doc as Record<string, unknown>)?.totpPendingSecret).toBe(TEST_ENCRYPTED_HEX);
+      expect((doc as ITotpUserDoc | null)?.totpPendingSecret).toBe(
+        TEST_ENCRYPTED_HEX,
+      );
     });
 
     it('does NOT double-wrap with $set (regression test)', async () => {
@@ -185,7 +207,9 @@ describe('BrightDbUserController — TOTP endpoints', () => {
       await controller.totpSetup(req, mockRes, mockNext);
 
       // The document should NOT have a literal "$set" field
-      const doc = await col.findOne({ _id: TEST_USER_ID } as never) as Record<string, unknown>;
+      const doc = (await col.findOne({
+        _id: TEST_USER_ID,
+      } as never)) as ITotpUserDoc | null;
       expect(doc).not.toHaveProperty('$set');
       expect(doc?.totpPendingSecret).toBe(TEST_ENCRYPTED_HEX);
     });
@@ -193,13 +217,19 @@ describe('BrightDbUserController — TOTP endpoints', () => {
     it('returns 409 when TOTP is already enabled', async () => {
       // Pre-create user with TOTP already active
       const col = memoryStore.collection('users');
-      await col.create({ _id: TEST_USER_ID, totpEnabled: true, totpSecret: 'existing' } as never);
+      await col.create({
+        _id: TEST_USER_ID,
+        totpEnabled: true,
+        totpSecret: 'existing',
+      } as never);
 
       const req = buildAuthenticatedRequest();
       const result = await controller.totpSetup(req, mockRes, mockNext);
 
       expect(result.statusCode).toBe(409);
-      expect((result.response as { message: string }).message).toBe('TOTP is already active');
+      expect((result.response as { message: string }).message).toBe(
+        'TOTP is already active',
+      );
     });
   });
 
@@ -216,7 +246,9 @@ describe('BrightDbUserController — TOTP endpoints', () => {
       const req = buildAuthenticatedRequest({ code: '12345' });
       const result = await controller.totpConfirm(req, mockRes, mockNext);
       expect(result.statusCode).toBe(400);
-      expect((result.response as { message: string }).message).toBe('Code must be exactly 6 digits');
+      expect((result.response as { message: string }).message).toBe(
+        'Code must be exactly 6 digits',
+      );
     });
 
     it('returns 400 when code is not a string', async () => {
@@ -234,13 +266,18 @@ describe('BrightDbUserController — TOTP endpoints', () => {
       const result = await controller.totpConfirm(req, mockRes, mockNext);
 
       expect(result.statusCode).toBe(400);
-      expect((result.response as { message: string }).message).toBe('TOTP setup has not been initiated');
+      expect((result.response as { message: string }).message).toBe(
+        'TOTP setup has not been initiated',
+      );
     });
 
     it('returns 400 when TOTP code is invalid', async () => {
       // Setup pending secret
       const col = memoryStore.collection('users');
-      await col.create({ _id: TEST_USER_ID, totpPendingSecret: TEST_ENCRYPTED_HEX } as never);
+      await col.create({
+        _id: TEST_USER_ID,
+        totpPendingSecret: TEST_ENCRYPTED_HEX,
+      } as never);
 
       mockTotpService.verifyCode.mockReturnValue(false);
 
@@ -248,22 +285,31 @@ describe('BrightDbUserController — TOTP endpoints', () => {
       const result = await controller.totpConfirm(req, mockRes, mockNext);
 
       expect(result.statusCode).toBe(400);
-      expect((result.response as { message: string }).message).toBe('Invalid TOTP code');
+      expect((result.response as { message: string }).message).toBe(
+        'Invalid TOTP code',
+      );
     });
 
     it('activates TOTP on valid code', async () => {
       // Setup pending secret
       const col = memoryStore.collection('users');
-      await col.create({ _id: TEST_USER_ID, totpPendingSecret: TEST_ENCRYPTED_HEX } as never);
+      await col.create({
+        _id: TEST_USER_ID,
+        totpPendingSecret: TEST_ENCRYPTED_HEX,
+      } as never);
 
       const req = buildAuthenticatedRequest({ code: '123456' });
       const result = await controller.totpConfirm(req, mockRes, mockNext);
 
       expect(result.statusCode).toBe(200);
-      expect((result.response as { message: string }).message).toBe('TOTP has been enabled successfully');
+      expect((result.response as { message: string }).message).toBe(
+        'TOTP has been enabled successfully',
+      );
 
       // Verify DB state
-      const doc = await col.findOne({ _id: TEST_USER_ID } as never) as Record<string, unknown>;
+      const doc = (await col.findOne({
+        _id: TEST_USER_ID,
+      } as never)) as ITotpUserDoc | null;
       expect(doc?.totpEnabled).toBe(true);
       expect(doc?.totpSecret).toBe(TEST_ENCRYPTED_HEX);
       expect(doc?.totpPendingSecret).toBeNull();
@@ -272,17 +318,27 @@ describe('BrightDbUserController — TOTP endpoints', () => {
     it('full setup→confirm flow works end-to-end', async () => {
       // Step 1: Setup
       const setupReq = buildAuthenticatedRequest();
-      const setupResult = await controller.totpSetup(setupReq, mockRes, mockNext);
+      const setupResult = await controller.totpSetup(
+        setupReq,
+        mockRes,
+        mockNext,
+      );
       expect(setupResult.statusCode).toBe(200);
 
       // Step 2: Confirm
       const confirmReq = buildAuthenticatedRequest({ code: '123456' });
-      const confirmResult = await controller.totpConfirm(confirmReq, mockRes, mockNext);
+      const confirmResult = await controller.totpConfirm(
+        confirmReq,
+        mockRes,
+        mockNext,
+      );
       expect(confirmResult.statusCode).toBe(200);
 
       // Verify final state
       const col = memoryStore.collection('users');
-      const doc = await col.findOne({ _id: TEST_USER_ID } as never) as Record<string, unknown>;
+      const doc = (await col.findOne({
+        _id: TEST_USER_ID,
+      } as never)) as ITotpUserDoc | null;
       expect(doc?.totpEnabled).toBe(true);
       expect(doc?.totpSecret).toBeTruthy();
       expect(doc?.totpPendingSecret).toBeNull();
@@ -312,7 +368,9 @@ describe('BrightDbUserController — TOTP endpoints', () => {
       const result = await controller.totpDisable(req, mockRes, mockNext);
 
       expect(result.statusCode).toBe(409);
-      expect((result.response as { message: string }).message).toBe('TOTP is not currently active');
+      expect((result.response as { message: string }).message).toBe(
+        'TOTP is not currently active',
+      );
     });
 
     it('returns 400 when code verification fails', async () => {
@@ -329,7 +387,9 @@ describe('BrightDbUserController — TOTP endpoints', () => {
       const result = await controller.totpDisable(req, mockRes, mockNext);
 
       expect(result.statusCode).toBe(400);
-      expect((result.response as { message: string }).message).toBe('Invalid TOTP code');
+      expect((result.response as { message: string }).message).toBe(
+        'Invalid TOTP code',
+      );
     });
 
     it('disables TOTP on valid code', async () => {
@@ -344,10 +404,14 @@ describe('BrightDbUserController — TOTP endpoints', () => {
       const result = await controller.totpDisable(req, mockRes, mockNext);
 
       expect(result.statusCode).toBe(200);
-      expect((result.response as { message: string }).message).toBe('TOTP has been disabled successfully');
+      expect((result.response as { message: string }).message).toBe(
+        'TOTP has been disabled successfully',
+      );
 
       // Verify DB state
-      const doc = await col.findOne({ _id: TEST_USER_ID } as never) as Record<string, unknown>;
+      const doc = (await col.findOne({
+        _id: TEST_USER_ID,
+      } as never)) as ITotpUserDoc | null;
       expect(doc?.totpEnabled).toBe(false);
       expect(doc?.totpSecret).toBeNull();
       expect(doc?.totpPendingSecret).toBeNull();
@@ -371,7 +435,9 @@ describe('BrightDbUserController — TOTP endpoints', () => {
       const result = await controller.totpReset(req, mockRes, mockNext);
 
       expect(result.statusCode).toBe(409);
-      expect((result.response as { message: string }).message).toBe('TOTP is not currently active');
+      expect((result.response as { message: string }).message).toBe(
+        'TOTP is not currently active',
+      );
     });
 
     it('returns 400 when current code is invalid', async () => {
@@ -405,12 +471,18 @@ describe('BrightDbUserController — TOTP endpoints', () => {
       const result = await controller.totpReset(req, mockRes, mockNext);
 
       expect(result.statusCode).toBe(200);
-      const response = result.response as { secret: string; provisioningUri: string; message: string };
+      const response = result.response as {
+        secret: string;
+        provisioningUri: string;
+        message: string;
+      };
       expect(response.secret).toBe(NEW_SECRET);
       expect(response.message).toContain('TOTP reset initiated');
 
       // Verify DB state — new pending secret stored
-      const doc = await col.findOne({ _id: TEST_USER_ID } as never) as Record<string, unknown>;
+      const doc = (await col.findOne({
+        _id: TEST_USER_ID,
+      } as never)) as ITotpUserDoc | null;
       const expectedHex = Buffer.from(NEW_SECRET, 'utf-8').toString('hex');
       expect(doc?.totpPendingSecret).toBe(expectedHex);
     });
@@ -421,12 +493,17 @@ describe('BrightDbUserController — TOTP endpoints', () => {
   describe('$set double-wrapping regression', () => {
     it('totpConfirm does not create a literal $set field', async () => {
       const col = memoryStore.collection('users');
-      await col.create({ _id: TEST_USER_ID, totpPendingSecret: TEST_ENCRYPTED_HEX } as never);
+      await col.create({
+        _id: TEST_USER_ID,
+        totpPendingSecret: TEST_ENCRYPTED_HEX,
+      } as never);
 
       const req = buildAuthenticatedRequest({ code: '123456' });
       await controller.totpConfirm(req, mockRes, mockNext);
 
-      const doc = await col.findOne({ _id: TEST_USER_ID } as never) as Record<string, unknown>;
+      const doc = (await col.findOne({
+        _id: TEST_USER_ID,
+      } as never)) as ITotpUserDoc | null;
       expect(doc).not.toHaveProperty('$set');
       expect(doc?.totpEnabled).toBe(true);
     });
@@ -442,7 +519,9 @@ describe('BrightDbUserController — TOTP endpoints', () => {
       const req = buildAuthenticatedRequest({ code: '123456' });
       await controller.totpDisable(req, mockRes, mockNext);
 
-      const doc = await col.findOne({ _id: TEST_USER_ID } as never) as Record<string, unknown>;
+      const doc = (await col.findOne({
+        _id: TEST_USER_ID,
+      } as never)) as ITotpUserDoc | null;
       expect(doc).not.toHaveProperty('$set');
       expect(doc?.totpEnabled).toBe(false);
     });
@@ -458,7 +537,9 @@ describe('BrightDbUserController — TOTP endpoints', () => {
       const req = buildAuthenticatedRequest({ code: '123456' });
       await controller.totpReset(req, mockRes, mockNext);
 
-      const doc = await col.findOne({ _id: TEST_USER_ID } as never) as Record<string, unknown>;
+      const doc = (await col.findOne({
+        _id: TEST_USER_ID,
+      } as never)) as ITotpUserDoc | null;
       expect(doc).not.toHaveProperty('$set');
       expect(doc?.totpPendingSecret).toBeTruthy();
     });

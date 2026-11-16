@@ -46,7 +46,9 @@ export class ProviderCatalogService<TID extends PlatformID = string>
    * Get all providers in the catalog, optionally filtered.
    * Filters are applied with AND logic — all provided filters must match.
    */
-  getProviders(filters?: IProviderCatalogFilters): ICanaryProviderConfig<TID>[] {
+  getProviders(
+    filters?: IProviderCatalogFilters,
+  ): ICanaryProviderConfig<TID>[] {
     if (!filters) {
       return [...this.providers];
     }
@@ -106,7 +108,10 @@ export class ProviderCatalogService<TID extends PlatformID = string>
   /**
    * Get providers grouped by category.
    */
-  getProvidersByCategory(): Map<ProviderCategory, ICanaryProviderConfig<TID>[]> {
+  getProvidersByCategory(): Map<
+    ProviderCategory,
+    ICanaryProviderConfig<TID>[]
+  > {
     const categoryMap = new Map<
       ProviderCategory,
       ICanaryProviderConfig<TID>[]

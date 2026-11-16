@@ -13,7 +13,6 @@
  */
 
 import { InvalidBlockSizeLengthError } from '../errors/invalidBlockSizeLength';
-import { translate } from '../i18n';
 import { BrightChainStringKey, BrightChainStrings } from './brightChainStrings';
 
 /**

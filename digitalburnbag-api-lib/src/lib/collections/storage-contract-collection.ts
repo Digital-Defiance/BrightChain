@@ -13,24 +13,6 @@ const BIGINT_FIELDS = [
   'survivalFundMicroJoules',
 ] as const;
 
-/** Shape of a document stored in the `burnbag_storage_contracts` collection. */
-type IStorageContractDoc = Omit<
-  IBurnbagStorageContract,
-  | '_id'
-  | 'bytes'
-  | 'upfrontMicroJoules'
-  | 'dailyMicroJoules'
-  | 'remainingCreditMicroJoules'
-  | 'survivalFundMicroJoules'
-> & {
-  _id: string;
-  bytes: string;
-  upfrontMicroJoules: string;
-  dailyMicroJoules: string;
-  remainingCreditMicroJoules: string;
-  survivalFundMicroJoules: string;
-};
-
 function toDoc(contract: IBurnbagStorageContract): Record<string, unknown> {
   const { contractId, ...rest } = contract;
   const doc: Record<string, unknown> = { _id: contractId };

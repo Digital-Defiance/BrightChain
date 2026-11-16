@@ -11,17 +11,18 @@
  * Validates: Requirements 3.7, 5.6
  */
 
+import type { MessageEncryptionScheme as MessageEncryptionSchemeType } from '@brightchain/brightchain-lib';
 import * as fc from 'fast-check';
 
 import { mapComposeStateToSendParams } from './ComposeView';
 import type { AttachmentInput, MailboxInput } from './services/emailApi';
 
 const MessageEncryptionScheme = {
-  NONE: 'none',
-  SHARED_KEY: 'shared_key',
-  RECIPIENT_KEYS: 'recipient_keys',
-  S_MIME: 's_mime',
-} as const;
+  NONE: 'none' as MessageEncryptionSchemeType,
+  SHARED_KEY: 'shared_key' as MessageEncryptionSchemeType,
+  RECIPIENT_KEYS: 'recipient_keys' as MessageEncryptionSchemeType,
+  S_MIME: 's_mime' as MessageEncryptionSchemeType,
+};
 
 jest.mock('@brightchain/brightchain-lib', () => ({
   MessageEncryptionScheme,

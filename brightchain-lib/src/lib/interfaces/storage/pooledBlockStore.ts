@@ -7,8 +7,8 @@
  */
 
 import { BlockSize } from '../../enumerations/blockSize';
-import { Checksum } from '../../types/checksum';
 import type { BrightDateTimestamp } from '../../types/brightDateTimestamp';
+import { Checksum } from '../../types/checksum';
 import { BlockStoreOptions } from './blockMetadata';
 import { IBlockStore } from './blockStore';
 import type { CBLStorageResult, CBLWhiteningOptions } from './cblWhitening';

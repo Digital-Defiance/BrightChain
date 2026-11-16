@@ -29,7 +29,10 @@ jest.mock('@brightchain/brightchain-lib', () => ({
   brightDateNow: () => 9146.438,
   brightDateToDate: (bd: number) => new Date(bd * 86_400_000 + 946_727_935_816),
   dateToBrightDate: (d: Date) => (d.getTime() - 946_727_935_816) / 86_400_000,
-  BrightChainStrings: new Proxy({}, { get: (_t: unknown, p: string | symbol) => String(p) }),
+  BrightChainStrings: new Proxy(
+    {},
+    { get: (_t: unknown, p: string | symbol) => String(p) },
+  ),
   CommunicationEventType: {
     MESSAGE_SENT: 'communication:message_sent',
     MESSAGE_EDITED: 'communication:message_edited',
@@ -95,7 +98,7 @@ jest.mock('../hooks/useChatWebSocket', () => {
 
 import { act, render, screen, waitFor } from '@testing-library/react';
 import fc from 'fast-check';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { MemoryRouter, Route, Routes } from 'react-router';
 import MessageThreadView, {
   sortMessagesChronologically,
 } from '../MessageThreadView';

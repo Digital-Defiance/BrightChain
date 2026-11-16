@@ -28,6 +28,12 @@ import {
 import { AdminUserController } from './adminUser';
 import { DashboardController } from './dashboard';
 
+/** Claims carried by the tokens these tests sign. */
+interface ITestTokenPayload extends jwt.JwtPayload {
+  memberId?: string;
+  roles?: string[];
+}
+
 function ensureI18nContext(): void {
   const testLang = {
     id: 'en-US',
@@ -44,7 +50,7 @@ function ensureI18nContext(): void {
   }
   const ctx = GlobalActiveContext.getInstance();
   try {
-    ctx.context;
+    void ctx.context; // throws if the default context is missing
   } catch {
     ctx.createContext('en-US');
   }
@@ -94,10 +100,7 @@ const createMockApplication = (): IBrightChainApplication => {
     authProvider: {
       verifyToken: async (token: string) => {
         // Decode the JWT to extract the user info
-        const decoded = jwt.verify(token, JWT_SECRET) as Record<
-          string,
-          unknown
-        >;
+        const decoded = jwt.verify(token, JWT_SECRET) as ITestTokenPayload;
         return { userId: decoded.memberId as string };
       },
       buildRequestUserDTO: async (userId: string) => ({
@@ -183,12 +186,9 @@ function createTestApp(): Express {
       const token = req.headers.authorization?.replace('Bearer ', '');
       if (token) {
         try {
-          const decoded = jwt.verify(token, JWT_SECRET) as Record<
-            string,
-            unknown
-          >;
+          const decoded = jwt.verify(token, JWT_SECRET) as ITestTokenPayload;
           if (Array.isArray(decoded.roles)) {
-            authReq.memberContext.roles = decoded.roles as string[];
+            authReq.memberContext.roles = decoded.roles;
           }
         } catch {
           // Token already verified by jwtAuth, ignore errors here

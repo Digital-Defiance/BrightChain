@@ -75,7 +75,9 @@ describe('DiskBlockAsyncStore Cleanup Property Tests', () => {
               const blockId = block.idChecksum.toHex();
 
               // Store with past expiration
-              const expiresAt = dateToBrightDate(new Date(Date.now() - 1000 * 60)); // 1 minute ago
+              const expiresAt = dateToBrightDate(
+                new Date(Date.now() - 1000 * 60),
+              ); // 1 minute ago
               await store.setData(block, {
                 durabilityLevel: DurabilityLevel.Ephemeral,
                 expiresAt,
@@ -136,7 +138,9 @@ describe('DiskBlockAsyncStore Cleanup Property Tests', () => {
               const blockId = block.idChecksum.toHex();
 
               // Store with past expiration
-              const expiresAt = dateToBrightDate(new Date(Date.now() - 1000 * 60)); // 1 minute ago
+              const expiresAt = dateToBrightDate(
+                new Date(Date.now() - 1000 * 60),
+              ); // 1 minute ago
               await store.setData(block, {
                 durabilityLevel: DurabilityLevel.Ephemeral,
                 expiresAt,

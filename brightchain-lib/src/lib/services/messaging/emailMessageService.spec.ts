@@ -12,6 +12,7 @@ import type { BlockId } from '../../interfaces/branded/primitives/blockId';
 import { createMailbox } from '../../interfaces/messaging/emailAddress';
 import type { IEmailMetadata } from '../../interfaces/messaging/emailMetadata';
 import { createContentType } from '../../interfaces/messaging/mimePart';
+import { brightDateNow } from '../../utils/brightDateConversions';
 import {
   DEFAULT_EMAIL_SERVICE_CONFIG,
   EmailMessageService,
@@ -24,8 +25,6 @@ import {
   type IReplyInput,
 } from './emailMessageService';
 import type { MessageCBLService } from './messageCBLService';
-import { brightDateNow, brightDateToDate } from '../../utils/brightDateConversions';
-import type { BrightDateTimestamp } from '../../types/brightDateTimestamp';
 
 /** Cast a test string to BlockId without validation — for test data only. */
 const bid = (s: string) => s as unknown as BlockId;

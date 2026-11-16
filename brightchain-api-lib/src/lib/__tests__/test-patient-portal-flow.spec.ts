@@ -8,6 +8,9 @@
  */
 
 import * as fc from 'fast-check';
+// scripts/ is a folder of standalone CLI tools, not an Nx project, so it has
+// no npm-scoped alias; its tests run here.
+// eslint-disable-next-line @nx/enforce-module-boundaries
 import { formatStepLog } from '../../../../scripts/test-patient-portal-flow';
 
 describe('Feature: patient-portal-registration, Property 10: CLI step logger includes step name and status code', () => {

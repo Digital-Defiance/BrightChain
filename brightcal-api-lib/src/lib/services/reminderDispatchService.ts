@@ -82,10 +82,12 @@ export class ReminderDispatchService {
   async processDueReminders(): Promise<number> {
     const now = new Date();
 
-    const due = await this.reminderModel.find({
-      triggerAt: { $lte: now.toISOString() },
-      delivered: false,
-    }).toArray();
+    const due = await this.reminderModel
+      .find({
+        triggerAt: { $lte: now.toISOString() },
+        delivered: false,
+      })
+      .toArray();
 
     let processed = 0;
 

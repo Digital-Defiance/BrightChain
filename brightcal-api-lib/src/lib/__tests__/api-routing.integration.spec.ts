@@ -28,19 +28,20 @@ import {
   validBlockSizes,
 } from '@brightchain/brightchain-lib';
 import { BrightDb, InMemoryHeadRegistry } from '@brightchain/db';
+import type { Express } from 'express';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const express = require('express');
+const express: typeof import('express') = require('express');
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const request = require('supertest');
 
-import { HolidayCatalogController } from '../controllers/holidayCatalogController.ts';
-import { createCalendarEventModel } from '../models/calendarEvent.model.ts';
-import { createCalendarReminderModel } from '../models/calendarReminder.model.ts';
-import { createCalendarRouter } from '../router/calendarRouter.ts';
-import { CalendarNotificationService } from '../services/calendarNotificationService.ts';
-import type { IWebSocketDispatcher } from '../services/notificationDispatcher.ts';
-import { NotificationDispatcher } from '../services/notificationDispatcher.ts';
+import { HolidayCatalogController } from '../controllers/holidayCatalogController.js';
+import { createCalendarEventModel } from '../models/calendarEvent.model.js';
+import { createCalendarReminderModel } from '../models/calendarReminder.model.js';
+import { createCalendarRouter } from '../router/calendarRouter.js';
+import { CalendarNotificationService } from '../services/calendarNotificationService.js';
+import type { IWebSocketDispatcher } from '../services/notificationDispatcher.js';
+import { NotificationDispatcher } from '../services/notificationDispatcher.js';
 
 // ─── Setup ───────────────────────────────────────────────────────────────────
 
@@ -52,8 +53,7 @@ beforeAll(() => {
 function makeDb(name = 'testdb'): BrightDb {
   const store = new MemoryBlockStore(validBlockSizes);
   const registry = InMemoryHeadRegistry.createIsolated();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return new BrightDb(store as any, { name, headRegistry: registry });
+  return new BrightDb(store, { name, headRegistry: registry });
 }
 
 function createMockApplication(): IBrightChainApplication {
@@ -145,7 +145,7 @@ describe('API Router Registration', () => {
 describe('Route Mounting Integration', () => {
   let db: BrightDb;
   let mockApp: IBrightChainApplication;
-  let expressApp: express.Express;
+  let expressApp: Express;
 
   beforeEach(() => {
     db = makeDb();

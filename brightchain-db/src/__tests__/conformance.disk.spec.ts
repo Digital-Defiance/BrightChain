@@ -24,27 +24,33 @@ import {
 
 jest.setTimeout(30_000);
 
+// Shared between the factory callbacks (a restart reuses the same dataDir).
+let dataDirState: string | undefined;
+
 const factory: StoreTestFactory = {
   label: 'PooledMemoryBlockStore + PersistentHeadRegistry (disk)',
 
   async createStore() {
     const dataDir = await fs.mkdtemp(join(tmpdir(), 'bc-conform-disk-'));
-    (this as any)._dataDir = dataDir;
+    dataDirState = dataDir;
     const store = new PooledMemoryBlockStore(BlockSize.Small);
     const registry = new PersistentHeadRegistry({ dataDir });
-    (this as any)._store = store;
     return { store, registry };
   },
 
   async createFreshRegistry() {
-    const dataDir = (this as any)._dataDir as string;
-    const fresh = new PersistentHeadRegistry({ dataDir });
+    if (dataDirState === undefined) {
+      throw new Error('createStore must run before createFreshRegistry');
+    }
+    const fresh = new PersistentHeadRegistry({
+      dataDir: dataDirState,
+    });
     await fresh.load();
     return fresh;
   },
 
   async cleanup() {
-    const dataDir = (this as any)._dataDir as string | undefined;
+    const dataDir = dataDirState;
     if (dataDir) {
       await fs.rm(dataDir, { recursive: true, force: true });
     }

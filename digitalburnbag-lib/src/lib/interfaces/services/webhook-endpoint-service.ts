@@ -1,9 +1,9 @@
 import { PlatformID } from '@digitaldefiance/ecies-lib';
-import type {
-  IWebhookEndpointBase,
-  IWebhookDeliveryStats,
-} from '../canary-provider/webhook-endpoint';
 import type { IWebhookProcessResult } from '../canary-provider/expansion-types';
+import type {
+  IWebhookDeliveryStats,
+  IWebhookEndpointBase,
+} from '../canary-provider/webhook-endpoint';
 
 /**
  * Service interface for managing webhook endpoint lifecycle,

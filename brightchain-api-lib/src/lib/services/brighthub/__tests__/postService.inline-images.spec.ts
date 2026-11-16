@@ -16,7 +16,7 @@ import {
   PostType,
   type IBaseMediaAttachment,
 } from '@brightchain/brighthub-lib';
-import { PostService } from '../postService';
+import { PostRecord, PostService } from '../postService';
 import type { IRewriteResult, UrlRewriterService } from '../urlRewriterService';
 
 // ─── Mocks ──────────────────────────────────────────────────────────────────
@@ -238,9 +238,11 @@ describe('PostService inline image integration', () => {
       expect(result.mediaAttachments[1]._id).toBe(FILE_ID_2);
 
       // Verify the post was persisted in the collection
-      const stored = postsCollection.store.values().next().value;
+      const stored = postsCollection.store.values().next().value as
+        | PostRecord
+        | undefined;
       expect(stored).toBeDefined();
-      expect(stored.mediaAttachments).toHaveLength(2);
+      expect(stored?.mediaAttachments).toHaveLength(2);
     });
 
     it('should pass hubId to URL Rewriter when creating a hub post', async () => {

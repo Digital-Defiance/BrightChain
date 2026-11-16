@@ -11,6 +11,7 @@
  */
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import type { MessageEncryptionScheme as MessageEncryptionSchemeType } from '@brightchain/brightchain-lib';
 import '@testing-library/jest-dom';
 import {
   act,
@@ -30,15 +31,15 @@ import PassphraseDialog from '../PassphraseDialog';
 // ─── Mocks ──────────────────────────────────────────────────────────────────
 
 const MessageEncryptionScheme = {
-  NONE: 'none',
-  SHARED_KEY: 'shared_key',
-  RECIPIENT_KEYS: 'recipient_keys',
-  S_MIME: 's_mime',
-  GPG: 'gpg',
-} as const;
+  NONE: 'none' as MessageEncryptionSchemeType,
+  SHARED_KEY: 'shared_key' as MessageEncryptionSchemeType,
+  RECIPIENT_KEYS: 'recipient_keys' as MessageEncryptionSchemeType,
+  S_MIME: 's_mime' as MessageEncryptionSchemeType,
+  GPG: 'gpg' as MessageEncryptionSchemeType,
+};
 
-jest.mock('react-router-dom', () => ({
-  ...jest.requireActual('react-router-dom'),
+jest.mock('react-router', () => ({
+  ...jest.requireActual('react-router'),
   useNavigate: () => jest.fn(),
 }));
 

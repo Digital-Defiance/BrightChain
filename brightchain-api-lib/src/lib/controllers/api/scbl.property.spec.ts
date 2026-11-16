@@ -68,7 +68,7 @@ function ensureI18nContext(): void {
   const ctx = GlobalActiveContext.getInstance();
   try {
     // Access .context to verify the default key is present
-    ctx.context;
+    void ctx.context; // throws if the default context is missing
   } catch {
     // Context map was cleared — recreate it
     ctx.createContext('en-US');

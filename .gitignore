@@ -83,3 +83,18 @@ vite.config.*.timestamp*
 
 # Verdaccio local cache
 .verdaccio/
+
+# Local symlinks to sibling checkouts and untracked secrets
+/enclave
+/enclave-bridge-client
+.env-prod
+/Lumen
+/SDIAgent
+/brightdate
+/brightdate-rust
+/bsh
+/express-suite
+test-results/
+
+# Local agent working output (reports, reviews)
+.agents/

@@ -21,7 +21,7 @@ import {
 } from '@brightchain/brightchart-lib';
 import { render, screen, waitFor } from '@testing-library/react';
 import * as React from 'react';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter } from 'react-router';
 import {
   ActiveContextProvider,
   useActiveContext,

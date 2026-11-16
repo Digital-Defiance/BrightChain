@@ -160,7 +160,9 @@ export class CLIOperatorPrompt implements IOperatorPrompt {
       `  Action Payload: ${JSON.stringify(proposal.actionPayload, null, 2)}\n`,
     );
     this.output.write(`  Proposer:     ${proposal.proposerMemberId}\n`);
-    this.output.write(`  Expires At:   ${brightDateToISO(proposal.expiresAt)}\n`);
+    this.output.write(
+      `  Expires At:   ${brightDateToISO(proposal.expiresAt)}\n`,
+    );
 
     if (proposal.attachmentCblId) {
       this.output.write(`  Attachment:   CBL ${proposal.attachmentCblId}\n`);

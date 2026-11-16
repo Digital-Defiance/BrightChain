@@ -36,16 +36,24 @@ export interface BrightDbV2DiskWriter {
  */
 export interface BrightDbV2GarbageStorage {
   /** Every stored block with its size and the time it was written (0 when unknown). */
-  listBlocks(): Promise<Array<{ name: string; bytes: number; modifiedMs: number }>>;
+  listBlocks(): Promise<
+    Array<{ name: string; bytes: number; modifiedMs: number }>
+  >;
   /** The stored name of a block with this logical digest. */
   nameOf(digest: string): Promise<string>;
   /** Delete blocks by stored name. Call only inside `withWriteLock`. */
   deleteBlocks(names: string[]): Promise<void>;
 }
 
-export function isGarbageStorage(storage: unknown): storage is BrightDbV2GarbageStorage {
+export function isGarbageStorage(
+  storage: unknown,
+): storage is BrightDbV2GarbageStorage {
   const s = storage as Partial<BrightDbV2GarbageStorage>;
-  return typeof s?.listBlocks === 'function' && typeof s.nameOf === 'function' && typeof s.deleteBlocks === 'function';
+  return (
+    typeof s?.listBlocks === 'function' &&
+    typeof s.nameOf === 'function' &&
+    typeof s.deleteBlocks === 'function'
+  );
 }
 
 /**
@@ -61,6 +69,7 @@ export interface BrightDbV2Storage {
   readHead(): Promise<string>;
   readBlock(digest: string): Promise<Uint8Array>;
   hasBlock(digest: string): Promise<boolean>;
-  withWriteLock<T>(write: (writer: BrightDbV2DiskWriter) => Promise<T>): Promise<T>;
+  withWriteLock<T>(
+    write: (writer: BrightDbV2DiskWriter) => Promise<T>,
+  ): Promise<T>;
 }
-

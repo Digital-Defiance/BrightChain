@@ -16,10 +16,8 @@ import {
 } from '@brightchain/brightchain-lib';
 import { MemberType } from '@digitaldefiance/ecies-lib';
 import { ECIESService, Member } from '@digitaldefiance/node-ecies-lib';
-import {
-  InvalidBackupCodeError,
-  KeyWrappingService,
-} from '@digitaldefiance/node-express-suite';
+import { KeyWrappingService } from '@digitaldefiance/node-express-suite';
+import { InvalidBackupCodeError } from '@digitaldefiance/suite-core-lib';
 import { BrightChainBackupCodeService } from '../../lib/services/brightChainBackupCodeService';
 
 const TEST_CONSTANTS: IBackupCodeConstants = {
@@ -134,7 +132,7 @@ describe('BrightChainBackupCodeService Unit Tests', () => {
 
     const codes = await service.generateCodes(memberId);
     const profile = await memberStore.getMemberProfile(memberId);
-    const storedCodes = profile.privateProfile!.backupCodes;
+    const storedCodes = profile.privateProfile!.backupCodes!;
 
     // A completely bogus code should throw
     expect(() => service.useBackupCode(storedCodes, 'not-a-real-code')).toThrow(
@@ -202,7 +200,7 @@ describe('BrightChainBackupCodeService Unit Tests', () => {
 
     const codes = await service.generateCodes(memberId);
     const profile = await memberStore.getMemberProfile(memberId);
-    const storedCodes = profile.privateProfile!.backupCodes;
+    const storedCodes = profile.privateProfile!.backupCodes!;
 
     // First consumption succeeds
     const { newCodesArray } = service.useBackupCode(storedCodes, codes[0]);

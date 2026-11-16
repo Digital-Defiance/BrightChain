@@ -1,4 +1,8 @@
-import type { IBasePostData, IBaseThread, IBaseUserProfile } from '@brightchain/brighthub-lib';
+import type {
+  IBasePostData,
+  IBaseThread,
+  IBaseUserProfile,
+} from '@brightchain/brighthub-lib';
 import type { IApiMessageResponse } from '@digitaldefiance/node-express-suite';
 
 /**

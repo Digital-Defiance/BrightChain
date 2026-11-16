@@ -4,7 +4,6 @@ import type {
 } from '@brightchain/digitalburnbag-lib';
 import { DigitalBurnbagStrings } from '@brightchain/digitalburnbag-lib';
 import { useI18n } from '@digitaldefiance/express-suite-react-components';
-import { formatDateWithBD } from '../utils/formatBrightDate';
 import AddIcon from '@mui/icons-material/Add';
 import {
   Alert,
@@ -22,6 +21,7 @@ import {
   IApiProviderConnectionDTO,
   IApiProviderConnectionsSummaryDTO,
 } from '../services/burnbag-api-client';
+import { formatDateWithBD } from '../utils/formatBrightDate';
 import {
   getSignalTypeColor,
   getSignalTypeLabel,

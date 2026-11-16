@@ -46,7 +46,7 @@ function ensureI18nContext(): void {
   }
   const ctx = GlobalActiveContext.getInstance();
   try {
-    ctx.context;
+    void ctx.context; // throws if the default context is missing
   } catch {
     ctx.createContext('en-US');
   }

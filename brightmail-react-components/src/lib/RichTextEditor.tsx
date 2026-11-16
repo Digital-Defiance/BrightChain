@@ -262,7 +262,7 @@ const RichTextEditor: FC<RichTextEditorProps> = ({ value, onChange }) => {
           break;
       }
     },
-    [editor],
+    [editor, t],
   );
 
   // ─── Fallback: plain TextField ──────────────────────────────────────────

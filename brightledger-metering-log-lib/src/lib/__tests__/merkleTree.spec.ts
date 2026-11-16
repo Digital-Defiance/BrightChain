@@ -1,3 +1,4 @@
+import { blake3 } from '@noble/hashes/blake3';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
@@ -75,9 +76,6 @@ describe('RFC-9162 Merkle Tree — core functions', () => {
   });
 
   it('merkleLeafHash differs from plain BLAKE3 of the same input', () => {
-    const { blake3 } = require('@noble/hashes/blake3') as {
-      blake3: (m: Uint8Array) => Uint8Array;
-    };
     const h = merkleLeafHash(dummyRecord);
     const plain = blake3(dummyRecord);
     expect(Buffer.from(h).equals(Buffer.from(plain))).toBe(false);

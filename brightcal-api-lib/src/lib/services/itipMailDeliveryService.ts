@@ -22,7 +22,10 @@
  */
 
 import type { IReminderDTO } from '@brightchain/brightcal-lib';
-import type { CalendarNotificationService, ITipMessage } from './calendarNotificationService.js';
+import type {
+  CalendarNotificationService,
+  ITipMessage,
+} from './calendarNotificationService.js';
 
 // ─── Interfaces ──────────────────────────────────────────────────────────────
 

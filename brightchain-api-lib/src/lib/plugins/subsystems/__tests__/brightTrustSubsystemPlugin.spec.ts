@@ -10,7 +10,10 @@
  * _Requirements: 10.1, 10.2, 10.3, 10.5_
  */
 
-import type { ISubsystemContext } from '@brightchain/brightchain-lib';
+import type {
+  IAppSubsystemPlugin,
+  ISubsystemContext,
+} from '@brightchain/brightchain-lib';
 import { describe, expect, it, jest } from '@jest/globals';
 import { BrightTrustSubsystemPlugin } from '../brightTrustSubsystemPlugin';
 
@@ -28,7 +31,8 @@ function createMockContext(): {
       register: jest.fn((key: string, factory: () => unknown) => {
         registered.set(key, factory());
       }),
-      get: jest.fn((key: string) => registered.get(key)),
+      // services.get is generic; the registry stores whatever was registered.
+      get: <T>(key: string): T => registered.get(key) as T,
       has: jest.fn((key: string) => registered.has(key)),
     },
     apiRouter: null,
@@ -57,7 +61,7 @@ describe('BrightTrustSubsystemPlugin', () => {
   });
 
   it('should have isOptional set to true', () => {
-    const plugin = new BrightTrustSubsystemPlugin();
+    const plugin: IAppSubsystemPlugin = new BrightTrustSubsystemPlugin();
     expect(plugin.isOptional).toBe(true);
   });
 

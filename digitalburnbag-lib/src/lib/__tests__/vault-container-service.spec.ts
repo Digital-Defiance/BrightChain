@@ -1,5 +1,6 @@
 import { VaultContainerState } from '../enumerations/vault-container-state';
 import { VaultState } from '../enumerations/vault-state';
+import { VaultVisibility } from '../enumerations/vault-visibility';
 import {
   DuplicateVaultContainerNameError,
   VaultContainerDestroyedError,
@@ -30,6 +31,7 @@ function _makeContainer(
     ownerId: 'user-1',
     name: 'Test Vault',
     rootFolderId: 'root-folder-1',
+    visibility: VaultVisibility.Private,
     approvalGoverned: false,
     state: VaultContainerState.Active,
     usedBytes: 0,
@@ -86,6 +88,15 @@ class InMemoryVaultContainerRepository
     return [...this.containers.values()].filter((c) => c.ownerId === ownerId);
   }
 
+  async getPublicContainers(): Promise<{
+    containers: IVaultContainerBase<string>[];
+    total: number;
+  }> {
+    const containers = [...this.containers.values()].filter(
+      (c) => c.visibility === VaultVisibility.Public,
+    );
+    return { containers, total: containers.length };
+  }
   async createContainer(
     container: IVaultContainerBase<string>,
   ): Promise<IVaultContainerBase<string>> {
@@ -136,7 +147,7 @@ class InMemoryVaultContainerRepository
   }
 }
 
-function makeMockDeps(): IVaultContainerServiceDeps<string> {
+function makeMockDeps(): jest.Mocked<IVaultContainerServiceDeps<string>> {
   return {
     createRootFolder: jest.fn().mockImplementation(
       async (

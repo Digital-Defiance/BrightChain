@@ -10,7 +10,7 @@ import {
 } from 'react-icons/fa';
 import { GiCookingPot } from 'react-icons/gi';
 import { useInView } from 'react-intersection-observer';
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 import buildWithBrightStackImg from '../assets/images/build-with-brightstack.png';
 import { useShowcaseI18n } from '../i18n/ShowcaseI18nContext';
 import { ShowcaseStrings } from '../i18n/showcaseStrings';

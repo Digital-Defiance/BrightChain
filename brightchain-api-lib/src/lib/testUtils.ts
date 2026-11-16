@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { expect } from '@jest/globals';
-import type { MatcherContext } from 'expect';
 import { readFileSync } from 'fs';
 
 export type ErrorClass<E extends Error> = new (...args: any[]) => E;
@@ -56,7 +55,7 @@ function extractTestInfo(stackTrace: string) {
 }
 
 export const toThrowType = async function <E extends Error>(
-  this: MatcherContext,
+  this: jest.MatcherContext,
   received: (() => unknown | Promise<unknown>) | Promise<unknown>,
   errorType: ErrorClass<E>,
   validator?: (error: E) => void,

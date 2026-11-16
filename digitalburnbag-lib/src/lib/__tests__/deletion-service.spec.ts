@@ -1,6 +1,6 @@
+import { DISOWNED_OWNER_SENTINEL } from '../constants';
 import { VaultContainerState } from '../enumerations/vault-container-state';
 import { VaultVisibility } from '../enumerations/vault-visibility';
-import { DISOWNED_OWNER_SENTINEL } from '../constants';
 import {
   DeletionAlreadyScheduledError,
   DisownRequiresPublicVisibilityError,
@@ -9,11 +9,11 @@ import {
 } from '../errors';
 import type { ICertificateOfDestruction } from '../interfaces/bases/certificate-of-destruction';
 import type { IVaultContainerBase } from '../interfaces/bases/vault-container';
-import type { ICertificateRepository } from '../interfaces/services/certificate-repository';
 import type {
   IContainerDestructionResult,
   IContainerNonAccessResult,
 } from '../interfaces/params/vault-container-params';
+import type { ICertificateRepository } from '../interfaces/services/certificate-repository';
 import type { IVaultContainerService } from '../interfaces/services/vault-container-service';
 import {
   DeletionService,
@@ -109,12 +109,8 @@ function makeCertificate(
 }
 
 function makeMockVaultContainerService(): jest.Mocked<
-  Pick<
-    IVaultContainerService<string>,
-    'getContainer' | 'destroyContainer' | 'verifyNonAccess'
-  >
-> &
-  IVaultContainerService<string> {
+  IVaultContainerService<string>
+> {
   return {
     getContainer: jest.fn(),
     destroyContainer: jest.fn(),
@@ -127,7 +123,7 @@ function makeMockVaultContainerService(): jest.Mocked<
     sealContainer: jest.fn(),
     getSealStatus: jest.fn(),
     checkFileAccessStatus: jest.fn(),
-  } as jest.Mocked<IVaultContainerService<string>>;
+  };
 }
 
 function makeMockCertificateRepository(): jest.Mocked<ICertificateRepository> {
@@ -148,9 +144,11 @@ function makeMockDeps(): jest.Mocked<IDeletionServiceDeps<string>> {
     cooldownDays: 30,
     getExpiredPendingDeletions: jest.fn().mockResolvedValue([]),
     systemRequesterId: 'system-user',
-    updateContainerRaw: jest.fn().mockImplementation((_id, updates) =>
-      Promise.resolve(makeContainer(updates)),
-    ),
+    updateContainerRaw: jest
+      .fn()
+      .mockImplementation((_id, updates) =>
+        Promise.resolve(makeContainer(updates)),
+      ),
   };
 }
 

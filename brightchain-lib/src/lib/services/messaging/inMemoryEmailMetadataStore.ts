@@ -14,12 +14,15 @@
  */
 
 import type { IEmailMetadata } from '../../interfaces/messaging/emailMetadata';
+import {
+  brightDateNow,
+  normalizeToBrightDate,
+} from '../../utils/brightDateConversions';
 import type {
   IEmailMetadataStore,
   IInboxQuery,
   IInboxResult,
 } from './emailMessageService';
-import { brightDateNow, normalizeToBrightDate } from '../../utils/brightDateConversions';
 
 export class InMemoryEmailMetadataStore implements IEmailMetadataStore {
   private readonly emails = new Map<string, IEmailMetadata>();

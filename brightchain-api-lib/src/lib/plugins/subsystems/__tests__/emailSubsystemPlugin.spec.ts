@@ -9,7 +9,10 @@
  * _Requirements: 5.1, 5.2, 5.3_
  */
 
-import type { ISubsystemContext } from '@brightchain/brightchain-lib';
+import type {
+  IAppSubsystemPlugin,
+  ISubsystemContext,
+} from '@brightchain/brightchain-lib';
 import { describe, expect, it, jest } from '@jest/globals';
 import { EmailSubsystemPlugin } from '../emailSubsystemPlugin';
 
@@ -28,7 +31,8 @@ function createMockContext(): {
       register: jest.fn((key: string, factory: () => unknown) => {
         registered.set(key, factory());
       }),
-      get: jest.fn((key: string) => registered.get(key)),
+      // services.get is generic; the registry stores whatever was registered.
+      get: <T>(key: string): T => registered.get(key) as T,
       has: jest.fn((key: string) => registered.has(key)),
     },
     apiRouter: null,
@@ -62,12 +66,12 @@ describe('EmailSubsystemPlugin', () => {
   });
 
   it('should have isOptional set to true', () => {
-    const plugin = new EmailSubsystemPlugin();
+    const plugin: IAppSubsystemPlugin = new EmailSubsystemPlugin();
     expect(plugin.isOptional).toBe(true);
   });
 
   it('should not define a stop() method', () => {
-    const plugin = new EmailSubsystemPlugin();
+    const plugin: IAppSubsystemPlugin = new EmailSubsystemPlugin();
     expect(plugin.stop).toBeUndefined();
   });
 

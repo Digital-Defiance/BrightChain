@@ -18,9 +18,15 @@ function createMockApplication() {
 describe('BrightHubTimelineController — route definitions', () => {
   it('GET /users/:id route has useAuthentication: false', () => {
     const app = createMockApplication();
-    const controller = new BrightHubTimelineController(app as any);
+    const controller = new BrightHubTimelineController(
+      app as unknown as ConstructorParameters<
+        typeof BrightHubTimelineController
+      >[0],
+    );
 
-    const routeDefinitions = (controller as any).routeDefinitions as Array<{
+    const routeDefinitions = (
+      controller as unknown as { routeDefinitions: unknown }
+    ).routeDefinitions as Array<{
       handlerKey: string;
       method: string;
       path: string;

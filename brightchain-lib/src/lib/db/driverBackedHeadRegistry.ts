@@ -19,7 +19,7 @@ import type {
   IHeadRegistryDriver,
 } from '../interfaces/storage/headRegistryDriver';
 import type { BrightDateTimestamp } from '../types/brightDateTimestamp';
-import { brightDateNow, dateToBrightDate } from '../utils/brightDateConversions';
+import { brightDateNow } from '../utils/brightDateConversions';
 
 export class DriverBackedHeadRegistry implements IHeadRegistry {
   private readonly heads = new Map<string, string>();
@@ -98,7 +98,10 @@ export class DriverBackedHeadRegistry implements IHeadRegistry {
     return new Map(this.heads);
   }
 
-  getHeadTimestamp(dbName: string, collectionName: string): BrightDateTimestamp | undefined {
+  getHeadTimestamp(
+    dbName: string,
+    collectionName: string,
+  ): BrightDateTimestamp | undefined {
     return this.timestamps.get(this.makeKey(dbName, collectionName));
   }
 

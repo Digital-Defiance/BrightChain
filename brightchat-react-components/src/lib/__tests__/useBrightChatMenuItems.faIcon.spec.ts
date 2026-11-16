@@ -28,8 +28,8 @@ jest.mock('react', () => ({
   })),
 }));
 
-import { createElement } from 'react';
 import { createMenuType } from '@digitaldefiance/express-suite-react-components';
+import { createElement } from 'react';
 import { generateBrightChatMenuOptions } from '../hooks/useBrightChatMenuItems';
 
 // ─── Fixtures ───────────────────────────────────────────────────────────────
@@ -44,8 +44,8 @@ function createServer(overrides = {}) {
     memberIds: ['u1'],
     channelIds: [],
     categories: [],
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    createdAt: 0,
+    updatedAt: 0,
     ...overrides,
   };
 }

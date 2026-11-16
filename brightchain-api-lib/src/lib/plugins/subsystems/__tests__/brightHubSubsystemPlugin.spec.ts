@@ -8,7 +8,10 @@
  * _Requirements: 6.1, 6.2, 6.3_
  */
 
-import type { ISubsystemContext } from '@brightchain/brightchain-lib';
+import type {
+  IAppSubsystemPlugin,
+  ISubsystemContext,
+} from '@brightchain/brightchain-lib';
 import { describe, expect, it, jest } from '@jest/globals';
 import { BrightHubSubsystemPlugin } from '../brightHubSubsystemPlugin';
 
@@ -27,7 +30,8 @@ function createMockContext(): {
       register: jest.fn((key: string, factory: () => unknown) => {
         registered.set(key, factory());
       }),
-      get: jest.fn((key: string) => registered.get(key)),
+      // services.get is generic; the registry stores whatever was registered.
+      get: <T>(key: string): T => registered.get(key) as T,
       has: jest.fn((key: string) => registered.has(key)),
     },
     apiRouter: null,
@@ -67,14 +71,14 @@ describe('BrightHubSubsystemPlugin', () => {
   });
 
   it('should not have isOptional explicitly set (defaults to true via interface)', () => {
-    const plugin = new BrightHubSubsystemPlugin();
+    const plugin: IAppSubsystemPlugin = new BrightHubSubsystemPlugin();
     // isOptional is not explicitly set — the plugin lifecycle treats
     // undefined as true (optional), matching the design doc.
     expect(plugin.isOptional).toBeUndefined();
   });
 
   it('should not define a stop() method', () => {
-    const plugin = new BrightHubSubsystemPlugin();
+    const plugin: IAppSubsystemPlugin = new BrightHubSubsystemPlugin();
     expect(plugin.stop).toBeUndefined();
   });
 

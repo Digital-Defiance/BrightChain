@@ -477,7 +477,7 @@ describe('StagingCleanupScheduler', () => {
         'user-1',
         60,
       );
-      const successRecord = await stageService.stage(
+      await stageService.stage(
         fileBuffer,
         'success.txt',
         'text/plain',

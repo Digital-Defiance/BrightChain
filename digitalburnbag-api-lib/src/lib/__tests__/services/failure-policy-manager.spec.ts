@@ -95,7 +95,7 @@ describe('FailurePolicyManager', () => {
       const notifications: Array<{
         id: string;
         msg: string;
-        details?: Record<string, unknown>;
+        details?: { treatAs?: unknown };
       }> = [];
       const notify: PolicyNotificationCallback = (id, msg, details) => {
         notifications.push({ id, msg, details });

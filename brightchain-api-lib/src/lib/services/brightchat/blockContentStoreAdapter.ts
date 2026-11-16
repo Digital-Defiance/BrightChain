@@ -50,22 +50,19 @@ export class BlockContentStoreAdapter implements IBlockContentStore {
 
     // Delegate to MessageCBLService.createMessage() following the
     // MessagePassingService.sendMessage() pattern
-    const { messageId, contentBlockIds, magnetUrl } =
-      await this.messageCBLService.createMessage(
-        contentBytes,
-        // MessageCBLService expects Member<TID> but the existing pattern
-        // in MessagePassingService casts senderId through `as unknown`
-        senderId as unknown as Parameters<
-          MessageCBLService['createMessage']
-        >[1],
-        {
-          messageType: 'brightchat',
-          senderId,
-          recipients: recipientIds,
-          priority: MessagePriority.NORMAL,
-          encryptionScheme: MessageEncryptionScheme.SHARED_KEY,
-        },
-      );
+    const { messageId, magnetUrl } = await this.messageCBLService.createMessage(
+      contentBytes,
+      // MessageCBLService expects Member<TID> but the existing pattern
+      // in MessagePassingService casts senderId through `as unknown`
+      senderId as unknown as Parameters<MessageCBLService['createMessage']>[1],
+      {
+        messageType: 'brightchat',
+        senderId,
+        recipients: recipientIds,
+        priority: MessagePriority.NORMAL,
+        encryptionScheme: MessageEncryptionScheme.SHARED_KEY,
+      },
+    );
 
     // Retrieve metadata for gossip announcement (same as MessagePassingService)
     const metadata = await this.messageCBLService.getMessageMetadata(messageId);

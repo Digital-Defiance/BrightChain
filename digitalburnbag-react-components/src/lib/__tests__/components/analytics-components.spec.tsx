@@ -68,12 +68,14 @@ function makeSignalCounts(
   absence = 0,
   duress = 0,
   checkFailed = 0,
+  inconclusive = 0,
 ): Record<HeartbeatSignalType, number> {
   return {
     [HeartbeatSignalType.PRESENCE]: presence,
     [HeartbeatSignalType.ABSENCE]: absence,
     [HeartbeatSignalType.DURESS]: duress,
     [HeartbeatSignalType.CHECK_FAILED]: checkFailed,
+    [HeartbeatSignalType.INCONCLUSIVE]: inconclusive,
   };
 }
 
@@ -298,8 +300,6 @@ describe('DashboardWidgets', () => {
       card.textContent?.includes('Uptime'),
     );
     expect(uptimeCard).toBeDefined();
-    // Check that the card has the critical border color style
-    const style = window.getComputedStyle(uptimeCard!);
     // MUI applies styles via classes, so we check the rendered element exists
     expect(uptimeCard).toBeInTheDocument();
   });

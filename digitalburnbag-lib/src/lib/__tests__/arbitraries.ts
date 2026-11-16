@@ -1,9 +1,9 @@
-import fc from 'fast-check';
 import { EciesCryptoCore } from '@digitaldefiance/ecies-lib';
-import type { ICertificateOfDestruction } from '../interfaces/bases/certificate-of-destruction';
+import fc from 'fast-check';
 import { VaultContainerState } from '../enumerations/vault-container-state';
 import { VaultLedgerEntryType } from '../enumerations/vault-ledger-entry-type';
 import { VaultState } from '../enumerations/vault-state';
+import type { ICertificateOfDestruction } from '../interfaces/bases/certificate-of-destruction';
 
 /** Arbitrary 32-byte encryption key */
 export const arbEncryptionKey = fc.uint8Array({

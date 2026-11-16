@@ -1,6 +1,6 @@
 import { HexString } from '@digitaldefiance/ecies-lib';
-import { IBasicObjectDTO } from './basicObjectDto';
 import type { BrightDateTimestamp } from '../types/brightDateTimestamp';
+import { IBasicObjectDTO } from './basicObjectDto';
 
 /**
  * Read-only basic data transfer object
@@ -22,7 +22,8 @@ import type { BrightDateTimestamp } from '../types/brightDateTimestamp';
  * // readOnlyDto.dateCreated = brightDateNow();
  * ```
  */
-export interface IReadOnlyBasicObjectDTO extends IBasicObjectDTO<HexString, BrightDateTimestamp> {
+export interface IReadOnlyBasicObjectDTO
+  extends IBasicObjectDTO<HexString, BrightDateTimestamp> {
   /** Unique identifier as a hex string (read-only) */
   readonly id: HexString;
 

@@ -70,34 +70,34 @@ test.describe('Canary Protocol Advanced', () => {
   }) => {
     // Create a binding via API first
     const binding = await api.createCanaryBinding({
-        condition: 'MISSED_CHECK_IN',
-        provider: 'MANUAL',
-        action: 'DeleteFiles',
-        targetIds: [],
-      });
+      condition: 'MISSED_CHECK_IN',
+      provider: 'MANUAL',
+      action: 'DeleteFiles',
+      targetIds: [],
+    });
 
-      await clickSidebarSection(page, 'Canary');
+    await clickSidebarSection(page, 'Canary');
+    await page.waitForTimeout(1000);
+
+    const canaryPage = new CanaryConfigPage(page);
+    const dryRunButtons = canaryPage.dryRunButtons;
+
+    if ((await dryRunButtons.count()) > 0) {
+      await canaryPage.clickDryRun(0);
       await page.waitForTimeout(1000);
 
-      const canaryPage = new CanaryConfigPage(page);
-      const dryRunButtons = canaryPage.dryRunButtons;
+      // Should show a report or result
+      const hasReport = await page
+        .getByText(/affected|files|recipients|dry.*run.*result/i)
+        .first()
+        .isVisible()
+        .catch(() => false);
 
-      if ((await dryRunButtons.count()) > 0) {
-        await canaryPage.clickDryRun(0);
-        await page.waitForTimeout(1000);
+      expect(hasReport).toBeTruthy();
+    }
 
-        // Should show a report or result
-        const hasReport = await page
-          .getByText(/affected|files|recipients|dry.*run.*result/i)
-          .first()
-          .isVisible()
-          .catch(() => false);
-
-        expect(hasReport).toBeTruthy();
-      }
-
-      // Cleanup
-      await api.deleteCanaryBinding(binding.id);
+    // Cleanup
+    await api.deleteCanaryBinding(binding.id);
   });
 
   test('canary bindings API CRUD works', async ({
@@ -105,20 +105,20 @@ test.describe('Canary Protocol Advanced', () => {
     api,
   }) => {
     // Create
-      const binding = await api.createCanaryBinding({
-        condition: 'MISSED_CHECK_IN',
-        provider: 'MANUAL',
-        action: 'DeleteFiles',
-        targetIds: [],
-      });
-      expect(binding).toHaveProperty('id');
+    const binding = await api.createCanaryBinding({
+      condition: 'MISSED_CHECK_IN',
+      provider: 'MANUAL',
+      action: 'DeleteFiles',
+      targetIds: [],
+    });
+    expect(binding).toHaveProperty('id');
 
-      // Read
-      const bindings = await api.getCanaryBindings();
-      expect(Array.isArray(bindings)).toBeTruthy();
+    // Read
+    const bindings = await api.getCanaryBindings();
+    expect(Array.isArray(bindings)).toBeTruthy();
 
-      // Delete
-      await api.deleteCanaryBinding(binding.id);
+    // Delete
+    await api.deleteCanaryBinding(binding.id);
   });
 
   test('recipient list management via API', async ({
@@ -126,13 +126,13 @@ test.describe('Canary Protocol Advanced', () => {
     api,
   }) => {
     const list = await api.createRecipientList({
-        name: `e2e-recipients-${Date.now()}`,
-        recipients: [
-          { email: 'test1@example.com', label: 'Test 1' },
-          { email: 'test2@example.com', label: 'Test 2' },
-        ],
-      });
-      expect(list).toHaveProperty('id');
+      name: `e2e-recipients-${Date.now()}`,
+      recipients: [
+        { email: 'test1@example.com', label: 'Test 1' },
+        { email: 'test2@example.com', label: 'Test 2' },
+      ],
+    });
+    expect(list).toHaveProperty('id');
   });
 
   test('canary navigable via URL', async ({ authenticatedPage: page }) => {

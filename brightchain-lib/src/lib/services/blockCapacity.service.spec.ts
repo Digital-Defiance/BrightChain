@@ -1,3 +1,4 @@
+/// <reference path="../../test/types/jest.d.ts" />
 import { ECIES } from '@digitaldefiance/ecies-lib';
 import CONSTANTS from '../constants';
 import { BlockCapacityErrorType } from '../enumerations/blockCapacityErrorType';

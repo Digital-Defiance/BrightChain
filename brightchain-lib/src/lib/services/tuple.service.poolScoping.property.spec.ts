@@ -15,10 +15,9 @@ import { BlockType } from '../enumerations/blockType';
 import { TupleErrorType } from '../enumerations/tupleErrorType';
 import { TupleError } from '../errors/tupleError';
 import { initializeBrightChain, resetInitialization } from '../init';
+import type { BrightDateTimestamp } from '../types/brightDateTimestamp';
 import { ServiceProvider } from './service.provider';
 import { TupleService } from './tuple.service';
-import { brightDateNow } from '../utils/brightDateConversions';
-import type { BrightDateTimestamp } from '../types/brightDateTimestamp';
 
 jest.setTimeout(60000);
 

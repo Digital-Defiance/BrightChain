@@ -8,10 +8,7 @@
  * @requirements joule-resource-credits spec, Req 7.4, 10.5
  */
 
-import {
-  BrightChainStrings,
-  formatJoule,
-} from '@brightchain/brightchain-lib';
+import { BrightChainStrings, formatJoule } from '@brightchain/brightchain-lib';
 import { useI18n } from '@digitaldefiance/express-suite-react-components';
 import * as React from 'react';
 import { useFormattedDate } from '../hooks/useFormattedDate';

@@ -79,18 +79,6 @@ const arbDateTime = fc
       `${year}${String(month).padStart(2, '0')}${String(day).padStart(2, '0')}T${String(hour).padStart(2, '0')}${String(minute).padStart(2, '0')}${String(second).padStart(2, '0')}Z`,
   );
 
-/** Generate a valid iCal DATE string (for allDay events) */
-const arbDate = fc
-  .record({
-    year: fc.integer({ min: 2020, max: 2030 }),
-    month: fc.integer({ min: 1, max: 12 }),
-    day: fc.integer({ min: 1, max: 28 }),
-  })
-  .map(
-    ({ year, month, day }) =>
-      `${year}${String(month).padStart(2, '0')}${String(day).padStart(2, '0')}`,
-  );
-
 /** Generate a hex string of a given length */
 function arbHex(len: number): fc.Arbitrary<string> {
   return fc

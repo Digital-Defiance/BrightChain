@@ -3,8 +3,8 @@
  * manifest, referenced from documents through the reserved `_files` property.
  */
 import {
-  blobChildSpan,
   BLOB_CHUNK_BYTES,
+  blobChildSpan,
   decodeMetadata,
   digestPayload,
   encodeMetadata,
@@ -31,7 +31,9 @@ export class V2AttachmentError extends Error {
 }
 
 /** Re-cut an input into chunks of exactly BLOB_CHUNK_BYTES, except the last. */
-async function* chunked(input: Uint8Array | AsyncIterable<Uint8Array>): AsyncGenerator<Uint8Array> {
+async function* chunked(
+  input: Uint8Array | AsyncIterable<Uint8Array>,
+): AsyncGenerator<Uint8Array> {
   if (input instanceof Uint8Array) {
     for (let offset = 0; offset < input.length; offset += BLOB_CHUNK_BYTES) {
       yield input.subarray(offset, offset + BLOB_CHUNK_BYTES);
@@ -70,7 +72,10 @@ export async function writeAttachment(
   }
   let level: Array<{ digest: Digest; size: bigint }> = [];
   for await (const chunk of chunked(input)) {
-    level.push({ digest: await writer.writeBlock(chunk), size: BigInt(chunk.length) });
+    level.push({
+      digest: await writer.writeBlock(chunk),
+      size: BigInt(chunk.length),
+    });
   }
   const total = level.reduce((sum, entry) => sum + entry.size, 0n);
   let depth = 0;
@@ -80,7 +85,12 @@ export async function writeAttachment(
       const run = level.slice(start, start + MAX_BLOB_CHUNKS);
       const size = run.reduce((sum, entry) => sum + entry.size, 0n);
       const digest = await writer.writeBlock(
-        encodeMetadata({ kind: 'blob', size, depth, entries: run.map((e) => e.digest) }),
+        encodeMetadata({
+          kind: 'blob',
+          size,
+          depth,
+          entries: run.map((e) => e.digest),
+        }),
       );
       next.push({ digest, size });
     }
@@ -88,20 +98,32 @@ export async function writeAttachment(
     depth++;
   }
   const digest = await writer.writeBlock(
-    encodeMetadata({ kind: 'blob', size: total, depth, entries: level.map((e) => e.digest) }),
+    encodeMetadata({
+      kind: 'blob',
+      size: total,
+      depth,
+      entries: level.map((e) => e.digest),
+    }),
   );
   await writer.syncBlocks();
   if (total > BigInt(Number.MAX_SAFE_INTEGER)) {
     throw new V2AttachmentError('An attachment can be at most 2^53 - 1 bytes');
   }
-  return { digest, size: Number(total), ...(type === undefined ? {} : { type }) };
+  return {
+    digest,
+    size: Number(total),
+    ...(type === undefined ? {} : { type }),
+  };
 }
 
 async function readManifest(store: BrightDbV2Storage, digest: string) {
-  if (!DIGEST.test(digest)) throw new V2AttachmentError('Invalid attachment digest');
+  if (!DIGEST.test(digest))
+    throw new V2AttachmentError('Invalid attachment digest');
   const block = decodeMetadata(await store.readBlock(digest), digest);
   if (block.kind !== 'blob') {
-    throw new V2AttachmentError('Digest does not identify an attachment manifest');
+    throw new V2AttachmentError(
+      'Digest does not identify an attachment manifest',
+    );
   }
   return block;
 }
@@ -109,7 +131,9 @@ async function readManifest(store: BrightDbV2Storage, digest: string) {
 /** A file's root must be as shallow as possible. Interior manifests may hold a small tail. */
 function checkRoot(manifest: { depth: number; size: bigint }): void {
   if (manifest.depth > 0 && manifest.size <= blobChildSpan(manifest.depth)) {
-    throw new V2AttachmentError('Attachment root manifest is deeper than its size needs');
+    throw new V2AttachmentError(
+      'Attachment root manifest is deeper than its size needs',
+    );
   }
 }
 
@@ -180,21 +204,34 @@ export async function validateFileReferences(
       throw new V2AttachmentError(`_files.${name} has unknown properties`);
     }
     if (typeof digest !== 'string' || !DIGEST.test(digest)) {
-      throw new V2AttachmentError(`_files.${name}.digest must be a manifest digest`);
+      throw new V2AttachmentError(
+        `_files.${name}.digest must be a manifest digest`,
+      );
     }
     if (!Number.isSafeInteger(size) || (size as number) < 0) {
-      throw new V2AttachmentError(`_files.${name}.size must be a non-negative integer`);
+      throw new V2AttachmentError(
+        `_files.${name}.size must be a non-negative integer`,
+      );
     }
-    if (type !== undefined && (typeof type !== 'string' || Buffer.byteLength(type, 'utf8') > 255)) {
-      throw new V2AttachmentError(`_files.${name}.type must be a string of up to 255 bytes`);
+    if (
+      type !== undefined &&
+      (typeof type !== 'string' || Buffer.byteLength(type, 'utf8') > 255)
+    ) {
+      throw new V2AttachmentError(
+        `_files.${name}.type must be a string of up to 255 bytes`,
+      );
     }
     if (!(await store.hasBlock(digest))) {
-      throw new V2AttachmentError(`_files.${name} references a missing attachment`);
+      throw new V2AttachmentError(
+        `_files.${name} references a missing attachment`,
+      );
     }
     const manifest = await readManifest(store, digest);
     checkRoot(manifest);
     if (manifest.size !== BigInt(size as number)) {
-      throw new V2AttachmentError(`_files.${name}.size does not match its attachment`);
+      throw new V2AttachmentError(
+        `_files.${name}.size does not match its attachment`,
+      );
     }
     for await (const chunk of blobChunks(store, digest, manifest.size)) {
       if (!(await store.hasBlock(chunk.digest))) {

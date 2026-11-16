@@ -22,38 +22,6 @@ import {
   type IUrlRewriterDeps,
 } from '../urlRewriterService';
 
-// ─── Generators ─────────────────────────────────────────────────────────────
-
-/**
- * Generate a hex string of a given length from random characters.
- */
-function hexBlock(length: number): fc.Arbitrary<string> {
-  return fc
-    .array(fc.constantFrom(...'0123456789abcdef'.split('')), {
-      minLength: length,
-      maxLength: length,
-    })
-    .map((chars) => chars.join(''));
-}
-
-/**
- * Generator for valid UUID v4 strings.
- * UUID v4 format: xxxxxxxx-xxxx-4xxx-[89ab]xxx-xxxxxxxxxxxx
- */
-const uuidV4Arb = fc
-  .tuple(
-    hexBlock(8),
-    hexBlock(4),
-    hexBlock(3),
-    fc.constantFrom('8', '9', 'a', 'b'),
-    hexBlock(3),
-    hexBlock(12),
-  )
-  .map(
-    ([p1, p2, p3, variant, p4, p5]) =>
-      `${p1}-${p2}-4${p3}-${variant}${p4}-${p5}`,
-  );
-
 /**
  * Build a content string containing exactly N staging URLs embedded in
  * markdown image syntax. Each URL uses a unique UUID v4 token.
@@ -110,6 +78,7 @@ function createMockDeps(): IUrlRewriterDeps {
           rootFolderId: mockRootFolderId,
         }),
       ),
+      listContainers: jest.fn().mockResolvedValue([]),
     },
 
     uploadService: {
@@ -343,6 +312,7 @@ function createMockDepsWithUuidFileIds(): IUrlRewriterDeps {
           rootFolderId: mockRootFolderId,
         }),
       ),
+      listContainers: jest.fn().mockResolvedValue([]),
     },
 
     uploadService: {
@@ -597,13 +567,14 @@ jest.mock('sharp', () => {
 const mockedProcessImage = processImage as jest.MockedFunction<
   typeof processImage
 >;
-const mockedSharp = sharp as unknown as jest.MockedFunction<typeof sharp>;
+// sharp is replaced by a jest.fn() factory in the jest.mock() above.
+const mockedSharp = sharp as unknown as jest.Mock;
 
 /**
  * Configure sharp mock to return specific dimensions for metadata calls.
  */
 function configureSharpMetadata(width: number, height: number): void {
-  (mockedSharp as jest.Mock).mockImplementation(() => ({
+  mockedSharp.mockImplementation(() => ({
     metadata: jest.fn().mockResolvedValue({ width, height }),
     toBuffer: jest.fn().mockResolvedValue(Buffer.from('mock-processed')),
   }));
@@ -651,6 +622,7 @@ function createMockDepsForProperty8(mimeType: string): IUrlRewriterDeps {
           rootFolderId: mockRootFolderId,
         }),
       ),
+      listContainers: jest.fn().mockResolvedValue([]),
     },
 
     uploadService: {
@@ -682,7 +654,7 @@ function createMockDepsForProperty8(mimeType: string): IUrlRewriterDeps {
 describe('Feature: brighthub-post-images, Property 8: Image processing parameters correctness', () => {
   beforeEach(() => {
     mockedProcessImage.mockClear();
-    (mockedSharp as jest.Mock).mockClear();
+    mockedSharp.mockClear();
   });
 
   /**
@@ -1152,6 +1124,7 @@ describe('Feature: brighthub-post-images, Property 10: Edit does not re-commit p
             rootFolderId: mockRootFolderId,
           }),
         ),
+        listContainers: jest.fn().mockResolvedValue([]),
       },
 
       uploadService: {

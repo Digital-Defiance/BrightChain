@@ -12,19 +12,19 @@
  * **Validates: Requirements 12.1, 12.2, 12.3, 12.4, 12.5**
  */
 
-import * as fc from 'fast-check';
-import { signCertificate } from '../services/certificate-signing-service';
 import {
   serializeCertificate,
   verifyCertificate,
 } from '@brightchain/digitalburnbag-lib';
-// Import arbitraries from digitalburnbag-lib's test helpers via deep path
-// (the jest moduleNameMapper resolves @brightchain/digitalburnbag-lib to the source)
+import * as fc from 'fast-check';
+import { signCertificate } from '../services/certificate-signing-service';
+// Import arbitraries from digitalburnbag-lib's test helpers via the workspace
+// alias (tsconfig.base paths and the jest moduleNameMapper map it to source).
 import {
+  arbByteFlipIndex,
   arbCertificatePayload,
   arbSecp256k1KeyPair,
-  arbByteFlipIndex,
-} from '../../../../digitalburnbag-lib/src/lib/__tests__/arbitraries';
+} from '@brightchain/digitalburnbag-lib/lib/__tests__/arbitraries';
 
 // ── Property 1: Sign-then-verify round-trip ─────────────────────────
 
@@ -214,7 +214,9 @@ describe('Feature: vault-deletion-certificate, Property 6: Certificate completen
           expect(signed.destroyedAt.length).toBeGreaterThan(0);
           expect(signed.nonAccessVerification).toBeDefined();
           expect(signed.nonAccessVerification.containerId).toBeTruthy();
-          expect(signed.nonAccessVerification.totalFilesChecked).toBeGreaterThan(0);
+          expect(
+            signed.nonAccessVerification.totalFilesChecked,
+          ).toBeGreaterThan(0);
           expect(signed.fileDestructionProofs).toBeDefined();
           expect(signed.fileDestructionProofs.length).toBeGreaterThan(0);
           expect(signed.containerLedgerEntryHash).toBeTruthy();

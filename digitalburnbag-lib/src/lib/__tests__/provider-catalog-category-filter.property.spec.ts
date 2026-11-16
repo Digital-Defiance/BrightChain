@@ -9,9 +9,9 @@
  */
 
 import fc from 'fast-check';
+import { ICanaryProviderConfig } from '../interfaces/canary-provider';
 import { ProviderCategory } from '../interfaces/canary-provider/canary-provider-adapter';
 import { BUILTIN_PROVIDER_CONFIGS } from '../providers/builtin-provider-configs';
-import { ICanaryProviderConfig } from '../interfaces/canary-provider';
 
 // ── Pure filter function under test ─────────────────────────────────
 

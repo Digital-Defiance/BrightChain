@@ -42,8 +42,8 @@ function createServer(overrides = {}) {
     memberIds: ['u1'],
     channelIds: [],
     categories: [],
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    createdAt: 0,
+    updatedAt: 0,
     ...overrides,
   };
 }
@@ -77,7 +77,9 @@ describe('ServerRail — iconFaClass priority', () => {
     });
     const { container } = renderRail(server);
 
-    const img = container.querySelector('img[src="https://example.com/icon.png"]');
+    const img = container.querySelector(
+      'img[src="https://example.com/icon.png"]',
+    );
     expect(img).toBeTruthy();
 
     // No <i> FA icon should be present
@@ -87,7 +89,7 @@ describe('ServerRail — iconFaClass priority', () => {
 
   it('renders letter fallback when neither iconFaClass nor iconUrl is set', () => {
     const server = createServer({ name: 'Zeta' });
-    const { container } = renderRail(server);
+    renderRail(server);
 
     // Should show the first letter of the server name
     expect(screen.getByText('Z')).toBeTruthy();
@@ -112,7 +114,9 @@ describe('ServerRail — iconFaClass priority', () => {
     expect(faIcon).toBeTruthy();
 
     // Image avatar should NOT be rendered
-    const img = container.querySelector('img[src="https://example.com/icon.png"]');
+    const img = container.querySelector(
+      'img[src="https://example.com/icon.png"]',
+    );
     expect(img).toBeNull();
   });
 });

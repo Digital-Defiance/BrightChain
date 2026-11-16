@@ -10,12 +10,8 @@
  */
 
 import fc from 'fast-check';
-import {
-  BUILTIN_PROVIDER_CONFIGS,
-} from '../providers/builtin-provider-configs';
-import {
-  ProviderCategory,
-} from '../interfaces/canary-provider/canary-provider-adapter';
+import { ProviderCategory } from '../interfaces/canary-provider/canary-provider-adapter';
+import { BUILTIN_PROVIDER_CONFIGS } from '../providers/builtin-provider-configs';
 
 // ── Helpers ─────────────────────────────────────────────────────────
 
@@ -84,11 +80,21 @@ describe('Property 16: Provider config schema validation completeness', () => {
           if (!PROVIDERS_WITHOUT_HEALTH_CHECK.has(config.id as string)) {
             expect(config.endpoints.healthCheck).toBeDefined();
             expect(typeof config.endpoints.healthCheck!.path).toBe('string');
-            expect(config.endpoints.healthCheck!.path.length).toBeGreaterThan(0);
-            expect(['GET', 'POST']).toContain(config.endpoints.healthCheck!.method);
-            expect(typeof config.endpoints.healthCheck!.expectedStatus).toBe('number');
-            expect(config.endpoints.healthCheck!.expectedStatus).toBeGreaterThanOrEqual(100);
-            expect(config.endpoints.healthCheck!.expectedStatus).toBeLessThan(600);
+            expect(config.endpoints.healthCheck!.path.length).toBeGreaterThan(
+              0,
+            );
+            expect(['GET', 'POST']).toContain(
+              config.endpoints.healthCheck!.method,
+            );
+            expect(typeof config.endpoints.healthCheck!.expectedStatus).toBe(
+              'number',
+            );
+            expect(
+              config.endpoints.healthCheck!.expectedStatus,
+            ).toBeGreaterThanOrEqual(100);
+            expect(config.endpoints.healthCheck!.expectedStatus).toBeLessThan(
+              600,
+            );
           }
         },
       ),
@@ -157,7 +163,9 @@ describe('Exhaustive provider config validation', () => {
       expect(typeof config.endpoints.healthCheck!.path).toBe('string');
       expect(config.endpoints.healthCheck!.path.length).toBeGreaterThan(0);
       expect(['GET', 'POST']).toContain(config.endpoints.healthCheck!.method);
-      expect(typeof config.endpoints.healthCheck!.expectedStatus).toBe('number');
+      expect(typeof config.endpoints.healthCheck!.expectedStatus).toBe(
+        'number',
+      );
     }
   });
 

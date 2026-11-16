@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   BlockSize,
+  brightDateNow,
   ChecksumService,
   MemoryBlockStore,
   RandomBlock,
@@ -8,7 +9,6 @@ import {
   ServiceLocator,
   TUPLE,
   uint8ArrayToHex,
-  brightDateNow,
 } from '@brightchain/brightchain-lib';
 import React, { useCallback, useState } from 'react';
 

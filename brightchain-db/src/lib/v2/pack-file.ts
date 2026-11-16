@@ -35,12 +35,15 @@ export interface PackIndex {
 }
 
 /** Serialize entries into a pack. Returns the file bytes. */
-export function encodePack(entries: ReadonlyArray<{ name: string; bytes: Uint8Array }>): Buffer {
+export function encodePack(
+  entries: ReadonlyArray<{ name: string; bytes: Uint8Array }>,
+): Buffer {
   const parts: Buffer[] = [PACK_HEADER];
   const index: Buffer[] = [];
   let offset = PACK_HEADER.length;
   for (const { name, bytes } of entries) {
-    if (!/^[0-9a-f]{128}$/u.test(name)) throw new BrightDbV2StorageError('Invalid block name for a pack');
+    if (!/^[0-9a-f]{128}$/u.test(name))
+      throw new BrightDbV2StorageError('Invalid block name for a pack');
     const body = Buffer.from(bytes);
     const row = Buffer.alloc(INDEX_ENTRY_BYTES);
     Buffer.from(name, 'hex').copy(row, 0);
@@ -62,28 +65,42 @@ export async function readPackIndex(path: string): Promise<PackIndex> {
   const file = await open(path, constants.O_RDONLY | constants.O_NOFOLLOW);
   try {
     const stat = await file.stat();
-    const bad = (why: string) => new BrightDbV2StorageError(`Invalid BrightDB v2 pack ${path}: ${why}`);
-    if (!stat.isFile() || stat.size < PACK_HEADER.length + TRAILER_BYTES) throw bad('too small');
+    const bad = (why: string) =>
+      new BrightDbV2StorageError(`Invalid BrightDB v2 pack ${path}: ${why}`);
+    if (!stat.isFile() || stat.size < PACK_HEADER.length + TRAILER_BYTES)
+      throw bad('too small');
     const header = Buffer.alloc(PACK_HEADER.length);
     await file.read(header, 0, header.length, 0);
     if (!header.equals(PACK_HEADER)) throw bad('bad header');
     const trailer = Buffer.alloc(TRAILER_BYTES);
     await file.read(trailer, 0, TRAILER_BYTES, stat.size - TRAILER_BYTES);
-    if (!trailer.subarray(12).equals(PACK_END)) throw bad('bad trailer (incomplete write?)');
+    if (!trailer.subarray(12).equals(PACK_END))
+      throw bad('bad trailer (incomplete write?)');
     const count = trailer.readUInt32BE(0);
     const indexOffset = Number(trailer.readBigUInt64BE(4));
-    if (indexOffset < PACK_HEADER.length || indexOffset + count * INDEX_ENTRY_BYTES + TRAILER_BYTES !== stat.size) {
+    if (
+      indexOffset < PACK_HEADER.length ||
+      indexOffset + count * INDEX_ENTRY_BYTES + TRAILER_BYTES !== stat.size
+    ) {
       throw bad('index does not fit the file');
     }
     const raw = Buffer.alloc(count * INDEX_ENTRY_BYTES);
     if (count > 0) await file.read(raw, 0, raw.length, indexOffset);
     const entries = new Map<string, PackEntryLocation>();
     for (let i = 0; i < count; i++) {
-      const row = raw.subarray(i * INDEX_ENTRY_BYTES, (i + 1) * INDEX_ENTRY_BYTES);
+      const row = raw.subarray(
+        i * INDEX_ENTRY_BYTES,
+        (i + 1) * INDEX_ENTRY_BYTES,
+      );
       const name = row.subarray(0, NAME_BYTES).toString('hex');
       const offset = Number(row.readBigUInt64BE(NAME_BYTES));
       const length = row.readUInt32BE(NAME_BYTES + 8);
-      if (offset < PACK_HEADER.length || length < 1 || offset + length > indexOffset) throw bad('entry out of range');
+      if (
+        offset < PACK_HEADER.length ||
+        length < 1 ||
+        offset + length > indexOffset
+      )
+        throw bad('entry out of range');
       entries.set(name, { offset, length });
     }
     return { entries, bytes: stat.size };
@@ -93,13 +110,28 @@ export async function readPackIndex(path: string): Promise<PackIndex> {
 }
 
 /** Read one entry's stored bytes. */
-export async function readPackEntry(path: string, location: PackEntryLocation, maximum: number): Promise<Buffer> {
-  if (location.length > maximum) throw new BrightDbV2StorageError(`Invalid BrightDB v2 pack entry in ${path}`);
+export async function readPackEntry(
+  path: string,
+  location: PackEntryLocation,
+  maximum: number,
+): Promise<Buffer> {
+  if (location.length > maximum)
+    throw new BrightDbV2StorageError(
+      `Invalid BrightDB v2 pack entry in ${path}`,
+    );
   const file = await open(path, constants.O_RDONLY | constants.O_NOFOLLOW);
   try {
     const out = Buffer.alloc(location.length);
-    const { bytesRead } = await file.read(out, 0, location.length, location.offset);
-    if (bytesRead !== location.length) throw new BrightDbV2StorageError(`Short read in BrightDB v2 pack ${path}`);
+    const { bytesRead } = await file.read(
+      out,
+      0,
+      location.length,
+      location.offset,
+    );
+    if (bytesRead !== location.length)
+      throw new BrightDbV2StorageError(
+        `Short read in BrightDB v2 pack ${path}`,
+      );
     return out;
   } finally {
     await file.close();

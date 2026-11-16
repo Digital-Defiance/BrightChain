@@ -85,6 +85,10 @@ export default [
         { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
       ],
       'no-extra-semi': 'off',
+      // The TypeScript compiler checks undefined names, including type-only
+      // globals (React, Express, jest) that core no-undef misreports.
+      // typescript-eslint recommends turning it off for TS files.
+      'no-undef': 'off',
     },
   },
   {
@@ -123,6 +127,14 @@ export default [
       '**/brightledger-assets-react-components/**/*.tsx',
       '**/showcase/**/*.ts',
       '**/showcase/**/*.tsx',
+      '**/subspace-lattice-react/**/*.ts',
+      '**/subspace-lattice-react/**/*.tsx',
+      '**/brightcal-react-components/**/*.ts',
+      '**/brightcal-react-components/**/*.tsx',
+      '**/brightchart-react-components/**/*.ts',
+      '**/brightchart-react-components/**/*.tsx',
+      '**/brightnexus-react-components/**/*.ts',
+      '**/brightnexus-react-components/**/*.tsx',
     ],
     plugins: {
       'react-hooks': reactHooksPlugin,
@@ -225,6 +237,33 @@ export default [
       ],
     },
   },
+  // ── BrightDB reference model independence ─────────────────────────────────
+  // The model is a test oracle. If it imported the production matcher, update
+  // engine, index encoder, codec, storage or merge, a bug in them would agree
+  // with itself and pass. It may import only the shared conformance types and
+  // the error registry. See brightdb-v2-5 requirement 17.2.
+  {
+    name: 'brightdb-model/independence',
+    files: ['**/brightchain-db/src/lib/v2/conformance/model/**/*.ts'],
+    ignores: ['**/*.spec.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              // Any relative import except ../types and ../../ops/errors, and
+              // any workspace package.
+              regex:
+                '^(?!\\.\\./types$|\\.\\./\\.\\./ops/errors$)(\\.\\.?/|@brightchain/)',
+              message:
+                'The BrightDB reference model must stay independent of production code. Import only ../types and ../../ops/errors.',
+            },
+          ],
+        },
+      ],
+    },
+  },
   {
     name: 'test-files',
     files: [
@@ -261,6 +300,29 @@ export default [
         'error',
         { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
       ],
+    },
+  },
+  {
+    // ts-jest only type-checks the files it transforms (plus their imports),
+    // so an ambient declaration such as a custom matcher's typings is only
+    // visible to a test that references it. Allow `/// <reference path>` in
+    // test files for exactly that; it stays banned in source.
+    name: 'test-files/ambient-references',
+    files: ['**/*.spec.ts', '**/*.spec.tsx', '**/*.test.ts', '**/*.test.tsx'],
+    rules: {
+      '@typescript-eslint/triple-slash-reference': [
+        'error',
+        { path: 'always', types: 'prefer-import', lib: 'always' },
+      ],
+    },
+  },
+  {
+    // Shared helpers that live under __tests__/ are imported by test files;
+    // exporting from them is their purpose.
+    name: 'test-helpers',
+    files: ['**/__tests__/helpers/**/*.ts'],
+    rules: {
+      'jest/no-export': 'off',
     },
   },
 ];

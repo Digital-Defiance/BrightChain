@@ -10,7 +10,10 @@
  * _Requirements: 7.1, 7.2, 7.3_
  */
 
-import type { ISubsystemContext } from '@brightchain/brightchain-lib';
+import type {
+  IAppSubsystemPlugin,
+  ISubsystemContext,
+} from '@brightchain/brightchain-lib';
 import { describe, expect, it, jest } from '@jest/globals';
 
 // Mock ServiceProvider singleton so the plugin can call getInstance()
@@ -71,6 +74,15 @@ jest.mock('../../../services/brightchat/chatStorageAdapter', () => ({
 
 import { BrightChatSubsystemPlugin } from '../brightChatSubsystemPlugin';
 
+/** Router setters the chat plugin wires services into. */
+interface IMockChatRouter {
+  setConversationService: jest.Mock;
+  setGroupService: jest.Mock;
+  setChannelService: jest.Mock;
+  setPermissionService: jest.Mock;
+  setServerService: jest.Mock;
+}
+
 /**
  * Build a minimal mock ISubsystemContext for testing plugin initialization.
  * Tracks service registrations via a Map.
@@ -78,7 +90,7 @@ import { BrightChatSubsystemPlugin } from '../brightChatSubsystemPlugin';
 function createMockContext(withRouter = true): {
   context: ISubsystemContext;
   registered: Map<string, unknown>;
-  mockRouter: Record<string, jest.Mock>;
+  mockRouter: IMockChatRouter;
 } {
   const registered = new Map<string, unknown>();
 
@@ -95,7 +107,8 @@ function createMockContext(withRouter = true): {
       register: jest.fn((key: string, factory: () => unknown) => {
         registered.set(key, factory());
       }),
-      get: jest.fn((key: string) => registered.get(key)),
+      // services.get is generic; the registry stores whatever was registered.
+      get: <T>(key: string): T => registered.get(key) as T,
       has: jest.fn((key: string) => registered.has(key)),
     },
     apiRouter: withRouter ? mockRouter : null,
@@ -129,12 +142,12 @@ describe('BrightChatSubsystemPlugin', () => {
   });
 
   it('should not have isOptional explicitly set (defaults to true via interface)', () => {
-    const plugin = new BrightChatSubsystemPlugin();
+    const plugin: IAppSubsystemPlugin = new BrightChatSubsystemPlugin();
     expect(plugin.isOptional).toBeUndefined();
   });
 
   it('should not define a stop() method', () => {
-    const plugin = new BrightChatSubsystemPlugin();
+    const plugin: IAppSubsystemPlugin = new BrightChatSubsystemPlugin();
     expect(plugin.stop).toBeUndefined();
   });
 

@@ -155,7 +155,7 @@ describe('Property 20: PostMessage origin validation', () => {
     fc.assert(
       fc.property(
         fc.constantFrom('https://app.example.com', 'https://evil.com'),
-        fc.constantFrom(
+        fc.constantFrom<string[][]>(
           ['https://app.example.com'],
           ['https://*.example.com'],
           [],

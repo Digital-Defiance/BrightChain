@@ -192,7 +192,7 @@ yarn nx lint brightchat-react-components
 | `@brightchain/brightchat-lib` | Request parameter interfaces (`SendDirectMessageParams`, etc.) |
 | `@digitaldefiance/express-suite-react-components` | `PrivateRoute`, `useAuthenticatedApi`, `AuthenticatedApiProvider` |
 | `@mui/material` | UI components (Drawer, Box, IconButton, etc.) |
-| `react-router-dom` | Client-side routing (`useParams`, `Outlet`, `Routes`) |
+| `react-router` | Client-side routing (`useParams`, `Outlet`, `Routes`) |
 
 ## License
 

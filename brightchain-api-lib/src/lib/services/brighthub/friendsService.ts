@@ -9,6 +9,7 @@
  */
 
 import type {
+  BrightDateTimestamp,
   IBaseFriendRequest,
   IBaseFriendship,
   IFriendRequestResult,
@@ -17,26 +18,25 @@ import type {
   IPaginationOptions,
 } from '@brightchain/brightchain-lib';
 import {
-  FriendRequestStatus,
   brightDateNow,
+  FriendRequestStatus,
   FriendsErrorCode,
   FriendshipStatus,
   FriendsServiceError,
   sortPair,
 } from '@brightchain/brightchain-lib';
-import type { BrightDateTimestamp } from '@brightchain/brightchain-lib';
 import { randomUUID } from 'crypto';
 
 // ── Database record types ──────────────────────────────────────────────
 
-interface FriendshipRecord {
+export interface FriendshipRecord {
   _id: string;
   memberIdA: string;
   memberIdB: string;
   createdAt: BrightDateTimestamp;
 }
 
-interface FriendRequestRecord {
+export interface FriendRequestRecord {
   _id: string;
   requesterId: string;
   recipientId: string;

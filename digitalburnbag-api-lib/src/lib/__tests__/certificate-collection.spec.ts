@@ -111,7 +111,8 @@ describe('BrightDBCertificateRepository', () => {
         expiresAt: '2034-06-01T14:30:00.000Z',
       });
 
-      const result = await repo.getCertificateByContainerId('container-abc-123');
+      const result =
+        await repo.getCertificateByContainerId('container-abc-123');
 
       expect(result).not.toBeNull();
       expect(result!.containerId).toBe('container-abc-123');
@@ -124,8 +125,9 @@ describe('BrightDBCertificateRepository', () => {
       const { repo, collection } = createRepo();
       collection.findOne.mockResolvedValueOnce(null);
 
-      const result =
-        await repo.getCertificateByContainerId('nonexistent-container');
+      const result = await repo.getCertificateByContainerId(
+        'nonexistent-container',
+      );
 
       expect(result).toBeNull();
     });
@@ -140,7 +142,8 @@ describe('BrightDBCertificateRepository', () => {
         expiresAt: '2034-06-01T14:30:00.000Z',
       });
 
-      const result = await repo.getCertificateByContainerId('container-abc-123');
+      const result =
+        await repo.getCertificateByContainerId('container-abc-123');
 
       expect(result).not.toBeNull();
       expect((result as any)._id).toBeUndefined();
@@ -164,8 +167,12 @@ describe('BrightDBCertificateRepository', () => {
     it('should create a unique index on containerId', async () => {
       const { repo, collection } = createRepo();
       // Mock createIndex and createTTLIndex on the collection
-      (collection as any).createIndex = jest.fn().mockResolvedValue('containerId_1_unique');
-      (collection as any).createTTLIndex = jest.fn().mockResolvedValue('ttl_expiresAt');
+      (collection as any).createIndex = jest
+        .fn()
+        .mockResolvedValue('containerId_1_unique');
+      (collection as any).createTTLIndex = jest
+        .fn()
+        .mockResolvedValue('ttl_expiresAt');
 
       await repo.ensureIndexes();
 
@@ -177,8 +184,12 @@ describe('BrightDBCertificateRepository', () => {
 
     it('should create a TTL index on expiresAt', async () => {
       const { repo, collection } = createRepo();
-      (collection as any).createIndex = jest.fn().mockResolvedValue('containerId_1_unique');
-      (collection as any).createTTLIndex = jest.fn().mockResolvedValue('ttl_expiresAt');
+      (collection as any).createIndex = jest
+        .fn()
+        .mockResolvedValue('containerId_1_unique');
+      (collection as any).createTTLIndex = jest
+        .fn()
+        .mockResolvedValue('ttl_expiresAt');
 
       await repo.ensureIndexes(3650);
 
@@ -190,8 +201,12 @@ describe('BrightDBCertificateRepository', () => {
 
     it('should only create indexes once (idempotent)', async () => {
       const { repo, collection } = createRepo();
-      (collection as any).createIndex = jest.fn().mockResolvedValue('containerId_1_unique');
-      (collection as any).createTTLIndex = jest.fn().mockResolvedValue('ttl_expiresAt');
+      (collection as any).createIndex = jest
+        .fn()
+        .mockResolvedValue('containerId_1_unique');
+      (collection as any).createTTLIndex = jest
+        .fn()
+        .mockResolvedValue('ttl_expiresAt');
 
       await repo.ensureIndexes();
       await repo.ensureIndexes();
@@ -202,8 +217,12 @@ describe('BrightDBCertificateRepository', () => {
 
     it('should use default retention of 3650 days when not specified', async () => {
       const { repo, collection } = createRepo();
-      (collection as any).createIndex = jest.fn().mockResolvedValue('containerId_1_unique');
-      (collection as any).createTTLIndex = jest.fn().mockResolvedValue('ttl_expiresAt');
+      (collection as any).createIndex = jest
+        .fn()
+        .mockResolvedValue('containerId_1_unique');
+      (collection as any).createTTLIndex = jest
+        .fn()
+        .mockResolvedValue('ttl_expiresAt');
 
       await repo.ensureIndexes();
 

@@ -82,7 +82,7 @@ describe('FriendsSuggestionSection', () => {
 
   it('omits section entirely when user has no friends (Req 14.4)', async () => {
     const emptyProvider = createMockProvider([]);
-    const { container } = renderSection({
+    renderSection({
       suggestionProvider: emptyProvider,
     });
 

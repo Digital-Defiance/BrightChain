@@ -1,4 +1,5 @@
 import {
+  BlockId,
   BlockSize,
   brightDateNow,
   DeliveryStatus,
@@ -37,7 +38,7 @@ describe('DiskMessageMetadataStore - Concurrent Access Property Tests', () => {
     senderId: string,
     recipients: string[],
   ): IMessageMetadata => ({
-    blockId,
+    blockId: blockId as BlockId,
     createdAt: brightDateNow(),
     expiresAt: null,
     durabilityLevel: DurabilityLevel.Standard,
@@ -244,7 +245,7 @@ describe('DiskMessageMetadataStore - Concurrent Access Property Tests', () => {
           results.forEach((result) => {
             const resultIds = new Set(result.map((m) => m.blockId));
             uniqueBlockIds.forEach((blockId) => {
-              expect(resultIds.has(blockId)).toBe(true);
+              expect(resultIds.has(blockId as BlockId)).toBe(true);
             });
           });
         },

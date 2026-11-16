@@ -1,3 +1,4 @@
+/// <reference path="../../test/types/jest.d.ts" />
 import { arraysEqual, ECIES } from '@digitaldefiance/ecies-lib';
 import { BlockMetadata } from '../blockMetadata';
 import { BlockAccessErrorType } from '../enumerations/blockAccessErrorType';
@@ -9,10 +10,10 @@ import { BlockAccessError, BlockValidationError } from '../errors/block';
 import { ChecksumMismatchError } from '../errors/checksumMismatch';
 import { ChecksumService } from '../services/checksum.service';
 import { ServiceProvider } from '../services/service.provider';
-import { Checksum } from '../types/checksum';
-import { BaseBlock } from './base';
-import { brightDateNow } from '../utils/brightDateConversions';
 import type { BrightDateTimestamp } from '../types/brightDateTimestamp';
+import { Checksum } from '../types/checksum';
+import { brightDateNow } from '../utils/brightDateConversions';
+import { BaseBlock } from './base';
 
 // Test class that properly implements abstract methods
 class TestBaseBlock extends BaseBlock {

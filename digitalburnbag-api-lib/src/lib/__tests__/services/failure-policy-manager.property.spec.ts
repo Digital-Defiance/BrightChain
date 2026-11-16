@@ -29,55 +29,6 @@ const validActions: FailurePolicyAction[] = [
 const arbFailurePolicyAction: fc.Arbitrary<FailurePolicyAction> =
   fc.constantFrom(...validActions);
 
-/** Arbitrary that produces a minimal IProviderConnectionExtended. */
-function arbConnection(overrides?: {
-  threshold?: number;
-  action?: FailurePolicyAction;
-  consecutiveFailures?: number;
-  status?: IProviderConnectionExtended['status'];
-}): fc.Arbitrary<IProviderConnectionExtended<string>> {
-  return fc
-    .record({
-      threshold:
-        overrides?.threshold !== undefined
-          ? fc.constant(overrides.threshold)
-          : fc.integer({ min: 1, max: 100 }),
-      action:
-        overrides?.action !== undefined
-          ? fc.constant(overrides.action)
-          : arbFailurePolicyAction,
-      consecutiveFailures:
-        overrides?.consecutiveFailures !== undefined
-          ? fc.constant(overrides.consecutiveFailures)
-          : fc.integer({ min: 0, max: 200 }),
-      status:
-        overrides?.status !== undefined
-          ? fc.constant(overrides.status)
-          : fc.constantFrom(
-              'connected' as const,
-              'expired' as const,
-              'error' as const,
-              'paused' as const,
-              'pending' as const,
-            ),
-    })
-    .map(({ threshold, action, consecutiveFailures, status }) => ({
-      id: 'conn-1',
-      userId: 'user-1',
-      providerId: 'provider-1',
-      status,
-      isEnabled: true,
-      consecutiveFailures,
-      failurePolicyConfig: {
-        failureThreshold: threshold,
-        failurePolicy: action,
-      },
-      isPaused: false,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    }));
-}
-
 // ---------------------------------------------------------------------------
 // Property 7: Failure policy validation accepts only valid values
 // Tag: Feature: canary-provider-system, Property 7: Failure policy validation

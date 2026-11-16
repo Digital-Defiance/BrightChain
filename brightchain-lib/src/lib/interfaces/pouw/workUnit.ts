@@ -18,9 +18,9 @@ export enum WorkUnitOperation {
  * - Frontend uses IWorkUnit<string>
  * - Backend uses IWorkUnit<Uint8Array>
  *
- * @template TID - Platform ID type. Defaults to string for JSON/frontend.
+ * @template _TID - Platform ID type (reserved; no field uses it yet). Defaults to string for JSON/frontend.
  */
-export interface IWorkUnit<TID extends PlatformID = string> {
+export interface IWorkUnit<_TID extends PlatformID = string> {
   /** Unique identifier for this work unit (UUID v4) */
   id: string;
   /** The Merkle tree this work unit contributes to */

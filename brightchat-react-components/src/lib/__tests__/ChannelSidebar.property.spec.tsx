@@ -33,6 +33,11 @@ jest.mock('@digitaldefiance/express-suite-react-components', () => ({
 jest.retryTimes(2, { logErrorsBeforeRetry: false });
 jest.setTimeout(30000);
 
+import type {
+  ChannelVisibility,
+  DefaultRole,
+  IChannel,
+} from '@brightchain/brightchain-lib';
 import { cleanup, render, screen } from '@testing-library/react';
 import fc from 'fast-check';
 import type { ChannelSidebarProps } from '../ChannelSidebar';
@@ -41,10 +46,10 @@ import ChannelSidebar from '../ChannelSidebar';
 // ─── Arbitraries ────────────────────────────────────────────────────────────
 
 const visibilityArb = fc.constantFrom(
-  'public' as const,
-  'private' as const,
-  'secret' as const,
-  'invisible' as const,
+  'public' as ChannelVisibility,
+  'private' as ChannelVisibility,
+  'secret' as ChannelVisibility,
+  'invisible' as ChannelVisibility,
 );
 
 /** Generate a channel with a unique id and random name. */
@@ -57,11 +62,11 @@ const channelArb = (id: string) =>
     topic: fc.constant(''),
     creatorId: fc.constant('u1'),
     visibility: visibilityArb,
-    members: fc.constant([]),
+    members: fc.constant<IChannel['members']>([]),
     encryptedSharedKey: fc.constant(new Map()),
-    createdAt: fc.constant(new Date()),
-    lastMessageAt: fc.constant(new Date()),
-    pinnedMessageIds: fc.constant([]),
+    createdAt: fc.constant(0),
+    lastMessageAt: fc.constant(0),
+    pinnedMessageIds: fc.constant<string[]>([]),
     historyVisibleToNewMembers: fc.constant(true),
   });
 
@@ -118,10 +123,10 @@ describe('Feature: brightchat-encryption-indicators, Property 1: Every channel r
 
         const props: ChannelSidebarProps = {
           serverName: 'Test Server',
-          channels: channels as any,
-          categories: categories as any,
+          channels: channels,
+          categories: categories,
           activeChannelId: null,
-          userRole: 'member' as any,
+          userRole: 'member' as DefaultRole,
           onChannelSelect: jest.fn(),
         };
 

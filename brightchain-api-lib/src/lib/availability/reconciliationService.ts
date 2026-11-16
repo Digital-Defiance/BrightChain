@@ -14,7 +14,6 @@ import {
   brightDateNow,
   brightDateToISO,
   CBLIndexManifest,
-  dateToBrightDate,
   DEFAULT_RECONCILIATION_CONFIG,
   ICBLIndexEntry,
   IReconciliationService,

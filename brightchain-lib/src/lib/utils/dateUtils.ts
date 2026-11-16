@@ -170,7 +170,6 @@ export function isValidDate(date: Date, allowFuture = false): boolean {
   return true;
 }
 
-
 // ============================================================================
 // BrightDate-aware serialization
 // ============================================================================

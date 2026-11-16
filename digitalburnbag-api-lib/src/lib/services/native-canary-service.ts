@@ -10,9 +10,9 @@
  * Requirements: 8.1, 8.2, 8.3, 8.4, 8.5, 8.6, 8.7, 8.8
  */
 import type {
+  IConfigureNativeCanaryParams,
   INativeCanaryConfigBase,
   INativeCanaryService,
-  IConfigureNativeCanaryParams,
   IPlatformEvent,
   NativeCanaryType,
 } from '@brightchain/digitalburnbag-lib';
@@ -31,15 +31,14 @@ import type { IEncryptionService } from './credential-service';
  *
  * Requirement: 8.8
  */
-export type NativeCanarySignalCallback<TID extends PlatformID = string> = (
-  event: {
+export type NativeCanarySignalCallback<TID extends PlatformID = string> =
+  (event: {
     userId: TID;
     configId: TID;
     signalType: HeartbeatSignalType;
     canaryType: NativeCanaryType;
     timestamp: Date;
-  },
-) => void | Promise<void>;
+  }) => void | Promise<void>;
 
 // ---------------------------------------------------------------------------
 // Platform Event Store Interface
@@ -144,22 +143,40 @@ function getThresholdAndPeriod(
   switch (config.type) {
     case 'login_activity':
       if (config.loginThreshold != null && config.loginPeriodMs != null) {
-        return { threshold: config.loginThreshold, periodMs: config.loginPeriodMs };
+        return {
+          threshold: config.loginThreshold,
+          periodMs: config.loginPeriodMs,
+        };
       }
       return null;
     case 'file_access':
-      if (config.fileAccessThreshold != null && config.fileAccessPeriodMs != null) {
-        return { threshold: config.fileAccessThreshold, periodMs: config.fileAccessPeriodMs };
+      if (
+        config.fileAccessThreshold != null &&
+        config.fileAccessPeriodMs != null
+      ) {
+        return {
+          threshold: config.fileAccessThreshold,
+          periodMs: config.fileAccessPeriodMs,
+        };
       }
       return null;
     case 'api_usage':
       if (config.apiUsageThreshold != null && config.apiUsagePeriodMs != null) {
-        return { threshold: config.apiUsageThreshold, periodMs: config.apiUsagePeriodMs };
+        return {
+          threshold: config.apiUsageThreshold,
+          periodMs: config.apiUsagePeriodMs,
+        };
       }
       return null;
     case 'vault_interaction':
-      if (config.vaultInteractionThreshold != null && config.vaultInteractionPeriodMs != null) {
-        return { threshold: config.vaultInteractionThreshold, periodMs: config.vaultInteractionPeriodMs };
+      if (
+        config.vaultInteractionThreshold != null &&
+        config.vaultInteractionPeriodMs != null
+      ) {
+        return {
+          threshold: config.vaultInteractionThreshold,
+          periodMs: config.vaultInteractionPeriodMs,
+        };
       }
       return null;
     case 'duress_code':

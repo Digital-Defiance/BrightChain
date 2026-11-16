@@ -13,8 +13,8 @@ import BlockType from '../enumerations/blockType';
 import { EphemeralBlockMetadata } from '../ephemeralBlockMetadata';
 import { ServiceProvider } from '../services/service.provider';
 import { initializeTestServices } from '../test/service.initializer.helper';
-import { dateToBrightDate } from '../utils/brightDateConversions';
 import type { BrightDateTimestamp } from '../types/brightDateTimestamp';
+import { dateToBrightDate } from '../utils/brightDateConversions';
 
 /**
  * Property-based tests for metadata round-trip serialization

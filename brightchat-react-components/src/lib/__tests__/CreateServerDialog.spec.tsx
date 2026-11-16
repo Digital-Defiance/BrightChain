@@ -45,7 +45,7 @@ jest.mock('@digitaldefiance/express-suite-react-components', () => ({
 
 // Mock react-easy-crop to avoid canvas issues in test environment
 jest.mock('react-easy-crop', () => {
-  const React = require('react');
+  const React = jest.requireActual<typeof import('react')>('react');
   return {
     __esModule: true,
     default: React.forwardRef(function MockCropper(

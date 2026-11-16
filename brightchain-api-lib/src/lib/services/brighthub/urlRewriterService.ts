@@ -62,9 +62,11 @@ export interface IUrlRewriterDeps {
       ownerId: PlatformID;
       visibility?: string;
     }): Promise<{ id: PlatformID; rootFolderId: PlatformID }>;
-    listContainers(
-      ownerId: PlatformID,
-    ): Promise<Array<{ container: { id: PlatformID; name: string; rootFolderId: PlatformID } }>>;
+    listContainers(ownerId: PlatformID): Promise<
+      Array<{
+        container: { id: PlatformID; name: string; rootFolderId: PlatformID };
+      }>
+    >;
   };
   uploadService: {
     createSession(params: {
@@ -413,8 +415,6 @@ export class UrlRewriterService {
       vaultContainerId,
     });
 
-    const checksum = djb2Checksum(new Uint8Array(fileBuffer));
-
     // Send the file in chunks matching the upload service's expected chunk
     // size. The session calculates totalChunks from totalSizeBytes and its
     // internal chunkSizeBytes (default 1 MB). Sending the entire buffer as
@@ -427,12 +427,7 @@ export class UrlRewriterService {
       const end = Math.min(start + chunkSize, fileBuffer.length);
       const chunkData = new Uint8Array(fileBuffer.subarray(start, end));
       const chunkChecksum = djb2Checksum(chunkData);
-      await uploadService.receiveChunk(
-        session.id,
-        i,
-        chunkData,
-        chunkChecksum,
-      );
+      await uploadService.receiveChunk(session.id, i, chunkData, chunkChecksum);
     }
 
     const fileMetadata = await uploadService.finalize(session.id);

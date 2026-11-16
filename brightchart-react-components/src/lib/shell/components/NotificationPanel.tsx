@@ -4,6 +4,7 @@
  * @module shell/components/NotificationPanel
  */
 
+import { useFormattedDate } from '@brightchain/brightchain-react-components';
 import { BrightChartStrings } from '@brightchain/brightchart-lib';
 import {
   Box,
@@ -16,8 +17,7 @@ import {
   Typography,
 } from '@mui/material';
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useFormattedDate } from '@brightchain/brightchain-react-components';
+import { useNavigate } from 'react-router';
 import { useBrightChartTranslation } from '../../hooks/useBrightChartTranslation';
 import { useNotifications } from '../contexts/NotificationContext';
 

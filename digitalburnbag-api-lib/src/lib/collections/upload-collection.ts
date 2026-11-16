@@ -165,7 +165,9 @@ export class BrightDBUploadRepository<TID extends PlatformID>
     }
     const doc = (await this.escrowData.findOne({
       _id: sessionId,
-    } as Parameters<Collection['findOne']>[0])) as unknown as IEscrowDocument | null;
+    } as Parameters<
+      Collection['findOne']
+    >[0])) as unknown as IEscrowDocument | null;
     if (!doc) return null;
     // Treat expired docs as absent (TTL-based purge may be async).
     if (doc.expiresAtMs <= Date.now()) return null;

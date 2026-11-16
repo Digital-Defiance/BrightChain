@@ -8,23 +8,21 @@
  * Feature: canary-provider-expansion
  * Requirements: 9.3, 16.4, 16.5
  */
-import { HeartbeatSignalType } from '@brightchain/digitalburnbag-lib';
 import type {
   IMultiCanaryBindingBase,
-  IRedundancyEvaluationResult,
+  IProviderConnectionExtended,
 } from '@brightchain/digitalburnbag-lib';
-import { CanaryCondition } from '@brightchain/digitalburnbag-lib';
-import { ProtocolAction } from '@brightchain/digitalburnbag-lib';
 import {
-  MultiCanaryBindingService,
-  MIN_PROVIDERS,
-} from '../../services/multi-canary-binding-service';
+  CanaryCondition,
+  HeartbeatSignalType,
+  ProtocolAction,
+} from '@brightchain/digitalburnbag-lib';
+import type { BrightDBMultiCanaryBindingRepository } from '../../collections/multi-canary-binding-collection';
 import type {
   IMultiCanaryConnectionRepository,
   ProtocolActionCallback,
 } from '../../services/multi-canary-binding-service';
-import type { BrightDBMultiCanaryBindingRepository } from '../../collections/multi-canary-binding-collection';
-import type { IProviderConnectionExtended } from '@brightchain/digitalburnbag-lib';
+import { MultiCanaryBindingService } from '../../services/multi-canary-binding-service';
 
 // ---------------------------------------------------------------------------
 // In-memory repositories for integration testing
@@ -57,7 +55,11 @@ function createInMemoryBindingRepository(): BrightDBMultiCanaryBindingRepository
     ) => {
       const existing = store.get(bindingId);
       if (existing) {
-        store.set(bindingId, { ...existing, ...updates, updatedAt: new Date() });
+        store.set(bindingId, {
+          ...existing,
+          ...updates,
+          updatedAt: new Date(),
+        });
       }
     },
     deleteBinding: async (bindingId: string) => {
@@ -65,7 +67,6 @@ function createInMemoryBindingRepository(): BrightDBMultiCanaryBindingRepository
     },
   } as unknown as BrightDBMultiCanaryBindingRepository<string>;
 }
-
 
 /**
  * In-memory connection repository that simulates provider connections.
@@ -163,7 +164,8 @@ beforeEach(() => {
 
 describe('Multi-Canary Evaluation: Signal → Evaluate → Trigger', () => {
   it('all_must_fail: triggers protocol only when ALL providers report ABSENCE', async () => {
-    const { service, connectionRepo, onProtocolAction } = createIntegrationStack();
+    const { service, connectionRepo, onProtocolAction } =
+      createIntegrationStack();
 
     // Set up 3 connected providers
     connectionRepo.addConnection(makeConnection('conn-1'));
@@ -211,7 +213,8 @@ describe('Multi-Canary Evaluation: Signal → Evaluate → Trigger', () => {
   });
 
   it('majority_must_fail: triggers when more than half report ABSENCE', async () => {
-    const { service, connectionRepo, onProtocolAction } = createIntegrationStack();
+    const { service, connectionRepo, onProtocolAction } =
+      createIntegrationStack();
 
     connectionRepo.addConnection(makeConnection('conn-1'));
     connectionRepo.addConnection(makeConnection('conn-2'));
@@ -251,7 +254,8 @@ describe('Multi-Canary Evaluation: Signal → Evaluate → Trigger', () => {
   });
 
   it('any_fails: triggers when any single provider reports ABSENCE', async () => {
-    const { service, connectionRepo, onProtocolAction } = createIntegrationStack();
+    const { service, connectionRepo, onProtocolAction } =
+      createIntegrationStack();
 
     connectionRepo.addConnection(makeConnection('conn-1'));
     connectionRepo.addConnection(makeConnection('conn-2'));
@@ -279,7 +283,8 @@ describe('Multi-Canary Evaluation: Signal → Evaluate → Trigger', () => {
   });
 
   it('weighted_consensus: triggers when weighted absence score exceeds threshold', async () => {
-    const { service, connectionRepo, onProtocolAction } = createIntegrationStack();
+    const { service, connectionRepo, onProtocolAction } =
+      createIntegrationStack();
 
     connectionRepo.addConnection(makeConnection('conn-1'));
     connectionRepo.addConnection(makeConnection('conn-2'));
@@ -321,7 +326,8 @@ describe('Multi-Canary Evaluation: Signal → Evaluate → Trigger', () => {
   });
 
   it('CHECK_FAILED providers are excluded from consensus, not treated as ABSENCE', async () => {
-    const { service, connectionRepo, onProtocolAction } = createIntegrationStack();
+    const { service, connectionRepo, onProtocolAction } =
+      createIntegrationStack();
 
     connectionRepo.addConnection(makeConnection('conn-1'));
     connectionRepo.addConnection(makeConnection('conn-2'));
@@ -364,7 +370,8 @@ describe('Multi-Canary Evaluation: Signal → Evaluate → Trigger', () => {
   });
 
   it('paused providers are excluded from binding evaluation', async () => {
-    const { service, connectionRepo, onProtocolAction } = createIntegrationStack();
+    const { service, connectionRepo, onProtocolAction } =
+      createIntegrationStack();
 
     connectionRepo.addConnection(makeConnection('conn-1'));
     connectionRepo.addConnection(makeConnection('conn-2'));
@@ -401,7 +408,8 @@ describe('Multi-Canary Evaluation: Signal → Evaluate → Trigger', () => {
   });
 
   it('does NOT double-trigger: once triggered, subsequent signals do not re-trigger', async () => {
-    const { service, connectionRepo, onProtocolAction } = createIntegrationStack();
+    const { service, connectionRepo, onProtocolAction } =
+      createIntegrationStack();
 
     connectionRepo.addConnection(makeConnection('conn-1'));
     connectionRepo.addConnection(makeConnection('conn-2'));
@@ -434,7 +442,8 @@ describe('Multi-Canary Evaluation: Signal → Evaluate → Trigger', () => {
   });
 
   it('PRESENCE signal does not trigger protocol action', async () => {
-    const { service, connectionRepo, onProtocolAction } = createIntegrationStack();
+    const { service, connectionRepo, onProtocolAction } =
+      createIntegrationStack();
 
     connectionRepo.addConnection(makeConnection('conn-1'));
     connectionRepo.addConnection(makeConnection('conn-2'));
@@ -499,7 +508,6 @@ describe('Multi-Canary Evaluation: Signal → Evaluate → Trigger', () => {
     expect(afterTrigger?.aggregateStatus).toBe('triggered');
   });
 });
-
 
 // ---------------------------------------------------------------------------
 // E2E Flow: Provider disconnect → credential deletion → binding removal → status update

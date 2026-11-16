@@ -39,7 +39,7 @@ import { useTheme } from '@mui/material';
 import Box from '@mui/material/Box';
 import * as React from 'react';
 import { useCallback, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { useBrightChartTranslation } from '../hooks/useBrightChartTranslation';
 import { ConnectivityIndicator } from './components/Header/ConnectivityIndicator';
 import { RoleSwitcher } from './components/Header/RoleSwitcher';
@@ -206,7 +206,7 @@ const BrightChartLayoutInner: React.FC = () => {
       ),
       onNavigate: handleNavigate,
     }),
-    [navItems, handleNavigate, displayName],
+    [navItems, handleNavigate, displayName, t],
   );
 
   // Toolbar actions: connectivity indicator + role switcher (no notification bell —

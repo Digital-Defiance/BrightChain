@@ -624,7 +624,8 @@ export const BrightHubStrings = createI18nStringKeys(BrightHubComponentId, {
   EditProfileDialog_DisplayName: 'EditProfileDialog_DisplayName',
   EditProfileDialog_Bio: 'EditProfileDialog_Bio',
   EditProfileDialog_BioPlaceholder: 'EditProfileDialog_BioPlaceholder',
-  EditProfileDialog_BioCharCountTemplate: 'EditProfileDialog_BioCharCountTemplate',
+  EditProfileDialog_BioCharCountTemplate:
+    'EditProfileDialog_BioCharCountTemplate',
   EditProfileDialog_BioPreview: 'EditProfileDialog_BioPreview',
   EditProfileDialog_Location: 'EditProfileDialog_Location',
   EditProfileDialog_WebsiteUrl: 'EditProfileDialog_WebsiteUrl',
@@ -632,7 +633,8 @@ export const BrightHubStrings = createI18nStringKeys(BrightHubComponentId, {
   EditProfileDialog_Cancel: 'EditProfileDialog_Cancel',
   EditProfileDialog_Saving: 'EditProfileDialog_Saving',
   EditProfileDialog_ErrorBioTooLong: 'EditProfileDialog_ErrorBioTooLong',
-  EditProfileDialog_ErrorBioContainsImage: 'EditProfileDialog_ErrorBioContainsImage',
+  EditProfileDialog_ErrorBioContainsImage:
+    'EditProfileDialog_ErrorBioContainsImage',
 
   // UserProfileCard — edit button
   UserProfileCard_EditProfile: 'UserProfileCard_EditProfile',

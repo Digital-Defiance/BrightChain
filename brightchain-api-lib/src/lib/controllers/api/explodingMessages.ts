@@ -298,7 +298,10 @@ export class ExplodingMessagesController<
           status: 'success',
           data: {
             messageId: id,
-            expiresAt: message.expiresAt !== undefined ? brightDateToISO(message.expiresAt) : undefined,
+            expiresAt:
+              message.expiresAt !== undefined
+                ? brightDateToISO(message.expiresAt)
+                : undefined,
             maxReads: message.maxReads,
           },
           message: 'Expiration set successfully',
@@ -459,7 +462,10 @@ export class ExplodingMessagesController<
           data: {
             messageId: id,
             isExploding: ExplodingMessageService.isExplodingMessage(message),
-            expiresAt: message.expiresAt !== undefined ? brightDateToISO(message.expiresAt) : undefined,
+            expiresAt:
+              message.expiresAt !== undefined
+                ? brightDateToISO(message.expiresAt)
+                : undefined,
             maxReads: message.maxReads,
             readCount: message.readCount,
             remainingTimeMs: ExplodingMessageService.getRemainingTime(message),

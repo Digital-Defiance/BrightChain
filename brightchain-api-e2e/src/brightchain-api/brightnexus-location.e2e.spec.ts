@@ -102,7 +102,9 @@ describe('E2E: BrightNexus location registry', () => {
     );
     expect(mine.status).toBe(200);
     expect(
-      mine.data.records?.some((r: { ipAddress: string }) => r.ipAddress === TEST_IP),
+      mine.data.records?.some(
+        (r: { ipAddress: string }) => r.ipAddress === TEST_IP,
+      ),
     ).toBe(true);
 
     const lookup = await axios.get(

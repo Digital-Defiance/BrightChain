@@ -20,9 +20,9 @@ import type {
 } from '../../interfaces/availability/gossipService';
 import type { BlockId } from '../../interfaces/branded/primitives/blockId';
 import type { ICBLIndexEntry } from '../../interfaces/storage/cblIndex';
+import { brightDateNow } from '../../utils/brightDateConversions';
 import { HeadRegistryGossipTransport } from '../headRegistryGossipTransport';
 import { InMemoryHeadRegistry } from '../inMemoryHeadRegistry';
-import { brightDateNow } from '../../utils/brightDateConversions';
 
 // ── Mock gossip service ──────────────────────────────────────────────────────
 
@@ -392,12 +392,7 @@ describe('HeadRegistryGossipTransport – delegation of non-gossip methods', () 
         string,
         import('../../interfaces/storage/headRegistryDriver').HeadRecord,
       ]
-    > = [
-      [
-        'db:col',
-        { blockId: 'remote-block', timestamp: brightDateNow() },
-      ],
-    ];
+    > = [['db:col', { blockId: 'remote-block', timestamp: brightDateNow() }]];
     const result = await transport.mergeSnapshot(snapshot);
     expect(result.merged).toBe(1);
     expect(transport.getHead('db', 'col')).toBe('remote-block');

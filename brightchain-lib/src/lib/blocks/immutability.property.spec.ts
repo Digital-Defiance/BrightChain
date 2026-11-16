@@ -13,9 +13,8 @@ import { EphemeralBlockMetadata } from '../ephemeralBlockMetadata';
 import { initializeBrightChain } from '../init';
 import { ServiceProvider } from '../services/service.provider';
 import { ServiceLocator } from '../services/serviceLocator';
-import { EphemeralBlock } from './ephemeral';
 import { brightDateNow } from '../utils/brightDateConversions';
-import type { BrightDateTimestamp } from '../types/brightDateTimestamp';
+import { EphemeralBlock } from './ephemeral';
 
 /**
  * Property-based tests for block immutability

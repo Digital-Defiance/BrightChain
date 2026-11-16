@@ -26,10 +26,10 @@ import { initializeBrightChain } from '../init';
 import { ContentWithIdentity } from '../interfaces/contentWithIdentity';
 import { IBrightTrustDatabase } from '../interfaces/services/brightTrustDatabase';
 import { IBrightTrustMember } from '../interfaces/services/brightTrustService';
+import { brightDateNow } from '../utils/brightDateConversions';
 import { IdentityValidator } from './identityValidator';
 import { MembershipProofService } from './membershipProofService';
 import { ServiceProvider } from './service.provider';
-import { brightDateNow } from '../utils/brightDateConversions';
 
 jest.setTimeout(120000);
 

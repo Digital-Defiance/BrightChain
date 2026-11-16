@@ -19,12 +19,18 @@ export function useBrightChartTranslation() {
   const t = useCallback(
     (key: BrightChartStringKey, vars?: Record<string, string>) =>
       engine.translate(BrightChartComponentId, key, vars),
+    // currentLanguage changes the function identity on a language switch
+    // (see the docstring above), so it is a dependency on purpose.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [engine, currentLanguage],
   );
 
   const tEnum = useCallback(
     <T extends string | number>(enumType: Record<string, T>, value: T) =>
       engine.translateEnum(enumType, value),
+    // currentLanguage changes the function identity on a language switch
+    // (see the docstring above), so it is a dependency on purpose.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [engine, currentLanguage],
   );
 

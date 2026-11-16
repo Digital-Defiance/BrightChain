@@ -5,7 +5,10 @@
 export class BrightChainIdentityError extends Error {
   public override readonly name = 'BrightChainIdentityError';
 
-  constructor(message: string, public override readonly cause?: unknown) {
+  constructor(
+    message: string,
+    public override readonly cause?: unknown,
+  ) {
     super(message);
   }
 }

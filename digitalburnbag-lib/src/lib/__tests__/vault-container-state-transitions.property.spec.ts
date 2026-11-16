@@ -43,13 +43,6 @@ const ALLOWED_TRANSITIONS_SET: ReadonlySet<string> = new Set([
   `${VaultContainerState.PendingDeletion}->${VaultContainerState.Locked}`,
 ]);
 
-/**
- * Admin-only transitions (not allowed for non-admin callers).
- */
-const ADMIN_ONLY_TRANSITIONS_SET: ReadonlySet<string> = new Set([
-  `${VaultContainerState.Disowned}->${VaultContainerState.Destroyed}`,
-]);
-
 // Feature: vault-deletion-certificate, Property 5: State transition correctness
 describe('Feature: vault-deletion-certificate, Property 5: State transition correctness', () => {
   it('FOR ANY (currentState, targetState) pair, isValidTransition succeeds iff the pair is in the allowed set', () => {
@@ -135,7 +128,10 @@ describe('Feature: vault-deletion-certificate, Property 5: State transition corr
   it('transitions from Disowned to Active or Destroyed (without admin) are rejected', () => {
     fc.assert(
       fc.property(
-        fc.constantFrom(VaultContainerState.Active, VaultContainerState.Destroyed),
+        fc.constantFrom(
+          VaultContainerState.Active,
+          VaultContainerState.Destroyed,
+        ),
         (targetState) => {
           const result = isValidTransition(
             VaultContainerState.Disowned,

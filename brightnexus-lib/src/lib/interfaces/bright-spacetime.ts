@@ -46,7 +46,8 @@ export interface IBrightNexusLocationPublishRequest {
 /**
  * Stored registry record (BrightDB document).
  */
-export interface IBrightNexusLocationRecord extends IBrightNexusLocationPublishRequest {
+export interface IBrightNexusLocationRecord
+  extends IBrightNexusLocationPublishRequest {
   id: string;
   memberId: string;
   memberIdHex: string;

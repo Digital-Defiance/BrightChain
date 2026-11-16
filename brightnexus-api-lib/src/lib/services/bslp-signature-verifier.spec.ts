@@ -1,4 +1,3 @@
-import { BslpPrivacyMode } from '@brightchain/brightnexus-lib';
 import {
   ensureTestMemberKeys,
   signSamplePublishBody,

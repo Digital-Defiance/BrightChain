@@ -27,8 +27,13 @@ Object.assign(navigator, {
 // Imports
 // ---------------------------------------------------------------------------
 
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import React from 'react';
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from '@testing-library/react';
 import {
   IWebhookEndpointDisplay,
   IWebhookEndpointPanelProps,
@@ -47,8 +52,12 @@ function makeEndpoint(
     connectionId: 'conn-1',
     providerId: 'github',
     providerName: overrides.providerName ?? 'GitHub Webhooks',
-    webhookUrl: overrides.webhookUrl ?? 'https://example.com/api/webhooks/canary/conn-1/abc123',
-    secret: overrides.secret ?? 'a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2',
+    webhookUrl:
+      overrides.webhookUrl ??
+      'https://example.com/api/webhooks/canary/conn-1/abc123',
+    secret:
+      overrides.secret ??
+      'a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2',
     isActive: overrides.isActive ?? true,
     isDisabledByFailures: overrides.isDisabledByFailures ?? false,
     ipAllowlist: overrides.ipAllowlist ?? [],
@@ -99,9 +108,14 @@ const ALL_ENDPOINTS = [ENDPOINT_GITHUB, ENDPOINT_STRIPE];
 function renderPanel(overrides: Partial<IWebhookEndpointPanelProps> = {}) {
   const defaultProps: IWebhookEndpointPanelProps = {
     endpoints: ALL_ENDPOINTS,
-    onRotateSecret: jest.fn().mockResolvedValue({ newSecret: 'new-secret-hex-value-32-bytes-long-hex-encoded-string-64-chars' }),
+    onRotateSecret: jest.fn().mockResolvedValue({
+      newSecret:
+        'new-secret-hex-value-32-bytes-long-hex-encoded-string-64-chars',
+    }),
     onUpdateIpAllowlist: jest.fn().mockResolvedValue(undefined),
-    onSendTestWebhook: jest.fn().mockResolvedValue({ success: true, processingTimeMs: 42 }),
+    onSendTestWebhook: jest
+      .fn()
+      .mockResolvedValue({ success: true, processingTimeMs: 42 }),
     onRefreshStats: jest.fn().mockResolvedValue({
       totalReceived: 201,
       successfullyProcessed: 197,
@@ -148,7 +162,9 @@ describe('WebhookEndpointPanel', () => {
     it('shows delivery stats including success rate', () => {
       renderPanel();
       const githubCard = screen.getByTestId('endpoint-card-ep-github');
-      const statsSection = within(githubCard).getByTestId('delivery-stats-ep-github');
+      const statsSection = within(githubCard).getByTestId(
+        'delivery-stats-ep-github',
+      );
       // Success rate = 196/200 = 98%
       expect(within(statsSection).getByText('98%')).toBeInTheDocument();
     });
@@ -156,14 +172,18 @@ describe('WebhookEndpointPanel', () => {
     it('shows total received count', () => {
       renderPanel();
       const githubCard = screen.getByTestId('endpoint-card-ep-github');
-      const statsSection = within(githubCard).getByTestId('delivery-stats-ep-github');
+      const statsSection = within(githubCard).getByTestId(
+        'delivery-stats-ep-github',
+      );
       expect(within(statsSection).getByText('200')).toBeInTheDocument();
     });
 
     it('shows empty state when no endpoints exist', () => {
       renderPanel({ endpoints: [] });
       expect(screen.getByTestId('no-endpoints-state')).toBeInTheDocument();
-      expect(screen.getByText('No webhook endpoints configured.')).toBeInTheDocument();
+      expect(
+        screen.getByText('No webhook endpoints configured.'),
+      ).toBeInTheDocument();
     });
 
     it('shows webhook URL for each endpoint', () => {
@@ -249,19 +269,25 @@ describe('WebhookEndpointPanel', () => {
     it('shows grace period configuration when "Rotate Secret" is clicked', () => {
       renderPanel();
       fireEvent.click(screen.getByTestId('rotate-secret-ep-github'));
-      expect(screen.getByTestId('grace-period-config-ep-github')).toBeInTheDocument();
+      expect(
+        screen.getByTestId('grace-period-config-ep-github'),
+      ).toBeInTheDocument();
     });
 
     it('shows grace period selector with options', () => {
       renderPanel();
       fireEvent.click(screen.getByTestId('rotate-secret-ep-github'));
-      expect(screen.getByTestId('grace-period-select-ep-github')).toBeInTheDocument();
+      expect(
+        screen.getByTestId('grace-period-select-ep-github'),
+      ).toBeInTheDocument();
     });
 
     it('shows "Confirm Rotation" button after clicking "Rotate Secret"', () => {
       renderPanel();
       fireEvent.click(screen.getByTestId('rotate-secret-ep-github'));
-      expect(screen.getByTestId('confirm-rotate-ep-github')).toBeInTheDocument();
+      expect(
+        screen.getByTestId('confirm-rotate-ep-github'),
+      ).toBeInTheDocument();
     });
 
     it('calls onRotateSecret when rotation is confirmed', async () => {
@@ -270,7 +296,10 @@ describe('WebhookEndpointPanel', () => {
       fireEvent.click(screen.getByTestId('confirm-rotate-ep-github'));
 
       await waitFor(() => {
-        expect(props.onRotateSecret).toHaveBeenCalledWith('ep-github', expect.any(Number));
+        expect(props.onRotateSecret).toHaveBeenCalledWith(
+          'ep-github',
+          expect.any(Number),
+        );
       });
     });
 
@@ -280,7 +309,9 @@ describe('WebhookEndpointPanel', () => {
       fireEvent.click(screen.getByTestId('confirm-rotate-ep-github'));
 
       await waitFor(() => {
-        expect(screen.getByTestId('rotate-result-ep-github')).toBeInTheDocument();
+        expect(
+          screen.getByTestId('rotate-result-ep-github'),
+        ).toBeInTheDocument();
       });
     });
   });
@@ -331,7 +362,7 @@ describe('WebhookEndpointPanel', () => {
     });
 
     it('shows error result when test webhook fails', async () => {
-      const { props } = renderPanel({
+      renderPanel({
         onSendTestWebhook: jest.fn().mockResolvedValue({
           success: false,
           error: 'Connection refused',

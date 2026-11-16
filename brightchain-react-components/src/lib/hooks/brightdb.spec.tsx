@@ -1,4 +1,10 @@
-import { act, render, renderHook, screen, waitFor } from '@testing-library/react';
+import {
+  act,
+  render,
+  renderHook,
+  screen,
+  waitFor,
+} from '@testing-library/react';
 import type { ReactNode } from 'react';
 import {
   BrightDbProvider,
@@ -30,13 +36,20 @@ function fakeDb() {
         find: (filter: Record<string, unknown> = {}) => ({
           toArray: async () => {
             calls.find++;
-            return [...table(name).values()].filter((d) => Object.entries(filter).every(([k, v]) => d[k] === v));
+            return [...table(name).values()].filter((d) =>
+              Object.entries(filter).every(([k, v]) => d[k] === v),
+            );
           },
         }),
-        findByIndex: async (_index: string, query: Record<string, unknown> = {}) => {
+        findByIndex: async (
+          _index: string,
+          query: Record<string, unknown> = {},
+        ) => {
           calls.findByIndex++;
           const equals = (query['equals'] as unknown[] | undefined)?.[0];
-          return [...table(name).values()].filter((d) => equals === undefined || d['key'] === equals);
+          return [...table(name).values()].filter(
+            (d) => equals === undefined || d['key'] === equals,
+          );
         },
         insertOne: async (doc: BrightDbDocument) => {
           table(name).set(doc._id, doc);
@@ -68,7 +81,10 @@ describe('BrightDB React hooks', () => {
   it('useLiveQuery loads, then refreshes when the database changes', async () => {
     const { db, table, notify } = fakeDb();
     table('people').set('a', { _id: 'a', city: 'oslo' });
-    const { result } = renderHook(() => useLiveQuery('people', { city: 'oslo' }), { wrapper: wrapperFor(db) });
+    const { result } = renderHook(
+      () => useLiveQuery('people', { city: 'oslo' }),
+      { wrapper: wrapperFor(db) },
+    );
     expect(result.current.loading).toBe(true);
     await waitFor(() => expect(result.current.loading).toBe(false));
     expect(result.current.data.map((d) => d._id)).toEqual(['a']);
@@ -77,25 +93,37 @@ describe('BrightDB React hooks', () => {
     table('people').set('b', { _id: 'b', city: 'oslo' });
     table('people').set('c', { _id: 'c', city: 'bergen' });
     await act(async () => notify());
-    await waitFor(() => expect(result.current.data.map((d) => d._id)).toEqual(['a', 'b']));
+    await waitFor(() =>
+      expect(result.current.data.map((d) => d._id)).toEqual(['a', 'b']),
+    );
   });
 
   it('re-runs when the filter changes and keeps the previous data while loading', async () => {
     const { db, table } = fakeDb();
     table('p').set('a', { _id: 'a', city: 'oslo' });
     table('p').set('b', { _id: 'b', city: 'bergen' });
-    const { result, rerender } = renderHook(({ city }) => useLiveQuery('p', { city }), {
-      wrapper: wrapperFor(db),
-      initialProps: { city: 'oslo' },
-    });
-    await waitFor(() => expect(result.current.data.map((d) => d._id)).toEqual(['a']));
+    const { result, rerender } = renderHook(
+      ({ city }) => useLiveQuery('p', { city }),
+      {
+        wrapper: wrapperFor(db),
+        initialProps: { city: 'oslo' },
+      },
+    );
+    await waitFor(() =>
+      expect(result.current.data.map((d) => d._id)).toEqual(['a']),
+    );
     rerender({ city: 'bergen' });
-    await waitFor(() => expect(result.current.data.map((d) => d._id)).toEqual(['b']));
+    await waitFor(() =>
+      expect(result.current.data.map((d) => d._id)).toEqual(['b']),
+    );
   });
 
   it('does not re-query when a parent re-renders with an equal filter object', async () => {
     const { db, calls } = fakeDb();
-    const { rerender, result } = renderHook(() => useLiveQuery('p', { city: 'oslo' }), { wrapper: wrapperFor(db) });
+    const { rerender, result } = renderHook(
+      () => useLiveQuery('p', { city: 'oslo' }),
+      { wrapper: wrapperFor(db) },
+    );
     await waitFor(() => expect(result.current.loading).toBe(false));
     const before = calls.find;
     rerender();
@@ -107,7 +135,10 @@ describe('BrightDB React hooks', () => {
   it('useIndexQuery runs an index query and refreshes', async () => {
     const { db, table, notify } = fakeDb();
     table('p').set('a', { _id: 'a', key: 'x' });
-    const { result } = renderHook(() => useIndexQuery('p', 'by_key', { equals: ['x'] }), { wrapper: wrapperFor(db) });
+    const { result } = renderHook(
+      () => useIndexQuery('p', 'by_key', { equals: ['x'] }),
+      { wrapper: wrapperFor(db) },
+    );
     await waitFor(() => expect(result.current.data).toHaveLength(1));
     table('p').set('b', { _id: 'b', key: 'x' });
     await act(async () => notify());
@@ -116,15 +147,22 @@ describe('BrightDB React hooks', () => {
 
   it('useDocument reads, saves (insert then replace) and removes', async () => {
     const { db } = fakeDb();
-    const { result } = renderHook(() => useDocument<{ _id: string; name?: string }>('people', 'u1'), {
-      wrapper: wrapperFor(db),
-    });
+    const { result } = renderHook(
+      () => useDocument<{ _id: string; name?: string }>('people', 'u1'),
+      {
+        wrapper: wrapperFor(db),
+      },
+    );
     await waitFor(() => expect(result.current.loading).toBe(false));
     expect(result.current.data).toBeNull();
     await act(async () => result.current.save({ _id: 'u1', name: 'first' }));
     await waitFor(() => expect(result.current.data?.name).toBe('first'));
-    await act(async () => result.current.save({ _id: 'ignored', name: 'second' }));
-    await waitFor(() => expect(result.current.data).toEqual({ _id: 'u1', name: 'second' }));
+    await act(async () =>
+      result.current.save({ _id: 'ignored', name: 'second' }),
+    );
+    await waitFor(() =>
+      expect(result.current.data).toEqual({ _id: 'u1', name: 'second' }),
+    );
     await act(async () => result.current.remove());
     await waitFor(() => expect(result.current.data).toBeNull());
   });
@@ -145,8 +183,12 @@ describe('BrightDB React hooks', () => {
         }),
       };
     }) as BrightDbLike['collection'];
-    const { result } = renderHook(() => useLiveQuery('p'), { wrapper: wrapperFor(db) });
-    await waitFor(() => expect(result.current.error?.message).toBe('storage unavailable'));
+    const { result } = renderHook(() => useLiveQuery('p'), {
+      wrapper: wrapperFor(db),
+    });
+    await waitFor(() =>
+      expect(result.current.error?.message).toBe('storage unavailable'),
+    );
     fail = false;
     await act(async () => notify());
     await waitFor(() => expect(result.current.error).toBeNull());
@@ -166,9 +208,14 @@ describe('BrightDB React hooks', () => {
     let release: (stop: () => void) => void = () => undefined;
     const slow: BrightDbLike = {
       ...db,
-      subscribe: () => new Promise<() => void>((resolve) => (release = resolve)),
+      subscribe: () =>
+        new Promise<() => void>((resolve) => (release = resolve)),
     };
-    const early = render(<BrightDbProvider db={slow}><span>x</span></BrightDbProvider>);
+    const early = render(
+      <BrightDbProvider db={slow}>
+        <span>x</span>
+      </BrightDbProvider>,
+    );
     early.unmount();
     const stopped = jest.fn();
     release(stopped);
@@ -176,11 +223,17 @@ describe('BrightDB React hooks', () => {
   });
 
   it('hooks outside a provider fail with a clear message, and useBrightDb returns the database', () => {
-    const spy = jest.spyOn(console, 'error').mockImplementation(() => undefined);
-    expect(() => renderHook(() => useLiveQuery('p'))).toThrow(/BrightDbProvider/u);
+    const spy = jest
+      .spyOn(console, 'error')
+      .mockImplementation(() => undefined);
+    expect(() => renderHook(() => useLiveQuery('p'))).toThrow(
+      /BrightDbProvider/u,
+    );
     spy.mockRestore();
     const { db } = fakeDb();
-    const { result } = renderHook(() => useBrightDb(), { wrapper: wrapperFor(db) });
+    const { result } = renderHook(() => useBrightDb(), {
+      wrapper: wrapperFor(db),
+    });
     expect(result.current).toBe(db);
     render(
       <BrightDbProvider db={db}>

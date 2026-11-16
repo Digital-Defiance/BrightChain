@@ -7,8 +7,8 @@
  * Requirements: 2.1, 8.1
  */
 
-import { asBlockId } from '../branded/primitives/blockId';
 import { brightDateNow } from '../../utils/brightDateConversions';
+import { asBlockId } from '../branded/primitives/blockId';
 import { CBLVisibility, ICBLIndexEntry } from './cblIndex';
 
 /** Minimal valid BlockId (64-char lowercase hex) */
@@ -19,9 +19,7 @@ const BLOCK_ID_2 = asBlockId('b'.repeat(64));
 const KNOWN_BRIGHT_DATE = 9296.9375;
 
 /** Build a minimal valid ICBLIndexEntry with the given overrides */
-function makeEntry(
-  overrides: Partial<ICBLIndexEntry> = {},
-): ICBLIndexEntry {
+function makeEntry(overrides: Partial<ICBLIndexEntry> = {}): ICBLIndexEntry {
   return {
     _id: 'test-entry-1',
     magnetUrl: 'magnet:?xt=urn:btih:abc123',

@@ -9,7 +9,10 @@
  * Requirements: 7.4
  */
 
-import { brightDateToDate, toBrightDateString } from '@brightchain/brightchain-lib';
+import {
+  brightDateToDate,
+  toBrightDateString,
+} from '@brightchain/brightchain-lib';
 
 /**
  * Normalise a BrightDateTimestamp (number), Date, or ISO string to a Date.
@@ -29,7 +32,10 @@ function toDate(date: number | Date | string): Date {
  *                 Defaults to `undefined` which uses the runtime default locale.
  * @returns A non-empty dual-formatted date string, e.g. "Jan 15, 2025 (BD 9146.438)"
  */
-export function formatDateLocale(date: number | Date | string, locale?: string): string {
+export function formatDateLocale(
+  date: number | Date | string,
+  locale?: string,
+): string {
   const d = toDate(date);
   if (isNaN(d.getTime())) {
     return '';

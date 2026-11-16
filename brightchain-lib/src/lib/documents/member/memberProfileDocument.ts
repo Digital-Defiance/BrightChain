@@ -16,11 +16,11 @@ import {
   IPublicMemberProfileHydratedData,
   IPublicMemberProfileStorageData,
 } from '../../interfaces/member/profileStorage';
-import type { BrightDateTimestamp } from '../../types/brightDateTimestamp';
-import { brightDateNow } from '../../utils/brightDateConversions';
 import { MemberCblService } from '../../services/member/memberCblService';
 import { ServiceProvider } from '../../services/service.provider';
+import type { BrightDateTimestamp } from '../../types/brightDateTimestamp';
 import { Checksum } from '../../types/checksum';
+import { brightDateNow } from '../../utils/brightDateConversions';
 import { Document } from '../base';
 import {
   privateMemberProfileHydrationSchema,

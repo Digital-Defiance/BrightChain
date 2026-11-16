@@ -27,6 +27,7 @@ function makeMockRepository(): jest.Mocked<ICanaryRepository<string>> {
     createRecipientList: jest.fn(),
     updateRecipientList: jest.fn(),
     getFilesInFolders: jest.fn(),
+    getRecipientListsByUser: jest.fn(),
   };
 }
 
@@ -61,6 +62,9 @@ function makeBinding(
     protocolAction: ProtocolAction.DeleteFiles,
     canaryCondition: CanaryCondition.ABSENCE,
     canaryProvider: CanaryProvider.GITHUB,
+    isActive: true,
+    consecutiveAbsenceCount: 0,
+    warningsSent: false,
     createdBy: 'owner-1',
     createdAt: '2024-01-01T00:00:00Z',
     updatedAt: '2024-01-01T00:00:00Z',
@@ -110,6 +114,7 @@ describe('CanaryService', () => {
       const result = await service.createBinding(
         {
           protocolId: 'protocol-1',
+          vaultContainerIds: [],
           fileIds: ['file-1'],
           folderIds: [],
           protocolAction: ProtocolAction.DeleteFiles,

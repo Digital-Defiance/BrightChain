@@ -192,7 +192,7 @@ export default defineConfig({
       'react',
       'react-dom',
       'react/jsx-runtime',
-      'react-router-dom',
+      'react-router',
       // MUI/emotion — brightchain-react-components also nests @mui which pulls
       // in @emotion/react, causing the "loaded multiple times" warning.
       '@mui/material',

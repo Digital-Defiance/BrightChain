@@ -254,7 +254,11 @@ export class EventEngineService implements IEventEngineService {
     if (rawEvent.isRecurring && mode !== 'all') {
       // Decrypt to access rrule, attendeeIds, exdates etc.
       const calendarKey = await this.getCalendarKey(rawEvent.calendarId);
-      const event = await decryptEventBody(rawEvent, calendarKey, this.encryptionService);
+      const event = await decryptEventBody(
+        rawEvent,
+        calendarKey,
+        this.encryptionService,
+      );
       if (mode === 'single') {
         return this.createSingleException(event, updates);
       }
@@ -266,7 +270,11 @@ export class EventEngineService implements IEventEngineService {
     // Mode 'all' or non-recurring: update the event directly
     // Decrypt for applyDirectUpdate which may need summary/attendeeIds
     const calendarKey = await this.getCalendarKey(rawEvent.calendarId);
-    const event = await decryptEventBody(rawEvent, calendarKey, this.encryptionService);
+    const event = await decryptEventBody(
+      rawEvent,
+      calendarKey,
+      this.encryptionService,
+    );
     return this.applyDirectUpdate(event, updates);
   }
 
@@ -299,7 +307,11 @@ export class EventEngineService implements IEventEngineService {
     if (rawEvent.isRecurring && mode !== 'all') {
       // Decrypt to access rrule, exdates etc.
       const calendarKey = await this.getCalendarKey(rawEvent.calendarId);
-      const event = await decryptEventBody(rawEvent, calendarKey, this.encryptionService);
+      const event = await decryptEventBody(
+        rawEvent,
+        calendarKey,
+        this.encryptionService,
+      );
       if (mode === 'single') {
         return this.deleteSingleOccurrence(event);
       }

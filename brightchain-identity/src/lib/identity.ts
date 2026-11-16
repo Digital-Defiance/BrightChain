@@ -1,17 +1,14 @@
-import { ECIESService, Member } from '@digitaldefiance/node-ecies-lib';
 import {
-  EmailString,
   Member as BaseMember,
+  EmailString,
   MemberType,
   type PlatformID,
   type SecureString,
 } from '@digitaldefiance/ecies-lib';
+import { ECIESService, Member } from '@digitaldefiance/node-ecies-lib';
 
 import { BrightChainIdentityError } from './errors';
-import type {
-  IBrightChainIdentity,
-  IBrightChainIdentityBundle,
-} from './types';
+import type { IBrightChainIdentity, IBrightChainIdentityBundle } from './types';
 
 /**
  * Options accepted by every BrightChainIdentity factory.
@@ -60,8 +57,7 @@ export class BrightChainIdentity {
       throw new BrightChainIdentityError('email is required');
     }
 
-    const ecies =
-      options.eciesService ?? new ECIESService<TID>();
+    const ecies = options.eciesService ?? new ECIESService<TID>();
     const memberType = options.memberType ?? MemberType.User;
 
     let member: Member<TID>;
@@ -103,8 +99,7 @@ export class BrightChainIdentity {
       throw new BrightChainIdentityError('email is required');
     }
 
-    const ecies =
-      options.eciesService ?? new ECIESService<TID>();
+    const ecies = options.eciesService ?? new ECIESService<TID>();
     const memberType = options.memberType ?? MemberType.User;
 
     let result: { member: Member<TID>; mnemonic: SecureString };
@@ -116,10 +111,7 @@ export class BrightChainIdentity {
         new EmailString(email),
       );
     } catch (err) {
-      throw new BrightChainIdentityError(
-        'Failed to create new identity',
-        err,
-      );
+      throw new BrightChainIdentityError('Failed to create new identity', err);
     }
 
     return {

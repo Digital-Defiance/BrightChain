@@ -70,7 +70,7 @@ function assertWrappedKeyCountEqualsMembers(
   currentMembers: string[],
 ): void {
   const memberCount = currentMembers.length;
-  for (const [epoch, memberMap] of state.encryptedEpochKeys) {
+  for (const [, memberMap] of state.encryptedEpochKeys) {
     expect(memberMap.size).toBe(memberCount);
     // Also verify the exact member IDs match
     for (const memberId of currentMembers) {

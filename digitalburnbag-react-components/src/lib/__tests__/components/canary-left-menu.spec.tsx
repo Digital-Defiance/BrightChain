@@ -20,8 +20,7 @@ jest.mock('@digitaldefiance/express-suite-react-components', () => ({
 // Imports
 // ---------------------------------------------------------------------------
 
-import { fireEvent, render, screen, within } from '@testing-library/react';
-import React from 'react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import {
   CanaryLeftMenu,
   ICanaryLeftMenuProps,
@@ -78,7 +77,11 @@ const ANOTHER_HEALTHY = makeConnection({
   lastCheckResult: 'presence',
 });
 
-const ALL_CONNECTIONS = [HEALTHY_CONNECTION, ATTENTION_CONNECTION, ANOTHER_HEALTHY];
+const ALL_CONNECTIONS = [
+  HEALTHY_CONNECTION,
+  ATTENTION_CONNECTION,
+  ANOTHER_HEALTHY,
+];
 
 const SAMPLE_BINDINGS: IMultiCanaryBindingSummary[] = [
   {
@@ -182,16 +185,28 @@ describe('CanaryLeftMenu', () => {
     it('renders provider list items with status dots', () => {
       renderMenu();
       // My Providers is expanded by default
-      expect(screen.getByTestId('provider-list-item-conn-github')).toBeInTheDocument();
-      expect(screen.getByTestId('provider-list-item-conn-fitbit')).toBeInTheDocument();
-      expect(screen.getByTestId('provider-list-item-conn-slack')).toBeInTheDocument();
+      expect(
+        screen.getByTestId('provider-list-item-conn-github'),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByTestId('provider-list-item-conn-fitbit'),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByTestId('provider-list-item-conn-slack'),
+      ).toBeInTheDocument();
     });
 
     it('shows status indicator dots for each provider', () => {
       renderMenu();
-      expect(screen.getByTestId('provider-status-dot-conn-github')).toBeInTheDocument();
-      expect(screen.getByTestId('provider-status-dot-conn-fitbit')).toBeInTheDocument();
-      expect(screen.getByTestId('provider-status-dot-conn-slack')).toBeInTheDocument();
+      expect(
+        screen.getByTestId('provider-status-dot-conn-github'),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByTestId('provider-status-dot-conn-fitbit'),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByTestId('provider-status-dot-conn-slack'),
+      ).toBeInTheDocument();
     });
 
     it('displays provider display names', () => {
@@ -224,7 +239,9 @@ describe('CanaryLeftMenu', () => {
 
     it('shows "Browse & connect providers" secondary text', () => {
       renderMenu();
-      expect(screen.getByText('Browse & connect providers')).toBeInTheDocument();
+      expect(
+        screen.getByText('Browse & connect providers'),
+      ).toBeInTheDocument();
     });
   });
 

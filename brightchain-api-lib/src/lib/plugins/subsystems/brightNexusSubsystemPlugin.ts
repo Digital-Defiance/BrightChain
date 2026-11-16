@@ -4,13 +4,13 @@ import {
   type ISubsystemContext,
 } from '@brightchain/brightchain-lib';
 import {
-  BrightNexusBrightDBName,
-  BrightNexusBrightDBPoolID,
-} from '@brightchain/brightnexus-lib';
-import {
   createBrightNexusDeps,
   type IBrightNexusExternalDeps,
 } from '@brightchain/brightnexus-api-lib';
+import {
+  BrightNexusBrightDBName,
+  BrightNexusBrightDBPoolID,
+} from '@brightchain/brightnexus-lib';
 import { BrightDb } from '@brightchain/db';
 import type { PlatformID } from '@digitaldefiance/node-ecies-lib';
 import { debugLog } from '@digitaldefiance/node-express-suite';

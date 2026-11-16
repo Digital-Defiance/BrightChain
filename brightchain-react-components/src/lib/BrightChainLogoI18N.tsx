@@ -145,11 +145,13 @@ export const BrightChainLogoI18N: React.FC<BrightChainLogoI18NProps> = ({
     secondaryColor: chainColor,
     secondaryText: secondaryText,
     taglineColor,
-    taglineText: taglineText ?? t(
-      BrightChainStrings.Common_PrivacyParticipationPower,
-      undefined,
-      languageCode,
-    ),
+    taglineText:
+      taglineText ??
+      t(
+        BrightChainStrings.Common_PrivacyParticipationPower,
+        undefined,
+        languageCode,
+      ),
     className,
     style,
     width,

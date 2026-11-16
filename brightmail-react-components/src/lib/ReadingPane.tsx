@@ -14,7 +14,7 @@ import { BrightMailStrings } from '@brightchain/brightmail-lib';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import { FC, memo, useMemo } from 'react';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { MemoryRouter, Route, Routes } from 'react-router';
 import { useBrightMailTranslation } from './hooks/useBrightMailTranslation';
 import ThreadView from './ThreadView';
 

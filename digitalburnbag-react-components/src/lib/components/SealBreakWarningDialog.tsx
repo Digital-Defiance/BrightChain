@@ -8,7 +8,6 @@
  *
  * The caller decides what "proceed" means via the `onConfirm` callback.
  */
-import { formatDateWithBD } from '../utils/formatBrightDate';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
@@ -17,6 +16,7 @@ import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
 import Typography from '@mui/material/Typography';
+import { formatDateWithBD } from '../utils/formatBrightDate';
 
 export interface ISealBreakWarningDialogProps {
   open: boolean;

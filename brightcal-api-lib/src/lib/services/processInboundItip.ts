@@ -28,10 +28,10 @@
 
 import {
   ITipMethod,
+  ParticipationStatus,
   type ICalInviteEmailDTO,
   type IImportResult,
   type IItipInboundHandler,
-  ParticipationStatus,
 } from '@brightchain/brightcal-lib';
 
 /**

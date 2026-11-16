@@ -111,11 +111,7 @@ describe('Feature: brightchat-block-storage-fix, Property 1: Bug Condition — D
           conversationService.registerMember(senderId);
           conversationService.registerMember(recipientId);
 
-          const result = await conversationService.sendMessage(
-            senderId,
-            recipientId,
-            content,
-          );
+          await conversationService.sendMessage(senderId, recipientId, content);
 
           // IBlockContentStore.storeContent() MUST have been called
           expect(mockStore.calls.length).toBeGreaterThanOrEqual(1);
@@ -168,11 +164,7 @@ describe('Feature: brightchat-block-storage-fix, Property 1: Bug Condition — D
             memberId,
           ]);
 
-          const result = await groupService.sendMessage(
-            group.id,
-            creatorId,
-            content,
-          );
+          await groupService.sendMessage(group.id, creatorId, content);
 
           // IBlockContentStore.storeContent() MUST have been called
           expect(mockStore.calls.length).toBeGreaterThanOrEqual(1);
@@ -222,11 +214,7 @@ describe('Feature: brightchat-block-storage-fix, Property 1: Bug Condition — D
             ChannelVisibility.PUBLIC,
           );
 
-          const result = await channelService.sendMessage(
-            channel.id,
-            creatorId,
-            content,
-          );
+          await channelService.sendMessage(channel.id, creatorId, content);
 
           // IBlockContentStore.storeContent() MUST have been called
           expect(mockStore.calls.length).toBeGreaterThanOrEqual(1);

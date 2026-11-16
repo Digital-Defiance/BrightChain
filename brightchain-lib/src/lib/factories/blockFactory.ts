@@ -9,8 +9,8 @@ import { BlockType } from '../enumerations/blockType';
 import { EphemeralBlockMetadata } from '../ephemeralBlockMetadata';
 import { ChecksumService } from '../services/checksum.service';
 import type { BrightDateTimestamp } from '../types/brightDateTimestamp';
-import { brightDateNow } from '../utils/brightDateConversions';
 import { Checksum } from '../types/checksum';
+import { brightDateNow } from '../utils/brightDateConversions';
 
 /**
  * Factory for creating blocks without circular dependencies.

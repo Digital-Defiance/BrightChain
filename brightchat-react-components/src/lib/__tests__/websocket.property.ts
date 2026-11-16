@@ -54,23 +54,30 @@ import {
 
 // ─── Arbitraries ────────────────────────────────────────────────────────────
 
+/** Generates a BrightDate timestamp (days since J2000, a plain number). */
+const brightDateArb = fc.double({
+  min: 0,
+  max: 20_000,
+  noNaN: true,
+  noDefaultInfinity: true,
+});
 /** Generates a minimal message-like object with id and encryptedContent. */
 const messageArb = fc.record({
   id: fc.uuid(),
   encryptedContent: fc.string({ minLength: 1, maxLength: 200 }),
-  editedAt: fc.option(fc.date(), { nil: undefined }),
+  editedAt: fc.option(brightDateArb, { nil: undefined }),
   reactions: fc.constant([]),
 });
 
 type TestMessage = {
   id: string;
   encryptedContent: string;
-  editedAt?: Date;
+  editedAt?: number;
   reactions: Array<{
     id: string;
     emoji: string;
     memberId: string;
-    createdAt: Date;
+    createdAt: number;
   }>;
 };
 
@@ -90,7 +97,7 @@ const reactionArb = fc.record({
   id: fc.uuid(),
   emoji: fc.constantFrom('👍', '❤️', '😂', '🎉', '🔥', '👀', '✅'),
   memberId: fc.uuid(),
-  createdAt: fc.date(),
+  createdAt: brightDateArb,
 });
 
 // ─── Property 14: WebSocket message_sent prepends to message list ───────────
@@ -145,7 +152,7 @@ describe('Feature: brightchat-frontend, Property 15: WebSocket message_edited up
       fc.property(
         uniqueMessageListArb.filter((msgs) => msgs.length > 0),
         fc.string({ minLength: 1, maxLength: 200 }),
-        fc.date(),
+        brightDateArb,
         (messages, newContent, editedAt) => {
           // Pick a random message from the list to edit
           const targetIndex = Math.floor(Math.random() * messages.length);

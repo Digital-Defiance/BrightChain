@@ -376,7 +376,7 @@ describe('DisputeResolver — resolveChallenge (Req 7.4)', () => {
   });
 
   it('returns DISPUTED_FRAUD when itemsRoot recomputed from records does not match on-chain', () => {
-    const { encodedRecords, idx } = buildBatch(tmpDir, 0n, 2);
+    const { idx } = buildBatch(tmpDir, 0n, 2);
     const tipHash = makeBytes(32, 0x01);
 
     // Build a response with different (tampered) records but original root claim

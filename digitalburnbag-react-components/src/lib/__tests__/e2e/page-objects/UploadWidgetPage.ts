@@ -51,9 +51,7 @@ export class UploadWidgetPage {
     // The Joule upload pipeline mounts a hidden file input inside the
     // UploadWidget; PostComposer / BurnbagPage may also mount image/video
     // inputs elsewhere on the page. Scope to the multi-file widget input.
-    this.fileInput = page
-      .locator('input[type="file"][multiple]')
-      .first();
+    this.fileInput = page.locator('input[type="file"][multiple]').first();
     this.progressBars = page.getByRole('progressbar');
     // JouleUploadForm renders inside an MUI Dialog whose DialogTitle text
     // is `Joule_FormAriaLabel` ("Upload configuration form" in en-US) —
@@ -166,8 +164,7 @@ export class UploadWidgetPage {
         .then(() => true)
         .catch(() => false),
       (async () => {
-        const deadline =
-          Date.now() + (options.uploadTimeoutMs ?? 60_000);
+        const deadline = Date.now() + (options.uploadTimeoutMs ?? 60_000);
         while (Date.now() < deadline) {
           if (await this.costApprovalDialog.isVisible().catch(() => false)) {
             return true;

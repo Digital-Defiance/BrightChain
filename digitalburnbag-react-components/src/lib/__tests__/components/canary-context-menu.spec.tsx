@@ -21,7 +21,6 @@ jest.mock('@digitaldefiance/express-suite-react-components', () => ({
 // ---------------------------------------------------------------------------
 
 import { fireEvent, render, screen, within } from '@testing-library/react';
-import React from 'react';
 import {
   CanaryContextMenu,
   ICanaryBinding,
@@ -95,7 +94,11 @@ const SLACK_CONNECTION = makeConnection({
   lastCheckResult: 'absence',
 });
 
-const ALL_CONNECTIONS = [GITHUB_CONNECTION, FITBIT_CONNECTION, SLACK_CONNECTION];
+const ALL_CONNECTIONS = [
+  GITHUB_CONNECTION,
+  FITBIT_CONNECTION,
+  SLACK_CONNECTION,
+];
 
 function renderMenu(overrides: Partial<ICanaryContextMenuProps> = {}) {
   const anchorEl = document.createElement('div');
@@ -144,7 +147,9 @@ describe('CanaryContextMenu', () => {
 
     it('does not render the menu when open is false', () => {
       renderMenu({ open: false });
-      expect(screen.queryByTestId('attach-canary-menu-item')).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId('attach-canary-menu-item'),
+      ).not.toBeInTheDocument();
     });
 
     it('"Attach Canary" is enabled when providers are connected', () => {
@@ -202,9 +207,15 @@ describe('CanaryContextMenu', () => {
       renderMenu();
       fireEvent.click(screen.getByTestId('attach-canary-menu-item'));
 
-      expect(screen.getByTestId('provider-submenu-item-conn-github')).toBeInTheDocument();
-      expect(screen.getByTestId('provider-submenu-item-conn-fitbit')).toBeInTheDocument();
-      expect(screen.getByTestId('provider-submenu-item-conn-slack')).toBeInTheDocument();
+      expect(
+        screen.getByTestId('provider-submenu-item-conn-github'),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByTestId('provider-submenu-item-conn-fitbit'),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByTestId('provider-submenu-item-conn-slack'),
+      ).toBeInTheDocument();
     });
 
     it('only shows connected/active providers in submenu', () => {
@@ -218,7 +229,9 @@ describe('CanaryContextMenu', () => {
       fireEvent.click(screen.getByTestId('attach-canary-menu-item'));
 
       // Disconnected provider should not appear
-      expect(screen.queryByTestId('provider-submenu-item-conn-disconnected')).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId('provider-submenu-item-conn-disconnected'),
+      ).not.toBeInTheDocument();
     });
   });
 
@@ -261,7 +274,9 @@ describe('CanaryContextMenu', () => {
 
     it('shows "Add more providers" button for multi-canary setup', () => {
       openPopover();
-      expect(screen.getByTestId('add-more-providers-button')).toBeInTheDocument();
+      expect(
+        screen.getByTestId('add-more-providers-button'),
+      ).toBeInTheDocument();
     });
 
     it('shows "Attach" button to confirm binding', () => {
@@ -280,7 +295,9 @@ describe('CanaryContextMenu', () => {
 
     it('does not show "Multi-Canary Setup" when fewer than 2 providers are connected', () => {
       renderMenu({ connections: [GITHUB_CONNECTION] });
-      expect(screen.queryByTestId('multi-canary-setup-item')).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId('multi-canary-setup-item'),
+      ).not.toBeInTheDocument();
     });
 
     it('calls onOpenMultiCanarySetup when "Multi-Canary Setup" is clicked', () => {
@@ -300,8 +317,18 @@ describe('CanaryContextMenu', () => {
 
   describe('Req 13.5 — "Manage Canaries" shows existing bindings', () => {
     const existingBindings: ICanaryBinding[] = [
-      makeBinding({ id: 'b1', providerDisplayName: 'GitHub', condition: 'ABSENCE', action: 'notify' }),
-      makeBinding({ id: 'b2', providerDisplayName: 'Fitbit', condition: 'DURESS', action: 'destroy' }),
+      makeBinding({
+        id: 'b1',
+        providerDisplayName: 'GitHub',
+        condition: 'ABSENCE',
+        action: 'notify',
+      }),
+      makeBinding({
+        id: 'b2',
+        providerDisplayName: 'Fitbit',
+        condition: 'DURESS',
+        action: 'destroy',
+      }),
     ];
 
     it('shows "Manage Canaries" option when bindings exist', () => {
@@ -311,7 +338,9 @@ describe('CanaryContextMenu', () => {
 
     it('does not show "Manage Canaries" when no bindings exist', () => {
       renderMenu({ existingBindings: [] });
-      expect(screen.queryByTestId('manage-canaries-item')).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId('manage-canaries-item'),
+      ).not.toBeInTheDocument();
     });
 
     it('shows binding count in "Manage Canaries" secondary text', () => {
@@ -354,7 +383,9 @@ describe('CanaryContextMenu', () => {
   describe('Req 13.7 — "Connect a Provider First" message when no providers', () => {
     it('shows "Connect a Provider First" when no providers are connected', () => {
       renderMenu({ connections: [] });
-      expect(screen.getByTestId('connect-provider-first-item')).toBeInTheDocument();
+      expect(
+        screen.getByTestId('connect-provider-first-item'),
+      ).toBeInTheDocument();
       expect(screen.getByText('Connect a Provider First')).toBeInTheDocument();
     });
 
@@ -378,7 +409,9 @@ describe('CanaryContextMenu', () => {
 
     it('does not show "Connect a Provider First" when providers are connected', () => {
       renderMenu();
-      expect(screen.queryByTestId('connect-provider-first-item')).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId('connect-provider-first-item'),
+      ).not.toBeInTheDocument();
     });
   });
 });

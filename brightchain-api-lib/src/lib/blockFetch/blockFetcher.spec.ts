@@ -11,7 +11,12 @@ import {
   BlockAnnouncement,
   BlockFetcherConfig,
   BlockFetchResult,
+  BlockId,
   BlockStoreOptions,
+  brightDateNow,
+  BrightDateTimestamp,
+  BrightTrustProposalMetadata,
+  BrightTrustVoteMetadata,
   DEFAULT_BLOCK_FETCHER_CONFIG,
   FetchQueueConfig,
   GossipConfig,
@@ -24,7 +29,6 @@ import {
   IPooledBlockStore,
   PoolId,
   PoolMismatchError,
-  brightDateNow,
 } from '@brightchain/brightchain-lib';
 import { sha3_512 } from '@noble/hashes/sha3';
 import { BlockFetcher } from './blockFetcher';
@@ -80,13 +84,19 @@ class MockTransport implements IBlockFetchTransport {
 class MockAvailabilityService {
   readonly locations = new Map<
     string,
-    Array<{ nodeId: string; lastSeen: Date; isAuthoritative: boolean }>
+    Array<{
+      nodeId: string;
+      lastSeen: BrightDateTimestamp;
+      isAuthoritative: boolean;
+    }>
   >();
 
-  async getBlockLocations(
-    blockId: string,
-  ): Promise<
-    Array<{ nodeId: string; lastSeen: Date; isAuthoritative: boolean }>
+  async getBlockLocations(blockId: string): Promise<
+    Array<{
+      nodeId: string;
+      lastSeen: BrightDateTimestamp;
+      isAuthoritative: boolean;
+    }>
   > {
     return this.locations.get(blockId) ?? [];
   }
@@ -202,15 +212,19 @@ class MockPooledStore {
     this.poolBlocks.set(`${pool}:${hash}`, new Uint8Array(data));
     this.putCalls.push({ pool, dataLength: data.length });
     // Auto-create metadata with poolId
-    this.metadataMap.set(hash, { blockId: hash, poolId: pool });
+    this.metadataMap.set(hash, { blockId: hash as BlockId, poolId: pool });
     return hash;
   }
 
   readonly namedCalls: Array<{ pool: PoolId; id: string }> = [];
-  putInPoolWithId?: (pool: PoolId, id: string, data: Uint8Array) => Promise<void> = async (pool, id, data) => {
+  putInPoolWithId?: (
+    pool: PoolId,
+    id: string,
+    data: Uint8Array,
+  ) => Promise<void> = async (pool, id, data) => {
     this.poolBlocks.set(`${pool}:${id}`, new Uint8Array(data));
     this.namedCalls.push({ pool, id });
-    this.metadataMap.set(id, { blockId: id, poolId: pool });
+    this.metadataMap.set(id, { blockId: id as BlockId, poolId: pool });
   };
 
   async getFromPool(pool: PoolId, hash: string): Promise<Uint8Array> {
@@ -243,7 +257,7 @@ class MockPooledStore {
     this.putKeyCalls.push({ key, dataLength: data.length });
     const hash = computeBlockId(data);
     this.poolBlocks.set(hash, new Uint8Array(data));
-    this.metadataMap.set(hash, { blockId: hash });
+    this.metadataMap.set(hash, { blockId: hash as BlockId });
   }
 
   async delete(_key: string): Promise<void> {}
@@ -425,7 +439,11 @@ describe('BlockFetcher', () => {
         setup.transport,
         setup.availability as unknown as IAvailabilityService,
         setup.store as unknown as IBlockStore & IPooledBlockStore,
-        { ...DEFAULT_BLOCK_FETCHER_CONFIG, maxRetries: 0, nodeCooldownMs: 1000 },
+        {
+          ...DEFAULT_BLOCK_FETCHER_CONFIG,
+          maxRetries: 0,
+          nodeCooldownMs: 1000,
+        },
         undefined,
         undefined,
         encrypted ? (pool) => pool === 'secure' : undefined,
@@ -441,7 +459,9 @@ describe('BlockFetcher', () => {
       const setup = build(true);
       const result = await setup.fetcher.fetchBlock(keyedName, 'secure');
       expect(result.success).toBe(true);
-      expect(setup.store.namedCalls).toEqual([{ pool: 'secure', id: keyedName }]);
+      expect(setup.store.namedCalls).toEqual([
+        { pool: 'secure', id: keyedName },
+      ]);
       expect(setup.store.putCalls).toHaveLength(0);
       expect(await setup.store.hasInPool('secure', keyedName)).toBe(true);
     });
@@ -452,7 +472,9 @@ describe('BlockFetcher', () => {
       expect(result.success).toBe(false);
       expect(setup.store.namedCalls).toHaveLength(0);
       const withoutOption = build(false);
-      expect((await withoutOption.fetcher.fetchBlock(keyedName, 'secure')).success).toBe(false);
+      expect(
+        (await withoutOption.fetcher.fetchBlock(keyedName, 'secure')).success,
+      ).toBe(false);
     });
 
     it('fails clearly when the store cannot hold named blocks', async () => {
@@ -534,7 +556,7 @@ describe('BlockFetcher', () => {
 
       // Pre-set metadata with a different poolId to simulate mismatch
       setup.store.metadataMap.set(blockId, {
-        blockId,
+        blockId: blockId as BlockId,
         poolId: 'pool-b',
       });
 
@@ -599,7 +621,7 @@ describe('BlockFetcher', () => {
         );
         setup.store.putCalls.push({ pool, dataLength: blockData.length });
         // Set metadata without poolId (legacy)
-        setup.store.metadataMap.set(hash, { blockId: hash });
+        setup.store.metadataMap.set(hash, { blockId: hash as BlockId });
         return hash;
       };
 
@@ -654,7 +676,11 @@ describe('BlockFetcher', () => {
       // Return wrong data to trigger checksum mismatch
       setup.transport.responses.set(blockId, makeBlockData(99));
       setup.availability.locations.set(blockId, [
-        { nodeId: 'bad-node', lastSeen: brightDateNow(), isAuthoritative: true },
+        {
+          nodeId: 'bad-node',
+          lastSeen: brightDateNow(),
+          isAuthoritative: true,
+        },
       ]);
 
       await setup.fetcher.fetchBlock(blockId);
@@ -804,6 +830,25 @@ describe('BlockFetcher', () => {
       get handlerCount(): number {
         return this.handlers.size;
       }
+
+      async announceBrightTrustProposal(
+        _metadata: BrightTrustProposalMetadata,
+      ): Promise<void> {}
+      async announceBrightTrustVote(
+        _metadata: BrightTrustVoteMetadata,
+      ): Promise<void> {}
+      onBrightTrustProposal(
+        _handler: (announcement: BlockAnnouncement) => void,
+      ): void {}
+      offBrightTrustProposal(
+        _handler: (announcement: BlockAnnouncement) => void,
+      ): void {}
+      onBrightTrustVote(
+        _handler: (announcement: BlockAnnouncement) => void,
+      ): void {}
+      offBrightTrustVote(
+        _handler: (announcement: BlockAnnouncement) => void,
+      ): void {}
     }
 
     // ── Mock FetchQueue that tracks enqueue calls ──
@@ -838,9 +883,9 @@ describe('BlockFetcher', () => {
     ): BlockAnnouncement {
       return {
         type,
-        blockId,
+        blockId: blockId as BlockId,
         nodeId: 'remote-node-1',
-        timestamp: new Date(),
+        timestamp: brightDateNow(),
         ttl: 3,
       };
     }

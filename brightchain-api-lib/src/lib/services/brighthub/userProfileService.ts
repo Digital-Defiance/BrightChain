@@ -43,7 +43,7 @@ interface MainUserRecord {
 /**
  * Database record type for user profiles
  */
-interface UserProfileRecord {
+export interface UserProfileRecord {
   _id: string;
   username: string;
   displayName: string;
@@ -68,7 +68,7 @@ interface UserProfileRecord {
 /**
  * Database record type for follows
  */
-interface FollowRecord {
+export interface FollowRecord {
   _id: string;
   followerId: string;
   followedId: string;
@@ -78,7 +78,7 @@ interface FollowRecord {
 /**
  * Database record type for follow requests
  */
-interface FollowRequestRecord {
+export interface FollowRequestRecord {
   _id: string;
   requesterId: string;
   targetId: string;
@@ -90,7 +90,7 @@ interface FollowRequestRecord {
 /**
  * Database record type for blocks
  */
-interface BlockRecord {
+export interface BlockRecord {
   _id: string;
   blockerId: string;
   blockedId: string;
@@ -100,7 +100,7 @@ interface BlockRecord {
 /**
  * Database record type for mutes
  */
-interface MuteRecord {
+export interface MuteRecord {
   _id: string;
   muterId: string;
   mutedId: string;

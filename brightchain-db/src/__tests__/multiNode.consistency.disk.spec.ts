@@ -25,21 +25,27 @@ import {
 
 jest.setTimeout(30_000);
 
+let baseDirState: string | undefined;
+let nodeIndex = 0;
+
 const factory: MultiNodeFactory = {
   label: 'PooledMemoryBlockStore + PersistentHeadRegistry (multi-node disk)',
 
   async createSharedStore() {
     // Create a suite-level base temp dir; node dirs are created beneath it
     const baseDir = await fs.mkdtemp(join(tmpdir(), 'bc-mn-disk-'));
-    (this as any)._baseDir = baseDir;
-    (this as any)._nodeIndex = 0;
+    baseDirState = baseDir;
+    nodeIndex = 0;
     const store = new PooledMemoryBlockStore(BlockSize.Small);
     return { store };
   },
 
   async createNodeRegistry(): Promise<IHeadRegistry> {
-    const baseDir = (this as any)._baseDir as string;
-    const idx = ((this as any)._nodeIndex as number)++;
+    if (baseDirState === undefined) {
+      throw new Error('createSharedStore must run before createNodeRegistry');
+    }
+    const baseDir = baseDirState;
+    const idx = nodeIndex++;
     const dataDir = join(baseDir, `node-${idx}`);
     await fs.mkdir(dataDir, { recursive: true });
     const reg = new PersistentHeadRegistry({ dataDir });
@@ -48,7 +54,7 @@ const factory: MultiNodeFactory = {
   },
 
   async cleanup() {
-    const baseDir = (this as any)._baseDir as string | undefined;
+    const baseDir = baseDirState;
     if (baseDir) {
       await fs.rm(baseDir, { recursive: true, force: true });
     }

@@ -8,7 +8,7 @@ import {
 } from '@digitaldefiance/i18n-lib';
 import { StrictMode } from 'react';
 import * as ReactDOM from 'react-dom/client';
-import { BrowserRouter } from 'react-router-dom';
+import { BrowserRouter } from 'react-router';
 import './styles.scss';
 
 import App from './app/app';

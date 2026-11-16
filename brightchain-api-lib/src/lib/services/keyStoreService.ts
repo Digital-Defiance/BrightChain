@@ -144,8 +144,13 @@ function deserializeGpgMetadata(doc: Record<string, unknown>): IGpgKeyMetadata {
     fingerprint: doc['fingerprint'] as string,
     algorithm: doc['algorithm'] as string,
     userId: doc['gpgUserId'] as string,
-    createdAt: normalizeToBrightDate(doc['createdAt'] as number | string | Date),
-    expiresAt: doc['expiresAt'] != null ? normalizeToBrightDate(doc['expiresAt'] as number | string | Date) : null,
+    createdAt: normalizeToBrightDate(
+      doc['createdAt'] as number | string | Date,
+    ),
+    expiresAt:
+      doc['expiresAt'] != null
+        ? normalizeToBrightDate(doc['expiresAt'] as number | string | Date)
+        : null,
   };
 }
 
@@ -171,7 +176,9 @@ function deserializeSmimeMetadata(
     subject: doc['subject'] as string,
     issuer: doc['issuer'] as string,
     serialNumber: doc['serialNumber'] as string,
-    validFrom: normalizeToBrightDate(doc['validFrom'] as number | string | Date),
+    validFrom: normalizeToBrightDate(
+      doc['validFrom'] as number | string | Date,
+    ),
     validTo: normalizeToBrightDate(doc['validTo'] as number | string | Date),
     emailAddresses: (doc['emailAddresses'] as string[]) ?? [],
     fingerprint: doc['smimeFingerprint'] as string,
@@ -213,8 +220,12 @@ function docToEntry(
     publicMaterial: doc.publicMaterial,
     privateMaterial,
     metadata,
-    createdAt: normalizeToBrightDate(doc.createdAt as unknown as number | string | Date),
-    updatedAt: normalizeToBrightDate(doc.updatedAt as unknown as number | string | Date),
+    createdAt: normalizeToBrightDate(
+      doc.createdAt as unknown as number | string | Date,
+    ),
+    updatedAt: normalizeToBrightDate(
+      doc.updatedAt as unknown as number | string | Date,
+    ),
   };
 }
 

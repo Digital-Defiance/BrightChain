@@ -102,7 +102,7 @@ describe('BrightTrust Seal-Unseal Property Tests', () => {
 
             // Use first member as agent
             const agent = memberData[0].member;
-            const memberIds = memberData.map((m) => m.memberId);
+            const memberIds = memberData.map((m) => m.member.id);
 
             // Seal the document
             let sealResult: SealedDocumentResult<GuidV4Buffer>;
@@ -162,7 +162,7 @@ describe('BrightTrust Seal-Unseal Property Tests', () => {
           }
 
           const agent = memberData[0].member;
-          const memberIds = memberData.map((m) => m.memberId);
+          const memberIds = memberData.map((m) => m.member.id);
 
           // Seal with threshold
           let sealResult: SealedDocumentResult<GuidV4Buffer>;
@@ -222,7 +222,7 @@ describe('BrightTrust Seal-Unseal Property Tests', () => {
           }
 
           const agent = memberData[0].member;
-          const memberIds = memberData.map((m) => m.memberId);
+          const memberIds = memberData.map((m) => m.member.id);
 
           // Seal with threshold of 3
           let sealResult: SealedDocumentResult<GuidV4Buffer>;
@@ -288,7 +288,7 @@ describe('BrightTrust Seal-Unseal Property Tests', () => {
           }
 
           const agent = memberData[0].member;
-          const memberIds = memberData.map((m) => m.memberId);
+          const memberIds = memberData.map((m) => m.member.id);
 
           // Seal with threshold
           let sealResult: SealedDocumentResult<GuidV4Buffer>;
@@ -355,7 +355,7 @@ describe('BrightTrust Seal-Unseal Property Tests', () => {
             }
 
             const agent = memberData[0].member;
-            const memberIds = memberData.map((m) => m.memberId);
+            const memberIds = memberData.map((m) => m.member.id);
             const threshold = memberCount;
 
             // Seal the document
@@ -383,7 +383,7 @@ describe('BrightTrust Seal-Unseal Property Tests', () => {
 
             // Verify all member IDs are present
             for (const memberId of memberIds) {
-              expect(docInfo!.memberIds).toContain(memberId);
+              expect(docInfo!.memberIds).toContainEqual(memberId);
             }
 
             return true;

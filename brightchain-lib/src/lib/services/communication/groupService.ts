@@ -41,8 +41,8 @@ import {
   ICommunicationEventEmitter,
   NullEventEmitter,
 } from '../../interfaces/events';
-import { paginateItems } from '../../utils/pagination';
 import { brightDateNow } from '../../utils/brightDateConversions';
+import { paginateItems } from '../../utils/pagination';
 import { validateAndPrepareAttachments } from './attachmentUtils';
 import { IKeyEpochState } from './keyEpochManager';
 import { MessageOperationsService } from './messageOperationsService';

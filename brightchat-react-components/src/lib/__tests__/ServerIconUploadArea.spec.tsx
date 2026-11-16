@@ -7,22 +7,36 @@
  * Validates: Requirements 6.1–6.3, 7.1–7.3
  */
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 // ─── Mocks ──────────────────────────────────────────────────────────────────
 
 // Mock react-easy-crop (used by IconCropDialog internally)
 jest.mock('react-easy-crop', () => {
-  const React = require('react');
+  const React = jest.requireActual<typeof import('react')>('react');
   return {
     __esModule: true,
-    default: (props: any) =>
-      React.createElement('div', {
+    default: function MockCropper(
+      props: import('react-easy-crop').CropperProps,
+    ) {
+      // Report a crop area on mount, like the real cropper after image load.
+      React.useEffect(() => {
+        const area = { x: 0, y: 0, width: 10, height: 10 };
+        props.onCropComplete?.(area, area);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+      }, []);
+      return React.createElement('div', {
         'data-testid': 'mock-cropper',
         'data-image': props.image,
-      }),
+      });
+    },
   };
 });
+// Canvas cropping is unavailable in jsdom; the helper has its own spec.
+jest.mock('../IconCropDialog.helpers', () => ({
+  ...jest.requireActual<typeof import('../IconCropDialog.helpers')>(
+    '../IconCropDialog.helpers',
+  ),
+  cropImageToFile: jest.fn(async () => new File(['x'], 'server-icon.png')),
+}));
 
 jest.mock('@brightchain/brightchain-lib', () => ({
   DEFAULT_SERVER_ICON_CONFIG: {

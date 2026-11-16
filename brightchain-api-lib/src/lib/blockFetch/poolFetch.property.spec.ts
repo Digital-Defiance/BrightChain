@@ -12,7 +12,10 @@
 
 import {
   BlockFetcherConfig,
+  BlockId,
   BlockStoreOptions,
+  brightDateNow,
+  BrightDateTimestamp,
   DEFAULT_BLOCK_FETCHER_CONFIG,
   IAvailabilityService,
   IBlockFetchTransport,
@@ -21,7 +24,6 @@ import {
   IPooledBlockStore,
   PoolId,
   PoolMismatchError,
-  brightDateNow,
 } from '@brightchain/brightchain-lib';
 import { sha3_512 } from '@noble/hashes/sha3';
 import fc from 'fast-check';
@@ -57,13 +59,19 @@ class MockTransport implements IBlockFetchTransport {
 class MockAvailabilityService {
   readonly locations = new Map<
     string,
-    Array<{ nodeId: string; lastSeen: Date; isAuthoritative: boolean }>
+    Array<{
+      nodeId: string;
+      lastSeen: BrightDateTimestamp;
+      isAuthoritative: boolean;
+    }>
   >();
 
-  async getBlockLocations(
-    blockId: string,
-  ): Promise<
-    Array<{ nodeId: string; lastSeen: Date; isAuthoritative: boolean }>
+  async getBlockLocations(blockId: string): Promise<
+    Array<{
+      nodeId: string;
+      lastSeen: BrightDateTimestamp;
+      isAuthoritative: boolean;
+    }>
   > {
     return this.locations.get(blockId) ?? [];
   }
@@ -164,7 +172,7 @@ class MockPooledStore {
     const hash = computeBlockId(data);
     this.poolBlocks.set(`${pool}:${hash}`, new Uint8Array(data));
     this.putInPoolCalls.push({ pool, dataLength: data.length });
-    this.metadataMap.set(hash, { blockId: hash, poolId: pool });
+    this.metadataMap.set(hash, { blockId: hash as BlockId, poolId: pool });
     return hash;
   }
 
@@ -197,7 +205,7 @@ class MockPooledStore {
   async put(key: string, data: Uint8Array): Promise<void> {
     const hash = computeBlockId(data);
     this.poolBlocks.set(hash, new Uint8Array(data));
-    this.metadataMap.set(hash, { blockId: hash });
+    this.metadataMap.set(hash, { blockId: hash as BlockId });
   }
 
   async delete(_key: string): Promise<void> {}
@@ -510,7 +518,7 @@ describe('Feature: cross-node-eventual-consistency, Property 11: Pool mismatch r
             });
             // Metadata records the ACTUAL pool ID — triggering the mismatch
             setup.store.metadataMap.set(hash, {
-              blockId: hash,
+              blockId: hash as BlockId,
               poolId: actualPoolId,
             });
             return hash;

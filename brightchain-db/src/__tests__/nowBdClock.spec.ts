@@ -89,8 +89,10 @@ describe('nowBd clock – write timestamps (gossip merge LWW)', () => {
     // Shared block store so both collections can read each other's blocks
     const store = new MockBlockStore();
 
-    const regA = InMemoryHeadRegistry.createIsolated() as unknown as IHeadRegistry;
-    const regB = InMemoryHeadRegistry.createIsolated() as unknown as IHeadRegistry;
+    const regA =
+      InMemoryHeadRegistry.createIsolated() as unknown as IHeadRegistry;
+    const regB =
+      InMemoryHeadRegistry.createIsolated() as unknown as IHeadRegistry;
 
     // collA: frozen clock at 9000.0
     const collA = new Collection<{ _id: string; value: string }>(
@@ -132,8 +134,10 @@ describe('nowBd clock – write timestamps (gossip merge LWW)', () => {
   it('remote update at 8999.0 loses to local write at 9000.0', async () => {
     const store = new MockBlockStore();
 
-    const regA = InMemoryHeadRegistry.createIsolated() as unknown as IHeadRegistry;
-    const regB = InMemoryHeadRegistry.createIsolated() as unknown as IHeadRegistry;
+    const regA =
+      InMemoryHeadRegistry.createIsolated() as unknown as IHeadRegistry;
+    const regB =
+      InMemoryHeadRegistry.createIsolated() as unknown as IHeadRegistry;
 
     // collA: frozen clock at 9000.0
     const collA = new Collection<{ _id: string; value: string }>(
@@ -194,13 +198,9 @@ describe('nowBd clock – TTL cutoff in sweepTTL', () => {
     const registry = InMemoryHeadRegistry.createIsolated();
 
     // nowBd frozen at 1000.0; expireAfterSeconds = 86400 → cutoff = 999.0
-    const coll = new Collection(
-      'ttl-test',
-      store as any,
-      'testdb',
-      registry,
-      { nowBd: () => 1000.0 },
-    );
+    const coll = new Collection('ttl-test', store as any, 'testdb', registry, {
+      nowBd: () => 1000.0,
+    });
 
     // Insert a document with createdAt = 998.9 (below cutoff 999.0)
     await coll.insertOne({ _id: 'old-doc', createdAt: 998.9 });
@@ -292,7 +292,9 @@ describe('nowBd clock – BrightDb forwards clock to Collection', () => {
       nowBd: () => 5000.0,
     });
 
-    const coll = db.collection<{ _id: string; createdAt: number }>('forward-test');
+    const coll = db.collection<{ _id: string; createdAt: number }>(
+      'forward-test',
+    );
 
     // Insert one document that should expire (createdAt = 4998.0 < cutoff 4999.0)
     await coll.insertOne({ _id: 'expired', createdAt: 4998.0 });

@@ -126,7 +126,9 @@ export function validateProviderConfig(
 export class ProviderConfigValidatorImpl<TID extends PlatformID = string>
   implements IProviderConfigValidator<TID>
 {
-  validate(config: ICanaryProviderConfig<TID>): IProviderConfigValidationResult {
+  validate(
+    config: ICanaryProviderConfig<TID>,
+  ): IProviderConfigValidationResult {
     return validateProviderConfig(
       config as unknown as Partial<ICanaryProviderConfig<string>>,
     );

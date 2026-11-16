@@ -152,12 +152,6 @@ export class MockChatStorageProvider implements IChatStorageProvider {
 /** Arbitrary for non-empty alphanumeric IDs (1–36 chars). */
 const arbId = fc.stringMatching(/^[a-zA-Z0-9]{1,36}$/);
 
-/** Arbitrary for a Date within a reasonable range. */
-const arbDate = fc.date({
-  min: new Date('2020-01-01'),
-  max: new Date('2030-01-01'),
-});
-
 /** Arbitrary for a BrightDateTimestamp (number) within a reasonable range.
  * J2000.0 epoch: 2020-01-01 ≈ 7305.5, 2030-01-01 ≈ 10957.5 */
 const arbBrightDate = fc.float({ min: 7305.5, max: 10957.5, noNaN: true });
@@ -347,7 +341,9 @@ export const arbMessage = (
     expiresAt: fc.option(arbBrightDate, { nil: undefined }),
     maxReads: fc.option(fc.nat({ max: 100 }), { nil: undefined }),
     readCount: fc.option(fc.nat({ max: 100 }), { nil: undefined }),
-    readBy: fc.option(fc.constant(new Map<string, number>()), { nil: undefined }),
+    readBy: fc.option(fc.constant(new Map<string, number>()), {
+      nil: undefined,
+    }),
     exploded: fc.option(fc.boolean(), { nil: undefined }),
     explodedAt: fc.option(arbBrightDate, { nil: undefined }),
   });

@@ -11,6 +11,7 @@
 import {
   ClientIdentifierStrategy,
   DifficultyTier,
+  IWorkUnit,
   RateLimiterFallback,
 } from '@brightchain/brightchain-lib';
 import { NextFunction, Request, Response } from 'express';
@@ -20,6 +21,22 @@ import {
   getPoUWMetrics,
   pouwEvents,
 } from '../middleware';
+
+/** JSON body written by the PoUW middleware on 4xx responses. */
+interface IPoUWResponseBody {
+  statusCode?: number;
+  error?: string;
+  message?: string;
+  workUnit?: IWorkUnit;
+}
+
+/** Return the body's work unit, failing the test if the middleware issued none. */
+function requireWorkUnit(body: IPoUWResponseBody): IWorkUnit {
+  if (!body.workUnit) {
+    throw new Error('Expected a work unit in the response body');
+  }
+  return body.workUnit;
+}
 
 // ---------------------------------------------------------------------------
 // Mock helpers
@@ -40,11 +57,11 @@ function createMockRes(): {
   res: Response;
   getHeaders: () => Record<string, string | number>;
   getStatus: () => number;
-  getBody: () => any;
+  getBody: () => IPoUWResponseBody;
 } {
   const headers: Record<string, string | number> = {};
   let statusCode = 200;
-  let body: any = null;
+  let body: IPoUWResponseBody = {};
 
   const res = {
     setHeader: jest.fn((name: string, value: string | number) => {
@@ -55,7 +72,7 @@ function createMockRes(): {
       statusCode = code;
       return res;
     }),
-    json: jest.fn(function (data: any) {
+    json: jest.fn(function (data: IPoUWResponseBody) {
       body = data;
       return res;
     }),
@@ -82,7 +99,7 @@ function sendRequests(
   const results: Array<{
     next: jest.Mock;
     status: number;
-    body: any;
+    body: IPoUWResponseBody;
     headers: Record<string, string | number>;
   }> = [];
 
@@ -193,8 +210,8 @@ describe('PoUW Middleware Unit Tests', () => {
       expect(body.error).toBe('Too Many Requests');
       expect(body.message).toBeDefined();
       expect(body.workUnit).toBeDefined();
-      expect(body.workUnit.id).toBeDefined();
-      expect(body.workUnit.challengeToken).toBeDefined();
+      expect(body.workUnit?.id).toBeDefined();
+      expect(body.workUnit?.challengeToken).toBeDefined();
     });
 
     it('includes Retry-After header on 429 responses', () => {
@@ -246,7 +263,7 @@ describe('PoUW Middleware Unit Tests', () => {
 
       // Second request gets rate-limited with a work unit
       const rateLimited = sendRequests(middleware, 1, '10.0.0.6');
-      const workUnit = rateLimited[0].body.workUnit;
+      const workUnit = requireWorkUnit(rateLimited[0].body);
       const challengeToken = workUnit.challengeToken;
 
       // To verify work, we need to compute the correct result.
@@ -323,12 +340,12 @@ describe('PoUW Middleware Unit Tests', () => {
 
       // Requests with different user IDs should have independent limits
       const reqA = createMockReq({ ip: '10.0.0.20' });
-      (reqA as any).brightchainUser = { id: 'user-a' };
+      Object.assign(reqA, { brightchainUser: { id: 'user-a' } });
       const reqB = createMockReq({ ip: '10.0.0.20' });
-      (reqB as any).brightchainUser = { id: 'user-b' };
+      Object.assign(reqB, { brightchainUser: { id: 'user-b' } });
 
-      const { res: resA, getStatus: getStatusA } = createMockRes();
-      const { res: resB, getStatus: getStatusB } = createMockRes();
+      const { res: resA } = createMockRes();
+      const { res: resB } = createMockRes();
       const nextA: NextFunction = jest.fn();
       const nextB: NextFunction = jest.fn();
 
@@ -349,10 +366,10 @@ describe('PoUW Middleware Unit Tests', () => {
       // Requests with different API keys should have independent limits
       const resultsA = sendRequests(middleware, 2, '10.0.0.30', {
         headers: { 'x-api-key': 'key-alpha' },
-      } as any);
+      });
       const resultsB = sendRequests(middleware, 2, '10.0.0.30', {
         headers: { 'x-api-key': 'key-beta' },
-      } as any);
+      });
 
       for (const r of [...resultsA, ...resultsB]) {
         expect(r.next).toHaveBeenCalled();
@@ -394,8 +411,8 @@ describe('PoUW Middleware Unit Tests', () => {
       // Requests to the overridden route should use the lower limit
       const results = sendRequests(middleware, 2, '10.0.0.50', {
         path: '/api/expensive',
-        route: { path: '/api/expensive' } as any,
-      } as any);
+        route: { path: '/api/expensive' },
+      });
       for (const r of results) {
         expect(r.next).toHaveBeenCalled();
       }
@@ -403,14 +420,14 @@ describe('PoUW Middleware Unit Tests', () => {
       // Third request to the overridden route should be rate-limited
       const over = sendRequests(middleware, 1, '10.0.0.50', {
         path: '/api/expensive',
-        route: { path: '/api/expensive' } as any,
-      } as any);
+        route: { path: '/api/expensive' },
+      });
       expect(over[0].status).toBe(429);
 
       // But requests to a different route should still be allowed (default limit)
       const otherRoute = sendRequests(middleware, 1, '10.0.0.50', {
         path: '/api/cheap',
-      } as any);
+      });
       expect(otherRoute[0].next).toHaveBeenCalled();
     });
   });
@@ -477,7 +494,7 @@ describe('PoUW Middleware Unit Tests', () => {
       // Get a work unit
       sendRequests(middleware, 1, '10.0.0.62');
       const rateLimited = sendRequests(middleware, 1, '10.0.0.62');
-      const workUnit = rateLimited[0].body.workUnit;
+      const workUnit = requireWorkUnit(rateLimited[0].body);
 
       // Submit incorrect work
       const req = createMockReq({
@@ -699,7 +716,7 @@ describe('PoUW Middleware Unit Tests', () => {
       expect(results[0].body.workUnit).toBeDefined();
     });
 
-    it('handles async reputationProvider', (done) => {
+    it('handles async reputationProvider', async () => {
       const middleware = createPoUWMiddleware({
         hmacSecret: 'test-secret-rep-async',
         rateLimit: 1,
@@ -720,16 +737,14 @@ describe('PoUW Middleware Unit Tests', () => {
       middleware(req, res, next);
 
       // Since the reputation provider is async, we need to wait for the promise
-      setTimeout(() => {
-        expect(getStatus()).toBe(429);
-        expect(getBody().workUnit).toBeUndefined();
-        expect(fallbackHandler).toHaveBeenCalledWith(
-          expect.objectContaining({
-            reason: 'reputation-exempt',
-          }),
-        );
-        done();
-      }, 50);
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      expect(getStatus()).toBe(429);
+      expect(getBody().workUnit).toBeUndefined();
+      expect(fallbackHandler).toHaveBeenCalledWith(
+        expect.objectContaining({
+          reason: 'reputation-exempt',
+        }),
+      );
     });
   });
 
@@ -748,7 +763,7 @@ describe('PoUW Middleware Unit Tests', () => {
       // Get a work unit
       sendRequests(middleware, 1, '10.0.0.100');
       const rateLimited = sendRequests(middleware, 1, '10.0.0.100');
-      const workUnit = rateLimited[0].body.workUnit;
+      const workUnit = requireWorkUnit(rateLimited[0].body);
 
       // Submit work — even if incorrect, we test the header mechanism
       // For a correct submission we'd need to compute the actual hash.
@@ -790,7 +805,7 @@ describe('PoUW Middleware Unit Tests', () => {
       // Get a work unit
       sendRequests(middleware, 1, '10.0.0.101');
       const rateLimited = sendRequests(middleware, 1, '10.0.0.101');
-      const workUnit = rateLimited[0].body.workUnit;
+      const workUnit = requireWorkUnit(rateLimited[0].body);
 
       // Submit incorrect work — event should NOT fire
       const req = createMockReq({

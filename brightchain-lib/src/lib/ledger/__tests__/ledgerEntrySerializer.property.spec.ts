@@ -104,30 +104,27 @@ function arbLedgerEntryWithBrightDate(): fc.Arbitrary<ILedgerEntry> {
 // Property 8: Ledger Serialization Round-Trip
 // ---------------------------------------------------------------------------
 
-describe(
-  'Feature: brightdate-default-timestamp, Property 8: Ledger Serialization Round-Trip',
-  () => {
-    const checksumService = new ChecksumService();
-    const serializer = new LedgerEntrySerializer(checksumService);
+describe('Feature: brightdate-default-timestamp, Property 8: Ledger Serialization Round-Trip', () => {
+  const checksumService = new ChecksumService();
+  const serializer = new LedgerEntrySerializer(checksumService);
 
-    /**
-     * **Validates: Requirements 5.1, 5.2**
-     *
-     * For any valid ILedgerEntry with a BrightDateValue timestamp,
-     * `deserialize(serialize(entry)).timestamp` SHALL equal the original
-     * `entry.timestamp` exactly (float64 bit-exact round-trip through DataView).
-     */
-    it('deserialize(serialize(entry)).timestamp equals original timestamp exactly for any BrightDateValue', () => {
-      fc.assert(
-        fc.property(arbLedgerEntryWithBrightDate(), (entry) => {
-          const serialized = serializer.serialize(entry);
-          const deserialized = serializer.deserialize(serialized);
+  /**
+   * **Validates: Requirements 5.1, 5.2**
+   *
+   * For any valid ILedgerEntry with a BrightDateValue timestamp,
+   * `deserialize(serialize(entry)).timestamp` SHALL equal the original
+   * `entry.timestamp` exactly (float64 bit-exact round-trip through DataView).
+   */
+  it('deserialize(serialize(entry)).timestamp equals original timestamp exactly for any BrightDateValue', () => {
+    fc.assert(
+      fc.property(arbLedgerEntryWithBrightDate(), (entry) => {
+        const serialized = serializer.serialize(entry);
+        const deserialized = serializer.deserialize(serialized);
 
-          // Exact equality — float64 round-trip through DataView must be bit-exact
-          expect(deserialized.timestamp).toBe(entry.timestamp);
-        }),
-        { numRuns: 100 },
-      );
-    });
-  },
-);
+        // Exact equality — float64 round-trip through DataView must be bit-exact
+        expect(deserialized.timestamp).toBe(entry.timestamp);
+      }),
+      { numRuns: 100 },
+    );
+  });
+});

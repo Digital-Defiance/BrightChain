@@ -98,6 +98,22 @@ class InMemoryFolderRepository implements IFolderRepository<string> {
       file.folderId = newFolderId;
     }
   }
+  async updateFolderName(folderId: string, newName: string): Promise<void> {
+    const folder = this.folders.get(folderId);
+    if (folder) {
+      folder.name = newName;
+    }
+  }
+  async softDeleteFolder(
+    folderId: string,
+    deletedFromPath: string,
+  ): Promise<void> {
+    const folder = this.folders.get(folderId);
+    if (folder) {
+      folder.deletedAt = new Date();
+      folder.deletedFromPath = deletedFromPath;
+    }
+  }
 }
 
 function _makeFolder(
@@ -158,7 +174,7 @@ describe('FolderService', () => {
   beforeEach(() => {
     repo = new InMemoryFolderRepository();
     idCounter = 0;
-    service = new FolderService(repo, () => `id-${++idCounter}`);
+    service = new FolderService<string>(repo, () => `id-${++idCounter}`);
   });
 
   describe('getRootFolder', () => {
@@ -417,7 +433,7 @@ describe('FolderService', () => {
 
     it('triggers ACL re-evaluation callback on move', async () => {
       const aclCallback = jest.fn().mockResolvedValue(undefined);
-      const svcWithAcl = new FolderService(
+      const svcWithAcl = new FolderService<string>(
         repo,
         () => `id-${++idCounter}`,
         aclCallback,

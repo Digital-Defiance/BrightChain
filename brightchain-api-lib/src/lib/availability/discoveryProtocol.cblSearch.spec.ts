@@ -9,6 +9,8 @@
  */
 
 import {
+  BlockId,
+  brightDateNow,
   CBLMetadataSearchQuery,
   CBLVisibility,
   ICBLIndexEntry,
@@ -24,10 +26,10 @@ function makeEntry(overrides: Partial<ICBLIndexEntry> = {}): ICBLIndexEntry {
     magnetUrl:
       overrides.magnetUrl ??
       `magnet:?xt=urn:brightchain:cbl&bs=256&b1=${Math.random().toString(16).slice(2)}&b2=${Math.random().toString(16).slice(2)}`,
-    blockId1: overrides.blockId1 ?? 'aaa111',
-    blockId2: overrides.blockId2 ?? 'bbb222',
+    blockId1: overrides.blockId1 ?? ('aaa111' as BlockId),
+    blockId2: overrides.blockId2 ?? ('bbb222' as BlockId),
     blockSize: overrides.blockSize ?? 256,
-    createdAt: overrides.createdAt ?? new Date(),
+    createdAt: overrides.createdAt ?? brightDateNow(),
     visibility: overrides.visibility ?? CBLVisibility.Public,
     sequenceNumber: overrides.sequenceNumber ?? 1,
     ...overrides,

@@ -63,7 +63,10 @@ import {
   IMimePart,
   createContentType,
 } from '../../interfaces/messaging/mimePart';
-import { brightDateNow, normalizeToBrightDate } from '../../utils/brightDateConversions';
+import {
+  brightDateNow,
+  normalizeToBrightDate,
+} from '../../utils/brightDateConversions';
 
 /**
  * RFC 5322/MIME compliant email parser.
@@ -1255,7 +1258,9 @@ export class EmailParser {
 
     // Parse Date
     const rawDate = email.date ? new Date(email.date) : new Date();
-    const date = normalizeToBrightDate(isNaN(rawDate.getTime()) ? new Date() : rawDate);
+    const date = normalizeToBrightDate(
+      isNaN(rawDate.getTime()) ? new Date() : rawDate,
+    );
 
     // Parse Content-Type from headers
     const contentTypeHeader = this.findHeader(email.headers, 'content-type');

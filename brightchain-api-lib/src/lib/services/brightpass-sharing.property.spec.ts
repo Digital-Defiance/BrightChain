@@ -18,6 +18,7 @@ import fc from 'fast-check';
 import { BrightPassService, VaultAuthenticationError } from './brightpass';
 import {
   arbitraryLoginEntry,
+  asEntryInput,
   masterPasswordArb,
   memberIdArb,
   vaultNameArb,
@@ -59,7 +60,7 @@ describe('BrightPassService – Sharing & Password Change', () => {
               createdAt: new Date(),
               updatedAt: new Date(),
             };
-            await service.addEntry(metadata.id, entry);
+            await service.addEntry(metadata.id, asEntryInput(entry));
             await service.shareVault(metadata.id, uniqueRecipients);
 
             const ownerView = await service.openVault(
@@ -280,7 +281,10 @@ describe('BrightPassService – Sharing & Password Change', () => {
               oldPassword,
             );
 
-            const added = await service.addEntry(metadata.id, entry);
+            const added = await service.addEntry(
+              metadata.id,
+              asEntryInput(entry),
+            );
 
             await service.changeMasterPassword(
               memberId,

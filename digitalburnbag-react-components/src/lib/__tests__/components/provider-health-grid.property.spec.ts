@@ -9,7 +9,10 @@
  * Validates: Requirements 12.4, 12.7
  */
 
-import { HeartbeatSignalType, ProviderCategory } from '@brightchain/digitalburnbag-lib';
+import {
+  HeartbeatSignalType,
+  ProviderCategory,
+} from '@brightchain/digitalburnbag-lib';
 import * as fc from 'fast-check';
 import {
   computeHealthPercentages,
@@ -44,53 +47,69 @@ const validDateStringArb = fc
   .map((ts) => new Date(ts).toISOString());
 
 /** Arbitrary for a minimal IProviderConnectionExtendedForGrid. */
-const connectionArb: fc.Arbitrary<IProviderConnectionExtendedForGrid> = fc.record({
-  id: fc.uuid(),
-  providerId: fc.string({ minLength: 1, maxLength: 20 }),
-  providerDisplayName: fc.option(fc.string({ minLength: 1, maxLength: 40 }), { nil: undefined }),
-  providerUsername: fc.option(fc.string({ minLength: 1, maxLength: 40 }), { nil: undefined }),
-  status: fc.constantFrom('connected', 'expired', 'error', 'paused', 'pending') as fc.Arbitrary<
-    'connected' | 'expired' | 'error' | 'paused' | 'pending'
-  >,
-  lastCheckSignalType: signalTypeArb,
-  lastCheckedAt: fc.option(validDateStringArb, { nil: undefined }),
-  lastActivityAt: fc.option(validDateStringArb, { nil: undefined }),
-  isPaused: fc.option(fc.boolean(), { nil: undefined }),
-  providerConfig: fc.option(
-    fc.record({
-      id: fc.string({ minLength: 1, maxLength: 20 }),
-      name: fc.string({ minLength: 1, maxLength: 40 }),
-      description: fc.string({ maxLength: 80 }),
-      category: providerCategoryArb,
-      icon: fc.option(fc.string({ minLength: 1, maxLength: 20 }), { nil: undefined }),
-      baseUrl: fc.constant('https://api.example.com'),
-      auth: fc.constant({ type: 'api_key' as const }),
-      endpoints: fc.constant({
-        activity: {
-          path: '/activity',
-          method: 'GET' as const,
-          responseMapping: {
-            eventsPath: 'events',
-            timestampPath: 'ts',
-            timestampFormat: 'iso8601' as const,
+const connectionArb: fc.Arbitrary<IProviderConnectionExtendedForGrid> =
+  fc.record({
+    id: fc.uuid(),
+    providerId: fc.string({ minLength: 1, maxLength: 20 }),
+    providerDisplayName: fc.option(fc.string({ minLength: 1, maxLength: 40 }), {
+      nil: undefined,
+    }),
+    providerUsername: fc.option(fc.string({ minLength: 1, maxLength: 40 }), {
+      nil: undefined,
+    }),
+    status: fc.constantFrom(
+      'connected',
+      'expired',
+      'error',
+      'paused',
+      'pending',
+    ) as fc.Arbitrary<'connected' | 'expired' | 'error' | 'paused' | 'pending'>,
+    lastCheckSignalType: signalTypeArb,
+    lastCheckedAt: fc.option(validDateStringArb, { nil: undefined }),
+    lastActivityAt: fc.option(validDateStringArb, { nil: undefined }),
+    isPaused: fc.option(fc.boolean(), { nil: undefined }),
+    providerConfig: fc.option(
+      fc.record({
+        id: fc.string({ minLength: 1, maxLength: 20 }),
+        name: fc.string({ minLength: 1, maxLength: 40 }),
+        description: fc.string({ maxLength: 80 }),
+        category: providerCategoryArb,
+        icon: fc.option(fc.string({ minLength: 1, maxLength: 20 }), {
+          nil: undefined,
+        }),
+        baseUrl: fc.constant('https://api.example.com'),
+        auth: fc.constant({ type: 'api_key' as const }),
+        endpoints: fc.constant({
+          activity: {
+            path: '/activity',
+            method: 'GET' as const,
+            responseMapping: {
+              eventsPath: 'events',
+              timestampPath: 'ts',
+              timestampFormat: 'iso8601' as const,
+            },
           },
-        },
+        }),
+        defaultLookbackMs: fc.constant(86400000),
+        minCheckIntervalMs: fc.constant(60000),
+        supportsWebhooks: fc.boolean(),
+        enabledByDefault: fc.boolean(),
       }),
-      defaultLookbackMs: fc.constant(86400000),
-      minCheckIntervalMs: fc.constant(60000),
-      supportsWebhooks: fc.boolean(),
-      enabledByDefault: fc.boolean(),
-    }),
-    { nil: undefined },
-  ),
-  signalHistory: fc.option(
-    fc.array(signalTypeArb.filter((s): s is HeartbeatSignalType => s !== undefined), {
-      minLength: 0,
-      maxLength: 20,
-    }),
-    { nil: undefined },
-  ),
-});
+      { nil: undefined },
+    ),
+    signalHistory: fc.option(
+      fc.array(
+        signalTypeArb.filter(
+          (s): s is NonNullable<typeof s> => s !== undefined,
+        ),
+        {
+          minLength: 0,
+          maxLength: 20,
+        },
+      ),
+      { nil: undefined },
+    ),
+  });
 
 // ---------------------------------------------------------------------------
 // Property 18: Provider health grid aggregate percentage calculation
@@ -109,7 +128,11 @@ describe('Feature: canary-provider-expansion, Property 18: Provider health grid 
         fc.array(connectionArb, { minLength: 1, maxLength: 50 }),
         (connections) => {
           const result = computeHealthPercentages(connections);
-          const sum = result.presence + result.absence + result.checkFailed + result.other;
+          const sum =
+            result.presence +
+            result.absence +
+            result.checkFailed +
+            result.other;
           // Allow floating-point tolerance of 0.001%
           expect(Math.abs(sum - 100)).toBeLessThan(0.001);
         },
@@ -149,11 +172,15 @@ describe('Feature: canary-provider-expansion, Property 18: Provider health grid 
               c.lastCheckSignalType === HeartbeatSignalType.CHECK_FAILED ||
               c.lastCheckSignalType === 'check_failed',
           ).length;
-          const otherCount = total - presenceCount - absenceCount - checkFailedCount;
+          const otherCount =
+            total - presenceCount - absenceCount - checkFailedCount;
 
           expect(result.presence).toBeCloseTo((presenceCount / total) * 100, 5);
           expect(result.absence).toBeCloseTo((absenceCount / total) * 100, 5);
-          expect(result.checkFailed).toBeCloseTo((checkFailedCount / total) * 100, 5);
+          expect(result.checkFailed).toBeCloseTo(
+            (checkFailedCount / total) * 100,
+            5,
+          );
           expect(result.other).toBeCloseTo((otherCount / total) * 100, 5);
         },
       ),
@@ -181,7 +208,10 @@ describe('Feature: canary-provider-expansion, Property 18: Provider health grid 
     fc.assert(
       fc.property(
         fc.array(
-          connectionArb.map((c) => ({ ...c, lastCheckSignalType: HeartbeatSignalType.PRESENCE })),
+          connectionArb.map((c) => ({
+            ...c,
+            lastCheckSignalType: HeartbeatSignalType.PRESENCE,
+          })),
           { minLength: 1, maxLength: 20 },
         ),
         (connections) => {
@@ -283,7 +313,9 @@ describe('Feature: canary-provider-expansion, Property 19: Provider health grid 
           };
 
           for (let i = 0; i < sorted.length - 1; i++) {
-            expect(severityOf(sorted[i].lastCheckSignalType)).toBeLessThanOrEqual(
+            expect(
+              severityOf(sorted[i].lastCheckSignalType),
+            ).toBeLessThanOrEqual(
               severityOf(sorted[i + 1].lastCheckSignalType),
             );
           }
@@ -301,8 +333,12 @@ describe('Feature: canary-provider-expansion, Property 19: Provider health grid 
           const sorted = sortConnections(connections, 'category');
 
           for (let i = 0; i < sorted.length - 1; i++) {
-            const catA = (sorted[i].providerConfig?.category ?? '').toLowerCase();
-            const catB = (sorted[i + 1].providerConfig?.category ?? '').toLowerCase();
+            const catA = (
+              sorted[i].providerConfig?.category ?? ''
+            ).toLowerCase();
+            const catB = (
+              sorted[i + 1].providerConfig?.category ?? ''
+            ).toLowerCase();
             expect(catA.localeCompare(catB)).toBeLessThanOrEqual(0);
           }
         },
@@ -319,8 +355,10 @@ describe('Feature: canary-provider-expansion, Property 19: Provider health grid 
           const sorted = sortConnections(connections, 'lastActivity');
 
           for (let i = 0; i < sorted.length - 1; i++) {
-            const tsA = sorted[i].lastActivityAt ?? sorted[i].lastCheckedAt ?? '';
-            const tsB = sorted[i + 1].lastActivityAt ?? sorted[i + 1].lastCheckedAt ?? '';
+            const tsA =
+              sorted[i].lastActivityAt ?? sorted[i].lastCheckedAt ?? '';
+            const tsB =
+              sorted[i + 1].lastActivityAt ?? sorted[i + 1].lastCheckedAt ?? '';
 
             // Both empty: equal (ok)
             if (tsA === '' && tsB === '') continue;

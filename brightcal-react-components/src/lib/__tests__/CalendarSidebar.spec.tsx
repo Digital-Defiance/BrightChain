@@ -4,16 +4,20 @@ import { act, fireEvent, render, screen } from '@testing-library/react';
 // Mock useI18n to avoid requiring I18nProvider in tests
 jest.mock(
   '@digitaldefiance/express-suite-react-components',
-  () => require('./helpers/i18nMock').expressSuiteReactComponentsMock,
+  () =>
+    jest.requireActual<typeof import('./helpers/i18nMock')>(
+      './helpers/i18nMock',
+    ).expressSuiteReactComponentsMock,
 );
 
 import type { ICalendarCollectionDTO } from '@brightchain/brightcal-lib';
+import { CalendarPermissionLevel } from '@brightchain/brightcal-lib';
 import type { CalendarSidebarProps } from '../components/CalendarSidebar';
 import { CalendarSidebar } from '../components/CalendarSidebar';
 
 // Mock global fetch
 const mockFetch = jest.fn();
-(globalThis as any).fetch = mockFetch;
+globalThis.fetch = mockFetch;
 
 const ownedCalendar: ICalendarCollectionDTO = {
   id: 'cal-owned-1',
@@ -23,9 +27,9 @@ const ownedCalendar: ICalendarCollectionDTO = {
   description: 'My personal calendar',
   isDefault: true,
   isSubscription: false,
-  defaultPermission: 'viewer' as any,
+  defaultPermission: CalendarPermissionLevel.Viewer,
   dateCreated: '2024-01-01T00:00:00Z',
-} as any;
+};
 
 const ownedCalendar2: ICalendarCollectionDTO = {
   id: 'cal-owned-2',
@@ -35,9 +39,9 @@ const ownedCalendar2: ICalendarCollectionDTO = {
   description: 'Work calendar',
   isDefault: false,
   isSubscription: false,
-  defaultPermission: 'viewer' as any,
+  defaultPermission: CalendarPermissionLevel.Viewer,
   dateCreated: '2024-01-01T00:00:00Z',
-} as any;
+};
 
 const sharedCalendar: ICalendarCollectionDTO = {
   id: 'cal-shared-1',
@@ -47,9 +51,9 @@ const sharedCalendar: ICalendarCollectionDTO = {
   description: 'Shared team calendar',
   isDefault: false,
   isSubscription: false,
-  defaultPermission: 'viewer' as any,
+  defaultPermission: CalendarPermissionLevel.Viewer,
   dateCreated: '2024-01-01T00:00:00Z',
-} as any;
+};
 
 const allCalendars = [ownedCalendar, ownedCalendar2, sharedCalendar];
 

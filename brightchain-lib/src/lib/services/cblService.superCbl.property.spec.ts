@@ -17,11 +17,13 @@ import * as fc from 'fast-check';
 import { BLOCK_HEADER, StructuredBlockType } from '../constants';
 import { BlockSize } from '../enumerations/blockSize';
 import { Checksum } from '../types/checksum';
+import {
+  brightDateNow,
+  dateToBrightDate,
+} from '../utils/brightDateConversions';
 import { CBLService } from './cblService';
 import { ChecksumService } from './checksum.service';
 import { ServiceProvider } from './service.provider';
-import { brightDateNow, dateToBrightDate } from '../utils/brightDateConversions';
-import type { BrightDateTimestamp } from '../types/brightDateTimestamp';
 
 describe('Binary SuperCBL Format - Property Tests', () => {
   let cblService: CBLService;
@@ -277,9 +279,7 @@ describe('Binary SuperCBL Format - Property Tests', () => {
             );
 
             // Verify date is preserved (within small tolerance due to BrightDate conversion)
-            const timeDiff = Math.abs(
-              parsed.dateCreated - dateCreated,
-            );
+            const timeDiff = Math.abs(parsed.dateCreated - dateCreated);
             expect(timeDiff).toBeLessThan(0.001); // < 0.001 days tolerance
           },
         ),

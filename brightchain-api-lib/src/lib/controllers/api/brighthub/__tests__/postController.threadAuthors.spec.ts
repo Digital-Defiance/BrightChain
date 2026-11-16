@@ -11,7 +11,15 @@
  * 4. getThread skips unresolvable authors without failing
  */
 
+import type {
+  IBaseUserProfile,
+  IPostService,
+  IThreadService,
+  IUserProfileService,
+} from '@brightchain/brighthub-lib';
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
+import type { IBrightChainApplication } from '../../../../interfaces/application';
+import type { IThreadApiResponse } from '../../../../interfaces/responses/brighthub';
 import { BrightHubPostController } from '../postController';
 
 // ─── Mock file-type (required by transitive imports) ─────────────────────────
@@ -73,7 +81,9 @@ const THREAD_DATA = {
   participantCount: 2,
 };
 
-const PROFILES: Record<string, any> = {
+type ProfileMap = Record<string, Partial<IBaseUserProfile<string>>>;
+
+const PROFILES: ProfileMap = {
   'user-1': { _id: 'user-1', username: 'alice', displayName: 'Alice' },
   'user-2': { _id: 'user-2', username: 'bob', displayName: 'Bob' },
 };
@@ -90,10 +100,10 @@ function createMockApplication() {
     getModel: () => {
       throw new Error('not implemented');
     },
-  } as any;
+  } as unknown as IBrightChainApplication;
 }
 
-function createMockPostService() {
+function createMockPostService(): IPostService {
   return {
     getPost: jest.fn(),
     createPost: jest.fn(),
@@ -110,40 +120,54 @@ function createMockPostService() {
     downvotePost: jest.fn(),
     pinPost: jest.fn(),
     unpinPost: jest.fn(),
-  };
+  } as unknown as IPostService;
 }
 
-function createMockThreadService(threadData = THREAD_DATA) {
+function createMockThreadService(threadData = THREAD_DATA): IThreadService {
   return {
-    getThread: jest.fn().mockResolvedValue(threadData as never),
+    getThread: jest.fn(async () => threadData),
     createReply: jest.fn(),
-  };
+  } as unknown as IThreadService;
 }
 
 function createMockUserProfileService(
-  profiles: Record<string, any> = PROFILES,
-) {
+  profiles: ProfileMap = PROFILES,
+): IUserProfileService {
   return {
-    getProfile: jest.fn().mockImplementation((userId: string) => {
-      if (profiles[userId]) return Promise.resolve(profiles[userId]);
-      return Promise.reject(new Error('User not found'));
+    getProfile: jest.fn(async (userId: string) => {
+      const profile = profiles[userId];
+      if (profile) return profile;
+      throw new Error('User not found');
     }),
-  };
+  } as unknown as IUserProfileService;
+}
+
+type ThreadHandler = (
+  req: unknown,
+) => Promise<{ statusCode: number; response: IThreadApiResponse }>;
+
+/** The controller's handler map, exposed for direct invocation. */
+interface IPostControllerHandlers {
+  handlers: { getThread: ThreadHandler };
+}
+
+function getThreadHandler(ctrl: BrightHubPostController): ThreadHandler {
+  return (ctrl as unknown as IPostControllerHandlers).handlers.getThread;
 }
 
 // ─── Test Setup ──────────────────────────────────────────────────────────────
 
 let controller: BrightHubPostController;
-let getThread: (req: unknown) => Promise<{ statusCode: number; response: any }>;
+let getThread: ThreadHandler;
 
 beforeEach(() => {
   const app = createMockApplication();
   controller = new BrightHubPostController(app);
-  controller.setPostService(createMockPostService() as any);
-  controller.setThreadService(createMockThreadService() as any);
-  controller.setUserProfileService(createMockUserProfileService() as any);
+  controller.setPostService(createMockPostService());
+  controller.setThreadService(createMockThreadService());
+  controller.setUserProfileService(createMockUserProfileService());
 
-  getThread = (controller as any).handlers.getThread;
+  getThread = getThreadHandler(controller);
 });
 
 // ─── Tests ───────────────────────────────────────────────────────────────────
@@ -155,29 +179,29 @@ describe('BrightHubPostController — getThread author resolution', () => {
     expect(result.statusCode).toBe(200);
     expect(result.response.data.authors).toBeDefined();
     expect(typeof result.response.data.authors).toBe('object');
-    expect(result.response.data.authors['user-1']).toBeDefined();
-    expect(result.response.data.authors['user-2']).toBeDefined();
+    expect(result.response.data.authors?.['user-1']).toBeDefined();
+    expect(result.response.data.authors?.['user-2']).toBeDefined();
   });
 
   it('resolves authors for both root post and reply authors', async () => {
     const result = await getThread({ params: { id: 'post-1' } });
 
     const authors = result.response.data.authors;
-    expect(authors['user-1'].username).toBe('alice');
-    expect(authors['user-1'].displayName).toBe('Alice');
-    expect(authors['user-2'].username).toBe('bob');
-    expect(authors['user-2'].displayName).toBe('Bob');
+    expect(authors?.['user-1']?.username).toBe('alice');
+    expect(authors?.['user-1']?.displayName).toBe('Alice');
+    expect(authors?.['user-2']?.username).toBe('bob');
+    expect(authors?.['user-2']?.displayName).toBe('Bob');
   });
 
   it('returns empty authors when UserProfileService is not set', async () => {
     // Create a fresh controller without UserProfileService
     const app = createMockApplication();
     const freshController = new BrightHubPostController(app);
-    freshController.setPostService(createMockPostService() as any);
-    freshController.setThreadService(createMockThreadService() as any);
+    freshController.setPostService(createMockPostService());
+    freshController.setThreadService(createMockThreadService());
     // Deliberately NOT calling setUserProfileService
 
-    const freshGetThread = (freshController as any).handlers.getThread;
+    const freshGetThread = getThreadHandler(freshController);
     const result = await freshGetThread({ params: { id: 'post-1' } });
 
     expect(result.statusCode).toBe(200);
@@ -186,26 +210,24 @@ describe('BrightHubPostController — getThread author resolution', () => {
 
   it('skips unresolvable authors without failing', async () => {
     // Only user-1 is resolvable; user-2 will throw
-    const partialProfiles: Record<string, any> = {
+    const partialProfiles: ProfileMap = {
       'user-1': { _id: 'user-1', username: 'alice', displayName: 'Alice' },
     };
 
     const app = createMockApplication();
     const ctrl = new BrightHubPostController(app);
-    ctrl.setPostService(createMockPostService() as any);
-    ctrl.setThreadService(createMockThreadService() as any);
-    ctrl.setUserProfileService(
-      createMockUserProfileService(partialProfiles) as any,
-    );
+    ctrl.setPostService(createMockPostService());
+    ctrl.setThreadService(createMockThreadService());
+    ctrl.setUserProfileService(createMockUserProfileService(partialProfiles));
 
-    const handler = (ctrl as any).handlers.getThread;
+    const handler = getThreadHandler(ctrl);
     const result = await handler({ params: { id: 'post-1' } });
 
     expect(result.statusCode).toBe(200);
     // user-1 should be resolved
-    expect(result.response.data.authors['user-1']).toBeDefined();
-    expect(result.response.data.authors['user-1'].username).toBe('alice');
+    expect(result.response.data.authors?.['user-1']).toBeDefined();
+    expect(result.response.data.authors?.['user-1']?.username).toBe('alice');
     // user-2 should be absent (not an error)
-    expect(result.response.data.authors['user-2']).toBeUndefined();
+    expect(result.response.data.authors?.['user-2']).toBeUndefined();
   });
 });

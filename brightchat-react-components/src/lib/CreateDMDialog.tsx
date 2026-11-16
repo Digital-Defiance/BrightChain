@@ -115,6 +115,17 @@ const CreateDMDialog: FC<CreateDMDialogProps> = ({
     setError(null);
   }, []);
 
+  // Declared before handleConfirm, which calls it and lists it as a dependency.
+  const handleClose = useCallback(() => {
+    if (!submitting) {
+      setQuery('');
+      setDebouncedQuery('');
+      setSelectedUserId(null);
+      setError(null);
+      onClose();
+    }
+  }, [submitting, onClose]);
+
   const handleConfirm = useCallback(async () => {
     if (!selectedUserId) {
       setError(t(BrightChatStrings.Create_DM_SelectUser));
@@ -158,17 +169,8 @@ const CreateDMDialog: FC<CreateDMDialogProps> = ({
     sendDirectMessage,
     onConversationStarted,
     t,
+    handleClose,
   ]);
-
-  const handleClose = useCallback(() => {
-    if (!submitting) {
-      setQuery('');
-      setDebouncedQuery('');
-      setSelectedUserId(null);
-      setError(null);
-      onClose();
-    }
-  }, [submitting, onClose]);
 
   return (
     <Dialog

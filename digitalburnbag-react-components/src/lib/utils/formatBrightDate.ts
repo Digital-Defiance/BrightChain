@@ -17,7 +17,10 @@ import { toBrightDateString } from '@brightchain/brightchain-lib';
  * @param precision - BrightDate decimal places (default: 3)
  * @returns Dual-formatted string, e.g. "1/15/2025, 10:30 AM (BD 9146.438)"
  */
-export function formatDateWithBD(dateInput: string | Date, precision = 3): string {
+export function formatDateWithBD(
+  dateInput: string | Date,
+  precision = 3,
+): string {
   try {
     const d = typeof dateInput === 'string' ? new Date(dateInput) : dateInput;
     const localeStr = d.toLocaleString();

@@ -10,7 +10,12 @@
  * **Validates: Requirements 1.1, 6.3**
  */
 
-import { BlockAnnouncement, GossipConfig } from '@brightchain/brightchain-lib';
+import {
+  BlockAnnouncement,
+  BlockId,
+  brightDateNow,
+  GossipConfig,
+} from '@brightchain/brightchain-lib';
 import fc from 'fast-check';
 import { GossipService, IPeerProvider } from './gossipService';
 
@@ -25,7 +30,7 @@ const arbPoolId = fc.stringMatching(/^[a-zA-Z0-9_-]{1,64}$/);
 /** Valid hex-encoded block ID (at least 32 hex chars) */
 const arbBlockId = fc
   .array(fc.integer({ min: 0, max: 15 }), { minLength: 32, maxLength: 64 })
-  .map((arr) => arr.map((n) => n.toString(16)).join(''));
+  .map((arr) => arr.map((n) => n.toString(16)).join('') as BlockId);
 
 /** Valid node ID */
 const arbNodeId = fc
@@ -97,7 +102,7 @@ describe('Feature: cross-node-pool-coordination, Property 1: Block announcements
           const peerProvider = new MockPeerProvider(nodeId);
           const gossipService = new GossipService(peerProvider, testConfig);
 
-          await gossipService.announceBlock(blockId, poolId);
+          await gossipService.announceBlock(blockId as BlockId, poolId);
 
           const pending = gossipService.getPendingAnnouncements();
           expect(pending.length).toBe(1);
@@ -125,7 +130,7 @@ describe('Feature: cross-node-pool-coordination, Property 1: Block announcements
         const peerProvider = new MockPeerProvider(nodeId);
         const gossipService = new GossipService(peerProvider, testConfig);
 
-        await gossipService.announceBlock(blockId);
+        await gossipService.announceBlock(blockId as BlockId);
 
         const pending = gossipService.getPendingAnnouncements();
         expect(pending.length).toBe(1);
@@ -155,7 +160,7 @@ describe('Feature: cross-node-pool-coordination, Property 1: Block announcements
           const peerProvider = new MockPeerProvider(nodeId);
           const gossipService = new GossipService(peerProvider, testConfig);
 
-          await gossipService.announceRemoval(blockId, poolId);
+          await gossipService.announceRemoval(blockId as BlockId, poolId);
 
           const pending = gossipService.getPendingAnnouncements();
           expect(pending.length).toBe(1);
@@ -182,7 +187,7 @@ describe('Feature: cross-node-pool-coordination, Property 1: Block announcements
         const peerProvider = new MockPeerProvider(nodeId);
         const gossipService = new GossipService(peerProvider, testConfig);
 
-        await gossipService.announceRemoval(blockId);
+        await gossipService.announceRemoval(blockId as BlockId);
 
         const pending = gossipService.getPendingAnnouncements();
         expect(pending.length).toBe(1);
@@ -217,9 +222,9 @@ describe('Feature: cross-node-pool-coordination, Property 1: Block announcements
           const gossipService = new GossipService(peerProvider, testConfig);
 
           if (type === 'add') {
-            await gossipService.announceBlock(blockId, poolId);
+            await gossipService.announceBlock(blockId as BlockId, poolId);
           } else {
-            await gossipService.announceRemoval(blockId, poolId);
+            await gossipService.announceRemoval(blockId as BlockId, poolId);
           }
 
           const pending = gossipService.getPendingAnnouncements();
@@ -253,9 +258,9 @@ describe('Feature: cross-node-pool-coordination, Property 2: Gossip preserves po
 
           const announcement: BlockAnnouncement = {
             type: 'add',
-            blockId,
+            blockId: blockId as BlockId,
             nodeId: 'remote-node',
-            timestamp: new Date(),
+            timestamp: brightDateNow(),
             ttl,
             poolId,
           };
@@ -295,9 +300,9 @@ describe('Feature: cross-node-pool-coordination, Property 2: Gossip preserves po
 
           const announcement: BlockAnnouncement = {
             type: 'remove',
-            blockId,
+            blockId: blockId as BlockId,
             nodeId: 'remote-node',
-            timestamp: new Date(),
+            timestamp: brightDateNow(),
             ttl,
             poolId,
           };
@@ -336,9 +341,9 @@ describe('Feature: cross-node-pool-coordination, Property 2: Gossip preserves po
 
           const announcement: BlockAnnouncement = {
             type: 'pool_deleted',
-            blockId: '',
+            blockId: '' as BlockId,
             nodeId: 'remote-node',
-            timestamp: new Date(),
+            timestamp: brightDateNow(),
             ttl,
             poolId,
           };
@@ -384,9 +389,9 @@ describe('Feature: cross-node-pool-coordination, Property 2: Gossip preserves po
 
           const announcement: BlockAnnouncement = {
             type,
-            blockId: type === 'pool_deleted' ? '' : blockId,
+            blockId: (type === 'pool_deleted' ? '' : blockId) as BlockId,
             nodeId: 'remote-node',
-            timestamp: new Date(),
+            timestamp: brightDateNow(),
             ttl,
             poolId,
           };
@@ -430,9 +435,9 @@ describe('Feature: cross-node-pool-coordination, Property 2: Gossip preserves po
 
           const announcement: BlockAnnouncement = {
             type,
-            blockId: type === 'pool_deleted' ? '' : blockId,
+            blockId: (type === 'pool_deleted' ? '' : blockId) as BlockId,
             nodeId: 'remote-node',
-            timestamp: new Date(),
+            timestamp: brightDateNow(),
             ttl: 0,
             poolId,
           };

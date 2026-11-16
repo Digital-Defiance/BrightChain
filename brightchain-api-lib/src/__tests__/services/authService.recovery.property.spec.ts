@@ -18,6 +18,7 @@ import {
   ServiceProvider,
 } from '@brightchain/brightchain-lib';
 import { MemberType, SecureString } from '@digitaldefiance/ecies-lib';
+import { GuidV4Buffer } from '@digitaldefiance/node-ecies-lib';
 import { ServiceContainer } from '@digitaldefiance/node-express-suite';
 import * as bcrypt from 'bcrypt';
 import * as fc from 'fast-check';
@@ -140,14 +141,14 @@ async function registerMemberWithMnemonic(
   username: string,
   email: string,
   password: string,
-): Promise<{ memberId: Uint8Array; mnemonic: SecureString }> {
+): Promise<{ memberId: GuidV4Buffer; mnemonic: SecureString }> {
   const { reference, mnemonic } = await memberStore.createMember({
     type: MemberType.User,
     name: username,
     contactEmail: new EmailString(email),
   });
 
-  const memberId = reference.id as Uint8Array;
+  const memberId = reference.id as GuidV4Buffer;
   const passwordHash = await bcrypt.hash(password, 4); // low rounds for speed
   await authService.storePasswordHash(memberId, passwordHash);
 

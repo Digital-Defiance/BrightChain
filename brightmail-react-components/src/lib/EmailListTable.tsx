@@ -12,7 +12,7 @@ import { IEmailMetadata } from '@brightchain/brightchain-lib';
 import { BrightMailStrings } from '@brightchain/brightmail-lib';
 import { Checkbox } from '@mui/material';
 import { FC, memo, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 
 import { formatDateLocale } from './dateFormatting';
 import { useBrightMailTranslation } from './hooks/useBrightMailTranslation';

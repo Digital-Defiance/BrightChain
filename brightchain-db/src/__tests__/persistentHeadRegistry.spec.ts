@@ -6,7 +6,7 @@
  * file-level locking, and graceful handling of corrupt/missing files.
  */
 
-import { brightDateNow, dateToBrightDate } from '@brightchain/brightchain-lib';
+import { brightDateNow } from '@brightchain/brightchain-lib';
 import { promises as fs } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';

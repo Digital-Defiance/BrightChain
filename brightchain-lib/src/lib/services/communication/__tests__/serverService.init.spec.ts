@@ -12,6 +12,7 @@ import {
   IServer,
   IServerInviteToken,
 } from '../../../interfaces/communication/server';
+import { brightDateNow } from '../../../utils/brightDateConversions';
 import { ChannelService } from '../channelService';
 import { PermissionService } from '../permissionService';
 import { ServerService } from '../serverService';
@@ -19,7 +20,6 @@ import {
   MockChatCollection,
   MockChatStorageProvider,
 } from './mockChatStorageProvider';
-import { brightDateNow } from '../../../utils/brightDateConversions';
 
 /** Create a minimal ChannelService for ServerService construction. */
 function createChannelService(): ChannelService {

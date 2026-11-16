@@ -20,15 +20,18 @@ import {
   validBlockSizes,
 } from '@brightchain/brightchain-lib';
 import { BrightDb, InMemoryHeadRegistry } from '@brightchain/db';
-import type { ICreateEventBody } from '../../controllers/eventController.ts';
-import { createCalendarCollectionModel } from '../../models/calendarCollection.model.ts';
-import { createCalendarEventModel } from '../../models/calendarEvent.model.ts';
-import { createCalendarShareModel } from '../../models/calendarShare.model.ts';
-import { CalendarEngineService } from '../calendarEngineService.ts';
-import { CalendarPermissionService } from '../calendarPermissionService.ts';
-import { EncryptionService } from '../encryptionService.ts';
-import { EventEngineService } from '../eventEngineService.ts';
-import { SchedulingEngineService } from '../schedulingEngineService.ts';
+import type { ICreateEventBody } from '../../controllers/eventController.js';
+import { createCalendarCollectionModel } from '../../models/calendarCollection.model.js';
+import {
+  createCalendarEventModel,
+  type IStoredCalendarEvent,
+} from '../../models/calendarEvent.model.js';
+import { createCalendarShareModel } from '../../models/calendarShare.model.js';
+import { CalendarEngineService } from '../calendarEngineService.js';
+import { CalendarPermissionService } from '../calendarPermissionService.js';
+import { EncryptionService } from '../encryptionService.js';
+import { EventEngineService } from '../eventEngineService.js';
+import { SchedulingEngineService } from '../schedulingEngineService.js';
 
 // ─── Setup ───────────────────────────────────────────────────────────────────
 
@@ -40,8 +43,7 @@ beforeAll(() => {
 function makeDb(name = 'testdb'): BrightDb {
   const store = new MemoryBlockStore(validBlockSizes);
   const registry = InMemoryHeadRegistry.createIsolated();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return new BrightDb(store as any, { name, headRegistry: registry });
+  return new BrightDb(store, { name, headRegistry: registry });
 }
 
 function createServices() {
@@ -156,22 +158,31 @@ describe('SchedulingEngineService', () => {
     });
 
     it('should mark tentative events as BUSY-TENTATIVE', async () => {
-      const { schedulingService, eventService, calendarService } =
+      const { schedulingService, eventService, calendarService, eventModel } =
         createServices();
       const cal = await setupCalendar(calendarService, 'user-1');
 
-      // Create event then update status to TENTATIVE via the model directly
-      const event = await eventService.createEvent(
+      // createEvent always stores CONFIRMED; TENTATIVE events arrive via iTIP
+      // inbound, so set the stored status directly.
+      const tentative = await eventService.createEvent(
         'user-1',
-        makeEventBody(cal.id),
+        makeEventBody(cal.id, {
+          dtstart: '2024-06-15T09:00:00Z',
+          dtend: '2024-06-15T10:00:00Z',
+        }),
       );
-      // We need to update the status directly since createEvent always sets CONFIRMED
-      const { eventModel } = createServices();
-      // Use the same services' eventModel
-      // Actually, let's just test with CONFIRMED status and verify BUSY type
-      // The tentative test requires direct model manipulation which is complex.
-      // Instead, verify the basic BUSY type for CONFIRMED events.
-      expect(event.status).toBe('CONFIRMED');
+      await eventModel.updateOne(
+        { _id: tentative.id } as Partial<IStoredCalendarEvent>,
+        { $set: { status: 'TENTATIVE' } },
+      );
+      const confirmed = await eventService.createEvent(
+        'user-1',
+        makeEventBody(cal.id, {
+          dtstart: '2024-06-15T11:00:00Z',
+          dtend: '2024-06-15T12:00:00Z',
+        }),
+      );
+      expect(confirmed.status).toBe('CONFIRMED');
 
       const fb = await schedulingService.computeFreeBusy(
         'user-1',
@@ -179,7 +190,18 @@ describe('SchedulingEngineService', () => {
         '2024-06-15T23:59:59Z',
       );
 
-      expect(fb.slots[0].type).toBe('BUSY');
+      expect(fb.slots).toEqual([
+        {
+          start: '2024-06-15T09:00:00.000Z',
+          end: '2024-06-15T10:00:00.000Z',
+          type: 'BUSY-TENTATIVE',
+        },
+        {
+          start: '2024-06-15T11:00:00.000Z',
+          end: '2024-06-15T12:00:00.000Z',
+          type: 'BUSY',
+        },
+      ]);
     });
 
     it('should exclude events outside the requested range', async () => {
@@ -425,7 +447,7 @@ describe('SchedulingEngineService', () => {
       const { schedulingService, eventService, calendarService } =
         createServices();
       const cal1 = await setupCalendar(calendarService, 'user-1');
-      const cal2 = await setupCalendar(calendarService, 'user-2');
+      await setupCalendar(calendarService, 'user-2');
 
       // user-1 busy 09:00-10:00 on a Wednesday (working hours)
       await eventService.createEvent(

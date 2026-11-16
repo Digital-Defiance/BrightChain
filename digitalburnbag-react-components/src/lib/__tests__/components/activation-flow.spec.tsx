@@ -10,16 +10,23 @@
 // ---------------------------------------------------------------------------
 
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import React from 'react';
-import type { IActivationFlowProps, IActivationFlowProvider } from '../../components/ActivationFlow';
+import type {
+  IActivationFlowProps,
+  IActivationFlowProvider,
+} from '../../components/ActivationFlow';
 import { ActivationFlow } from '../../components/ActivationFlow';
-import type { IApiProviderConnectionDTO, IApiTestConnectionResponseDTO } from '../../services/burnbag-api-client';
+import type {
+  IApiProviderConnectionDTO,
+  IApiTestConnectionResponseDTO,
+} from '../../services/burnbag-api-client';
 
 // ---------------------------------------------------------------------------
 // Test fixtures
 // ---------------------------------------------------------------------------
 
-function makeProvider(overrides: Partial<IActivationFlowProvider> = {}): IActivationFlowProvider {
+function makeProvider(
+  overrides: Partial<IActivationFlowProvider> = {},
+): IActivationFlowProvider {
   return {
     id: 'github',
     name: 'GitHub',
@@ -31,7 +38,9 @@ function makeProvider(overrides: Partial<IActivationFlowProvider> = {}): IActiva
   };
 }
 
-function makeConnection(overrides: Partial<IApiProviderConnectionDTO> = {}): IApiProviderConnectionDTO {
+function makeConnection(
+  overrides: Partial<IApiProviderConnectionDTO> = {},
+): IApiProviderConnectionDTO {
   return {
     id: 'conn-1',
     userId: 'user-1',
@@ -44,7 +53,9 @@ function makeConnection(overrides: Partial<IApiProviderConnectionDTO> = {}): IAp
   };
 }
 
-function makeTestResult(overrides: Partial<IApiTestConnectionResponseDTO> = {}): IApiTestConnectionResponseDTO {
+function makeTestResult(
+  overrides: Partial<IApiTestConnectionResponseDTO> = {},
+): IApiTestConnectionResponseDTO {
   return {
     success: true,
     status: 'connected',
@@ -189,7 +200,12 @@ describe('ActivationFlow', () => {
     });
 
     it('shows provider name and description in the flow header', () => {
-      renderActivationFlow({ provider: makeProvider({ name: 'Fitbit', description: 'Track your fitness' }) });
+      renderActivationFlow({
+        provider: makeProvider({
+          name: 'Fitbit',
+          description: 'Track your fitness',
+        }),
+      });
       expect(screen.getByText('Connect Fitbit')).toBeInTheDocument();
       expect(screen.getByText('Track your fitness')).toBeInTheDocument();
     });
@@ -197,7 +213,9 @@ describe('ActivationFlow', () => {
     it('shows OAuth connect button for OAuth2 providers', () => {
       renderActivationFlow({
         provider: makeProvider({ authType: 'oauth2', name: 'Spotify' }),
-        onInitiateOAuth: jest.fn().mockResolvedValue({ authorizationUrl: 'https://accounts.spotify.com/authorize' }),
+        onInitiateOAuth: jest.fn().mockResolvedValue({
+          authorizationUrl: 'https://accounts.spotify.com/authorize',
+        }),
       });
       expect(screen.getByTestId('oauth-connect-button')).toBeInTheDocument();
       expect(screen.getByText('Connect with Spotify')).toBeInTheDocument();
@@ -211,7 +229,9 @@ describe('ActivationFlow', () => {
 
     it('shows cancel button during the flow', () => {
       renderActivationFlow();
-      expect(screen.getByTestId('cancel-activation-button')).toBeInTheDocument();
+      expect(
+        screen.getByTestId('cancel-activation-button'),
+      ).toBeInTheDocument();
     });
 
     it('calls onCancel when cancel button is clicked', () => {
@@ -241,7 +261,9 @@ describe('ActivationFlow', () => {
       await waitFor(() => {
         expect(screen.getByTestId('configure-step')).toBeInTheDocument();
       });
-      expect(screen.getByTestId('absence-threshold-slider')).toBeInTheDocument();
+      expect(
+        screen.getByTestId('absence-threshold-slider'),
+      ).toBeInTheDocument();
     });
 
     it('shows multi-canary option in Configure step', async () => {

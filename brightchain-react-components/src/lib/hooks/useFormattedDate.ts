@@ -23,7 +23,11 @@
  * @module hooks/useFormattedDate
  */
 
-import { BrightDateDisplayMode, brightDateToDate, toBrightDateString } from '@brightchain/brightchain-lib';
+import {
+  BrightDateDisplayMode,
+  brightDateToDate,
+  toBrightDateString,
+} from '@brightchain/brightchain-lib';
 import { useCallback } from 'react';
 import { useBrightDateMode } from '../contexts/BrightDateContext';
 
@@ -40,15 +44,24 @@ export interface UseFormattedDateReturn {
   /**
    * Format a date as a short date string (e.g. "Jan 15, 2025") respecting mode.
    */
-  formatDate: (date: number | Date | string, options?: FormattedDateOptions) => string;
+  formatDate: (
+    date: number | Date | string,
+    options?: FormattedDateOptions,
+  ) => string;
   /**
    * Format a date as a date+time string (e.g. "Jan 15, 2025, 10:30 AM") respecting mode.
    */
-  formatDateTime: (date: number | Date | string, options?: FormattedDateOptions) => string;
+  formatDateTime: (
+    date: number | Date | string,
+    options?: FormattedDateOptions,
+  ) => string;
   /**
    * Get the tooltip string for hover modes. Empty string for non-hover modes.
    */
-  getTooltip: (date: number | Date | string, options?: FormattedDateOptions) => string;
+  getTooltip: (
+    date: number | Date | string,
+    options?: FormattedDateOptions,
+  ) => string;
   /**
    * Get just the BrightDate string (e.g. "BD 9146.438").
    */
@@ -135,19 +148,37 @@ export function useFormattedDate(): UseFormattedDateReturn {
 
   const formatDate = useCallback(
     (date: number | Date | string, options?: FormattedDateOptions) =>
-      formatByMode(date, mode, DATE_FORMAT, options?.locale, options?.precision ?? 3),
+      formatByMode(
+        date,
+        mode,
+        DATE_FORMAT,
+        options?.locale,
+        options?.precision ?? 3,
+      ),
     [mode],
   );
 
   const formatDateTime = useCallback(
     (date: number | Date | string, options?: FormattedDateOptions) =>
-      formatByMode(date, mode, DATETIME_FORMAT, options?.locale, options?.precision ?? 3),
+      formatByMode(
+        date,
+        mode,
+        DATETIME_FORMAT,
+        options?.locale,
+        options?.precision ?? 3,
+      ),
     [mode],
   );
 
   const getTooltip = useCallback(
     (date: number | Date | string, options?: FormattedDateOptions) =>
-      tooltipByMode(date, mode, DATETIME_FORMAT, options?.locale, options?.precision ?? 3),
+      tooltipByMode(
+        date,
+        mode,
+        DATETIME_FORMAT,
+        options?.locale,
+        options?.precision ?? 3,
+      ),
     [mode],
   );
 

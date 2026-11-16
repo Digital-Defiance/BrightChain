@@ -10,8 +10,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import type { IHolidayFeedEntry } from '@brightchain/brightcal-lib';
-import { HolidayCatalogController } from '../controllers/holidayCatalogController.ts';
-import { holidayCatalogData } from '../data/holidayCatalogData.ts';
+import { HolidayCatalogController } from '../controllers/holidayCatalogController.js';
+import { holidayCatalogData } from '../data/holidayCatalogData.js';
 
 // ─── Mock application ────────────────────────────────────────────────────────
 

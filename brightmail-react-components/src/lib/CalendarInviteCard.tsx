@@ -137,7 +137,11 @@ const CalendarInviteCard: FC<CalendarInviteCardProps> = ({
     formatDateTime,
   );
 
-  const respondedChipColor = (): 'success' | 'error' | 'warning' | 'default' => {
+  const respondedChipColor = ():
+    | 'success'
+    | 'error'
+    | 'warning'
+    | 'default' => {
     switch (rsvpStatus) {
       case ParticipationStatus.Accepted:
         return 'success';
@@ -229,7 +233,8 @@ const CalendarInviteCard: FC<CalendarInviteCardProps> = ({
         )}
 
         <Typography variant="body2" color="text.secondary">
-          {t(BrightMailStrings.CalInvite_Organizer)}: {invite.organizerName ?? invite.organizerEmail}
+          {t(BrightMailStrings.CalInvite_Organizer)}:{' '}
+          {invite.organizerName ?? invite.organizerEmail}
         </Typography>
 
         {invite.attendees.length > 0 && (
@@ -241,10 +246,7 @@ const CalendarInviteCard: FC<CalendarInviteCardProps> = ({
         )}
 
         {invite.description && (
-          <Typography
-            variant="body2"
-            sx={{ whiteSpace: 'pre-wrap', mt: 0.5 }}
-          >
+          <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', mt: 0.5 }}>
             {invite.description}
           </Typography>
         )}
@@ -268,8 +270,7 @@ const CalendarInviteCard: FC<CalendarInviteCardProps> = ({
       {isReply && invite.attendees[0] && (
         <Alert severity="info" sx={{ mt: 2 }}>
           {t(BrightMailStrings.CalInvite_ResponseTemplate, {
-            name:
-              invite.attendees[0].displayName ?? invite.attendees[0].email,
+            name: invite.attendees[0].displayName ?? invite.attendees[0].email,
             status: invite.attendees[0].partstat,
           })}
         </Alert>

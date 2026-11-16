@@ -123,7 +123,10 @@ function buildMockPost(overrides: Record<string, unknown> = {}) {
 // ─── Mock application factory ───────────────────────────────────────────────
 
 function createMockApplication() {
-  const collections = new Map<string, ReturnType<typeof createMockCollection>>();
+  const collections = new Map<
+    string,
+    ReturnType<typeof createMockCollection>
+  >();
   collections.set('brighthub_posts', createMockCollection());
   collections.set('brighthub_likes', createMockCollection());
   collections.set('brighthub_reposts', createMockCollection());
@@ -158,7 +161,11 @@ describe('PostService pin / unpin', () => {
 
   describe('pinPost', () => {
     it('successfully pins a post owned by the user', async () => {
-      const post = buildMockPost({ _id: 'p1', authorId: 'u1', isPinned: false });
+      const post = buildMockPost({
+        _id: 'p1',
+        authorId: 'u1',
+        isPinned: false,
+      });
       postsCollection._store.set(post._id, post);
 
       await service.pinPost('p1', 'u1');
@@ -199,12 +206,10 @@ describe('PostService pin / unpin', () => {
     });
 
     it('throws PostServiceError with PostNotFound when post does not exist', async () => {
-      await expect(
-        service.pinPost('nonexistent', 'u1'),
-      ).rejects.toThrow(PostServiceError);
-      await expect(
-        service.pinPost('nonexistent', 'u1'),
-      ).rejects.toMatchObject({
+      await expect(service.pinPost('nonexistent', 'u1')).rejects.toThrow(
+        PostServiceError,
+      );
+      await expect(service.pinPost('nonexistent', 'u1')).rejects.toMatchObject({
         code: PostErrorCode.PostNotFound,
       });
     });
@@ -251,9 +256,9 @@ describe('PostService pin / unpin', () => {
     });
 
     it('throws PostServiceError with PostNotFound when post does not exist', async () => {
-      await expect(
-        service.unpinPost('nonexistent', 'u1'),
-      ).rejects.toThrow(PostServiceError);
+      await expect(service.unpinPost('nonexistent', 'u1')).rejects.toThrow(
+        PostServiceError,
+      );
       await expect(
         service.unpinPost('nonexistent', 'u1'),
       ).rejects.toMatchObject({

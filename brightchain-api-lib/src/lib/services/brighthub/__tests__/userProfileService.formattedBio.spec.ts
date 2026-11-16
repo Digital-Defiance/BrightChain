@@ -20,17 +20,13 @@ jest.mock('../textFormatter', () => {
         .mockImplementation(
           (content: string, options?: { isBlogPost?: boolean }) => ({
             raw: content,
-            formatted: options?.isBlogPost
-              ? `<h1>${content}</h1>`
-              : content,
+            formatted: options?.isBlogPost ? `<h1>${content}</h1>` : content,
             mentions: [],
             hashtags: [],
             characterCount: content.length,
           }),
         ),
-      getCharacterCount: jest
-        .fn()
-        .mockImplementation((c: string) => c.length),
+      getCharacterCount: jest.fn().mockImplementation((c: string) => c.length),
     }),
   };
 });
@@ -97,7 +93,10 @@ function createMockCollection() {
 // ─── Mock application factory ───────────────────────────────────────────────
 
 function createMockApplication() {
-  const collections = new Map<string, ReturnType<typeof createMockCollection>>();
+  const collections = new Map<
+    string,
+    ReturnType<typeof createMockCollection>
+  >();
   collections.set('brighthub_user_profiles', createMockCollection());
   collections.set('brighthub_follows', createMockCollection());
   collections.set('brighthub_follow_requests', createMockCollection());

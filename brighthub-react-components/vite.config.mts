@@ -48,6 +48,7 @@ export default defineConfig(() => ({
         'react',
         'react-dom',
         'react/jsx-runtime',
+        'react-router',
         /^@brightchain\//,
         /^@digitaldefiance\//,
         /^@awesome\.me\//,

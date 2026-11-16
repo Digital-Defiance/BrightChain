@@ -1,6 +1,6 @@
-import { FC, useEffect, useMemo, useState } from 'react';
-import { useI18n } from '@digitaldefiance/express-suite-react-components';
 import { BrightChainStrings, CONSTANTS } from '@brightchain/brightchain-lib';
+import { useI18n } from '@digitaldefiance/express-suite-react-components';
+import { FC, useEffect, useMemo, useState } from 'react';
 import { BrightChainLogoI18N } from './BrightChainLogoI18N';
 
 export interface BrightChainLogoI18NRotationProps {
@@ -14,15 +14,17 @@ export interface BrightChainLogoI18NRotationProps {
   height?: number | string;
 }
 
-export const BrightChainLogoI18NRotation: FC<BrightChainLogoI18NRotationProps> = ({
-    primaryColor: brightColor = CONSTANTS.THEME_COLORS.CHAIN_BLUE_DARK,
-    primarySecondaryBreak = false,
-    secondaryColor: chainColor = CONSTANTS.THEME_COLORS.CHAIN_BLUE_LIGHT,
-    taglineColor = '#ffffff',
-    className,
-    style,
-    width = 3151,
-    height = 649,
+export const BrightChainLogoI18NRotation: FC<
+  BrightChainLogoI18NRotationProps
+> = ({
+  primaryColor: brightColor = CONSTANTS.THEME_COLORS.CHAIN_BLUE_DARK,
+  primarySecondaryBreak = false,
+  secondaryColor: chainColor = CONSTANTS.THEME_COLORS.CHAIN_BLUE_LIGHT,
+  taglineColor = '#ffffff',
+  className,
+  style,
+  width = 3151,
+  height = 649,
 }) => {
   const slogans = useMemo(
     () => [
@@ -59,6 +61,6 @@ export const BrightChainLogoI18NRotation: FC<BrightChainLogoI18NRotationProps> =
       style={style}
       width={width}
       height={height}
-     />
+    />
   );
 };

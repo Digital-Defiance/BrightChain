@@ -15,7 +15,7 @@ import {
   EventTransparency,
   EventVisibility,
 } from '@brightchain/brightcal-lib';
-import { CalDavService } from '../calDavService.ts';
+import { CalDavService } from '../calDavService.js';
 
 // ─── Test helpers ────────────────────────────────────────────────────────────
 

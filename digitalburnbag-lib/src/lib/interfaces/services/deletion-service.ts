@@ -1,7 +1,7 @@
 import { PlatformID } from '@digitaldefiance/ecies-lib';
 import type { ICertificateOfDestruction } from '../bases/certificate-of-destruction';
-import type { IContainerDestructionResult } from '../params/vault-container-params';
 import type { IVaultContainerBase } from '../bases/vault-container';
+import type { IContainerDestructionResult } from '../params/vault-container-params';
 
 /**
  * Service interface for vault container deletion orchestration.

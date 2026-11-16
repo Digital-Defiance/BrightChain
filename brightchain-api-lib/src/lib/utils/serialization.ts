@@ -12,8 +12,13 @@ import { toISO } from '@brightchain/brightdate';
 
 /** Known timestamp field names that should be serialized as ISO strings. */
 const TIMESTAMP_FIELDS = new Set([
-  'createdAt', 'updatedAt', 'deletedAt', 'lastLogin', 'lastActive',
-  'dateCreated', 'dateUpdated',
+  'createdAt',
+  'updatedAt',
+  'deletedAt',
+  'lastLogin',
+  'lastActive',
+  'dateCreated',
+  'dateUpdated',
 ]);
 
 /**

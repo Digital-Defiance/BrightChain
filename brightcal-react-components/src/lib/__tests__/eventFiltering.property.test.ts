@@ -2,6 +2,7 @@ import type {
   ICalendarCollectionDTO,
   ICalendarEventDTO,
 } from '@brightchain/brightcal-lib';
+import { CalendarPermissionLevel } from '@brightchain/brightcal-lib';
 import * as fc from 'fast-check';
 import {
   buildCalendarColorMap,
@@ -111,7 +112,7 @@ function calendarArb(
     description: fc.string({ maxLength: 100 }),
     isDefault: fc.boolean(),
     isSubscription: fc.boolean(),
-    defaultPermission: fc.constant('viewer' as any),
+    defaultPermission: fc.constant(CalendarPermissionLevel.Viewer),
     dateCreated: validDateStr,
   }) as fc.Arbitrary<ICalendarCollectionDTO>;
 }

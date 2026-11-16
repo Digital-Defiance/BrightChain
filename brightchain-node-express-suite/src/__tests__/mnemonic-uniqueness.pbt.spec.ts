@@ -52,8 +52,16 @@ const validMnemonicArb = fc
  * Build a mock QueryBuilder that resolves to the given value.
  * Matches the DocumentCollection.findOne return type (thenable + exec).
  */
+interface IMockQueryBuilder<T> {
+  exec?: () => Promise<T | null>;
+  then?: (
+    onFulfilled?: ((v: T | null) => unknown) | null,
+    onRejected?: ((r: unknown) => unknown) | null,
+  ) => Promise<unknown>;
+  [chainMethod: string]: unknown;
+}
 function mockQueryBuilder<T>(resolvedValue: T | null) {
-  const builder: Record<string, unknown> = {};
+  const builder: IMockQueryBuilder<T> = {};
   // Make it thenable (Promise-like)
   builder.exec = () => Promise.resolve(resolvedValue);
   builder.then = (

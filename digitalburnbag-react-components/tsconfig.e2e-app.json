@@ -7,6 +7,7 @@
   "include": [
     "e2e-app/**/*.ts",
     "e2e-app/**/*.tsx",
-    "playwright.config.ts"
+    "playwright.config.ts",
+    "playwright.config.monitored.ts"
   ]
 }

@@ -28,8 +28,8 @@ import {
   ICommunicationEventEmitter,
   NullEventEmitter,
 } from '../../interfaces/events';
-import { paginateItems } from '../../utils/pagination';
 import { brightDateNow } from '../../utils/brightDateConversions';
+import { paginateItems } from '../../utils/pagination';
 import { ChannelService } from './channelService';
 
 // ─── Error classes ──────────────────────────────────────────────────────────

@@ -22,10 +22,26 @@ export class MemoryV2Storage implements BrightDbV2Storage {
   ) {}
 
   /** A new empty database with the given 32-hex-digit ID, or a random one. */
-  static create(databaseId?: string, writerId?: Uint8Array, encryptsAtRest = false): MemoryV2Storage {
-    const id = databaseId ?? Buffer.from(globalThis.crypto.getRandomValues(new Uint8Array(16))).toString('hex');
-    const storage = new MemoryV2Storage(writerId ?? globalThis.crypto.getRandomValues(new Uint8Array(16)), encryptsAtRest);
-    const root = encodeMetadata({ kind: 'database', databaseId: id, clock: 0n, catalog: null });
+  static create(
+    databaseId?: string,
+    writerId?: Uint8Array,
+    encryptsAtRest = false,
+  ): MemoryV2Storage {
+    const id =
+      databaseId ??
+      Buffer.from(
+        globalThis.crypto.getRandomValues(new Uint8Array(16)),
+      ).toString('hex');
+    const storage = new MemoryV2Storage(
+      writerId ?? globalThis.crypto.getRandomValues(new Uint8Array(16)),
+      encryptsAtRest,
+    );
+    const root = encodeMetadata({
+      kind: 'database',
+      databaseId: id,
+      clock: 0n,
+      catalog: null,
+    });
     storage.head = digestPayload(root);
     storage.blocks.set(storage.head, root);
     return storage;
@@ -33,7 +49,10 @@ export class MemoryV2Storage implements BrightDbV2Storage {
 
   /** An independent copy with its own writer ID, as a replica would be. */
   copy(writerId?: Uint8Array): MemoryV2Storage {
-    const copy = new MemoryV2Storage(writerId ?? globalThis.crypto.getRandomValues(new Uint8Array(16)), this.encryptsAtRest);
+    const copy = new MemoryV2Storage(
+      writerId ?? globalThis.crypto.getRandomValues(new Uint8Array(16)),
+      this.encryptsAtRest,
+    );
     for (const [digest, bytes] of this.blocks) copy.blocks.set(digest, bytes);
     copy.head = this.head;
     for (const [name, time] of this.times) copy.times.set(name, time);
@@ -44,8 +63,14 @@ export class MemoryV2Storage implements BrightDbV2Storage {
     return this.head;
   }
 
-  async listBlocks(): Promise<Array<{ name: string; bytes: number; modifiedMs: number }>> {
-    return [...this.blocks].map(([name, bytes]) => ({ name, bytes: bytes.length, modifiedMs: this.times.get(name) ?? 0 }));
+  async listBlocks(): Promise<
+    Array<{ name: string; bytes: number; modifiedMs: number }>
+  > {
+    return [...this.blocks].map(([name, bytes]) => ({
+      name,
+      bytes: bytes.length,
+      modifiedMs: this.times.get(name) ?? 0,
+    }));
   }
 
   async nameOf(digest: string): Promise<string> {
@@ -69,7 +94,9 @@ export class MemoryV2Storage implements BrightDbV2Storage {
     return this.blocks.has(digest);
   }
 
-  withWriteLock<T>(write: (writer: BrightDbV2DiskWriter) => Promise<T>): Promise<T> {
+  withWriteLock<T>(
+    write: (writer: BrightDbV2DiskWriter) => Promise<T>,
+  ): Promise<T> {
     const run = this.chain.then(() =>
       write({
         writeBlock: async (payload) => {
@@ -87,7 +114,8 @@ export class MemoryV2Storage implements BrightDbV2Storage {
         },
         syncBlocks: async () => undefined,
         publishHead: async (digest) => {
-          if (!this.blocks.has(digest)) throw new BrightDbV2MissingBlockError(digest);
+          if (!this.blocks.has(digest))
+            throw new BrightDbV2MissingBlockError(digest);
           this.head = digest;
         },
       }),

@@ -6,7 +6,10 @@ import { TranslatableBrightChainError } from '../../errors/translatableBrightCha
 import type { BlockId } from '../../interfaces/branded/primitives/blockId';
 import { IMessageMetadata } from '../../interfaces/messaging/messageMetadata';
 import { SchemaDefinition } from '../../sharedTypes';
-import { normalizeToBrightDate, brightDateToISO } from '../../utils/brightDateConversions';
+import {
+  brightDateToISO,
+  normalizeToBrightDate,
+} from '../../utils/brightDateConversions';
 
 /**
  * Schema for message metadata storage.

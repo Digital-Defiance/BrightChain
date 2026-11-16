@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import React from 'react';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter } from 'react-router';
 
 // Mock ecies-lib to prevent heavy crypto/i18n initialization at module load time
 jest.mock('@digitaldefiance/ecies-lib', () => ({

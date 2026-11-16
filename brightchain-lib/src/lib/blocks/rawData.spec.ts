@@ -6,10 +6,9 @@ import { BlockAccessError } from '../errors/block';
 import { ChecksumMismatchError } from '../errors/checksumMismatch';
 import { ChecksumService } from '../services/checksum.service';
 import { ServiceProvider } from '../services/service.provider';
+import type { BrightDateTimestamp } from '../types/brightDateTimestamp';
 import { Checksum } from '../types/checksum';
 import { RawDataBlock } from './rawData';
-import { brightDateNow } from '../utils/brightDateConversions';
-import type { BrightDateTimestamp } from '../types/brightDateTimestamp';
 
 describe('RawDataBlock', () => {
   let checksumService: ChecksumService;

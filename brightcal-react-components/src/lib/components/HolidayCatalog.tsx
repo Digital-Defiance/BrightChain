@@ -139,6 +139,9 @@ export function HolidayCatalog({
     return () => {
       cancelled = true;
     };
+    // `t` only formats a fallback error message; a language switch must not
+    // refetch the catalog, so it is deliberately not a dependency.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, apiBaseUrl, authToken]);
 
   const filteredEntries = useMemo(

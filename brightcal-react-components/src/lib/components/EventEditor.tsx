@@ -233,13 +233,16 @@ export function EventEditor({
             ? t(BrightCalStrings.Action_Save)
             : t(BrightCalStrings.Action_Create)}
         </button>
-        <button type="button" onClick={() => {
-          onCancel();
-          // A cancel on an event with attendees triggers a iTIP CANCEL flush.
-          if (onItipFlush && (event?.attendees?.length ?? 0) > 0) {
-            onItipFlush(false);
-          }
-        }}>
+        <button
+          type="button"
+          onClick={() => {
+            onCancel();
+            // A cancel on an event with attendees triggers a iTIP CANCEL flush.
+            if (onItipFlush && (event?.attendees?.length ?? 0) > 0) {
+              onItipFlush(false);
+            }
+          }}
+        >
           {t(BrightCalStrings.Action_Cancel)}
         </button>
       </div>

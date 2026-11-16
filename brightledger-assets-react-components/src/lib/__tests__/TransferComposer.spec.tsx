@@ -2,6 +2,7 @@
  * @fileoverview Tests for TransferComposer component.
  */
 
+import { QuorumType } from '@brightchain/brightchain-lib';
 import type { IAssetDescriptor } from '@brightchain/brightledger-assets-api-lib';
 import '@testing-library/jest-dom';
 import { fireEvent, render, screen } from '@testing-library/react';
@@ -17,7 +18,7 @@ const DESCRIPTOR: IAssetDescriptor = {
   transferPolicy: 'open',
   freezable: true,
   burnable: true,
-  brightTrustPolicy: { type: 'majority', threshold: 1 },
+  brightTrustPolicy: { type: QuorumType.Majority, threshold: 1 },
 };
 
 function makeAssets(): ReadonlyMap<string, IAssetDescriptor> {

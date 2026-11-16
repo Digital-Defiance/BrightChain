@@ -1,3 +1,4 @@
+/// <reference path="../../test/types/jest.d.ts" />
 import { arraysEqual } from '@digitaldefiance/ecies-lib';
 import { StoreErrorType } from '../enumerations/storeErrorType';
 import { StoreError } from '../errors/storeError';

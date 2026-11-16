@@ -11,7 +11,9 @@ import type { LocationRegistryService } from '../services/location-registry-serv
 export interface IDiscoveryRoutesDeps<TID extends PlatformID> {
   locationRegistryService: LocationRegistryService<TID>;
   signatureVerifier: BslpSignatureVerifier;
-  getMemberPublicKeyHexByIdString: (memberIdHex: string) => Promise<string | null>;
+  getMemberPublicKeyHexByIdString: (
+    memberIdHex: string,
+  ) => Promise<string | null>;
 }
 
 function verifiedOnlyQuery(query: Record<string, unknown>): boolean {

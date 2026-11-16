@@ -15,7 +15,13 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import '@testing-library/jest-dom';
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from '@testing-library/react';
 
 import { ITipMethod, ParticipationStatus } from '@brightchain/brightcal-lib';
 
@@ -39,7 +45,9 @@ jest.mock('@digitaldefiance/suite-core-lib', () => ({
 jest.mock('@brightchain/brightchain-lib', () => {
   const mockEngine = {
     translate: jest.fn((_componentId: string, key: string) => key),
-    translateEnum: jest.fn((_enumType: unknown, value: unknown) => String(value)),
+    translateEnum: jest.fn((_enumType: unknown, value: unknown) =>
+      String(value),
+    ),
     registerIfNotExists: jest.fn(),
     registerStringKeyEnum: jest.fn(),
     registerConstants: jest.fn(),
@@ -93,7 +101,9 @@ jest.mock('@digitaldefiance/express-suite-react-components', () => ({
     changeLanguage: jest.fn(),
     currentLanguage: 'en',
   }),
-  I18nProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  I18nProvider: ({ children }: { children: React.ReactNode }) => (
+    <>{children}</>
+  ),
 }));
 
 jest.mock('../hooks/useBrightMailTranslation', () => ({
@@ -103,19 +113,34 @@ jest.mock('../hooks/useBrightMailTranslation', () => ({
 }));
 
 // MUI icon mocks to avoid SVG rendering issues
-jest.mock('@mui/icons-material/CalendarToday', () => () => <span data-testid="icon-calendar" />);
-jest.mock('@mui/icons-material/Cancel', () => () => <span data-testid="icon-cancel" />);
-jest.mock('@mui/icons-material/CheckCircleOutline', () => () => <span data-testid="icon-check" />);
-jest.mock('@mui/icons-material/HelpOutline', () => () => <span data-testid="icon-help" />);
-jest.mock('@mui/icons-material/LocationOn', () => () => <span data-testid="icon-location" />);
-jest.mock('@mui/icons-material/Schedule', () => () => <span data-testid="icon-schedule" />);
+jest.mock('@mui/icons-material/CalendarToday', () => () => (
+  <span data-testid="icon-calendar" />
+));
+jest.mock('@mui/icons-material/Cancel', () => () => (
+  <span data-testid="icon-cancel" />
+));
+jest.mock('@mui/icons-material/CheckCircleOutline', () => () => (
+  <span data-testid="icon-check" />
+));
+jest.mock('@mui/icons-material/HelpOutline', () => () => (
+  <span data-testid="icon-help" />
+));
+jest.mock('@mui/icons-material/LocationOn', () => () => (
+  <span data-testid="icon-location" />
+));
+jest.mock('@mui/icons-material/Schedule', () => () => (
+  <span data-testid="icon-schedule" />
+));
 
 import React from 'react';
 import CalendarInviteCard from '../CalendarInviteCard';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function makeInvite(method: ITipMethod, overrides: Record<string, unknown> = {}) {
+function makeInvite(
+  method: ITipMethod,
+  overrides: Record<string, unknown> = {},
+) {
   return {
     method,
     uid: 'test-uid-001',
@@ -301,7 +326,9 @@ describe('CalendarInviteCard', () => {
         ],
       });
       render(<CalendarInviteCard invite={invite as any} />);
-      expect(screen.getByText('CalInvite_ResponseTemplate')).toBeInTheDocument();
+      expect(
+        screen.getByText('CalInvite_ResponseTemplate'),
+      ).toBeInTheDocument();
     });
 
     it('does not show RSVP buttons', () => {
@@ -335,7 +362,9 @@ describe('CalendarInviteCard', () => {
     it('shows organizer name when provided', () => {
       render(
         <CalendarInviteCard
-          invite={makeInvite(ITipMethod.Request, { organizerName: 'Jane Doe' }) as any}
+          invite={
+            makeInvite(ITipMethod.Request, { organizerName: 'Jane Doe' }) as any
+          }
         />,
       );
       expect(screen.getByText(/Jane Doe/)).toBeInTheDocument();

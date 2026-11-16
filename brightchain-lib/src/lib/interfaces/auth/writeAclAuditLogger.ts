@@ -9,8 +9,8 @@
  * @see Requirements 11.1, 11.2, 11.3, 11.4, 11.5
  */
 
-import { IAclScope } from './writeAcl';
 import type { BrightDateTimestamp } from '../../types/brightDateTimestamp';
+import { IAclScope } from './writeAcl';
 
 /**
  * Structured audit logger for write ACL events.

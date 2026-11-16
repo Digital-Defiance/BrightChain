@@ -55,6 +55,8 @@ function makeLocals(): BrightChainIndexLocals {
     emailDomain: 'brightchain.org',
     fontAwesomeKitId: 'kit123',
     enabledFeatures: ['BrightChat', 'BrightHub'],
+    gtag: undefined,
+    totpAvailable: false,
   };
 }
 
@@ -101,7 +103,7 @@ function createEjsApp(
 
   // Register manifest routes (mirrors AppRouter logic)
   const manifest = ejsService.readRouteManifest();
-  for (const [route, templateFile] of Object.entries(manifest)) {
+  for (const route of Object.keys(manifest)) {
     if (!ejsService.isValidEjsRoute(route)) {
       continue;
     }

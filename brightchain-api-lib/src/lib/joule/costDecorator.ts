@@ -147,7 +147,7 @@ export function Cost(
  * Used by `CaptureMiddleware` and the joule-lint CI guard.
  */
 export function getCostMetadata(
-  // eslint-disable-next-line @typescript-eslint/ban-types
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type -- Reflect metadata is keyed by the handler function itself
   handler: Function,
 ): ICostMetadata | undefined {
   return Reflect.getMetadata(COST_METADATA_KEY, handler) as

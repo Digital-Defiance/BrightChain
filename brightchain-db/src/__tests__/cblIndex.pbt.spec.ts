@@ -10,7 +10,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import type { BlockId, ICBLIndexEntry } from '@brightchain/brightchain-lib';
-import { brightDateNow, CBLVisibility, dateToBrightDate } from '@brightchain/brightchain-lib';
+import {
+  brightDateNow,
+  CBLVisibility,
+  dateToBrightDate,
+} from '@brightchain/brightchain-lib';
 import * as fc from 'fast-check';
 import { CBLIndex } from '../lib/cblIndex';
 import { BrightDb } from '../lib/database';

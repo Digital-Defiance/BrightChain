@@ -9,6 +9,18 @@
 
 import {
   ChannelService,
+  IAddServerMembersResponse,
+  IApiEnvelope,
+  IChatCollection,
+  IChatStorageProvider,
+  ICreateServerInviteResponse,
+  ICreateServerResponse,
+  IDeleteServerResponse,
+  IGetServerResponse,
+  IListServersResponse,
+  IRedeemServerInviteResponse,
+  IRemoveServerMemberResponse,
+  IUpdateServerResponse,
   PermissionService,
   ServerService,
 } from '@brightchain/brightchain-lib';
@@ -18,48 +30,42 @@ import { ServerController } from '../servers';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
+type HandlerResult<T> = Promise<{
+  statusCode: number;
+  response: T | ApiErrorResponse;
+}>;
+
 interface ServerControllerHandlers {
   handlers: {
-    createServer: (req: unknown) => Promise<{
-      statusCode: number;
-      response: Record<string, unknown> | ApiErrorResponse;
-    }>;
-    listServers: (req: unknown) => Promise<{
-      statusCode: number;
-      response: Record<string, unknown> | ApiErrorResponse;
-    }>;
-    getServer: (req: unknown) => Promise<{
-      statusCode: number;
-      response: Record<string, unknown> | ApiErrorResponse;
-    }>;
-    updateServer: (req: unknown) => Promise<{
-      statusCode: number;
-      response: Record<string, unknown> | ApiErrorResponse;
-    }>;
-    deleteServer: (req: unknown) => Promise<{
-      statusCode: number;
-      response: Record<string, unknown> | ApiErrorResponse;
-    }>;
-    addMembers: (req: unknown) => Promise<{
-      statusCode: number;
-      response: Record<string, unknown> | ApiErrorResponse;
-    }>;
-    removeMember: (req: unknown) => Promise<{
-      statusCode: number;
-      response: Record<string, unknown> | ApiErrorResponse;
-    }>;
-    createInvite: (req: unknown) => Promise<{
-      statusCode: number;
-      response: Record<string, unknown> | ApiErrorResponse;
-    }>;
-    redeemInvite: (req: unknown) => Promise<{
-      statusCode: number;
-      response: Record<string, unknown> | ApiErrorResponse;
-    }>;
+    createServer: (req: unknown) => HandlerResult<ICreateServerResponse>;
+    listServers: (req: unknown) => HandlerResult<IListServersResponse>;
+    getServer: (req: unknown) => HandlerResult<IGetServerResponse>;
+    updateServer: (req: unknown) => HandlerResult<IUpdateServerResponse>;
+    deleteServer: (req: unknown) => HandlerResult<IDeleteServerResponse>;
+    addMembers: (req: unknown) => HandlerResult<IAddServerMembersResponse>;
+    removeMember: (req: unknown) => HandlerResult<IRemoveServerMemberResponse>;
+    createInvite: (req: unknown) => HandlerResult<ICreateServerInviteResponse>;
+    redeemInvite: (req: unknown) => HandlerResult<IRedeemServerInviteResponse>;
   };
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
+
+/** Treat a handler response as the success envelope the test expects. */
+function envelope<T>(
+  response: IApiEnvelope<T> | ApiErrorResponse,
+): IApiEnvelope<T> {
+  return response as IApiEnvelope<T>;
+}
+
+/** Return the envelope's data, failing the test if it is missing. */
+function dataOf<T>(response: IApiEnvelope<T> | ApiErrorResponse): T {
+  const data = envelope(response).data;
+  if (data === undefined) {
+    throw new Error('Expected response data');
+  }
+  return data;
+}
 
 function createMockApplication(): IBrightChainApplication {
   return {
@@ -80,21 +86,36 @@ function createMockApplication(): IBrightChainApplication {
   } as unknown as IBrightChainApplication;
 }
 
+/** Documents are keyed by `id`, or `token` for invite tokens. */
+interface IKeyedDocument {
+  id?: string;
+  token?: string;
+  _id?: string;
+}
+
+function makeCol<T>(): IChatCollection<T> {
+  const store = new Map<string, T>();
+  return {
+    create: async (doc: T) => {
+      const keyed = doc as IKeyedDocument;
+      store.set(String(keyed.id ?? keyed.token ?? keyed._id), doc);
+    },
+    findById: async (key: string) => store.get(key) ?? null,
+    findMany: async () => Array.from(store.values()),
+    update: async (key: string, doc: T) => {
+      store.set(key, doc);
+    },
+    delete: async (key: string) => {
+      store.delete(key);
+    },
+  };
+}
+
 function createTestSetup() {
   const permissionService = new PermissionService();
   const channelService = new ChannelService(permissionService);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const makeCol = () => {
-    const store = new Map<string, any>();
-    return {
-      create: async (doc: any) => { store.set(doc.id ?? doc.token ?? doc._id, doc); },
-      findById: async (key: string) => store.get(key) ?? null,
-      findMany: async () => Array.from(store.values()),
-      update: async (key: string, doc: any) => { store.set(key, doc); },
-      delete: async (key: string) => { store.delete(key); },
-    };
-  };
-  const storageProvider = {
+
+  const storageProvider: IChatStorageProvider = {
     conversations: makeCol(),
     messages: makeCol(),
     groups: makeCol(),
@@ -104,8 +125,7 @@ function createTestSetup() {
     inviteTokens: makeCol(),
     servers: makeCol(),
     serverInvites: makeCol(),
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } as any;
+  };
   const serverService = new ServerService({ channelService, storageProvider });
 
   const app = createMockApplication();
@@ -133,15 +153,15 @@ describe('ServerController — integration tests', () => {
       );
 
       expect(result.statusCode).toBe(201);
-      const body = result.response as Record<string, unknown>;
+      const body = envelope(result.response);
       expect(body.status).toBe('success');
 
-      const data = body.data as Record<string, unknown>;
+      const data = dataOf(body);
       expect(data.name).toBe('Test Server');
       expect(data.ownerId).toBe('owner-1');
       expect(data.memberIds).toEqual(['owner-1']);
-      expect((data.categories as unknown[]).length).toBe(1);
-      expect((data.channelIds as unknown[]).length).toBe(1);
+      expect(data.categories.length).toBe(1);
+      expect(data.channelIds.length).toBe(1);
     });
   });
 
@@ -155,9 +175,7 @@ describe('ServerController — integration tests', () => {
         authReq('user-1', { body: { name: 'Server A' } }),
       );
       expect(r1.statusCode).toBe(201);
-      const serverId = (
-        (r1.response as Record<string, unknown>).data as Record<string, unknown>
-      ).id as string;
+      const serverId = dataOf(r1.response).id;
 
       // List servers for the owner
       const result = await handlers.listServers(
@@ -165,10 +183,10 @@ describe('ServerController — integration tests', () => {
       );
 
       expect(result.statusCode).toBe(200);
-      const body = result.response as Record<string, unknown>;
+      const body = envelope(result.response);
       expect(body.status).toBe('success');
 
-      const data = body.data as { items: Array<Record<string, unknown>> };
+      const data = dataOf(body);
       expect(data.items.length).toBe(1);
       expect(data.items[0].id).toBe(serverId);
     });
@@ -186,9 +204,7 @@ describe('ServerController — integration tests', () => {
       );
 
       expect(result.statusCode).toBe(200);
-      const data = (result.response as Record<string, unknown>).data as {
-        items: unknown[];
-      };
+      const data = dataOf(result.response);
       expect(data.items.length).toBe(0);
     });
   });
@@ -201,22 +217,17 @@ describe('ServerController — integration tests', () => {
       const createResult = await handlers.createServer(
         authReq('owner-1', { body: { name: 'Detail Server' } }),
       );
-      const serverId = (
-        (createResult.response as Record<string, unknown>).data as Record<
-          string,
-          unknown
-        >
-      ).id as string;
+      const serverId = dataOf(createResult.response).id;
 
       const result = await handlers.getServer(
         authReq('owner-1', { params: { serverId } }),
       );
 
       expect(result.statusCode).toBe(200);
-      const body = result.response as Record<string, unknown>;
+      const body = envelope(result.response);
       expect(body.status).toBe('success');
-      expect((body.data as Record<string, unknown>).id).toBe(serverId);
-      expect((body.data as Record<string, unknown>).name).toBe('Detail Server');
+      expect(dataOf(body).id).toBe(serverId);
+      expect(dataOf(body).name).toBe('Detail Server');
     });
   });
 
@@ -228,12 +239,7 @@ describe('ServerController — integration tests', () => {
       const createResult = await handlers.createServer(
         authReq('owner-1', { body: { name: 'Original Name' } }),
       );
-      const serverId = (
-        (createResult.response as Record<string, unknown>).data as Record<
-          string,
-          unknown
-        >
-      ).id as string;
+      const serverId = dataOf(createResult.response).id;
 
       const result = await handlers.updateServer(
         authReq('owner-1', {
@@ -243,9 +249,9 @@ describe('ServerController — integration tests', () => {
       );
 
       expect(result.statusCode).toBe(200);
-      const body = result.response as Record<string, unknown>;
+      const body = envelope(result.response);
       expect(body.status).toBe('success');
-      expect((body.data as Record<string, unknown>).name).toBe('Updated Name');
+      expect(dataOf(body).name).toBe('Updated Name');
     });
 
     // ── 5. PUT /:serverId — non-owner member gets 403 ──────────────────
@@ -255,12 +261,7 @@ describe('ServerController — integration tests', () => {
       const createResult = await handlers.createServer(
         authReq('owner-1', { body: { name: 'Protected Server' } }),
       );
-      const serverId = (
-        (createResult.response as Record<string, unknown>).data as Record<
-          string,
-          unknown
-        >
-      ).id as string;
+      const serverId = dataOf(createResult.response).id;
 
       // Add a member
       await handlers.addMembers(
@@ -290,21 +291,16 @@ describe('ServerController — integration tests', () => {
       const createResult = await handlers.createServer(
         authReq('owner-1', { body: { name: 'Doomed Server' } }),
       );
-      const serverId = (
-        (createResult.response as Record<string, unknown>).data as Record<
-          string,
-          unknown
-        >
-      ).id as string;
+      const serverId = dataOf(createResult.response).id;
 
       const result = await handlers.deleteServer(
         authReq('owner-1', { params: { serverId } }),
       );
 
       expect(result.statusCode).toBe(200);
-      const body = result.response as Record<string, unknown>;
+      const body = envelope(result.response);
       expect(body.status).toBe('success');
-      expect((body.data as Record<string, unknown>).deleted).toBe(true);
+      expect(dataOf(body).deleted).toBe(true);
 
       // Verify server is gone
       const getResult = await handlers.getServer(
@@ -320,12 +316,7 @@ describe('ServerController — integration tests', () => {
       const createResult = await handlers.createServer(
         authReq('owner-1', { body: { name: 'Protected Server' } }),
       );
-      const serverId = (
-        (createResult.response as Record<string, unknown>).data as Record<
-          string,
-          unknown
-        >
-      ).id as string;
+      const serverId = dataOf(createResult.response).id;
 
       // Add a member
       await handlers.addMembers(
@@ -352,12 +343,7 @@ describe('ServerController — integration tests', () => {
       const createResult = await handlers.createServer(
         authReq('owner-1', { body: { name: 'Invite Server' } }),
       );
-      const serverId = (
-        (createResult.response as Record<string, unknown>).data as Record<
-          string,
-          unknown
-        >
-      ).id as string;
+      const serverId = dataOf(createResult.response).id;
 
       const result = await handlers.createInvite(
         authReq('owner-1', {
@@ -367,10 +353,10 @@ describe('ServerController — integration tests', () => {
       );
 
       expect(result.statusCode).toBe(201);
-      const body = result.response as Record<string, unknown>;
+      const body = envelope(result.response);
       expect(body.status).toBe('success');
 
-      const data = body.data as Record<string, unknown>;
+      const data = dataOf(body);
       expect(data.token).toBeDefined();
       expect(typeof data.token).toBe('string');
       expect(data.serverId).toBe(serverId);
@@ -387,12 +373,7 @@ describe('ServerController — integration tests', () => {
       const createResult = await handlers.createServer(
         authReq('owner-1', { body: { name: 'Join Server' } }),
       );
-      const serverId = (
-        (createResult.response as Record<string, unknown>).data as Record<
-          string,
-          unknown
-        >
-      ).id as string;
+      const serverId = dataOf(createResult.response).id;
 
       // Create invite
       const inviteResult = await handlers.createInvite(
@@ -401,12 +382,7 @@ describe('ServerController — integration tests', () => {
           body: { maxUses: 3 },
         }),
       );
-      const token = (
-        (inviteResult.response as Record<string, unknown>).data as Record<
-          string,
-          unknown
-        >
-      ).token as string;
+      const token = dataOf(inviteResult.response).token;
 
       // Redeem invite as a new user
       const redeemResult = await handlers.redeemInvite(
@@ -414,9 +390,9 @@ describe('ServerController — integration tests', () => {
       );
 
       expect(redeemResult.statusCode).toBe(200);
-      const body = redeemResult.response as Record<string, unknown>;
+      const body = envelope(redeemResult.response);
       expect(body.status).toBe('success');
-      expect((body.data as Record<string, unknown>).redeemed).toBe(true);
+      expect(dataOf(body).redeemed).toBe(true);
 
       // Verify user is now a member
       const server = await serverService.getServer(serverId);
@@ -430,12 +406,7 @@ describe('ServerController — integration tests', () => {
       const createResult = await handlers.createServer(
         authReq('owner-1', { body: { name: 'Limited Server' } }),
       );
-      const serverId = (
-        (createResult.response as Record<string, unknown>).data as Record<
-          string,
-          unknown
-        >
-      ).id as string;
+      const serverId = dataOf(createResult.response).id;
 
       // Create invite with maxUses=1
       const inviteResult = await handlers.createInvite(
@@ -444,12 +415,7 @@ describe('ServerController — integration tests', () => {
           body: { maxUses: 1 },
         }),
       );
-      const token = (
-        (inviteResult.response as Record<string, unknown>).data as Record<
-          string,
-          unknown
-        >
-      ).token as string;
+      const token = dataOf(inviteResult.response).token;
 
       // First redemption succeeds
       const firstRedeem = await handlers.redeemInvite(

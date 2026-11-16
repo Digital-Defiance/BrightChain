@@ -10,8 +10,8 @@ import {
   ContentTransferEncoding,
   createContentType,
 } from '../../interfaces/messaging/mimePart';
-import { EmailParser } from './emailParser';
 import { brightDateToDate } from '../../utils/brightDateConversions';
+import { EmailParser } from './emailParser';
 
 describe('EmailParser', () => {
   let parser: EmailParser;

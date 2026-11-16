@@ -8,6 +8,7 @@
  * @see Requirements 3.1, 5.1, 7.1, 9.1, 14.1, 14.2, 14.4
  */
 import 'reflect-metadata';
+
 import * as x509 from '@peculiar/x509';
 import { EmailErrorType } from '../../enumerations/messaging/emailErrorType';
 import { MessageEncryptionScheme } from '../../enumerations/messaging/messageEncryptionScheme';
@@ -19,11 +20,11 @@ import {
   IKeyStoreEntry,
 } from '../../interfaces/messaging/keyStore';
 import type { ISmimeCertificateMetadata } from '../../interfaces/messaging/smimeCertificate';
+import { brightDateNow } from '../../utils/brightDateConversions';
 import { EmailEncryptionService } from './emailEncryptionService';
 import { GpgKeyManager } from './gpgKeyManager';
 import { RecipientKeyResolver } from './recipientKeyResolver';
 import { SmimeCertificateManager } from './smimeCertificateManager';
-import { brightDateNow } from '../../utils/brightDateConversions';
 
 // ── Helpers ──────────────────────────────────────────────────────────────
 

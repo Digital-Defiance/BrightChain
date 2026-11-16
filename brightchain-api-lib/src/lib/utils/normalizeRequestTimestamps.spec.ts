@@ -4,13 +4,13 @@
  * Requirements: 7.1, 7.2, 7.4
  */
 
+import type { BrightDateTimestamp } from '@brightchain/brightchain-lib';
 import {
   brightDateNow,
   brightDateToISO,
   dateToBrightDate,
   isoToBrightDate,
 } from '@brightchain/brightchain-lib';
-import type { BrightDateTimestamp } from '@brightchain/brightchain-lib';
 import type {
   IBaseResponse,
   IEnrichedTimestampResponse,
@@ -142,12 +142,15 @@ describe('normalizeRequestTimestamps', () => {
         name: 'test',
       };
 
-      const result = normalizeRequestTimestamps(body, ['createdAt', 'updatedAt']);
+      const result = normalizeRequestTimestamps(body, [
+        'createdAt',
+        'updatedAt',
+      ]);
 
       expect(typeof result.createdAt).toBe('number');
       expect(typeof result.updatedAt).toBe('number');
       // name should be unchanged
-      expect(result.name).toBe('test');
+      expect(result['name']).toBe('test');
     });
 
     it('produces the correct BrightDate value from an ISO string', () => {
@@ -160,7 +163,9 @@ describe('normalizeRequestTimestamps', () => {
       const result = normalizeRequestTimestamps(body, ['timestamp']);
 
       // J2000.0 = BrightDate 0 (within Float64 round-trip tax, ~120 ns)
-      expect(Math.abs((result.timestamp as unknown as number) - 0)).toBeLessThan(0.000001);
+      expect(
+        Math.abs((result.timestamp as unknown as number) - 0),
+      ).toBeLessThan(0.000001);
     });
   });
 
@@ -182,13 +187,16 @@ describe('normalizeRequestTimestamps', () => {
         label: 'record',
       };
 
-      const result = normalizeRequestTimestamps(body, ['createdAt', 'expiresAt']);
+      const result = normalizeRequestTimestamps(body, [
+        'createdAt',
+        'expiresAt',
+      ]);
 
       expect(typeof result.createdAt).toBe('number');
       expect(typeof result.expiresAt).toBe('number');
       expect(result.label).toBe('record');
       // expiresAt should be greater than createdAt (later date = higher BrightDate)
-      expect((result.expiresAt as unknown as number)).toBeGreaterThan(
+      expect(result.expiresAt as unknown as number).toBeGreaterThan(
         result.createdAt as unknown as number,
       );
     });
@@ -200,7 +208,9 @@ describe('normalizeRequestTimestamps', () => {
 
       const result = normalizeRequestTimestamps(body, ['createdAt']);
 
-      expect(Math.abs((result.createdAt as unknown as number) - expected)).toBeLessThan(0.000001);
+      expect(
+        Math.abs((result.createdAt as unknown as number) - expected),
+      ).toBeLessThan(0.000001);
     });
   });
 
@@ -261,10 +271,12 @@ describe('normalizeRequestTimestamps', () => {
     it('skips fields not present in the body', () => {
       const body = { name: 'test' } as Record<string, unknown>;
 
-      const result = normalizeRequestTimestamps(body, ['createdAt' as keyof typeof body]);
+      const result = normalizeRequestTimestamps(body, [
+        'createdAt' as keyof typeof body,
+      ]);
 
       expect(result['createdAt']).toBeUndefined();
-      expect(result.name).toBe('test');
+      expect(result['name']).toBe('test');
     });
 
     it('only normalizes specified fields, leaving others untouched', () => {
@@ -280,7 +292,7 @@ describe('normalizeRequestTimestamps', () => {
 
       expect(typeof result.createdAt).toBe('number');
       expect(typeof result.updatedAt).toBe('string'); // unchanged
-      expect(result.name).toBe('test');
+      expect(result['name']).toBe('test');
       expect(result.count).toBe(42);
     });
   });

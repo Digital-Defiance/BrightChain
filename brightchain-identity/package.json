@@ -43,9 +43,9 @@
     "@brightchain/brightchain-lib": "^0.33.0"
   },
   "dependencies": {
-    "@digitaldefiance/ecies-lib": "5.2.2",
-    "@digitaldefiance/i18n-lib": "4.7.5",
-    "@digitaldefiance/node-ecies-lib": "5.2.2"
+    "@digitaldefiance/ecies-lib": "5.2.3",
+    "@digitaldefiance/i18n-lib": "4.8.0",
+    "@digitaldefiance/node-ecies-lib": "5.2.3"
   },
   "scripts": {
     "build": "npx nx build brightchain-identity",

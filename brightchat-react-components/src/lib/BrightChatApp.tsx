@@ -23,7 +23,7 @@ import type {
 import { brightDateNow, DefaultRole } from '@brightchain/brightchain-lib';
 import { useAuth } from '@digitaldefiance/express-suite-react-components';
 import { FC, memo, useCallback, useEffect, useMemo, useState } from 'react';
-import { Outlet, useLocation, useNavigate, useParams } from 'react-router-dom';
+import { Outlet, useLocation, useNavigate, useParams } from 'react-router';
 
 import BrightChatLayout from './BrightChatLayout';
 import CreateChannelDialog from './CreateChannelDialog';
@@ -413,9 +413,7 @@ const BrightChatApp: FC = () => {
           .updateServer(server.id, { iconFaClass: server.iconFaClass })
           .then((updated) => {
             setServers((prev) =>
-              prev.map((s) =>
-                s.id === server.id ? { ...s, ...updated } : s,
-              ),
+              prev.map((s) => (s.id === server.id ? { ...s, ...updated } : s)),
             );
           })
           .catch(() => {
@@ -428,9 +426,7 @@ const BrightChatApp: FC = () => {
 
       const generalChannelId = server.channelIds?.[0];
       if (generalChannelId) {
-        navigate(
-          `/brightchat/channel/${encodeURIComponent(generalChannelId)}`,
-        );
+        navigate(`/brightchat/channel/${encodeURIComponent(generalChannelId)}`);
       }
     },
     [navigate, chatApi],
@@ -530,7 +526,11 @@ const BrightChatApp: FC = () => {
   // ─── ServerSettingsPanel callbacks ──────────────────────────────────
 
   const handleUpdateServer = useCallback(
-    async (params: { name?: string; iconUrl?: string; iconFaClass?: string }) => {
+    async (params: {
+      name?: string;
+      iconUrl?: string;
+      iconFaClass?: string;
+    }) => {
       if (!activeServerId) return;
       const updated = await chatApi.updateServer(activeServerId, params);
       setServers((prev) =>

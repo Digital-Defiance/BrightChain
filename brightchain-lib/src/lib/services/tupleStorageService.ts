@@ -87,8 +87,16 @@ export class TupleStorageService {
 
     // Store all three blocks
     const dataBlock = new RawDataBlock(blockSize, storedData, brightDateNow());
-    const rand1Block = new RawDataBlock(blockSize, randomizer1, brightDateNow());
-    const rand2Block = new RawDataBlock(blockSize, randomizer2, brightDateNow());
+    const rand1Block = new RawDataBlock(
+      blockSize,
+      randomizer1,
+      brightDateNow(),
+    );
+    const rand2Block = new RawDataBlock(
+      blockSize,
+      randomizer2,
+      brightDateNow(),
+    );
 
     await this.blockStore.setData(dataBlock, options);
     await this.blockStore.setData(rand1Block, options);

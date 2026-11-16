@@ -14,6 +14,7 @@ import {
   AvailabilityServiceConfig,
   AvailabilityState,
   AvailabilityStatistics,
+  BlockId,
   BlockSize,
   Checksum,
   IAvailabilityService,
@@ -79,7 +80,7 @@ const createMockAvailabilityService = (
   queryBlockLocation: async (
     blockId: string,
   ): Promise<LocationQueryResult> => ({
-    blockId,
+    blockId: blockId as BlockId,
     state: AvailabilityState.Unknown,
     locations: [],
     isStale: false,

@@ -4,11 +4,15 @@ import { fireEvent, render, screen } from '@testing-library/react';
 // Mock useI18n to avoid requiring I18nProvider in tests
 jest.mock(
   '@digitaldefiance/express-suite-react-components',
-  () => require('./helpers/i18nMock').expressSuiteReactComponentsMock,
+  () =>
+    jest.requireActual<typeof import('./helpers/i18nMock')>(
+      './helpers/i18nMock',
+    ).expressSuiteReactComponentsMock,
 );
 
 import type { ICalendarEventDTO } from '@brightchain/brightcal-lib';
 import {
+  CalendarPermissionLevel,
   EventTransparency,
   EventVisibility,
   ParticipationStatus,
@@ -57,12 +61,12 @@ const mockEvent: ICalendarEventDTO = {
   reminders: [],
   dateModified: '2024-06-15T00:00:00Z',
   dateCreated: '2024-06-01T00:00:00Z',
-} as any;
+};
 
 const mockUpdatedEvent: ICalendarEventDTO = {
   ...mockEvent,
   sequence: 2,
-} as any;
+};
 
 // --- InlineEventCard tests ---
 
@@ -152,7 +156,7 @@ describe('InlineEventCard', () => {
 
 // Mock global fetch for CalendarSidebar hooks
 const mockFetchIntegration = jest.fn();
-(globalThis as any).fetch = mockFetchIntegration;
+globalThis.fetch = mockFetchIntegration;
 
 const mockCalendar: import('@brightchain/brightcal-lib').ICalendarCollectionDTO =
   {
@@ -163,9 +167,9 @@ const mockCalendar: import('@brightchain/brightcal-lib').ICalendarCollectionDTO 
     description: 'My personal calendar',
     isDefault: true,
     isSubscription: false,
-    defaultPermission: 'viewer' as any,
+    defaultPermission: CalendarPermissionLevel.Viewer,
     dateCreated: '2024-01-01T00:00:00Z',
-  } as any;
+  };
 
 const mockSharedCalendar: import('@brightchain/brightcal-lib').ICalendarCollectionDTO =
   {
@@ -176,9 +180,9 @@ const mockSharedCalendar: import('@brightchain/brightcal-lib').ICalendarCollecti
     description: 'Shared team calendar',
     isDefault: false,
     isSubscription: false,
-    defaultPermission: 'viewer' as any,
+    defaultPermission: CalendarPermissionLevel.Viewer,
     dateCreated: '2024-01-01T00:00:00Z',
-  } as any;
+  };
 
 describe('CalendarSidebar', () => {
   const defaultProps = {

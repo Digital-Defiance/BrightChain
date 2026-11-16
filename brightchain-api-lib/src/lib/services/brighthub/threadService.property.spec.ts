@@ -63,7 +63,7 @@ describe('Feature: brighthub-social-network, Thread_Service Property Tests', () 
 
   beforeEach(() => {
     mockApp = createMockApplication();
-    postsCollection = mockApp.collections.get('brighthub_posts')!;
+    postsCollection = mockApp.getModel('brighthub_posts');
     service = createThreadService(mockApp);
   });
 

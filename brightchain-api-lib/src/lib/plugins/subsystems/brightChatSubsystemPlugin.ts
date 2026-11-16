@@ -141,7 +141,7 @@ export class BrightChatSubsystemPlugin implements IAppSubsystemPlugin {
       createMessage: async (
         content: Uint8Array,
         _sender: unknown,
-        metadata: Record<string, unknown>,
+        _metadata: Record<string, unknown>,
       ) => {
         const messageId = `msg-${Date.now()}-${Math.random().toString(36).slice(2)}`;
         const magnetUrl = `magnet:?xt=urn:brightchain:${messageId}`;

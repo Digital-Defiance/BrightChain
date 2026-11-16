@@ -27,7 +27,7 @@ import { useTheme } from '@mui/material';
 import Box from '@mui/material/Box';
 import CircularProgress from '@mui/material/CircularProgress';
 import React, { Suspense, useMemo } from 'react';
-import { Route, Routes, useLocation, useNavigate } from 'react-router-dom';
+import { Route, Routes, useLocation, useNavigate } from 'react-router';
 
 // Lazy-load the page components
 const BlockListPage = React.lazy(() => import('./pages/BlockExplorerListPage'));

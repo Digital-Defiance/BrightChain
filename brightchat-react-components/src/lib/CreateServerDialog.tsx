@@ -24,14 +24,7 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
-import {
-  ChangeEvent,
-  FC,
-  FormEvent,
-  memo,
-  useCallback,
-  useState,
-} from 'react';
+import { ChangeEvent, FC, FormEvent, memo, useCallback, useState } from 'react';
 import FontAwesomeIconPicker from './FontAwesomeIconPicker';
 import SafeFaIcon from './SafeFaIcon';
 import ServerIconUploadArea from './ServerIconUploadArea';
@@ -126,7 +119,10 @@ const CreateServerDialog: FC<CreateServerDialogProps> = ({
         let uploadedServer: typeof server | null = null;
         if (commitToken && chatApi && !iconFaClass) {
           try {
-            uploadedServer = await chatApi.uploadServerIcon(server.id, commitToken);
+            uploadedServer = await chatApi.uploadServerIcon(
+              server.id,
+              commitToken,
+            );
           } catch {
             // Server created but icon upload failed — show warning, still navigate
             setIconWarning(t(BrightChatStrings.Server_Icon_UploadFailed));
@@ -158,7 +154,16 @@ const CreateServerDialog: FC<CreateServerDialogProps> = ({
         setSubmitting(false);
       }
     },
-    [name, commitToken, iconFaClass, chatApi, createServer, onCreated, onClose, t],
+    [
+      name,
+      commitToken,
+      iconFaClass,
+      chatApi,
+      createServer,
+      onCreated,
+      onClose,
+      t,
+    ],
   );
 
   const handleClose = useCallback(() => {

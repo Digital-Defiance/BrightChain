@@ -17,7 +17,10 @@ jest.mock('@brightchain/brightchain-lib', () => ({
     HoverReverse: 'hoverReverse',
   },
   toBrightDateString: () => '9146.438',
-  BrightChainStrings: new Proxy({}, { get: (_t: unknown, p: string | symbol) => String(p) }),
+  BrightChainStrings: new Proxy(
+    {},
+    { get: (_t: unknown, p: string | symbol) => String(p) },
+  ),
   PresenceStatus: {
     ONLINE: 'online',
     OFFLINE: 'offline',
@@ -66,9 +69,10 @@ jest.mock('@brightchain/brightchain-react-components', () => ({
   SubLogoIconHeight: 20,
 }));
 
+import type { DefaultRole } from '@brightchain/brightchain-lib';
 import { render, screen } from '@testing-library/react';
 import React from 'react';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter } from 'react-router';
 import type { DiscordLayoutProps } from '../BrightChatLayout';
 import DiscordLayout from '../BrightChatLayout';
 
@@ -82,8 +86,8 @@ const testServers = [
     memberIds: ['u1'],
     channelIds: [],
     categories: [],
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    createdAt: 0,
+    updatedAt: 0,
   },
 ];
 
@@ -99,7 +103,7 @@ function renderLayout(
       channels: [],
       categories: [],
       activeChannelId: null,
-      userRole: 'owner' as any,
+      userRole: 'owner' as DefaultRole,
       onChannelSelect: jest.fn(),
     },
     onServerSelect: jest.fn(),

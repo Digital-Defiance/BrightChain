@@ -155,7 +155,8 @@ export class BlockFetcher implements IBlockFetcher {
         );
 
         // Verify checksum matches blockId, except in encrypting pools where the name is not a content hash
-        const namedBlock = poolId !== undefined && this.isPoolEncrypted?.(poolId) === true;
+        const namedBlock =
+          poolId !== undefined && this.isPoolEncrypted?.(poolId) === true;
         if (!namedBlock) {
           const computedChecksum = this.checksumService
             .calculateChecksum(data)
@@ -221,7 +222,9 @@ export class BlockFetcher implements IBlockFetcher {
     if (poolId && isPooledBlockStore(this.store)) {
       if (namedBlock) {
         if (!this.store.putInPoolWithId) {
-          throw new Error('The store cannot hold named blocks, so an encrypting pool cannot be fetched into it');
+          throw new Error(
+            'The store cannot hold named blocks, so an encrypting pool cannot be fetched into it',
+          );
         }
         await this.store.putInPoolWithId(poolId, blockId, data);
         return;

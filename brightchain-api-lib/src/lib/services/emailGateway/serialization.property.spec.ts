@@ -15,10 +15,12 @@ import type {
   IMailbox,
 } from '@brightchain/brightchain-lib';
 import {
+  brightDateNow,
+  BrightDateTimestamp,
   ContentTransferEncoding,
-  dateToBrightDate,
   createContentType,
   createMailbox,
+  dateToBrightDate,
   DeliveryStatus,
   DurabilityLevel,
   EmailParser,
@@ -176,12 +178,12 @@ const arbEmailMetadata: fc.Arbitrary<IEmailMetadata> = fc
     const metadata: IEmailMetadata = {
       // IBlockMetadata fields (required but not part of round-trip)
       blockId: 'a'.repeat(64) as unknown as BlockId,
-      createdAt: new Date(),
+      createdAt: brightDateNow(),
       expiresAt: null,
       durabilityLevel: DurabilityLevel.Standard,
       parityBlockIds: [],
       accessCount: 0,
-      lastAccessedAt: new Date(),
+      lastAccessedAt: brightDateNow(),
       replicationStatus: ReplicationStatus.Pending,
       targetReplicationFactor: 0,
       replicaNodeIds: [],
@@ -194,7 +196,7 @@ const arbEmailMetadata: fc.Arbitrary<IEmailMetadata> = fc
       recipients: to.map((r) => r.address),
       priority: MessagePriority.NORMAL,
       deliveryStatus: new Map<string, DeliveryStatus>(),
-      acknowledgments: new Map<string, Date>(),
+      acknowledgments: new Map<string, BrightDateTimestamp>(),
       encryptionScheme: MessageEncryptionScheme.NONE,
       isCBL: false,
 
@@ -296,7 +298,8 @@ describe('Email Serialization Round-Trip Property Tests', () => {
           const parsed = await parser.parse(rfc5322);
 
           // RFC 5322 folding/unfolding may collapse runs of whitespace to a single space
-          const normalizeWs = (s: string) => s.replace(/\s+/g, ' ');
+          const normalizeWs = (s: string | undefined) =>
+            s?.replace(/\s+/g, ' ');
           expect(normalizeWs(parsed.subject)).toBe(
             normalizeWs(original.subject),
           );

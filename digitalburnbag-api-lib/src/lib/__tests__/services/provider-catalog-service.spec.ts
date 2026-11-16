@@ -97,8 +97,8 @@ describe('ProviderCatalogService', () => {
     it('should find providers by name (case-insensitive)', () => {
       const results = service.searchProviders('github');
       expect(results.length).toBeGreaterThan(0);
-      const hasGithub = results.some(
-        (p) => p.name.toLowerCase().includes('github'),
+      const hasGithub = results.some((p) =>
+        p.name.toLowerCase().includes('github'),
       );
       expect(hasGithub).toBe(true);
     });

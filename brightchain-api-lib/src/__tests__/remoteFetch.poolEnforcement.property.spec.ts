@@ -13,7 +13,10 @@
 
 import {
   BlockFetcherConfig,
+  BlockId,
   BlockStoreOptions,
+  brightDateNow,
+  BrightDateTimestamp,
   DEFAULT_BLOCK_FETCHER_CONFIG,
   IAvailabilityService,
   IBlockFetchTransport,
@@ -22,7 +25,6 @@ import {
   IPooledBlockStore,
   PoolId,
   PoolMismatchError,
-  brightDateNow,
 } from '@brightchain/brightchain-lib';
 import { sha3_512 } from '@noble/hashes/sha3';
 import fc from 'fast-check';
@@ -77,13 +79,19 @@ class MockTransport implements IBlockFetchTransport {
 class MockAvailabilityService {
   readonly locations = new Map<
     string,
-    Array<{ nodeId: string; lastSeen: Date; isAuthoritative: boolean }>
+    Array<{
+      nodeId: string;
+      lastSeen: BrightDateTimestamp;
+      isAuthoritative: boolean;
+    }>
   >();
 
-  async getBlockLocations(
-    blockId: string,
-  ): Promise<
-    Array<{ nodeId: string; lastSeen: Date; isAuthoritative: boolean }>
+  async getBlockLocations(blockId: string): Promise<
+    Array<{
+      nodeId: string;
+      lastSeen: BrightDateTimestamp;
+      isAuthoritative: boolean;
+    }>
   > {
     return this.locations.get(blockId) ?? [];
   }
@@ -205,7 +213,7 @@ class MockPooledStore {
     this.putCalls.push({ pool, dataLength: data.length });
     // Use override if set, otherwise record the actual pool
     const metaPool = this.metadataPoolOverride ?? pool;
-    this.metadataMap.set(hash, { blockId: hash, poolId: metaPool });
+    this.metadataMap.set(hash, { blockId: hash as BlockId, poolId: metaPool });
     return hash;
   }
 
@@ -235,7 +243,7 @@ class MockPooledStore {
     this.putKeyCalls.push({ key, dataLength: data.length });
     const hash = computeBlockId(data);
     this.poolBlocks.set(hash, new Uint8Array(data));
-    this.metadataMap.set(hash, { blockId: hash });
+    this.metadataMap.set(hash, { blockId: hash as BlockId });
   }
   async delete(_key: string): Promise<void> {}
   async getData(): Promise<never> {

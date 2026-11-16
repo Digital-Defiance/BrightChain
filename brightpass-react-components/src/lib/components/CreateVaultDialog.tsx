@@ -21,7 +21,7 @@ import {
 } from '@mui/material';
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import * as Yup from 'yup';
 import { useBrightPass } from '../context/BrightPassProvider';
 import { useBrightPassApi } from '../hooks/useBrightPassApi';

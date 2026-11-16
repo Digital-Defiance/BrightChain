@@ -18,16 +18,16 @@ import {
 } from '@brightchain/brightchain-lib';
 import { BrightDb, InMemoryHeadRegistry } from '@brightchain/db';
 import fc from 'fast-check';
-import type { ICreateEventBody } from '../controllers/eventController.ts';
-import { createCalendarCollectionModel } from '../models/calendarCollection.model.ts';
-import type { ITypedCalendarEvent } from '../models/calendarEvent.model.ts';
-import { createCalendarEventModel } from '../models/calendarEvent.model.ts';
-import { createCalendarShareModel } from '../models/calendarShare.model.ts';
-import { CalendarEngineService } from '../services/calendarEngineService.ts';
-import { CalendarPermissionService } from '../services/calendarPermissionService.ts';
-import { EncryptionService } from '../services/encryptionService.ts';
-import { EventEngineService } from '../services/eventEngineService.ts';
-import { ExportImportService } from '../services/exportImportService.ts';
+import type { ICreateEventBody } from '../controllers/eventController.js';
+import { createCalendarCollectionModel } from '../models/calendarCollection.model.js';
+import type { ITypedCalendarEvent } from '../models/calendarEvent.model.js';
+import { createCalendarEventModel } from '../models/calendarEvent.model.js';
+import { createCalendarShareModel } from '../models/calendarShare.model.js';
+import { CalendarEngineService } from '../services/calendarEngineService.js';
+import { CalendarPermissionService } from '../services/calendarPermissionService.js';
+import { EncryptionService } from '../services/encryptionService.js';
+import { EventEngineService } from '../services/eventEngineService.js';
+import { ExportImportService } from '../services/exportImportService.js';
 
 // ─── Setup ───────────────────────────────────────────────────────────────────
 
@@ -39,8 +39,7 @@ beforeAll(() => {
 function makeDb(name = 'testdb'): BrightDb {
   const store = new MemoryBlockStore(validBlockSizes);
   const registry = InMemoryHeadRegistry.createIsolated();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return new BrightDb(store as any, { name, headRegistry: registry });
+  return new BrightDb(store, { name, headRegistry: registry });
 }
 
 function createServices() {

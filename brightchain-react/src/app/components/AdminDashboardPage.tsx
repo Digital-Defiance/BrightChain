@@ -45,7 +45,7 @@ import {
   Typography,
 } from '@mui/material';
 import { FC, memo, useCallback, useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 import authenticatedApi from '../../services/authenticatedApi';
 
 const DEFAULT_POLL_INTERVAL_MS = 30_000;

@@ -1,6 +1,6 @@
-import type { Member } from '@digitaldefiance/node-ecies-lib';
-import type { PlatformID } from '@digitaldefiance/ecies-lib';
 import type { IBrightChainIdentity } from '@brightchain/brightchain-lib';
+import type { PlatformID } from '@digitaldefiance/ecies-lib';
+import type { Member } from '@digitaldefiance/node-ecies-lib';
 
 // Re-export the browser-safe DTO from brightchain-lib so existing consumers of
 // @brightchain/brightchain-identity can keep importing IBrightChainIdentity

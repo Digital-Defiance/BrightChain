@@ -24,14 +24,13 @@ import type { IMailbox } from '../../interfaces/messaging/emailAddress';
 import { createMailbox } from '../../interfaces/messaging/emailAddress';
 import type { IEmailMetadata } from '../../interfaces/messaging/emailMetadata';
 import { createContentType } from '../../interfaces/messaging/mimePart';
+import { brightDateNow } from '../../utils/brightDateConversions';
 import {
   EmailMessageService,
   type IEmailMetadataStore,
   type IReplyInput,
 } from './emailMessageService';
 import type { MessageCBLService } from './messageCBLService';
-import { brightDateNow } from '../../utils/brightDateConversions';
-import type { BrightDateTimestamp } from '../../types/brightDateTimestamp';
 
 // Feature: email-messaging-protocol, Property 7: Threading Consistency
 

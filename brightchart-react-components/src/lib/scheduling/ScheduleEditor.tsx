@@ -205,7 +205,7 @@ export const ScheduleEditor: React.FC<ScheduleEditorProps> = ({
     };
 
     setBlocks((prev) => [...prev, block]);
-  }, [newDay, newStart, newEnd, newRecurring]);
+  }, [newDay, newStart, newEnd, newRecurring, t]);
 
   // Remove a time block
   const handleRemoveBlock = useCallback((blockId: string) => {

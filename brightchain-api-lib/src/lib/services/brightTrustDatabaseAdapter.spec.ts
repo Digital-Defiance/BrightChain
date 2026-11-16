@@ -12,6 +12,7 @@ import {
   BrightTrustMemberMetadata,
   BrightTrustOperationalMode,
   ChainedAuditLogEntry,
+  dateToBrightDate,
   IBrightTrustMember,
   IdentityMode,
   IdentityRecoveryRecord,
@@ -127,8 +128,8 @@ function makeMember(
     publicKey: new Uint8Array([1, 2, 3, 4]),
     metadata,
     isActive,
-    createdAt: new Date('2024-01-01T00:00:00Z'),
-    updatedAt: new Date('2024-01-01T00:00:00Z'),
+    createdAt: dateToBrightDate(new Date('2024-01-01T00:00:00Z')),
+    updatedAt: dateToBrightDate(new Date('2024-01-01T00:00:00Z')),
   };
 }
 

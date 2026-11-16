@@ -16,8 +16,8 @@
  * @module brightDateFormatting
  */
 
-import { BrightDate } from '@brightchain/brightdate';
 import type { BrightDateValue, Precision } from '@brightchain/brightdate';
+import { BrightDate } from '@brightchain/brightdate';
 import { BrightDateDisplayMode } from '../enumerations/brightDateDisplayMode';
 
 /**
@@ -91,7 +91,9 @@ export function formatDualDate(
  * @param date - A BrightDateTimestamp (number), Date object, or ISO date string
  * @returns Compact string, e.g. "BD:9146.438"
  */
-export function toBrightDateCompact(date: BrightDateValue | Date | string): string {
+export function toBrightDateCompact(
+  date: BrightDateValue | Date | string,
+): string {
   return toBrightDatePrefixed(date, 3);
 }
 

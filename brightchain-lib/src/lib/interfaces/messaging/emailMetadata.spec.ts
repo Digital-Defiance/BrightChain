@@ -4,6 +4,11 @@ import { DeliveryStatus } from '../../enumerations/messaging/deliveryStatus';
 import { MessageEncryptionScheme } from '../../enumerations/messaging/messageEncryptionScheme';
 import { MessagePriority } from '../../enumerations/messaging/messagePriority';
 import { ReplicationStatus } from '../../enumerations/replicationStatus';
+import {
+  brightDateNow,
+  brightDateToISO,
+  normalizeToBrightDate,
+} from '../../utils/brightDateConversions';
 import type { BlockId } from '../branded/primitives/blockId';
 import {
   ContentTransferEncoding,
@@ -15,7 +20,6 @@ import {
   IMimePart,
   IResentHeaderBlock,
 } from './emailMetadata';
-import { normalizeToBrightDate, brightDateNow, brightDateToISO } from '../../utils/brightDateConversions';
 
 /**
  * Helper to create a minimal valid IMailbox.
@@ -363,7 +367,10 @@ describe('IEmailMetadata Interface', () => {
 
     it('should include required readReceipts as Map', () => {
       const readReceipts = new Map([
-        ['recipient-1', normalizeToBrightDate(new Date('2024-01-01T13:00:00Z'))],
+        [
+          'recipient-1',
+          normalizeToBrightDate(new Date('2024-01-01T13:00:00Z')),
+        ],
       ]);
       const email = createMinimalEmailMetadata({ readReceipts });
       expect(email.readReceipts.size).toBe(1);

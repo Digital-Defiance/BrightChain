@@ -10,8 +10,8 @@ import { CblErrorType } from '../enumerations/cblErrorType';
 import { CblError } from '../errors/cblError';
 import { IBlockCapacityCalculator } from '../interfaces/blockCapacity';
 import { EntryPropertyRecord } from '../interfaces/brightpass';
-import { Validator } from '../utils/validator';
 import { dateToBrightDate } from '../utils/brightDateConversions';
+import { Validator } from '../utils/validator';
 import { CBLService } from './cblService';
 import { ChecksumService } from './checksum.service';
 

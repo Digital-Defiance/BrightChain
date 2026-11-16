@@ -7,7 +7,7 @@
 import { BrightChartStrings } from '@brightchain/brightchart-lib';
 import { Box, Card, CardContent, Grid, Typography } from '@mui/material';
 import React from 'react';
-import { Route, Routes } from 'react-router-dom';
+import { Route, Routes } from 'react-router';
 import { useBrightChartTranslation } from '../../../hooks/useBrightChartTranslation';
 import { CheckInView } from './CheckInView';
 import { RegistrationView } from './RegistrationView';

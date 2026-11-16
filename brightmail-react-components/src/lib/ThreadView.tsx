@@ -47,7 +47,7 @@ import {
 } from '@mui/material';
 import type { AxiosInstance } from 'axios';
 import { FC, memo, useCallback, useEffect, useMemo, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router';
 import { useBrightMailTranslation } from './hooks/useBrightMailTranslation';
 
 import AvatarCircle from './AvatarCircle';
@@ -843,7 +843,6 @@ const ThreadView: FC = () => {
                                   },
                                 }}
                               >
-                                {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
                                 <audio
                                   controls
                                   src={getAttachmentDownloadPath(

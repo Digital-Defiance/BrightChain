@@ -13,15 +13,37 @@
 
 import {
   ChannelService,
+  IApiEnvelope,
+  IChatCollection,
+  IChatStorageProvider,
+  ICreateServerResponse,
+  IGetServerResponse,
+  IUpdateServerResponse,
   PermissionService,
   ServerService,
 } from '@brightchain/brightchain-lib';
+import { ApiErrorResponse } from '@digitaldefiance/node-express-suite';
 import { beforeEach, describe, expect, it } from '@jest/globals';
+import { IBrightChainApplication } from '../../../interfaces/application';
 import { ServerController } from '../servers';
+
+type HandlerResult<T> = Promise<{
+  statusCode: number;
+  response: T | ApiErrorResponse;
+}>;
+
+/** Return the envelope's data, failing the test if it is missing. */
+function dataOf<T>(response: IApiEnvelope<T> | ApiErrorResponse): T {
+  const data = (response as IApiEnvelope<T>).data;
+  if (data === undefined) {
+    throw new Error('Expected response data');
+  }
+  return data;
+}
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-function createMockApplication() {
+function createMockApplication(): IBrightChainApplication {
   return {
     db: { connection: { readyState: 1 } },
     environment: { mongo: { useTransactions: false }, debug: false },
@@ -31,25 +53,30 @@ function createMockApplication() {
     getModel: () => {
       throw new Error('not implemented');
     },
-  } as any;
+  } as unknown as IBrightChainApplication;
 }
-
 function authReq(userId: string, extra: Record<string, unknown> = {}) {
   return { user: { id: userId }, ...extra };
 }
 
 // ─── In-memory storage provider ──────────────────────────────────────────────
 
-function makeCol() {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const store = new Map<string, any>();
+/** Documents are keyed by `id`, or `token` for invite tokens. */
+interface IKeyedDocument {
+  id?: string;
+  token?: string;
+  _id?: string;
+}
+function makeCol<T>(): IChatCollection<T> {
+  const store = new Map<string, T>();
   return {
-    create: async (doc: any) => {
-      store.set(doc.id ?? doc.token ?? doc._id, doc);
+    create: async (doc: T) => {
+      const keyed = doc as IKeyedDocument;
+      store.set(String(keyed.id ?? keyed.token ?? keyed._id), doc);
     },
     findById: async (key: string) => store.get(key) ?? null,
     findMany: async () => Array.from(store.values()),
-    update: async (key: string, doc: any) => {
+    update: async (key: string, doc: T) => {
       store.set(key, doc);
     },
     delete: async (key: string) => {
@@ -58,7 +85,7 @@ function makeCol() {
   };
 }
 
-function createStorageProvider() {
+function createStorageProvider(): IChatStorageProvider {
   return {
     conversations: makeCol(),
     messages: makeCol(),
@@ -69,16 +96,15 @@ function createStorageProvider() {
     inviteTokens: makeCol(),
     servers: makeCol(),
     serverInvites: makeCol(),
-  } as any;
+  };
 }
-
 // ─── Test Setup ──────────────────────────────────────────────────────────────
 
 let controller: ServerController;
 let handlers: {
-  createServer: (req: unknown) => Promise<{ statusCode: number; response: any }>;
-  updateServer: (req: unknown) => Promise<{ statusCode: number; response: any }>;
-  getServer: (req: unknown) => Promise<{ statusCode: number; response: any }>;
+  createServer: (req: unknown) => HandlerResult<ICreateServerResponse>;
+  updateServer: (req: unknown) => HandlerResult<IUpdateServerResponse>;
+  getServer: (req: unknown) => HandlerResult<IGetServerResponse>;
 };
 
 beforeEach(() => {
@@ -91,7 +117,7 @@ beforeEach(() => {
   controller = new ServerController(app);
   controller.setServerService(serverService);
 
-  handlers = (controller as any).handlers;
+  handlers = (controller as unknown as { handlers: typeof handlers }).handlers;
 });
 
 // ─── Helper: create a server and return its ID ──────────────────────────────
@@ -101,7 +127,7 @@ async function createTestServer(ownerId: string): Promise<string> {
     authReq(ownerId, { body: { name: 'Test' } }),
   );
   expect(result.statusCode).toBe(201);
-  return (result.response as any).data.id as string;
+  return dataOf(result.response).id;
 }
 
 // ─── Tests ───────────────────────────────────────────────────────────────────
@@ -118,10 +144,10 @@ describe('ServerController — iconFaClass via updateServer', () => {
     );
 
     expect(result.statusCode).toBe(200);
-    expect(result.response.data.iconFaClass).toBe('fa-solid fa-gamepad');
+    expect(dataOf(result.response).iconFaClass).toBe('fa-solid fa-gamepad');
   });
 
-  it('updateServer with iconFaClass: \'\' clears it', async () => {
+  it("updateServer with iconFaClass: '' clears it", async () => {
     const serverId = await createTestServer('owner-1');
 
     // Set it first
@@ -141,10 +167,10 @@ describe('ServerController — iconFaClass via updateServer', () => {
     );
 
     expect(result.statusCode).toBe(200);
-    expect(result.response.data.iconFaClass).toBe('');
+    expect(dataOf(result.response).iconFaClass).toBe('');
   });
 
-  it('updateServer without iconFaClass doesn\'t change existing value', async () => {
+  it("updateServer without iconFaClass doesn't change existing value", async () => {
     const serverId = await createTestServer('owner-1');
 
     // Set iconFaClass
@@ -164,8 +190,8 @@ describe('ServerController — iconFaClass via updateServer', () => {
     );
 
     expect(result.statusCode).toBe(200);
-    expect(result.response.data.iconFaClass).toBe('fa-solid fa-gamepad');
-    expect(result.response.data.name).toBe('Renamed');
+    expect(dataOf(result.response).iconFaClass).toBe('fa-solid fa-gamepad');
+    expect(dataOf(result.response).name).toBe('Renamed');
   });
 
   it('getServer returns the updated iconFaClass', async () => {
@@ -187,6 +213,6 @@ describe('ServerController — iconFaClass via updateServer', () => {
     );
 
     expect(result.statusCode).toBe(200);
-    expect(result.response.data.iconFaClass).toBe('fa-solid fa-star');
+    expect(dataOf(result.response).iconFaClass).toBe('fa-solid fa-star');
   });
 });

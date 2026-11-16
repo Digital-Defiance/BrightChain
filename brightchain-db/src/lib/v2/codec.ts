@@ -9,7 +9,9 @@ export const MAX_FIELD_PATH_BYTES = 256;
 /** Attachment chunk size: every chunk but the last is exactly this long. */
 export const BLOB_CHUNK_BYTES = 1_048_576;
 /** Entries per blob manifest: (4096 - magic, kind, size, depth, count) / 64-byte digests. */
-export const MAX_BLOB_CHUNKS = Math.floor((MAX_METADATA_BYTES - 5 - 8 - 1 - 2) / 64);
+export const MAX_BLOB_CHUNKS = Math.floor(
+  (MAX_METADATA_BYTES - 5 - 8 - 1 - 2) / 64,
+);
 export const MAX_BLOB_DEPTH = 7;
 
 /** Bytes covered by each entry of a manifest at `depth` (every entry but the last is full). */
@@ -141,7 +143,9 @@ let sha3: (bytes: Uint8Array) => Uint8Array = sha3_512;
  * Replace the SHA3-512 implementation. The default is pure JavaScript and runs
  * in browsers. Node entry points install the native one (see node-hash.ts).
  */
-export function setSha3Implementation(implementation: (bytes: Uint8Array) => Uint8Array): void {
+export function setSha3Implementation(
+  implementation: (bytes: Uint8Array) => Uint8Array,
+): void {
   sha3 = implementation;
 }
 
@@ -376,7 +380,6 @@ function validateBranch(children: readonly V2BranchChild[]): void {
   }
 }
 
-
 const LEAF_RECORD_BUDGET_BYTES = MAX_METADATA_BYTES - LEAF_HEADER_BYTES;
 
 function validateIndexFieldPath(path: string): Buffer {
@@ -459,7 +462,10 @@ function validateIndexKeys(entries: readonly Buffer[]): void {
       if (Buffer.compare(previous, key) >= 0) {
         throw new V2CodecError('Index keys must be unique and ascending');
       }
-      if (key.length > previous.length && key.subarray(0, previous.length).equals(previous)) {
+      if (
+        key.length > previous.length &&
+        key.subarray(0, previous.length).equals(previous)
+      ) {
         throw new V2CodecError('An index key cannot be a prefix of another');
       }
     }
@@ -511,15 +517,22 @@ function validateIndexBranch(
     }
     total += recordBytes;
     if (total > MAX_U64) {
-      throw new V2CodecError('Branch record byte total exceeds the unsigned 64-bit range');
+      throw new V2CodecError(
+        'Branch record byte total exceeds the unsigned 64-bit range',
+      );
     }
   }
   if (total <= BigInt(LEAF_RECORD_BUDGET_BYTES)) {
-    throw new V2CodecError('A branch must collapse when its entries fit in a leaf');
+    throw new V2CodecError(
+      'A branch must collapse when its entries fit in a leaf',
+    );
   }
 }
 
-function encodeIndexBranch(writer: MetadataWriter, branch: V2IndexBranch): void {
+function encodeIndexBranch(
+  writer: MetadataWriter,
+  branch: V2IndexBranch,
+): void {
   const children = [...branch.children].sort((a, b) => a.nibble - b.nibble);
   validateIndexBranch(branch.skip, children);
   writer.u16(branch.skip.length);
@@ -545,7 +558,9 @@ function decodeIndexBranch(reader: MetadataReader): V2IndexBranch {
   const packed = reader.bytes(Math.ceil(length / 2));
   const skip: number[] = [];
   for (let index = 0; index < length; index++) {
-    skip.push(index % 2 === 0 ? packed[index >> 1] >> 4 : packed[index >> 1] & 15);
+    skip.push(
+      index % 2 === 0 ? packed[index >> 1] >> 4 : packed[index >> 1] & 15,
+    );
   }
   if (length % 2 === 1 && (packed[packed.length - 1] & 15) !== 0) {
     throw new V2CodecError('Nonzero padding in an index branch prefix');
@@ -554,14 +569,22 @@ function decodeIndexBranch(reader: MetadataReader): V2IndexBranch {
   const children: V2BranchChild[] = [];
   for (let nibble = 0; nibble < 16; nibble++) {
     if ((bitmap & (1 << nibble)) !== 0) {
-      children.push({ nibble, recordBytes: reader.u64(), digest: reader.digest() });
+      children.push({
+        nibble,
+        recordBytes: reader.u64(),
+        digest: reader.digest(),
+      });
     }
   }
   validateIndexBranch(skip, children);
   return { kind: 'index-branch', skip, children };
 }
 
-function validateBlob(size: bigint, depth: number, entries: readonly Digest[]): void {
+function validateBlob(
+  size: bigint,
+  depth: number,
+  entries: readonly Digest[],
+): void {
   if (typeof size !== 'bigint' || size < 0n || size > MAX_U64) {
     throw new V2CodecError('Invalid blob size');
   }

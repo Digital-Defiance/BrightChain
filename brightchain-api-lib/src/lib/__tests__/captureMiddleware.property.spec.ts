@@ -52,7 +52,6 @@ function makeReq(
   _finishListeners: (() => void)[];
   triggerFinish: () => void;
 } {
-  const listeners: (() => void)[] = [];
   const fakeMember = {
     toBytes: () => new Uint8Array(32).fill(1),
     id: 'test-member-id',

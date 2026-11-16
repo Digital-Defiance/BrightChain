@@ -8,10 +8,7 @@
  * @requirements joule-resource-credits spec, Req 7.5, 8.1 – 8.4
  */
 
-import {
-  BrightChainStrings,
-  formatJoule,
-} from '@brightchain/brightchain-lib';
+import { BrightChainStrings, formatJoule } from '@brightchain/brightchain-lib';
 import { useI18n } from '@digitaldefiance/express-suite-react-components';
 import * as React from 'react';
 import { useFormattedDate } from '../hooks/useFormattedDate';
@@ -123,9 +120,7 @@ export const DisputeNotice: React.FC<DisputeNoticeProps> = ({
         </div>
         <div className="joule-dispute__row">
           <dt>{t(BrightChainStrings.Dispute_Field_Opened)}</dt>
-          <dd>
-            {formatDateTime(new Date(dispute.openedAt))}
-          </dd>
+          <dd>{formatDateTime(new Date(dispute.openedAt))}</dd>
         </div>
         {dispute.reason ? (
           <div className="joule-dispute__row">
@@ -136,9 +131,7 @@ export const DisputeNotice: React.FC<DisputeNoticeProps> = ({
         {dispute.resolvedAt ? (
           <div className="joule-dispute__row">
             <dt>{t(BrightChainStrings.Dispute_Field_Resolved)}</dt>
-            <dd>
-              {formatDateTime(new Date(dispute.resolvedAt))}
-            </dd>
+            <dd>{formatDateTime(new Date(dispute.resolvedAt))}</dd>
           </div>
         ) : null}
         {dispute.resolution ? (

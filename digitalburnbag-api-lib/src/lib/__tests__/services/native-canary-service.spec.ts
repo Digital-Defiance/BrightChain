@@ -6,17 +6,16 @@
  */
 import type {
   INativeCanaryConfigBase,
-  IPlatformEvent,
   NativeCanaryType,
 } from '@brightchain/digitalburnbag-lib';
 import { HeartbeatSignalType } from '@brightchain/digitalburnbag-lib';
+import type { BrightDBNativeCanaryConfigRepository } from '../../collections/native-canary-config-collection';
+import type { IEncryptionService } from '../../services/credential-service';
 import {
   InMemoryPlatformEventStore,
   NativeCanaryService,
   NativeCanarySignalCallback,
 } from '../../services/native-canary-service';
-import type { BrightDBNativeCanaryConfigRepository } from '../../collections/native-canary-config-collection';
-import type { IEncryptionService } from '../../services/credential-service';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -47,7 +46,8 @@ function createInMemoryRepository(): BrightDBNativeCanaryConfigRepository<string
   const configs: INativeCanaryConfigBase<string>[] = [];
   return {
     configs_: configs,
-    getConfigById: async (id: string) => configs.find((c) => c.id === id) ?? null,
+    getConfigById: async (id: string) =>
+      configs.find((c) => c.id === id) ?? null,
     getConfigsByUser: async (userId: string) =>
       configs.filter((c) => c.userId === userId),
     createConfig: async (config: INativeCanaryConfigBase<string>) => {
@@ -65,48 +65,6 @@ function createInMemoryRepository(): BrightDBNativeCanaryConfigRepository<string
   } as unknown as BrightDBNativeCanaryConfigRepository<string> & {
     configs_: INativeCanaryConfigBase<string>[];
   };
-}
-
-/**
- * Builds a native canary config for a given type with threshold and period.
- */
-function buildConfig(
-  type: NativeCanaryType,
-  overrides?: Partial<INativeCanaryConfigBase<string>>,
-): INativeCanaryConfigBase<string> {
-  const base: INativeCanaryConfigBase<string> = {
-    id: 'config-1',
-    userId: 'user-1',
-    type,
-    isEnabled: true,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    ...overrides,
-  };
-
-  switch (type) {
-    case 'login_activity':
-      base.loginThreshold = base.loginThreshold ?? 3;
-      base.loginPeriodMs = base.loginPeriodMs ?? 86400000; // 24h
-      break;
-    case 'file_access':
-      base.fileAccessThreshold = base.fileAccessThreshold ?? 5;
-      base.fileAccessPeriodMs = base.fileAccessPeriodMs ?? 86400000;
-      break;
-    case 'api_usage':
-      base.apiUsageThreshold = base.apiUsageThreshold ?? 10;
-      base.apiUsagePeriodMs = base.apiUsagePeriodMs ?? 3600000; // 1h
-      break;
-    case 'vault_interaction':
-      base.vaultInteractionThreshold = base.vaultInteractionThreshold ?? 2;
-      base.vaultInteractionPeriodMs = base.vaultInteractionPeriodMs ?? 86400000;
-      break;
-    case 'duress_code':
-      // No threshold/period for duress codes
-      break;
-  }
-
-  return base;
 }
 
 /**
@@ -391,8 +349,12 @@ describe('NativeCanaryService', () => {
       expect(await service.isDuressCode('user-1', 'duress-beta')).toBe(true);
 
       // Normal credentials should NOT be identified as duress codes
-      expect(await service.isDuressCode('user-1', 'normal-password')).toBe(false);
-      expect(await service.isDuressCode('user-1', 'my-regular-pass')).toBe(false);
+      expect(await service.isDuressCode('user-1', 'normal-password')).toBe(
+        false,
+      );
+      expect(await service.isDuressCode('user-1', 'my-regular-pass')).toBe(
+        false,
+      );
     });
 
     it('should return false for empty string as duress code', async () => {

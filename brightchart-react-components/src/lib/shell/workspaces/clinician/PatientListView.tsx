@@ -16,7 +16,7 @@ import {
 } from '@brightchain/brightchart-lib';
 import * as React from 'react';
 import { useCallback, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { useBrightChartTranslation } from '../../../hooks/useBrightChartTranslation';
 import { PatientSearchForm } from '../../../PatientSearchForm/PatientSearchForm';
 import { PermissionGate } from '../../components/PermissionGate';

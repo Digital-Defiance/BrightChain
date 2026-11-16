@@ -10,6 +10,7 @@
 
 import {
   BlockAnnouncement,
+  BlockId,
   GossipConfig,
   MessageDeliveryMetadata,
 } from '@brightchain/brightchain-lib';
@@ -70,8 +71,8 @@ describe('GossipService.announceMessage()', () => {
     messageId: 'msg-001',
     recipientIds: ['recipient-1', 'recipient-2'],
     priority: 'normal',
-    blockIds: ['block-a', 'block-b'],
-    cblBlockId: 'cbl-001',
+    blockIds: ['block-a' as BlockId, 'block-b' as BlockId],
+    cblBlockId: 'cbl-001' as BlockId,
     ackRequired: true,
   };
 
@@ -79,8 +80,8 @@ describe('GossipService.announceMessage()', () => {
     messageId: 'msg-002',
     recipientIds: ['recipient-3'],
     priority: 'high',
-    blockIds: ['block-c'],
-    cblBlockId: 'cbl-002',
+    blockIds: ['block-c' as BlockId],
+    cblBlockId: 'cbl-002' as BlockId,
     ackRequired: false,
   };
 
@@ -134,10 +135,7 @@ describe('GossipService.announceMessage()', () => {
     it('should set timestamp to a BrightDateTimestamp (number)', async () => {
       const peerProvider = new MockPeerProvider('local-node', manyPeers);
       const service = new GossipService(peerProvider, defaultConfig);
-
-      const before = Date.now();
       await service.announceMessage(['block-1'], normalMetadata);
-      const after = Date.now();
 
       const pending = service.getPendingAnnouncements();
       expect(typeof pending[0].timestamp).toBe('number');
@@ -242,7 +240,7 @@ describe('GossipService.announceMessage()', () => {
       const peerProvider = new MockPeerProvider('local-node', manyPeers);
       const service = new GossipService(peerProvider, defaultConfig);
 
-      await service.announceBlock('block-1');
+      await service.announceBlock('block-1' as BlockId);
       await service.flushAnnouncements();
 
       // Should have sent to 3 peers (default fanout)
@@ -257,7 +255,7 @@ describe('GossipService.announceMessage()', () => {
       const service = new GossipService(peerProvider, defaultConfig);
 
       // Queue a mix of announcement types
-      await service.announceBlock('plain-block'); // default fanout=3
+      await service.announceBlock('plain-block' as BlockId); // default fanout=3
       await service.announceMessage(['msg-block'], normalMetadata); // normal fanout=5
       await service.announceMessage(['high-block'], highMetadata); // high fanout=7
 

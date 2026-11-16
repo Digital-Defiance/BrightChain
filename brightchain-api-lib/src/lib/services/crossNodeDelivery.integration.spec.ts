@@ -19,14 +19,16 @@
 
 import {
   BlockAnnouncement,
+  BlockId,
   BlockSize,
   createMailbox,
+  dateToBrightDate,
+  type IEmailInput,
   InMemoryEmailMetadataStore,
   MemoryBlockStore,
   MemoryMessageMetadataStore,
   MessageCBLService,
   ServiceProvider,
-  type IEmailInput,
 } from '@brightchain/brightchain-lib';
 import { afterAll, beforeAll, describe, expect, it } from '@jest/globals';
 import { createServer, Server } from 'http';
@@ -92,7 +94,7 @@ function createTestNode(
     for (const announcement of announcements) {
       const rehydrated: BlockAnnouncement = {
         ...announcement,
-        timestamp: new Date(announcement.timestamp),
+        timestamp: dateToBrightDate(new Date(announcement.timestamp)),
       };
       await gossipService.handleAnnouncement(rehydrated);
     }
@@ -433,8 +435,8 @@ describe('Cross-Node Delivery Integration (real servers)', () => {
         messageId: 'generic-msg-001',
         recipientIds: ['user-n'],
         priority: 'normal',
-        blockIds: ['block-generic-1'],
-        cblBlockId: 'cbl-generic-1',
+        blockIds: ['block-generic-1' as BlockId],
+        cblBlockId: 'cbl-generic-1' as BlockId,
         ackRequired: true,
       });
 
@@ -460,8 +462,8 @@ describe('Cross-Node Delivery Integration (real servers)', () => {
         messageId: 'generic-msg-002',
         recipientIds: ['user-n'],
         priority: 'normal',
-        blockIds: ['block-generic-2'],
-        cblBlockId: 'cbl-generic-2',
+        blockIds: ['block-generic-2' as BlockId],
+        cblBlockId: 'cbl-generic-2' as BlockId,
         ackRequired: true,
       });
 
@@ -509,8 +511,8 @@ describe('Cross-Node Delivery Integration (real servers)', () => {
         messageId: 'hop-msg-001',
         recipientIds: ['user-n'],
         priority: 'normal',
-        blockIds: ['block-hop-1'],
-        cblBlockId: 'cbl-hop-1',
+        blockIds: ['block-hop-1' as BlockId],
+        cblBlockId: 'cbl-hop-1' as BlockId,
         ackRequired: true,
       });
 

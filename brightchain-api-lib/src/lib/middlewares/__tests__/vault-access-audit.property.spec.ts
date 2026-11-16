@@ -233,7 +233,7 @@ describe('Vault Access Audit Property Tests', () => {
           fc.boolean(),
           fc.uuid(),
           async (isAuthenticated, userId) => {
-            const { service, entries } = createMockAuditService();
+            const { service } = createMockAuditService();
             const deps = createMockDeps({ auditService: service });
 
             const req = createMockReq({
@@ -273,7 +273,7 @@ describe('Vault Access Audit Property Tests', () => {
     it('preserves IPv4 and IPv6 addresses without transformation', async () => {
       await fc.assert(
         fc.asyncProperty(fc.oneof(fc.ipV4(), fc.ipV6()), async (ipAddress) => {
-          const { service, entries } = createMockAuditService();
+          const { service } = createMockAuditService();
           const deps = createMockDeps({ auditService: service });
 
           const req = createMockReq({ ip: ipAddress });

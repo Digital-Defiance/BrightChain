@@ -11,10 +11,11 @@ test.describe('BrightChat Server Features', () => {
     await waitForSuspense(page);
 
     // Click the "+" button to create a server
-    const createBtn = page.getByRole('button', { name: /create.*server/i })
+    const createBtn = page
+      .getByRole('button', { name: /create.*server/i })
       .or(page.locator('[data-testid="create-server-button"]'))
       .first();
-    
+
     if (await createBtn.isVisible({ timeout: 10_000 }).catch(() => false)) {
       await createBtn.click();
 
@@ -60,7 +61,8 @@ test.describe('BrightChat Server Features', () => {
       await waitForSuspense(page);
 
       // Open settings (gear icon)
-      const settingsBtn = page.getByRole('button', { name: /settings/i })
+      const settingsBtn = page
+        .getByRole('button', { name: /settings/i })
         .or(page.locator('[data-testid="settings-button"]'))
         .first();
 
@@ -82,7 +84,8 @@ test.describe('BrightChat Server Features', () => {
     await waitForSuspense(page);
 
     // Click the "+" button to create a server
-    const createBtn = page.getByRole('button', { name: /create.*server/i })
+    const createBtn = page
+      .getByRole('button', { name: /create.*server/i })
       .or(page.locator('[data-testid="create-server-button"]'))
       .first();
 
@@ -118,7 +121,8 @@ test.describe('BrightChat Server Features', () => {
       await waitForSuspense(page);
 
       // Open settings
-      const settingsBtn = page.getByRole('button', { name: /settings/i })
+      const settingsBtn = page
+        .getByRole('button', { name: /settings/i })
         .or(page.locator('[data-testid="settings-button"]'))
         .first();
 

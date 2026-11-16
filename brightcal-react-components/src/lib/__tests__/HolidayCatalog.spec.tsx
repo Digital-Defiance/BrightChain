@@ -4,7 +4,10 @@ import { act, fireEvent, render, screen } from '@testing-library/react';
 // Mock useI18n to avoid requiring I18nProvider in tests
 jest.mock(
   '@digitaldefiance/express-suite-react-components',
-  () => require('./helpers/i18nMock').expressSuiteReactComponentsMock,
+  () =>
+    jest.requireActual<typeof import('./helpers/i18nMock')>(
+      './helpers/i18nMock',
+    ).expressSuiteReactComponentsMock,
 );
 
 import type { HolidayCatalogProps } from '../components/HolidayCatalog';
@@ -12,7 +15,7 @@ import { HolidayCatalog } from '../components/HolidayCatalog';
 
 // Mock global fetch
 const mockFetch = jest.fn();
-(globalThis as any).fetch = mockFetch;
+globalThis.fetch = mockFetch;
 
 const sampleEntries = [
   {

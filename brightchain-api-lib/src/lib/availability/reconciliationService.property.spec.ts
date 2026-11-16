@@ -12,7 +12,9 @@
  */
 
 import {
+  BlockId,
   BlockManifest,
+  BrightDateTimestamp,
   PendingSyncItem,
   ReconciliationConfig,
   ReconciliationEvent,
@@ -39,7 +41,7 @@ const arbHexString = (minLength: number, maxLength: number) =>
 /**
  * Generate a valid block ID (hex string of at least 32 characters)
  */
-const arbBlockId = arbHexString(32, 64);
+const arbBlockId = arbHexString(32, 64).map((id) => id as BlockId);
 
 /**
  * Generate a unique set of block IDs
@@ -68,7 +70,7 @@ const arbPeerIdSet = fc
 interface LocationUpdate {
   blockId: string;
   nodeId: string;
-  timestamp: Date;
+  timestamp: BrightDateTimestamp;
 }
 
 /**
@@ -114,7 +116,7 @@ function createMockManifestProvider(options: {
     getLocalNodeId: () => options.localNodeId,
     getLocalManifest: () => ({
       nodeId: options.localNodeId,
-      blockIds: options.localBlockIds,
+      blockIds: options.localBlockIds as BlockId[],
       generatedAt: 9000,
       checksum: `checksum-${options.localBlockIds.length}`,
     }),
@@ -125,7 +127,7 @@ function createMockManifestProvider(options: {
       }
       return {
         nodeId: peerId,
-        blockIds: peerData.blockIds,
+        blockIds: peerData.blockIds as BlockId[],
         generatedAt: 9000,
         checksum: peerData.checksum,
       };
@@ -133,7 +135,7 @@ function createMockManifestProvider(options: {
     updateBlockLocation: async (
       blockId: string,
       nodeId: string,
-      timestamp: Date,
+      timestamp: BrightDateTimestamp,
     ) => {
       locationUpdates.push({ blockId, nodeId, timestamp });
     },
@@ -149,7 +151,8 @@ function createMockManifestProvider(options: {
     updateBlockAvailabilityState: async (blockId: string, state: string) => {
       stateUpdates.push({ blockId, state });
     },
-    getOrphanedBlockIds: async () => options.orphanedBlockIds ?? [],
+    getOrphanedBlockIds: async () =>
+      (options.orphanedBlockIds ?? []) as BlockId[],
     sendSyncItem: async (peerId: string, item: PendingSyncItem) => {
       sentSyncItems.push({ peerId, item });
     },

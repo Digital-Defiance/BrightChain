@@ -138,10 +138,10 @@ export type { FontAwesomeIconPickerProps } from './lib/FontAwesomeIconPicker';
 // Icon Upload
 export { default as IconCropDialog } from './lib/IconCropDialog';
 export type { IconCropDialogProps } from './lib/IconCropDialog';
-export { default as ServerIconUploadArea } from './lib/ServerIconUploadArea';
-export type { ServerIconUploadAreaProps } from './lib/ServerIconUploadArea';
 export { default as SafeFaIcon } from './lib/SafeFaIcon';
 export type { SafeFaIconProps } from './lib/SafeFaIcon';
+export { default as ServerIconUploadArea } from './lib/ServerIconUploadArea';
+export type { ServerIconUploadAreaProps } from './lib/ServerIconUploadArea';
 
 // Encryption Indicators
 export { default as EncryptionBanner } from './lib/EncryptionBanner';

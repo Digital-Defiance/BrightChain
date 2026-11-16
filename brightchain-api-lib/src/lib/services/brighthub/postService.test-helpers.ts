@@ -3,12 +3,17 @@
  * Provides mock implementations of database collections and application.
  */
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/** True when every entry in the filter equals the record's field. */
+function matchesFilter<T>(item: T, filter: object): boolean {
+  return Object.entries(filter).every(
+    ([key, value]) => (item as Record<string, unknown>)[key] === value,
+  );
+}
 
 /**
  * Mock collection that stores data in memory
  */
-export class MockCollection<T extends { _id: string }> {
+export class MockCollection<T> {
   data: T[] = [];
 
   async create(record: T): Promise<T> {
@@ -19,13 +24,7 @@ export class MockCollection<T extends { _id: string }> {
   findOne(filter: Partial<T>): { exec(): Promise<T | null> } {
     return {
       exec: async () => {
-        return (
-          this.data.find((item) =>
-            Object.entries(filter).every(
-              ([key, value]) => (item as any)[key] === value,
-            ),
-          ) || null
-        );
+        return this.data.find((item) => matchesFilter(item, filter)) || null;
       },
     };
   }
@@ -36,11 +35,7 @@ export class MockCollection<T extends { _id: string }> {
         if (Object.keys(filter).length === 0) {
           return [...this.data];
         }
-        return this.data.filter((item) =>
-          Object.entries(filter).every(
-            ([key, value]) => (item as any)[key] === value,
-          ),
-        );
+        return this.data.filter((item) => matchesFilter(item, filter));
       },
     };
   }
@@ -52,9 +47,7 @@ export class MockCollection<T extends { _id: string }> {
     return {
       exec: async () => {
         const index = this.data.findIndex((item) =>
-          Object.entries(filter).every(
-            ([key, value]) => (item as any)[key] === value,
-          ),
+          matchesFilter(item, filter),
         );
         if (index >= 0) {
           this.data[index] = { ...this.data[index], ...update };
@@ -69,9 +62,7 @@ export class MockCollection<T extends { _id: string }> {
     return {
       exec: async () => {
         const index = this.data.findIndex((item) =>
-          Object.entries(filter).every(
-            ([key, value]) => (item as any)[key] === value,
-          ),
+          matchesFilter(item, filter),
         );
         if (index >= 0) {
           this.data.splice(index, 1);
@@ -91,7 +82,7 @@ export class MockCollection<T extends { _id: string }> {
  * Create a mock application with in-memory collections
  */
 export function createMockApplication() {
-  const collections = new Map<string, MockCollection<any>>();
+  const collections = new Map<string, MockCollection<unknown>>();
 
   // Pre-create the collections we need
   collections.set('brighthub_posts', new MockCollection());
@@ -100,9 +91,9 @@ export function createMockApplication() {
 
   return {
     collections,
-    getModel<T extends { _id: string }>(name: string): MockCollection<T> {
+    getModel<T>(name: string): MockCollection<T> {
       if (!collections.has(name)) {
-        collections.set(name, new MockCollection<T>());
+        collections.set(name, new MockCollection<unknown>());
       }
       return collections.get(name) as MockCollection<T>;
     },

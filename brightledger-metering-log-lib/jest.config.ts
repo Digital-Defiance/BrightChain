@@ -15,6 +15,6 @@ export default {
   coverageDirectory: '../coverage/brightledger-metering-log-lib',
   extensionsToTreatAsEsm: ['.ts'],
   transformIgnorePatterns: [
-    '/node_modules/(?!(@noble|@scure|cbor-x|msgpackr-extract|cbor-extract)).+\.js$',
+    '/node_modules/(?!(@noble|@scure|cbor-x|msgpackr-extract|cbor-extract)).+\\.js$',
   ],
 };

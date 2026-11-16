@@ -232,8 +232,12 @@ function deserializeMember<TID extends PlatformID>(
     publicKey: deserializeUint8Array(data['publicKey'] as string),
     metadata: data['metadata'] as IBrightTrustMember<TID>['metadata'],
     isActive: data['isActive'] as boolean,
-    createdAt: normalizeToBrightDate(data['createdAt'] as number | string | Date),
-    updatedAt: normalizeToBrightDate(data['updatedAt'] as number | string | Date),
+    createdAt: normalizeToBrightDate(
+      data['createdAt'] as number | string | Date,
+    ),
+    updatedAt: normalizeToBrightDate(
+      data['updatedAt'] as number | string | Date,
+    ),
   };
 }
 
@@ -444,9 +448,10 @@ function deserializeAlias<TID extends PlatformID>(
     identityRecoveryRecordId,
     isActive: data['isActive'] as boolean,
     registeredAt: data['registeredAt'] as number,
-    deactivatedAt: data['deactivatedAt'] !== undefined && data['deactivatedAt'] !== null
-      ? (data['deactivatedAt'] as number)
-      : undefined,
+    deactivatedAt:
+      data['deactivatedAt'] !== undefined && data['deactivatedAt'] !== null
+        ? (data['deactivatedAt'] as number)
+        : undefined,
     epochNumber: data['epochNumber'] as number,
   };
 }

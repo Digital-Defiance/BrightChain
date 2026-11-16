@@ -1,5 +1,5 @@
-import { normalizeToBrightDate } from '@brightchain/brightchain-lib';
 import type { BrightDateTimestamp } from '@brightchain/brightchain-lib';
+import { normalizeToBrightDate } from '@brightchain/brightchain-lib';
 
 /**
  * Normalize timestamp fields in a request body from Date/string to BrightDateTimestamp.
@@ -23,9 +23,7 @@ export function normalizeRequestTimestamps<T extends Record<string, unknown>>(
     const value = result[field];
     if (value !== undefined && value !== null) {
       (result as Record<string, unknown>)[field as string] =
-        normalizeToBrightDate(
-          value as BrightDateTimestamp | Date | string,
-        );
+        normalizeToBrightDate(value as BrightDateTimestamp | Date | string);
     }
   }
   return result;

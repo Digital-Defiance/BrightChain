@@ -8,7 +8,11 @@
  */
 
 import type { BlockId, ICBLIndexEntry } from '@brightchain/brightchain-lib';
-import { brightDateNow, CBLVisibility, dateToBrightDate } from '@brightchain/brightchain-lib';
+import {
+  brightDateNow,
+  CBLVisibility,
+  dateToBrightDate,
+} from '@brightchain/brightchain-lib';
 import { CBLIndex } from '../lib/cblIndex';
 import { BrightDb } from '../lib/database';
 import { InMemoryHeadRegistry } from '../lib/headRegistry';

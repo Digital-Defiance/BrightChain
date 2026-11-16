@@ -11,31 +11,73 @@
  * Requirements: 11.1, 13.1, 14.1, 14.3
  */
 import type { ICanaryProviderConfig } from '@brightchain/digitalburnbag-lib';
+import { DigitalBurnbagStrings } from '@brightchain/digitalburnbag-lib';
+import { useI18n } from '@digitaldefiance/express-suite-react-components';
 import CloseIcon from '@mui/icons-material/Close';
-import { Box, Dialog, DialogContent, DialogTitle, Divider, IconButton, Paper } from '@mui/material';
+import {
+  Box,
+  CircularProgress,
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  Divider,
+  IconButton,
+  Paper,
+} from '@mui/material';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import type { BurnbagApiClient, IApiProviderConnectionDTO } from '../services/burnbag-api-client';
-import { ActivationFlow } from './ActivationFlow';
+import type {
+  BurnbagApiClient,
+  IApiProviderConnectionDTO,
+} from '../services/burnbag-api-client';
 import type { IActivationFlowProvider } from './ActivationFlow';
+import { ActivationFlow } from './ActivationFlow';
+import type {
+  IMultiCanaryBindingSummary,
+  IWebhookEndpointSummary,
+} from './CanaryLeftMenu';
 import { CanaryLeftMenu } from './CanaryLeftMenu';
-import type { IMultiCanaryBindingSummary, IWebhookEndpointSummary } from './CanaryLeftMenu';
+import type {
+  IMultiCanaryBinding,
+  IMultiCanaryTarget,
+} from './MultiCanaryBindingPanel';
 import { MultiCanaryBindingPanel } from './MultiCanaryBindingPanel';
-import type { IMultiCanaryBinding, IMultiCanaryTarget } from './MultiCanaryBindingPanel';
-import { ProviderHealthGrid } from './ProviderHealthGrid';
 import type { IProviderConnectionExtendedForGrid } from './ProviderHealthGrid';
+import { ProviderHealthGrid } from './ProviderHealthGrid';
 import { ProviderMarketplace } from './ProviderMarketplace';
-import { WebhookEndpointPanel } from './WebhookEndpointPanel';
 import type { IWebhookEndpointDisplay } from './WebhookEndpointPanel';
+import { WebhookEndpointPanel } from './WebhookEndpointPanel';
 
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
 
-export type CanaryPageSection = 'my-providers' | 'marketplace' | 'multi-canary' | 'webhooks' | 'provider-detail';
+export type CanaryPageSection =
+  | 'my-providers'
+  | 'marketplace'
+  | 'multi-canary'
+  | 'webhooks'
+  | 'provider-detail';
+
+/** The subset of BurnbagApiClient that CanaryProviderPage calls. */
+export type ICanaryProviderApiClient = Pick<
+  BurnbagApiClient,
+  | 'connectWithApiKey'
+  | 'createMultiCanaryBinding'
+  | 'deleteMultiCanaryBinding'
+  | 'getMultiCanaryBindings'
+  | 'getMyConnections'
+  | 'getWebhookDeliveryStats'
+  | 'getWebhookEndpoints'
+  | 'initiateOAuth'
+  | 'rotateWebhookSecret'
+  | 'sendTestWebhook'
+  | 'testConnection'
+  | 'updateWebhookIpAllowlist'
+>;
 
 export interface ICanaryProviderPageProps {
-  /** BurnbagApiClient instance for making API calls */
-  apiClient: BurnbagApiClient;
+  /** API client used by the page (see ICanaryProviderApiClient) */
+  apiClient: ICanaryProviderApiClient;
   /** Provider catalog configs (from BUILTIN_PROVIDER_CONFIGS or API) */
   providerCatalog: ICanaryProviderConfig<string>[];
   /** WebSocket subscription for real-time provider status updates */
@@ -64,11 +106,20 @@ export function CanaryProviderPage({
   initialSection = 'my-providers',
   recommendedProviderIds = [],
 }: ICanaryProviderPageProps) {
-  const [activeSection, setActiveSection] = useState<CanaryPageSection>(initialSection);
-  const [connections, setConnections] = useState<IApiProviderConnectionDTO[]>([]);
-  const [multiCanaryBindings, setMultiCanaryBindings] = useState<IMultiCanaryBinding[]>([]);
-  const [webhookEndpoints, setWebhookEndpoints] = useState<IWebhookEndpointDisplay[]>([]);
-  const [activationProvider, setActivationProvider] = useState<ICanaryProviderConfig<string> | null>(null);
+  const { tBranded: t } = useI18n();
+  const [activeSection, setActiveSection] =
+    useState<CanaryPageSection>(initialSection);
+  const [connections, setConnections] = useState<IApiProviderConnectionDTO[]>(
+    [],
+  );
+  const [multiCanaryBindings, setMultiCanaryBindings] = useState<
+    IMultiCanaryBinding[]
+  >([]);
+  const [webhookEndpoints, setWebhookEndpoints] = useState<
+    IWebhookEndpointDisplay[]
+  >([]);
+  const [activationProvider, setActivationProvider] =
+    useState<ICanaryProviderConfig<string> | null>(null);
   const [loading, setLoading] = useState(true);
 
   // ── Data fetching ──────────────────────────────────────────────────────────
@@ -85,19 +136,22 @@ export function CanaryProviderPage({
   const fetchMultiCanaryBindings = useCallback(async () => {
     try {
       const data = await apiClient.getMultiCanaryBindings();
-      setMultiCanaryBindings(data.map(b => ({
-        id: b.id,
-        name: b.name,
-        providerConnectionIds: b.providerConnectionIds,
-        redundancyPolicy: b.redundancyPolicy as IMultiCanaryBinding['redundancyPolicy'],
-        providerWeights: b.providerWeights,
-        weightedThresholdPercent: b.weightedThresholdPercent,
-        protocolAction: b.protocolAction,
-        canaryCondition: b.canaryCondition as 'ABSENCE' | 'DURESS',
-        absenceThresholdHours: b.absenceThresholdHours,
-        aggregateStatus: b.aggregateStatus,
-        providerSignals: b.providerSignals,
-      })));
+      setMultiCanaryBindings(
+        data.map((b) => ({
+          id: b.id,
+          name: b.name,
+          providerConnectionIds: b.providerConnectionIds,
+          redundancyPolicy:
+            b.redundancyPolicy as IMultiCanaryBinding['redundancyPolicy'],
+          providerWeights: b.providerWeights,
+          weightedThresholdPercent: b.weightedThresholdPercent,
+          protocolAction: b.protocolAction,
+          canaryCondition: b.canaryCondition as 'ABSENCE' | 'DURESS',
+          absenceThresholdHours: b.absenceThresholdHours,
+          aggregateStatus: b.aggregateStatus,
+          providerSignals: b.providerSignals,
+        })),
+      );
     } catch {
       /* silently handle */
     }
@@ -106,21 +160,23 @@ export function CanaryProviderPage({
   const fetchWebhookEndpoints = useCallback(async () => {
     try {
       const data = await apiClient.getWebhookEndpoints();
-      setWebhookEndpoints(data.map(ep => ({
-        id: ep.id,
-        connectionId: ep.connectionId,
-        providerId: ep.providerId,
-        providerName: ep.providerName,
-        webhookUrl: ep.webhookUrl,
-        secret: ep.secret,
-        isActive: ep.isActive,
-        isDisabledByFailures: ep.isDisabledByFailures,
-        ipAllowlist: ep.ipAllowlist,
-        rateLimitPerMinute: ep.rateLimitPerMinute,
-        stats: ep.stats,
-        lastReceivedAt: ep.lastReceivedAt,
-        createdAt: ep.createdAt,
-      })));
+      setWebhookEndpoints(
+        data.map((ep) => ({
+          id: ep.id,
+          connectionId: ep.connectionId,
+          providerId: ep.providerId,
+          providerName: ep.providerName,
+          webhookUrl: ep.webhookUrl,
+          secret: ep.secret,
+          isActive: ep.isActive,
+          isDisabledByFailures: ep.isDisabledByFailures,
+          ipAllowlist: ep.ipAllowlist,
+          rateLimitPerMinute: ep.rateLimitPerMinute,
+          stats: ep.stats,
+          lastReceivedAt: ep.lastReceivedAt,
+          createdAt: ep.createdAt,
+        })),
+      );
     } catch {
       /* silently handle */
     }
@@ -129,7 +185,11 @@ export function CanaryProviderPage({
   useEffect(() => {
     const loadAll = async () => {
       setLoading(true);
-      await Promise.all([fetchConnections(), fetchMultiCanaryBindings(), fetchWebhookEndpoints()]);
+      await Promise.all([
+        fetchConnections(),
+        fetchMultiCanaryBindings(),
+        fetchWebhookEndpoints(),
+      ]);
       setLoading(false);
     };
     void loadAll();
@@ -138,46 +198,50 @@ export function CanaryProviderPage({
   // ── Derived data ───────────────────────────────────────────────────────────
 
   const connectedProviderIds = useMemo(
-    () => connections.map(c => c.providerId),
+    () => connections.map((c) => c.providerId),
     [connections],
   );
 
   const bindingSummaries: IMultiCanaryBindingSummary[] = useMemo(
-    () => multiCanaryBindings.map(b => ({
-      id: b.id,
-      name: b.name,
-      targetNames: [], // populated from targets if available
-      providerCount: b.providerConnectionIds.length,
-      aggregateStatus: b.aggregateStatus ?? 'all_present',
-    })),
+    () =>
+      multiCanaryBindings.map((b) => ({
+        id: b.id,
+        name: b.name,
+        targetNames: [], // populated from targets if available
+        providerCount: b.providerConnectionIds.length,
+        aggregateStatus: b.aggregateStatus ?? 'all_present',
+      })),
     [multiCanaryBindings],
   );
 
   const webhookSummaries: IWebhookEndpointSummary[] = useMemo(
-    () => webhookEndpoints.map(ep => ({
-      id: ep.id,
-      providerName: ep.providerName,
-      lastReceivedAt: ep.lastReceivedAt,
-      successRate: ep.stats.totalReceived > 0
-        ? `${Math.round((ep.stats.successfullyProcessed / ep.stats.totalReceived) * 100)}%`
-        : '—',
-    })),
+    () =>
+      webhookEndpoints.map((ep) => ({
+        id: ep.id,
+        providerName: ep.providerName,
+        lastReceivedAt: ep.lastReceivedAt,
+        successRate:
+          ep.stats.totalReceived > 0
+            ? `${Math.round((ep.stats.successfullyProcessed / ep.stats.totalReceived) * 100)}%`
+            : '—',
+      })),
     [webhookEndpoints],
   );
 
   const gridConnections: IProviderConnectionExtendedForGrid[] = useMemo(
-    () => connections.map(c => ({
-      id: c.id,
-      providerId: c.providerId,
-      providerDisplayName: c.providerDisplayName,
-      providerUsername: c.providerUsername,
-      status: c.status as IProviderConnectionExtendedForGrid['status'],
-      lastCheckSignalType: c.lastCheckResult,
-      lastCheckedAt: c.lastCheckedAt,
-      lastActivityAt: c.lastCheckedAt,
-      isPaused: c.status === 'paused',
-      providerConfig: providerCatalog.find(p => p.id === c.providerId),
-    })),
+    () =>
+      connections.map((c) => ({
+        id: c.id,
+        providerId: c.providerId,
+        providerDisplayName: c.providerDisplayName,
+        providerUsername: c.providerUsername,
+        status: c.status as IProviderConnectionExtendedForGrid['status'],
+        lastCheckSignalType: c.lastCheckResult,
+        lastCheckedAt: c.lastCheckedAt,
+        lastActivityAt: c.lastCheckedAt,
+        isPaused: c.status === 'paused',
+        providerConfig: providerCatalog.find((p) => p.id === c.providerId),
+      })),
     [connections, providerCatalog],
   );
 
@@ -189,9 +253,12 @@ export function CanaryProviderPage({
 
   // ── ActivationFlow callbacks ───────────────────────────────────────────────
 
-  const handleConnectProvider = useCallback((provider: ICanaryProviderConfig<string>) => {
-    setActivationProvider(provider);
-  }, []);
+  const handleConnectProvider = useCallback(
+    (provider: ICanaryProviderConfig<string>) => {
+      setActivationProvider(provider);
+    },
+    [],
+  );
 
   const handleActivationComplete = useCallback(async () => {
     setActivationProvider(null);
@@ -209,7 +276,8 @@ export function CanaryProviderPage({
       name: activationProvider.name,
       description: activationProvider.description,
       icon: activationProvider.icon,
-      authType: activationProvider.auth.type as IActivationFlowProvider['authType'],
+      authType: activationProvider.auth
+        .type as IActivationFlowProvider['authType'],
       oauthAuthorizationUrl: activationProvider.auth.oauth2?.authorizationUrl,
       requiresApiKey: activationProvider.auth.type === 'api_key',
     };
@@ -217,65 +285,95 @@ export function CanaryProviderPage({
 
   // ── MultiCanaryBindingPanel callbacks ──────────────────────────────────────
 
-  const handleCreateBinding = useCallback(async (params: {
-    name: string;
-    providerConnectionIds: string[];
-    targetIds: string[];
-    redundancyPolicy: string;
-    providerWeights?: Record<string, number>;
-    weightedThresholdPercent?: number;
-    protocolAction: string;
-    canaryCondition: string;
-    absenceThresholdHours: number;
-  }) => {
-    await apiClient.createMultiCanaryBinding({
-      name: params.name,
-      providerConnectionIds: params.providerConnectionIds,
-      targetIds: params.targetIds,
-      redundancyPolicy: params.redundancyPolicy,
-      providerWeights: params.providerWeights,
-      weightedThresholdPercent: params.weightedThresholdPercent,
-      protocolAction: params.protocolAction,
-      canaryCondition: params.canaryCondition,
-      absenceThresholdHours: params.absenceThresholdHours,
-    });
-    await fetchMultiCanaryBindings();
-  }, [apiClient, fetchMultiCanaryBindings]);
+  const handleCreateBinding = useCallback(
+    async (params: {
+      name: string;
+      providerConnectionIds: string[];
+      targetIds: string[];
+      redundancyPolicy: string;
+      providerWeights?: Record<string, number>;
+      weightedThresholdPercent?: number;
+      protocolAction: string;
+      canaryCondition: string;
+      absenceThresholdHours: number;
+    }) => {
+      await apiClient.createMultiCanaryBinding({
+        name: params.name,
+        providerConnectionIds: params.providerConnectionIds,
+        targetIds: params.targetIds,
+        redundancyPolicy: params.redundancyPolicy,
+        providerWeights: params.providerWeights,
+        weightedThresholdPercent: params.weightedThresholdPercent,
+        protocolAction: params.protocolAction,
+        canaryCondition: params.canaryCondition,
+        absenceThresholdHours: params.absenceThresholdHours,
+      });
+      await fetchMultiCanaryBindings();
+    },
+    [apiClient, fetchMultiCanaryBindings],
+  );
 
-  const handleDeleteBinding = useCallback(async (bindingId: string) => {
-    await apiClient.deleteMultiCanaryBinding(bindingId);
-    await fetchMultiCanaryBindings();
-  }, [apiClient, fetchMultiCanaryBindings]);
+  const handleDeleteBinding = useCallback(
+    async (bindingId: string) => {
+      await apiClient.deleteMultiCanaryBinding(bindingId);
+      await fetchMultiCanaryBindings();
+    },
+    [apiClient, fetchMultiCanaryBindings],
+  );
 
   // ── WebhookEndpointPanel callbacks ─────────────────────────────────────────
 
-  const handleRotateSecret = useCallback(async (endpointId: string, gracePeriodMs?: number) => {
-    const result = await apiClient.rotateWebhookSecret(endpointId, gracePeriodMs);
-    await fetchWebhookEndpoints();
-    return result;
-  }, [apiClient, fetchWebhookEndpoints]);
+  const handleRotateSecret = useCallback(
+    async (endpointId: string, gracePeriodMs?: number) => {
+      const result = await apiClient.rotateWebhookSecret(
+        endpointId,
+        gracePeriodMs,
+      );
+      await fetchWebhookEndpoints();
+      return result;
+    },
+    [apiClient, fetchWebhookEndpoints],
+  );
 
-  const handleUpdateIpAllowlist = useCallback(async (endpointId: string, cidrs: string[]) => {
-    await apiClient.updateWebhookIpAllowlist(endpointId, cidrs);
-    await fetchWebhookEndpoints();
-  }, [apiClient, fetchWebhookEndpoints]);
+  const handleUpdateIpAllowlist = useCallback(
+    async (endpointId: string, cidrs: string[]) => {
+      await apiClient.updateWebhookIpAllowlist(endpointId, cidrs);
+      await fetchWebhookEndpoints();
+    },
+    [apiClient, fetchWebhookEndpoints],
+  );
 
-  const handleSendTestWebhook = useCallback(async (endpointId: string) => {
-    return apiClient.sendTestWebhook(endpointId);
-  }, [apiClient]);
+  const handleSendTestWebhook = useCallback(
+    async (endpointId: string) => {
+      return apiClient.sendTestWebhook(endpointId);
+    },
+    [apiClient],
+  );
 
-  const handleRefreshStats = useCallback(async (endpointId: string) => {
-    return apiClient.getWebhookDeliveryStats(endpointId);
-  }, [apiClient]);
+  const handleRefreshStats = useCallback(
+    async (endpointId: string) => {
+      return apiClient.getWebhookDeliveryStats(endpointId);
+    },
+    [apiClient],
+  );
 
   // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
-    <Box data-testid="canary-provider-page" sx={{ display: 'flex', height: '100%', minHeight: 0 }}>
+    <Box
+      data-testid="canary-provider-page"
+      sx={{ display: 'flex', height: '100%', minHeight: 0 }}
+    >
       {/* Sidebar navigation */}
       <Paper
         elevation={0}
-        sx={{ width: 260, flexShrink: 0, borderRight: 1, borderColor: 'divider', overflowY: 'auto' }}
+        sx={{
+          width: 260,
+          flexShrink: 0,
+          borderRight: 1,
+          borderColor: 'divider',
+          overflowY: 'auto',
+        }}
         data-testid="canary-sidebar"
       >
         <CanaryLeftMenu
@@ -283,7 +381,7 @@ export function CanaryProviderPage({
           multiCanaryBindings={bindingSummaries}
           webhookEndpoints={webhookSummaries}
           onNavigate={handleNavigate}
-          onSelectProvider={(connectionId) => {
+          onSelectProvider={(_connectionId) => {
             setActiveSection('provider-detail');
           }}
           activeSection={activeSection}
@@ -293,8 +391,25 @@ export function CanaryProviderPage({
       <Divider orientation="vertical" flexItem />
 
       {/* Main content area */}
-      <Box sx={{ flex: 1, overflowY: 'auto', p: 3, minWidth: 0 }} data-testid="canary-content">
-        {activeSection === 'marketplace' && (
+      <Box
+        sx={{ flex: 1, overflowY: 'auto', p: 3, minWidth: 0 }}
+        data-testid="canary-content"
+        aria-busy={loading}
+      >
+        {/* Until the initial fetch settles, show progress instead of empty
+            panels (which would offer "Connect" for connected providers). */}
+        {loading && (
+          <Box
+            sx={{ display: 'flex', justifyContent: 'center', py: 6 }}
+            data-testid="canary-content-loading"
+          >
+            <CircularProgress
+              aria-label={t(DigitalBurnbagStrings.Common_Loading)}
+            />
+          </Box>
+        )}
+
+        {!loading && activeSection === 'marketplace' && (
           <ProviderMarketplace
             providers={providerCatalog}
             connectedProviderIds={connectedProviderIds}
@@ -303,14 +418,14 @@ export function CanaryProviderPage({
           />
         )}
 
-        {activeSection === 'my-providers' && (
+        {!loading && activeSection === 'my-providers' && (
           <ProviderHealthGrid
             connections={gridConnections}
             onStatusUpdate={onStatusUpdate}
           />
         )}
 
-        {activeSection === 'multi-canary' && (
+        {!loading && activeSection === 'multi-canary' && (
           <MultiCanaryBindingPanel
             connections={connections}
             availableTargets={availableTargets}
@@ -320,7 +435,7 @@ export function CanaryProviderPage({
           />
         )}
 
-        {activeSection === 'webhooks' && (
+        {!loading && activeSection === 'webhooks' && (
           <WebhookEndpointPanel
             endpoints={webhookEndpoints}
             onRotateSecret={handleRotateSecret}
@@ -339,9 +454,20 @@ export function CanaryProviderPage({
         fullWidth
         data-testid="activation-flow-dialog"
       >
-        <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <DialogTitle
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+          }}
+        >
           Connect {activationProvider?.name ?? 'Provider'}
-          <IconButton size="small" onClick={handleActivationCancel} aria-label="Close" data-testid="activation-flow-close">
+          <IconButton
+            size="small"
+            onClick={handleActivationCancel}
+            aria-label="Close"
+            data-testid="activation-flow-close"
+          >
             <CloseIcon />
           </IconButton>
         </DialogTitle>
@@ -350,7 +476,10 @@ export function CanaryProviderPage({
             <ActivationFlow
               provider={activationFlowProvider}
               onInitiateOAuth={async (providerId) => {
-                const result = await apiClient.initiateOAuth(providerId, window.location.href);
+                const result = await apiClient.initiateOAuth(
+                  providerId,
+                  window.location.href,
+                );
                 return { authorizationUrl: result.authorizationUrl };
               }}
               onConnectWithApiKey={async (providerId, apiKey) => {

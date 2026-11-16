@@ -11,8 +11,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { EventTransparency, EventVisibility } from '@brightchain/brightcal-lib';
-import type { ITypedCalendarEvent } from '../../models/calendarEvent.model.ts';
-import { EventController, IEventEngineService } from '../eventController.ts';
+import type { ITypedCalendarEvent } from '../../models/calendarEvent.model.js';
+import { EventController, IEventEngineService } from '../eventController.js';
 
 // ─── Mock application ────────────────────────────────────────────────────────
 
@@ -74,6 +74,7 @@ const SAMPLE_EVENT: ITypedCalendarEvent = {
   attendeeIds: [],
   isRecurring: false,
   blockId: 'block-1',
+  encryptedBody: '',
   dateCreated: new Date(),
   dateModified: new Date(),
   searchText: 'Team Standup',

@@ -18,6 +18,9 @@ function makeMockRepository(): jest.Mocked<INotificationRepository<string>> {
     markDelivered: jest.fn().mockResolvedValue(undefined),
     getPreferences: jest.fn().mockResolvedValue(null),
     setPreferences: jest.fn().mockResolvedValue(undefined),
+    getUnreadCount: jest.fn().mockResolvedValue(0),
+    getRecentNotifications: jest.fn().mockResolvedValue([]),
+    markRead: jest.fn().mockResolvedValue(undefined),
   };
 }
 
@@ -35,9 +38,13 @@ function makeNotification(
     id: 'notif-1',
     type: 'share_accessed',
     targetId: 'file-1',
+    targetType: 'file',
     actorId: 'actor-1',
     actorName: 'Alice',
+    message: 'Test notification',
+    read: false,
     timestamp: '2024-06-01T00:00:00Z',
+    createdAt: '2024-06-01T00:00:00Z',
     metadata: {},
     ...overrides,
   };

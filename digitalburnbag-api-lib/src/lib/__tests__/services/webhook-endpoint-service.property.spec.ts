@@ -12,21 +12,20 @@
  *   - Property 12: Webhook IP allowlist enforcement
  *   - Property 13: Webhook rate limiting
  */
-import * as fc from 'fast-check';
-import {
-  generateWebhookSecret,
-  computeHmacSignature,
-  verifySignature,
-  isIpAllowed,
-  checkRateLimit,
-  WebhookRateLimiter,
-  WebhookEndpointService,
-  WEBHOOK_SECRET_BYTES,
-  DEFAULT_RATE_LIMIT_PER_MINUTE,
-  CONSECUTIVE_FAILURE_THRESHOLD,
-} from '../../services/webhook-endpoint-service';
 import type { IWebhookEndpointBase } from '@brightchain/digitalburnbag-lib';
+import * as fc from 'fast-check';
 import type { BrightDBWebhookEndpointRepository } from '../../collections/webhook-endpoint-collection';
+import {
+  checkRateLimit,
+  computeHmacSignature,
+  CONSECUTIVE_FAILURE_THRESHOLD,
+  generateWebhookSecret,
+  isIpAllowed,
+  verifySignature,
+  WEBHOOK_SECRET_BYTES,
+  WebhookEndpointService,
+  WebhookRateLimiter,
+} from '../../services/webhook-endpoint-service';
 
 // ---------------------------------------------------------------------------
 // In-memory repository helper
@@ -41,7 +40,9 @@ function createInMemoryEndpointRepository(): BrightDBWebhookEndpointRepository<s
   return {
     getEndpointById: async (id: string) => store.get(id) ?? null,
     getEndpointByConnectionId: async (connectionId: string) =>
-      [...store.values()].find((e) => String(e.connectionId) === String(connectionId)) ?? null,
+      [...store.values()].find(
+        (e) => String(e.connectionId) === String(connectionId),
+      ) ?? null,
     getEndpointsForUser: async (userId: string) =>
       [...store.values()].filter((e) => String(e.userId) === String(userId)),
     getEndpointByUrlPath: async (urlPath: string) =>
@@ -81,38 +82,6 @@ function createTestService() {
   return { service, repo };
 }
 
-/**
- * Creates a minimal endpoint object for use in tests that bypass the service.
- */
-function makeEndpoint(
-  overrides: Partial<IWebhookEndpointBase<string>> = {},
-): IWebhookEndpointBase<string> {
-  const secret = generateWebhookSecret();
-  const connectionId = 'conn-test';
-  return {
-    id: 'whe-test',
-    connectionId,
-    userId: 'user-test',
-    providerId: 'provider-test',
-    urlPath: `${connectionId}/${secret}`,
-    secret,
-    signatureMethod: 'hmac_sha256',
-    isActive: true,
-    stats: {
-      totalReceived: 0,
-      successfullyProcessed: 0,
-      failedValidation: 0,
-    },
-    consecutiveSignatureFailures: 0,
-    isDisabledByFailures: false,
-    rateLimitPerMinute: DEFAULT_RATE_LIMIT_PER_MINUTE,
-    timeoutMs: 24 * 60 * 60 * 1000,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    ...overrides,
-  };
-}
-
 // ---------------------------------------------------------------------------
 // Arbitraries
 // ---------------------------------------------------------------------------
@@ -135,8 +104,9 @@ const arbSecret: fc.Arbitrary<string> = fc
   .map((arr) => Buffer.from(arr).toString('hex'));
 
 /** Arbitrary for HMAC-based signature methods only (excludes ed25519 which needs key pair). */
-const arbHmacMethod: fc.Arbitrary<'hmac_sha256' | 'hmac_sha1' | 'custom_header'> =
-  fc.constantFrom('hmac_sha256', 'hmac_sha1', 'custom_header');
+const arbHmacMethod: fc.Arbitrary<
+  'hmac_sha256' | 'hmac_sha1' | 'custom_header'
+> = fc.constantFrom('hmac_sha256', 'hmac_sha1', 'custom_header');
 
 // ---------------------------------------------------------------------------
 // Property 7: Webhook URL uniqueness and format
@@ -154,7 +124,9 @@ describe('Feature: canary-provider-expansion, Property 7: Webhook URL uniqueness
      */
     fc.assert(
       fc.property(fc.integer({ min: 1, max: 20 }), (count) => {
-        const secrets = Array.from({ length: count }, () => generateWebhookSecret());
+        const secrets = Array.from({ length: count }, () =>
+          generateWebhookSecret(),
+        );
         return secrets.every(
           (s) => s.length === WEBHOOK_SECRET_BYTES * 2 && /^[0-9a-f]+$/.test(s),
         );
@@ -172,7 +144,9 @@ describe('Feature: canary-provider-expansion, Property 7: Webhook URL uniqueness
      */
     fc.assert(
       fc.property(fc.integer({ min: 2, max: 20 }), (count) => {
-        const secrets = Array.from({ length: count }, () => generateWebhookSecret());
+        const secrets = Array.from({ length: count }, () =>
+          generateWebhookSecret(),
+        );
         const unique = new Set(secrets);
         return unique.size === count;
       }),
@@ -189,11 +163,13 @@ describe('Feature: canary-provider-expansion, Property 7: Webhook URL uniqueness
      */
     await fc.assert(
       fc.asyncProperty(
-        fc.integer({ min: 2, max: 10 }).chain((n) =>
-          fc
-            .uniqueArray(arbConnectionId, { minLength: n, maxLength: n })
-            .filter((ids) => ids.length === n),
-        ),
+        fc
+          .integer({ min: 2, max: 10 })
+          .chain((n) =>
+            fc
+              .uniqueArray(arbConnectionId, { minLength: n, maxLength: n })
+              .filter((ids) => ids.length === n),
+          ),
         async (connectionIds) => {
           const { service } = createTestService();
           const endpoints = await Promise.all(
@@ -348,7 +324,8 @@ describe('Feature: canary-provider-expansion, Property 8: Webhook signature veri
           const pos = mutatePos % sig.length;
           const originalChar = sig[pos];
           const mutatedChar = originalChar === 'a' ? 'b' : 'a';
-          const mutatedSig = sig.slice(0, pos) + mutatedChar + sig.slice(pos + 1);
+          const mutatedSig =
+            sig.slice(0, pos) + mutatedChar + sig.slice(pos + 1);
 
           return !verifySignature(method, payload, secret, mutatedSig);
         },
@@ -389,9 +366,14 @@ describe('Feature: canary-provider-expansion, Property 8: Webhook signature veri
      * An empty signature must always fail verification regardless of method.
      */
     fc.assert(
-      fc.property(arbPayload, arbSecret, arbHmacMethod, (payload, secret, method) => {
-        return !verifySignature(method, payload, secret, '');
-      }),
+      fc.property(
+        arbPayload,
+        arbSecret,
+        arbHmacMethod,
+        (payload, secret, method) => {
+          return !verifySignature(method, payload, secret, '');
+        },
+      ),
       { numRuns: 100 },
     );
   });
@@ -428,7 +410,10 @@ describe('Feature: canary-provider-expansion, Property 9: Webhook secret rotatio
 
           // Rotate with a 1-hour grace period
           const gracePeriodMs = 60 * 60 * 1000;
-          const { newSecret } = await service.rotateSecret(endpoint.id, gracePeriodMs);
+          const { newSecret } = await service.rotateSecret(
+            endpoint.id,
+            gracePeriodMs,
+          );
 
           // Fetch updated endpoint
           const updated = await repo.getEndpointById(endpoint.id);
@@ -436,7 +421,12 @@ describe('Feature: canary-provider-expansion, Property 9: Webhook secret rotatio
 
           // New secret must verify
           const newSig = computeHmacSignature(payload, newSecret, 'sha256');
-          const newVerifies = verifySignature('hmac_sha256', payload, updated.secret, newSig);
+          const newVerifies = verifySignature(
+            'hmac_sha256',
+            payload,
+            updated.secret,
+            newSig,
+          );
 
           // Old secret must also verify during grace period
           const oldSig = computeHmacSignature(payload, oldSecret, 'sha256');
@@ -444,7 +434,12 @@ describe('Feature: canary-provider-expansion, Property 9: Webhook secret rotatio
             updated.previousSecret !== undefined &&
             updated.previousSecretExpiresAt !== undefined &&
             new Date(updated.previousSecretExpiresAt) > new Date() &&
-            verifySignature('hmac_sha256', payload, updated.previousSecret!, oldSig);
+            verifySignature(
+              'hmac_sha256',
+              payload,
+              updated.previousSecret!,
+              oldSig,
+            );
 
           return newVerifies && oldVerifiesWithPrevious === true;
         },
@@ -483,8 +478,17 @@ describe('Feature: canary-provider-expansion, Property 9: Webhook secret rotatio
           if (!updated) return false;
 
           // New secret must verify
-          const newSig = computeHmacSignature(payload, updated.secret, 'sha256');
-          const newVerifies = verifySignature('hmac_sha256', payload, updated.secret, newSig);
+          const newSig = computeHmacSignature(
+            payload,
+            updated.secret,
+            'sha256',
+          );
+          const newVerifies = verifySignature(
+            'hmac_sha256',
+            payload,
+            updated.secret,
+            newSig,
+          );
 
           // Old secret must NOT verify (grace period expired)
           const oldSig = computeHmacSignature(payload, oldSecret, 'sha256');
@@ -559,7 +563,10 @@ describe('Feature: canary-provider-expansion, Property 10: Webhook delivery stat
         // Generate a sequence of outcomes (success or invalid_signature)
         // Keep it short enough to avoid hitting the 10-failure disable threshold
         fc.array(
-          fc.constantFrom('success' as DeliveryOutcome, 'invalid_signature' as DeliveryOutcome),
+          fc.constantFrom(
+            'success' as DeliveryOutcome,
+            'invalid_signature' as DeliveryOutcome,
+          ),
           { minLength: 1, maxLength: 8 },
         ),
         async (outcomes) => {
@@ -591,7 +598,8 @@ describe('Feature: canary-provider-expansion, Property 10: Webhook delivery stat
           const updated = await repo.getEndpointById(endpoint.id);
           if (!updated) return false;
 
-          const { totalReceived, successfullyProcessed, failedValidation } = updated.stats;
+          const { totalReceived, successfullyProcessed, failedValidation } =
+            updated.stats;
           return totalReceived === successfullyProcessed + failedValidation;
         },
       ),
@@ -609,7 +617,10 @@ describe('Feature: canary-provider-expansion, Property 10: Webhook delivery stat
     await fc.assert(
       fc.asyncProperty(
         fc.array(
-          fc.constantFrom('success' as DeliveryOutcome, 'invalid_signature' as DeliveryOutcome),
+          fc.constantFrom(
+            'success' as DeliveryOutcome,
+            'invalid_signature' as DeliveryOutcome,
+          ),
           { minLength: 1, maxLength: 8 },
         ),
         async (outcomes) => {
@@ -622,7 +633,9 @@ describe('Feature: canary-provider-expansion, Property 10: Webhook delivery stat
           );
 
           const payload = Buffer.from('{"data":[{"id":"1"}]}', 'utf8');
-          const expectedSuccesses = outcomes.filter((o) => o === 'success').length;
+          const expectedSuccesses = outcomes.filter(
+            (o) => o === 'success',
+          ).length;
 
           for (const outcome of outcomes) {
             const sig =
@@ -659,7 +672,10 @@ describe('Feature: canary-provider-expansion, Property 10: Webhook delivery stat
     await fc.assert(
       fc.asyncProperty(
         fc.array(
-          fc.constantFrom('success' as DeliveryOutcome, 'invalid_signature' as DeliveryOutcome),
+          fc.constantFrom(
+            'success' as DeliveryOutcome,
+            'invalid_signature' as DeliveryOutcome,
+          ),
           { minLength: 1, maxLength: 8 },
         ),
         async (outcomes) => {
@@ -672,7 +688,9 @@ describe('Feature: canary-provider-expansion, Property 10: Webhook delivery stat
           );
 
           const payload = Buffer.from('{"data":[{"id":"1"}]}', 'utf8');
-          const expectedFailures = outcomes.filter((o) => o === 'invalid_signature').length;
+          const expectedFailures = outcomes.filter(
+            (o) => o === 'invalid_signature',
+          ).length;
 
           for (const outcome of outcomes) {
             const sig =
@@ -728,7 +746,8 @@ describe('Feature: canary-provider-expansion, Property 11: Webhook consecutive f
           );
 
           const payload = Buffer.from('{"data":[]}', 'utf8');
-          const badSig = 'sha256=invalidsignature0000000000000000000000000000000000000000000000';
+          const badSig =
+            'sha256=invalidsignature0000000000000000000000000000000000000000000000';
 
           for (let i = 0; i < failureCount; i++) {
             await service.processWebhook(
@@ -743,7 +762,8 @@ describe('Feature: canary-provider-expansion, Property 11: Webhook consecutive f
           const updated = await repo.getEndpointById(endpoint.id);
           if (!updated) return false;
 
-          const shouldBeDisabled = failureCount >= CONSECUTIVE_FAILURE_THRESHOLD;
+          const shouldBeDisabled =
+            failureCount >= CONSECUTIVE_FAILURE_THRESHOLD;
           return updated.isDisabledByFailures === shouldBeDisabled;
         },
       ),
@@ -772,7 +792,8 @@ describe('Feature: canary-provider-expansion, Property 11: Webhook consecutive f
           );
 
           const payload = Buffer.from('{"data":[{"id":"1"}]}', 'utf8');
-          const badSig = 'sha256=invalidsignature0000000000000000000000000000000000000000000000';
+          const badSig =
+            'sha256=invalidsignature0000000000000000000000000000000000000000000000';
 
           // Send failures
           for (let i = 0; i < failuresBefore; i++) {
@@ -816,43 +837,41 @@ describe('Feature: canary-provider-expansion, Property 11: Webhook consecutive f
      * with a disabled error, regardless of signature validity.
      */
     await fc.assert(
-      fc.asyncProperty(
-        arbPayload,
-        async (payload) => {
-          const { service } = createTestService();
-          const connectionId = 'conn-disabled-check';
-          const endpoint = await service.createEndpoint(
-            connectionId,
-            'provider-test',
-            'user-test',
-          );
+      fc.asyncProperty(arbPayload, async (payload) => {
+        const { service } = createTestService();
+        const connectionId = 'conn-disabled-check';
+        const endpoint = await service.createEndpoint(
+          connectionId,
+          'provider-test',
+          'user-test',
+        );
 
-          const badSig = 'sha256=invalidsignature0000000000000000000000000000000000000000000000';
+        const badSig =
+          'sha256=invalidsignature0000000000000000000000000000000000000000000000';
 
-          // Trigger exactly CONSECUTIVE_FAILURE_THRESHOLD failures to disable
-          for (let i = 0; i < CONSECUTIVE_FAILURE_THRESHOLD; i++) {
-            await service.processWebhook(
-              connectionId,
-              endpoint.secret,
-              { 'X-Hub-Signature-256': badSig },
-              payload,
-              '127.0.0.1',
-            );
-          }
-
-          // Now send a valid request — should still fail because endpoint is disabled
-          const goodSig = `sha256=${computeHmacSignature(payload, endpoint.secret, 'sha256')}`;
-          const result = await service.processWebhook(
+        // Trigger exactly CONSECUTIVE_FAILURE_THRESHOLD failures to disable
+        for (let i = 0; i < CONSECUTIVE_FAILURE_THRESHOLD; i++) {
+          await service.processWebhook(
             connectionId,
             endpoint.secret,
-            { 'X-Hub-Signature-256': goodSig },
+            { 'X-Hub-Signature-256': badSig },
             payload,
             '127.0.0.1',
           );
+        }
 
-          return result.success === false && result.error !== undefined;
-        },
-      ),
+        // Now send a valid request — should still fail because endpoint is disabled
+        const goodSig = `sha256=${computeHmacSignature(payload, endpoint.secret, 'sha256')}`;
+        const result = await service.processWebhook(
+          connectionId,
+          endpoint.secret,
+          { 'X-Hub-Signature-256': goodSig },
+          payload,
+          '127.0.0.1',
+        );
+
+        return result.success === false && result.error !== undefined;
+      }),
       { numRuns: 100 },
     );
   });
@@ -872,14 +891,6 @@ const arbIpv4: fc.Arbitrary<string> = fc
 
 /** Arbitrary for a CIDR prefix length (0–32). */
 const arbPrefixLen: fc.Arbitrary<number> = fc.integer({ min: 0, max: 32 });
-
-/** Arbitrary for a CIDR range derived from an IP and prefix length. */
-const arbCidr: fc.Arbitrary<{ cidr: string; networkIp: string; prefixLen: number }> = fc
-  .tuple(arbOctet, arbOctet, arbOctet, arbOctet, arbPrefixLen)
-  .map(([a, b, c, d, prefix]) => {
-    const networkIp = `${a}.${b}.${c}.${d}`;
-    return { cidr: `${networkIp}/${prefix}`, networkIp, prefixLen: prefix };
-  });
 
 // ---------------------------------------------------------------------------
 // Property 12: Webhook IP allowlist enforcement
@@ -912,12 +923,11 @@ describe('Feature: canary-provider-expansion, Property 12: Webhook IP allowlist 
     fc.assert(
       fc.property(
         // Generate a network address and prefix, then derive an IP within the range
-        fc.tuple(arbOctet, arbOctet, arbOctet, arbOctet, arbPrefixLen).map(
-          ([a, b, c, d, prefix]) => {
-            const networkNum =
-              ((a * 256 + b) * 256 + c) * 256 + d;
-            const mask =
-              prefix === 0 ? 0 : ((~0 << (32 - prefix)) >>> 0);
+        fc
+          .tuple(arbOctet, arbOctet, arbOctet, arbOctet, arbPrefixLen)
+          .map(([a, b, c, d, prefix]) => {
+            const networkNum = ((a * 256 + b) * 256 + c) * 256 + d;
+            const mask = prefix === 0 ? 0 : (~0 << (32 - prefix)) >>> 0;
             const maskedNetwork = (networkNum & mask) >>> 0;
             // Use the network address itself as the test IP (always in range)
             const testIp = [
@@ -928,8 +938,7 @@ describe('Feature: canary-provider-expansion, Property 12: Webhook IP allowlist 
             ].join('.');
             const networkIp = [a, b, c, d].join('.');
             return { testIp, cidr: `${networkIp}/${prefix}` };
-          },
-        ),
+          }),
         ({ testIp, cidr }) => {
           return isIpAllowed(testIp, [cidr]);
         },
@@ -974,7 +983,10 @@ describe('Feature: canary-provider-expansion, Property 12: Webhook IP allowlist 
         // Generate 1–4 other IPs as /32 entries, then add the target IP as /32
         fc.array(arbIpv4, { minLength: 1, maxLength: 4 }),
         (targetIp, otherIps) => {
-          const allowlist = [...otherIps.map((ip) => `${ip}/32`), `${targetIp}/32`];
+          const allowlist = [
+            ...otherIps.map((ip) => `${ip}/32`),
+            `${targetIp}/32`,
+          ];
           return isIpAllowed(targetIp, allowlist);
         },
       ),
@@ -990,37 +1002,33 @@ describe('Feature: canary-provider-expansion, Property 12: Webhook IP allowlist 
      * reject requests from IPs not in the allowlist.
      */
     await fc.assert(
-      fc.asyncProperty(
-        arbIpv4,
-        arbIpv4,
-        async (allowedIp, blockedIp) => {
-          if (allowedIp === blockedIp) return true;
+      fc.asyncProperty(arbIpv4, arbIpv4, async (allowedIp, blockedIp) => {
+        if (allowedIp === blockedIp) return true;
 
-          const { service } = createTestService();
-          const connectionId = 'conn-ip-test';
-          const endpoint = await service.createEndpoint(
-            connectionId,
-            'provider-test',
-            'user-test',
-          );
+        const { service } = createTestService();
+        const connectionId = 'conn-ip-test';
+        const endpoint = await service.createEndpoint(
+          connectionId,
+          'provider-test',
+          'user-test',
+        );
 
-          // Set IP allowlist to only allow the allowedIp
-          await service.updateIpAllowlist(endpoint.id, [`${allowedIp}/32`]);
+        // Set IP allowlist to only allow the allowedIp
+        await service.updateIpAllowlist(endpoint.id, [`${allowedIp}/32`]);
 
-          const payload = Buffer.from('{"data":[]}', 'utf8');
-          const sig = `sha256=${computeHmacSignature(payload, endpoint.secret, 'sha256')}`;
+        const payload = Buffer.from('{"data":[]}', 'utf8');
+        const sig = `sha256=${computeHmacSignature(payload, endpoint.secret, 'sha256')}`;
 
-          const result = await service.processWebhook(
-            connectionId,
-            endpoint.secret,
-            { 'X-Hub-Signature-256': sig },
-            payload,
-            blockedIp,
-          );
+        const result = await service.processWebhook(
+          connectionId,
+          endpoint.secret,
+          { 'X-Hub-Signature-256': sig },
+          payload,
+          blockedIp,
+        );
 
-          return result.success === false;
-        },
-      ),
+        return result.success === false;
+      }),
       { numRuns: 100 },
     );
   });
@@ -1042,13 +1050,20 @@ describe('Feature: canary-provider-expansion, Property 13: Webhook rate limiting
      */
     fc.assert(
       fc.property(
-        fc.integer({ min: 1, max: 200 }).chain((limit) =>
-          fc.integer({ min: 0, max: limit - 1 }).map((count) => ({ limit, count })),
-        ),
+        fc
+          .integer({ min: 1, max: 200 })
+          .chain((limit) =>
+            fc
+              .integer({ min: 0, max: limit - 1 })
+              .map((count) => ({ limit, count })),
+          ),
         ({ limit, count }) => {
           const now = Date.now();
           // All timestamps within the 60-second window
-          const timestamps = Array.from({ length: count }, (_, i) => now - i * 100);
+          const timestamps = Array.from(
+            { length: count },
+            (_, i) => now - i * 100,
+          );
           const result = checkRateLimit(timestamps, now, limit);
           return result.allowed === true && result.windowCount === count;
         },
@@ -1066,12 +1081,19 @@ describe('Feature: canary-provider-expansion, Property 13: Webhook rate limiting
      */
     fc.assert(
       fc.property(
-        fc.integer({ min: 1, max: 200 }).chain((limit) =>
-          fc.integer({ min: limit, max: limit + 50 }).map((count) => ({ limit, count })),
-        ),
+        fc
+          .integer({ min: 1, max: 200 })
+          .chain((limit) =>
+            fc
+              .integer({ min: limit, max: limit + 50 })
+              .map((count) => ({ limit, count })),
+          ),
         ({ limit, count }) => {
           const now = Date.now();
-          const timestamps = Array.from({ length: count }, (_, i) => now - i * 100);
+          const timestamps = Array.from(
+            { length: count },
+            (_, i) => now - i * 100,
+          );
           const result = checkRateLimit(timestamps, now, limit);
           return result.allowed === false;
         },
@@ -1188,7 +1210,7 @@ describe('Feature: canary-provider-expansion, Property 13: Webhook rate limiting
         async (extraRequests) => {
           const { service } = createTestService();
           const connectionId = 'conn-ratelimit-test';
-          const endpoint = await service.createEndpoint(
+          await service.createEndpoint(
             connectionId,
             'provider-test',
             'user-test',

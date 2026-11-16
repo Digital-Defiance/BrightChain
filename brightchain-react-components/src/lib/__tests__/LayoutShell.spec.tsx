@@ -6,7 +6,7 @@
 import { useTheme } from '@mui/material/styles';
 import '@testing-library/jest-dom';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter } from 'react-router';
 import { useBrandConfig } from '../layout/BrandConfigContext';
 import { LayoutShell } from '../layout/LayoutShell';
 import { BrandConfig, NavItem, SidebarConfig } from '../layout/types';
@@ -14,8 +14,8 @@ import { BrandConfig, NavItem, SidebarConfig } from '../layout/types';
 // ---------------------------------------------------------------------------
 // Mock Outlet so we can detect its presence
 // ---------------------------------------------------------------------------
-jest.mock('react-router-dom', () => {
-  const actual = jest.requireActual('react-router-dom');
+jest.mock('react-router', () => {
+  const actual = jest.requireActual('react-router');
   return {
     ...actual,
     Outlet: () => <div data-testid="mock-outlet">Outlet</div>,

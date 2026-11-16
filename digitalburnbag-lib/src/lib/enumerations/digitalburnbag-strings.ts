@@ -352,8 +352,7 @@ const _digitalBurnbagKeys = {
   ProviderCategory_CustomIntegrationDesc:
     'DigitalBurnbag_ProviderCategory_CustomIntegrationDesc',
   ProviderCategory_Location: 'DigitalBurnbag_ProviderCategory_Location',
-  ProviderCategory_LocationDesc:
-    'DigitalBurnbag_ProviderCategory_LocationDesc',
+  ProviderCategory_LocationDesc: 'DigitalBurnbag_ProviderCategory_LocationDesc',
   ProviderCategory_Entertainment:
     'DigitalBurnbag_ProviderCategory_Entertainment',
   ProviderCategory_EntertainmentDesc:

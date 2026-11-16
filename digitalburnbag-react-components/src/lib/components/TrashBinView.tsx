@@ -1,5 +1,5 @@
-import { DigitalBurnbagStrings } from '@brightchain/digitalburnbag-lib';
 import { toBrightDateString } from '@brightchain/brightchain-lib';
+import { DigitalBurnbagStrings } from '@brightchain/digitalburnbag-lib';
 import { useI18n } from '@digitaldefiance/express-suite-react-components';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import FolderIcon from '@mui/icons-material/Folder';

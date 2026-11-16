@@ -11,6 +11,8 @@
 
 import {
   BlockAnnouncement,
+  BlockId,
+  brightDateNow,
   DeliveryAckMetadata,
   GossipConfig,
   MessageDeliveryMetadata,
@@ -72,16 +74,16 @@ describe('GossipService.handleAnnouncement()', () => {
     metadataOverrides: Partial<MessageDeliveryMetadata> = {},
   ): BlockAnnouncement => ({
     type: 'add',
-    blockId: 'block-001',
+    blockId: 'block-001' as BlockId,
     nodeId: 'sender-node',
-    timestamp: new Date(),
+    timestamp: brightDateNow(),
     ttl: 5,
     messageDelivery: {
       messageId: 'msg-001',
       recipientIds: ['user-1', 'user-2'],
       priority: 'normal',
-      blockIds: ['block-001', 'block-002'],
-      cblBlockId: 'cbl-001',
+      blockIds: ['block-001' as BlockId, 'block-002' as BlockId],
+      cblBlockId: 'cbl-001' as BlockId,
       ackRequired: true,
       ...metadataOverrides,
     },
@@ -93,9 +95,9 @@ describe('GossipService.handleAnnouncement()', () => {
     ackOverrides: Partial<DeliveryAckMetadata> = {},
   ): BlockAnnouncement => ({
     type: 'ack',
-    blockId: 'msg-001',
+    blockId: 'msg-001' as BlockId,
     nodeId: 'recipient-node',
-    timestamp: new Date(),
+    timestamp: brightDateNow(),
     ttl: 3,
     deliveryAck: {
       messageId: 'msg-001',
@@ -111,9 +113,9 @@ describe('GossipService.handleAnnouncement()', () => {
     overrides: Partial<BlockAnnouncement> = {},
   ): BlockAnnouncement => ({
     type: 'add',
-    blockId: 'plain-block-001',
+    blockId: 'plain-block-001' as BlockId,
     nodeId: 'some-node',
-    timestamp: new Date(),
+    timestamp: brightDateNow(),
     ttl: 3,
     ...overrides,
   });

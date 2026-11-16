@@ -13,10 +13,13 @@
 import {
   AvailabilityState,
   BlockAnnouncement,
+  BlockId,
   BlockManifest,
   BloomFilter,
-  CBLMetadataSearchQuery,
   brightDateNow,
+  BrightDateTimestamp,
+  brightDateToDate,
+  CBLMetadataSearchQuery,
   ICBLIndexEntry,
   ILocationRecord,
 } from '@brightchain/brightchain-lib';
@@ -223,7 +226,7 @@ class MockManifestProvider implements IManifestProvider {
 
   async getPeerManifest(
     peerId: string,
-    sinceTimestamp?: Date,
+    sinceTimestamp?: BrightDateTimestamp,
     timeoutMs?: number,
   ): Promise<BlockManifest> {
     const manifest = this.manifests.get(peerId);
@@ -236,9 +239,12 @@ class MockManifestProvider implements IManifestProvider {
   async updateBlockLocation(
     blockId: string,
     nodeId: string,
-    timestamp: Date,
+    timestamp: BrightDateTimestamp,
   ): Promise<void> {
-    this.blockTimestamps.set(`${blockId}:${nodeId}`, timestamp);
+    this.blockTimestamps.set(
+      `${blockId}:${nodeId}`,
+      brightDateToDate(timestamp),
+    );
   }
 
   async getBlockAvailabilityState(
@@ -254,11 +260,11 @@ class MockManifestProvider implements IManifestProvider {
     this.blockStates.set(blockId, state);
   }
 
-  async getOrphanedBlockIds(): Promise<string[]> {
-    const orphaned: string[] = [];
+  async getOrphanedBlockIds(): Promise<BlockId[]> {
+    const orphaned: BlockId[] = [];
     for (const [blockId, state] of this.blockStates) {
       if (state === 'orphaned') {
-        orphaned.push(blockId);
+        orphaned.push(blockId as BlockId);
       }
     }
     return orphaned;
@@ -385,14 +391,16 @@ describe('Availability Integration Tests', () => {
       const block1Id = randomBytes(32).toString('hex');
       const block2Id = randomBytes(32).toString('hex');
 
-      node2.registry.addLocal(block1Id);
-      node2.registry.addLocal(block2Id);
+      node2.registry.addLocal(block1Id as BlockId);
+      node2.registry.addLocal(block2Id as BlockId);
 
       // Set up network provider for node1 to know about node2's blocks
       node1.networkProvider.addPeer('node2', [block1Id, block2Id]);
 
       // Discover block from node1
-      const result = await node1.discoveryProtocol.discoverBlock(block1Id);
+      const result = await node1.discoveryProtocol.discoverBlock(
+        block1Id as BlockId,
+      );
 
       expect(result.found).toBe(true);
       expect(result.locations.length).toBeGreaterThan(0);
@@ -411,11 +419,15 @@ describe('Availability Integration Tests', () => {
       };
 
       // Update location
-      await node1.availabilityService.updateLocation(blockId, location);
+      await node1.availabilityService.updateLocation(
+        blockId as BlockId,
+        location,
+      );
 
       // Query locations
-      const locations =
-        await node1.availabilityService.getBlockLocations(blockId);
+      const locations = await node1.availabilityService.getBlockLocations(
+        blockId as BlockId,
+      );
 
       expect(locations.length).toBe(1);
       expect(locations[0].nodeId).toBe('node2');
@@ -462,21 +474,25 @@ describe('Availability Integration Tests', () => {
       const blockId = randomBytes(32).toString('hex');
 
       // Add remote block location
-      await node1.availabilityService.updateLocation(blockId, {
+      await node1.availabilityService.updateLocation(blockId as BlockId, {
         nodeId: 'node2',
         lastSeen: brightDateNow(),
         isAuthoritative: true,
       });
 
       // Verify it's remote
-      let state = await node1.availabilityService.getAvailabilityState(blockId);
+      let state = await node1.availabilityService.getAvailabilityState(
+        blockId as BlockId,
+      );
       expect(state).toBe(AvailabilityState.Remote);
 
       // Enter partition mode
       node1.availabilityService.enterPartitionMode();
 
       // Verify it's now orphaned
-      state = await node1.availabilityService.getAvailabilityState(blockId);
+      state = await node1.availabilityService.getAvailabilityState(
+        blockId as BlockId,
+      );
       expect(state).toBe(AvailabilityState.Orphaned);
     });
   });
@@ -507,8 +523,8 @@ describe('Availability Integration Tests', () => {
 
       // Announce a block from node1
       const blockId = randomBytes(32).toString('hex');
-      node1.registry.addLocal(blockId);
-      await node1.gossipService.announceBlock(blockId);
+      node1.registry.addLocal(blockId as BlockId);
+      await node1.gossipService.announceBlock(blockId as BlockId);
 
       // Manually flush announcements to trigger sending
       await node1.gossipService.flushAnnouncements();
@@ -532,8 +548,8 @@ describe('Availability Integration Tests', () => {
       );
 
       for (const blockId of blockIds) {
-        node1.registry.addLocal(blockId);
-        await node1.gossipService.announceBlock(blockId);
+        node1.registry.addLocal(blockId as BlockId);
+        await node1.gossipService.announceBlock(blockId as BlockId);
       }
 
       // Get pending announcements before flush
@@ -551,11 +567,11 @@ describe('Availability Integration Tests', () => {
 
       // Add a local block
       const localBlock = randomBytes(32).toString('hex');
-      node.registry.addLocal(localBlock);
+      node.registry.addLocal(localBlock as BlockId);
 
       // Add a remote block location
       const remoteBlock = randomBytes(32).toString('hex');
-      await node.availabilityService.updateLocation(remoteBlock, {
+      await node.availabilityService.updateLocation(remoteBlock as BlockId, {
         nodeId: 'node2',
         lastSeen: brightDateNow(),
         isAuthoritative: true,
@@ -575,8 +591,8 @@ describe('Availability Integration Tests', () => {
       // Add local blocks
       const block1 = randomBytes(32).toString('hex');
       const block2 = randomBytes(32).toString('hex');
-      node.registry.addLocal(block1);
-      node.registry.addLocal(block2);
+      node.registry.addLocal(block1 as BlockId);
+      node.registry.addLocal(block2 as BlockId);
 
       // List local blocks
       const localBlocks = await node.availabilityService.listBlocksByState(

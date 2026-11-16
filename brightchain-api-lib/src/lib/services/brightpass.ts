@@ -20,6 +20,7 @@ import {
   BlockEncryptionType,
   BlockService,
   BlockSize,
+  brightDateNow,
   Checksum,
   ChecksumService,
   CONSTANTS,
@@ -47,7 +48,6 @@ import {
   type BrightDateTimestamp,
   type IChatCollection,
 } from '@brightchain/brightchain-lib';
-import { brightDateNow } from '@brightchain/brightchain-lib';
 import { Member, PlatformID } from '@digitaldefiance/ecies-lib';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -1079,7 +1079,12 @@ export class BrightPassService<TID extends PlatformID = Uint8Array> {
           'utf-8',
         );
         const existingEntry = VaultSerializer.deserializeEntry(existingJson);
-        const merged = { ...existingEntry, ...entry, id: entryId, updatedAt: now };
+        const merged = {
+          ...existingEntry,
+          ...entry,
+          id: entryId,
+          updatedAt: now,
+        };
         newEncrypted = Buffer.from(
           VaultSerializer.serializeEntry(merged as unknown as VaultEntry),
         ).toString('base64');
@@ -1521,7 +1526,10 @@ export class BrightPassService<TID extends PlatformID = Uint8Array> {
           encryptedEntry,
         );
         // Re-encrypt with new key
-        const reEncrypted = VaultEncryption.encryptString(newVaultKey, decrypted);
+        const reEncrypted = VaultEncryption.encryptString(
+          newVaultKey,
+          decrypted,
+        );
         vault.entries.set(entryId, reEncrypted);
       } catch {
         // Entry was stored as plain base64 JSON (server-side/test path without

@@ -12,8 +12,8 @@ import {
   type ICalendarEventDTO,
 } from '@brightchain/brightcal-lib';
 import fc from 'fast-check';
-import type { ITypedCalendarEvent } from '../models/calendarEvent.model.ts';
-import { IcsSubscriptionService } from '../services/icsSubscriptionService.ts';
+import type { ITypedCalendarEvent } from '../models/calendarEvent.model.js';
+import { IcsSubscriptionService } from '../services/icsSubscriptionService.js';
 
 // ─── Setup ───────────────────────────────────────────────────────────────────
 
@@ -98,6 +98,7 @@ function typedEventFromDto(dto: ICalendarEventDTO): ITypedCalendarEvent {
     transparency: dto.transparency,
     status: dto.status,
     organizerId: dto.organizerId as string,
+    encryptedBody: '',
     attendeeIds: dto.attendees.map((a) => a.email),
     isRecurring: false,
     blockId: 'block-' + dto.uid,
@@ -106,61 +107,6 @@ function typedEventFromDto(dto: ICalendarEventDTO): ITypedCalendarEvent {
     searchText: dto.summary,
   };
 }
-
-/**
- * Generate a test scenario with:
- * - Some events that exist both locally and in the new feed (shared UIDs)
- * - Some events only in the existing set (will be removed)
- * - Some events only in the new feed (will be added)
- * - Some shared events with changed content (will be updated)
- */
-const mergeScenarioArb = fc
-  .record({
-    // Events that exist in both (unchanged) — same UID, same content
-    sharedUids: fc.array(uidArb, { minLength: 0, maxLength: 5 }),
-    // Events only in existing (to be removed)
-    existingOnlyCount: fc.nat({ max: 5 }),
-    // Events only in new feed (to be added)
-    newOnlyCount: fc.nat({ max: 5 }),
-    // Events in both but with changed content
-    changedUids: fc.array(uidArb, { minLength: 0, maxLength: 5 }),
-  })
-  .chain((scenario) => {
-    // Ensure no UID collisions between shared and changed sets
-    const allUids = new Set([...scenario.sharedUids, ...scenario.changedUids]);
-    const uniqueShared = [...new Set(scenario.sharedUids)];
-    const uniqueChanged = [...new Set(scenario.changedUids)].filter(
-      (uid) => !uniqueShared.includes(uid),
-    );
-
-    return fc
-      .record({
-        // Generate shared events (same content in both)
-        sharedEvents: fc.tuple(...uniqueShared.map((uid) => feedEventArb(uid))),
-        // Generate existing-only events
-        existingOnlyEvents: fc.array(feedEventArb(), {
-          minLength: scenario.existingOnlyCount,
-          maxLength: scenario.existingOnlyCount,
-        }),
-        // Generate new-only events
-        newOnlyEvents: fc.array(feedEventArb(), {
-          minLength: scenario.newOnlyCount,
-          maxLength: scenario.newOnlyCount,
-        }),
-        // Generate changed events — two versions per UID
-        changedExisting: fc.tuple(
-          ...uniqueChanged.map((uid) => feedEventArb(uid)),
-        ),
-        changedNew: fc.tuple(...uniqueChanged.map((uid) => feedEventArb(uid))),
-      })
-      .map((generated) => ({
-        sharedEvents: generated.sharedEvents as ICalendarEventDTO[],
-        existingOnlyEvents: generated.existingOnlyEvents,
-        newOnlyEvents: generated.newOnlyEvents,
-        changedExisting: generated.changedExisting as ICalendarEventDTO[],
-        changedNew: generated.changedNew as ICalendarEventDTO[],
-      }));
-  });
 
 // ─── Tests ───────────────────────────────────────────────────────────────────
 

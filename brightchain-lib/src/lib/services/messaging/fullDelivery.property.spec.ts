@@ -6,8 +6,7 @@ import { MessagePriority } from '../../enumerations/messaging/messagePriority';
 import { ReplicationStatus } from '../../enumerations/replicationStatus';
 import type { BlockId } from '../../interfaces/branded/primitives/blockId';
 import { IMessageMetadata } from '../../interfaces/messaging/messageMetadata';
-import { brightDateNow, brightDateToDate } from '../../utils/brightDateConversions';
-import type { BrightDateTimestamp } from '../../types/brightDateTimestamp';
+import { brightDateNow } from '../../utils/brightDateConversions';
 
 /** Cast a test string to BlockId without validation — for test data only. */
 const bid = (s: string) => s as unknown as BlockId;

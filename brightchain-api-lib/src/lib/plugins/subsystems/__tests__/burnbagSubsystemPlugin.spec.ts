@@ -9,7 +9,10 @@
  * _Requirements: 9.1, 9.2, 9.3_
  */
 
-import type { ISubsystemContext } from '@brightchain/brightchain-lib';
+import type {
+  IAppSubsystemPlugin,
+  ISubsystemContext,
+} from '@brightchain/brightchain-lib';
 import { describe, expect, it, jest } from '@jest/globals';
 import { BurnbagSubsystemPlugin } from '../burnbagSubsystemPlugin';
 
@@ -27,7 +30,8 @@ function createMockContext(withApiRouter = true): {
       register: jest.fn((key: string, factory: () => unknown) => {
         registered.set(key, factory());
       }),
-      get: jest.fn((key: string) => registered.get(key)),
+      // services.get is generic; the registry stores whatever was registered.
+      get: <T>(key: string): T => registered.get(key) as T,
       has: jest.fn((key: string) => registered.has(key)),
     },
     apiRouter: withApiRouter
@@ -60,12 +64,12 @@ describe('BurnbagSubsystemPlugin', () => {
   });
 
   it('should have isOptional set to true', () => {
-    const plugin = new BurnbagSubsystemPlugin();
+    const plugin: IAppSubsystemPlugin = new BurnbagSubsystemPlugin();
     expect(plugin.isOptional).toBe(true);
   });
 
   it('should not define a stop() method', () => {
-    const plugin = new BurnbagSubsystemPlugin();
+    const plugin: IAppSubsystemPlugin = new BurnbagSubsystemPlugin();
     expect(plugin.stop).toBeUndefined();
   });
 

@@ -11,11 +11,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { ParticipationStatus } from '@brightchain/brightcal-lib';
-import type { ITypedCalendarEvent } from '../../models/calendarEvent.model.ts';
+import type { ITypedCalendarEvent } from '../../models/calendarEvent.model.js';
 import {
   IInvitationService,
   InvitationController,
-} from '../invitationController.ts';
+} from '../invitationController.js';
 
 // ─── Mock application ────────────────────────────────────────────────────────
 

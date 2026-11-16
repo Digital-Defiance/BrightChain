@@ -7,10 +7,10 @@
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { ICommunicationEventEmitter } from '../../interfaces/events';
 import { NullEventEmitter } from '../../interfaces/events/communicationEventEmitter';
+import { createMockStorageProvider } from './__tests__/mockStorageProvider';
 import { ChannelService } from './channelService';
 import { PermissionService } from './permissionService';
 import { ServerPermissionError, ServerService } from './serverService';
-import { createMockStorageProvider } from './__tests__/mockStorageProvider';
 
 describe('ServerService membership management', () => {
   let channelService: ChannelService;

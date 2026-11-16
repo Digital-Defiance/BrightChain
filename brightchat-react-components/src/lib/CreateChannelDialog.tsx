@@ -121,6 +121,7 @@ const CreateChannelDialog: FC<CreateChannelDialogProps> = ({
     createChannel,
     onCreated,
     handleClose,
+    t,
   ]);
 
   return (

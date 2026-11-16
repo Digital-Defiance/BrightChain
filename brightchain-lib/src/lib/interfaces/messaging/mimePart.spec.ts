@@ -1,4 +1,5 @@
 import { describe, expect, it } from '@jest/globals';
+import { brightDateNow } from '../../utils/brightDateConversions';
 import type { BlockId } from '../branded/primitives/blockId';
 import {
   ContentTransferEncoding,
@@ -6,7 +7,6 @@ import {
   IContentDisposition,
   IMimePart,
 } from './mimePart';
-import { brightDateNow } from '../../utils/brightDateConversions';
 
 /** Cast a test string to BlockId without validation — for test data only. */
 const bid = (s: string) => s as unknown as BlockId;

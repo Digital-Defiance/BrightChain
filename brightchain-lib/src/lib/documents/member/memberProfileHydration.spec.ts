@@ -12,7 +12,7 @@ import {
   IPublicMemberProfileStorageData,
 } from '../../interfaces/member/profileStorage';
 import { ServiceProvider } from '../../services/service.provider';
-import { normalizeToBrightDate, brightDateToISO } from '../../utils/brightDateConversions';
+import { normalizeToBrightDate } from '../../utils/brightDateConversions';
 import {
   privateMemberProfileHydrationSchema,
   publicMemberProfileHydrationSchema,
@@ -157,7 +157,9 @@ describe('MemberProfileHydration', () => {
           activityLog: [
             {
               action: 'login',
-              timestamp: normalizeToBrightDate(new Date('2026-01-24T10:00:00Z')),
+              timestamp: normalizeToBrightDate(
+                new Date('2026-01-24T10:00:00Z'),
+              ),
               metadata: { ip: '127.0.0.1' },
             },
           ],
@@ -324,7 +326,9 @@ describe('MemberProfileHydration', () => {
           activityLog: [
             {
               action: 'complex',
-              timestamp: normalizeToBrightDate(new Date('2026-01-24T12:00:00Z')),
+              timestamp: normalizeToBrightDate(
+                new Date('2026-01-24T12:00:00Z'),
+              ),
               metadata: complexMetadata,
             },
           ],

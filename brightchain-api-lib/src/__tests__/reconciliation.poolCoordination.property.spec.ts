@@ -12,7 +12,9 @@
  */
 
 import {
+  BlockId,
   BlockManifest,
+  BrightDateTimestamp,
   DEFAULT_RECONCILIATION_CONFIG,
   PendingSyncItem,
   PoolId,
@@ -35,7 +37,7 @@ const arbPoolId = fc.stringMatching(/^[a-zA-Z0-9_-]{1,64}$/);
 /** Valid hex-encoded block ID (32-64 hex chars) */
 const arbBlockId = fc
   .array(fc.integer({ min: 0, max: 15 }), { minLength: 32, maxLength: 64 })
-  .map((arr) => arr.map((n) => n.toString(16)).join(''));
+  .map((arr) => arr.map((n) => n.toString(16)).join('') as BlockId);
 
 /**
  * Generate a pool-to-blocks mapping with 1-4 pools, each with 1-5 unique block IDs.
@@ -54,14 +56,14 @@ const arbPoolBlockMap = fc
   .map((entries) => {
     // Deduplicate pool IDs, keeping first occurrence
     const seen = new Set<string>();
-    const deduped: Array<[string, string[]]> = [];
+    const deduped: Array<[string, BlockId[]]> = [];
     for (const [poolId, blockIds] of entries) {
       if (!seen.has(poolId) && blockIds.length > 0) {
         seen.add(poolId);
         deduped.push([poolId, blockIds]);
       }
     }
-    return new Map<PoolId, string[]>(deduped);
+    return new Map<PoolId, BlockId[]>(deduped);
   })
   .filter((m) => m.size >= 1);
 
@@ -99,7 +101,7 @@ interface StoreBlockCall {
 interface UpdateLocationCall {
   blockId: string;
   nodeId: string;
-  timestamp: Date;
+  timestamp: BrightDateTimestamp;
   poolId: PoolId;
 }
 
@@ -110,8 +112,8 @@ interface UpdateLocationCall {
  */
 function createMockManifestProvider(
   localNodeId: string,
-  localPools: Map<PoolId, string[]>,
-  peerPools: Map<PoolId, string[]>,
+  localPools: Map<PoolId, BlockId[]>,
+  peerPools: Map<PoolId, BlockId[]>,
   peerId: string,
 ): {
   provider: IManifestProvider;
@@ -122,7 +124,7 @@ function createMockManifestProvider(
   const updateLocationCalls: UpdateLocationCall[] = [];
 
   // Build flat block list for the local manifest
-  const allLocalBlockIds: string[] = [];
+  const allLocalBlockIds: BlockId[] = [];
   for (const blockIds of localPools.values()) {
     allLocalBlockIds.push(...blockIds);
   }
@@ -143,10 +145,10 @@ function createMockManifestProvider(
 
     async getPeerManifest(
       _peerId: string,
-      _sinceTimestamp?: Date,
+      _sinceTimestamp?: BrightDateTimestamp,
       _timeoutMs?: number,
     ): Promise<BlockManifest> {
-      const allPeerBlockIds: string[] = [];
+      const allPeerBlockIds: BlockId[] = [];
       for (const blockIds of peerPools.values()) {
         allPeerBlockIds.push(...blockIds);
       }
@@ -161,7 +163,7 @@ function createMockManifestProvider(
     async updateBlockLocation(
       _blockId: string,
       _nodeId: string,
-      _timestamp: Date,
+      _timestamp: BrightDateTimestamp,
     ): Promise<void> {
       // no-op for flat updates
     },
@@ -179,7 +181,7 @@ function createMockManifestProvider(
       // no-op
     },
 
-    async getOrphanedBlockIds(): Promise<string[]> {
+    async getOrphanedBlockIds(): Promise<BlockId[]> {
       return [];
     },
 
@@ -210,7 +212,7 @@ function createMockManifestProvider(
 
     async getPeerPoolScopedManifest(
       _peerId: string,
-      _sinceTimestamp?: Date,
+      _sinceTimestamp?: BrightDateTimestamp,
       _timeoutMs?: number,
     ): Promise<PoolScopedManifest | undefined> {
       return {
@@ -236,7 +238,7 @@ function createMockManifestProvider(
     async updateBlockLocationWithPool(
       blockId: string,
       nodeId: string,
-      timestamp: Date,
+      timestamp: BrightDateTimestamp,
       poolId: PoolId,
     ): Promise<void> {
       updateLocationCalls.push({ blockId, nodeId, timestamp, poolId });
@@ -398,14 +400,14 @@ const arbTombstoneScenario = fc
       )
       .map((entries) => {
         const seen = new Set<string>();
-        const deduped: Array<[string, string[]]> = [];
+        const deduped: Array<[string, BlockId[]]> = [];
         for (const [poolId, blockIds] of entries) {
           if (!seen.has(poolId) && blockIds.length > 0) {
             seen.add(poolId);
             deduped.push([poolId, blockIds]);
           }
         }
-        return new Map<PoolId, string[]>(deduped);
+        return new Map<PoolId, BlockId[]>(deduped);
       })
       .filter((m) => m.size >= 2),
     // Random seed to pick which pools are tombstoned
@@ -444,7 +446,7 @@ const arbTombstoneScenario = fc
  */
 function createTombstoneMockProvider(
   localNodeId: string,
-  peerPools: Map<PoolId, string[]>,
+  peerPools: Map<PoolId, BlockId[]>,
   tombstonedPools: Set<PoolId>,
   peerId: string,
 ): {
@@ -471,10 +473,10 @@ function createTombstoneMockProvider(
 
     async getPeerManifest(
       _peerId: string,
-      _sinceTimestamp?: Date,
+      _sinceTimestamp?: BrightDateTimestamp,
       _timeoutMs?: number,
     ): Promise<BlockManifest> {
-      const allPeerBlockIds: string[] = [];
+      const allPeerBlockIds: BlockId[] = [];
       for (const blockIds of peerPools.values()) {
         allPeerBlockIds.push(...blockIds);
       }
@@ -489,7 +491,7 @@ function createTombstoneMockProvider(
     async updateBlockLocation(
       _blockId: string,
       _nodeId: string,
-      _timestamp: Date,
+      _timestamp: BrightDateTimestamp,
     ): Promise<void> {
       // no-op
     },
@@ -507,7 +509,7 @@ function createTombstoneMockProvider(
       // no-op
     },
 
-    async getOrphanedBlockIds(): Promise<string[]> {
+    async getOrphanedBlockIds(): Promise<BlockId[]> {
       return [];
     },
 
@@ -530,7 +532,7 @@ function createTombstoneMockProvider(
     getLocalPoolScopedManifest(): PoolScopedManifest {
       return {
         nodeId: localNodeId,
-        pools: new Map<PoolId, string[]>(),
+        pools: new Map<PoolId, BlockId[]>(),
         generatedAt: 9000,
         checksum: 'empty-local-pool-checksum',
       };
@@ -538,7 +540,7 @@ function createTombstoneMockProvider(
 
     async getPeerPoolScopedManifest(
       _peerId: string,
-      _sinceTimestamp?: Date,
+      _sinceTimestamp?: BrightDateTimestamp,
       _timeoutMs?: number,
     ): Promise<PoolScopedManifest | undefined> {
       return {
@@ -564,7 +566,7 @@ function createTombstoneMockProvider(
     async updateBlockLocationWithPool(
       blockId: string,
       nodeId: string,
-      timestamp: Date,
+      timestamp: BrightDateTimestamp,
       poolId: PoolId,
     ): Promise<void> {
       updateLocationCalls.push({ blockId, nodeId, timestamp, poolId });

@@ -27,6 +27,7 @@ import { brightchainDatabaseInit } from '../lib/databaseInit';
 import { Environment } from '../lib/environment';
 import { DiskBlockStore } from '../lib/stores/diskBlockStore';
 // Ensure the disk store factory is registered
+import { BrightDb } from '@brightchain/db';
 import '../lib/factories/blockStoreFactory';
 
 /** Create a unique temp directory for each test run */
@@ -164,12 +165,10 @@ describe('Database Init Property-Based Tests', () => {
             expect(db).toBeDefined();
             expect(db).not.toBeNull();
             // BrightDb has collection() and withTransaction()
-            expect(typeof (db as Record<string, unknown>).collection).toBe(
-              'function',
-            );
-            expect(typeof (db as Record<string, unknown>).withTransaction).toBe(
-              'function',
-            );
+            // IBrightChainInitData types db as unknown; the node backend supplies a BrightDb.
+            const brightDb = db as BrightDb;
+            expect(typeof brightDb.collection).toBe('function');
+            expect(typeof brightDb.withTransaction).toBe('function');
 
             // Verify types: memberStore is a MemberStore
             expect(backend.memberStore).toBeInstanceOf(MemberStore);

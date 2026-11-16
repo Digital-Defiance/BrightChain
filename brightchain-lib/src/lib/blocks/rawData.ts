@@ -8,11 +8,11 @@ import { BlockAccessError } from '../errors/block';
 import { ChecksumMismatchError } from '../errors/checksumMismatch';
 import { TranslatableBrightChainError } from '../errors/translatableBrightChainError';
 import { logValidationFailure } from '../logging/blockLogger';
-import type { BrightDateTimestamp } from '../types/brightDateTimestamp';
 import type { ChecksumService } from '../services/checksum.service';
-import { brightDateNow } from '../utils/brightDateConversions';
 import { getGlobalServiceProvider } from '../services/globalServiceProvider';
+import type { BrightDateTimestamp } from '../types/brightDateTimestamp';
 import { Checksum } from '../types/checksum';
+import { brightDateNow } from '../utils/brightDateConversions';
 import { BaseBlock } from './base';
 
 /**

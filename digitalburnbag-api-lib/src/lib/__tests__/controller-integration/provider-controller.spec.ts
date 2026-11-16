@@ -13,7 +13,7 @@ import type {
   IStatusHistoryEntry,
 } from '@brightchain/digitalburnbag-lib';
 import { HeartbeatSignalType } from '@brightchain/digitalburnbag-lib';
-import { OAuthStateManager } from '../services/oauth-state.property.spec';
+import { OAuthStateManager } from '../helpers/oauth-state-manager';
 
 // ---------------------------------------------------------------------------
 // Mock service factories
@@ -46,12 +46,6 @@ function createMockHealthMonitor() {
   };
 }
 
-function createMockAggregationEngine() {
-  return {
-    aggregate: jest.fn(),
-  };
-}
-
 function createMockConfigValidator() {
   return {
     validate: jest.fn().mockReturnValue({ valid: true, errors: [] }),
@@ -59,7 +53,7 @@ function createMockConfigValidator() {
 }
 
 function createMockCredentialService() {
-  const store = new Map<string, unknown>();
+  const store = new Map<string, IProviderCredentials<string>>();
   return {
     storeCredentials: jest.fn(async (creds: IProviderCredentials<string>) => {
       const key = `${creds.userId}:${creds.providerId}`;
@@ -189,13 +183,10 @@ describe('ProviderController integration tests', () => {
 
       expect(credService.storeCredentials).toHaveBeenCalledWith(credentials);
       // Verify the stored data has encrypted tokens (not plaintext)
-      const stored = credService._store.get('user-1:github') as Record<
-        string,
-        unknown
-      >;
+      const stored = credService._store.get('user-1:github');
       expect(stored).toBeDefined();
-      expect(stored.accessToken).toBe('[ENCRYPTED]');
-      expect(stored.refreshToken).toBe('[ENCRYPTED]');
+      expect(stored?.accessToken).toBe('[ENCRYPTED]');
+      expect(stored?.refreshToken).toBe('[ENCRYPTED]');
     });
   });
 
@@ -310,7 +301,7 @@ describe('ProviderController integration tests', () => {
 
       // Step 1: Decrypt credentials
       const creds = await credService.getDecryptedCredentials('conn-1');
-      expect(creds.accessToken).toBe('plaintext-token');
+      expect(creds?.accessToken).toBe('plaintext-token');
 
       // Step 2: Simulate API call (use credentials)
       // In real code, the adapter uses creds.accessToken for the HTTP call

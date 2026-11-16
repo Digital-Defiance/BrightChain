@@ -149,8 +149,10 @@ export const BrightChatJapaneseStrings: ComponentStrings<BrightChatStringKey> =
     [BrightChatStrings.Server_Settings_RemoveMember]: 'メンバーを削除',
     [BrightChatStrings.Server_Settings_DeleteCategory]: 'カテゴリを削除',
     [BrightChatStrings.Server_Settings_DeleteServer]: 'サーバーを削除',
-    [BrightChatStrings.Server_Settings_DeleteServerConfirm]: 'このサーバーを削除してもよろしいですか？すべてのチャンネルとメッセージが完全に失われます。',
-    [BrightChatStrings.Server_Settings_DeleteServerConfirmTitle]: 'サーバーを削除',
+    [BrightChatStrings.Server_Settings_DeleteServerConfirm]:
+      'このサーバーを削除してもよろしいですか？すべてのチャンネルとメッセージが完全に失われます。',
+    [BrightChatStrings.Server_Settings_DeleteServerConfirmTitle]:
+      'サーバーを削除',
     [BrightChatStrings.DMSidebar_NoConversations]: 'まだ会話がありません',
     [BrightChatStrings.DMSidebar_NoGroups]: 'まだグループチャットがありません',
 
@@ -260,6 +262,10 @@ export const BrightChatJapaneseStrings: ComponentStrings<BrightChatStringKey> =
       '画像をドロップするかクリックして選択',
     [BrightChatStrings.Server_Icon_StagingFailed]:
       'アップロード用のファイル準備に失敗しました',
+    [BrightChatStrings.Server_Icon_CropFailed]:
+      '画像のトリミングに失敗しました',
+    [BrightChatStrings.Server_Icon_PreviewLoadFailed]:
+      '画像を読み込めませんでした。もう一度選択してください。',
     [BrightChatStrings.Server_Icon_StagingExpired]:
       '準備されたファイルの有効期限が切れました。画像を再度選択してください。',
 

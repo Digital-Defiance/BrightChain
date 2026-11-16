@@ -14,7 +14,7 @@ describe('Feature: message-passing-and-events, Property: Invalid Message Payload
   let server: http.Server;
   let mockService: jest.Mocked<MessagePassingService>;
 
-  beforeEach((done) => {
+  beforeEach(async () => {
     mockService = {
       sendMessage: jest.fn(),
       getMessage: jest.fn(),
@@ -28,11 +28,15 @@ describe('Feature: message-passing-and-events, Property: Invalid Message Payload
 
     // Use a persistent server to avoid ephemeral port exhaustion and
     // truncated request bodies under heavy parallel test load.
-    server = app.listen(0, done);
+    await new Promise<void>((resolve) => {
+      server = app.listen(0, () => resolve());
+    });
   });
 
-  afterEach((done) => {
-    server.close(done);
+  afterEach(async () => {
+    await new Promise<void>((resolve, reject) =>
+      server.close((error) => (error ? reject(error) : resolve())),
+    );
   });
 
   /**

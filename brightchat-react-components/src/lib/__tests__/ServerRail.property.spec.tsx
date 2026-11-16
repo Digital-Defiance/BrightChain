@@ -27,6 +27,7 @@ jest.mock('@digitaldefiance/express-suite-react-components', () => ({
 jest.retryTimes(2, { logErrorsBeforeRetry: false });
 jest.setTimeout(30000);
 
+import type { IServerCategory } from '@brightchain/brightchain-lib';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import fc from 'fast-check';
 import type { ServerRailProps } from '../ServerRail';
@@ -43,11 +44,11 @@ const serverArb = (id: string) =>
       .filter((s) => s.trim().length > 0),
     iconUrl: fc.option(fc.webUrl(), { nil: undefined }),
     ownerId: fc.constant('u1'),
-    memberIds: fc.constant(['u1']),
-    channelIds: fc.constant(['ch-1']),
-    categories: fc.constant([]),
-    createdAt: fc.constant(new Date()),
-    updatedAt: fc.constant(new Date()),
+    memberIds: fc.constant<string[]>(['u1']),
+    channelIds: fc.constant<string[]>(['ch-1']),
+    categories: fc.constant<IServerCategory[]>([]),
+    createdAt: fc.constant(0),
+    updatedAt: fc.constant(0),
   });
 
 /** Generate an array of 1–10 servers with unique ids. */
@@ -76,7 +77,7 @@ describe('Feature: brightchat-encryption-indicators, Property 2: Every server ic
         cleanup();
 
         const props: ServerRailProps = {
-          servers: servers as any,
+          servers: servers,
           activeServerId: null,
           onServerSelect: jest.fn(),
           onHomeClick: jest.fn(),
@@ -115,11 +116,11 @@ describe('Feature: brightchat-encryption-indicators, Property 3: Server tooltip 
       name: serverNameArb,
       iconUrl: fc.constant(undefined),
       ownerId: fc.constant('u1'),
-      memberIds: fc.constant(['u1']),
-      channelIds: fc.constant(['ch-1']),
-      categories: fc.constant([]),
-      createdAt: fc.constant(new Date()),
-      updatedAt: fc.constant(new Date()),
+      memberIds: fc.constant<string[]>(['u1']),
+      channelIds: fc.constant<string[]>(['ch-1']),
+      categories: fc.constant<IServerCategory[]>([]),
+      createdAt: fc.constant(0),
+      updatedAt: fc.constant(0),
     });
 
     await fc.assert(
@@ -127,7 +128,7 @@ describe('Feature: brightchat-encryption-indicators, Property 3: Server tooltip 
         cleanup();
 
         const props: ServerRailProps = {
-          servers: [server] as any,
+          servers: [server],
           activeServerId: null,
           onServerSelect: jest.fn(),
           onHomeClick: jest.fn(),

@@ -21,7 +21,11 @@ import type {
   IInboxQuery,
   IInboxResult,
 } from '@brightchain/brightchain-lib';
-import { brightDateNow, brightDateToISO, normalizeToBrightDate } from '@brightchain/brightchain-lib';
+import {
+  brightDateNow,
+  brightDateToISO,
+  normalizeToBrightDate,
+} from '@brightchain/brightchain-lib';
 import type {
   DocumentCollection,
   DocumentRecord,
@@ -88,7 +92,8 @@ function serializeEmail(metadata: IEmailMetadata): EmailDocument {
   if (metadata.readReceipts instanceof Map) {
     const receipts: Record<string, string> = {};
     for (const [k, v] of metadata.readReceipts) {
-      receipts[String(k)] = typeof v === 'number' ? brightDateToISO(v) : String(v);
+      receipts[String(k)] =
+        typeof v === 'number' ? brightDateToISO(v) : String(v);
     }
     doc['readReceipts'] = receipts;
   }
@@ -597,9 +602,7 @@ export class BrightDbEmailMetadataStore implements IEmailMetadataStore {
     }
 
     if (query.isStarred !== undefined) {
-      results = results.filter(
-        (e) => Boolean(e.isStarred) === query.isStarred,
-      );
+      results = results.filter((e) => Boolean(e.isStarred) === query.isStarred);
     }
 
     return results;

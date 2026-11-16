@@ -90,10 +90,8 @@ describe('Feature: brightdb-write-acls, Property 1: ACL Document Serialization R
     if (original.documentId !== roundTripped.documentId) return false;
     if (original.writeMode !== roundTripped.writeMode) return false;
     if (original.version !== roundTripped.version) return false;
-    if (original.createdAt !== roundTripped.createdAt)
-      return false;
-    if (original.updatedAt !== roundTripped.updatedAt)
-      return false;
+    if (original.createdAt !== roundTripped.createdAt) return false;
+    if (original.updatedAt !== roundTripped.updatedAt) return false;
 
     // Scope
     if (original.scope.dbName !== roundTripped.scope.dbName) return false;
@@ -266,8 +264,7 @@ describe('Feature: brightdb-write-acls, Property 2: Capability Token Serializati
       return false;
 
     // BrightDateTimestamp field (exact equality)
-    if (original.expiresAt !== roundTripped.expiresAt)
-      return false;
+    if (original.expiresAt !== roundTripped.expiresAt) return false;
 
     return true;
   }

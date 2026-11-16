@@ -209,7 +209,7 @@ describe('parseWorkUnit malformed input', () => {
       const json = JSON.stringify(obj);
       try {
         parseWorkUnit(json);
-        fail('Expected parseWorkUnit to throw');
+        throw new Error('Expected parseWorkUnit to throw');
       } catch (error) {
         expect(error).toBeInstanceOf(TranslatableBrightChainError);
         const translatable = error as TranslatableBrightChainError;
@@ -226,7 +226,7 @@ describe('parseWorkUnit malformed input', () => {
     const json = JSON.stringify(obj);
     try {
       parseWorkUnit(json);
-      fail('Expected parseWorkUnit to throw');
+      throw new Error('Expected parseWorkUnit to throw');
     } catch (error) {
       expect(error).toBeInstanceOf(TranslatableBrightChainError);
       const translatable = error as TranslatableBrightChainError;
@@ -242,7 +242,7 @@ describe('parseWorkUnit malformed input', () => {
     const json = JSON.stringify(obj);
     try {
       parseWorkUnit(json);
-      fail('Expected parseWorkUnit to throw');
+      throw new Error('Expected parseWorkUnit to throw');
     } catch (error) {
       expect(error).toBeInstanceOf(TranslatableBrightChainError);
       const translatable = error as TranslatableBrightChainError;
@@ -282,7 +282,7 @@ describe('parseWorkResult malformed input', () => {
       const json = JSON.stringify(obj);
       try {
         parseWorkResult(json);
-        fail('Expected parseWorkResult to throw');
+        throw new Error('Expected parseWorkResult to throw');
       } catch (error) {
         expect(error).toBeInstanceOf(TranslatableBrightChainError);
         const translatable = error as TranslatableBrightChainError;

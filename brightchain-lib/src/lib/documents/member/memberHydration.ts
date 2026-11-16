@@ -11,8 +11,10 @@ import { IHydrationSchema } from '../../interfaces/document/base';
 import { IMemberHydratedData } from '../../interfaces/member/hydrated';
 import { IMemberStorageData } from '../../interfaces/member/storage';
 import { ServiceProvider } from '../../services/service.provider';
-import { normalizeToBrightDate } from '../../utils/brightDateConversions';
-import { brightDateToISO } from '../../utils/brightDateConversions';
+import {
+  brightDateToISO,
+  normalizeToBrightDate,
+} from '../../utils/brightDateConversions';
 
 /**
  * Hydration schema for converting between storage and hydrated member formats

@@ -133,8 +133,8 @@ export class IcsSubscriptionService implements IIcsSubscriptionService {
   mergeEvents(
     existingEvents: ITypedCalendarEvent[],
     newFeedEvents: ICalendarEventDTO[],
-    calendarId: string,
-    userId: string,
+    _calendarId: string,
+    _userId: string,
   ): IMergeResult {
     // Build a map of existing events by UID for O(1) lookup
     const existingByUid = new Map<string, ITypedCalendarEvent>();

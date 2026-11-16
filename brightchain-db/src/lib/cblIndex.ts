@@ -8,11 +8,11 @@
  */
 
 import {
+  brightDateNow,
   CBLVisibility,
   isPooledBlockStore,
-  brightDateNow,
-  type BrightDateTimestamp,
   type BlockId,
+  type BrightDateTimestamp,
   type CBLIndexManifest,
   type CBLIndexManifestEntry,
   type IBlockStore,
@@ -695,9 +695,12 @@ export class CBLIndex {
       const restoredEntries = snapshotData.entries.map((entry) => ({
         ...entry,
         createdAt: typeof entry.createdAt === 'number' ? entry.createdAt : 0,
-        deletedAt: entry.deletedAt !== undefined
-          ? (typeof entry.deletedAt === 'number' ? entry.deletedAt : undefined)
-          : undefined,
+        deletedAt:
+          entry.deletedAt !== undefined
+            ? typeof entry.deletedAt === 'number'
+              ? entry.deletedAt
+              : undefined
+            : undefined,
       }));
       await this.collection.insertMany(restoredEntries);
     }
@@ -881,7 +884,10 @@ export class CBLIndex {
    *
    * @see Requirements 8.6
    */
-  async mergeSoftDelete(magnetUrl: string, deletedAt: BrightDateTimestamp): Promise<void> {
+  async mergeSoftDelete(
+    magnetUrl: string,
+    deletedAt: BrightDateTimestamp,
+  ): Promise<void> {
     const existing = await this.collection.findOne({
       magnetUrl,
     } as CBLFilter);

@@ -1,7 +1,7 @@
 import { HexString } from '@digitaldefiance/ecies-lib';
+import type { BrightDateTimestamp } from '../types/brightDateTimestamp';
 import { IBasicDataObjectDTO } from './basicDataObjectDto';
 import { IReadOnlyBasicObjectDTO } from './readOnlyBasicObjectDto';
-import type { BrightDateTimestamp } from '../types/brightDateTimestamp';
 
 export interface IReadOnlyDataObjectDTO
   extends IBasicDataObjectDTO,

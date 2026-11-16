@@ -49,8 +49,8 @@ const serverArb: fc.Arbitrary<IServer<string>> = fc.record({
   memberIds: fc.array(fc.uuid(), { minLength: 1, maxLength: 10 }),
   channelIds: fc.array(fc.uuid(), { minLength: 0, maxLength: 10 }),
   categories: fc.array(serverCategoryArb, { minLength: 0, maxLength: 3 }),
-  createdAt: fc.date(),
-  updatedAt: fc.date(),
+  createdAt: fc.constant(0),
+  updatedAt: fc.constant(0),
 });
 
 /** Generate an array of servers (0 to 10). */

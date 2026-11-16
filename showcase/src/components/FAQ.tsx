@@ -6,7 +6,7 @@ import {
 import { faCircleNodes } from '@awesome.me/kit-a20d532681/icons/classic/thin';
 import { faCalendarDays } from '@awesome.me/kit-a20d532681/icons/sharp-duotone/solid';
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 import { useShowcaseI18n } from '../i18n/ShowcaseI18nContext';
 import { ShowcaseStrings } from '../i18n/showcaseStrings';
 import './FAQ.css';
@@ -494,9 +494,7 @@ function TechnicalFAQ() {
             {t(ShowcaseStrings.FAQ_Tech_Q19_Format)}
           </li>
           <li>
-            <strong>
-              {t(ShowcaseStrings.FAQ_Tech_Q19_Arithmetic_Label)}:
-            </strong>{' '}
+            <strong>{t(ShowcaseStrings.FAQ_Tech_Q19_Arithmetic_Label)}:</strong>{' '}
             {t(ShowcaseStrings.FAQ_Tech_Q19_Arithmetic)}
           </li>
           <li>

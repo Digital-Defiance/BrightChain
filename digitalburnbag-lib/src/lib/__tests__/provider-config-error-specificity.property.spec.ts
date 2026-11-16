@@ -10,14 +10,12 @@
  */
 
 import * as fc from 'fast-check';
-import {
-  BUILTIN_PROVIDER_CONFIGS,
-} from '../providers/builtin-provider-configs';
-import {
-  validateProviderConfig,
-  REQUIRED_PROVIDER_CONFIG_FIELDS,
-} from '../providers/provider-config-validator';
 import type { ICanaryProviderConfig } from '../interfaces/canary-provider/canary-provider-adapter';
+import { BUILTIN_PROVIDER_CONFIGS } from '../providers/builtin-provider-configs';
+import {
+  REQUIRED_PROVIDER_CONFIG_FIELDS,
+  validateProviderConfig,
+} from '../providers/provider-config-validator';
 
 // ── Helpers ─────────────────────────────────────────────────────────
 
@@ -27,7 +25,9 @@ import type { ICanaryProviderConfig } from '../interfaces/canary-provider/canary
  */
 type ConfigRemover = {
   label: string;
-  remove: (config: ICanaryProviderConfig<string>) => Partial<ICanaryProviderConfig<string>>;
+  remove: (
+    config: ICanaryProviderConfig<string>,
+  ) => Partial<ICanaryProviderConfig<string>>;
 };
 
 const fieldRemovers: ConfigRemover[] = [
@@ -123,9 +123,9 @@ function countActualMissingFields(
 function getActualMissingFieldPaths(
   config: Partial<ICanaryProviderConfig<string>>,
 ): string[] {
-  return REQUIRED_PROVIDER_CONFIG_FIELDS
-    .filter((field) => !field.isPresent(config))
-    .map((field) => field.fieldPath);
+  return REQUIRED_PROVIDER_CONFIG_FIELDS.filter(
+    (field) => !field.isPresent(config),
+  ).map((field) => field.fieldPath);
 }
 
 // ── Property Tests ──────────────────────────────────────────────────

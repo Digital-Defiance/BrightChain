@@ -17,13 +17,13 @@
  */
 
 export {
-  fromDate as dateToBrightDate,
-  normalize as normalizeToBrightDate,
   toDate as brightDateToDate,
   toISO as brightDateToISO,
+  fromDate as dateToBrightDate,
+  normalize as normalizeToBrightDate,
 } from '@brightchain/brightdate';
-import { fromISO, now } from '@brightchain/brightdate';
 import type { BrightDateValue } from '@brightchain/brightdate';
+import { fromISO, now } from '@brightchain/brightdate';
 import type { BrightDateTimestamp } from '../types/brightDateTimestamp';
 
 /**

@@ -58,6 +58,9 @@ export default {
       '<rootDir>/../brightchain-lib/src/index.ts',
     '^@brightchain/brightchain-api-lib$':
       '<rootDir>/src/lib/__tests__/brightchain-api-lib-shim.ts',
+    // The shim reaches one file by deep path (see brightchain-api-lib-shim.ts).
+    '^@brightchain/brightchain-api-lib/(.*)$':
+      '<rootDir>/../brightchain-api-lib/src/$1',
     '^@brightchain/node-express-suite$':
       '<rootDir>/../brightchain-node-express-suite/src/index.ts',
     '^@brightchain/db$': '<rootDir>/../brightchain-db/src/index.ts',

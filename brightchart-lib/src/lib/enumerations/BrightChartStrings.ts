@@ -1,11 +1,12 @@
 import {
   BrandedStringKeyValue,
+  type BrandedStringKeys,
   createI18nStringKeys,
 } from '@digitaldefiance/i18n-lib';
 
 export const BrightChartComponentId = 'BrightChart';
 
-export const BrightChartStrings = createI18nStringKeys(BrightChartComponentId, {
+const _brightChartKeys = {
   // ── Menu / Navigation ──────────────────────────────────────────────────
   MenuLabel: 'MenuLabel',
   ChartSectionsLabel: 'ChartSectionsLabel',
@@ -726,7 +727,12 @@ export const BrightChartStrings = createI18nStringKeys(BrightChartComponentId, {
 
   // ── Layout ─────────────────────────────────────────────────────────────
   Layout_NavAriaTemplate: 'Layout_NavAriaTemplate',
-} as const);
+} as const;
+
+// Explicit annotation keeps the declaration portable when consumers resolve
+// @digitaldefiance/i18n-lib through a different node_modules path.
+export const BrightChartStrings: BrandedStringKeys<typeof _brightChartKeys> =
+  createI18nStringKeys(BrightChartComponentId, _brightChartKeys);
 
 export type BrightChartStringKey = BrandedStringKeyValue<
   typeof BrightChartStrings

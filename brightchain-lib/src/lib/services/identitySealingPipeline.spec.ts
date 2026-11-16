@@ -25,13 +25,13 @@ import {
 import { IdentityRecoveryRecord } from '../interfaces/identityRecoveryRecord';
 import { IBrightTrustDatabase } from '../interfaces/services/brightTrustDatabase';
 import { IBrightTrustMember } from '../interfaces/services/brightTrustService';
+import { brightDateNow } from '../utils/brightDateConversions';
 import {
   ANONYMOUS_ID,
   IdentitySealingPipeline,
 } from './identitySealingPipeline';
 import { SealingService } from './sealing.service';
 import { ServiceProvider } from './service.provider';
-import { brightDateNow } from '../utils/brightDateConversions';
 
 jest.setTimeout(30000);
 

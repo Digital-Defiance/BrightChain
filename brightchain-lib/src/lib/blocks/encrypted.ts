@@ -32,8 +32,8 @@ import { IEncryptedBlock } from '../interfaces/blocks/encrypted';
 import { IEphemeralBlock } from '../interfaces/blocks/ephemeral';
 import { logValidationFailure } from '../logging/blockLogger';
 import { getGlobalServiceProvider } from '../services/globalServiceProvider';
-import { Checksum } from '../types/checksum';
 import type { BrightDateTimestamp } from '../types/brightDateTimestamp';
+import { Checksum } from '../types/checksum';
 import { EphemeralBlock } from './ephemeral';
 
 /**

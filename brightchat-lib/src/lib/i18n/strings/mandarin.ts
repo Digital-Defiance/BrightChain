@@ -147,7 +147,8 @@ export const BrightChatMandarinStrings: ComponentStrings<BrightChatStringKey> =
     [BrightChatStrings.Server_Settings_RemoveMember]: '移除成员',
     [BrightChatStrings.Server_Settings_DeleteCategory]: '删除分类',
     [BrightChatStrings.Server_Settings_DeleteServer]: '删除服务器',
-    [BrightChatStrings.Server_Settings_DeleteServerConfirm]: '确定要删除此服务器吗？所有频道和消息将永久丢失。',
+    [BrightChatStrings.Server_Settings_DeleteServerConfirm]:
+      '确定要删除此服务器吗？所有频道和消息将永久丢失。',
     [BrightChatStrings.Server_Settings_DeleteServerConfirmTitle]: '删除服务器',
     [BrightChatStrings.DMSidebar_NoConversations]: '还没有对话',
     [BrightChatStrings.DMSidebar_NoGroups]: '还没有群聊',
@@ -247,6 +248,9 @@ export const BrightChatMandarinStrings: ComponentStrings<BrightChatStringKey> =
     [BrightChatStrings.Server_Icon_UploadLabel]: '上传服务器图标',
     [BrightChatStrings.Server_Icon_DropOrBrowse]: '拖放图片或点击浏览',
     [BrightChatStrings.Server_Icon_StagingFailed]: '文件上传准备失败',
+    [BrightChatStrings.Server_Icon_CropFailed]: '图片裁剪失败',
+    [BrightChatStrings.Server_Icon_PreviewLoadFailed]:
+      '无法加载图片。请重新选择。',
     [BrightChatStrings.Server_Icon_StagingExpired]:
       '准备的文件已过期。请重新选择图片。',
 

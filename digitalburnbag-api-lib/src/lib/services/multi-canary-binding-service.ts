@@ -12,8 +12,11 @@
  */
 import type {
   IBindingImpactReport,
+  ICreateMultiCanaryBindingParams,
   IMultiCanaryBindingBase,
   IMultiCanaryBindingService,
+  IMultiCanaryBindingUpdate,
+  IProviderConnectionExtended,
   IRedundancyEvaluationResult,
   MultiCanaryAggregateStatus,
   RedundancyPolicy,
@@ -21,11 +24,6 @@ import type {
 import { HeartbeatSignalType } from '@brightchain/digitalburnbag-lib';
 import type { PlatformID } from '@digitaldefiance/ecies-lib';
 import type { BrightDBMultiCanaryBindingRepository } from '../collections/multi-canary-binding-collection';
-import type {
-  ICreateMultiCanaryBindingParams,
-  IMultiCanaryBindingUpdate,
-} from '@brightchain/digitalburnbag-lib';
-import type { IProviderConnectionExtended } from '@brightchain/digitalburnbag-lib';
 
 // ---------------------------------------------------------------------------
 // Connection Repository Interface
@@ -153,7 +151,10 @@ export function evaluateRedundancyPolicy(
   weightedScore?: number;
 } {
   // Collect active signals: exclude CHECK_FAILED (Req 9.7) and paused (Req 16.2)
-  const activeSignals: Array<{ connectionId: string; signal: HeartbeatSignalType }> = [];
+  const activeSignals: Array<{
+    connectionId: string;
+    signal: HeartbeatSignalType;
+  }> = [];
 
   for (const [connectionId, signal] of Object.entries(providerSignals)) {
     // Exclude paused providers
@@ -349,7 +350,9 @@ export class MultiCanaryBindingService<TID extends PlatformID = string>
     params: ICreateMultiCanaryBindingParams<TID>,
   ): Promise<IMultiCanaryBindingBase<TID>> {
     // Validate provider count (Req 9.8)
-    const countError = validateProviderCount(params.providerConnectionIds.length);
+    const countError = validateProviderCount(
+      params.providerConnectionIds.length,
+    );
     if (countError) {
       throw new Error(countError);
     }
@@ -357,7 +360,8 @@ export class MultiCanaryBindingService<TID extends PlatformID = string>
     // Validate weighted_consensus parameters (Req 9.5)
     if (params.redundancyPolicy === 'weighted_consensus') {
       const weights = params.providerWeights ?? {};
-      const threshold = params.weightedThresholdPercent ?? DEFAULT_THRESHOLD_PERCENT;
+      const threshold =
+        params.weightedThresholdPercent ?? DEFAULT_THRESHOLD_PERCENT;
       const weightErrors = validateWeights(weights, threshold);
       if (weightErrors.length > 0) {
         throw new Error(weightErrors.join('; '));
@@ -367,7 +371,8 @@ export class MultiCanaryBindingService<TID extends PlatformID = string>
     // Validate all providers are connected (Req 9.1)
     const disconnectedProviders: string[] = [];
     for (const connectionId of params.providerConnectionIds) {
-      const connection = await this.connectionRepository.getConnection(connectionId);
+      const connection =
+        await this.connectionRepository.getConnection(connectionId);
       if (!connection || connection.status !== 'connected') {
         disconnectedProviders.push(String(connectionId));
       }
@@ -380,7 +385,9 @@ export class MultiCanaryBindingService<TID extends PlatformID = string>
     }
 
     // Detect circular cascades
-    const existingBindings = await this.repository.getBindingsForUser(params.userId);
+    const existingBindings = await this.repository.getBindingsForUser(
+      params.userId,
+    );
     const newTargetIds = [
       ...params.vaultContainerIds.map(String),
       ...params.fileIds.map(String),
@@ -450,27 +457,37 @@ export class MultiCanaryBindingService<TID extends PlatformID = string>
 
     // Validate updated provider count if changing providers
     if (updates.providerConnectionIds !== undefined) {
-      const countError = validateProviderCount(updates.providerConnectionIds.length);
+      const countError = validateProviderCount(
+        updates.providerConnectionIds.length,
+      );
       if (countError) {
         throw new Error(countError);
       }
     }
 
     // Validate weighted_consensus parameters if changing policy or weights
-    const effectivePolicy = updates.redundancyPolicy ?? existing.redundancyPolicy;
+    const effectivePolicy =
+      updates.redundancyPolicy ?? existing.redundancyPolicy;
     if (effectivePolicy === 'weighted_consensus') {
-      const effectiveWeights = updates.providerWeights ?? existing.providerWeights ?? {};
+      const effectiveWeights =
+        updates.providerWeights ?? existing.providerWeights ?? {};
       const effectiveThreshold =
         updates.weightedThresholdPercent ??
         existing.weightedThresholdPercent ??
         DEFAULT_THRESHOLD_PERCENT;
-      const weightErrors = validateWeights(effectiveWeights, effectiveThreshold);
+      const weightErrors = validateWeights(
+        effectiveWeights,
+        effectiveThreshold,
+      );
       if (weightErrors.length > 0) {
         throw new Error(weightErrors.join('; '));
       }
     }
 
-    await this.repository.updateBinding(bindingId, updates as Partial<IMultiCanaryBindingBase<TID>>);
+    await this.repository.updateBinding(
+      bindingId,
+      updates as Partial<IMultiCanaryBindingBase<TID>>,
+    );
 
     const updated = await this.repository.getBindingById(bindingId);
     if (!updated) {
@@ -502,7 +519,9 @@ export class MultiCanaryBindingService<TID extends PlatformID = string>
   // getBindingsForUser — retrieve all bindings for a user
   // -----------------------------------------------------------------------
 
-  async getBindingsForUser(userId: TID): Promise<IMultiCanaryBindingBase<TID>[]> {
+  async getBindingsForUser(
+    userId: TID,
+  ): Promise<IMultiCanaryBindingBase<TID>[]> {
     return this.repository.getBindingsForUser(userId);
   }
 
@@ -523,7 +542,9 @@ export class MultiCanaryBindingService<TID extends PlatformID = string>
   // Requirements: 9.3, 9.4, 9.5, 9.7
   // -----------------------------------------------------------------------
 
-  async evaluateRedundancy(bindingId: TID): Promise<IRedundancyEvaluationResult> {
+  async evaluateRedundancy(
+    bindingId: TID,
+  ): Promise<IRedundancyEvaluationResult> {
     const binding = await this.repository.getBindingById(bindingId);
     if (!binding) {
       throw new Error(`Multi-canary binding not found: ${String(bindingId)}`);
@@ -532,13 +553,17 @@ export class MultiCanaryBindingService<TID extends PlatformID = string>
     // Determine which providers are paused (Req 16.2)
     const pausedConnectionIds = new Set<string>();
     for (const connectionId of binding.providerConnectionIds) {
-      const connection = await this.connectionRepository.getConnection(connectionId);
+      const connection =
+        await this.connectionRepository.getConnection(connectionId);
       if (connection?.isPaused) {
         pausedConnectionIds.add(String(connectionId));
       }
     }
 
-    const providerSignals = binding.providerSignals as Record<string, HeartbeatSignalType>;
+    const providerSignals = binding.providerSignals as Record<
+      string,
+      HeartbeatSignalType
+    >;
     const providerWeights = binding.providerWeights ?? {};
     const weightedThresholdPercent =
       binding.weightedThresholdPercent ?? DEFAULT_THRESHOLD_PERCENT;
@@ -572,7 +597,8 @@ export class MultiCanaryBindingService<TID extends PlatformID = string>
     signal: HeartbeatSignalType,
   ): Promise<void> {
     // Find all bindings containing this connection
-    const bindings = await this.repository.getBindingsForConnection(connectionId);
+    const bindings =
+      await this.repository.getBindingsForConnection(connectionId);
 
     for (const binding of bindings) {
       if (!binding.isActive) continue;
@@ -586,7 +612,8 @@ export class MultiCanaryBindingService<TID extends PlatformID = string>
       // Determine which providers are paused
       const pausedConnectionIds = new Set<string>();
       for (const connId of binding.providerConnectionIds) {
-        const connection = await this.connectionRepository.getConnection(connId);
+        const connection =
+          await this.connectionRepository.getConnection(connId);
         if (connection?.isPaused) {
           pausedConnectionIds.add(String(connId));
         }
@@ -621,7 +648,11 @@ export class MultiCanaryBindingService<TID extends PlatformID = string>
       } as Partial<IMultiCanaryBindingBase<TID>>);
 
       // Trigger protocol action if threshold is met and not already triggered (Req 9.3)
-      if (evalResult.shouldTrigger && !alreadyTriggered && this.onProtocolAction) {
+      if (
+        evalResult.shouldTrigger &&
+        !alreadyTriggered &&
+        this.onProtocolAction
+      ) {
         // Mark as triggered before executing to prevent double-trigger
         await this.repository.updateBinding(binding.id, {
           aggregateStatus: 'triggered',
@@ -657,7 +688,8 @@ export class MultiCanaryBindingService<TID extends PlatformID = string>
   async removeProviderFromBindings(
     connectionId: TID,
   ): Promise<IBindingImpactReport> {
-    const bindings = await this.repository.getBindingsForConnection(connectionId);
+    const bindings =
+      await this.repository.getBindingsForConnection(connectionId);
 
     const affectedBindings: string[] = [];
     const bindingsReducedBelowMinimum: string[] = [];

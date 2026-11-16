@@ -18,4 +18,7 @@ import { BaseDocument } from './base';
 export type UserDocument<
   TLanguage extends string = string,
   TID extends PlatformID = Uint8Array,
-> = BaseDocument<IUserBase<TID, BrightDateTimestamp, TLanguage, AccountStatus>, TID>;
+> = BaseDocument<
+  IUserBase<TID, BrightDateTimestamp, TLanguage, AccountStatus>,
+  TID
+>;

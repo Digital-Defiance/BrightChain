@@ -76,7 +76,10 @@ export function validateDeletionConfig(): IBurnbagDeletionConfig {
  * is responsible for range checks). Returns the default if the variable is
  * absent, empty, or not parseable as an integer.
  */
-function parsePositiveIntOrDefault(envVar: string, defaultValue: number): number {
+function parsePositiveIntOrDefault(
+  envVar: string,
+  defaultValue: number,
+): number {
   const raw = process.env[envVar];
   if (raw === undefined || raw === '') {
     return defaultValue;

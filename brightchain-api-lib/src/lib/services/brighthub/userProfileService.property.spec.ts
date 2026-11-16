@@ -20,7 +20,12 @@ import {
 } from '@brightchain/brighthub-lib';
 import fc from 'fast-check';
 import {
+  BlockRecord,
   createUserProfileService,
+  FollowRecord,
+  FollowRequestRecord,
+  MuteRecord,
+  UserProfileRecord,
   UserProfileService,
 } from './userProfileService';
 import {
@@ -32,32 +37,23 @@ import {
 describe('Feature: brighthub-social-network, User_Profile_Service Property Tests', () => {
   let service: UserProfileService;
   let mockApp: ReturnType<typeof createMockApplication>;
-  let userProfilesCollection: MockCollection<{
-    _id: string;
-    [key: string]: unknown;
-  }>;
-  let followsCollection: MockCollection<{
-    _id: string;
-    [key: string]: unknown;
-  }>;
-  let followRequestsCollection: MockCollection<{
-    _id: string;
-    [key: string]: unknown;
-  }>;
-  let blocksCollection: MockCollection<{ _id: string; [key: string]: unknown }>;
-  let mutesCollection: MockCollection<{ _id: string; [key: string]: unknown }>;
+  let userProfilesCollection: MockCollection<UserProfileRecord>;
+  let followsCollection: MockCollection<FollowRecord>;
+  let followRequestsCollection: MockCollection<FollowRequestRecord>;
+  let blocksCollection: MockCollection<BlockRecord>;
+  let mutesCollection: MockCollection<MuteRecord>;
 
   beforeEach(() => {
     mockApp = createMockApplication();
-    userProfilesCollection = mockApp.collections.get(
+    userProfilesCollection = mockApp.getModel<UserProfileRecord>(
       'brighthub_user_profiles',
-    )!;
-    followsCollection = mockApp.collections.get('brighthub_follows')!;
-    followRequestsCollection = mockApp.collections.get(
+    );
+    followsCollection = mockApp.getModel<FollowRecord>('brighthub_follows');
+    followRequestsCollection = mockApp.getModel<FollowRequestRecord>(
       'brighthub_follow_requests',
-    )!;
-    blocksCollection = mockApp.collections.get('brighthub_blocks')!;
-    mutesCollection = mockApp.collections.get('brighthub_mutes')!;
+    );
+    blocksCollection = mockApp.getModel<BlockRecord>('brighthub_blocks');
+    mutesCollection = mockApp.getModel<MuteRecord>('brighthub_mutes');
     service = createUserProfileService(mockApp);
   });
 
@@ -95,7 +91,7 @@ describe('Feature: brighthub-social-network, User_Profile_Service Property Tests
    */
   async function setupUser(
     userId: string,
-    overrides: Record<string, unknown> = {},
+    overrides: Partial<UserProfileRecord> = {},
   ): Promise<void> {
     const profile = createMockUserProfile(userId, overrides);
     userProfilesCollection.data.push(profile);

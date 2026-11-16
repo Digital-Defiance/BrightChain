@@ -56,9 +56,12 @@ export class WebSocketMessageServer {
     if (server) {
       // Auto-register upgrade handler when a server is provided.
       // Only safe when this is the sole WSS on the HTTP server.
-      server.on('upgrade', (req: IncomingMessage, socket: Duplex, head: Buffer) => {
-        this.handleUpgrade(req, socket, head);
-      });
+      server.on(
+        'upgrade',
+        (req: IncomingMessage, socket: Duplex, head: Buffer) => {
+          this.handleUpgrade(req, socket, head);
+        },
+      );
     }
 
     // Create Node.js-compatible ECIES config with full algorithm name

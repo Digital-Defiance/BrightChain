@@ -8,18 +8,25 @@
  * the same storageProvider, calls init(), and asserts the data survived.
  */
 
+import type { IChatStorageProvider } from '../../../interfaces/communication/chatStorageProvider';
 import { ChannelService } from '../channelService';
 import { PermissionService } from '../permissionService';
 import { ServerNotFoundError, ServerService } from '../serverService';
 import { createMockStorageProvider } from './mockStorageProvider';
-import type { IChatStorageProvider } from '../../../interfaces/communication/chatStorageProvider';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
 function createChannelService(
   storageProvider?: IChatStorageProvider,
 ): ChannelService {
-  return new ChannelService(new PermissionService(), undefined, undefined, undefined, undefined, storageProvider);
+  return new ChannelService(
+    new PermissionService(),
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    storageProvider,
+  );
 }
 
 interface ServicePair {

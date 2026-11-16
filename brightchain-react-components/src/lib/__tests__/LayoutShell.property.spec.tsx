@@ -4,25 +4,24 @@
  * Uses fast-check to verify universal correctness properties
  * across randomly generated inputs.
  */
-// Async React property tests can exceed 5 s under parallel load — give them room.
-jest.retryTimes(2, { logErrorsBeforeRetry: false });
-jest.setTimeout(30000);
-
 import { useTheme } from '@mui/material/styles';
 import '@testing-library/jest-dom';
 import { cleanup, render, screen } from '@testing-library/react';
 import fc from 'fast-check';
 import * as React from 'react';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter } from 'react-router';
 import { useBrandConfig } from '../layout/BrandConfigContext';
 import { LayoutShell } from '../layout/LayoutShell';
 import { BrandConfig, NavItem, SidebarConfig } from '../layout/types';
+// Async React property tests can exceed 5 s under parallel load — give them room.
+jest.retryTimes(2, { logErrorsBeforeRetry: false });
+jest.setTimeout(30000);
 
 // ---------------------------------------------------------------------------
 // Mock Outlet so we can detect its presence
 // ---------------------------------------------------------------------------
-jest.mock('react-router-dom', () => {
-  const actual = jest.requireActual('react-router-dom');
+jest.mock('react-router', () => {
+  const actual = jest.requireActual('react-router');
   return {
     ...actual,
     Outlet: () => <div data-testid="mock-outlet">Outlet</div>,

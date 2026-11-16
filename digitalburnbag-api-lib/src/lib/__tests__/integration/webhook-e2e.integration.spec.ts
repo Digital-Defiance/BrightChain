@@ -8,18 +8,17 @@
  * Feature: canary-provider-expansion
  * Requirements: 10.1, 10.2, 10.3, 10.6, 10.7
  */
-import { HeartbeatSignalType } from '@brightchain/digitalburnbag-lib';
 import type { IWebhookEndpointBase } from '@brightchain/digitalburnbag-lib';
-import {
-  WebhookEndpointService,
-  computeHmacSignature,
-  generateWebhookSecret,
-  CONSECUTIVE_FAILURE_THRESHOLD,
-} from '../../services/webhook-endpoint-service';
-import { WebhookController } from '../../controllers/webhook-controller';
-import type { BrightDBWebhookEndpointRepository } from '../../collections/webhook-endpoint-collection';
+import { HeartbeatSignalType } from '@brightchain/digitalburnbag-lib';
 import express from 'express';
 import request from 'supertest';
+import type { BrightDBWebhookEndpointRepository } from '../../collections/webhook-endpoint-collection';
+import { WebhookController } from '../../controllers/webhook-controller';
+import {
+  CONSECUTIVE_FAILURE_THRESHOLD,
+  WebhookEndpointService,
+  computeHmacSignature,
+} from '../../services/webhook-endpoint-service';
 
 // ---------------------------------------------------------------------------
 // In-memory repository for integration testing
@@ -63,7 +62,10 @@ function createInMemoryEndpointRepository(): BrightDBWebhookEndpointRepository<s
 
 let idCounter = 0;
 
-function createIntegrationStack(options?: { onSignal?: jest.Mock; onNotify?: jest.Mock }) {
+function createIntegrationStack(options?: {
+  onSignal?: jest.Mock;
+  onNotify?: jest.Mock;
+}) {
   const repo = createInMemoryEndpointRepository();
   const onSignal = options?.onSignal ?? jest.fn();
   const onNotify = options?.onNotify ?? jest.fn();
@@ -93,7 +95,11 @@ function validSig(payload: Buffer, secret: string): string {
 }
 
 const SAMPLE_PAYLOAD = Buffer.from(
-  JSON.stringify({ data: [{ id: 'evt-1', type: 'activity', created_at: new Date().toISOString() }] }),
+  JSON.stringify({
+    data: [
+      { id: 'evt-1', type: 'activity', created_at: new Date().toISOString() },
+    ],
+  }),
   'utf8',
 );
 
@@ -111,7 +117,11 @@ describe('Webhook E2E: POST → verify → signal → stats', () => {
     const { app, service, repo, onSignal } = createIntegrationStack();
 
     // Step 1: Create an endpoint (simulates user setup)
-    const endpoint = await service.createEndpoint('conn-e2e-1', 'github', 'user-1');
+    const endpoint = await service.createEndpoint(
+      'conn-e2e-1',
+      'github',
+      'user-1',
+    );
     const secret = endpoint.secret;
 
     // Step 2: POST a valid webhook payload to the endpoint URL
@@ -146,10 +156,15 @@ describe('Webhook E2E: POST → verify → signal → stats', () => {
   it('invalid signature returns 401 and does NOT emit signal', async () => {
     const { app, service, repo, onSignal } = createIntegrationStack();
 
-    const endpoint = await service.createEndpoint('conn-e2e-2', 'github', 'user-1');
+    const endpoint = await service.createEndpoint(
+      'conn-e2e-2',
+      'github',
+      'user-1',
+    );
 
     const payload = SAMPLE_PAYLOAD;
-    const badSignature = 'sha256=0000000000000000000000000000000000000000000000000000000000000000';
+    const badSignature =
+      'sha256=0000000000000000000000000000000000000000000000000000000000000000';
 
     const res = await request(app)
       .post(`/api/webhooks/canary/${endpoint.connectionId}/${endpoint.secret}`)
@@ -187,7 +202,11 @@ describe('Webhook E2E: POST → verify → signal → stats', () => {
   it('multiple valid deliveries accumulate stats correctly', async () => {
     const { app, service, repo, onSignal } = createIntegrationStack();
 
-    const endpoint = await service.createEndpoint('conn-e2e-multi', 'stripe', 'user-1');
+    const endpoint = await service.createEndpoint(
+      'conn-e2e-multi',
+      'stripe',
+      'user-1',
+    );
     const secret = endpoint.secret;
     const payload = SAMPLE_PAYLOAD;
     const signature = validSig(payload, secret);
@@ -214,11 +233,16 @@ describe('Webhook E2E: POST → verify → signal → stats', () => {
   it('mixed valid and invalid deliveries track stats accurately', async () => {
     const { app, service, repo, onSignal } = createIntegrationStack();
 
-    const endpoint = await service.createEndpoint('conn-e2e-mixed', 'github', 'user-1');
+    const endpoint = await service.createEndpoint(
+      'conn-e2e-mixed',
+      'github',
+      'user-1',
+    );
     const secret = endpoint.secret;
     const payload = SAMPLE_PAYLOAD;
     const goodSig = validSig(payload, secret);
-    const badSig = 'sha256=0000000000000000000000000000000000000000000000000000000000000000';
+    const badSig =
+      'sha256=0000000000000000000000000000000000000000000000000000000000000000';
 
     // Valid
     await request(app)
@@ -254,10 +278,15 @@ describe('Webhook E2E: POST → verify → signal → stats', () => {
   it('consecutive signature failures disable endpoint and return 503', async () => {
     const { app, service, repo, onSignal, onNotify } = createIntegrationStack();
 
-    const endpoint = await service.createEndpoint('conn-e2e-disable', 'github', 'user-1');
+    const endpoint = await service.createEndpoint(
+      'conn-e2e-disable',
+      'github',
+      'user-1',
+    );
     const secret = endpoint.secret;
     const payload = SAMPLE_PAYLOAD;
-    const badSig = 'sha256=0000000000000000000000000000000000000000000000000000000000000000';
+    const badSig =
+      'sha256=0000000000000000000000000000000000000000000000000000000000000000';
 
     // Send CONSECUTIVE_FAILURE_THRESHOLD (10) bad requests
     for (let i = 0; i < CONSECUTIVE_FAILURE_THRESHOLD; i++) {
@@ -298,11 +327,18 @@ describe('Webhook E2E: Secret rotation with grace period', () => {
   it('after rotation, both old and new secrets are accepted during grace period', async () => {
     const { app, service, repo, onSignal } = createIntegrationStack();
 
-    const endpoint = await service.createEndpoint('conn-rotate-1', 'github', 'user-1');
+    const endpoint = await service.createEndpoint(
+      'conn-rotate-1',
+      'github',
+      'user-1',
+    );
     const oldSecret = endpoint.secret;
 
     // Rotate the secret with a long grace period (1 hour)
-    const { newSecret } = await service.rotateSecret(endpoint.id, 60 * 60 * 1000);
+    const { newSecret } = await service.rotateSecret(
+      endpoint.id,
+      60 * 60 * 1000,
+    );
     expect(newSecret).not.toBe(oldSecret);
     expect(newSecret).toHaveLength(64); // 32 bytes hex-encoded
 
@@ -339,7 +375,11 @@ describe('Webhook E2E: Secret rotation with grace period', () => {
   it('after grace period expires, old secret is rejected', async () => {
     const { app, service, repo, onSignal } = createIntegrationStack();
 
-    const endpoint = await service.createEndpoint('conn-rotate-2', 'github', 'user-1');
+    const endpoint = await service.createEndpoint(
+      'conn-rotate-2',
+      'github',
+      'user-1',
+    );
     const oldSecret = endpoint.secret;
 
     // Rotate with a very short grace period (1ms — effectively expired immediately)
@@ -380,7 +420,11 @@ describe('Webhook E2E: Secret rotation with grace period', () => {
   it('rotation preserves endpoint stats and does not reset counters', async () => {
     const { app, service, repo, onSignal } = createIntegrationStack();
 
-    const endpoint = await service.createEndpoint('conn-rotate-3', 'github', 'user-1');
+    const endpoint = await service.createEndpoint(
+      'conn-rotate-3',
+      'github',
+      'user-1',
+    );
     const originalSecret = endpoint.secret;
     const payload = SAMPLE_PAYLOAD;
 
@@ -397,7 +441,10 @@ describe('Webhook E2E: Secret rotation with grace period', () => {
     expect(updated?.stats.successfullyProcessed).toBe(1);
 
     // Rotate the secret
-    const { newSecret } = await service.rotateSecret(endpoint.id, 60 * 60 * 1000);
+    const { newSecret } = await service.rotateSecret(
+      endpoint.id,
+      60 * 60 * 1000,
+    );
 
     // Send another valid webhook with new secret
     const newSig = validSig(payload, newSecret);
@@ -417,10 +464,15 @@ describe('Webhook E2E: Secret rotation with grace period', () => {
   it('a successful delivery after failures resets consecutive failure counter', async () => {
     const { app, service, repo } = createIntegrationStack();
 
-    const endpoint = await service.createEndpoint('conn-rotate-reset', 'github', 'user-1');
+    const endpoint = await service.createEndpoint(
+      'conn-rotate-reset',
+      'github',
+      'user-1',
+    );
     const secret = endpoint.secret;
     const payload = SAMPLE_PAYLOAD;
-    const badSig = 'sha256=0000000000000000000000000000000000000000000000000000000000000000';
+    const badSig =
+      'sha256=0000000000000000000000000000000000000000000000000000000000000000';
 
     // Send 5 bad requests (below threshold)
     for (let i = 0; i < 5; i++) {
@@ -450,14 +502,24 @@ describe('Webhook E2E: Secret rotation with grace period', () => {
   it('multiple rotations: only current and immediately previous secret work', async () => {
     const { app, service, onSignal } = createIntegrationStack();
 
-    const endpoint = await service.createEndpoint('conn-rotate-multi', 'github', 'user-1');
+    const endpoint = await service.createEndpoint(
+      'conn-rotate-multi',
+      'github',
+      'user-1',
+    );
     const secret1 = endpoint.secret;
 
     // First rotation
-    const { newSecret: secret2 } = await service.rotateSecret(endpoint.id, 60 * 60 * 1000);
+    const { newSecret: secret2 } = await service.rotateSecret(
+      endpoint.id,
+      60 * 60 * 1000,
+    );
 
     // Second rotation — secret1 is now two rotations old
-    const { newSecret: secret3 } = await service.rotateSecret(endpoint.id, 60 * 60 * 1000);
+    const { newSecret: secret3 } = await service.rotateSecret(
+      endpoint.id,
+      60 * 60 * 1000,
+    );
 
     const payload = SAMPLE_PAYLOAD;
 

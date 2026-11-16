@@ -15,8 +15,8 @@ import type {
   IUserProfile,
 } from '@brightchain/brightchain-lib';
 import { BrightDateDisplayMode } from '@brightchain/brightchain-lib';
-import type { IRequestUserDTO } from '@digitaldefiance/suite-core-lib';
 import type { IApiMessageResponse } from '@digitaldefiance/node-express-suite';
+import type { IRequestUserDTO } from '@digitaldefiance/suite-core-lib';
 
 /**
  * API response for successful login operations.
@@ -51,41 +51,6 @@ export interface IApiUserSettingsResponse extends IApiMessageResponse {
     /** How BrightDate is displayed alongside traditional dates. Defaults to 'dual'. */
     brightDateDisplay?: BrightDateDisplayMode;
   };
-}
-
-/** API response containing user information */
-export interface IApiRequestUserResponse
-  extends IApiMessageResponse,
-    IRequestUserResponseData {}
-
-/** API response for backup codes operations */
-export interface IApiBackupCodesResponse
-  extends IApiMessageResponse,
-    IBackupCodesResponseData {}
-
-/** API response for backup code count operations */
-export interface IApiCodeCountResponse
-  extends IApiMessageResponse,
-    ICodeCountResponseData {}
-
-/** API response for password change operations */
-export interface IApiPasswordChangeResponse extends IApiMessageResponse {
-  data: IPasswordChangeResponse<string>;
-}
-
-/** API response for mnemonic-based account recovery operations */
-export interface IApiRecoveryResponse extends IApiMessageResponse {
-  data: IRecoveryResponse<string>;
-}
-
-/** API response for user profile retrieval */
-export interface IUserProfileApiResponse extends IApiMessageResponse {
-  data: IUserProfile<string>;
-}
-
-/** API response for authentication operations (login/register) */
-export interface IAuthApiResponse extends IApiMessageResponse {
-  data: IAuthResponse<string>;
 }
 
 /** API response containing user information */

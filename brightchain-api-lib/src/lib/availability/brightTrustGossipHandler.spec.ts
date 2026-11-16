@@ -15,8 +15,11 @@
 
 import {
   BlockAnnouncement,
+  BlockId,
+  brightDateNow,
   BrightTrustProposalMetadata,
   BrightTrustVoteMetadata,
+  dateToBrightDate,
   IBrightTrustDatabase,
   IBrightTrustStateMachine,
   IGossipService,
@@ -45,12 +48,14 @@ function makeMember(id: HexString, isActive = true) {
     publicKey: new Uint8Array([1, 2, 3]),
     metadata: { name: `Member-${id}` },
     isActive,
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    createdAt: brightDateNow(),
+    updatedAt: brightDateNow(),
   };
 }
 
-function makeProposal(overrides: Partial<Proposal> = {}): Proposal {
+function makeProposal(
+  overrides: Partial<Proposal<HexString>> = {},
+): Proposal<HexString> {
   return {
     id: PROPOSAL_ID,
     description: 'Test proposal',
@@ -75,7 +80,7 @@ function makeProposalMetadata(
     actionType: ProposalActionType.CUSTOM,
     actionPayload: JSON.stringify({ key: 'value' }),
     proposerMemberId: MEMBER_A,
-    expiresAt: new Date(Date.now() + 3600_000),
+    expiresAt: dateToBrightDate(new Date(Date.now() + 3600_000)),
     requiredThreshold: 2,
     ...overrides,
   };
@@ -97,9 +102,10 @@ function makeProposalAnnouncement(
 ): BlockAnnouncement {
   return {
     type: 'brightTrust_proposal',
-    blockId: metadata.proposalId,
+    // Proposal IDs double as the announcement block ID (as in GossipService).
+    blockId: metadata.proposalId as unknown as BlockId,
     nodeId: 'remote-node-1',
-    timestamp: new Date(),
+    timestamp: brightDateNow(),
     ttl: 5,
     brightTrustProposal: metadata,
   };
@@ -110,9 +116,10 @@ function makeVoteAnnouncement(
 ): BlockAnnouncement {
   return {
     type: 'brightTrust_vote',
-    blockId: metadata.proposalId,
+    // Proposal IDs double as the announcement block ID (as in GossipService).
+    blockId: metadata.proposalId as unknown as BlockId,
     nodeId: 'remote-node-2',
-    timestamp: new Date(),
+    timestamp: brightDateNow(),
     ttl: 5,
     brightTrustVote: metadata,
   };
@@ -182,8 +189,8 @@ function createMockGossipService(): IGossipService & {
 
 function createMockDatabase(options?: {
   members?: Map<HexString, ReturnType<typeof makeMember>>;
-  proposals?: Map<HexString, Proposal>;
-}): IBrightTrustDatabase {
+  proposals?: Map<HexString, Proposal<HexString>>;
+}): IBrightTrustDatabase<HexString> {
   const members =
     options?.members ?? new Map([[MEMBER_A, makeMember(MEMBER_A)]]);
   const proposals = options?.proposals ?? new Map();
@@ -227,19 +234,24 @@ function createMockDatabase(options?: {
     getStatuteConfig: jest.fn(async () => null),
     saveOperationalState: jest.fn(async () => {}),
     getOperationalState: jest.fn(async () => null),
+    saveBanRecord: jest.fn(async () => {}),
+    deleteBanRecord: jest.fn(async () => {}),
+    getBanRecord: jest.fn(async () => null),
+    getAllBanRecords: jest.fn(async () => []),
+    getMemberAdmissionProposerId: jest.fn(async () => null),
     withTransaction: jest.fn(async <R>(fn: () => Promise<R>) => fn()),
     isAvailable: jest.fn(async () => true),
-  } as IBrightTrustDatabase;
+  } as IBrightTrustDatabase<HexString>;
 }
 
-interface MockStateMachine extends IBrightTrustStateMachine {
+interface MockStateMachine extends IBrightTrustStateMachine<HexString> {
   submittedProposals: Array<ProposalInput>;
-  submittedVotes: Array<VoteInput>;
+  submittedVotes: Array<VoteInput<HexString>>;
 }
 
 function createMockStateMachine(): MockStateMachine {
   const submittedProposals: Array<ProposalInput> = [];
-  const submittedVotes: Array<VoteInput> = [];
+  const submittedVotes: Array<VoteInput<HexString>> = [];
 
   return {
     submittedProposals,
@@ -253,7 +265,7 @@ function createMockStateMachine(): MockStateMachine {
       submittedProposals.push(input);
       return makeProposal();
     }),
-    submitVote: jest.fn(async (input: VoteInput) => {
+    submitVote: jest.fn(async (input: VoteInput<HexString>) => {
       submittedVotes.push(input);
     }),
     getProposal: jest.fn(async () => null),
@@ -277,7 +289,7 @@ describe('BrightTrustGossipHandler', () => {
   let gossipService: ReturnType<typeof createMockGossipService>;
   let db: ReturnType<typeof createMockDatabase>;
   let stateMachine: MockStateMachine;
-  let handler: BrightTrustGossipHandler;
+  let handler: BrightTrustGossipHandler<HexString>;
 
   beforeEach(() => {
     gossipService = createMockGossipService();
@@ -370,7 +382,7 @@ describe('BrightTrustGossipHandler', () => {
 
     it('should preserve attachmentCblId in deserialized proposal', async () => {
       const metadata = makeProposalMetadata({
-        attachmentCblId: CBL_ID,
+        attachmentCblId: CBL_ID as BlockId,
       });
       const announcement = makeProposalAnnouncement(metadata);
 
@@ -380,11 +392,11 @@ describe('BrightTrustGossipHandler', () => {
       expect(submitted.attachmentCblId).toBe(CBL_ID);
     });
 
-    it('should convert string expiresAt to Date', async () => {
+    it('should convert BrightDate expiresAt to Date', async () => {
       const futureDate = new Date(Date.now() + 7200_000);
       const metadata = makeProposalMetadata({
-        // Simulate JSON deserialization where Date becomes string
-        expiresAt: futureDate.toISOString() as unknown as Date,
+        // Gossip metadata carries expiresAt as a BrightDate timestamp
+        expiresAt: dateToBrightDate(futureDate),
       });
       const announcement = makeProposalAnnouncement(metadata);
 
@@ -554,9 +566,9 @@ describe('BrightTrustGossipHandler', () => {
     it('should silently discard announcement without brightTrustProposal metadata', async () => {
       const announcement: BlockAnnouncement = {
         type: 'brightTrust_proposal',
-        blockId: 'some-id',
+        blockId: 'some-id' as BlockId,
         nodeId: 'remote-node',
-        timestamp: new Date(),
+        timestamp: brightDateNow(),
         ttl: 5,
         // brightTrustProposal is missing
       };
@@ -569,9 +581,9 @@ describe('BrightTrustGossipHandler', () => {
     it('should silently discard announcement without brightTrustVote metadata', async () => {
       const announcement: BlockAnnouncement = {
         type: 'brightTrust_vote',
-        blockId: 'some-id',
+        blockId: 'some-id' as BlockId,
         nodeId: 'remote-node',
-        timestamp: new Date(),
+        timestamp: brightDateNow(),
         ttl: 5,
         // brightTrustVote is missing
       };
@@ -694,7 +706,9 @@ describe('BrightTrustGossipHandler', () => {
         cblProvider,
       );
 
-      const metadata = makeProposalMetadata({ attachmentCblId: CBL_ID });
+      const metadata = makeProposalMetadata({
+        attachmentCblId: CBL_ID as BlockId,
+      });
       const announcement = makeProposalAnnouncement(metadata);
 
       await handlerWithCBL.handleProposalAnnouncement(announcement);
@@ -722,7 +736,9 @@ describe('BrightTrustGossipHandler', () => {
 
     it('should not attempt CBL retrieval when no provider configured', async () => {
       // handler has no cblProvider
-      const metadata = makeProposalMetadata({ attachmentCblId: CBL_ID });
+      const metadata = makeProposalMetadata({
+        attachmentCblId: CBL_ID as BlockId,
+      });
       const announcement = makeProposalAnnouncement(metadata);
 
       // Should not throw
@@ -741,7 +757,9 @@ describe('BrightTrustGossipHandler', () => {
         cblProvider,
       );
 
-      const metadata = makeProposalMetadata({ attachmentCblId: CBL_ID });
+      const metadata = makeProposalMetadata({
+        attachmentCblId: CBL_ID as BlockId,
+      });
 
       // First proposal with this attachment
       await handlerWithCBL.handleProposalAnnouncement(
@@ -752,7 +770,7 @@ describe('BrightTrustGossipHandler', () => {
       handler.clearDeduplicationState();
       const metadata2 = makeProposalMetadata({
         proposalId: 'pppp0002' as HexString,
-        attachmentCblId: CBL_ID,
+        attachmentCblId: CBL_ID as BlockId,
       });
       await handlerWithCBL.handleProposalAnnouncement(
         makeProposalAnnouncement(metadata2),
@@ -775,7 +793,9 @@ describe('BrightTrustGossipHandler', () => {
         failingProvider,
       );
 
-      const metadata = makeProposalMetadata({ attachmentCblId: CBL_ID });
+      const metadata = makeProposalMetadata({
+        attachmentCblId: CBL_ID as BlockId,
+      });
       const announcement = makeProposalAnnouncement(metadata);
 
       // Should not throw — CBL failure is non-fatal
@@ -797,7 +817,9 @@ describe('BrightTrustGossipHandler', () => {
         nullProvider,
       );
 
-      const metadata = makeProposalMetadata({ attachmentCblId: CBL_ID });
+      const metadata = makeProposalMetadata({
+        attachmentCblId: CBL_ID as BlockId,
+      });
       const announcement = makeProposalAnnouncement(metadata);
 
       await handlerWithNull.handleProposalAnnouncement(announcement);
@@ -815,7 +837,9 @@ describe('BrightTrustGossipHandler', () => {
         cblProvider,
       );
 
-      const metadata = makeProposalMetadata({ attachmentCblId: CBL_ID });
+      const metadata = makeProposalMetadata({
+        attachmentCblId: CBL_ID as BlockId,
+      });
       await handlerWithCBL.handleProposalAnnouncement(
         makeProposalAnnouncement(metadata),
       );

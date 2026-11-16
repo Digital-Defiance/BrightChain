@@ -26,8 +26,10 @@ export interface IServerCategory<TId = string> {
 /**
  * Represents a Server – an organizational container that groups related
  * channels together, analogous to a Discord server.
+ *
+ * The data type parameter is reserved: no IServer field carries binary data yet.
  */
-export interface IServer<TId = string, TData = string> {
+export interface IServer<TId = string, _TData = string> {
   id: TId;
   name: string;
   iconUrl?: string;

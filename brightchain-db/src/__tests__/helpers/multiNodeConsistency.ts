@@ -328,7 +328,12 @@ export function runMultiNodeConsistency(factory: MultiNodeFactory): void {
 
       // Gossip the OLD delete (T=5) into the writer's registry.
       // Use a stale arrival timestamp so LWW for the head itself uses a past time.
-      await regWriter.mergeHeadUpdate(DB, COL, deleteHead, brightDateNow() - 0.001);
+      await regWriter.mergeHeadUpdate(
+        DB,
+        COL,
+        deleteHead,
+        brightDateNow() - 0.001,
+      );
       await flushAsync();
 
       // Writer's T=10 insert must survive

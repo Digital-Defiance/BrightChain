@@ -18,13 +18,13 @@ jest.setTimeout(30000);
 import type { VaultMetadata } from '@brightchain/brightchain-lib';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import React from 'react';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter } from 'react-router';
 
 // ── Mocks ────────────────────────────────────────────────────────────
 
 const mockNavigate = jest.fn();
-jest.mock('react-router-dom', () => ({
-  ...jest.requireActual('react-router-dom'),
+jest.mock('react-router', () => ({
+  ...jest.requireActual('react-router'),
   useNavigate: () => mockNavigate,
   useParams: () => ({ vaultId: 'abc-123' }),
 }));

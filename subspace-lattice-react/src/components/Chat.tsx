@@ -22,10 +22,17 @@ export const Chat: React.FC<ChatProps> = ({ messages, onSendMessage }) => {
     <div className="subspace-chat">
       <div className="chat-messages">
         {(messages ?? []).map((msg) => (
-          <div key={msg.id} className={`chat-message ${msg.isSystemMessage ? 'system' : ''}`}>
-            {!msg.isSystemMessage && <span className="sender">{msg.senderId}: </span>}
+          <div
+            key={msg.id}
+            className={`chat-message ${msg.isSystemMessage ? 'system' : ''}`}
+          >
+            {!msg.isSystemMessage && (
+              <span className="sender">{msg.senderId}: </span>
+            )}
             <span className="text">{msg.text}</span>
-            <span className="timestamp">{new Date(msg.timestamp).toLocaleTimeString()}</span>
+            <span className="timestamp">
+              {new Date(msg.timestamp).toLocaleTimeString()}
+            </span>
           </div>
         ))}
       </div>
@@ -37,7 +44,9 @@ export const Chat: React.FC<ChatProps> = ({ messages, onSendMessage }) => {
           placeholder="Send a message..."
           className="chat-input"
         />
-        <button type="submit" className="chat-send-btn">Send</button>
+        <button type="submit" className="chat-send-btn">
+          Send
+        </button>
       </form>
     </div>
   );

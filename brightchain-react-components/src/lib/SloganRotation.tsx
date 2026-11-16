@@ -1,6 +1,6 @@
-import { FC, useEffect, useMemo, useState } from 'react';
-import { useI18n } from '@digitaldefiance/express-suite-react-components';
 import { BrightChainStrings } from '@brightchain/brightchain-lib';
+import { useI18n } from '@digitaldefiance/express-suite-react-components';
+import { FC, useEffect, useMemo, useState } from 'react';
 import { HeroBadge } from './HeroBadge';
 
 export const SloganRotation: FC = () => {
@@ -28,7 +28,5 @@ export const SloganRotation: FC = () => {
     return () => clearInterval(intervalId);
   }, [slogans.length]);
 
-  return (
-    <HeroBadge text={t(slogans[currentIndex])} />
-  );
+  return <HeroBadge text={t(slogans[currentIndex])} />;
 };

@@ -31,7 +31,7 @@ import {
   Typography,
 } from '@mui/material';
 import { FC, ReactElement, useCallback, useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 
 const SOURCE_CONFIG: Record<
   UnifiedNotificationSource,

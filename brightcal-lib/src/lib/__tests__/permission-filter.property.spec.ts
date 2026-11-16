@@ -68,14 +68,6 @@ const arbVisibility = fc.constantFrom(
   EventVisibility.Confidential,
 );
 
-const arbPermission = fc.constantFrom(
-  CalendarPermissionLevel.Owner,
-  CalendarPermissionLevel.Editor,
-  CalendarPermissionLevel.Viewer,
-  CalendarPermissionLevel.FreeBusyOnly,
-  undefined as CalendarPermissionLevel | undefined,
-);
-
 const arbSafeString = fc
   .array(
     fc.constantFrom(...'abcdefghijklmnopqrstuvwxyz0123456789 '.split('')),

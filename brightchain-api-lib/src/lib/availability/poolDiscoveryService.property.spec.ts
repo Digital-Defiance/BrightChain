@@ -10,6 +10,8 @@
 
 import {
   BlockAnnouncement,
+  BlockId,
+  brightDateNow,
   IPoolACL,
   IPoolInfo,
   PoolAnnouncementMetadata,
@@ -420,10 +422,10 @@ describe('Feature: lumen-brightchain-client-protocol, Property 11: Pool announce
 
           const announcement: BlockAnnouncement = {
             type: 'pool_announce',
-            blockId: '',
+            blockId: '' as BlockId,
             poolId,
             nodeId,
-            timestamp: new Date(),
+            timestamp: brightDateNow(),
             ttl: 3,
             poolAnnouncement: metadata,
           };
@@ -466,10 +468,10 @@ describe('Feature: lumen-brightchain-client-protocol, Property 11: Pool announce
           for (const nodeId of uniqueNodeIds) {
             const announcement: BlockAnnouncement = {
               type: 'pool_announce',
-              blockId: '',
+              blockId: '' as BlockId,
               poolId,
               nodeId,
-              timestamp: new Date(),
+              timestamp: brightDateNow(),
               ttl: 3,
               poolAnnouncement: {
                 blockCount: 10,
@@ -508,10 +510,10 @@ describe('Feature: lumen-brightchain-client-protocol, Property 11: Pool announce
         // Add announcement
         const announcement: BlockAnnouncement = {
           type: 'pool_announce',
-          blockId: '',
+          blockId: '' as BlockId,
           poolId,
           nodeId,
-          timestamp: new Date(),
+          timestamp: brightDateNow(),
           ttl: 3,
           poolAnnouncement: {
             blockCount: 10,

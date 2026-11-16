@@ -142,7 +142,7 @@ export class DestructionController<
           ),
         } as unknown as BurnbagResponse,
       };
-    const fileId = this.safeParseId(req.params.fileId as string);
+    const fileId = this.safeParseId(req.params['fileId'] as string);
     if (!fileId)
       return {
         statusCode: 400,
@@ -183,7 +183,7 @@ export class DestructionController<
           ),
         } as unknown as BurnbagResponse,
       };
-    const fileId = this.safeParseId(req.params.fileId as string);
+    const fileId = this.safeParseId(req.params['fileId'] as string);
     if (!fileId)
       return {
         statusCode: 400,
@@ -236,7 +236,7 @@ export class DestructionController<
           ),
         } as unknown as BurnbagResponse,
       };
-    const fileId = this.safeParseId(req.params.fileId as string);
+    const fileId = this.safeParseId(req.params['fileId'] as string);
     if (!fileId)
       return {
         statusCode: 400,

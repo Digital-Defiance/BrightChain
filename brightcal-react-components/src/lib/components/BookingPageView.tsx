@@ -91,9 +91,7 @@ export function BookingPageView({
         >
           ←
         </button>
-        <span>
-          {formatDate(selectedDate)}
-        </span>
+        <span>{formatDate(selectedDate)}</span>
         <button
           type="button"
           onClick={handleNextDay}

@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { toBrightDateString } from '@brightchain/brightchain-lib';
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 import { useShowcaseI18n } from '../i18n/ShowcaseI18nContext';
 import { ShowcaseStrings } from '../i18n/showcaseStrings';
 import './Blog.css';

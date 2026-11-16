@@ -28,7 +28,10 @@ jest.mock('@brightchain/brightchain-lib', () => ({
     Hover: 'hover',
     HoverReverse: 'hoverReverse',
   },
-  BrightChainStrings: new Proxy({}, { get: (_t: unknown, p: string | symbol) => String(p) }),
+  BrightChainStrings: new Proxy(
+    {},
+    { get: (_t: unknown, p: string | symbol) => String(p) },
+  ),
   AuditAction: {
     VAULT_CREATED: 'VAULT_CREATED',
     VAULT_OPENED: 'VAULT_OPENED',
@@ -64,7 +67,7 @@ jest.mock('../hooks/useBrightPassApi', () => ({
   }),
 }));
 
-jest.mock('react-router-dom', () => ({
+jest.mock('react-router', () => ({
   __esModule: true,
   useParams: () => ({ vaultId: 'test-vault' }),
 }));

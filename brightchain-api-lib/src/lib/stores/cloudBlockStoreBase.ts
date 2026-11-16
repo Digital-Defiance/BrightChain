@@ -20,7 +20,6 @@ import {
   BlockStoreOptions,
   BlockType,
   brightDateNow,
-  brightDateToDate,
   brightDateToISO,
   BrightenResult,
   CBLMagnetComponents,
@@ -292,7 +291,10 @@ export abstract class CloudBlockStoreBase
     const file: CloudBlockMetadataFile = {
       blockId: metadata.blockId,
       createdAt: brightDateToISO(metadata.createdAt),
-      expiresAt: metadata.expiresAt !== null ? brightDateToISO(metadata.expiresAt) : null,
+      expiresAt:
+        metadata.expiresAt !== null
+          ? brightDateToISO(metadata.expiresAt)
+          : null,
       durabilityLevel: metadata.durabilityLevel,
       parityBlockIds: [...metadata.parityBlockIds],
       accessCount: metadata.accessCount,
@@ -1323,7 +1325,9 @@ export abstract class CloudBlockStoreBase
   ): Promise<void> {
     validatePoolId(pool);
     if (!/^[0-9a-f]{128}$/u.test(id)) {
-      throw new Error('A named block id must be 128 lowercase hexadecimal digits');
+      throw new Error(
+        'A named block id must be 128 lowercase hexadecimal digits',
+      );
     }
     const objectKey = this.buildObjectKey(id, pool);
     const exists = await this.withRetry('putInPoolWithId.exists', id, () =>
@@ -1333,7 +1337,13 @@ export abstract class CloudBlockStoreBase
     await this.withRetry('putInPoolWithId.upload', id, () =>
       this.uploadObject(objectKey, data),
     );
-    const metadata = createDefaultBlockMetadata(toStorageKey(id), data.length, id, options, pool);
+    const metadata = createDefaultBlockMetadata(
+      toStorageKey(id),
+      data.length,
+      id,
+      options,
+      pool,
+    );
     const metaKey = this.buildMetaKey(id, pool);
     await this.withRetry('putInPoolWithId.meta', id, () =>
       this.uploadObject(metaKey, this.serializeMetadata(metadata)),

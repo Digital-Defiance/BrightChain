@@ -20,10 +20,13 @@ import {
   ALLOWED_MEDIA_TYPES,
   createPostService,
   EDIT_WINDOW_MS,
+  LikeRecord,
   MAX_MEDIA_ATTACHMENTS,
   MAX_TOTAL_ATTACHMENT_SIZE,
   POST_MAX_CHARACTERS,
+  PostRecord,
   PostService,
+  RepostRecord,
 } from './postService';
 import {
   createMockApplication,
@@ -33,15 +36,15 @@ import {
 describe('Feature: brighthub-social-network, Post_Service Property Tests', () => {
   let service: PostService;
   let mockApp: ReturnType<typeof createMockApplication>;
-  let postsCollection: MockCollection;
-  let likesCollection: MockCollection;
-  let _repostsCollection: MockCollection;
+  let postsCollection: MockCollection<PostRecord>;
+  let likesCollection: MockCollection<LikeRecord>;
+  let _repostsCollection: MockCollection<RepostRecord>;
 
   beforeEach(() => {
     mockApp = createMockApplication();
-    postsCollection = mockApp.collections.get('brighthub_posts')!;
-    likesCollection = mockApp.collections.get('brighthub_likes')!;
-    _repostsCollection = mockApp.collections.get('brighthub_reposts')!;
+    postsCollection = mockApp.getModel<PostRecord>('brighthub_posts');
+    likesCollection = mockApp.getModel<LikeRecord>('brighthub_likes');
+    _repostsCollection = mockApp.getModel<RepostRecord>('brighthub_reposts');
     service = createPostService(mockApp);
   });
 
@@ -309,6 +312,9 @@ describe('Feature: brighthub-social-network, Post_Service Property Tests', () =>
               repostCount: 0,
               replyCount: 0,
               quoteCount: 0,
+              upvoteCount: 0,
+              downvoteCount: 0,
+              score: 0,
               isEdited: false,
               isBlogPost: true,
               isDeleted: false,

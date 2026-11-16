@@ -16,11 +16,12 @@
 
 import {
   BlockSize,
+  brightDateNow,
   initializeBrightChain,
   PooledMemoryBlockStore,
   resetInitialization,
+  type BlockId,
 } from '@brightchain/brightchain-lib';
-import { brightDateNow } from '@brightchain/brightchain-lib';
 import { CBLVisibility } from '@brightchain/brightchain-lib/lib/interfaces/storage/cblIndex';
 import { promises as fs } from 'fs';
 import { tmpdir } from 'os';
@@ -41,7 +42,7 @@ async function makeTempDir(): Promise<string> {
  */
 async function storeFakeBlocks(
   store: PooledMemoryBlockStore,
-): Promise<{ id1: string; id2: string }> {
+): Promise<{ id1: BlockId; id2: BlockId }> {
   const data1 = new Uint8Array(512);
   data1[0] = 0xaa;
   const data2 = new Uint8Array(512);
@@ -55,7 +56,7 @@ async function storeFakeBlocks(
   await store.put(hash1, data1);
   await store.put(hash2, data2);
 
-  return { id1: hash1, id2: hash2 };
+  return { id1: hash1 as BlockId, id2: hash2 as BlockId };
 }
 
 function makeMagnetUrl(id1: string, id2: string): string {
@@ -95,8 +96,8 @@ describe('CBLIndex e2e persistence', () => {
 
       await idx1.addEntry({
         magnetUrl,
-        blockId1: id1 as any,
-        blockId2: id2 as any,
+        blockId1: id1,
+        blockId2: id2,
         blockSize: 512,
         createdAt: brightDateNow(),
         visibility: CBLVisibility.Public,
@@ -125,8 +126,8 @@ describe('CBLIndex e2e persistence', () => {
 
       await idx1.addEntry({
         magnetUrl: makeMagnetUrl(id1, id2),
-        blockId1: id1 as any,
-        blockId2: id2 as any,
+        blockId1: id1,
+        blockId2: id2,
         blockSize: 512,
         createdAt: brightDateNow(),
         visibility: CBLVisibility.Public,
@@ -138,7 +139,7 @@ describe('CBLIndex e2e persistence', () => {
       await db2.connect();
       const idx2 = new CBLIndex(db2, store, { parityCount: 0 });
 
-      const results = await idx2.getByBlockId(id1 as any);
+      const results = await idx2.getByBlockId(id1);
       expect(results.length).toBeGreaterThanOrEqual(1);
       expect(results[0].blockId1).toBe(id1);
     });
@@ -166,8 +167,8 @@ describe('CBLIndex e2e persistence', () => {
 
       await idx1.addEntry({
         magnetUrl,
-        blockId1: id1 as any,
-        blockId2: id2 as any,
+        blockId1: id1,
+        blockId2: id2,
         blockSize: 512,
         createdAt: brightDateNow(),
         visibility: CBLVisibility.Public,
@@ -210,8 +211,8 @@ describe('CBLIndex e2e persistence', () => {
       const { id1: a1, id2: a2 } = await storeFakeBlocks(store);
       const v1 = await idx1.addVersion(fileId, {
         magnetUrl: makeMagnetUrl(a1, a2),
-        blockId1: a1 as any,
-        blockId2: a2 as any,
+        blockId1: a1,
+        blockId2: a2,
         blockSize: 512,
         createdAt: brightDateNow(),
         visibility: CBLVisibility.Private,
@@ -222,8 +223,8 @@ describe('CBLIndex e2e persistence', () => {
       const { id1: b1, id2: b2 } = await storeFakeBlocks(store);
       const v2 = await idx1.addVersion(fileId, {
         magnetUrl: makeMagnetUrl(b1, b2),
-        blockId1: b1 as any,
-        blockId2: b2 as any,
+        blockId1: b1,
+        blockId2: b2,
         blockSize: 512,
         createdAt: brightDateNow(),
         visibility: CBLVisibility.Private,
@@ -271,8 +272,8 @@ describe('CBLIndex e2e persistence', () => {
       const { id1: a1, id2: a2 } = await storeFakeBlocks(store);
       await idx1.addEntry({
         magnetUrl: makeMagnetUrl(a1, a2),
-        blockId1: a1 as any,
-        blockId2: a2 as any,
+        blockId1: a1,
+        blockId2: a2,
         blockSize: 512,
         createdAt: brightDateNow(),
         visibility: CBLVisibility.Public,
@@ -282,8 +283,8 @@ describe('CBLIndex e2e persistence', () => {
       const { id1: b1, id2: b2 } = await storeFakeBlocks(store);
       await idx1.addEntry({
         magnetUrl: makeMagnetUrl(b1, b2),
-        blockId1: b1 as any,
-        blockId2: b2 as any,
+        blockId1: b1,
+        blockId2: b2,
         blockSize: 512,
         createdAt: brightDateNow(),
         visibility: CBLVisibility.Public,
@@ -317,8 +318,8 @@ describe('CBLIndex e2e persistence', () => {
         const { id1, id2 } = await storeFakeBlocks(store);
         await idx1.addEntry({
           magnetUrl: makeMagnetUrl(id1, id2),
-          blockId1: id1 as any,
-          blockId2: id2 as any,
+          blockId1: id1,
+          blockId2: id2,
           blockSize: 512,
           createdAt: brightDateNow(),
           visibility: CBLVisibility.Public,
@@ -359,8 +360,8 @@ describe('CBLIndex e2e persistence', () => {
 
       await idx1.addEntry({
         magnetUrl,
-        blockId1: id1 as any,
-        blockId2: id2 as any,
+        blockId1: id1,
+        blockId2: id2,
         blockSize: 512,
         createdAt: brightDateNow(),
         visibility: CBLVisibility.Shared,
@@ -401,8 +402,8 @@ describe('CBLIndex e2e persistence', () => {
       const { id1: a1, id2: a2 } = await storeFakeBlocks(store);
       await idx1.addEntry({
         magnetUrl: makeMagnetUrl(a1, a2),
-        blockId1: a1 as any,
-        blockId2: a2 as any,
+        blockId1: a1,
+        blockId2: a2,
         blockSize: 512,
         createdAt: brightDateNow(),
         visibility: CBLVisibility.Public,
@@ -411,8 +412,8 @@ describe('CBLIndex e2e persistence', () => {
       const { id1: b1, id2: b2 } = await storeFakeBlocks(store);
       await idx1.addEntry({
         magnetUrl: makeMagnetUrl(b1, b2),
-        blockId1: b1 as any,
-        blockId2: b2 as any,
+        blockId1: b1,
+        blockId2: b2,
         blockSize: 512,
         createdAt: brightDateNow(),
         visibility: CBLVisibility.Private,

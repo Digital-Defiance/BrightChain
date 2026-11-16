@@ -1,16 +1,14 @@
 import {
   BlockSize,
-  DEFAULT_POOL,
   PooledMemoryBlockStore,
 } from '@brightchain/brightchain-lib';
-import { BrightDb } from '@brightchain/db';
 import {
   BrightNexusBrightDBName,
   BrightNexusBrightDBPoolID,
   BslpPrivacyMode,
   type IBrightNexusLocationPublishRequest,
 } from '@brightchain/brightnexus-lib';
-import { InMemoryHeadRegistry } from '@brightchain/db';
+import { BrightDb, InMemoryHeadRegistry } from '@brightchain/db';
 import {
   ECIESService,
   EmailString,
@@ -19,9 +17,9 @@ import {
   SecureString,
 } from '@digitaldefiance/ecies-lib';
 import { signBslpPublishBody } from '../../bslp-client-signing';
-import type { IBrightNexusExternalDeps } from '../../wiring/create-brightnexus-deps';
 import type { LocationRegistryService } from '../../services/location-registry-service';
 import { LocationRegistryService as LocationRegistryServiceClass } from '../../services/location-registry-service';
+import type { IBrightNexusExternalDeps } from '../../wiring/create-brightnexus-deps';
 
 /** BIP39 test mnemonic (matches user-management e2e vectors). */
 export const TEST_BSLP_MNEMONIC =
@@ -113,7 +111,10 @@ export function ensureTestMemberKeys(memberIdHex: string): string {
 
 export function signSamplePublishBody(
   memberIdHex: string,
-  body: Omit<IBrightNexusLocationPublishRequest, 'signature'> = samplePublishPayload,
+  body: Omit<
+    IBrightNexusLocationPublishRequest,
+    'signature'
+  > = samplePublishPayload,
 ): IBrightNexusLocationPublishRequest {
   ensureTestMemberKeys(memberIdHex);
   return signBslpPublishBody(

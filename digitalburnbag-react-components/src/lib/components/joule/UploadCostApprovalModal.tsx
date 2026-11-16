@@ -125,21 +125,25 @@ export function UploadCostApprovalModal({
             : t(DigitalBurnbagStrings.Joule_FetchQuoteFailed);
         setState({ phase: 'error', message });
       });
+    // `t` only formats a fallback error message; a language switch must not
+    // refetch the quote, so it is deliberately not a dependency.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, sessionId, apiClient]);
 
   // Proactively discard when the quote expires
   useEffect(() => {
     if (!expired || state.phase !== 'quoted' || discardedRef.current) return;
     // Double-check against the actual timestamp to avoid false positives
-    // from the countdown not having ticked yet.
-    const expiresAt = state.quote.quoteExpiresAt;
-    if (new Date(expiresAt).getTime() > Date.now()) return;
+    // from the countdown not having ticked yet. quoteExpiresAt is the
+    // current quote's expiry whenever the phase is 'quoted'.
+    if (!quoteExpiresAt || new Date(quoteExpiresAt).getTime() > Date.now())
+      return;
     discardedRef.current = true;
     setState({ phase: 'expired' });
     apiClient.discardUpload(sessionId).catch(() => {
       // best-effort — server will expire the session anyway
     });
-  }, [expired, state.phase, sessionId, apiClient]);
+  }, [expired, state.phase, quoteExpiresAt, sessionId, apiClient]);
 
   const handleCommit = useCallback(async () => {
     setCommitting(true);
@@ -155,7 +159,7 @@ export function UploadCostApprovalModal({
     } finally {
       setCommitting(false);
     }
-  }, [apiClient, sessionId, onCommit]);
+  }, [apiClient, sessionId, onCommit, t]);
 
   const handleDiscard = useCallback(async () => {
     try {

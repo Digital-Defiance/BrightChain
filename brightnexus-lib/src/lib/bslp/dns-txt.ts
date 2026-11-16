@@ -1,4 +1,7 @@
-import type { IBrightSpacetimePrivacy, IBrightSpacetimeVector } from '../interfaces/bright-spacetime';
+import type {
+  IBrightSpacetimePrivacy,
+  IBrightSpacetimeVector,
+} from '../interfaces/bright-spacetime';
 import { BSLP_DEFAULT_EPOCH } from '../interfaces/bright-spacetime';
 
 /**
@@ -42,9 +45,10 @@ export function parseBrightDnsTxt(txt: string): IParsedBrightDnsTxt | null {
   for (const part of parts) {
     if (part.startsWith('bst=')) {
       const coords = part.slice(4);
-      const match = /^(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)m$/i.exec(
-        coords,
-      );
+      const match =
+        /^(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)m$/i.exec(
+          coords,
+        );
       if (!match) return null;
       lat = Number(match[1]);
       lon = Number(match[2]);

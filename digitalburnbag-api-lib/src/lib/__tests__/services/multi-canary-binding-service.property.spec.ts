@@ -8,14 +8,14 @@
  *   - Property 4: Redundancy policy evaluation correctness
  *   - Property 5: CHECK_FAILED exclusion from consensus
  */
-import { HeartbeatSignalType } from '@brightchain/digitalburnbag-lib';
 import type { RedundancyPolicy } from '@brightchain/digitalburnbag-lib';
+import { HeartbeatSignalType } from '@brightchain/digitalburnbag-lib';
 import * as fc from 'fast-check';
 import {
   evaluateRedundancyPolicy,
-  validateProviderCount,
-  MIN_PROVIDERS,
   MAX_PROVIDERS,
+  MIN_PROVIDERS,
+  validateProviderCount,
 } from '../../services/multi-canary-binding-service';
 
 // ---------------------------------------------------------------------------
@@ -26,9 +26,7 @@ import {
 const arbProviderId: fc.Arbitrary<string> = fc.string({
   minLength: 1,
   maxLength: 20,
-  unit: fc.constantFrom(
-    ...'abcdefghijklmnopqrstuvwxyz0123456789'.split(''),
-  ),
+  unit: fc.constantFrom(...'abcdefghijklmnopqrstuvwxyz0123456789'.split('')),
 });
 
 /** Arbitrary for a unique list of N provider IDs. */
@@ -60,12 +58,6 @@ const arbValidCount: fc.Arbitrary<number> = fc.integer({
 const arbActiveSignal: fc.Arbitrary<HeartbeatSignalType> = fc.constantFrom(
   HeartbeatSignalType.PRESENCE,
   HeartbeatSignalType.ABSENCE,
-);
-
-/** Arbitrary for a HeartbeatSignalType that is excluded from active count. */
-const arbExcludedSignal: fc.Arbitrary<HeartbeatSignalType> = fc.constantFrom(
-  HeartbeatSignalType.CHECK_FAILED,
-  HeartbeatSignalType.INCONCLUSIVE,
 );
 
 /** Arbitrary for any HeartbeatSignalType. */
@@ -188,7 +180,9 @@ describe('Feature: canary-provider-expansion, Property 4: Redundancy policy eval
      */
     fc.assert(
       fc.property(
-        fc.integer({ min: 2, max: 10 }).chain((n) => arbActiveProviderSignals(n)),
+        fc
+          .integer({ min: 2, max: 10 })
+          .chain((n) => arbActiveProviderSignals(n)),
         ({ ids, signals }) => {
           const providerSignals = buildSignals(ids, signals);
           const result = evaluateRedundancyPolicy(
@@ -218,7 +212,9 @@ describe('Feature: canary-provider-expansion, Property 4: Redundancy policy eval
      */
     fc.assert(
       fc.property(
-        fc.integer({ min: 2, max: 10 }).chain((n) => arbActiveProviderSignals(n)),
+        fc
+          .integer({ min: 2, max: 10 })
+          .chain((n) => arbActiveProviderSignals(n)),
         ({ ids, signals }) => {
           const providerSignals = buildSignals(ids, signals);
           const result = evaluateRedundancyPolicy(
@@ -249,7 +245,9 @@ describe('Feature: canary-provider-expansion, Property 4: Redundancy policy eval
      */
     fc.assert(
       fc.property(
-        fc.integer({ min: 2, max: 10 }).chain((n) => arbActiveProviderSignals(n)),
+        fc
+          .integer({ min: 2, max: 10 })
+          .chain((n) => arbActiveProviderSignals(n)),
         ({ ids, signals }) => {
           const providerSignals = buildSignals(ids, signals);
           const result = evaluateRedundancyPolicy(
@@ -287,7 +285,11 @@ describe('Feature: canary-provider-expansion, Property 4: Redundancy policy eval
               .chain((signals) =>
                 fc
                   .array(
-                    fc.float({ min: Math.fround(0.1), max: Math.fround(10.0), noNaN: true }),
+                    fc.float({
+                      min: Math.fround(0.1),
+                      max: Math.fround(10.0),
+                      noNaN: true,
+                    }),
                     { minLength: n, maxLength: n },
                   )
                   .chain((weights) =>
@@ -345,7 +347,9 @@ describe('Feature: canary-provider-expansion, Property 4: Redundancy policy eval
      */
     fc.assert(
       fc.property(
-        fc.integer({ min: 2, max: 10 }).chain((n) => arbActiveProviderSignals(n)),
+        fc
+          .integer({ min: 2, max: 10 })
+          .chain((n) => arbActiveProviderSignals(n)),
         arbPolicy,
         ({ ids, signals }, policy) => {
           const providerSignals = buildSignals(ids, signals);
@@ -613,8 +617,10 @@ describe('Feature: canary-provider-expansion, Property 6: Paused providers exclu
 
           // Results must be identical: paused providers have no effect
           return (
-            resultWithPaused.shouldTrigger === resultWithoutPaused.shouldTrigger &&
-            resultWithPaused.absenceCount === resultWithoutPaused.absenceCount &&
+            resultWithPaused.shouldTrigger ===
+              resultWithoutPaused.shouldTrigger &&
+            resultWithPaused.absenceCount ===
+              resultWithoutPaused.absenceCount &&
             resultWithPaused.totalActive === resultWithoutPaused.totalActive
           );
         },
@@ -636,7 +642,10 @@ describe('Feature: canary-provider-expansion, Property 6: Paused providers exclu
         // Non-paused providers: all report PRESENCE
         fc.integer({ min: 2, max: 8 }).chain((nActive) =>
           fc
-            .uniqueArray(arbProviderId, { minLength: nActive, maxLength: nActive })
+            .uniqueArray(arbProviderId, {
+              minLength: nActive,
+              maxLength: nActive,
+            })
             .filter((ids) => ids.length === nActive)
             .chain((activeIds) =>
               // Paused providers: all report ABSENCE
@@ -731,13 +740,10 @@ describe('Feature: canary-provider-expansion, Property 6: Paused providers exclu
 // In-memory repository helpers for Property 22
 // ---------------------------------------------------------------------------
 
-import {
-  MultiCanaryBindingService,
-  MIN_PROVIDERS,
-} from '../../services/multi-canary-binding-service';
-import type { IMultiCanaryConnectionRepository } from '../../services/multi-canary-binding-service';
 import type { IMultiCanaryBindingBase } from '@brightchain/digitalburnbag-lib';
 import type { BrightDBMultiCanaryBindingRepository } from '../../collections/multi-canary-binding-collection';
+import type { IMultiCanaryConnectionRepository } from '../../services/multi-canary-binding-service';
+import { MultiCanaryBindingService } from '../../services/multi-canary-binding-service';
 
 /**
  * Creates a fully in-memory BrightDBMultiCanaryBindingRepository for testing.
@@ -815,24 +821,25 @@ describe('Feature: canary-provider-expansion, Property 22: Provider disconnect r
         fc
           .array(
             // Each binding has 2–6 providers, always including the shared one
-            fc
-              .integer({ min: 1, max: 5 })
-              .chain((nOthers) =>
-                fc
-                  .uniqueArray(arbProviderId, {
-                    minLength: nOthers,
-                    maxLength: nOthers,
-                  })
-                  .filter(
-                    (others) =>
-                      others.length === nOthers &&
-                      !others.includes(sharedProviderId),
-                  )
-                  .map((others) => [sharedProviderId, ...others]),
-              ),
+            fc.integer({ min: 1, max: 5 }).chain((nOthers) =>
+              fc
+                .uniqueArray(arbProviderId, {
+                  minLength: nOthers,
+                  maxLength: nOthers,
+                })
+                .filter(
+                  (others) =>
+                    others.length === nOthers &&
+                    !others.includes(sharedProviderId),
+                )
+                .map((others) => [sharedProviderId, ...others]),
+            ),
             { minLength: k, maxLength: k },
           )
-          .map((bindingProviderSets) => ({ sharedProviderId, bindingProviderSets })),
+          .map((bindingProviderSets) => ({
+            sharedProviderId,
+            bindingProviderSets,
+          })),
       ),
     );
 
@@ -877,9 +884,8 @@ describe('Feature: canary-provider-expansion, Property 22: Provider disconnect r
           }
 
           // Disconnect the shared provider
-          const impactReport = await service.removeProviderFromBindings(
-            sharedProviderId,
-          );
+          const impactReport =
+            await service.removeProviderFromBindings(sharedProviderId);
 
           // All K bindings must be in the affected list
           const k = bindingProviderSets.length;
@@ -887,7 +893,8 @@ describe('Feature: canary-provider-expansion, Property 22: Provider disconnect r
 
           // Every created binding ID must appear in affectedBindings
           const affectedSet = new Set(impactReport.affectedBindings);
-          if (!createdBindingIds.every((id) => affectedSet.has(id))) return false;
+          if (!createdBindingIds.every((id) => affectedSet.has(id)))
+            return false;
 
           // Verify the shared provider is actually removed from each binding
           for (const bindingId of createdBindingIds) {
@@ -957,9 +964,8 @@ describe('Feature: canary-provider-expansion, Property 22: Provider disconnect r
           }
 
           // Disconnect the shared provider
-          const impactReport = await service.removeProviderFromBindings(
-            sharedProviderId,
-          );
+          const impactReport =
+            await service.removeProviderFromBindings(sharedProviderId);
 
           // Verify classification: bindings with only 1 provider left → below minimum
           for (const { id, providerCount } of createdBindings) {
@@ -1003,60 +1009,52 @@ describe('Feature: canary-provider-expansion, Property 22: Provider disconnect r
       fc.asyncProperty(
         // Generate a shared provider and two groups: bindings WITH it and WITHOUT it
         arbProviderId.chain((sharedProviderId) =>
-          fc
-            .integer({ min: 1, max: 4 })
-            .chain((nWith) =>
+          fc.integer({ min: 1, max: 4 }).chain((nWith) =>
+            fc.integer({ min: 0, max: 4 }).chain((nWithout) =>
+              // Bindings containing the shared provider
               fc
-                .integer({ min: 0, max: 4 })
-                .chain((nWithout) =>
-                  // Bindings containing the shared provider
+                .array(
+                  fc.integer({ min: 1, max: 4 }).chain((nOthers) =>
+                    fc
+                      .uniqueArray(arbProviderId, {
+                        minLength: nOthers,
+                        maxLength: nOthers,
+                      })
+                      .filter(
+                        (others) =>
+                          others.length === nOthers &&
+                          !others.includes(sharedProviderId),
+                      )
+                      .map((others) => [sharedProviderId, ...others]),
+                  ),
+                  { minLength: nWith, maxLength: nWith },
+                )
+                .chain((withBindings) =>
+                  // Bindings NOT containing the shared provider (2+ distinct providers)
                   fc
                     .array(
-                      fc
-                        .integer({ min: 1, max: 4 })
-                        .chain((nOthers) =>
-                          fc
-                            .uniqueArray(arbProviderId, {
-                              minLength: nOthers,
-                              maxLength: nOthers,
-                            })
-                            .filter(
-                              (others) =>
-                                others.length === nOthers &&
-                                !others.includes(sharedProviderId),
-                            )
-                            .map((others) => [sharedProviderId, ...others]),
-                        ),
-                      { minLength: nWith, maxLength: nWith },
+                      fc.integer({ min: 2, max: 4 }).chain((n) =>
+                        fc
+                          .uniqueArray(arbProviderId, {
+                            minLength: n,
+                            maxLength: n,
+                          })
+                          .filter(
+                            (ids) =>
+                              ids.length === n &&
+                              !ids.includes(sharedProviderId),
+                          ),
+                      ),
+                      { minLength: nWithout, maxLength: nWithout },
                     )
-                    .chain((withBindings) =>
-                      // Bindings NOT containing the shared provider (2+ distinct providers)
-                      fc
-                        .array(
-                          fc
-                            .integer({ min: 2, max: 4 })
-                            .chain((n) =>
-                              fc
-                                .uniqueArray(arbProviderId, {
-                                  minLength: n,
-                                  maxLength: n,
-                                })
-                                .filter(
-                                  (ids) =>
-                                    ids.length === n &&
-                                    !ids.includes(sharedProviderId),
-                                ),
-                            ),
-                          { minLength: nWithout, maxLength: nWithout },
-                        )
-                        .map((withoutBindings) => ({
-                          sharedProviderId,
-                          withBindings,
-                          withoutBindings,
-                        })),
-                    ),
+                    .map((withoutBindings) => ({
+                      sharedProviderId,
+                      withBindings,
+                      withoutBindings,
+                    })),
                 ),
             ),
+          ),
         ),
         async ({ sharedProviderId, withBindings, withoutBindings }) => {
           const repo = createInMemoryBindingRepository();
@@ -1106,9 +1104,8 @@ describe('Feature: canary-provider-expansion, Property 22: Provider disconnect r
           }
 
           // Disconnect the shared provider
-          const impactReport = await service.removeProviderFromBindings(
-            sharedProviderId,
-          );
+          const impactReport =
+            await service.removeProviderFromBindings(sharedProviderId);
 
           // affectedBindings must be exactly the "with" bindings
           const affectedSet = new Set(impactReport.affectedBindings);

@@ -46,6 +46,8 @@ export function useBrightHubMenuItems(
 
   return useMemo(() => {
     let idx = startingIndex;
+    // Tracks nextIndex separately from idx (they advance by different amounts).
+    let next = startingIndex;
     const items: IMenuOption[] = [
       {
         id: 'hub_home',
@@ -118,7 +120,7 @@ export function useBrightHubMenuItems(
       },
     ];
     idx += 50;
-    startingIndex += 50;
+    next += 50;
 
     if (userId) {
       items.push({
@@ -131,13 +133,13 @@ export function useBrightHubMenuItems(
         icon: <FontAwesomeIcon icon={faPerson} />,
       });
       idx += 10;
-      startingIndex += 10;
+      next += 10;
     }
 
     // Add subscribed hubs as quick-access items
     for (const hub of subscribedHubs.slice(0, 5)) {
       idx += 10;
-      startingIndex += 10;
+      next += 10;
       items.push({
         id: `hub_sub_${hub._id}`,
         index: idx,
@@ -149,8 +151,15 @@ export function useBrightHubMenuItems(
       });
     }
 
-    return { options: items, nextIndex: startingIndex + 10 };
-  }, [t, hubMenu, subscribedHubs, startingIndex, unreadNotificationCount]);
+    return { options: items, nextIndex: next + 10 };
+  }, [
+    t,
+    hubMenu,
+    subscribedHubs,
+    startingIndex,
+    unreadNotificationCount,
+    userId,
+  ]);
 }
 
 export default useBrightHubMenuItems;

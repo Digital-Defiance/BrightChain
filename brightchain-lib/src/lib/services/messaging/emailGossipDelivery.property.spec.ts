@@ -900,9 +900,8 @@ import { ReplicationStatus } from '../../enumerations/replicationStatus';
 import type { BlockAnnouncement } from '../../interfaces/availability/gossipService';
 import type { BlockId } from '../../interfaces/branded/primitives/blockId';
 import { createContentType } from '../../interfaces/messaging/mimePart';
-import { InMemoryEmailMetadataStore } from './inMemoryEmailMetadataStore';
 import { brightDateNow } from '../../utils/brightDateConversions';
-import type { BrightDateTimestamp } from '../../types/brightDateTimestamp';
+import { InMemoryEmailMetadataStore } from './inMemoryEmailMetadataStore';
 
 /** Cast a test string to BlockId without validation — for test data only. */
 const bid = (s: string) => s as unknown as BlockId;

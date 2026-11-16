@@ -6,7 +6,10 @@ import {
   ITestMemberHydratedData,
 } from '../../interfaces/member/hydrated';
 import { ServiceProvider } from '../../services/service.provider';
-import { brightDateToISO, normalizeToBrightDate } from '../../utils/brightDateConversions';
+import {
+  brightDateToISO,
+  normalizeToBrightDate,
+} from '../../utils/brightDateConversions';
 
 /**
  * Factory for converting between hydrated data and Member instances

@@ -1,7 +1,7 @@
 import { describe, expect, it } from '@jest/globals';
 import { DeliveryStatus } from '../../enumerations/messaging/deliveryStatus';
-import { EmailDeliveryStatus, IDeliveryReceipt } from './emailDelivery';
 import { normalizeToBrightDate } from '../../utils/brightDateConversions';
+import { EmailDeliveryStatus, IDeliveryReceipt } from './emailDelivery';
 
 describe('EmailDeliveryStatus Enum (deprecated)', () => {
   it('should define all required delivery status states', () => {
@@ -94,7 +94,9 @@ describe('IDeliveryReceipt Interface', () => {
     });
 
     it('should support deliveredAt timestamp', () => {
-      const deliveredAt = normalizeToBrightDate(new Date('2024-01-01T12:00:05Z'));
+      const deliveredAt = normalizeToBrightDate(
+        new Date('2024-01-01T12:00:05Z'),
+      );
       const receipt = createMinimalReceipt({
         status: DeliveryStatus.Delivered,
         deliveredAt,

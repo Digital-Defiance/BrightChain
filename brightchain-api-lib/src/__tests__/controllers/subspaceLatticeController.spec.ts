@@ -8,9 +8,9 @@
  * - Creator ID is resolved from req.user.memberId, req.user.id, or falls back to 'anonymous'
  */
 
-import { IBrightChainApplication } from '../../lib/interfaces/application';
-import { SubspaceLatticeController } from '../../lib/controllers/api/subspaceLatticeController';
 import { IGameRoom } from 'subspace-lattice';
+import { SubspaceLatticeController } from '../../lib/controllers/api/subspaceLatticeController';
+import { IBrightChainApplication } from '../../lib/interfaces/application';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -28,8 +28,12 @@ function createMockApp(): IBrightChainApplication {
     getController: () => {
       throw new Error('not implemented');
     },
-    setController: () => { /* noop */ },
-    start: async () => { /* noop */ },
+    setController: () => {
+      /* noop */
+    },
+    start: async () => {
+      /* noop */
+    },
     getNodeId: () => 'test-node-id',
   } as unknown as IBrightChainApplication;
 }
@@ -60,7 +64,10 @@ function createMockRes() {
   };
 }
 
-function createMockReq(body: Record<string, unknown>, user?: { memberId?: string; id?: string }) {
+function createMockReq(
+  body: Record<string, unknown>,
+  user?: { memberId?: string; id?: string },
+) {
   return { body, user } as unknown as import('express').Request;
 }
 
@@ -76,7 +83,10 @@ describe('SubspaceLatticeController createRoom', () => {
   describe('successful room creation', () => {
     it('returns 201 status', async () => {
       const { mockRes, getStatus } = createMockRes();
-      const req = createMockReq({ name: 'Ten-Forward' }, { memberId: 'user-abc' });
+      const req = createMockReq(
+        { name: 'Ten-Forward' },
+        { memberId: 'user-abc' },
+      );
 
       await controller.createRoom(req, mockRes);
 
@@ -85,7 +95,10 @@ describe('SubspaceLatticeController createRoom', () => {
 
     it('returns a room with the requested name (fixes missing header bug)', async () => {
       const { mockRes, getBody } = createMockRes();
-      const req = createMockReq({ name: 'Ten-Forward' }, { memberId: 'user-abc' });
+      const req = createMockReq(
+        { name: 'Ten-Forward' },
+        { memberId: 'user-abc' },
+      );
 
       await controller.createRoom(req, mockRes);
 
@@ -95,7 +108,10 @@ describe('SubspaceLatticeController createRoom', () => {
 
     it('trims whitespace from the room name', async () => {
       const { mockRes, getBody } = createMockRes();
-      const req = createMockReq({ name: '  Promenade  ' }, { memberId: 'user-abc' });
+      const req = createMockReq(
+        { name: '  Promenade  ' },
+        { memberId: 'user-abc' },
+      );
 
       await controller.createRoom(req, mockRes);
 
@@ -146,7 +162,10 @@ describe('SubspaceLatticeController createRoom', () => {
 
     it('creates room with optional password', async () => {
       const { mockRes, getBody } = createMockRes();
-      const req = createMockReq({ name: 'Secret Room', password: 'warpcore' }, { memberId: 'user-1' });
+      const req = createMockReq(
+        { name: 'Secret Room', password: 'warpcore' },
+        { memberId: 'user-1' },
+      );
 
       await controller.createRoom(req, mockRes);
 
@@ -158,7 +177,10 @@ describe('SubspaceLatticeController createRoom', () => {
   describe('creator ID resolution', () => {
     it('uses req.user.memberId when present', async () => {
       const { mockRes, getBody } = createMockRes();
-      const req = createMockReq({ name: 'Room A' }, { memberId: 'member-123', id: 'fallback-id' });
+      const req = createMockReq(
+        { name: 'Room A' },
+        { memberId: 'member-123', id: 'fallback-id' },
+      );
 
       await controller.createRoom(req, mockRes);
 

@@ -56,7 +56,7 @@ const createMockApplication = (services: Map<string, unknown> = new Map()) => {
 };
 
 const createMockAvailabilityService = (
-  localNodeId: string | null,
+  localNodeId: string,
   isPartitioned: boolean,
   disconnectedPeers: string[],
 ): IAvailabilityService => {

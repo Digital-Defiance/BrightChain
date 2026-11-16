@@ -11,8 +11,8 @@
  */
 
 import { PlatformID } from '@digitaldefiance/ecies-lib';
-import { IAclScope } from './writeAcl';
 import type { BrightDateTimestamp } from '../../types/brightDateTimestamp';
+import { IAclScope } from './writeAcl';
 
 /**
  * Time-limited token granting temporary write access.

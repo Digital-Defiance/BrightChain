@@ -17,7 +17,12 @@ import type {
   ICBLIndexEntry,
   IPoolEncryptionConfig,
 } from '@brightchain/brightchain-lib';
-import { CBLVisibility, EncryptionMode } from '@brightchain/brightchain-lib';
+import {
+  BlockId,
+  CBLVisibility,
+  EncryptionMode,
+  isoToBrightDate,
+} from '@brightchain/brightchain-lib';
 
 import { EncryptedMetadataService } from './encryptedMetadataService';
 import { EncryptionAwareReplication } from './encryptionAwareReplication';
@@ -143,11 +148,11 @@ const arbCBLIndexEntry: fc.Arbitrary<ICBLIndexEntry> = fc
     ]) => ({
       _id: id,
       magnetUrl,
-      blockId1,
-      blockId2,
+      blockId1: blockId1 as BlockId,
+      blockId2: blockId2 as BlockId,
       blockSize,
       poolId,
-      createdAt: new Date('2025-01-15T10:00:00Z'),
+      createdAt: isoToBrightDate('2025-01-15T10:00:00Z'),
       createdBy: 'test-user',
       visibility,
       sequenceNumber,

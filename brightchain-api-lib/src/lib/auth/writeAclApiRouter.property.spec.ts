@@ -18,10 +18,11 @@ import request from 'supertest';
 import {
   brightDateNow,
   brightDateToISO,
-  normalizeToBrightDate,
+  dateToBrightDate,
   type IAclDocument,
   type IBlockStore,
   type INodeAuthenticator,
+  normalizeToBrightDate,
   WriteMode,
 } from '@brightchain/brightchain-lib';
 import { WriteAclManager } from '@brightchain/db';
@@ -140,8 +141,8 @@ function makeAclDocument(
     aclAdministrators: [adminKey],
     scope: { dbName, collectionName },
     version,
-    createdAt: now,
-    updatedAt: now,
+    createdAt: dateToBrightDate(now),
+    updatedAt: dateToBrightDate(now),
     creatorPublicKey: adminKey,
     creatorSignature: new Uint8Array(64),
   };

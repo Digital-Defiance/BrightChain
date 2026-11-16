@@ -7,11 +7,12 @@
  * @see Requirements 6.1, 6.2, 6.4, 6.5, 7.1, 7.3, 7.4, 8.1, 9.1, 9.4, 9.5, 15.2
  */
 import 'reflect-metadata';
+
 import * as x509 from '@peculiar/x509';
 import { EmailErrorType } from '../../enumerations/messaging/emailErrorType';
 import { EmailError } from '../../errors/messaging/emailError';
-import { SmimeCertificateManager } from './smimeCertificateManager';
 import { brightDateToDate } from '../../utils/brightDateConversions';
+import { SmimeCertificateManager } from './smimeCertificateManager';
 
 /**
  * Helper to generate a self-signed RSA certificate and private key for testing.
@@ -302,7 +303,9 @@ describe('SmimeCertificateManager — certificate import/export/validation', () 
 
       expect(metadata.isExpired).toBe(true);
       expect(metadata.subject).toContain('CN=Expired User');
-      expect(brightDateToDate(metadata.validTo).getTime()).toBeLessThan(Date.now());
+      expect(brightDateToDate(metadata.validTo).getTime()).toBeLessThan(
+        Date.now(),
+      );
     }, 30000);
   });
 

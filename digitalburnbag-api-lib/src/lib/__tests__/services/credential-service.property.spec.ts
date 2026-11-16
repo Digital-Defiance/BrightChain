@@ -188,7 +188,7 @@ describe('Feature: canary-provider-system, Property 23: Credentials never appear
      */
     // Use alphanumeric strings of sufficient length to avoid trivially
     // matching common words in error messages (e.g. single space).
-    const arbCredentialString = fc.stringMatching(/^[A-Za-z0-9_\-]{4,200}$/);
+    const arbCredentialString = fc.stringMatching(/^[A-Za-z0-9_-]{4,200}$/);
 
     await fc.assert(
       fc.asyncProperty(
@@ -248,7 +248,7 @@ describe('Feature: canary-provider-system, Property 23: Credentials never appear
      * When decryption fails, the error message must not contain any
      * encrypted or plaintext credential values.
      */
-    const arbCredentialString = fc.stringMatching(/^[A-Za-z0-9_\-]{4,200}$/);
+    const arbCredentialString = fc.stringMatching(/^[A-Za-z0-9_-]{4,200}$/);
 
     await fc.assert(
       fc.asyncProperty(arbCredentialString, async (accessToken) => {
@@ -305,7 +305,7 @@ describe('Feature: canary-provider-system, Property 23: Credentials never appear
      * When credentials are not found, the error message uses a redacted
      * connection identifier.
      */
-    const arbConnectionId = fc.stringMatching(/^[A-Za-z0-9_\-]{4,200}$/);
+    const arbConnectionId = fc.stringMatching(/^[A-Za-z0-9_-]{4,200}$/);
 
     await fc.assert(
       fc.asyncProperty(arbConnectionId, async (connectionId) => {

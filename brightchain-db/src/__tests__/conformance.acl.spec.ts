@@ -218,7 +218,7 @@ describe('ACL enforcement e2e (real ECDSA)', () => {
         dataDir: await makeTempDir(),
       });
       const authorizedReg = new AuthorizedHeadRegistry(
-        baseReg as any,
+        baseReg,
         aclManager,
         auth,
       );
@@ -234,7 +234,7 @@ describe('ACL enforcement e2e (real ECDSA)', () => {
         .insertOne({ _id: 'o1', val: 'open' } as never);
       const found = await db.collection('data').findById('o1');
       expect(found).not.toBeNull();
-      expect((found as any).val).toBe('open');
+      expect(found?.['val']).toBe('open');
     });
   });
 
@@ -258,7 +258,7 @@ describe('ACL enforcement e2e (real ECDSA)', () => {
         dataDir: await makeTempDir(),
       });
       const authorizedReg = new AuthorizedHeadRegistry(
-        baseReg as any,
+        baseReg,
         aclManager,
         auth,
       );
@@ -281,7 +281,7 @@ describe('ACL enforcement e2e (real ECDSA)', () => {
         .insertOne({ _id: 'r1', val: 'restricted' } as never);
       const found = await db.collection('data').findById('r1');
       expect(found).not.toBeNull();
-      expect((found as any).val).toBe('restricted');
+      expect(found?.['val']).toBe('restricted');
     });
 
     it('unauthorized writer is rejected', async () => {
@@ -301,7 +301,7 @@ describe('ACL enforcement e2e (real ECDSA)', () => {
         dataDir: await makeTempDir(),
       });
       const authorizedReg = new AuthorizedHeadRegistry(
-        baseReg as any,
+        baseReg,
         aclManager,
         auth,
       );
@@ -345,7 +345,7 @@ describe('ACL enforcement e2e (real ECDSA)', () => {
 
         const baseReg1 = new PersistentHeadRegistry({ dataDir });
         const authReg1 = new AuthorizedHeadRegistry(
-          baseReg1 as any,
+          baseReg1,
           aclManager1,
           auth,
         );
@@ -370,7 +370,7 @@ describe('ACL enforcement e2e (real ECDSA)', () => {
         const baseReg2 = new PersistentHeadRegistry({ dataDir });
         await baseReg2.load();
         const authReg2 = new AuthorizedHeadRegistry(
-          baseReg2 as any,
+          baseReg2,
           aclManager2,
           auth,
         );
@@ -388,7 +388,7 @@ describe('ACL enforcement e2e (real ECDSA)', () => {
         // Data from before restart should be there
         const found = await db2.collection('items').findById('p1');
         expect(found).not.toBeNull();
-        expect((found as any).val).toBe('before-restart');
+        expect(found?.['val']).toBe('before-restart');
 
         // New writes should still work
         await db2
@@ -417,7 +417,7 @@ describe('ACL enforcement e2e (real ECDSA)', () => {
 
         const baseReg1 = new PersistentHeadRegistry({ dataDir });
         const authReg1 = new AuthorizedHeadRegistry(
-          baseReg1 as any,
+          baseReg1,
           aclManager1,
           auth,
         );
@@ -442,7 +442,7 @@ describe('ACL enforcement e2e (real ECDSA)', () => {
         const baseReg2 = new PersistentHeadRegistry({ dataDir });
         await baseReg2.load();
         const authReg2 = new AuthorizedHeadRegistry(
-          baseReg2 as any,
+          baseReg2,
           aclManager2,
           auth,
         );
@@ -494,11 +494,7 @@ describe('ACL enforcement e2e (real ECDSA)', () => {
       const baseReg1 = PersistentHeadRegistry.create({
         dataDir: await makeTempDir(),
       });
-      const authReg1 = new AuthorizedHeadRegistry(
-        baseReg1 as any,
-        aclManager,
-        auth,
-      );
+      const authReg1 = new AuthorizedHeadRegistry(baseReg1, aclManager, auth);
       authReg1.setLocalSigner({
         publicKey: adminKeys.publicKey,
         privateKey: adminKeys.privateKey,
@@ -518,11 +514,7 @@ describe('ACL enforcement e2e (real ECDSA)', () => {
       const baseReg2 = PersistentHeadRegistry.create({
         dataDir: await makeTempDir(),
       });
-      const authReg2 = new AuthorizedHeadRegistry(
-        baseReg2 as any,
-        aclManager,
-        auth,
-      );
+      const authReg2 = new AuthorizedHeadRegistry(baseReg2, aclManager, auth);
       authReg2.setLocalSigner({
         publicKey: writerKeys.publicKey,
         privateKey: writerKeys.privateKey,
@@ -572,11 +564,7 @@ describe('ACL enforcement e2e (real ECDSA)', () => {
       const baseReg = PersistentHeadRegistry.create({
         dataDir: await makeTempDir(),
       });
-      const authReg = new AuthorizedHeadRegistry(
-        baseReg as any,
-        aclManager,
-        auth,
-      );
+      const authReg = new AuthorizedHeadRegistry(baseReg, aclManager, auth);
       authReg.setLocalSigner({
         publicKey: unauthorizedKeys.publicKey,
         privateKey: unauthorizedKeys.privateKey,

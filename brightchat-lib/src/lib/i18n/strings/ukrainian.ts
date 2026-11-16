@@ -156,8 +156,10 @@ export const BrightChatUkrainianStrings: ComponentStrings<BrightChatStringKey> =
     [BrightChatStrings.Server_Settings_RemoveMember]: 'Видалити учасника',
     [BrightChatStrings.Server_Settings_DeleteCategory]: 'Видалити категорію',
     [BrightChatStrings.Server_Settings_DeleteServer]: 'Видалити сервер',
-    [BrightChatStrings.Server_Settings_DeleteServerConfirm]: 'Ви впевнені, що хочете видалити цей сервер? Усі канали та повідомлення будуть втрачені назавжди.',
-    [BrightChatStrings.Server_Settings_DeleteServerConfirmTitle]: 'Видалити сервер',
+    [BrightChatStrings.Server_Settings_DeleteServerConfirm]:
+      'Ви впевнені, що хочете видалити цей сервер? Усі канали та повідомлення будуть втрачені назавжди.',
+    [BrightChatStrings.Server_Settings_DeleteServerConfirmTitle]:
+      'Видалити сервер',
     [BrightChatStrings.DMSidebar_NoConversations]: 'Ще немає розмов',
     [BrightChatStrings.DMSidebar_NoGroups]: 'Ще немає групових чатів',
 
@@ -269,6 +271,10 @@ export const BrightChatUkrainianStrings: ComponentStrings<BrightChatStringKey> =
       'Перетягніть зображення або натисніть для вибору',
     [BrightChatStrings.Server_Icon_StagingFailed]:
       'Не вдалося підготувати файл для завантаження',
+    [BrightChatStrings.Server_Icon_CropFailed]:
+      'Не вдалося обрізати зображення',
+    [BrightChatStrings.Server_Icon_PreviewLoadFailed]:
+      'Не вдалося завантажити зображення. Будь ласка, виберіть його знову.',
     [BrightChatStrings.Server_Icon_StagingExpired]:
       'Підготовлений файл закінчився. Будь ласка, виберіть зображення знову.',
 

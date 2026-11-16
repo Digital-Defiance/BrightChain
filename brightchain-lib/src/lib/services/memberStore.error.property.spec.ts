@@ -29,10 +29,9 @@ import { BlockType } from '../enumerations/blockType';
 import { MemberStatusType } from '../enumerations/memberStatusType';
 import { MemberError } from '../errors/memberError';
 import { BlockStoreFactory } from '../factories/blockStoreFactory';
+import { brightDateNow } from '../utils/brightDateConversions';
 import { MemberStore } from './memberStore';
 import { ServiceProvider } from './service.provider';
-import { brightDateNow } from '../utils/brightDateConversions';
-import type { BrightDateTimestamp } from '../types/brightDateTimestamp';
 
 describe('MemberStore Error Handling Property Tests', () => {
   let blockStore: ReturnType<typeof BlockStoreFactory.createMemoryStore>;

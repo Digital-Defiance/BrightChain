@@ -151,8 +151,10 @@ export const BrightChatSpanishStrings: ComponentStrings<BrightChatStringKey> = {
   [BrightChatStrings.Server_Settings_RemoveMember]: 'Eliminar miembro',
   [BrightChatStrings.Server_Settings_DeleteCategory]: 'Eliminar categoría',
   [BrightChatStrings.Server_Settings_DeleteServer]: 'Eliminar servidor',
-  [BrightChatStrings.Server_Settings_DeleteServerConfirm]: 'Estás seguro de que quieres eliminar este servidor? Todos los canales y mensajes se perderán permanentemente.',
-  [BrightChatStrings.Server_Settings_DeleteServerConfirmTitle]: 'Eliminar servidor',
+  [BrightChatStrings.Server_Settings_DeleteServerConfirm]:
+    'Estás seguro de que quieres eliminar este servidor? Todos los canales y mensajes se perderán permanentemente.',
+  [BrightChatStrings.Server_Settings_DeleteServerConfirmTitle]:
+    'Eliminar servidor',
   [BrightChatStrings.DMSidebar_NoConversations]: 'Aún no hay conversaciones',
   [BrightChatStrings.DMSidebar_NoGroups]: 'Aún no hay chats de grupo',
 
@@ -265,6 +267,9 @@ export const BrightChatSpanishStrings: ComponentStrings<BrightChatStringKey> = {
     'Arrastra una imagen o haz clic para buscar',
   [BrightChatStrings.Server_Icon_StagingFailed]:
     'Error al preparar el archivo para la subida',
+  [BrightChatStrings.Server_Icon_CropFailed]: 'Error al recortar la imagen',
+  [BrightChatStrings.Server_Icon_PreviewLoadFailed]:
+    'No se pudo cargar la imagen. Por favor, selecciónala de nuevo.',
   [BrightChatStrings.Server_Icon_StagingExpired]:
     'El archivo preparado ha expirado. Por favor, selecciona la imagen de nuevo.',
 

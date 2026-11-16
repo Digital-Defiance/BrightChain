@@ -6,4 +6,4 @@
  * This shim re-exports only what the S3 conformance test actually needs:
  * CloudBlockStoreBase (via the stores sub-path, which has no TOTP dependency).
  */
-export * from '../../../../brightchain-api-lib/src/lib/stores/cloudBlockStoreBase';
+export * from '@brightchain/brightchain-api-lib/lib/stores/cloudBlockStoreBase';

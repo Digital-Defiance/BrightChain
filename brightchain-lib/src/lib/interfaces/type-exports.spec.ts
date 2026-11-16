@@ -1,3 +1,4 @@
+import * as eciesLib from '@digitaldefiance/ecies-lib';
 import { describe, expect, it } from '@jest/globals';
 import CONSTANTS from '../constants';
 import type {
@@ -21,7 +22,6 @@ describe('Interface Export Tests', () => {
     it('should re-export ISimpleKeyPair interface from ecies-lib (compile-time check)', () => {
       // If this file compiles, the type re-export works.
       // Verify the upstream library provides the expected shape at runtime.
-      const eciesLib = require('@digitaldefiance/ecies-lib');
       expect(eciesLib).toBeDefined();
     });
   });

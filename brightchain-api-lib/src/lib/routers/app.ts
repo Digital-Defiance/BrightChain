@@ -209,7 +209,7 @@ export class AppRouter<
 
     // Read the route manifest and register each valid route
     const manifest = ejsService.readRouteManifest();
-    for (const [route, templateFile] of Object.entries(manifest)) {
+    for (const route of Object.keys(manifest)) {
       if (!ejsService.isValidEjsRoute(route)) {
         console.warn(
           `[AppRouter] Skipping manifest route "${route}" — conflicts with /api/ prefix`,

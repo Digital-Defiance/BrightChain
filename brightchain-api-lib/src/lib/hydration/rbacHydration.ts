@@ -51,7 +51,10 @@ export function createRoleHydrationSchema<TID extends PlatformID>(
  */
 export function createUserHydrationSchema<TID extends PlatformID>(
   idProvider: IIdProvider<TID>,
-): IHydrationSchema<IStoredUser, IUserBase<TID, number, string, AccountStatus>> {
+): IHydrationSchema<
+  IStoredUser,
+  IUserBase<TID, number, string, AccountStatus>
+> {
   return {
     hydrate: (stored) => rehydrateUser(stored, idProvider),
     dehydrate: (typed) =>

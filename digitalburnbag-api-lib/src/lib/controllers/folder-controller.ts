@@ -260,7 +260,7 @@ export class FolderController<
           ),
         },
       };
-    const vaultContainerIdStr = req.query.vaultContainerId as
+    const vaultContainerIdStr = req.query['vaultContainerId'] as
       | string
       | undefined;
     const vaultContainerId = vaultContainerIdStr
@@ -299,7 +299,7 @@ export class FolderController<
   private async handleGetFolderPath(
     req: ExpressRequest,
   ): Promise<IStatusCodeResponse<BurnbagResponse>> {
-    const folderId = this.safeParseId(req.params.id as string);
+    const folderId = this.safeParseId(req.params['id'] as string);
     if (!folderId)
       return {
         statusCode: 400,
@@ -341,7 +341,7 @@ export class FolderController<
 
     // Named wildcard param from path-to-regexp v8: /resolve/{*path}
     // The param value is an array of decoded segments (not a string).
-    const rawPath = (req.params as Record<string, unknown>).path;
+    const rawPath = (req.params as Record<string, unknown>)['path'];
     const segments: string[] = Array.isArray(rawPath)
       ? rawPath.filter((s: string) => s.length > 0)
       : typeof rawPath === 'string'
@@ -349,7 +349,7 @@ export class FolderController<
         : [];
 
     try {
-      const vaultContainerIdStr = req.query.vaultContainerId as
+      const vaultContainerIdStr = req.query['vaultContainerId'] as
         | string
         | undefined;
       const vaultContainerId = vaultContainerIdStr
@@ -410,7 +410,7 @@ export class FolderController<
           ),
         },
       };
-    const itemId = this.safeParseId(req.params.id as string);
+    const itemId = this.safeParseId(req.params['id'] as string);
     if (!itemId)
       return {
         statusCode: 400,
@@ -478,7 +478,7 @@ export class FolderController<
           ),
         },
       };
-    const folderId = this.safeParseId(req.params.id as string);
+    const folderId = this.safeParseId(req.params['id'] as string);
     if (!folderId)
       return {
         statusCode: 400,
@@ -531,7 +531,7 @@ export class FolderController<
           ),
         } as unknown as BurnbagResponse,
       };
-    const folderId = this.safeParseId(req.params.id as string);
+    const folderId = this.safeParseId(req.params['id'] as string);
     if (!folderId)
       return {
         statusCode: 400,

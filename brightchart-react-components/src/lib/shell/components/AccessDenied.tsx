@@ -7,7 +7,7 @@
 import { BrightChartStrings } from '@brightchain/brightchart-lib';
 import { Box, Button, Typography } from '@mui/material';
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { useBrightChartTranslation } from '../../hooks/useBrightChartTranslation';
 
 export const AccessDenied: React.FC = () => {

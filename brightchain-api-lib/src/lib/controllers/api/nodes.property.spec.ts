@@ -16,7 +16,9 @@
  */
 
 import {
+  BlockId,
   BloomFilter,
+  brightDateNow,
   CBLMetadataSearchQuery,
   CBLMetadataSearchResult,
   DiscoveryConfig,
@@ -27,7 +29,6 @@ import {
   NodeStatus,
   PeerQueryResult,
   PoolScopedBloomFilter,
-  brightDateNow,
 } from '@brightchain/brightchain-lib';
 import { ApiErrorResponse } from '@digitaldefiance/node-express-suite';
 import * as fc from 'fast-check';
@@ -90,7 +91,7 @@ const createMockDiscoveryProtocol = (
     discoverBlock: async (blockId: string): Promise<DiscoveryResult> => {
       const locations = blockLocations.get(blockId) || [];
       return {
-        blockId,
+        blockId: blockId as BlockId,
         found: locations.length > 0,
         locations,
         queriedPeers: locations.length > 0 ? 3 : 5,

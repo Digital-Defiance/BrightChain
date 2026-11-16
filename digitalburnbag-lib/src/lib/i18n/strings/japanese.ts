@@ -374,7 +374,8 @@ export const DigitalBurnbagJapaneseStrings: ComponentStrings<DigitalBurnbagStrin
     [DigitalBurnbagStrings.ProviderCategory_Location]: '位置情報',
     [DigitalBurnbagStrings.ProviderCategory_LocationDesc]:
       '位置情報とマッピングサービス',
-    [DigitalBurnbagStrings.ProviderCategory_Entertainment]: 'エンターテインメント',
+    [DigitalBurnbagStrings.ProviderCategory_Entertainment]:
+      'エンターテインメント',
     [DigitalBurnbagStrings.ProviderCategory_EntertainmentDesc]:
       'エンターテインメントとストリーミングサービス',
     [DigitalBurnbagStrings.ProviderCategory_Other]: 'その他',

@@ -1,10 +1,11 @@
 import '@testing-library/jest-dom';
-import { act, render, screen } from '@testing-library/react';
+
+import { fromDate } from '@brightchain/brightdate';
 import {
   I18nProvider,
   II18nEngineCompat,
 } from '@digitaldefiance/express-suite-react-components';
-import { fromDate } from '@brightchain/brightdate';
+import { act, render, screen } from '@testing-library/react';
 import { ReactNode } from 'react';
 import { BrightDate } from '../BrightDate';
 

@@ -45,7 +45,7 @@ const errorCodeToHttpStatus: Record<FriendsErrorCode, number> = {
  * Expects JWT middleware to have populated `req.user.id`.
  */
 function getUserId(req: Request): string | undefined {
-  return (req as any).user?.id as string | undefined;
+  return (req as Request & { user?: { id?: string } }).user?.id;
 }
 
 /**
@@ -132,18 +132,17 @@ export function createFriendsRouter(friendsService: IFriendsService): Router {
           recipientId,
           message,
         );
-        const response: any = {
+        const accepted = result.autoAccepted && result.friendship;
+        res.status(201).json({
           success: true,
-          message: translate(BrightChainStrings.Friends_RequestSent),
+          message: translate(
+            accepted
+              ? BrightChainStrings.Friends_RequestAccepted
+              : BrightChainStrings.Friends_RequestSent,
+          ),
           friendRequest: result.friendRequest,
-        };
-        if (result.autoAccepted && result.friendship) {
-          response.friendship = result.friendship;
-          response.message = translate(
-            BrightChainStrings.Friends_RequestAccepted,
-          );
-        }
-        res.status(201).json(response);
+          ...(accepted ? { friendship: result.friendship } : {}),
+        });
       } catch (err) {
         handleFriendsError(err, res);
       }

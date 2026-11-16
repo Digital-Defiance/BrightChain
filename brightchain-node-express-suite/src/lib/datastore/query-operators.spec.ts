@@ -74,6 +74,22 @@ async function seedCollection(
 }
 
 /**
+ * Run a find with a MongoDB-style operator filter. The DocumentCollection
+ * filter type is Partial<T>, which cannot express operators such as $gt,
+ * so the filter is accepted as an object and narrowed here once.
+ */
+function operatorFilter(filter: object): Partial<TestUser> {
+  return filter as Partial<TestUser>;
+}
+async function findAll(
+  col: DocumentCollection<TestUser>,
+  filter: object,
+): Promise<TestUser[]> {
+  const results = await col.find(operatorFilter(filter)).exec();
+  if (!results) throw new Error('find() resolved to null');
+  return results;
+}
+/**
  * Shared test suite that runs against any DocumentCollection implementation.
  */
 function queryOperatorTests(
@@ -89,7 +105,7 @@ function queryOperatorTests(
   // ── Exact match (implicit $eq) ──────────────────────────────────
 
   it('matches by exact field value', async () => {
-    const results = await col.find({ username: 'member' } as any).exec();
+    const results = await findAll(col, { username: 'member' });
     expect(results).toHaveLength(1);
     expect(results[0].username).toBe('member');
   });
@@ -97,7 +113,7 @@ function queryOperatorTests(
   // ── $eq ─────────────────────────────────────────────────────────
 
   it('$eq matches a field value', async () => {
-    const results = await col.find({ age: { $eq: 28 } } as any).exec();
+    const results = await findAll(col, { age: { $eq: 28 } });
     expect(results).toHaveLength(1);
     expect(results[0].username).toBe('member');
   });
@@ -105,7 +121,7 @@ function queryOperatorTests(
   // ── $ne ─────────────────────────────────────────────────────────
 
   it('$ne excludes matching documents', async () => {
-    const results = await col.find({ active: { $ne: true } } as any).exec();
+    const results = await findAll(col, { active: { $ne: true } });
     expect(results).toHaveLength(1);
     expect(results[0].username).toBe('guest');
   });
@@ -113,13 +129,13 @@ function queryOperatorTests(
   // ── $gt / $gte / $lt / $lte ─────────────────────────────────────
 
   it('$gt returns docs with field greater than value', async () => {
-    const results = await col.find({ age: { $gt: 30 } } as any).exec();
+    const results = await findAll(col, { age: { $gt: 30 } });
     expect(results).toHaveLength(1);
     expect(results[0].username).toBe('admin');
   });
 
   it('$gte returns docs with field >= value', async () => {
-    const results = await col.find({ age: { $gte: 30 } } as any).exec();
+    const results = await findAll(col, { age: { $gte: 30 } });
     expect(results).toHaveLength(2);
     expect(results.map((r) => r.username).sort()).toEqual([
       'admin',
@@ -128,13 +144,13 @@ function queryOperatorTests(
   });
 
   it('$lt returns docs with field less than value', async () => {
-    const results = await col.find({ age: { $lt: 28 } } as any).exec();
+    const results = await findAll(col, { age: { $lt: 28 } });
     expect(results).toHaveLength(1);
     expect(results[0].username).toBe('guest');
   });
 
   it('$lte returns docs with field <= value', async () => {
-    const results = await col.find({ age: { $lte: 28 } } as any).exec();
+    const results = await findAll(col, { age: { $lte: 28 } });
     expect(results).toHaveLength(2);
     expect(results.map((r) => r.username).sort()).toEqual(['guest', 'member']);
   });
@@ -142,17 +158,17 @@ function queryOperatorTests(
   // ── $in / $nin ──────────────────────────────────────────────────
 
   it('$in matches docs where field is in array', async () => {
-    const results = await col
-      .find({ username: { $in: ['admin', 'guest'] } } as any)
-      .exec();
+    const results = await findAll(col, {
+      username: { $in: ['admin', 'guest'] },
+    });
     expect(results).toHaveLength(2);
     expect(results.map((r) => r.username).sort()).toEqual(['admin', 'guest']);
   });
 
   it('$nin excludes docs where field is in array', async () => {
-    const results = await col
-      .find({ username: { $nin: ['admin', 'guest'] } } as any)
-      .exec();
+    const results = await findAll(col, {
+      username: { $nin: ['admin', 'guest'] },
+    });
     expect(results).toHaveLength(2);
     expect(results.map((r) => r.username).sort()).toEqual([
       'member',
@@ -163,23 +179,21 @@ function queryOperatorTests(
   // ── $regex ──────────────────────────────────────────────────────
 
   it('$regex with RegExp matches substring', async () => {
-    const results = await col
-      .find({ username: { $regex: /^mem/ } } as any)
-      .exec();
+    const results = await findAll(col, { username: { $regex: /^mem/ } });
     expect(results).toHaveLength(1);
     expect(results[0].username).toBe('member');
   });
 
   it('$regex with string pattern', async () => {
-    const results = await col.find({ email: { $regex: 'mod@' } } as any).exec();
+    const results = await findAll(col, { email: { $regex: 'mod@' } });
     expect(results).toHaveLength(1);
     expect(results[0].username).toBe('moderator');
   });
 
   it('$regex case-insensitive', async () => {
-    const results = await col
-      .find({ displayName: { $regex: /regular member/i } } as any)
-      .exec();
+    const results = await findAll(col, {
+      displayName: { $regex: /regular member/i },
+    });
     expect(results).toHaveLength(1);
     expect(results[0].username).toBe('member');
   });
@@ -187,7 +201,7 @@ function queryOperatorTests(
   // ── $exists ─────────────────────────────────────────────────────
 
   it('$exists: true matches docs where field is present', async () => {
-    const results = await col.find({ score: { $exists: true } } as any).exec();
+    const results = await findAll(col, { score: { $exists: true } });
     expect(results).toHaveLength(3);
     expect(results.map((r) => r.username).sort()).toEqual([
       'admin',
@@ -197,7 +211,7 @@ function queryOperatorTests(
   });
 
   it('$exists: false matches docs where field is absent', async () => {
-    const results = await col.find({ score: { $exists: false } } as any).exec();
+    const results = await findAll(col, { score: { $exists: false } });
     expect(results).toHaveLength(1);
     expect(results[0].username).toBe('guest');
   });
@@ -205,22 +219,20 @@ function queryOperatorTests(
   // ── $or ─────────────────────────────────────────────────────────
 
   it('$or matches docs satisfying any clause', async () => {
-    const results = await col
-      .find({ $or: [{ username: 'admin' }, { username: 'guest' }] } as any)
-      .exec();
+    const results = await findAll(col, {
+      $or: [{ username: 'admin' }, { username: 'guest' }],
+    });
     expect(results).toHaveLength(2);
     expect(results.map((r) => r.username).sort()).toEqual(['admin', 'guest']);
   });
 
   it('$or with $regex across fields', async () => {
-    const results = await col
-      .find({
-        $or: [
-          { username: { $regex: /member/i } },
-          { displayName: { $regex: /member/i } },
-        ],
-      } as any)
-      .exec();
+    const results = await findAll(col, {
+      $or: [
+        { username: { $regex: /member/i } },
+        { displayName: { $regex: /member/i } },
+      ],
+    });
     expect(results.length).toBeGreaterThanOrEqual(1);
     expect(results.map((r) => r.username)).toContain('member');
   });
@@ -228,9 +240,9 @@ function queryOperatorTests(
   // ── $and ────────────────────────────────────────────────────────
 
   it('$and matches docs satisfying all clauses', async () => {
-    const results = await col
-      .find({ $and: [{ active: true }, { age: { $gte: 30 } }] } as any)
-      .exec();
+    const results = await findAll(col, {
+      $and: [{ active: true }, { age: { $gte: 30 } }],
+    });
     expect(results).toHaveLength(2);
     expect(results.map((r) => r.username).sort()).toEqual([
       'admin',
@@ -241,9 +253,9 @@ function queryOperatorTests(
   // ── $nor ────────────────────────────────────────────────────────
 
   it('$nor excludes docs matching any clause', async () => {
-    const results = await col
-      .find({ $nor: [{ username: 'admin' }, { username: 'guest' }] } as any)
-      .exec();
+    const results = await findAll(col, {
+      $nor: [{ username: 'admin' }, { username: 'guest' }],
+    });
     expect(results).toHaveLength(2);
     expect(results.map((r) => r.username).sort()).toEqual([
       'member',
@@ -254,9 +266,7 @@ function queryOperatorTests(
   // ── $not ────────────────────────────────────────────────────────
 
   it('$not inverts a field-level operator', async () => {
-    const results = await col
-      .find({ age: { $not: { $gte: 30 } } } as any)
-      .exec();
+    const results = await findAll(col, { age: { $not: { $gte: 30 } } });
     expect(results).toHaveLength(2);
     expect(results.map((r) => r.username).sort()).toEqual(['guest', 'member']);
   });
@@ -267,7 +277,7 @@ function queryOperatorTests(
     // $elemMatch is designed for arrays of sub-documents.
     // For primitive arrays, use $in or direct value matching instead.
     // Here we test that tags array contains 'staff' using $in.
-    const results = await col.find({ tags: { $in: ['staff'] } } as any).exec();
+    const results = await findAll(col, { tags: { $in: ['staff'] } });
     expect(results).toHaveLength(2);
     expect(results.map((r) => r.username).sort()).toEqual([
       'admin',
@@ -278,7 +288,7 @@ function queryOperatorTests(
   // ── $size ───────────────────────────────────────────────────────
 
   it('$size matches arrays of exact length', async () => {
-    const results = await col.find({ tags: { $size: 2 } } as any).exec();
+    const results = await findAll(col, { tags: { $size: 2 } });
     expect(results).toHaveLength(2);
     expect(results.map((r) => r.username).sort()).toEqual([
       'admin',
@@ -289,9 +299,7 @@ function queryOperatorTests(
   // ── $all ────────────────────────────────────────────────────────
 
   it('$all matches arrays containing all specified elements', async () => {
-    const results = await col
-      .find({ tags: { $all: ['admin', 'staff'] } } as any)
-      .exec();
+    const results = await findAll(col, { tags: { $all: ['admin', 'staff'] } });
     expect(results).toHaveLength(1);
     expect(results[0].username).toBe('admin');
   });
@@ -299,7 +307,7 @@ function queryOperatorTests(
   // ── $type ───────────────────────────────────────────────────────
 
   it('$type matches fields of specified type', async () => {
-    const results = await col.find({ age: { $type: 'number' } } as any).exec();
+    const results = await findAll(col, { age: { $type: 'number' } });
     expect(results).toHaveLength(4);
   });
 
@@ -308,9 +316,7 @@ function queryOperatorTests(
   it('$text search matches across string fields', async () => {
     // Configure text search fields (as BrightDB Collection would)
     setTextSearchFields(['username', 'displayName']);
-    const results = await col
-      .find({ $text: { $search: 'member' } } as any)
-      .exec();
+    const results = await findAll(col, { $text: { $search: 'member' } });
     expect(results.length).toBeGreaterThanOrEqual(1);
     expect(results.map((r) => r.username)).toContain('member');
   });
@@ -322,25 +328,21 @@ function queryOperatorTests(
     const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const pattern = new RegExp(escaped, 'i');
 
-    const results = await col
-      .find({
-        $or: [
-          { username: { $regex: pattern } },
-          { displayName: { $regex: pattern } },
-        ],
-      } as any)
-      .exec();
+    const results = await findAll(col, {
+      $or: [
+        { username: { $regex: pattern } },
+        { displayName: { $regex: pattern } },
+      ],
+    });
 
     expect(results.length).toBeGreaterThanOrEqual(1);
     expect(results.map((r) => r.username)).toContain('member');
   });
 
   it('$and + comparison operators combined', async () => {
-    const results = await col
-      .find({
-        $and: [{ age: { $gte: 25 } }, { age: { $lte: 32 } }, { active: true }],
-      } as any)
-      .exec();
+    const results = await findAll(col, {
+      $and: [{ age: { $gte: 25 } }, { age: { $lte: 32 } }, { active: true }],
+    });
     expect(results).toHaveLength(2);
     expect(results.map((r) => r.username).sort()).toEqual([
       'member',
@@ -352,7 +354,7 @@ function queryOperatorTests(
 
   it('findOne with $regex returns a match', async () => {
     const result = await col
-      .findOne({ username: { $regex: /^mod/ } } as any)
+      .findOne(operatorFilter({ username: { $regex: /^mod/ } }))
       .exec();
     expect(result).not.toBeNull();
     expect(result!.username).toBe('moderator');
@@ -361,12 +363,12 @@ function queryOperatorTests(
   // ── Backward compat: simple equality still works ────────────────
 
   it('empty filter returns all documents', async () => {
-    const results = await col.find({}).exec();
+    const results = await findAll(col, {});
     expect(results).toHaveLength(4);
   });
 
   it('simple equality filter still works', async () => {
-    const results = await col.find({ active: true } as any).exec();
+    const results = await col.find({ active: true });
     expect(results).toHaveLength(3);
   });
 }

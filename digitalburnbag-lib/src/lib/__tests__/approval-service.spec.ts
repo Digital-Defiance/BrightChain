@@ -9,7 +9,7 @@ import type {
   IApprovalPolicy,
   IApprovalRepository,
 } from '../interfaces/services/approval-repository';
-import type { IApprovalRequest } from '../interfaces/services/approval-service';
+import type { IApprovalRequestInput } from '../interfaces/services/approval-service';
 import {
   ApprovalService,
   IApprovalServiceDeps,
@@ -120,7 +120,7 @@ describe('ApprovalService', () => {
   // ── requestApproval ─────────────────────────────────────────────
 
   describe('requestApproval', () => {
-    const approvalParams: IApprovalRequest<string> = {
+    const approvalParams: IApprovalRequestInput<string> = {
       operationType: ApprovalOperationType.Destruction,
       targetId: 'file-1',
       targetType: 'file',

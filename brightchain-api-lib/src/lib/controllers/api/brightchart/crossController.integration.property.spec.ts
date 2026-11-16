@@ -829,7 +829,7 @@ describe('Cross-Controller Integration Property Tests', () => {
           memberIdArb,
           memberIdArb,
           memberIdArb,
-          validPractitionerCodeArb.filter((code) => code !== PATIENT),
+          validPractitionerCodeArb,
           async (
             orgName,
             adminId,

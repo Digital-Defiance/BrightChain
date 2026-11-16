@@ -6,6 +6,10 @@
  * - API helper for direct HTTP calls to /api/burnbag/* endpoints
  * - Common navigation helpers
  */
+import type {
+  IFolderExportOptions,
+  IFolderExportResult,
+} from '@brightchain/digitalburnbag-lib';
 import { test as base, expect, Page } from '@playwright/test';
 import fs from 'fs';
 import path from 'path';
@@ -167,7 +171,7 @@ export class BurnbagTestApi {
   async uploadChunk(
     sessionId: string,
     chunkIndex: number,
-    data: Uint8Array,
+    data: Uint8Array<ArrayBuffer>,
     checksum: string,
   ) {
     const headers: Record<string, string> = {
@@ -418,19 +422,14 @@ export class BurnbagTestApi {
 
   // -- Folder Export ---------------------------------------------------------
 
-  async exportFolderToTCBL(
-    folderId: string,
-    options?: Record<string, unknown>,
-  ) {
-    return this.request<{
-      tcblHandle: string;
-      entryCount: number;
-      totalSizeBytes: number;
-      skippedFiles: unknown[];
-    }>(`/folders/${folderId}/export-tcbl`, {
-      method: 'POST',
-      body: JSON.stringify(options ?? {}),
-    });
+  async exportFolderToTCBL(folderId: string, options?: IFolderExportOptions) {
+    return this.request<IFolderExportResult<string>>(
+      `/folders/${folderId}/export-tcbl`,
+      {
+        method: 'POST',
+        body: JSON.stringify(options ?? {}),
+      },
+    );
   }
 
   // -- Helpers ---------------------------------------------------------------

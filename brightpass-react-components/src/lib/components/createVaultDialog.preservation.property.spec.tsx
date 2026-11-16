@@ -28,13 +28,13 @@ import {
 } from '@testing-library/react';
 import fc from 'fast-check';
 import React from 'react';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter } from 'react-router';
 
 // ── Mocks ────────────────────────────────────────────────────────────
 
 const mockNavigate = jest.fn();
-jest.mock('react-router-dom', () => ({
-  ...jest.requireActual('react-router-dom'),
+jest.mock('react-router', () => ({
+  ...jest.requireActual('react-router'),
   useNavigate: () => mockNavigate,
   useParams: () => ({ vaultId: 'abc-123' }),
 }));

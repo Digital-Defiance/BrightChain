@@ -11,7 +11,8 @@ export async function collectReachable(
   roots: readonly Digest[],
 ): Promise<Set<Digest>> {
   const seen = new Set<Digest>();
-  const meta = async (digest: Digest) => decodeMetadata(await source.readBlock(digest), digest);
+  const meta = async (digest: Digest) =>
+    decodeMetadata(await source.readBlock(digest), digest);
 
   const blob = async (digest: Digest): Promise<void> => {
     if (seen.has(digest)) return;
@@ -26,19 +27,30 @@ export async function collectReachable(
   const document = async (digest: Digest): Promise<void> => {
     if (seen.has(digest)) return;
     seen.add(digest);
-    const doc = decodeDocument(await source.readBlock(digest), undefined, digest) as Record<string, unknown>;
+    const doc = decodeDocument(
+      await source.readBlock(digest),
+      undefined,
+      digest,
+    ) as Record<string, unknown>;
     const files = doc['_files'];
     if (files && typeof files === 'object') {
-      for (const entry of Object.values(files as Record<string, { digest: string }>)) await blob(entry.digest);
+      for (const entry of Object.values(
+        files as Record<string, { digest: string }>,
+      ))
+        await blob(entry.digest);
     }
   };
   const indexTree = async (digest: Digest): Promise<void> => {
     if (seen.has(digest)) return;
     seen.add(digest);
     const page = await meta(digest);
-    if (page.kind === 'index-branch') for (const child of page.children) await indexTree(child.digest);
+    if (page.kind === 'index-branch')
+      for (const child of page.children) await indexTree(child.digest);
   };
-  const tree = async (kind: 'catalog' | 'primary', digest: Digest): Promise<void> => {
+  const tree = async (
+    kind: 'catalog' | 'primary',
+    digest: Digest,
+  ): Promise<void> => {
     if (seen.has(digest)) return;
     seen.add(digest);
     const page = await meta(digest);

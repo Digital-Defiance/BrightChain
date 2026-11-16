@@ -105,11 +105,7 @@ describe('LocationController integration', () => {
     ensureTestMemberKeys(memberId);
     const body = signSamplePublishBody(memberId);
 
-    await request(app)
-      .post(PREFIX)
-      .set(auth(memberId))
-      .send(body)
-      .expect(200);
+    await request(app).post(PREFIX).set(auth(memberId)).send(body).expect(200);
 
     const res = await request(app)
       .get(`${PREFIX}/lookup/${body.ipAddress}`)
@@ -127,11 +123,7 @@ describe('LocationController integration', () => {
     ensureTestMemberKeys(memberId);
     const body = signSamplePublishBody(memberId);
 
-    await request(app)
-      .post(PREFIX)
-      .set(auth(memberId))
-      .send(body)
-      .expect(200);
+    await request(app).post(PREFIX).set(auth(memberId)).send(body).expect(200);
 
     const manifest = await request(app)
       .get(`/brightnexus/discovery/ip/${body.ipAddress}/manifest`)
@@ -147,11 +139,7 @@ describe('LocationController integration', () => {
     ensureTestMemberKeys(memberId);
     const body = signSamplePublishBody(memberId);
 
-    await request(app)
-      .post(PREFIX)
-      .set(auth(memberId))
-      .send(body)
-      .expect(200);
+    await request(app).post(PREFIX).set(auth(memberId)).send(body).expect(200);
 
     await request(app)
       .delete(`${PREFIX}/${body.ipAddress}`)
@@ -171,11 +159,7 @@ describe('LocationController integration', () => {
     ensureTestMemberKeys(owner);
     const body = signSamplePublishBody(owner);
 
-    await request(app)
-      .post(PREFIX)
-      .set(auth(owner))
-      .send(body)
-      .expect(200);
+    await request(app).post(PREFIX).set(auth(owner)).send(body).expect(200);
 
     await request(app)
       .delete(`${PREFIX}/${body.ipAddress}`)

@@ -25,7 +25,9 @@ jest.mock('../textFormatter', () => ({
 }));
 
 jest.mock('../autoModerationService', () => ({
-  moderateContent: jest.fn().mockReturnValue({ decision: 'allow', reasons: [] }),
+  moderateContent: jest
+    .fn()
+    .mockReturnValue({ decision: 'allow', reasons: [] }),
 }));
 
 import { PostService } from '../postService';
@@ -84,7 +86,10 @@ function createMockCollection() {
 // ─── Mock application factory ───────────────────────────────────────────────
 
 function createMockApplication() {
-  const collections = new Map<string, ReturnType<typeof createMockCollection>>();
+  const collections = new Map<
+    string,
+    ReturnType<typeof createMockCollection>
+  >();
   collections.set('brighthub_posts', createMockCollection());
   collections.set('brighthub_likes', createMockCollection());
   collections.set('brighthub_reposts', createMockCollection());

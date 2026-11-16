@@ -44,8 +44,13 @@ async function main(): Promise<void> {
     const dir = await mkdtemp(join(tmpdir(), 'brightdb-v2-bench-'));
     try {
       const path = join(dir, 'db');
-      const db = await PortableBrightDb.open({ path, packed: process.env['BRIGHTDB_BENCH_PACKED'] === '1' });
-      const users = db.collection<{ _id: string; n: number; pad: string }>('users');
+      const db = await PortableBrightDb.open({
+        path,
+        packed: process.env['BRIGHTDB_BENCH_PACKED'] === '1',
+      });
+      const users = db.collection<{ _id: string; n: number; pad: string }>(
+        'users',
+      );
       const loadStart = performance.now();
       const chunk = 1000;
       for (let start = 0; start < size; start += chunk) {
@@ -61,7 +66,9 @@ async function main(): Promise<void> {
       db.close();
 
       // Cold lookup: fresh handle, no caches, count blocks read for one _id.
-      const coldTarget = `user-${Math.floor(size / 2).toString().padStart(7, '0')}`;
+      const coldTarget = `user-${Math.floor(size / 2)
+        .toString()
+        .padStart(7, '0')}`;
       const cold = await PortableBrightDb.open({ path });
       reads = [];
       const coldStart = performance.now();
@@ -80,7 +87,9 @@ async function main(): Promise<void> {
       let newBytesTotal = 0;
       const updates = 50;
       for (let i = 0; i < updates; i++) {
-        const id = `user-${Math.floor(((i + 1) * size) / (updates + 1)).toString().padStart(7, '0')}`;
+        const id = `user-${Math.floor(((i + 1) * size) / (updates + 1))
+          .toString()
+          .padStart(7, '0')}`;
         const prior = await blockSet(path);
         const start = performance.now();
         const result = await live

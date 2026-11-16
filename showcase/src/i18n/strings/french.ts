@@ -1828,9 +1828,9 @@ export const ShowcaseFrenchStrings: Partial<
   [ShowcaseStrings.Feat_BrightCal_HL8]:
     'Prise en charge des événements récurrents avec RRULE, EXDATE et gestion des remplacements par occurrence',
   [ShowcaseStrings.Feat_BrightCal_HL9]:
-    "Affichage multi-fuseaux horaires avec gestion automatique de l\'heure d\'été et ancrage du fuseau horaire par événement",
+    "Affichage multi-fuseaux horaires avec gestion automatique de l'heure d'été et ancrage du fuseau horaire par événement",
   [ShowcaseStrings.Feat_BrightCal_HL10]:
-    "Widgets d\'interface jour/semaine/mois/agenda avec reprogrammation par glisser-déposer et édition en ligne",
+    "Widgets d'interface jour/semaine/mois/agenda avec reprogrammation par glisser-déposer et édition en ligne",
   [ShowcaseStrings.Feat_BrightChat_Desc]:
     'Plateforme de communication compétitive avec Discord avec un chiffrement de bout en bout de niveau Signal. Messagerie directe, discussions de groupe et canaux avec présence en temps réel, indicateurs de saisie et permissions basées sur les rôles.',
   [ShowcaseStrings.Feat_BrightChat_Cat]: 'Réseau',

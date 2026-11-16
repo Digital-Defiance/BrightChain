@@ -1,5 +1,7 @@
 import {
   BlockAnnouncement,
+  BlockId,
+  dateToBrightDate,
   DeliveryAckMetadata,
   IAvailabilityService,
   IBlockRegistry,
@@ -20,6 +22,9 @@ import { GossipMessageType } from '../enumerations/websocketMessageType';
 import { IAnnouncementBatchMessage } from '../interfaces/websocketMessages';
 import { IWebSocketConnection, WebSocketHandler } from './websocketHandler';
 
+/** Arbitrary strings stand in for block IDs; the code under test only passes them through. */
+const toBlockId = (s: string): BlockId => s as BlockId;
+
 /**
  * Property tests for gossip message encryption feature.
  *
@@ -37,8 +42,11 @@ describe('Feature: gossip-message-encryption, Property 1: messageDelivery serial
     messageId: nonEmptyStringArb,
     recipientIds: fc.array(nonEmptyStringArb, { minLength: 1, maxLength: 5 }),
     priority: fc.constantFrom('normal' as const, 'high' as const),
-    blockIds: fc.array(nonEmptyStringArb, { minLength: 1, maxLength: 5 }),
-    cblBlockId: nonEmptyStringArb,
+    blockIds: fc.array(nonEmptyStringArb.map(toBlockId), {
+      minLength: 1,
+      maxLength: 5,
+    }),
+    cblBlockId: nonEmptyStringArb.map(toBlockId),
     ackRequired: fc.boolean(),
   });
 
@@ -67,7 +75,7 @@ describe('Feature: gossip-message-encryption, Property 1: messageDelivery serial
               announcements: [
                 {
                   type: 'add',
-                  blockId,
+                  blockId: blockId as BlockId,
                   nodeId,
                   ttl,
                   messageDelivery: metadata,
@@ -110,14 +118,17 @@ describe('Feature: gossip-message-encryption, Property 2: WebSocketHandler forwa
     messageId: nonEmptyStringArb,
     recipientIds: fc.array(nonEmptyStringArb, { minLength: 1, maxLength: 5 }),
     priority: fc.constantFrom('normal' as const, 'high' as const),
-    blockIds: fc.array(nonEmptyStringArb, { minLength: 1, maxLength: 5 }),
-    cblBlockId: nonEmptyStringArb,
+    blockIds: fc.array(nonEmptyStringArb.map(toBlockId), {
+      minLength: 1,
+      maxLength: 5,
+    }),
+    cblBlockId: nonEmptyStringArb.map(toBlockId),
     ackRequired: fc.boolean(),
   });
 
   const announcementWithDeliveryArb = fc.record({
     type: fc.constant('add' as const),
-    blockId: nonEmptyStringArb,
+    blockId: nonEmptyStringArb.map(toBlockId),
     nodeId: nonEmptyStringArb,
     ttl: fc.integer({ min: 0, max: 10 }),
     messageDelivery: messageDeliveryArb,
@@ -390,8 +401,11 @@ describe('Feature: gossip-message-encryption, Property 5: Selective encryption b
     messageId: nonEmptyStringArb,
     recipientIds: fc.array(nonEmptyStringArb, { minLength: 1, maxLength: 3 }),
     priority: fc.constantFrom('normal' as const, 'high' as const),
-    blockIds: fc.array(nonEmptyStringArb, { minLength: 1, maxLength: 3 }),
-    cblBlockId: nonEmptyStringArb,
+    blockIds: fc.array(nonEmptyStringArb.map(toBlockId), {
+      minLength: 1,
+      maxLength: 3,
+    }),
+    cblBlockId: nonEmptyStringArb.map(toBlockId),
     ackRequired: fc.boolean(),
   });
 
@@ -410,9 +424,9 @@ describe('Feature: gossip-message-encryption, Property 5: Selective encryption b
   /** A plain (non-sensitive) announcement — no messageDelivery or deliveryAck */
   const plainAnnouncementArb: fc.Arbitrary<BlockAnnouncement> = fc.record({
     type: fc.constantFrom('add' as const, 'remove' as const),
-    blockId: nonEmptyStringArb,
+    blockId: nonEmptyStringArb.map(toBlockId),
     nodeId: nonEmptyStringArb,
-    timestamp: fc.date(),
+    timestamp: fc.date({ noInvalidDate: true }).map(dateToBrightDate),
     ttl: fc.integer({ min: 1, max: 10 }),
   });
 
@@ -420,9 +434,9 @@ describe('Feature: gossip-message-encryption, Property 5: Selective encryption b
   const sensitiveAddAnnouncementArb: fc.Arbitrary<BlockAnnouncement> =
     fc.record({
       type: fc.constant('add' as const),
-      blockId: nonEmptyStringArb,
+      blockId: nonEmptyStringArb.map(toBlockId),
       nodeId: nonEmptyStringArb,
-      timestamp: fc.date(),
+      timestamp: fc.date({ noInvalidDate: true }).map(dateToBrightDate),
       ttl: fc.integer({ min: 1, max: 10 }),
       messageDelivery: messageDeliveryArb,
     });
@@ -431,9 +445,9 @@ describe('Feature: gossip-message-encryption, Property 5: Selective encryption b
   const sensitiveAckAnnouncementArb: fc.Arbitrary<BlockAnnouncement> =
     fc.record({
       type: fc.constant('ack' as const),
-      blockId: nonEmptyStringArb,
+      blockId: nonEmptyStringArb.map(toBlockId),
       nodeId: nonEmptyStringArb,
-      timestamp: fc.date(),
+      timestamp: fc.date({ noInvalidDate: true }).map(dateToBrightDate),
       ttl: fc.integer({ min: 1, max: 10 }),
       deliveryAck: deliveryAckArb,
     });
@@ -605,8 +619,11 @@ describe('Feature: gossip-message-encryption, Property 6: Encryption round-trip'
     messageId: nonEmptyStringArb,
     recipientIds: fc.array(nonEmptyStringArb, { minLength: 1, maxLength: 3 }),
     priority: fc.constantFrom('normal' as const, 'high' as const),
-    blockIds: fc.array(nonEmptyStringArb, { minLength: 1, maxLength: 3 }),
-    cblBlockId: nonEmptyStringArb,
+    blockIds: fc.array(nonEmptyStringArb.map(toBlockId), {
+      minLength: 1,
+      maxLength: 3,
+    }),
+    cblBlockId: nonEmptyStringArb.map(toBlockId),
     ackRequired: fc.boolean(),
   });
 
@@ -634,14 +651,14 @@ describe('Feature: gossip-message-encryption, Property 6: Encryption round-trip'
     // Plain add
     fc.record({
       type: fc.constant('add' as const),
-      blockId: nonEmptyStringArb,
+      blockId: nonEmptyStringArb.map(toBlockId),
       nodeId: nonEmptyStringArb,
       ttl: fc.integer({ min: 1, max: 10 }),
     }),
     // Add with messageDelivery
     fc.record({
       type: fc.constant('add' as const),
-      blockId: nonEmptyStringArb,
+      blockId: nonEmptyStringArb.map(toBlockId),
       nodeId: nonEmptyStringArb,
       ttl: fc.integer({ min: 1, max: 10 }),
       messageDelivery: messageDeliveryArb,
@@ -649,7 +666,7 @@ describe('Feature: gossip-message-encryption, Property 6: Encryption round-trip'
     // Ack with deliveryAck
     fc.record({
       type: fc.constant('ack' as const),
-      blockId: nonEmptyStringArb,
+      blockId: nonEmptyStringArb.map(toBlockId),
       nodeId: nonEmptyStringArb,
       ttl: fc.integer({ min: 1, max: 10 }),
       deliveryAck: deliveryAckArb,
@@ -657,7 +674,7 @@ describe('Feature: gossip-message-encryption, Property 6: Encryption round-trip'
     // Plain remove
     fc.record({
       type: fc.constant('remove' as const),
-      blockId: nonEmptyStringArb,
+      blockId: nonEmptyStringArb.map(toBlockId),
       nodeId: nonEmptyStringArb,
       ttl: fc.integer({ min: 1, max: 10 }),
     }),
@@ -742,8 +759,11 @@ describe('Feature: gossip-message-encryption, Property 8: Missing peer key cause
     messageId: nonEmptyStringArb,
     recipientIds: fc.array(nonEmptyStringArb, { minLength: 1, maxLength: 3 }),
     priority: fc.constantFrom('normal' as const, 'high' as const),
-    blockIds: fc.array(nonEmptyStringArb, { minLength: 1, maxLength: 3 }),
-    cblBlockId: nonEmptyStringArb,
+    blockIds: fc.array(nonEmptyStringArb.map(toBlockId), {
+      minLength: 1,
+      maxLength: 3,
+    }),
+    cblBlockId: nonEmptyStringArb.map(toBlockId),
     ackRequired: fc.boolean(),
   });
 

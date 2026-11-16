@@ -6,7 +6,6 @@ import type {
 } from '@brightchain/digitalburnbag-lib';
 import { DigitalBurnbagStrings } from '@brightchain/digitalburnbag-lib';
 import { useI18n } from '@digitaldefiance/express-suite-react-components';
-import { formatDateWithBD } from '../utils/formatBrightDate';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import {
   Box,
@@ -24,6 +23,7 @@ import {
 } from '@mui/material';
 import { useCallback, useEffect, useState } from 'react';
 import { IApiProviderConnectionDTO } from '../services/burnbag-api-client';
+import { formatDateWithBD } from '../utils/formatBrightDate';
 import {
   getSignalTypeColor,
   getSignalTypeLabel,

@@ -1,4 +1,5 @@
 import type { ICalendarCollectionDTO } from '@brightchain/brightcal-lib';
+import { CalendarPermissionLevel } from '@brightchain/brightcal-lib';
 import * as fc from 'fast-check';
 import { groupCalendarsByOwnership } from '../utils/visibilitySet';
 
@@ -16,7 +17,7 @@ function calendarArb(
     description: fc.string({ maxLength: 100 }),
     isDefault: fc.boolean(),
     isSubscription: fc.boolean(),
-    defaultPermission: fc.constant('viewer' as any),
+    defaultPermission: fc.constant(CalendarPermissionLevel.Viewer),
     dateCreated: fc
       .integer({
         min: new Date('2000-01-01').getTime(),

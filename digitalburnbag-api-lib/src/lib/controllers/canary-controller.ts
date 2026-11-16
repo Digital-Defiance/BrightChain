@@ -241,15 +241,17 @@ export class CanaryController<
       // Service-style fields pass through as-is
       ...body,
       // Map shorthand → service fields (shorthand wins if both present)
-      protocolAction: body.action ?? body.protocolAction,
-      canaryCondition: body.condition ?? body.canaryCondition,
-      canaryProvider: body.provider ?? body.canaryProvider,
-      protocolId: body.protocolId ?? generateProtocolId,
-      fileIds: body.targetIds ?? body.fileIds ?? [],
-      folderIds: body.folderIds ?? [],
-      recipientListId: body.recipientListId,
+      protocolAction: body['action'] ?? body['protocolAction'],
+      canaryCondition: body['condition'] ?? body['canaryCondition'],
+      canaryProvider: body['provider'] ?? body['canaryProvider'],
+      protocolId: body['protocolId'] ?? generateProtocolId,
+      fileIds: body['targetIds'] ?? body['fileIds'] ?? [],
+      folderIds: body['folderIds'] ?? [],
+      recipientListId: body['recipientListId'],
       cascadeDelayMs:
-        body.cascadeDelay != null ? [body.cascadeDelay] : body.cascadeDelayMs,
+        body['cascadeDelay'] != null
+          ? [body['cascadeDelay']]
+          : body['cascadeDelayMs'],
     };
   }
 
@@ -323,7 +325,7 @@ export class CanaryController<
           ),
         } as unknown as BurnbagResponse,
       };
-    const bindingId = this.safeParseId(req.params.id as string);
+    const bindingId = this.safeParseId(req.params['id'] as string);
     if (!bindingId)
       return {
         statusCode: 400,
@@ -359,7 +361,7 @@ export class CanaryController<
           ),
         } as unknown as BurnbagResponse,
       };
-    const bindingId = this.safeParseId(req.params.id as string);
+    const bindingId = this.safeParseId(req.params['id'] as string);
     if (!bindingId)
       return {
         statusCode: 400,
@@ -407,7 +409,7 @@ export class CanaryController<
           ),
         } as unknown as BurnbagResponse,
       };
-    const bindingId = this.safeParseId(req.params.id as string);
+    const bindingId = this.safeParseId(req.params['id'] as string);
     if (!bindingId)
       return {
         statusCode: 400,
@@ -447,7 +449,7 @@ export class CanaryController<
           ),
         } as unknown as BurnbagResponse,
       };
-    const bindingId = this.safeParseId(req.params.id as string);
+    const bindingId = this.safeParseId(req.params['id'] as string);
     if (!bindingId)
       return {
         statusCode: 400,
@@ -483,7 +485,7 @@ export class CanaryController<
           ),
         } as unknown as BurnbagResponse,
       };
-    const listId = this.safeParseId(req.params.id as string);
+    const listId = this.safeParseId(req.params['id'] as string);
     if (!listId)
       return {
         statusCode: 400,

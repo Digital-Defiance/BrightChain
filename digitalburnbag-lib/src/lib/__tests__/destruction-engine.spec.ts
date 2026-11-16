@@ -113,7 +113,7 @@ async function createVaultForDestruction() {
 
   const vault = new Vault(
     internals,
-    ledgerGateway as unknown as import('../ledger-gateway').LedgerGateway,
+    ledgerGateway as unknown as import('../ledger/ledger-gateway').LedgerGateway,
     custodian,
     aesGcm,
     pbkdf2,
@@ -152,7 +152,7 @@ describe('DestructionEngine & ProofVerifier', () => {
 
     const engine = new DestructionEngine(
       ecies,
-      ctx.ledgerGateway as unknown as import('../ledger-gateway').LedgerGateway,
+      ctx.ledgerGateway as unknown as import('../ledger/ledger-gateway').LedgerGateway,
     );
 
     const proof = await engine.destroy(
@@ -200,7 +200,7 @@ describe('DestructionEngine & ProofVerifier', () => {
 
     const engine = new DestructionEngine(
       ecies,
-      ctx.ledgerGateway as unknown as import('../ledger-gateway').LedgerGateway,
+      ctx.ledgerGateway as unknown as import('../ledger/ledger-gateway').LedgerGateway,
     );
 
     const proof = await engine.destroy(
@@ -251,7 +251,7 @@ describe('DestructionEngine & ProofVerifier', () => {
 
     const engine = new DestructionEngine(
       ecies,
-      ctx.ledgerGateway as unknown as import('../ledger-gateway').LedgerGateway,
+      ctx.ledgerGateway as unknown as import('../ledger/ledger-gateway').LedgerGateway,
     );
 
     await expect(

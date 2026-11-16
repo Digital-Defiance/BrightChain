@@ -2,15 +2,12 @@
   "extends": "../tsconfig.base.json",
   "compilerOptions": {
     "module": "esnext",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "jsx": "react-jsx",
     "declaration": true,
     "sourceMap": true,
     "outDir": "../dist/subspace-lattice-react",
-    "rootDirs": [
-      "src",
-      "../subspace-lattice/src"
-    ],
+    "rootDirs": ["src", "../subspace-lattice/src"],
     "strict": true,
     "allowSyntheticDefaultImports": true
   },

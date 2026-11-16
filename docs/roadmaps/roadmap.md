@@ -5,7 +5,7 @@ nav_order: 6
 ---
 # BrightChain Roadmap
 
-* the maintainer of this project has had a sudden downturn in health and does not have as much time left as expected. previously expected to be around a few more years, but it may now be months. The project is considered mothballed.
+* the maintainer of this project has cancer and has variable health and resumes and sets aside projects fairly randomly. All projects are looking for new maintainer(s).
 
 ## 1. Introduction
 

@@ -1,7 +1,6 @@
-import { mkdtemp, rm, unlink } from 'node:fs/promises';
+import { mkdtemp, readdir, rm, unlink } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { readdir } from 'node:fs/promises';
 import { digestPayload, encodeDocument } from './codec';
 import { BrightDbV2MissingBlockError } from './disk-store';
 import { PortableBrightDb } from './portable-database';
@@ -16,7 +15,8 @@ describe('BrightDB v2 fork and merge', () => {
   });
 
   type Doc = { _id: string; v?: number; city?: string; age?: number };
-  const open = (name: string) => PortableBrightDb.open({ path: join(dir, name) });
+  const open = (name: string) =>
+    PortableBrightDb.open({ path: join(dir, name) });
   const dump = async (db: PortableBrightDb) => {
     const out: Record<string, unknown[]> = {};
     for (const name of (await db.listCollections()).sort()) {
@@ -94,12 +94,21 @@ describe('BrightDB v2 fork and merge', () => {
 
   it('gives the same root whatever order three partitioned replicas merge in', async () => {
     const origin = await base();
-    const replicas = [origin, await origin.fork(join(dir, 'r1')), await origin.fork(join(dir, 'r2'))];
+    const replicas = [
+      origin,
+      await origin.fork(join(dir, 'r1')),
+      await origin.fork(join(dir, 'r2')),
+    ];
     for (const [index, replica] of replicas.entries()) {
       await replica.collection<Doc>('docs').insertMany(
-        Array.from({ length: 5 }, (_, i) => ({ _id: `r${index}-${i}`, v: index })),
+        Array.from({ length: 5 }, (_, i) => ({
+          _id: `r${index}-${i}`,
+          v: index,
+        })),
       );
-      await replica.collection<Doc>(`c${index}`).insertOne({ _id: 'only', v: index });
+      await replica
+        .collection<Doc>(`c${index}`)
+        .insertOne({ _id: 'only', v: index });
     }
     const [x, y, z] = replicas;
     // Order 1: x <- y, x <- z.  Order 2: z <- y, z <- x.  Order 3: y <- z, y <- x.
@@ -149,9 +158,15 @@ describe('BrightDB v2 fork and merge', () => {
       { _id: 'p2', city: 'Bergen', age: 40 },
     ]);
     const b = await a.fork(join(dir, 'b'));
-    await a.collection<Doc>('people').insertOne({ _id: 'p3', city: 'Oslo', age: 20 });
-    await a.collection<Doc>('people').replaceById('p2', { _id: 'p2', city: 'Oslo', age: 41 });
-    await b.collection<Doc>('people').insertOne({ _id: 'p4', city: 'Bergen', age: 25 });
+    await a
+      .collection<Doc>('people')
+      .insertOne({ _id: 'p3', city: 'Oslo', age: 20 });
+    await a
+      .collection<Doc>('people')
+      .replaceById('p2', { _id: 'p2', city: 'Oslo', age: 41 });
+    await b
+      .collection<Doc>('people')
+      .insertOne({ _id: 'p4', city: 'Bergen', age: 25 });
     await b.collection<Doc>('people').createIndex('by_age', ['age']);
     await b.collection<Doc>('people').deleteById('p1');
 
@@ -159,9 +174,14 @@ describe('BrightDB v2 fork and merge', () => {
     await b.merge(a);
     expect(await a.root()).toBe(await b.root());
     const ids = async (db: PortableBrightDb, index: string, query: object) =>
-      (await db.collection<Doc>('people').findByIndex(index, query)).map((d) => d._id);
+      (await db.collection<Doc>('people').findByIndex(index, query)).map(
+        (d) => d._id,
+      );
     for (const db of [a, b]) {
-      expect(await ids(db, 'by_city', { equals: ['Oslo'] })).toEqual(['p2', 'p3']);
+      expect(await ids(db, 'by_city', { equals: ['Oslo'] })).toEqual([
+        'p2',
+        'p3',
+      ]);
       expect(await ids(db, 'by_city', { equals: ['Bergen'] })).toEqual(['p4']);
       expect(await ids(db, 'by_age', { gte: 25 })).toEqual(['p4', 'p2']);
     }
@@ -173,8 +193,12 @@ describe('BrightDB v2 fork and merge', () => {
     const a = await open('a');
     await a.collection('docs').insertOne({ _id: 'seed' });
     const b = await a.fork(join(dir, 'b'));
-    const ref = await b.putAttachment(Buffer.alloc(1_500_000, 3), { type: 'application/octet-stream' });
-    await b.collection('docs').insertOne({ _id: 'with-file', _files: { f: { ...ref } } });
+    const ref = await b.putAttachment(Buffer.alloc(1_500_000, 3), {
+      type: 'application/octet-stream',
+    });
+    await b
+      .collection('docs')
+      .insertOne({ _id: 'with-file', _files: { f: { ...ref } } });
     await a.merge(b);
     expect((await a.getAttachment(ref)).length).toBe(1_500_000);
     a.close();
@@ -189,7 +213,11 @@ describe('BrightDB v2 fork and merge', () => {
     // Remove every block of b that a does not have, except the metadata needed to reach the
     // new document, as if b were only partly copied.
     const files = await readdir(join(dir, 'b', 'blocks'), { recursive: true });
-    const aFiles = new Set((await readdir(join(dir, 'a', 'blocks'), { recursive: true })).map(String));
+    const aFiles = new Set(
+      (await readdir(join(dir, 'a', 'blocks'), { recursive: true })).map(
+        String,
+      ),
+    );
     const documentDigest = digestPayload(encodeDocument({ _id: 'new', v: 1 }));
     let removed = 0;
     for (const file of files) {

@@ -1,5 +1,7 @@
+import type { BrightDb } from '@brightchain/db';
 import { BrightDbAuthenticationProvider } from '../bright-db-authentication-provider';
 
+type MockDoc = Record<string, unknown>;
 /**
  * Lightweight in-memory mock for BrightDb.
  *
@@ -7,17 +9,18 @@ import { BrightDbAuthenticationProvider } from '../bright-db-authentication-prov
  * random fallback).  `findOne` does a linear scan and returns the first
  * document whose fields match every key/value pair in the filter.
  */
+
 function createMockDb() {
-  const collections = new Map<string, Map<string, any>>();
+  const collections = new Map<string, Map<string, MockDoc>>();
 
   function getCollection(name: string) {
     if (!collections.has(name)) collections.set(name, new Map());
     const store = collections.get(name)!;
     return {
-      findOne: jest.fn(async (filter: any) => {
+      findOne: jest.fn(async (filter: MockDoc) => {
         for (const doc of store.values()) {
           const matches = Object.entries(filter).every(
-            ([k, v]) => (doc as any)[k] === v,
+            ([k, v]) => doc[k] === v,
           );
           if (matches) return doc;
         }
@@ -29,15 +32,12 @@ function createMockDb() {
   return {
     collection: jest.fn((name: string) => getCollection(name)),
     _collections: collections,
-    seed: (collectionName: string, docs: any[]) => {
+    seed: (collectionName: string, docs: MockDoc[]) => {
       if (!collections.has(collectionName))
         collections.set(collectionName, new Map());
       const store = collections.get(collectionName)!;
       for (const doc of docs) {
-        store.set(
-          doc._id ?? doc.userId ?? Math.random().toString(),
-          doc,
-        );
+        store.set(String(doc['_id'] ?? doc['userId'] ?? Math.random()), doc);
       }
     },
   };
@@ -80,7 +80,7 @@ describe('BrightDbAuthenticationProvider – RBAC role lookup', () => {
     ]);
 
     const provider = new BrightDbAuthenticationProvider(
-      mockDb as any,
+      mockDb as unknown as BrightDb,
       JWT_SECRET,
     );
     const result = await provider.buildRequestUserDTO('user-1');
@@ -100,7 +100,7 @@ describe('BrightDbAuthenticationProvider – RBAC role lookup', () => {
     ]);
 
     const provider = new BrightDbAuthenticationProvider(
-      mockDb as any,
+      mockDb as unknown as BrightDb,
       JWT_SECRET,
     );
     const result = await provider.buildRequestUserDTO('user-1');
@@ -116,7 +116,7 @@ describe('BrightDbAuthenticationProvider – RBAC role lookup', () => {
     // No user_roles or roles seeded
 
     const provider = new BrightDbAuthenticationProvider(
-      mockDb as any,
+      mockDb as unknown as BrightDb,
       JWT_SECRET,
     );
     const result = await provider.buildRequestUserDTO('user-1');
@@ -132,7 +132,7 @@ describe('BrightDbAuthenticationProvider – RBAC role lookup', () => {
     // No users seeded
 
     const provider = new BrightDbAuthenticationProvider(
-      mockDb as any,
+      mockDb as unknown as BrightDb,
       JWT_SECRET,
     );
     const result = await provider.buildRequestUserDTO('nonexistent');
@@ -161,7 +161,7 @@ describe('BrightDbAuthenticationProvider – RBAC role lookup', () => {
     ]);
 
     const provider = new BrightDbAuthenticationProvider(
-      mockDb as any,
+      mockDb as unknown as BrightDb,
       JWT_SECRET,
     );
     const result = await provider.buildRequestUserDTO(plainHexId);

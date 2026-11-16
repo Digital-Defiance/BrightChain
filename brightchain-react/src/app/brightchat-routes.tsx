@@ -30,7 +30,7 @@ import {
 import { PrivateRoute } from '@digitaldefiance/express-suite-react-components';
 import { Box, CircularProgress } from '@mui/material';
 import React, { Suspense } from 'react';
-import { Route, Routes } from 'react-router-dom';
+import { Route, Routes } from 'react-router';
 
 const LoadingFallback: React.FC = () => (
   <Box display="flex" justifyContent="center" alignItems="center" mt={4}>

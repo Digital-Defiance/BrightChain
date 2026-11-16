@@ -18,7 +18,7 @@ import {
   IdentityRecoveryRecord,
   StatuteOfLimitationsConfig,
 } from '@brightchain/brightchain-lib';
-import { HexString, ShortHexGuid } from '@digitaldefiance/ecies-lib';
+import { HexString, IIdProvider } from '@digitaldefiance/ecies-lib';
 import * as fc from 'fast-check';
 import { IdentityExpirationScheduler } from './identityExpirationScheduler';
 
@@ -27,7 +27,7 @@ jest.setTimeout(120000);
 
 /**
  * Minimal mock IIdProvider<HexString> for PBT tests.
- * Generates 32-char hex IDs matching ShortHexGuid format.
+ * Generates 32-char hex IDs matching HexString format.
  */
 const mockIdProvider = {
   byteLength: 16,
@@ -67,18 +67,21 @@ const mockIdProvider = {
   parseSafe(str: string): HexString | undefined {
     return /^[0-9a-f]{32}$/.test(str) ? (str as HexString) : undefined;
   },
-};
+} as IIdProvider<HexString>;
 
 /**
  * Creates a minimal mock IBrightTrustDatabase with in-memory identity record storage.
  */
-function createMockDatabase(): IBrightTrustDatabase & {
-  identityRecords: Map<ShortHexGuid, IdentityRecoveryRecord>;
-  auditEntries: BrightTrustAuditLogEntry[];
+function createMockDatabase(): IBrightTrustDatabase<HexString> & {
+  identityRecords: Map<HexString, IdentityRecoveryRecord<HexString>>;
+  auditEntries: BrightTrustAuditLogEntry<HexString>[];
   statuteConfig: StatuteOfLimitationsConfig | null;
 } {
-  const identityRecords = new Map<ShortHexGuid, IdentityRecoveryRecord>();
-  const auditEntries: BrightTrustAuditLogEntry[] = [];
+  const identityRecords = new Map<
+    HexString,
+    IdentityRecoveryRecord<HexString>
+  >();
+  const auditEntries: BrightTrustAuditLogEntry<HexString>[] = [];
   let statuteConfig: StatuteOfLimitationsConfig | null = null;
 
   return {
@@ -87,18 +90,20 @@ function createMockDatabase(): IBrightTrustDatabase & {
     statuteConfig,
 
     // Identity recovery records
-    saveIdentityRecord: jest.fn(async (record: IdentityRecoveryRecord) => {
-      identityRecords.set(record.id, record);
-    }),
-    getIdentityRecord: jest.fn(async (recordId: ShortHexGuid) => {
+    saveIdentityRecord: jest.fn(
+      async (record: IdentityRecoveryRecord<HexString>) => {
+        identityRecords.set(record.id, record);
+      },
+    ),
+    getIdentityRecord: jest.fn(async (recordId: HexString) => {
       return identityRecords.get(recordId) ?? null;
     }),
-    deleteIdentityRecord: jest.fn(async (recordId: ShortHexGuid) => {
+    deleteIdentityRecord: jest.fn(async (recordId: HexString) => {
       identityRecords.delete(recordId);
     }),
     listExpiredIdentityRecords: jest.fn(
       async (before: Date, _page: number, pageSize: number) => {
-        const expired: IdentityRecoveryRecord[] = [];
+        const expired: IdentityRecoveryRecord<HexString>[] = [];
         for (const record of identityRecords.values()) {
           if (record.expiresAt < before) {
             expired.push(record);
@@ -110,9 +115,11 @@ function createMockDatabase(): IBrightTrustDatabase & {
     ),
 
     // Audit log
-    appendAuditEntry: jest.fn(async (entry: BrightTrustAuditLogEntry) => {
-      auditEntries.push(entry);
-    }),
+    appendAuditEntry: jest.fn(
+      async (entry: BrightTrustAuditLogEntry<HexString>) => {
+        auditEntries.push(entry);
+      },
+    ),
     getLatestAuditEntry: jest.fn(async () => null),
 
     // Statute config
@@ -145,23 +152,29 @@ function createMockDatabase(): IBrightTrustDatabase & {
     deleteJournalEntries: jest.fn(async () => {}),
     saveOperationalState: jest.fn(async () => {}),
     getOperationalState: jest.fn(async () => null),
+    // Ban records (not exercised by the expiration scheduler)
+    saveBanRecord: jest.fn(async () => {}),
+    deleteBanRecord: jest.fn(async () => {}),
+    getBanRecord: jest.fn(async () => null),
+    getAllBanRecords: jest.fn(async () => []),
+    getMemberAdmissionProposerId: jest.fn(async () => null),
     withTransaction: jest.fn(async <R>(fn: () => Promise<R>) => fn()),
     isAvailable: jest.fn(async () => true),
   };
 }
 
 /**
- * Arbitrary for generating a valid ShortHexGuid (32-char hex string).
+ * Arbitrary for generating a valid HexString (32-char hex string).
  */
 const shortHexGuidArb = fc
   .array(fc.integer({ min: 0, max: 15 }), { minLength: 32, maxLength: 32 })
-  .map((nums) => nums.map((n) => n.toString(16)).join('') as ShortHexGuid);
+  .map((nums) => nums.map((n) => n.toString(16)).join('') as HexString);
 
 /**
  * Arbitrary for generating an expired IdentityRecoveryRecord.
  * The expiresAt is always in the past.
  */
-const expiredRecordArb: fc.Arbitrary<IdentityRecoveryRecord> = fc
+const expiredRecordArb: fc.Arbitrary<IdentityRecoveryRecord<HexString>> = fc
   .tuple(
     shortHexGuidArb,
     shortHexGuidArb,
@@ -188,19 +201,19 @@ const expiredRecordArb: fc.Arbitrary<IdentityRecoveryRecord> = fc
       const expiresAt = new Date(now - hoursAgoExpired * 3600000);
 
       // Generate fake member IDs
-      const memberIds: ShortHexGuid[] = [];
+      const memberIds: HexString[] = [];
       for (let i = 0; i < memberCount; i++) {
-        memberIds.push(String(i).padStart(32, '0') as ShortHexGuid);
+        memberIds.push(String(i).padStart(32, '0') as HexString);
       }
 
-      const record: IdentityRecoveryRecord = {
+      const record: IdentityRecoveryRecord<HexString> = {
         id,
         contentId,
         contentType,
         encryptedShardsByMemberId: new Map(
           memberIds.map(
             (mid) =>
-              [mid, new Uint8Array([1, 2, 3])] as [ShortHexGuid, Uint8Array],
+              [mid, new Uint8Array([1, 2, 3])] as [HexString, Uint8Array],
           ),
         ),
         memberIds,
@@ -374,10 +387,10 @@ describe('P11: Temporal Expiration Permanence', () => {
 
         // Create exactly batchSize expired records
         for (let i = 0; i < batchSize; i++) {
-          const id = String(i).padStart(32, 'a') as ShortHexGuid;
-          const record: IdentityRecoveryRecord = {
+          const id = String(i).padStart(32, 'a') as HexString;
+          const record: IdentityRecoveryRecord<HexString> = {
             id,
-            contentId: String(i).padStart(32, 'b') as ShortHexGuid,
+            contentId: String(i).padStart(32, 'b') as HexString,
             contentType: 'post',
             encryptedShardsByMemberId: new Map(),
             memberIds: [],

@@ -1,5 +1,6 @@
 import { PlatformID } from '@digitaldefiance/node-ecies-lib';
 import { Environment as BaseEnvironment } from '@digitaldefiance/node-express-suite';
+import * as fc from 'fast-check';
 import { Environment } from './environment';
 import { IEnvironment } from './interfaces/environment';
 
@@ -285,8 +286,6 @@ describe('Environment Class', () => {
     });
 
     it('should parse valid positive integers and fall back to 2000 for invalid values', () => {
-      const fc = require('fast-check');
-
       // Generator for valid positive integer strings (1 to 9999)
       const validPositiveIntString = fc
         .integer({ min: 1, max: 9999 })

@@ -26,7 +26,10 @@ import {
   Typography,
 } from '@mui/material';
 import { useCallback, useState } from 'react';
-import type { IApiProviderConnectionDTO, IApiTestConnectionResponseDTO } from '../services/burnbag-api-client';
+import type {
+  IApiProviderConnectionDTO,
+  IApiTestConnectionResponseDTO,
+} from '../services/burnbag-api-client';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -47,13 +50,23 @@ export interface IActivationFlowProvider {
 export interface IActivationFlowProps {
   provider: IActivationFlowProvider;
   /** Called to initiate OAuth flow — returns the authorization URL */
-  onInitiateOAuth?: (providerId: string) => Promise<{ authorizationUrl: string }>;
+  onInitiateOAuth?: (
+    providerId: string,
+  ) => Promise<{ authorizationUrl: string }>;
   /** Called to connect with an API key */
-  onConnectWithApiKey?: (providerId: string, apiKey: string) => Promise<IApiProviderConnectionDTO>;
+  onConnectWithApiKey?: (
+    providerId: string,
+    apiKey: string,
+  ) => Promise<IApiProviderConnectionDTO>;
   /** Called to test the connection after auth */
-  onTestConnection: (connectionId: string) => Promise<IApiTestConnectionResponseDTO>;
+  onTestConnection: (
+    connectionId: string,
+  ) => Promise<IApiTestConnectionResponseDTO>;
   /** Called when the full activation is complete */
-  onComplete: (connection: IApiProviderConnectionDTO, config: { absenceThresholdHours: number; setupMultiCanary: boolean }) => void;
+  onComplete: (
+    connection: IApiProviderConnectionDTO,
+    config: { absenceThresholdHours: number; setupMultiCanary: boolean },
+  ) => void;
   /** Called when the user cancels */
   onCancel: () => void;
 }
@@ -67,12 +80,22 @@ const STEPS = ['Authentication', 'Test Connection', 'Configure', 'Done'];
 // Step 1: Authentication
 interface IAuthStepProps {
   provider: IActivationFlowProvider;
-  onInitiateOAuth?: (providerId: string) => Promise<{ authorizationUrl: string }>;
-  onConnectWithApiKey?: (providerId: string, apiKey: string) => Promise<IApiProviderConnectionDTO>;
+  onInitiateOAuth?: (
+    providerId: string,
+  ) => Promise<{ authorizationUrl: string }>;
+  onConnectWithApiKey?: (
+    providerId: string,
+    apiKey: string,
+  ) => Promise<IApiProviderConnectionDTO>;
   onSuccess: (connection: IApiProviderConnectionDTO) => void;
 }
 
-function AuthStep({ provider, onInitiateOAuth, onConnectWithApiKey, onSuccess }: IAuthStepProps) {
+function AuthStep({
+  provider,
+  onInitiateOAuth,
+  onConnectWithApiKey,
+  onSuccess,
+}: IAuthStepProps) {
   const [apiKey, setApiKey] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -98,7 +121,9 @@ function AuthStep({ provider, onInitiateOAuth, onConnectWithApiKey, onSuccess }:
       const connection = await onConnectWithApiKey(provider.id, apiKey.trim());
       onSuccess(connection);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to connect with API key');
+      setError(
+        e instanceof Error ? e.message : 'Failed to connect with API key',
+      );
       setLoading(false);
     }
   };
@@ -109,7 +134,11 @@ function AuthStep({ provider, onInitiateOAuth, onConnectWithApiKey, onSuccess }:
         Connect your {provider.name} account to use it as a canary provider.
       </Typography>
 
-      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+      )}
 
       {provider.authType === 'oauth2' && (
         <Button
@@ -132,7 +161,7 @@ function AuthStep({ provider, onInitiateOAuth, onConnectWithApiKey, onSuccess }:
             label={provider.apiKeyLabel ?? 'API Key'}
             helperText={provider.apiKeyHelperText}
             value={apiKey}
-            onChange={e => setApiKey(e.target.value)}
+            onChange={(e) => setApiKey(e.target.value)}
             type="password"
             sx={{ mb: 2 }}
             inputProps={{ 'data-testid': 'api-key-input' }}
@@ -156,14 +185,23 @@ function AuthStep({ provider, onInitiateOAuth, onConnectWithApiKey, onSuccess }:
 // Step 2: Test Connection
 interface ITestStepProps {
   connection: IApiProviderConnectionDTO;
-  onTestConnection: (connectionId: string) => Promise<IApiTestConnectionResponseDTO>;
+  onTestConnection: (
+    connectionId: string,
+  ) => Promise<IApiTestConnectionResponseDTO>;
   onSuccess: () => void;
   onBack: () => void;
 }
 
-function TestStep({ connection, onTestConnection, onSuccess, onBack }: ITestStepProps) {
+function TestStep({
+  connection,
+  onTestConnection,
+  onSuccess,
+  onBack,
+}: ITestStepProps) {
   const [testing, setTesting] = useState(false);
-  const [result, setResult] = useState<IApiTestConnectionResponseDTO | null>(null);
+  const [result, setResult] = useState<IApiTestConnectionResponseDTO | null>(
+    null,
+  );
   const [error, setError] = useState('');
 
   const handleTest = async () => {
@@ -185,10 +223,18 @@ function TestStep({ connection, onTestConnection, onSuccess, onBack }: ITestStep
         Verify that the connection is working correctly.
       </Typography>
 
-      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+      )}
 
       {result && (
-        <Alert severity={result.success ? 'success' : 'error'} sx={{ mb: 2 }} data-testid="test-result">
+        <Alert
+          severity={result.success ? 'success' : 'error'}
+          sx={{ mb: 2 }}
+          data-testid="test-result"
+        >
           {result.success
             ? `Connected as ${result.providerUserInfo?.displayName ?? result.providerUserInfo?.username ?? 'unknown'} (${result.responseTimeMs}ms)`
             : `Connection failed: ${result.error}`}
@@ -196,11 +242,21 @@ function TestStep({ connection, onTestConnection, onSuccess, onBack }: ITestStep
       )}
 
       <Box sx={{ display: 'flex', gap: 1 }}>
-        <Button variant="outlined" onClick={handleTest} disabled={testing} startIcon={testing ? <CircularProgress size={16} /> : undefined} data-testid="test-connection-button">
+        <Button
+          variant="outlined"
+          onClick={handleTest}
+          disabled={testing}
+          startIcon={testing ? <CircularProgress size={16} /> : undefined}
+          data-testid="test-connection-button"
+        >
           {testing ? 'Testing…' : 'Test Connection'}
         </Button>
         {result?.success && (
-          <Button variant="contained" onClick={onSuccess} data-testid="continue-after-test-button">
+          <Button
+            variant="contained"
+            onClick={onSuccess}
+            data-testid="continue-after-test-button"
+          >
             Continue
           </Button>
         )}
@@ -212,7 +268,10 @@ function TestStep({ connection, onTestConnection, onSuccess, onBack }: ITestStep
 
 // Step 3: Configure
 interface IConfigureStepProps {
-  onComplete: (config: { absenceThresholdHours: number; setupMultiCanary: boolean }) => void;
+  onComplete: (config: {
+    absenceThresholdHours: number;
+    setupMultiCanary: boolean;
+  }) => void;
   onBack: () => void;
 }
 
@@ -227,8 +286,14 @@ function ConfigureStep({ onComplete, onBack }: IConfigureStepProps) {
       </Typography>
 
       <Box sx={{ mb: 3 }}>
-        <Typography variant="body2" gutterBottom>Absence threshold: {absenceThresholdHours}h</Typography>
-        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
+        <Typography variant="body2" gutterBottom>
+          Absence threshold: {absenceThresholdHours}h
+        </Typography>
+        <Typography
+          variant="caption"
+          color="text.secondary"
+          sx={{ display: 'block', mb: 1 }}
+        >
           Trigger protocol if no activity detected for this duration.
         </Typography>
         <Slider
@@ -237,7 +302,11 @@ function ConfigureStep({ onComplete, onBack }: IConfigureStepProps) {
           min={1}
           max={168}
           step={1}
-          marks={[{ value: 24, label: '24h' }, { value: 72, label: '72h' }, { value: 168, label: '7d' }]}
+          marks={[
+            { value: 24, label: '24h' },
+            { value: 72, label: '72h' },
+            { value: 168, label: '7d' },
+          ]}
           data-testid="absence-threshold-slider"
         />
       </Box>
@@ -248,17 +317,25 @@ function ConfigureStep({ onComplete, onBack }: IConfigureStepProps) {
           <Select
             value={setupMultiCanary ? 'yes' : 'no'}
             label="Multi-Canary Setup"
-            onChange={e => setSetupMultiCanary(e.target.value === 'yes')}
+            onChange={(e) => setSetupMultiCanary(e.target.value === 'yes')}
             data-testid="multi-canary-option"
           >
             <MenuItem value="no">Skip — use this provider alone</MenuItem>
-            <MenuItem value="yes">Set up multi-canary redundancy after connecting</MenuItem>
+            <MenuItem value="yes">
+              Set up multi-canary redundancy after connecting
+            </MenuItem>
           </Select>
         </FormControl>
       </Box>
 
       <Box sx={{ display: 'flex', gap: 1 }}>
-        <Button variant="contained" onClick={() => onComplete({ absenceThresholdHours, setupMultiCanary })} data-testid="finish-button">
+        <Button
+          variant="contained"
+          onClick={() =>
+            onComplete({ absenceThresholdHours, setupMultiCanary })
+          }
+          data-testid="finish-button"
+        >
           Finish
         </Button>
         <Button onClick={onBack}>Back</Button>
@@ -268,15 +345,27 @@ function ConfigureStep({ onComplete, onBack }: IConfigureStepProps) {
 }
 
 // Step 4: Done
-function DoneStep({ providerName, onClose }: { providerName: string; onClose: () => void }) {
+function DoneStep({
+  providerName,
+  onClose,
+}: {
+  providerName: string;
+  onClose: () => void;
+}) {
   return (
     <Box sx={{ textAlign: 'center', py: 2 }} data-testid="done-step">
       <CheckCircleIcon color="success" sx={{ fontSize: 48, mb: 1 }} />
-      <Typography variant="h6" gutterBottom>{providerName} connected!</Typography>
+      <Typography variant="h6" gutterBottom>
+        {providerName} connected!
+      </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
         Your provider is now active and monitoring your activity.
       </Typography>
-      <Button variant="contained" onClick={onClose} data-testid="close-activation-button">
+      <Button
+        variant="contained"
+        onClick={onClose}
+        data-testid="close-activation-button"
+      >
         Done
       </Button>
     </Box>
@@ -292,9 +381,17 @@ function DoneStep({ providerName, onClose }: { providerName: string; onClose: ()
  * Steps: authentication → test connection → configure → done
  * Requirements: 16.1
  */
-export function ActivationFlow({ provider, onInitiateOAuth, onConnectWithApiKey, onTestConnection, onComplete, onCancel }: IActivationFlowProps) {
+export function ActivationFlow({
+  provider,
+  onInitiateOAuth,
+  onConnectWithApiKey,
+  onTestConnection,
+  onComplete,
+  onCancel,
+}: IActivationFlowProps) {
   const [activeStep, setActiveStep] = useState(0);
-  const [connection, setConnection] = useState<IApiProviderConnectionDTO | null>(null);
+  const [connection, setConnection] =
+    useState<IApiProviderConnectionDTO | null>(null);
 
   const handleAuthSuccess = useCallback((conn: IApiProviderConnectionDTO) => {
     setConnection(conn);
@@ -305,12 +402,15 @@ export function ActivationFlow({ provider, onInitiateOAuth, onConnectWithApiKey,
     setActiveStep(2);
   }, []);
 
-  const handleConfigureComplete = useCallback((config: { absenceThresholdHours: number; setupMultiCanary: boolean }) => {
-    if (connection) {
-      onComplete(connection, config);
-      setActiveStep(3);
-    }
-  }, [connection, onComplete]);
+  const handleConfigureComplete = useCallback(
+    (config: { absenceThresholdHours: number; setupMultiCanary: boolean }) => {
+      if (connection) {
+        onComplete(connection, config);
+        setActiveStep(3);
+      }
+    },
+    [connection, onComplete],
+  );
 
   return (
     <Box data-testid="activation-flow" sx={{ maxWidth: 480, mx: 'auto' }}>
@@ -321,8 +421,12 @@ export function ActivationFlow({ provider, onInitiateOAuth, onConnectWithApiKey,
         {provider.description}
       </Typography>
 
-      <Stepper activeStep={activeStep} sx={{ mb: 3 }} data-testid="activation-stepper">
-        {STEPS.map(label => (
+      <Stepper
+        activeStep={activeStep}
+        sx={{ mb: 3 }}
+        data-testid="activation-stepper"
+      >
+        {STEPS.map((label) => (
           <Step key={label}>
             <StepLabel>{label}</StepLabel>
           </Step>
@@ -362,7 +466,12 @@ export function ActivationFlow({ provider, onInitiateOAuth, onConnectWithApiKey,
 
       {activeStep < 3 && (
         <Box sx={{ mt: 2 }}>
-          <Button size="small" color="inherit" onClick={onCancel} data-testid="cancel-activation-button">
+          <Button
+            size="small"
+            color="inherit"
+            onClick={onCancel}
+            data-testid="cancel-activation-button"
+          >
             Cancel
           </Button>
         </Box>

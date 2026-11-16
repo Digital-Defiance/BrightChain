@@ -10,24 +10,32 @@
  * correctly when serving binary image data.
  */
 
+import type { IStagingConfig } from '@brightchain/brightchain-lib';
 import {
   ChannelService,
+  ICreateServerResponse,
   PermissionService,
   ServerService,
 } from '@brightchain/brightchain-lib';
-import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  jest,
+} from '@jest/globals';
 import { mkdtemp, rm } from 'fs/promises';
 import { tmpdir } from 'os';
 import { join } from 'path';
-import type { IStagingConfig } from '@brightchain/brightchain-lib';
 import { IBrightChainApplication } from '../../../interfaces/application';
 import type { IStagingServiceDeps } from '../../../services/staging/stagingService';
 import { StagingService } from '../../../services/staging/stagingService';
-import { IServerIconControllerDeps, ServerController } from '../servers';
 import {
-  PostImageController,
   IPostImageControllerDeps,
+  PostImageController,
 } from '../brighthub/postImageController';
+import { IServerIconControllerDeps, ServerController } from '../servers';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -195,7 +203,7 @@ beforeEach(async () => {
 
   const permissionService = new PermissionService();
   const channelService = new ChannelService(permissionService);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   const makeCol = () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const store = new Map<string, any>();
@@ -246,9 +254,8 @@ async function createServerWithIcon(
     authReq('owner-1', { body: { name: 'Test Server' } }),
   );
   expect(createResult.statusCode).toBe(201);
-  const serverId = (
-    createResult.response.data as Record<string, unknown>
-  ).id as string;
+  const created = createResult.response as ICreateServerResponse;
+  const serverId = created.data?.id as string;
 
   // Stage a valid PNG image
   const sharp = (await import('sharp')).default;
@@ -375,7 +382,7 @@ describe('Binary response serving pattern', () => {
           readFile: async () => fakeFileBuffer,
         },
         parseId: (id: string) => Buffer.from(id) as never,
-        resolveFile: async (fileId: string) => ({
+        resolveFile: async (_fileId: string) => ({
           vaultContainerId: 'vault-container-123',
           mimeType: 'image/png',
         }),

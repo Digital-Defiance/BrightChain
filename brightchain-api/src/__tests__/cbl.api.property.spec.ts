@@ -16,8 +16,8 @@ import { DiskCBLStore } from '@brightchain/brightchain-api-lib/lib/stores/diskCB
 import {
   BlockEncryptionType,
   BlockSize,
-  ConstituentBlockListBlock,
   brightDateNow,
+  ConstituentBlockListBlock,
   initializeBrightChain,
   ServiceProvider,
   StoreError,

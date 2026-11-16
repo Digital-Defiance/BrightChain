@@ -984,7 +984,9 @@ export class BurnbagApiClient {
    * Stops heartbeat checks, excludes from aggregation, preserves credentials.
    * Requirements: 16.2
    */
-  async pauseProvider(connectionId: string): Promise<IApiProviderConnectionDTO> {
+  async pauseProvider(
+    connectionId: string,
+  ): Promise<IApiProviderConnectionDTO> {
     return this.request(`/canary/connections/${connectionId}/pause`, {
       method: 'POST',
     });
@@ -995,7 +997,9 @@ export class BurnbagApiClient {
    * Restarts heartbeat checks and re-includes in aggregation.
    * Requirements: 16.2
    */
-  async resumeProvider(connectionId: string): Promise<IApiProviderConnectionDTO> {
+  async resumeProvider(
+    connectionId: string,
+  ): Promise<IApiProviderConnectionDTO> {
     return this.request(`/canary/connections/${connectionId}/resume`, {
       method: 'POST',
     });
@@ -1008,13 +1012,28 @@ export class BurnbagApiClient {
    * Requirements: 16.5, 16.6
    */
   async getDisconnectImpact(connectionId: string): Promise<{
-    affectedBindings: Array<{ id: string; name: string; providerCount: number }>;
-    bindingsReducedBelowMinimum: Array<{ id: string; name: string; providerCount: number }>;
-    bindingsStillValid: Array<{ id: string; name: string; providerCount: number }>;
+    affectedBindings: Array<{
+      id: string;
+      name: string;
+      providerCount: number;
+    }>;
+    bindingsReducedBelowMinimum: Array<{
+      id: string;
+      name: string;
+      providerCount: number;
+    }>;
+    bindingsStillValid: Array<{
+      id: string;
+      name: string;
+      providerCount: number;
+    }>;
   }> {
-    return this.request(`/canary/connections/${connectionId}/disconnect-impact`, {
-      method: 'GET',
-    });
+    return this.request(
+      `/canary/connections/${connectionId}/disconnect-impact`,
+      {
+        method: 'GET',
+      },
+    );
   }
 
   /**
@@ -1068,11 +1087,13 @@ export class BurnbagApiClient {
   }
 
   async approveRequest(requestId: string): Promise<void> {
-    return this.request(`/approval//approve`, { method: 'POST' });
+    return this.request(`/approval/${encodeURIComponent(requestId)}/approve`, {
+      method: 'POST',
+    });
   }
 
   async rejectRequest(requestId: string, reason: string): Promise<void> {
-    return this.request(`/approval//reject`, {
+    return this.request(`/approval/${encodeURIComponent(requestId)}/reject`, {
       method: 'POST',
       body: JSON.stringify({ reason }),
     });
@@ -1416,7 +1437,9 @@ export class BurnbagApiClient {
   /**
    * Get a specific multi-canary binding by ID.
    */
-  async getMultiCanaryBinding(bindingId: string): Promise<IApiMultiCanaryBindingDTO> {
+  async getMultiCanaryBinding(
+    bindingId: string,
+  ): Promise<IApiMultiCanaryBindingDTO> {
     return this.request(`/multi-canary-bindings/${bindingId}`);
   }
 
@@ -1465,7 +1488,9 @@ export class BurnbagApiClient {
   /**
    * Get multi-canary bindings for a specific target.
    */
-  async getMultiCanaryBindingsForTarget(targetId: string): Promise<IApiMultiCanaryBindingDTO[]> {
+  async getMultiCanaryBindingsForTarget(
+    targetId: string,
+  ): Promise<IApiMultiCanaryBindingDTO[]> {
     return this.request(`/multi-canary-bindings/target/${targetId}`);
   }
 
@@ -1481,7 +1506,9 @@ export class BurnbagApiClient {
   /**
    * Create a webhook endpoint for a provider connection.
    */
-  async createWebhookEndpoint(connectionId: string): Promise<IApiWebhookEndpointDTO> {
+  async createWebhookEndpoint(
+    connectionId: string,
+  ): Promise<IApiWebhookEndpointDTO> {
     return this.request('/webhook-endpoints', {
       method: 'POST',
       body: JSON.stringify({ connectionId }),
@@ -1528,7 +1555,9 @@ export class BurnbagApiClient {
   /**
    * Get delivery stats for a webhook endpoint.
    */
-  async getWebhookDeliveryStats(endpointId: string): Promise<IApiWebhookDeliveryStatsDTO> {
+  async getWebhookDeliveryStats(
+    endpointId: string,
+  ): Promise<IApiWebhookDeliveryStatsDTO> {
     return this.request(`/webhook-endpoints/${endpointId}/stats`);
   }
 
@@ -1546,7 +1575,8 @@ export class BurnbagApiClient {
     const params = new URLSearchParams();
     if (filters?.category) params.set('category', filters.category);
     if (filters?.authType) params.set('authType', filters.authType);
-    if (filters?.supportsWebhooks !== undefined) params.set('supportsWebhooks', String(filters.supportsWebhooks));
+    if (filters?.supportsWebhooks !== undefined)
+      params.set('supportsWebhooks', String(filters.supportsWebhooks));
     if (filters?.searchQuery) params.set('q', filters.searchQuery);
     const qs = params.toString();
     return this.request(`/canary/providers/catalog${qs ? `?${qs}` : ''}`);

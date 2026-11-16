@@ -104,13 +104,17 @@ export class BrightHubSubsystemPlugin implements IAppSubsystemPlugin {
             ownerId: PlatformID;
             visibility?: string;
           }): Promise<{ id: PlatformID; rootFolderId: PlatformID }>;
-          listContainers(
-            ownerId: PlatformID,
-          ): Promise<Array<{ container: { id: PlatformID; name: string; rootFolderId: PlatformID } }>>;
+          listContainers(ownerId: PlatformID): Promise<
+            Array<{
+              container: {
+                id: PlatformID;
+                name: string;
+                rootFolderId: PlatformID;
+              };
+            }>
+          >;
         };
-        const uploadService = context.services.get(
-          'burnbagUploadService',
-        ) as {
+        const uploadService = context.services.get('burnbagUploadService') as {
           createSession(params: {
             userId: PlatformID;
             fileName: string;
@@ -186,9 +190,7 @@ export class BrightHubSubsystemPlugin implements IAppSubsystemPlugin {
               }>;
               isDeleted: boolean;
             }>('brighthub_posts');
-            const allPosts = await postsCol
-              .find({} as never)
-              .exec();
+            const allPosts = await postsCol.find({} as never).exec();
             for (const post of allPosts) {
               if (!post.mediaAttachments) continue;
               for (const att of post.mediaAttachments) {
@@ -213,9 +215,7 @@ export class BrightHubSubsystemPlugin implements IAppSubsystemPlugin {
               ) => {
                 const fileIdStr = fileId.toString();
                 const entry = postImageRegistry.get(fileIdStr);
-                const ownerId = entry
-                  ? parseId(entry.authorId)
-                  : fileId; // fallback
+                const ownerId = entry ? parseId(entry.authorId) : fileId; // fallback
 
                 const stream = await fileService.getFileContent(
                   fileId,

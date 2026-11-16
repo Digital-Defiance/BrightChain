@@ -36,7 +36,10 @@ import { Validator } from '../utils/validator';
 import { BrightChainStrings } from '../enumerations';
 import { translate } from '../i18n';
 import type { BrightDateTimestamp } from '../types/brightDateTimestamp';
-import { brightDateToDate, dateToBrightDate } from '../utils/brightDateConversions';
+import {
+  brightDateToDate,
+  dateToBrightDate,
+} from '../utils/brightDateConversions';
 import { detectBlockFormat } from './blockFormatService';
 import { ChecksumService } from './checksum.service';
 import { getGlobalServiceProvider } from './globalServiceProvider';

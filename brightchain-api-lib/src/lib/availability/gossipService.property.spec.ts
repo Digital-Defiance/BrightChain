@@ -10,7 +10,12 @@
  * **Validates: Requirements 6.4, 6.6**
  */
 
-import { BlockAnnouncement, GossipConfig } from '@brightchain/brightchain-lib';
+import {
+  BlockAnnouncement,
+  BlockId,
+  dateToBrightDate,
+  GossipConfig,
+} from '@brightchain/brightchain-lib';
 import fc from 'fast-check';
 import { GossipService, IPeerProvider } from './gossipService';
 
@@ -28,7 +33,7 @@ const arbHexString = (minLength: number, maxLength: number) =>
 /**
  * Generate a valid block ID (hex string of at least 32 characters)
  */
-const arbBlockId = arbHexString(32, 64);
+const arbBlockId = arbHexString(32, 64).map((id) => id as BlockId);
 
 /**
  * Generate a valid TTL value (0 to 10)
@@ -49,7 +54,7 @@ const arbBlockAnnouncement = fc.record({
   type: fc.constantFrom('add' as const, 'remove' as const),
   blockId: arbBlockId,
   nodeId: arbNodeId,
-  timestamp: fc.date(),
+  timestamp: fc.date({ noInvalidDate: true }).map(dateToBrightDate),
   ttl: arbTtl,
 });
 
@@ -352,7 +357,7 @@ describe('GossipService Property Tests', () => {
             // Queue many announcements
             for (let i = 0; i < announcementCount; i++) {
               const blockId = i.toString(16).padStart(32, '0');
-              await gossipService.announceBlock(blockId);
+              await gossipService.announceBlock(blockId as BlockId);
             }
 
             // Flush all announcements

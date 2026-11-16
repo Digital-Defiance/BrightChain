@@ -16,7 +16,7 @@
   },
   "dependencies": {
     "@awesome.me/kit-a20d532681": "^1.0.23",
-    "@digitaldefiance/i18n-lib": "4.7.5",
+    "@digitaldefiance/i18n-lib": "4.8.0",
     "@fortawesome/fontawesome-common-types": "^7.2.0",
     "known-css-properties": "^0.34.0",
     "markdown-it": "^14.1.1",

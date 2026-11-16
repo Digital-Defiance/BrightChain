@@ -8,6 +8,7 @@ import { LoginEntry } from '@brightchain/brightchain-lib';
 import fc from 'fast-check';
 import { BrightPassService, EmergencyAccessError } from './brightpass';
 import {
+  asEntryInput,
   masterPasswordArb,
   memberIdArb,
   vaultNameArb,
@@ -50,7 +51,7 @@ describe('BrightPassService – Emergency Access', () => {
               createdAt: new Date(),
               updatedAt: new Date(),
             };
-            await service.addEntry(metadata.id, entry);
+            await service.addEntry(metadata.id, asEntryInput(entry));
 
             const config = await service.configureEmergencyAccess(
               metadata.id,

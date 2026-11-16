@@ -16,17 +16,16 @@
  */
 import type {
   INativeCanaryConfigBase,
-  IPlatformEvent,
   NativeCanaryType,
 } from '@brightchain/digitalburnbag-lib';
 import { HeartbeatSignalType } from '@brightchain/digitalburnbag-lib';
+import type { BrightDBNativeCanaryConfigRepository } from '../../collections/native-canary-config-collection';
+import type { IEncryptionService } from '../../services/credential-service';
 import {
   InMemoryPlatformEventStore,
   NativeCanaryService,
   NativeCanarySignalCallback,
 } from '../../services/native-canary-service';
-import type { BrightDBNativeCanaryConfigRepository } from '../../collections/native-canary-config-collection';
-import type { IEncryptionService } from '../../services/credential-service';
 
 // ---------------------------------------------------------------------------
 // In-memory repository for integration testing
@@ -36,7 +35,8 @@ function createInMemoryRepository(): BrightDBNativeCanaryConfigRepository<string
   const configs: INativeCanaryConfigBase<string>[] = [];
 
   return {
-    getConfigById: async (id: string) => configs.find((c) => c.id === id) ?? null,
+    getConfigById: async (id: string) =>
+      configs.find((c) => c.id === id) ?? null,
     getConfigsByUser: async (userId: string) =>
       configs.filter((c) => c.userId === userId),
     createConfig: async (config: INativeCanaryConfigBase<string>) => {
@@ -80,17 +80,6 @@ interface EmittedSignal {
   signalType: HeartbeatSignalType;
   canaryType: NativeCanaryType;
   timestamp: Date;
-}
-
-function createSignalCollector(): {
-  signals: EmittedSignal[];
-  callback: NativeCanarySignalCallback<string>;
-} {
-  const signals: EmittedSignal[] = [];
-  const callback: NativeCanarySignalCallback<string> = (event) => {
-    signals.push(event);
-  };
-  return { signals, callback };
 }
 
 // ---------------------------------------------------------------------------
@@ -253,7 +242,9 @@ describe('Native Canary Event Flow: Platform Event → Evaluation → Signal', (
     }
 
     // All should be ABSENCE (count < 4)
-    expect(signals.every((s) => s.signalType === HeartbeatSignalType.ABSENCE)).toBe(true);
+    expect(
+      signals.every((s) => s.signalType === HeartbeatSignalType.ABSENCE),
+    ).toBe(true);
 
     // Send 4th event (meets threshold)
     await service.onPlatformEvent({
@@ -437,7 +428,9 @@ describe('Native Canary Event Flow: Platform Event → Evaluation → Signal', (
     });
 
     // Login canary should emit PRESENCE
-    const loginSignals = signals.filter((s) => s.canaryType === 'login_activity');
+    const loginSignals = signals.filter(
+      (s) => s.canaryType === 'login_activity',
+    );
     expect(loginSignals[loginSignals.length - 1].signalType).toBe(
       HeartbeatSignalType.PRESENCE,
     );
@@ -587,9 +580,9 @@ describe('Native Canary Event Flow: Duress Code → Immediate Signal → Protoco
     expect(protocolExecutions).toHaveLength(2);
 
     // All signals are DURESS
-    expect(signals.every((s) => s.signalType === HeartbeatSignalType.DURESS)).toBe(
-      true,
-    );
+    expect(
+      signals.every((s) => s.signalType === HeartbeatSignalType.DURESS),
+    ).toBe(true);
   });
 
   it('duress code detection is case-sensitive and exact-match', async () => {
@@ -650,7 +643,9 @@ describe('Native Canary Event Flow: Duress Code → Immediate Signal → Protoco
     });
 
     // Login canary should have emitted signals (ABSENCE then PRESENCE)
-    const loginSignals = signals.filter((s) => s.canaryType === 'login_activity');
+    const loginSignals = signals.filter(
+      (s) => s.canaryType === 'login_activity',
+    );
     expect(loginSignals).toHaveLength(2);
     expect(loginSignals[0].signalType).toBe(HeartbeatSignalType.ABSENCE);
     expect(loginSignals[1].signalType).toBe(HeartbeatSignalType.PRESENCE);

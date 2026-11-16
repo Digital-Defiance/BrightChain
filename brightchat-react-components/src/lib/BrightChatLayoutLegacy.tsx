@@ -24,7 +24,7 @@ import GroupIcon from '@mui/icons-material/Group';
 import { useTheme } from '@mui/material';
 import Box from '@mui/material/Box';
 import { FC, memo, useCallback, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { BrightChatProvider } from './BrightChatContext';
 
 // ─── Inner layout (must be inside BrightChatProvider) ───────────────────────

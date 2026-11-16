@@ -20,8 +20,7 @@ import { useItipRsvp } from '../hooks/useItipRsvp';
 // ─── Mocks ──────────────────────────────────────────────────────────────────
 
 const mockFetch = jest.fn();
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-(globalThis as any).fetch = mockFetch;
+globalThis.fetch = mockFetch;
 
 beforeEach(() => {
   mockFetch.mockReset();
@@ -71,7 +70,11 @@ describe('useItipRsvp', () => {
       const { result } = renderHook(() => useItipRsvp(DEFAULT_OPTIONS));
 
       await act(async () => {
-        await result.current.rsvp('uid-001', 'BEGIN:VCAL\r\nEND:VCAL', 'ACCEPTED' as never);
+        await result.current.rsvp(
+          'uid-001',
+          'BEGIN:VCAL\r\nEND:VCAL',
+          'ACCEPTED' as never,
+        );
       });
 
       expect(mockFetch).toHaveBeenCalledWith(

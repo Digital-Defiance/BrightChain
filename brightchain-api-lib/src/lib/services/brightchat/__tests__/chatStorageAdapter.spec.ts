@@ -12,9 +12,9 @@
  */
 
 import {
+  BRIGHTCHAT_COLLECTIONS,
   ChatCollectionAdapter,
   createChatStorageProvider,
-  BRIGHTCHAT_COLLECTIONS,
 } from '../chatStorageAdapter';
 
 // ---------------------------------------------------------------------------
@@ -41,7 +41,9 @@ function createBrightDbMock() {
     find: jest.fn().mockReturnValue({
       toArray: jest.fn().mockResolvedValue([]),
     }),
-    updateOne: jest.fn().mockResolvedValue({ modifiedCount: 1, matchedCount: 1 }),
+    updateOne: jest
+      .fn()
+      .mockResolvedValue({ modifiedCount: 1, matchedCount: 1 }),
     deleteOne: jest.fn().mockResolvedValue({ deletedCount: 1 }),
   };
 }
@@ -63,7 +65,9 @@ function createWrappedMock() {
     find: jest.fn().mockReturnValue({
       exec: jest.fn().mockResolvedValue([]),
     }),
-    updateOne: jest.fn().mockResolvedValue({ modifiedCount: 1, matchedCount: 1 }),
+    updateOne: jest
+      .fn()
+      .mockResolvedValue({ modifiedCount: 1, matchedCount: 1 }),
     deleteOne: jest.fn().mockResolvedValue({ deletedCount: 1 }),
   };
 }
@@ -330,7 +334,10 @@ describe('ChatCollectionAdapter', () => {
   describe('keyField handling', () => {
     it('uses the specified keyField for filter construction', async () => {
       const mock = createBrightDbMock();
-      const adapter = new ChatCollectionAdapter<{ token: string }>(mock, 'token');
+      const adapter = new ChatCollectionAdapter<{ token: string }>(
+        mock,
+        'token',
+      );
 
       await adapter.findById('my-token');
       expect(mock.findOne).toHaveBeenCalledWith({ token: 'my-token' });
@@ -355,7 +362,9 @@ describe('ChatCollectionAdapter', () => {
         insertOne: jest.fn().mockResolvedValue(undefined),
         create: jest.fn().mockResolvedValue(undefined),
         findOne: jest.fn().mockResolvedValue(null),
-        find: jest.fn().mockReturnValue({ toArray: jest.fn().mockResolvedValue([]) }),
+        find: jest
+          .fn()
+          .mockReturnValue({ toArray: jest.fn().mockResolvedValue([]) }),
         updateOne: jest.fn().mockResolvedValue({}),
         deleteOne: jest.fn().mockResolvedValue({}),
       };

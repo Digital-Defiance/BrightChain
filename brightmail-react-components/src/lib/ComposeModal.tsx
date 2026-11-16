@@ -35,6 +35,7 @@ import React, {
   memo,
   useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from 'react';
@@ -239,7 +240,8 @@ const ComposeModalInner: FC<ComposeModalProps> = ({
   const emailDomain = getEmailDomain();
 
   // ── External recipient detection for ECIES warning ──────────────────
-  const allRecipients = [...to, ...cc, ...bcc];
+  // Memoized so callbacks that depend on it are not recreated every render.
+  const allRecipients = useMemo(() => [...to, ...cc, ...bcc], [to, cc, bcc]);
   const externalRecipients = getExternalRecipients(allRecipients, emailDomain);
   const encryptionRequiresLocalOnly =
     encryptionScheme === MessageEncryptionScheme.RECIPIENT_KEYS ||

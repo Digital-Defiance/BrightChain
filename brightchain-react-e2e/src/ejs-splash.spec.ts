@@ -17,6 +17,13 @@
  */
 import { expect, test } from '@playwright/test';
 
+interface IAppConfig {
+  serverUrl?: string;
+  enabledFeatures?: string[];
+  emailDomain?: string;
+  siteTitle?: string;
+}
+
 test.describe('EJS Splash Page — HTML Shell', () => {
   test('root route returns valid HTML document', async ({ page }) => {
     const response = await page.goto('/');
@@ -33,7 +40,9 @@ test.describe('EJS Splash Page — HTML Shell', () => {
     await page.goto('/');
 
     // APP_CONFIG should be available as a global
-    const appConfig = await page.evaluate(() => (window as any).APP_CONFIG);
+    const appConfig = await page.evaluate(
+      () => (window as unknown as { APP_CONFIG?: IAppConfig }).APP_CONFIG,
+    );
     expect(appConfig).toBeDefined();
     expect(appConfig).toHaveProperty('serverUrl');
     expect(appConfig).toHaveProperty('enabledFeatures');
@@ -44,8 +53,10 @@ test.describe('EJS Splash Page — HTML Shell', () => {
   test('APP_CONFIG contains expected feature flags', async ({ page }) => {
     await page.goto('/');
 
-    const appConfig = await page.evaluate(() => (window as any).APP_CONFIG);
-    const features: string[] = appConfig.enabledFeatures;
+    const appConfig = await page.evaluate(
+      () => (window as unknown as { APP_CONFIG?: IAppConfig }).APP_CONFIG,
+    );
+    const features: string[] = appConfig?.enabledFeatures ?? [];
     expect(Array.isArray(features)).toBe(true);
     expect(features.length).toBeGreaterThan(0);
 
@@ -209,12 +220,6 @@ test.describe('EJS Splash Page — SPA Fallthrough', () => {
     // The demo page should render (it's a React route, not EJS)
     // Wait for the page to load — it may lazy-load
     await page.waitForLoadState('networkidle').catch(() => {});
-
-    // Should not show a 404 or error page
-    const hasError = await page
-      .getByText(/not found|404|error/i)
-      .isVisible()
-      .catch(() => false);
     // The demo page might show content or redirect — just verify no crash
     const url = page.url();
     expect(url).toContain('/demo');

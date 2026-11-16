@@ -19,7 +19,7 @@ import {
 } from '@mui/material';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { FC, memo, useCallback, useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 
 // EmailApiClient is provided by the consuming application (brightchain-react)
 // via tsconfig path mapping: @brightchain/brightchain-react/services/emailApi

@@ -23,33 +23,19 @@ import {
   FriendshipStatus,
 } from '@brightchain/brightchain-lib';
 import fc from 'fast-check';
-import { createFriendsService, FriendsService } from './friendsService';
+import {
+  createFriendsService,
+  FriendRequestRecord,
+  FriendshipRecord,
+  FriendsService,
+} from './friendsService';
 import {
   createMockFriendsApplication,
   createMockIsBlocked,
-  MockCollection,
 } from './friendsService.test-helpers';
 
 describe('Feature: brightchain-friends-system, FriendsService Property Tests', () => {
-  let service: FriendsService;
-  let mockApp: ReturnType<typeof createMockFriendsApplication>;
-  let friendshipsCollection: MockCollection<{
-    _id: string;
-    [key: string]: unknown;
-  }>;
-  let friendRequestsCollection: MockCollection<{
-    _id: string;
-    [key: string]: unknown;
-  }>;
-
-  beforeEach(() => {
-    mockApp = createMockFriendsApplication();
-    friendshipsCollection = mockApp.collections.get('brightchain_friendships')!;
-    friendRequestsCollection = mockApp.collections.get(
-      'brightchain_friend_requests',
-    )!;
-    service = createFriendsService(mockApp, createMockIsBlocked());
-  });
+  // Each property builds a fresh application and service per iteration.
 
   // --- Smart Generators ---
 
@@ -122,7 +108,9 @@ describe('Feature: brightchain-friends-system, FriendsService Property Tests', (
           });
 
           // Verify no request was created
-          const requests = app.collections.get('brightchain_friend_requests')!;
+          const requests = app.getModel<FriendRequestRecord>(
+            'brightchain_friend_requests',
+          );
           expect(requests.data.length).toBe(0);
 
           return true;
@@ -229,7 +217,9 @@ describe('Feature: brightchain-friends-system, FriendsService Property Tests', (
           expect(await svc.areFriends(userA, userB)).toBe(true);
 
           // Both requests should be accepted
-          const requests = app.collections.get('brightchain_friend_requests')!;
+          const requests = app.getModel<FriendRequestRecord>(
+            'brightchain_friend_requests',
+          );
           for (const req of requests.data) {
             expect((req as { status: string }).status).toBe(
               FriendRequestStatus.Accepted,
@@ -314,7 +304,9 @@ describe('Feature: brightchain-friends-system, FriendsService Property Tests', (
             expect(await svc.areFriends(requesterId, recipientId)).toBe(true);
 
             // Verify friendship record
-            const friendships = app.collections.get('brightchain_friendships')!;
+            const friendships = app.getModel<FriendshipRecord>(
+              'brightchain_friendships',
+            );
             expect(friendships.data.length).toBe(1);
             const f = friendships.data[0] as {
               _id: string;
@@ -337,13 +329,13 @@ describe('Feature: brightchain-friends-system, FriendsService Property Tests', (
             expect(f.memberIdB).toBe(expectedB);
 
             // Request status should be accepted
-            const requests = app.collections.get(
+            const requests = app.getModel<FriendRequestRecord>(
               'brightchain_friend_requests',
-            )!;
+            );
             const req = requests.data.find(
               (r: { _id: string }) => r._id === requestId,
-            ) as { status: string };
-            expect(req.status).toBe(FriendRequestStatus.Accepted);
+            );
+            expect(req?.status).toBe(FriendRequestStatus.Accepted);
 
             return true;
           },
@@ -448,16 +440,18 @@ describe('Feature: brightchain-friends-system, FriendsService Property Tests', (
             await svc.rejectFriendRequest(recipientId, requestId);
 
             // Verify status
-            const requests = app.collections.get(
+            const requests = app.getModel<FriendRequestRecord>(
               'brightchain_friend_requests',
-            )!;
+            );
             const req = requests.data.find(
               (r: { _id: string }) => r._id === requestId,
-            ) as { status: string };
-            expect(req.status).toBe(FriendRequestStatus.Rejected);
+            );
+            expect(req?.status).toBe(FriendRequestStatus.Rejected);
 
             // No friendship created
-            const friendships = app.collections.get('brightchain_friendships')!;
+            const friendships = app.getModel<FriendshipRecord>(
+              'brightchain_friendships',
+            );
             expect(friendships.data.length).toBe(0);
 
             return true;
@@ -493,13 +487,13 @@ describe('Feature: brightchain-friends-system, FriendsService Property Tests', (
             await svc.cancelFriendRequest(requesterId, requestId);
 
             // Verify status
-            const requests = app.collections.get(
+            const requests = app.getModel<FriendRequestRecord>(
               'brightchain_friend_requests',
-            )!;
+            );
             const req = requests.data.find(
               (r: { _id: string }) => r._id === requestId,
-            ) as { status: string };
-            expect(req.status).toBe(FriendRequestStatus.Cancelled);
+            );
+            expect(req?.status).toBe(FriendRequestStatus.Cancelled);
 
             return true;
           },
@@ -892,9 +886,9 @@ describe('Feature: brightchain-friends-system, FriendsService Query & Status Pro
             expect(await svc.areFriends(blocker, blocked)).toBe(false);
 
             // All pending requests between them should be cancelled
-            const allRequests = app.collections.get(
+            const allRequests = app.getModel<FriendRequestRecord>(
               'brightchain_friend_requests',
-            )!;
+            );
             for (const req of allRequests.data) {
               const r = req as {
                 requesterId: string;

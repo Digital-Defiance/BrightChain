@@ -233,7 +233,6 @@ describe('Feature: canary-provider-system, Property 1: Provider grouping preserv
 
           // No providers duplicated: collect all IDs
           const allIds = groups.flatMap((g) => g.providers.map((p) => p.id));
-          const uniqueIds = new Set(allIds);
           // Note: input configs may have duplicate IDs from generation,
           // but the grouping should preserve the exact same count
           expect(allIds.length).toBe(configs.length);

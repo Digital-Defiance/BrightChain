@@ -30,9 +30,7 @@ export class BrightDBNativeCanaryConfigRepository<TID extends PlatformID> {
       : null;
   }
 
-  async getConfigsByUser(
-    userId: TID,
-  ): Promise<INativeCanaryConfigBase<TID>[]> {
+  async getConfigsByUser(userId: TID): Promise<INativeCanaryConfigBase<TID>[]> {
     const docs = await this.configs
       .find(filter({ userId }, this.ids))
       .toArray();

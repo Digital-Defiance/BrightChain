@@ -32,10 +32,13 @@ import {
   type IContentType,
   type IMimePart,
 } from '../../interfaces/messaging/mimePart';
+import type { BrightDateTimestamp } from '../../types/brightDateTimestamp';
+import {
+  brightDateNow,
+  normalizeToBrightDate,
+} from '../../utils/brightDateConversions';
 import { EmailParser } from './emailParser';
 import { EmailSerializer } from './emailSerializer';
-import { brightDateNow, normalizeToBrightDate } from '../../utils/brightDateConversions';
-import type { BrightDateTimestamp } from '../../types/brightDateTimestamp';
 
 /** Cast a test string to BlockId without validation — for test data only. */
 const bid = (s: string) => s as unknown as BlockId;
@@ -511,9 +514,9 @@ describe('Email Round-Trip Property Tests', () => {
 
           // 5. date is equivalent (same timestamp, within 1 second tolerance)
           // BrightDateTimestamp is in decimal days; 1 second = 1/86400 days ≈ 0.0000116
-          expect(
-            Math.abs(original.date - parsed.date),
-          ).toBeLessThanOrEqual(1 / 86400);
+          expect(Math.abs(original.date - parsed.date)).toBeLessThanOrEqual(
+            1 / 86400,
+          );
 
           // 6. cc addresses match (if present)
           if (original.cc && original.cc.length > 0) {

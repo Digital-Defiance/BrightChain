@@ -12,7 +12,10 @@ import {
   IPublicMemberData,
 } from '../../interfaces/member/memberData';
 import { SchemaDefinition, SerializedValue } from '../../sharedTypes';
-import { normalizeToBrightDate, brightDateToISO } from '../../utils/brightDateConversions';
+import {
+  brightDateToISO,
+  normalizeToBrightDate,
+} from '../../utils/brightDateConversions';
 
 const isString = (value: unknown): value is string => typeof value === 'string';
 const isStringArray = (value: unknown): value is string[] =>

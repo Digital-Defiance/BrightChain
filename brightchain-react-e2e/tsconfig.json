@@ -4,7 +4,9 @@
     "allowJs": true,
     "outDir": "../dist/out-tsc",
     "sourceMap": false,
-    "module": "commonjs"
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "esModuleInterop": true
   },
   "include": [
     "**/*.ts",

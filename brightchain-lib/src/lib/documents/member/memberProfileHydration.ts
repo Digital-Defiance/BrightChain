@@ -12,7 +12,10 @@ import {
   IPublicMemberProfileStorageData,
 } from '../../interfaces/member/profileStorage';
 import { ServiceProvider } from '../../services/service.provider';
-import { brightDateToISO, normalizeToBrightDate } from '../../utils/brightDateConversions';
+import {
+  brightDateToISO,
+  normalizeToBrightDate,
+} from '../../utils/brightDateConversions';
 
 /**
  * Hydration schema for converting between storage and hydrated public member profile formats

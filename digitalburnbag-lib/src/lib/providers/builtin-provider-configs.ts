@@ -413,8 +413,7 @@ export const GARMIN_PROVIDER_CONFIG: ICanaryProviderConfig<string> = {
 export const OURA_PROVIDER_CONFIG: ICanaryProviderConfig<string> = {
   id: 'oura',
   name: 'Oura Ring',
-  description:
-    'Monitor sleep, readiness, and activity from Oura Ring',
+  description: 'Monitor sleep, readiness, and activity from Oura Ring',
   category: ProviderCategory.HEALTH_FITNESS,
   icon: 'oura',
   baseUrl: 'https://api.ouraring.com',
@@ -550,8 +549,7 @@ export const WHOOP_PROVIDER_CONFIG: ICanaryProviderConfig<string> = {
 export const PELOTON_PROVIDER_CONFIG: ICanaryProviderConfig<string> = {
   id: 'peloton',
   name: 'Peloton',
-  description:
-    'Monitor Peloton workouts, streaks, and class history',
+  description: 'Monitor Peloton workouts, streaks, and class history',
   category: ProviderCategory.HEALTH_FITNESS,
   icon: 'peloton',
   baseUrl: 'https://api.onepeloton.com',
@@ -1020,8 +1018,7 @@ export const OUTLOOK_PROVIDER_CONFIG: ICanaryProviderConfig<string> = {
     oauth2: {
       authorizationUrl:
         'https://login.microsoftonline.com/common/oauth2/v2.0/authorize',
-      tokenUrl:
-        'https://login.microsoftonline.com/common/oauth2/v2.0/token',
+      tokenUrl: 'https://login.microsoftonline.com/common/oauth2/v2.0/token',
       clientId: '',
       clientSecret: '',
       scopes: ['Mail.Read', 'Calendars.Read', 'User.Read'],
@@ -1040,7 +1037,7 @@ export const OUTLOOK_PROVIDER_CONFIG: ICanaryProviderConfig<string> = {
       queryParams: {
         $top: '20',
         $orderby: 'receivedDateTime desc',
-        $filter: "receivedDateTime ge {sinceISO}",
+        $filter: 'receivedDateTime ge {sinceISO}',
       },
       responseMapping: {
         eventsPath: '$.value',
@@ -1260,8 +1257,7 @@ export const TEAMS_PROVIDER_CONFIG: ICanaryProviderConfig<string> = {
     oauth2: {
       authorizationUrl:
         'https://login.microsoftonline.com/common/oauth2/v2.0/authorize',
-      tokenUrl:
-        'https://login.microsoftonline.com/common/oauth2/v2.0/token',
+      tokenUrl: 'https://login.microsoftonline.com/common/oauth2/v2.0/token',
       clientId: '',
       clientSecret: '',
       scopes: ['Chat.Read', 'Presence.Read', 'User.Read'],
@@ -1319,8 +1315,7 @@ export const TEAMS_PROVIDER_CONFIG: ICanaryProviderConfig<string> = {
 export const REDDIT_PROVIDER_CONFIG: ICanaryProviderConfig<string> = {
   id: 'reddit',
   name: 'Reddit',
-  description:
-    'Monitor Reddit activity including comments, posts, and upvotes',
+  description: 'Monitor Reddit activity including comments, posts, and upvotes',
   category: ProviderCategory.SOCIAL_MEDIA,
   icon: 'reddit',
   baseUrl: 'https://oauth.reddit.com',
@@ -1948,7 +1943,8 @@ export const TRELLO_PROVIDER_CONFIG: ICanaryProviderConfig<string> = {
     type: 'api_key',
     apiKey: {
       headerName: 'Authorization',
-      headerPrefix: 'OAuth oauth_consumer_key="{apiKey}", oauth_token="{token}"',
+      headerPrefix:
+        'OAuth oauth_consumer_key="{apiKey}", oauth_token="{token}"',
     },
   },
   rateLimit: {
@@ -2512,7 +2508,10 @@ export const ALEXA_PROVIDER_CONFIG: ICanaryProviderConfig<string> = {
       tokenUrl: 'https://api.amazon.com/auth/o2/token',
       clientId: '',
       clientSecret: '',
-      scopes: ['alexa::devices:all:notifications:write', 'alexa::health:profile:write'],
+      scopes: [
+        'alexa::devices:all:notifications:write',
+        'alexa::health:profile:write',
+      ],
       redirectUri: '',
     },
   },
@@ -2625,8 +2624,7 @@ export const PLAID_PROVIDER_CONFIG: ICanaryProviderConfig<string> = {
 export const COINBASE_PROVIDER_CONFIG: ICanaryProviderConfig<string> = {
   id: 'coinbase',
   name: 'Coinbase',
-  description:
-    'Monitor Coinbase trades, transfers, and account activity',
+  description: 'Monitor Coinbase trades, transfers, and account activity',
   category: ProviderCategory.FINANCIAL,
   icon: 'coinbase',
   baseUrl: 'https://api.coinbase.com/v2',
@@ -2829,66 +2827,67 @@ export const VENMO_PROVIDER_CONFIG: ICanaryProviderConfig<string> = {
  * Google Maps Timeline provider configuration.
  * Monitors recent location history and place visits.
  */
-export const GOOGLE_MAPS_TIMELINE_PROVIDER_CONFIG: ICanaryProviderConfig<string> = {
-  id: 'google_maps_timeline',
-  name: 'Google Maps Timeline',
-  description:
-    'Monitor Google Maps Timeline location history and place visits via the Google Maps Platform API',
-  category: ProviderCategory.LOCATION,
-  icon: 'google_maps',
-  baseUrl: 'https://www.googleapis.com/geolocation/v1',
-  auth: {
-    type: 'oauth2',
-    oauth2: {
-      authorizationUrl: 'https://accounts.google.com/o/oauth2/v2/auth',
-      tokenUrl: 'https://oauth2.googleapis.com/token',
-      clientId: '',
-      clientSecret: '',
-      scopes: ['https://www.googleapis.com/auth/location.history.read'],
-      redirectUri: '',
-    },
-  },
-  rateLimit: {
-    maxRequests: 1000,
-    windowMs: 60 * 1000, // 1 minute
-    minDelayMs: 100,
-  },
-  endpoints: {
-    activity: {
-      path: '/timeline',
-      method: 'GET',
-      queryParams: {
-        startTime: '{sinceISO}',
-        endTime: '{untilISO}',
+export const GOOGLE_MAPS_TIMELINE_PROVIDER_CONFIG: ICanaryProviderConfig<string> =
+  {
+    id: 'google_maps_timeline',
+    name: 'Google Maps Timeline',
+    description:
+      'Monitor Google Maps Timeline location history and place visits via the Google Maps Platform API',
+    category: ProviderCategory.LOCATION,
+    icon: 'google_maps',
+    baseUrl: 'https://www.googleapis.com/geolocation/v1',
+    auth: {
+      type: 'oauth2',
+      oauth2: {
+        authorizationUrl: 'https://accounts.google.com/o/oauth2/v2/auth',
+        tokenUrl: 'https://oauth2.googleapis.com/token',
+        clientId: '',
+        clientSecret: '',
+        scopes: ['https://www.googleapis.com/auth/location.history.read'],
+        redirectUri: '',
       },
-      responseMapping: {
-        eventsPath: '$.timelineObjects',
-        timestampPath: 'activitySegment.duration.startTimestampMs',
-        timestampFormat: 'unix_ms',
-        activityTypePath: 'activitySegment.activityType',
-        eventIdPath: 'activitySegment.duration.startTimestampMs',
-        locationPaths: {
-          latitude: 'activitySegment.startLocation.latitudeE7',
-          longitude: 'activitySegment.startLocation.longitudeE7',
+    },
+    rateLimit: {
+      maxRequests: 1000,
+      windowMs: 60 * 1000, // 1 minute
+      minDelayMs: 100,
+    },
+    endpoints: {
+      activity: {
+        path: '/timeline',
+        method: 'GET',
+        queryParams: {
+          startTime: '{sinceISO}',
+          endTime: '{untilISO}',
+        },
+        responseMapping: {
+          eventsPath: '$.timelineObjects',
+          timestampPath: 'activitySegment.duration.startTimestampMs',
+          timestampFormat: 'unix_ms',
+          activityTypePath: 'activitySegment.activityType',
+          eventIdPath: 'activitySegment.duration.startTimestampMs',
+          locationPaths: {
+            latitude: 'activitySegment.startLocation.latitudeE7',
+            longitude: 'activitySegment.startLocation.longitudeE7',
+          },
         },
       },
+      healthCheck: {
+        path: '/timeline',
+        method: 'GET',
+        expectedStatus: 200,
+      },
     },
-    healthCheck: {
-      path: '/timeline',
-      method: 'GET',
-      expectedStatus: 200,
+    defaultLookbackMs: 2 * 24 * 60 * 60 * 1000, // 2 days
+    minCheckIntervalMs: 30 * 60 * 1000, // 30 minutes
+    supportsWebhooks: false,
+    enabledByDefault: false,
+    retry: {
+      maxAttempts: 3,
+      backoffMs: 1000,
+      backoffMultiplier: 2,
     },
-  },
-  defaultLookbackMs: 2 * 24 * 60 * 60 * 1000, // 2 days
-  minCheckIntervalMs: 30 * 60 * 1000, // 30 minutes
-  supportsWebhooks: false,
-  enabledByDefault: false,
-  retry: {
-    maxAttempts: 3,
-    backoffMs: 1000,
-    backoffMultiplier: 2,
-  },
-};
+  };
 
 /**
  * Life360 provider configuration.
@@ -3225,8 +3224,7 @@ export const XBOX_LIVE_PROVIDER_CONFIG: ICanaryProviderConfig<string> = {
   auth: {
     type: 'oauth2',
     oauth2: {
-      authorizationUrl:
-        'https://login.live.com/oauth20_authorize.srf',
+      authorizationUrl: 'https://login.live.com/oauth20_authorize.srf',
       tokenUrl: 'https://login.live.com/oauth20_token.srf',
       clientId: '',
       clientSecret: '',

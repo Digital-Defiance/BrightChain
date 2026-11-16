@@ -16,7 +16,7 @@ import { BrightPassStrings } from '@brightchain/brightpass-lib';
 import { useI18n } from '@digitaldefiance/express-suite-react-components';
 import { Button, useTheme } from '@mui/material';
 import { FC, memo, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import './BrightPass.scss';
 
 const BrightPassLayout: FC = () => {

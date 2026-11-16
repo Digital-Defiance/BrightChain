@@ -7,6 +7,7 @@
  * Requirements: 5.1, 5.4, 5.5, 5.7
  */
 
+import type { MessageEncryptionScheme as MessageEncryptionSchemeType } from '@brightchain/brightchain-lib';
 import '@testing-library/jest-dom';
 import { fireEvent, render, screen, within } from '@testing-library/react';
 
@@ -17,12 +18,12 @@ import EncryptionSelector from '../EncryptionSelector';
 // ─── Mocks ──────────────────────────────────────────────────────────────────
 
 const MessageEncryptionScheme = {
-  NONE: 'none',
-  SHARED_KEY: 'shared_key',
-  RECIPIENT_KEYS: 'recipient_keys',
-  S_MIME: 's_mime',
-  GPG: 'gpg',
-} as const;
+  NONE: 'none' as MessageEncryptionSchemeType,
+  SHARED_KEY: 'shared_key' as MessageEncryptionSchemeType,
+  RECIPIENT_KEYS: 'recipient_keys' as MessageEncryptionSchemeType,
+  S_MIME: 's_mime' as MessageEncryptionSchemeType,
+  GPG: 'gpg' as MessageEncryptionSchemeType,
+};
 
 const mockEngine = {
   translate: jest.fn((_componentId: string, key: string) => key),

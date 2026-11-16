@@ -9,7 +9,10 @@
  */
 
 import * as fc from 'fast-check';
-import { classifySystemHealth, getAttentionNeededCount } from '../../components/CanaryLeftMenu';
+import {
+  classifySystemHealth,
+  getAttentionNeededCount,
+} from '../../components/CanaryLeftMenu';
 import type { IApiProviderConnectionDTO } from '../../services/burnbag-api-client';
 
 // ---------------------------------------------------------------------------
@@ -17,61 +20,89 @@ import type { IApiProviderConnectionDTO } from '../../services/burnbag-api-clien
 // ---------------------------------------------------------------------------
 
 /** Statuses that are considered "needing attention" by the implementation. */
-const ATTENTION_STATUSES = ['error', 'expired', 'paused', 'check_failed', 'absence'] as const;
+const ATTENTION_STATUSES = [
+  'error',
+  'expired',
+  'paused',
+  'check_failed',
+  'absence',
+] as const;
 
 /** Statuses that are considered healthy (not needing attention). */
-const HEALTHY_STATUSES = ['active', 'connected', 'presence', 'ok', 'valid'] as const;
+const HEALTHY_STATUSES = [
+  'active',
+  'connected',
+  'presence',
+  'ok',
+  'valid',
+] as const;
 
 /** lastCheckResult values that need attention. */
 const ATTENTION_CHECK_RESULTS = ['error', 'absence'] as const;
-
-/** lastCheckResult values that are healthy. */
-const HEALTHY_CHECK_RESULTS = ['presence', 'duress', undefined] as const;
 
 /**
  * Generate a connection that does NOT need attention:
  * - status is NOT in ATTENTION_STATUSES
  * - lastCheckResult is NOT in ATTENTION_STATUSES
  */
-const healthyConnectionArb: fc.Arbitrary<IApiProviderConnectionDTO> = fc.record({
-  id: fc.uuid(),
-  userId: fc.uuid(),
-  providerId: fc.string({ minLength: 1, maxLength: 20 }),
-  status: fc.constantFrom(...HEALTHY_STATUSES),
-  lastCheckResult: fc.constantFrom('presence', 'duress', undefined) as fc.Arbitrary<'presence' | 'absence' | 'duress' | 'error' | undefined>,
-  isEnabled: fc.boolean(),
-  createdAt: fc.constant('2024-01-01T00:00:00Z'),
-  updatedAt: fc.constant('2024-01-01T00:00:00Z'),
-});
+const healthyConnectionArb: fc.Arbitrary<IApiProviderConnectionDTO> = fc.record(
+  {
+    id: fc.uuid(),
+    userId: fc.uuid(),
+    providerId: fc.string({ minLength: 1, maxLength: 20 }),
+    status: fc.constantFrom(...HEALTHY_STATUSES),
+    lastCheckResult: fc.constantFrom(
+      'presence',
+      'duress',
+      undefined,
+    ) as fc.Arbitrary<'presence' | 'absence' | 'duress' | 'error' | undefined>,
+    isEnabled: fc.boolean(),
+    createdAt: fc.constant('2024-01-01T00:00:00Z'),
+    updatedAt: fc.constant('2024-01-01T00:00:00Z'),
+  },
+);
 
 /**
  * Generate a connection that DOES need attention:
  * - status is in ATTENTION_STATUSES OR lastCheckResult is in ATTENTION_STATUSES
  */
-const attentionConnectionArb: fc.Arbitrary<IApiProviderConnectionDTO> = fc.oneof(
-  // Case 1: status needs attention (regardless of lastCheckResult)
-  fc.record({
-    id: fc.uuid(),
-    userId: fc.uuid(),
-    providerId: fc.string({ minLength: 1, maxLength: 20 }),
-    status: fc.constantFrom(...ATTENTION_STATUSES),
-    lastCheckResult: fc.constantFrom('presence', 'absence', 'duress', 'error', undefined) as fc.Arbitrary<'presence' | 'absence' | 'duress' | 'error' | undefined>,
-    isEnabled: fc.boolean(),
-    createdAt: fc.constant('2024-01-01T00:00:00Z'),
-    updatedAt: fc.constant('2024-01-01T00:00:00Z'),
-  }),
-  // Case 2: lastCheckResult needs attention (status is healthy)
-  fc.record({
-    id: fc.uuid(),
-    userId: fc.uuid(),
-    providerId: fc.string({ minLength: 1, maxLength: 20 }),
-    status: fc.constantFrom(...HEALTHY_STATUSES),
-    lastCheckResult: fc.constantFrom(...ATTENTION_CHECK_RESULTS) as fc.Arbitrary<'presence' | 'absence' | 'duress' | 'error' | undefined>,
-    isEnabled: fc.boolean(),
-    createdAt: fc.constant('2024-01-01T00:00:00Z'),
-    updatedAt: fc.constant('2024-01-01T00:00:00Z'),
-  }),
-);
+const attentionConnectionArb: fc.Arbitrary<IApiProviderConnectionDTO> =
+  fc.oneof(
+    // Case 1: status needs attention (regardless of lastCheckResult)
+    fc.record({
+      id: fc.uuid(),
+      userId: fc.uuid(),
+      providerId: fc.string({ minLength: 1, maxLength: 20 }),
+      status: fc.constantFrom(...ATTENTION_STATUSES),
+      lastCheckResult: fc.constantFrom(
+        'presence',
+        'absence',
+        'duress',
+        'error',
+        undefined,
+      ) as fc.Arbitrary<
+        'presence' | 'absence' | 'duress' | 'error' | undefined
+      >,
+      isEnabled: fc.boolean(),
+      createdAt: fc.constant('2024-01-01T00:00:00Z'),
+      updatedAt: fc.constant('2024-01-01T00:00:00Z'),
+    }),
+    // Case 2: lastCheckResult needs attention (status is healthy)
+    fc.record({
+      id: fc.uuid(),
+      userId: fc.uuid(),
+      providerId: fc.string({ minLength: 1, maxLength: 20 }),
+      status: fc.constantFrom(...HEALTHY_STATUSES),
+      lastCheckResult: fc.constantFrom(
+        ...ATTENTION_CHECK_RESULTS,
+      ) as fc.Arbitrary<
+        'presence' | 'absence' | 'duress' | 'error' | undefined
+      >,
+      isEnabled: fc.boolean(),
+      createdAt: fc.constant('2024-01-01T00:00:00Z'),
+      updatedAt: fc.constant('2024-01-01T00:00:00Z'),
+    }),
+  );
 
 // ---------------------------------------------------------------------------
 // Property 23: Overall system health classification
@@ -145,7 +176,10 @@ describe('Feature: canary-provider-expansion, Property 23: Overall system health
    * The classification is exhaustive: result is always one of 'healthy', 'degraded', 'critical'.
    */
   it('always returns one of "healthy", "degraded", or "critical" for any input', () => {
-    const anyConnectionArb = fc.oneof(healthyConnectionArb, attentionConnectionArb);
+    const anyConnectionArb = fc.oneof(
+      healthyConnectionArb,
+      attentionConnectionArb,
+    );
 
     fc.assert(
       fc.property(
@@ -165,7 +199,10 @@ describe('Feature: canary-provider-expansion, Property 23: Overall system health
    * Classification is deterministic: same input always produces same output.
    */
   it('is deterministic — same connections always produce the same health classification', () => {
-    const anyConnectionArb = fc.oneof(healthyConnectionArb, attentionConnectionArb);
+    const anyConnectionArb = fc.oneof(
+      healthyConnectionArb,
+      attentionConnectionArb,
+    );
 
     fc.assert(
       fc.property(
@@ -224,15 +261,26 @@ describe('Feature: canary-provider-expansion, Property 24: Attention-needed badg
   });
 
   it('badge count equals the exact number of providers with attention-needing status or lastCheckResult', () => {
-    const anyConnectionArb = fc.oneof(healthyConnectionArb, attentionConnectionArb);
+    const anyConnectionArb = fc.oneof(
+      healthyConnectionArb,
+      attentionConnectionArb,
+    );
 
     fc.assert(
       fc.property(
         fc.array(anyConnectionArb, { minLength: 0, maxLength: 30 }),
         (connections) => {
-          const attentionStatuses = new Set(['error', 'expired', 'paused', 'check_failed', 'absence']);
+          const attentionStatuses = new Set([
+            'error',
+            'expired',
+            'paused',
+            'check_failed',
+            'absence',
+          ]);
           const expectedCount = connections.filter(
-            (c) => attentionStatuses.has(c.status) || attentionStatuses.has(c.lastCheckResult ?? ''),
+            (c) =>
+              attentionStatuses.has(c.status) ||
+              attentionStatuses.has(c.lastCheckResult ?? ''),
           ).length;
           const actualCount = getAttentionNeededCount(connections);
           expect(actualCount).toBe(expectedCount);
@@ -243,7 +291,10 @@ describe('Feature: canary-provider-expansion, Property 24: Attention-needed badg
   });
 
   it('badge count is always between 0 and connections.length (inclusive)', () => {
-    const anyConnectionArb = fc.oneof(healthyConnectionArb, attentionConnectionArb);
+    const anyConnectionArb = fc.oneof(
+      healthyConnectionArb,
+      attentionConnectionArb,
+    );
 
     fc.assert(
       fc.property(
@@ -259,7 +310,10 @@ describe('Feature: canary-provider-expansion, Property 24: Attention-needed badg
   });
 
   it('adding a provider with attention-needing status increases count by exactly 1', () => {
-    const anyConnectionArb = fc.oneof(healthyConnectionArb, attentionConnectionArb);
+    const anyConnectionArb = fc.oneof(
+      healthyConnectionArb,
+      attentionConnectionArb,
+    );
 
     fc.assert(
       fc.property(
@@ -267,7 +321,10 @@ describe('Feature: canary-provider-expansion, Property 24: Attention-needed badg
         attentionConnectionArb,
         (connections, newAttentionConn) => {
           const countBefore = getAttentionNeededCount(connections);
-          const countAfter = getAttentionNeededCount([...connections, newAttentionConn]);
+          const countAfter = getAttentionNeededCount([
+            ...connections,
+            newAttentionConn,
+          ]);
           expect(countAfter).toBe(countBefore + 1);
         },
       ),
@@ -276,7 +333,10 @@ describe('Feature: canary-provider-expansion, Property 24: Attention-needed badg
   });
 
   it('adding a healthy provider does not change the attention count', () => {
-    const anyConnectionArb = fc.oneof(healthyConnectionArb, attentionConnectionArb);
+    const anyConnectionArb = fc.oneof(
+      healthyConnectionArb,
+      attentionConnectionArb,
+    );
 
     fc.assert(
       fc.property(
@@ -284,7 +344,10 @@ describe('Feature: canary-provider-expansion, Property 24: Attention-needed badg
         healthyConnectionArb,
         (connections, newHealthyConn) => {
           const countBefore = getAttentionNeededCount(connections);
-          const countAfter = getAttentionNeededCount([...connections, newHealthyConn]);
+          const countAfter = getAttentionNeededCount([
+            ...connections,
+            newHealthyConn,
+          ]);
           expect(countAfter).toBe(countBefore);
         },
       ),

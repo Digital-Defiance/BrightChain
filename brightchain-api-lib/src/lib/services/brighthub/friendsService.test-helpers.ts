@@ -3,8 +3,6 @@
  * Provides mock implementations of database collections and application.
  */
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import { MockCollection } from './userProfileService.test-helpers';
 
 export { MockCollection };
@@ -13,16 +11,16 @@ export { MockCollection };
  * Create a mock application with in-memory collections for the friends system.
  */
 export function createMockFriendsApplication() {
-  const collections = new Map<string, MockCollection<any>>();
+  const collections = new Map<string, MockCollection<unknown>>();
 
   collections.set('brightchain_friendships', new MockCollection());
   collections.set('brightchain_friend_requests', new MockCollection());
 
   return {
     collections,
-    getModel<T extends { _id: string }>(name: string): MockCollection<T> {
+    getModel<T>(name: string): MockCollection<T> {
       if (!collections.has(name)) {
-        collections.set(name, new MockCollection<T>());
+        collections.set(name, new MockCollection<unknown>());
       }
       return collections.get(name) as MockCollection<T>;
     },

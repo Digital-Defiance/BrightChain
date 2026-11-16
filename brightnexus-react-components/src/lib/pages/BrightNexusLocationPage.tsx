@@ -1,8 +1,13 @@
+import { signBslpPublishBody } from '@brightchain/brightnexus-api-lib';
 import {
   BSLP_DEFAULT_EPOCH,
   BslpPrivacyMode,
   type IBrightNexusLocationRecord,
 } from '@brightchain/brightnexus-lib';
+import {
+  useAuth,
+  useAuthenticatedApi,
+} from '@digitaldefiance/express-suite-react-components';
 import {
   Alert,
   Box,
@@ -15,14 +20,9 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import {
-  useAuth,
-  useAuthenticatedApi,
-} from '@digitaldefiance/express-suite-react-components';
 import React, { useCallback, useEffect, useState } from 'react';
 import { BrightNexusStrings } from '../enumerations/brightNexusStrings';
 import { brightNexusEnglishUs as t } from '../i18n/strings/englishUs';
-import { signBslpPublishBody } from '@brightchain/brightnexus-api-lib';
 import {
   listMyLocations,
   publishLocation,
@@ -116,7 +116,9 @@ export const BrightNexusLocationPage: React.FC = () => {
       await refresh();
     } catch (e) {
       setError(
-        e instanceof Error ? e.message : t[BrightNexusStrings.Error_PublishFailed],
+        e instanceof Error
+          ? e.message
+          : t[BrightNexusStrings.Error_PublishFailed],
       );
     } finally {
       setLoading(false);
@@ -226,9 +228,7 @@ export const BrightNexusLocationPage: React.FC = () => {
             <Button
               variant="contained"
               onClick={() => void handlePublish()}
-              disabled={
-                loading || !ipAddress.trim() || !signingMnemonic.trim()
-              }
+              disabled={loading || !ipAddress.trim() || !signingMnemonic.trim()}
             >
               {t[BrightNexusStrings.Form_Publish]}
             </Button>
@@ -247,7 +247,12 @@ export const BrightNexusLocationPage: React.FC = () => {
         </Alert>
       )}
 
-      <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
+      <Stack
+        direction="row"
+        justifyContent="space-between"
+        alignItems="center"
+        sx={{ mb: 2 }}
+      >
         <Typography variant="h6">My announcements</Typography>
         <Button size="small" onClick={() => void refresh()} disabled={loading}>
           {t[BrightNexusStrings.Form_Refresh]}
@@ -255,7 +260,9 @@ export const BrightNexusLocationPage: React.FC = () => {
       </Stack>
 
       {records.length === 0 ? (
-        <Typography color="text.secondary">{t[BrightNexusStrings.List_Empty]}</Typography>
+        <Typography color="text.secondary">
+          {t[BrightNexusStrings.List_Empty]}
+        </Typography>
       ) : (
         <Stack spacing={1}>
           {records.map((r) => (

@@ -37,7 +37,9 @@ type NativeCanaryResponse = IApiMessageResponse | ApiErrorResponse;
 // ---------------------------------------------------------------------------
 
 /** Convert a TID to a string for JSON-safe responses. */
-function sid<TID extends PlatformID>(value: TID | undefined | null): string | null {
+function sid<TID extends PlatformID>(
+  value: TID | undefined | null,
+): string | null {
   if (value === undefined || value === null) return null;
   if (value instanceof Uint8Array || Buffer.isBuffer(value)) {
     return Buffer.from(value).toString('hex');
@@ -57,7 +59,8 @@ function serializeConfig(c: any) {
     encryptedDuressCodes: undefined,
     // Indicate whether duress codes are configured (without exposing them)
     hasDuressCodes:
-      Array.isArray(c.encryptedDuressCodes) && c.encryptedDuressCodes.length > 0,
+      Array.isArray(c.encryptedDuressCodes) &&
+      c.encryptedDuressCodes.length > 0,
   };
 }
 
@@ -178,7 +181,8 @@ export class NativeCanaryController<
       return {
         statusCode: 400,
         response: {
-          message: 'type is required (login_activity, duress_code, file_access, api_usage, vault_interaction)',
+          message:
+            'type is required (login_activity, duress_code, file_access, api_usage, vault_interaction)',
           error: getDigitalBurnbagTranslation(
             DigitalBurnbagStrings.Api_Http_BadRequest,
           ),
@@ -211,7 +215,9 @@ export class NativeCanaryController<
       };
     } catch (err) {
       const message =
-        err instanceof Error ? err.message : 'Failed to configure native canary';
+        err instanceof Error
+          ? err.message
+          : 'Failed to configure native canary';
       return {
         statusCode: 400,
         response: {
@@ -251,9 +257,7 @@ export class NativeCanaryController<
 
     return {
       statusCode: 200,
-      response: configs.map(
-        serializeConfig,
-      ) as unknown as IApiMessageResponse,
+      response: configs.map(serializeConfig) as unknown as IApiMessageResponse,
     };
   }
 
@@ -280,7 +284,7 @@ export class NativeCanaryController<
       };
     }
 
-    const configId = this.safeParseId(req.params.id as string | undefined);
+    const configId = this.safeParseId(req.params['id'] as string | undefined);
     if (!configId) {
       return {
         statusCode: 400,
@@ -299,23 +303,23 @@ export class NativeCanaryController<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const updates: Record<string, any> = {};
 
-    if (body.isEnabled !== undefined) updates.isEnabled = body.isEnabled;
+    if (body.isEnabled !== undefined) updates['isEnabled'] = body.isEnabled;
     if (body.loginThreshold !== undefined)
-      updates.loginThreshold = body.loginThreshold;
+      updates['loginThreshold'] = body.loginThreshold;
     if (body.loginPeriodMs !== undefined)
-      updates.loginPeriodMs = body.loginPeriodMs;
+      updates['loginPeriodMs'] = body.loginPeriodMs;
     if (body.fileAccessThreshold !== undefined)
-      updates.fileAccessThreshold = body.fileAccessThreshold;
+      updates['fileAccessThreshold'] = body.fileAccessThreshold;
     if (body.fileAccessPeriodMs !== undefined)
-      updates.fileAccessPeriodMs = body.fileAccessPeriodMs;
+      updates['fileAccessPeriodMs'] = body.fileAccessPeriodMs;
     if (body.apiUsageThreshold !== undefined)
-      updates.apiUsageThreshold = body.apiUsageThreshold;
+      updates['apiUsageThreshold'] = body.apiUsageThreshold;
     if (body.apiUsagePeriodMs !== undefined)
-      updates.apiUsagePeriodMs = body.apiUsagePeriodMs;
+      updates['apiUsagePeriodMs'] = body.apiUsagePeriodMs;
     if (body.vaultInteractionThreshold !== undefined)
-      updates.vaultInteractionThreshold = body.vaultInteractionThreshold;
+      updates['vaultInteractionThreshold'] = body.vaultInteractionThreshold;
     if (body.vaultInteractionPeriodMs !== undefined)
-      updates.vaultInteractionPeriodMs = body.vaultInteractionPeriodMs;
+      updates['vaultInteractionPeriodMs'] = body.vaultInteractionPeriodMs;
 
     try {
       const config = await this.deps.nativeCanaryService.updateConfig(
@@ -328,15 +332,21 @@ export class NativeCanaryController<
       };
     } catch (err) {
       const message =
-        err instanceof Error ? err.message : 'Failed to update native canary config';
+        err instanceof Error
+          ? err.message
+          : 'Failed to update native canary config';
       const isNotFound = message.includes('not found');
       return {
         statusCode: isNotFound ? 404 : 400,
         response: {
           message,
           error: isNotFound
-            ? getDigitalBurnbagTranslation(DigitalBurnbagStrings.Api_Http_NotFound)
-            : getDigitalBurnbagTranslation(DigitalBurnbagStrings.Api_Http_BadRequest),
+            ? getDigitalBurnbagTranslation(
+                DigitalBurnbagStrings.Api_Http_NotFound,
+              )
+            : getDigitalBurnbagTranslation(
+                DigitalBurnbagStrings.Api_Http_BadRequest,
+              ),
         } as unknown as NativeCanaryResponse,
       };
     }

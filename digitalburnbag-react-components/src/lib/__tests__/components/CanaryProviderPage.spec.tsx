@@ -21,18 +21,36 @@ jest.mock('@digitaldefiance/express-suite-react-components', () => ({
 // ---------------------------------------------------------------------------
 
 import { ProviderCategory } from '@brightchain/digitalburnbag-lib';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import React from 'react';
-import type { ICanaryProviderPageProps } from '../../components/CanaryProviderPage';
+import {
+  fireEvent,
+  render,
+  renderHook,
+  screen,
+  waitFor,
+} from '@testing-library/react';
+import {
+  useCanaryContextMenu,
+  type ICanaryFileBrowserApiClient,
+} from '../../components/CanaryFileBrowserIntegration';
+import type {
+  ICanaryProviderApiClient,
+  ICanaryProviderPageProps,
+} from '../../components/CanaryProviderPage';
 import { CanaryProviderPage } from '../../components/CanaryProviderPage';
-import { useCanaryContextMenu } from '../../components/CanaryFileBrowserIntegration';
-import { renderHook, act } from '@testing-library/react';
+import type { IApiProviderConnectionDTO } from '../../services/burnbag-api-client';
 
 // ---------------------------------------------------------------------------
 // Test fixtures
 // ---------------------------------------------------------------------------
 
-function makeProvider(overrides: Partial<{ id: string; name: string; description: string; category: ProviderCategory }> = {}) {
+function makeProvider(
+  overrides: Partial<{
+    id: string;
+    name: string;
+    description: string;
+    category: ProviderCategory;
+  }> = {},
+) {
   const id = overrides.id ?? 'test-provider';
   return {
     id,
@@ -52,7 +70,11 @@ function makeProvider(overrides: Partial<{ id: string; name: string; description
           timestampFormat: 'iso8601' as const,
         },
       },
-      healthCheck: { path: '/health', method: 'GET' as const, expectedStatus: 200 },
+      healthCheck: {
+        path: '/health',
+        method: 'GET' as const,
+        expectedStatus: 200,
+      },
     },
     defaultLookbackMs: 86400000,
     minCheckIntervalMs: 3600000,
@@ -61,7 +83,14 @@ function makeProvider(overrides: Partial<{ id: string; name: string; description
   };
 }
 
-function makeConnection(overrides: Partial<{ id: string; providerId: string; status: string; providerDisplayName: string }> = {}) {
+function makeConnection(
+  overrides: Partial<{
+    id: string;
+    providerId: string;
+    status: string;
+    providerDisplayName: string;
+  }> = {},
+) {
   return {
     id: overrides.id ?? 'conn-1',
     userId: 'user-1',
@@ -74,34 +103,96 @@ function makeConnection(overrides: Partial<{ id: string; providerId: string; sta
   };
 }
 
-function createMockApiClient() {
+/** Mock of one client method; its signature comes from the real client. */
+type MockApiClient = ICanaryProviderApiClient & ICanaryFileBrowserApiClient;
+function mockMethod<K extends keyof MockApiClient>() {
+  return jest.fn<ReturnType<MockApiClient[K]>, Parameters<MockApiClient[K]>>();
+}
+function createMockApiClient(): jest.Mocked<MockApiClient> {
   return {
-    baseUrl: 'http://localhost/burnbag',
-    getMyConnections: jest.fn().mockResolvedValue([
-      makeConnection({ id: 'conn-1', providerId: 'github', providerDisplayName: 'GitHub' }),
-      makeConnection({ id: 'conn-2', providerId: 'fitbit', providerDisplayName: 'Fitbit', status: 'connected' }),
+    getMyConnections: mockMethod<'getMyConnections'>().mockResolvedValue([
+      makeConnection({
+        id: 'conn-1',
+        providerId: 'github',
+        providerDisplayName: 'GitHub',
+      }),
+      makeConnection({
+        id: 'conn-2',
+        providerId: 'fitbit',
+        providerDisplayName: 'Fitbit',
+        status: 'connected',
+      }),
     ]),
-    getMultiCanaryBindings: jest.fn().mockResolvedValue([]),
-    getWebhookEndpoints: jest.fn().mockResolvedValue([]),
-    createMultiCanaryBinding: jest.fn().mockResolvedValue({ id: 'binding-1' }),
-    deleteMultiCanaryBinding: jest.fn().mockResolvedValue(undefined),
-    getMultiCanaryBindingsForTarget: jest.fn().mockResolvedValue([]),
-    rotateWebhookSecret: jest.fn().mockResolvedValue({ newSecret: 'abc123' }),
-    updateWebhookIpAllowlist: jest.fn().mockResolvedValue(undefined),
-    sendTestWebhook: jest.fn().mockResolvedValue({ success: true, processingTimeMs: 50 }),
-    getWebhookDeliveryStats: jest.fn().mockResolvedValue({ totalReceived: 10, successfullyProcessed: 9, failedValidation: 1 }),
-    initiateOAuth: jest.fn().mockResolvedValue({ authorizationUrl: 'https://oauth.example.com/auth', state: 'state-1' }),
-    connectWithApiKey: jest.fn().mockResolvedValue(makeConnection()),
-    testConnection: jest.fn().mockResolvedValue({ success: true, status: 'connected', responseTimeMs: 100 }),
-    getProviderCatalog: jest.fn().mockResolvedValue([]),
-    getRecommendedProviders: jest.fn().mockResolvedValue([]),
-  } as unknown as jest.Mocked<any>;
+    getMultiCanaryBindingsForTarget:
+      mockMethod<'getMultiCanaryBindingsForTarget'>().mockResolvedValue([]),
+    getMultiCanaryBindings:
+      mockMethod<'getMultiCanaryBindings'>().mockResolvedValue([]),
+    getWebhookEndpoints: mockMethod<'getWebhookEndpoints'>().mockResolvedValue(
+      [],
+    ),
+    createMultiCanaryBinding:
+      mockMethod<'createMultiCanaryBinding'>().mockResolvedValue({
+        id: 'binding-1',
+        name: 'Test binding',
+        providerConnectionIds: [],
+        redundancyPolicy: 'any',
+        protocolAction: 'none',
+        canaryCondition: 'absence',
+        absenceThresholdHours: 24,
+        aggregateStatus: 'healthy',
+        targetNames: [],
+        providerCount: 0,
+        isActive: true,
+        createdAt: '2024-01-01T00:00:00Z',
+        updatedAt: '2024-01-01T00:00:00Z',
+      }),
+    deleteMultiCanaryBinding:
+      mockMethod<'deleteMultiCanaryBinding'>().mockResolvedValue(undefined),
+    rotateWebhookSecret: mockMethod<'rotateWebhookSecret'>().mockResolvedValue({
+      newSecret: 'abc123',
+    }),
+    updateWebhookIpAllowlist:
+      mockMethod<'updateWebhookIpAllowlist'>().mockResolvedValue(undefined),
+    sendTestWebhook: mockMethod<'sendTestWebhook'>().mockResolvedValue({
+      success: true,
+      processingTimeMs: 50,
+    }),
+    getWebhookDeliveryStats:
+      mockMethod<'getWebhookDeliveryStats'>().mockResolvedValue({
+        totalReceived: 10,
+        successfullyProcessed: 9,
+        failedValidation: 1,
+      }),
+    initiateOAuth: mockMethod<'initiateOAuth'>().mockResolvedValue({
+      authorizationUrl: 'https://oauth.example.com/auth',
+      state: 'state-1',
+    }),
+    connectWithApiKey:
+      mockMethod<'connectWithApiKey'>().mockResolvedValue(makeConnection()),
+    testConnection: mockMethod<'testConnection'>().mockResolvedValue({
+      success: true,
+      status: 'connected',
+      responseTimeMs: 100,
+    }),
+  };
 }
 
 const PROVIDERS = [
-  makeProvider({ id: 'github', name: 'GitHub', category: ProviderCategory.DEVELOPER }),
-  makeProvider({ id: 'fitbit', name: 'Fitbit', category: ProviderCategory.HEALTH_FITNESS }),
-  makeProvider({ id: 'spotify', name: 'Spotify', category: ProviderCategory.ENTERTAINMENT }),
+  makeProvider({
+    id: 'github',
+    name: 'GitHub',
+    category: ProviderCategory.DEVELOPER,
+  }),
+  makeProvider({
+    id: 'fitbit',
+    name: 'Fitbit',
+    category: ProviderCategory.HEALTH_FITNESS,
+  }),
+  makeProvider({
+    id: 'spotify',
+    name: 'Spotify',
+    category: ProviderCategory.ENTERTAINMENT,
+  }),
 ];
 
 function renderPage(overrides: Partial<ICanaryProviderPageProps> = {}) {
@@ -176,7 +267,9 @@ describe('CanaryProviderPage', () => {
     });
     fireEvent.click(screen.getByTestId('nav-multi-canary'));
     await waitFor(() => {
-      expect(screen.getByTestId('multi-canary-binding-panel')).toBeInTheDocument();
+      expect(
+        screen.getByTestId('multi-canary-binding-panel'),
+      ).toBeInTheDocument();
     });
   });
 
@@ -215,7 +308,9 @@ describe('CanaryProviderPage', () => {
     });
     fireEvent.click(screen.getByTestId('activation-flow-close'));
     await waitFor(() => {
-      expect(screen.queryByTestId('activation-flow-dialog')).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId('activation-flow-dialog'),
+      ).not.toBeInTheDocument();
     });
   });
 
@@ -238,6 +333,46 @@ describe('CanaryProviderPage', () => {
     await waitFor(() => {
       expect(apiClient.getWebhookEndpoints).toHaveBeenCalled();
     });
+  });
+
+  it('shows a loading indicator instead of panels until the initial fetch settles', async () => {
+    const apiClient = createMockApiClient();
+    let resolveConnections: (value: IApiProviderConnectionDTO[]) => void = () =>
+      undefined;
+    apiClient.getMyConnections.mockReturnValue(
+      new Promise<IApiProviderConnectionDTO[]>((resolve) => {
+        resolveConnections = resolve;
+      }),
+    );
+    render(
+      <CanaryProviderPage
+        apiClient={apiClient}
+        providerCatalog={PROVIDERS}
+        initialSection="marketplace"
+      />,
+    );
+
+    expect(screen.getByTestId('canary-content-loading')).toBeInTheDocument();
+    expect(screen.getByTestId('canary-content')).toHaveAttribute(
+      'aria-busy',
+      'true',
+    );
+    expect(
+      screen.queryByTestId('provider-marketplace'),
+    ).not.toBeInTheDocument();
+
+    resolveConnections([makeConnection({ providerId: 'github' })]);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('provider-marketplace')).toBeInTheDocument();
+    });
+    expect(
+      screen.queryByTestId('canary-content-loading'),
+    ).not.toBeInTheDocument();
+    expect(screen.getByTestId('canary-content')).toHaveAttribute(
+      'aria-busy',
+      'false',
+    );
   });
 });
 

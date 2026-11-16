@@ -175,7 +175,10 @@ export class BrightChainAuthenticationProvider<
         email: member.email.toString(),
         siteLanguage: settings['siteLanguage'] as TLanguage | undefined,
         timezone: (settings['timezone'] as string) ?? 'UTC',
-        lastLogin: publicProfile?.lastActive !== undefined ? brightDateToISO(publicProfile.lastActive) : undefined,
+        lastLogin:
+          publicProfile?.lastActive !== undefined
+            ? brightDateToISO(publicProfile.lastActive)
+            : undefined,
         // Carry the full Member object through so the middleware can
         // attach it to req.member without a redundant MemberStore lookup.
         member: member as unknown as Member<TID>,
@@ -419,11 +422,15 @@ export class BrightChainAuthenticationProvider<
           (dbSettings['directChallenge'] as boolean) ??
           (settings['directChallenge'] as boolean) ??
           false,
-        lastLogin: publicProfile?.lastActive !== undefined ? brightDateToISO(publicProfile.lastActive) : undefined,
+        lastLogin:
+          publicProfile?.lastActive !== undefined
+            ? brightDateToISO(publicProfile.lastActive)
+            : undefined,
         ...(dbSettings['brightDateDisplay']
           ? {
-              brightDateDisplay:
-                dbSettings['brightDateDisplay'] as BrightDateDisplayMode,
+              brightDateDisplay: dbSettings[
+                'brightDateDisplay'
+              ] as BrightDateDisplayMode,
             }
           : {}),
         member,

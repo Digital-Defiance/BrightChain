@@ -11,6 +11,7 @@
  */
 
 import {
+  BlockId,
   BlockSize,
   dateToBrightDate,
   DurabilityLevel,
@@ -120,9 +121,9 @@ describe('DiskBlockAsyncStore Expiration Property Tests', () => {
               // Verify only blocks with past expiration are returned
               for (const { blockId, shouldBeExpired } of storedBlocks) {
                 if (shouldBeExpired) {
-                  expect(expiredBlockIds.has(blockId)).toBe(true);
+                  expect(expiredBlockIds.has(blockId as BlockId)).toBe(true);
                 } else {
-                  expect(expiredBlockIds.has(blockId)).toBe(false);
+                  expect(expiredBlockIds.has(blockId as BlockId)).toBe(false);
                 }
               }
             } finally {
@@ -215,9 +216,9 @@ describe('DiskBlockAsyncStore Expiration Property Tests', () => {
             try {
               const block = new RawDataBlock(blockSize, data);
               const blockId = block.idChecksum.toHex();
-              const expiresAt = dateToBrightDate(new Date(
-                Date.now() + hoursInFuture * 60 * 60 * 1000,
-              ));
+              const expiresAt = dateToBrightDate(
+                new Date(Date.now() + hoursInFuture * 60 * 60 * 1000),
+              );
 
               await store.setData(block, {
                 durabilityLevel: DurabilityLevel.Ephemeral,
@@ -266,9 +267,9 @@ describe('DiskBlockAsyncStore Expiration Property Tests', () => {
             try {
               const block = new RawDataBlock(blockSize, data);
               const blockId = block.idChecksum.toHex();
-              const expiresAt = dateToBrightDate(new Date(
-                Date.now() - hoursInPast * 60 * 60 * 1000,
-              ));
+              const expiresAt = dateToBrightDate(
+                new Date(Date.now() - hoursInPast * 60 * 60 * 1000),
+              );
 
               await store.setData(block, {
                 durabilityLevel: DurabilityLevel.Ephemeral,

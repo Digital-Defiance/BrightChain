@@ -20,7 +20,6 @@ import {
 } from '@brightchain/brightchain-lib';
 import {
   EmailString,
-  HexString,
   IMemberWithMnemonic,
   Member,
   MemberType,
@@ -121,7 +120,7 @@ describe('BlockDocumentStore Encrypted Document Property Tests', () => {
 
             // Create 3 members (minimum for meaningful BrightTrust)
             const memberData: IMemberWithMnemonic<GuidV4Buffer>[] = [];
-            const memberIds: HexString[] = [];
+            const memberIds: GuidV4Buffer[] = [];
 
             for (let i = 0; i < 3; i++) {
               const uniqueSuffix = `${timestamp}${random}${i}`;
@@ -215,7 +214,7 @@ describe('BlockDocumentStore Encrypted Document Property Tests', () => {
 
             // Create 3 members
             const memberData: IMemberWithMnemonic<GuidV4Buffer>[] = [];
-            const memberIds: HexString[] = [];
+            const memberIds: GuidV4Buffer[] = [];
 
             for (let i = 0; i < 3; i++) {
               const uniqueSuffix = `${timestamp}${random}${i}`;

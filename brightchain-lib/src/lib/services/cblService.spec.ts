@@ -11,12 +11,14 @@ import { BlockEncryptionType } from '../enumerations/blockEncryptionType';
 import { BlockSize } from '../enumerations/blockSize';
 import { CblError } from '../errors/cblError';
 import { Checksum } from '../types/checksum';
+import {
+  brightDateNow,
+  dateToBrightDate,
+} from '../utils/brightDateConversions';
 import { BlockCapacityCalculator } from './blockCapacity.service';
 import { CBLService } from './cblService';
 import { ChecksumService } from './checksum.service';
 import { ServiceProvider } from './service.provider';
-import { brightDateNow, dateToBrightDate, brightDateToDate } from '../utils/brightDateConversions';
-import type { BrightDateTimestamp } from '../types/brightDateTimestamp';
 
 describe('CBLService', () => {
   let creator: Member;

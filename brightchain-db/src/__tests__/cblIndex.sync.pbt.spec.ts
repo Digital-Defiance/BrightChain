@@ -10,7 +10,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import type { BlockId, ICBLIndexEntry } from '@brightchain/brightchain-lib';
-import { brightDateNow, CBLVisibility, dateToBrightDate } from '@brightchain/brightchain-lib';
+import { CBLVisibility, dateToBrightDate } from '@brightchain/brightchain-lib';
 import * as fc from 'fast-check';
 import { CBLIndex } from '../lib/cblIndex';
 import { BrightDb } from '../lib/database';
@@ -252,10 +252,12 @@ describe('CBLIndex Cross-Node Sync Property-Based Tests', () => {
         blockIdPairArb,
         identifierArb.map((s) => `magnet:?softdel=${s}`),
         blockSizeArb,
-        fc.date({
-          min: new Date('2025-01-01T00:00:00Z'),
-          max: new Date('2025-12-31T23:59:59Z'),
-        }).map((d) => dateToBrightDate(d)),
+        fc
+          .date({
+            min: new Date('2025-01-01T00:00:00Z'),
+            max: new Date('2025-12-31T23:59:59Z'),
+          })
+          .map((d) => dateToBrightDate(d)),
         async (ids, magnetUrl, blockSize, deletedAt) => {
           const { index } = makeCBLIndex();
 

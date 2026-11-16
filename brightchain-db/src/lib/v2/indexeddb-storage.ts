@@ -10,7 +10,6 @@
  */
 import { digestPayload, encodeMetadata } from './codec';
 import type { BrightDbV2KeyRing } from './encryption';
-import { BrightDbV2WebCipher, WEB_ENCRYPTION_MARKER, wrapDecryptionError } from './web-cipher';
 import {
   BrightDbV2MissingBlockError,
   BrightDbV2StorageError,
@@ -18,6 +17,11 @@ import {
   type BrightDbV2GarbageStorage,
   type BrightDbV2Storage,
 } from './storage';
+import {
+  BrightDbV2WebCipher,
+  WEB_ENCRYPTION_MARKER,
+  wrapDecryptionError,
+} from './web-cipher';
 
 const BLOCKS = 'blocks';
 const META = 'meta';
@@ -38,7 +42,8 @@ function done(tx: IDBTransaction): Promise<void> {
   return new Promise((resolve, reject) => {
     tx.oncomplete = () => resolve();
     tx.onerror = () => reject(tx.error);
-    tx.onabort = () => reject(tx.error ?? new Error('IndexedDB transaction aborted'));
+    tx.onabort = () =>
+      reject(tx.error ?? new Error('IndexedDB transaction aborted'));
   });
 }
 
@@ -58,7 +63,9 @@ export interface IndexedDbV2Options {
   encryption?: { key: Uint8Array } | { keyRing: BrightDbV2KeyRing };
 }
 
-export class IndexedDbV2Storage implements BrightDbV2Storage, BrightDbV2GarbageStorage {
+export class IndexedDbV2Storage
+  implements BrightDbV2Storage, BrightDbV2GarbageStorage
+{
   private readonly pending = new Map<string, Uint8Array>();
   private pendingBytes = 0;
   private chain: Promise<unknown> = Promise.resolve();
@@ -76,11 +83,19 @@ export class IndexedDbV2Storage implements BrightDbV2Storage, BrightDbV2GarbageS
   }
 
   /** Open (and, unless `create` is false, create) the database stored under `name`. */
-  static async open(name: string, options: IndexedDbV2Options = {}): Promise<IndexedDbV2Storage> {
+  static async open(
+    name: string,
+    options: IndexedDbV2Options = {},
+  ): Promise<IndexedDbV2Storage> {
     const factory = options.indexedDB ?? globalThis.indexedDB;
-    if (!factory) throw new BrightDbV2StorageError('IndexedDB is not available here');
+    if (!factory)
+      throw new BrightDbV2StorageError('IndexedDB is not available here');
     const encryption = options.encryption;
-    const cipher = encryption ? await BrightDbV2WebCipher.create('keyRing' in encryption ? encryption.keyRing : encryption.key) : null;
+    const cipher = encryption
+      ? await BrightDbV2WebCipher.create(
+          'keyRing' in encryption ? encryption.keyRing : encryption.key,
+        )
+      : null;
     const opening = factory.open(`brightdb-v2:${name}`, DB_VERSION);
     opening.onupgradeneeded = () => {
       const stores = opening.result.objectStoreNames;
@@ -91,28 +106,39 @@ export class IndexedDbV2Storage implements BrightDbV2Storage, BrightDbV2GarbageS
     const db = await request(opening);
     // Let another tab upgrade the database instead of blocking it.
     db.onversionchange = () => db.close();
-    const read = <T>(key: string) => request<T | undefined>(db.transaction(META, 'readonly').objectStore(META).get(key));
+    const read = <T>(key: string) =>
+      request<T | undefined>(
+        db.transaction(META, 'readonly').objectStore(META).get(key),
+      );
     let writerId = await read<Uint8Array>('writerId');
     let head = await read<string | Uint8Array>('head');
     if (writerId && head) {
       const marker = await read<string>('encryption');
       if (marker !== undefined && marker !== WEB_ENCRYPTION_MARKER) {
         db.close();
-        throw new BrightDbV2StorageError(`Unsupported BrightDB encryption profile: ${name}`);
+        throw new BrightDbV2StorageError(
+          `Unsupported BrightDB encryption profile: ${name}`,
+        );
       }
       if (marker !== undefined && !cipher) {
         db.close();
-        throw new BrightDbV2StorageError(`BrightDB database is encrypted; open it with an encryption key: ${name}`);
+        throw new BrightDbV2StorageError(
+          `BrightDB database is encrypted; open it with an encryption key: ${name}`,
+        );
       }
       if (marker === undefined && cipher) {
         db.close();
-        throw new BrightDbV2StorageError(`BrightDB database is not encrypted; open it without an encryption key: ${name}`);
+        throw new BrightDbV2StorageError(
+          `BrightDB database is not encrypted; open it without an encryption key: ${name}`,
+        );
       }
     }
     if (!writerId || !head) {
       if (options.create === false) {
         db.close();
-        throw new BrightDbV2StorageError(`No BrightDB v2 database named ${name}`);
+        throw new BrightDbV2StorageError(
+          `No BrightDB v2 database named ${name}`,
+        );
       }
       // Initialize under a lock so two tabs opening at once do not both create one.
       await IndexedDbV2Storage.withNameLock(name, async () => {
@@ -122,7 +148,9 @@ export class IndexedDbV2Storage implements BrightDbV2Storage, BrightDbV2GarbageS
         writerId = globalThis.crypto.getRandomValues(new Uint8Array(16));
         const root = encodeMetadata({
           kind: 'database',
-          databaseId: Buffer.from(globalThis.crypto.getRandomValues(new Uint8Array(16))).toString('hex'),
+          databaseId: Buffer.from(
+            globalThis.crypto.getRandomValues(new Uint8Array(16)),
+          ).toString('hex'),
           clock: 0n,
           catalog: null,
         });
@@ -131,16 +159,24 @@ export class IndexedDbV2Storage implements BrightDbV2Storage, BrightDbV2GarbageS
         const blockName = cipher ? await cipher.physicalName(digest) : digest;
         const storedRoot = cipher ? await cipher.seal(digest, root) : root;
         const storedHead = cipher ? await cipher.sealHead(digest) : digest;
-        const tx = db.transaction([BLOCKS, META, TIMES], 'readwrite', { durability: 'strict' });
+        const tx = db.transaction([BLOCKS, META, TIMES], 'readwrite', {
+          durability: 'strict',
+        });
         tx.objectStore(BLOCKS).put(storedRoot, blockName);
         tx.objectStore(TIMES).put(Date.now(), blockName);
         tx.objectStore(META).put(writerId, 'writerId');
-        if (cipher) tx.objectStore(META).put(WEB_ENCRYPTION_MARKER, 'encryption');
+        if (cipher)
+          tx.objectStore(META).put(WEB_ENCRYPTION_MARKER, 'encryption');
         tx.objectStore(META).put(storedHead, 'head');
         await done(tx);
       });
     }
-    const storage = new IndexedDbV2Storage(db, name, writerId as Uint8Array, cipher);
+    const storage = new IndexedDbV2Storage(
+      db,
+      name,
+      writerId as Uint8Array,
+      cipher,
+    );
     if (cipher) await storage.readBlock(await storage.readHead()); // fails early on a wrong key
     return storage;
   }
@@ -150,15 +186,25 @@ export class IndexedDbV2Storage implements BrightDbV2Storage, BrightDbV2GarbageS
     this.db.close();
   }
 
-  private static async withNameLock<T>(name: string, fn: () => Promise<T>): Promise<T> {
+  private static async withNameLock<T>(
+    name: string,
+    fn: () => Promise<T>,
+  ): Promise<T> {
     const locks = (globalThis.navigator as Navigator | undefined)?.locks;
     if (!locks) return fn();
-    return locks.request(`brightdb-v2:${name}`, { mode: 'exclusive' }, fn) as Promise<T>;
+    return locks.request(
+      `brightdb-v2:${name}`,
+      { mode: 'exclusive' },
+      fn,
+    ) as Promise<T>;
   }
 
   async readHead(): Promise<string> {
-    const head = await request<string | Uint8Array | undefined>(this.db.transaction(META, 'readonly').objectStore(META).get('head'));
-    if (!head) throw new BrightDbV2StorageError(`No BrightDB v2 head in ${this.name}`);
+    const head = await request<string | Uint8Array | undefined>(
+      this.db.transaction(META, 'readonly').objectStore(META).get('head'),
+    );
+    if (!head)
+      throw new BrightDbV2StorageError(`No BrightDB v2 head in ${this.name}`);
     if (!this.cipher) return head as string;
     try {
       return await this.cipher.openHead(head as Uint8Array);
@@ -176,33 +222,51 @@ export class IndexedDbV2Storage implements BrightDbV2Storage, BrightDbV2GarbageS
     let bytes: Uint8Array | undefined = buffered;
     if (!bytes) {
       const stored = await request<Uint8Array | undefined>(
-        this.db.transaction(BLOCKS, 'readonly').objectStore(BLOCKS).get(await this.nameFor(digest)),
+        this.db
+          .transaction(BLOCKS, 'readonly')
+          .objectStore(BLOCKS)
+          .get(await this.nameFor(digest)),
       );
       if (!stored) throw new BrightDbV2MissingBlockError(digest);
       if (this.cipher) {
         try {
           bytes = await this.cipher.open(digest, stored);
         } catch (error) {
-          return wrapDecryptionError(error, `BrightDB v2 block cannot be decrypted: ${digest}`);
+          return wrapDecryptionError(
+            error,
+            `BrightDB v2 block cannot be decrypted: ${digest}`,
+          );
         }
       } else {
         bytes = stored;
       }
     }
-    if (digestPayload(bytes) !== digest) throw new BrightDbV2StorageError(`BrightDB block digest mismatch: ${digest}`);
+    if (digestPayload(bytes) !== digest)
+      throw new BrightDbV2StorageError(
+        `BrightDB block digest mismatch: ${digest}`,
+      );
     return bytes;
   }
 
   async hasBlock(digest: string): Promise<boolean> {
     if (this.pending.has(digest)) return true;
-    return (await request(this.db.transaction(BLOCKS, 'readonly').objectStore(BLOCKS).count(await this.nameFor(digest)))) > 0;
+    return (
+      (await request(
+        this.db
+          .transaction(BLOCKS, 'readonly')
+          .objectStore(BLOCKS)
+          .count(await this.nameFor(digest)),
+      )) > 0
+    );
   }
 
   async nameOf(digest: string): Promise<string> {
     return this.nameFor(digest);
   }
 
-  async listBlocks(): Promise<Array<{ name: string; bytes: number; modifiedMs: number }>> {
+  async listBlocks(): Promise<
+    Array<{ name: string; bytes: number; modifiedMs: number }>
+  > {
     const tx = this.db.transaction([BLOCKS, TIMES], 'readonly');
     const times = new Map<string, number>();
     const timeKeys = await request(tx.objectStore(TIMES).getAllKeys());
@@ -216,7 +280,11 @@ export class IndexedDbV2Storage implements BrightDbV2Storage, BrightDbV2GarbageS
         const at = cursor.result;
         if (!at) return resolve();
         const name = String(at.key);
-        out.push({ name, bytes: (at.value as Uint8Array).length, modifiedMs: times.get(name) ?? 0 });
+        out.push({
+          name,
+          bytes: (at.value as Uint8Array).length,
+          modifiedMs: times.get(name) ?? 0,
+        });
         at.continue();
       };
     });
@@ -226,7 +294,9 @@ export class IndexedDbV2Storage implements BrightDbV2Storage, BrightDbV2GarbageS
   /** Delete blocks by stored name. Call only inside `withWriteLock`. */
   async deleteBlocks(names: string[]): Promise<void> {
     if (names.length === 0) return;
-    const tx = this.db.transaction([BLOCKS, TIMES], 'readwrite', { durability: 'strict' });
+    const tx = this.db.transaction([BLOCKS, TIMES], 'readwrite', {
+      durability: 'strict',
+    });
     for (const name of names) {
       tx.objectStore(BLOCKS).delete(name);
       tx.objectStore(TIMES).delete(name);
@@ -239,10 +309,15 @@ export class IndexedDbV2Storage implements BrightDbV2Storage, BrightDbV2GarbageS
     // Name and seal first: a transaction must not sit idle while we wait on WebCrypto.
     const prepared: Array<{ name: string; stored: Uint8Array }> = [];
     for (const [digest, bytes] of this.pending) {
-      prepared.push({ name: await this.nameFor(digest), stored: this.cipher ? await this.cipher.seal(digest, bytes) : bytes });
+      prepared.push({
+        name: await this.nameFor(digest),
+        stored: this.cipher ? await this.cipher.seal(digest, bytes) : bytes,
+      });
     }
     const now = Date.now();
-    const tx = this.db.transaction([BLOCKS, TIMES], 'readwrite', { durability: 'strict' });
+    const tx = this.db.transaction([BLOCKS, TIMES], 'readwrite', {
+      durability: 'strict',
+    });
     for (const { name, stored } of prepared) {
       tx.objectStore(BLOCKS).put(stored, name);
       tx.objectStore(TIMES).put(now, name);
@@ -252,7 +327,9 @@ export class IndexedDbV2Storage implements BrightDbV2Storage, BrightDbV2GarbageS
     this.pendingBytes = 0;
   }
 
-  withWriteLock<T>(write: (writer: BrightDbV2DiskWriter) => Promise<T>): Promise<T> {
+  withWriteLock<T>(
+    write: (writer: BrightDbV2DiskWriter) => Promise<T>,
+  ): Promise<T> {
     const scope = async (): Promise<T> => {
       const writer: BrightDbV2DiskWriter = {
         writeBlock: async (payload) => {
@@ -270,9 +347,14 @@ export class IndexedDbV2Storage implements BrightDbV2Storage, BrightDbV2GarbageS
         syncBlocks: () => this.flush(),
         publishHead: async (digest) => {
           await this.flush();
-          if (!(await this.hasBlock(digest))) throw new BrightDbV2MissingBlockError(digest);
-          const storedHead = this.cipher ? await this.cipher.sealHead(digest) : digest;
-          const tx = this.db.transaction(META, 'readwrite', { durability: 'strict' });
+          if (!(await this.hasBlock(digest)))
+            throw new BrightDbV2MissingBlockError(digest);
+          const storedHead = this.cipher
+            ? await this.cipher.sealHead(digest)
+            : digest;
+          const tx = this.db.transaction(META, 'readwrite', {
+            durability: 'strict',
+          });
           tx.objectStore(META).put(storedHead, 'head');
           await done(tx);
         },
@@ -285,7 +367,9 @@ export class IndexedDbV2Storage implements BrightDbV2Storage, BrightDbV2GarbageS
         this.pendingBytes = 0;
       }
     };
-    const run = this.chain.then(() => IndexedDbV2Storage.withNameLock(this.name, scope));
+    const run = this.chain.then(() =>
+      IndexedDbV2Storage.withNameLock(this.name, scope),
+    );
     this.chain = run.catch(() => undefined);
     return run;
   }

@@ -15,10 +15,10 @@ import type {
 } from '@brightchain/brightchain-lib';
 import {
   BlockSize,
+  brightDateNow,
   initializeBrightChain,
   PooledMemoryBlockStore,
   resetInitialization,
-  brightDateNow,
   WriteMode,
 } from '@brightchain/brightchain-lib';
 import { sha256 } from '@noble/hashes/sha256';

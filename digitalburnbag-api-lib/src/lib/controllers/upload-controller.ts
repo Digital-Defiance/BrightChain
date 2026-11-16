@@ -416,7 +416,7 @@ export class UploadController<
   private async handleReceiveChunk(
     req: ExpressRequest,
   ): Promise<IStatusCodeResponse<BurnbagResponse>> {
-    const sessionId = this.safeParseId(req.params.sessionId as string);
+    const sessionId = this.safeParseId(req.params['sessionId'] as string);
     if (!sessionId)
       return {
         statusCode: 400,
@@ -429,7 +429,7 @@ export class UploadController<
           ),
         } as unknown as BurnbagResponse,
       };
-    const chunkIndex = parseInt(req.params.index as string, 10);
+    const chunkIndex = parseInt(req.params['index'] as string, 10);
     const checksum = req.headers['x-chunk-checksum'] as string;
     const data = req.body as Uint8Array;
     const receipt = await this.deps.uploadService.receiveChunk(
@@ -447,7 +447,7 @@ export class UploadController<
   private async handleFinalize(
     req: ExpressRequest,
   ): Promise<IStatusCodeResponse<BurnbagResponse>> {
-    const sessionId = this.safeParseId(req.params.sessionId as string);
+    const sessionId = this.safeParseId(req.params['sessionId'] as string);
     if (!sessionId)
       return {
         statusCode: 400,
@@ -487,7 +487,7 @@ export class UploadController<
   private async handleGetStatus(
     req: ExpressRequest,
   ): Promise<IStatusCodeResponse<BurnbagResponse>> {
-    const sessionId = this.safeParseId(req.params.sessionId as string);
+    const sessionId = this.safeParseId(req.params['sessionId'] as string);
     if (!sessionId)
       return {
         statusCode: 400,
@@ -537,7 +537,7 @@ export class UploadController<
         } as unknown as BurnbagResponse,
       };
     }
-    const sessionId = this.safeParseId(req.params.sessionId as string);
+    const sessionId = this.safeParseId(req.params['sessionId'] as string);
     if (!sessionId) {
       return {
         statusCode: 400,
@@ -649,7 +649,7 @@ export class UploadController<
         } as unknown as BurnbagResponse,
       };
     }
-    const sessionId = this.safeParseId(req.params.sessionId as string);
+    const sessionId = this.safeParseId(req.params['sessionId'] as string);
     if (!sessionId) {
       return {
         statusCode: 400,
@@ -746,7 +746,7 @@ export class UploadController<
         } as unknown as BurnbagResponse,
       };
     }
-    const sessionId = this.safeParseId(req.params.sessionId as string);
+    const sessionId = this.safeParseId(req.params['sessionId'] as string);
     if (!sessionId) {
       return {
         statusCode: 400,

@@ -20,6 +20,8 @@ import {
   AvailabilityServiceConfig,
   AvailabilityState,
   AvailabilityStatistics,
+  BlockId,
+  brightDateNow,
   IAvailabilityService,
   ILocationRecord,
   IReconciliationService,
@@ -30,7 +32,6 @@ import {
   ReconciliationEventHandler,
   ReconciliationResult,
   SyncVectorEntry,
-  brightDateNow,
 } from '@brightchain/brightchain-lib';
 import { ApiErrorResponse } from '@digitaldefiance/node-express-suite';
 import * as fc from 'fast-check';
@@ -105,7 +106,7 @@ const createMockAvailabilityService = (
     ): Promise<LocationQueryResult> => {
       const locations = blockLocations.get(blockId) || [];
       return {
-        blockId,
+        blockId: blockId as BlockId,
         state:
           locations.length > 0
             ? AvailabilityState.Local

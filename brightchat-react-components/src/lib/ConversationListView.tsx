@@ -10,7 +10,12 @@ import type {
   IConversation,
   IPaginatedResult,
 } from '@brightchain/brightchain-lib';
-import { brightDateNow, brightDateToDate, dateToBrightDate, toBrightDateString } from '@brightchain/brightchain-lib';
+import {
+  brightDateNow,
+  brightDateToDate,
+  dateToBrightDate,
+  toBrightDateString,
+} from '@brightchain/brightchain-lib';
 import { useAuth } from '@digitaldefiance/express-suite-react-components';
 import AddIcon from '@mui/icons-material/Add';
 import TagIcon from '@mui/icons-material/Tag';
@@ -35,7 +40,7 @@ import {
   useRef,
   useState,
 } from 'react';
-import { useNavigate, useOutletContext } from 'react-router-dom';
+import { useNavigate, useOutletContext } from 'react-router';
 
 import { BrightChatStrings } from '@brightchain/brightchat-lib';
 import { useI18n } from '@digitaldefiance/express-suite-react-components';
@@ -79,7 +84,12 @@ const INITIAL_STATE: ConversationListState = {
  * Format a BrightDateTimestamp (number), Date, or date-string into a short human-readable timestamp.
  */
 function formatTimestamp(date: number | Date | string): string {
-  const d = typeof date === 'number' ? brightDateToDate(date) : typeof date === 'string' ? new Date(date) : date;
+  const d =
+    typeof date === 'number'
+      ? brightDateToDate(date)
+      : typeof date === 'string'
+        ? new Date(date)
+        : date;
   const bdValue = typeof date === 'number' ? date : dateToBrightDate(d);
   const nowBd = brightDateNow();
   const diffDays = Math.floor(nowBd - bdValue);
@@ -96,7 +106,10 @@ function formatTimestamp(date: number | Date | string): string {
   if (diffDays < 7) {
     return d.toLocaleDateString(undefined, { weekday: 'short' });
   }
-  const localeStr = d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  const localeStr = d.toLocaleDateString(undefined, {
+    month: 'short',
+    day: 'numeric',
+  });
   const bd = toBrightDateString(d, 3);
   return bd ? `${localeStr} (BD ${bd})` : localeStr;
 }
@@ -182,7 +195,9 @@ const ConversationListView: FC<ConversationListViewProps> = ({
             : result.items;
 
           // Sort by lastMessageAt descending (most recent first)
-          const sorted = [...merged].sort((a, b) => b.lastMessageAt - a.lastMessageAt);
+          const sorted = [...merged].sort(
+            (a, b) => b.lastMessageAt - a.lastMessageAt,
+          );
 
           return {
             ...prev,

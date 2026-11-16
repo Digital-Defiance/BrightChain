@@ -175,7 +175,7 @@ describe('Pool isolation e2e', () => {
       // Pool A sees its data
       const a = await dbA2.collection('secrets').findById('s1');
       expect(a).not.toBeNull();
-      expect((a as any).data).toBe('pool-a-secret');
+      expect(a?.['data']).toBe('pool-a-secret');
 
       // Pool A does NOT see pool B's data
       expect(await dbA2.collection('secrets').findById('s2')).toBeNull();
@@ -183,7 +183,7 @@ describe('Pool isolation e2e', () => {
       // Pool B sees its data
       const b = await dbB2.collection('secrets').findById('s2');
       expect(b).not.toBeNull();
-      expect((b as any).data).toBe('pool-b-secret');
+      expect(b?.['data']).toBe('pool-b-secret');
 
       // Pool B does NOT see pool A's data
       expect(await dbB2.collection('secrets').findById('s1')).toBeNull();
@@ -248,10 +248,10 @@ describe('Pool isolation e2e', () => {
       });
       await dbB2.connect();
 
-      expect(((await dbA2.collection('shared').findById('x')) as any).val).toBe(
+      expect((await dbA2.collection('shared').findById('x'))?.['val']).toBe(
         'alpha-v2',
       );
-      expect(((await dbB2.collection('shared').findById('x')) as any).val).toBe(
+      expect((await dbB2.collection('shared').findById('x'))?.['val']).toBe(
         'beta',
       );
     });
@@ -390,7 +390,7 @@ describe('Pool isolation e2e', () => {
       for (let i = 0; i < 15; i++) {
         const doc = await db2.collection(`col-${i}`).findById(`d${i}`);
         expect(doc).not.toBeNull();
-        expect((doc as any).v).toBe(i);
+        expect(doc?.['v']).toBe(i);
       }
     });
 

@@ -201,8 +201,12 @@ export function deserializeAclDocument(
     ),
     scope: data.scope,
     version: data.version,
-    createdAt: normalizeToBrightDate(data.createdAt as unknown as string | number),
-    updatedAt: normalizeToBrightDate(data.updatedAt as unknown as string | number),
+    createdAt: normalizeToBrightDate(
+      data.createdAt as unknown as string | number,
+    ),
+    updatedAt: normalizeToBrightDate(
+      data.updatedAt as unknown as string | number,
+    ),
     creatorPublicKey: new Uint8Array(Buffer.from(data.creatorPublicKey, 'hex')),
     creatorSignature: new Uint8Array(Buffer.from(data.creatorSignature, 'hex')),
     previousVersionBlockId: data.previousVersionBlockId,

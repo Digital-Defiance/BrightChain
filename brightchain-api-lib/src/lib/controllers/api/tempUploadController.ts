@@ -631,9 +631,7 @@ export class TempUploadController<
           const start = i * chunkSize;
           const end = Math.min(start + chunkSize, fileBuffer.length);
           const chunkData = new Uint8Array(fileBuffer.subarray(start, end));
-          const checksum = createHash('sha256')
-            .update(chunkData)
-            .digest('hex');
+          const checksum = createHash('sha256').update(chunkData).digest('hex');
           await this.deps.uploadService.receiveChunk(
             session.id,
             i,

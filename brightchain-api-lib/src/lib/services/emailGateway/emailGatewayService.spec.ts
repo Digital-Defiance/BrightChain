@@ -17,6 +17,7 @@ import type {
   IGossipService,
 } from '@brightchain/brightchain-lib';
 import {
+  brightDateNow,
   createMailbox,
   EmailMessageService,
   OutboundDeliveryStatus,
@@ -34,6 +35,15 @@ function makeConfig(
 ): IEmailGatewayConfig {
   return {
     canonicalDomain: 'brightchain.org',
+    testMode: {
+      enabled: false,
+      catchallEnabled: false,
+      catchallDirectory: '',
+      skipDkim: false,
+      skipSpamFilter: false,
+      acceptAllRecipients: false,
+      testRecipients: [],
+    },
     postfixHost: 'localhost',
     postfixPort: 25,
     dkimKeyPath: '/etc/dkim/private.key',
@@ -213,7 +223,7 @@ function makeAnnouncement(
     type: 'add',
     blockId: 'block-1' as never,
     nodeId: 'node-1',
-    timestamp: new Date(),
+    timestamp: brightDateNow(),
     ttl: 3,
     messageDelivery: {
       messageId,

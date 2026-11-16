@@ -4,16 +4,16 @@
  * Feature: canary-provider-expansion
  * Requirements: 10.4, 10.5, 10.8, 17.3, 17.4, 17.5, 17.6, 17.7
  */
-import { HeartbeatSignalType } from '@brightchain/digitalburnbag-lib';
 import type { IWebhookEndpointBase } from '@brightchain/digitalburnbag-lib';
+import { HeartbeatSignalType } from '@brightchain/digitalburnbag-lib';
+import type { BrightDBWebhookEndpointRepository } from '../../collections/webhook-endpoint-collection';
 import {
+  CONSECUTIVE_FAILURE_THRESHOLD,
+  DEFAULT_RATE_LIMIT_PER_MINUTE,
   WebhookEndpointService,
   computeHmacSignature,
   generateWebhookSecret,
-  CONSECUTIVE_FAILURE_THRESHOLD,
-  DEFAULT_RATE_LIMIT_PER_MINUTE,
 } from '../../services/webhook-endpoint-service';
-import type { BrightDBWebhookEndpointRepository } from '../../collections/webhook-endpoint-collection';
 
 // ---------------------------------------------------------------------------
 // In-memory repository (same pattern as property test file)
@@ -74,7 +74,8 @@ function validSig(payload: Buffer, secret: string): string {
 }
 
 const SAMPLE_PAYLOAD = Buffer.from('{"data":[{"id":"evt-1"}]}', 'utf8');
-const BAD_SIG = 'sha256=0000000000000000000000000000000000000000000000000000000000000000';
+const BAD_SIG =
+  'sha256=0000000000000000000000000000000000000000000000000000000000000000';
 
 beforeEach(() => {
   idCounter = 0;
@@ -87,7 +88,11 @@ beforeEach(() => {
 describe('WebhookEndpointService — invalid signature (Req 10.5)', () => {
   it('returns success=false with "Invalid signature" error on bad HMAC', async () => {
     const { service } = makeService();
-    const endpoint = await service.createEndpoint('conn-1', 'provider-test', 'user-1');
+    const endpoint = await service.createEndpoint(
+      'conn-1',
+      'provider-test',
+      'user-1',
+    );
 
     const result = await service.processWebhook(
       'conn-1',
@@ -119,7 +124,11 @@ describe('WebhookEndpointService — invalid signature (Req 10.5)', () => {
 
   it('returns success=true when signature is correct', async () => {
     const { service } = makeService();
-    const endpoint = await service.createEndpoint('conn-3', 'provider-test', 'user-1');
+    const endpoint = await service.createEndpoint(
+      'conn-3',
+      'provider-test',
+      'user-1',
+    );
 
     const result = await service.processWebhook(
       'conn-3',
@@ -135,7 +144,11 @@ describe('WebhookEndpointService — invalid signature (Req 10.5)', () => {
   it('increments failedValidation stat on invalid signature', async () => {
     const repo = createInMemoryEndpointRepository();
     const { service } = makeService(repo);
-    const endpoint = await service.createEndpoint('conn-4', 'provider-test', 'user-1');
+    const endpoint = await service.createEndpoint(
+      'conn-4',
+      'provider-test',
+      'user-1',
+    );
 
     await service.processWebhook(
       'conn-4',
@@ -161,7 +174,11 @@ describe('WebhookEndpointService — rate limit exceeded (Req 17.3)', () => {
     const { service } = makeService(repo);
 
     // Create endpoint with a very low rate limit (2 per minute)
-    const endpoint = await service.createEndpoint('conn-rl', 'provider-test', 'user-1');
+    const endpoint = await service.createEndpoint(
+      'conn-rl',
+      'provider-test',
+      'user-1',
+    );
     // Manually set a low rate limit in the repo
     await repo.updateEndpoint(endpoint.id, { rateLimitPerMinute: 2 });
 
@@ -170,11 +187,29 @@ describe('WebhookEndpointService — rate limit exceeded (Req 17.3)', () => {
     const headers = { 'X-Hub-Signature-256': sig };
 
     // First two requests should succeed
-    const r1 = await service.processWebhook('conn-rl', endpoint.secret, headers, payload, '127.0.0.1');
-    const r2 = await service.processWebhook('conn-rl', endpoint.secret, headers, payload, '127.0.0.1');
+    const r1 = await service.processWebhook(
+      'conn-rl',
+      endpoint.secret,
+      headers,
+      payload,
+      '127.0.0.1',
+    );
+    const r2 = await service.processWebhook(
+      'conn-rl',
+      endpoint.secret,
+      headers,
+      payload,
+      '127.0.0.1',
+    );
 
     // Third request should be rate-limited
-    const r3 = await service.processWebhook('conn-rl', endpoint.secret, headers, payload, '127.0.0.1');
+    const r3 = await service.processWebhook(
+      'conn-rl',
+      endpoint.secret,
+      headers,
+      payload,
+      '127.0.0.1',
+    );
 
     expect(r1.success).toBe(true);
     expect(r2.success).toBe(true);
@@ -184,7 +219,11 @@ describe('WebhookEndpointService — rate limit exceeded (Req 17.3)', () => {
 
   it('default rate limit is 100 per minute', async () => {
     const { service } = makeService();
-    const endpoint = await service.createEndpoint('conn-rl-default', 'provider-test', 'user-1');
+    const endpoint = await service.createEndpoint(
+      'conn-rl-default',
+      'provider-test',
+      'user-1',
+    );
     expect(endpoint.rateLimitPerMinute).toBe(DEFAULT_RATE_LIMIT_PER_MINUTE);
     expect(DEFAULT_RATE_LIMIT_PER_MINUTE).toBe(100);
   });
@@ -198,7 +237,11 @@ describe('WebhookEndpointService — IP allowlist enforcement (Req 17.6)', () =>
   it('returns success=false with "Source IP not in allowlist" for blocked IP', async () => {
     const repo = createInMemoryEndpointRepository();
     const { service } = makeService(repo);
-    const endpoint = await service.createEndpoint('conn-ip', 'provider-test', 'user-1');
+    const endpoint = await service.createEndpoint(
+      'conn-ip',
+      'provider-test',
+      'user-1',
+    );
 
     // Set a restrictive allowlist that excludes 10.0.0.1
     await repo.updateEndpoint(endpoint.id, { ipAllowlist: ['192.168.1.0/24'] });
@@ -218,7 +261,11 @@ describe('WebhookEndpointService — IP allowlist enforcement (Req 17.6)', () =>
   it('returns success=true when source IP is within the allowed CIDR', async () => {
     const repo = createInMemoryEndpointRepository();
     const { service } = makeService(repo);
-    const endpoint = await service.createEndpoint('conn-ip2', 'provider-test', 'user-1');
+    const endpoint = await service.createEndpoint(
+      'conn-ip2',
+      'provider-test',
+      'user-1',
+    );
 
     await repo.updateEndpoint(endpoint.id, { ipAllowlist: ['192.168.1.0/24'] });
 
@@ -235,7 +282,11 @@ describe('WebhookEndpointService — IP allowlist enforcement (Req 17.6)', () =>
 
   it('accepts all IPs when allowlist is empty', async () => {
     const { service } = makeService();
-    const endpoint = await service.createEndpoint('conn-ip3', 'provider-test', 'user-1');
+    const endpoint = await service.createEndpoint(
+      'conn-ip3',
+      'provider-test',
+      'user-1',
+    );
     // No ipAllowlist set — defaults to empty (accept all)
 
     const result = await service.processWebhook(
@@ -252,7 +303,11 @@ describe('WebhookEndpointService — IP allowlist enforcement (Req 17.6)', () =>
   it('logs ip_blocked outcome in delivery log', async () => {
     const repo = createInMemoryEndpointRepository();
     const { service } = makeService(repo);
-    const endpoint = await service.createEndpoint('conn-ip4', 'provider-test', 'user-1');
+    const endpoint = await service.createEndpoint(
+      'conn-ip4',
+      'provider-test',
+      'user-1',
+    );
     await repo.updateEndpoint(endpoint.id, { ipAllowlist: ['10.0.0.0/8'] });
 
     await service.processWebhook(
@@ -278,7 +333,11 @@ describe('WebhookEndpointService — disabled endpoint (Req 17.5)', () => {
   it('returns success=false with disabled error when endpoint is disabled', async () => {
     const repo = createInMemoryEndpointRepository();
     const { service } = makeService(repo);
-    const endpoint = await service.createEndpoint('conn-dis', 'provider-test', 'user-1');
+    const endpoint = await service.createEndpoint(
+      'conn-dis',
+      'provider-test',
+      'user-1',
+    );
 
     // Manually disable the endpoint
     await repo.updateEndpoint(endpoint.id, { isDisabledByFailures: true });
@@ -298,7 +357,11 @@ describe('WebhookEndpointService — disabled endpoint (Req 17.5)', () => {
   it('auto-disables endpoint after 10 consecutive signature failures', async () => {
     const repo = createInMemoryEndpointRepository();
     const { service } = makeService(repo);
-    const endpoint = await service.createEndpoint('conn-auto-dis', 'provider-test', 'user-1');
+    const endpoint = await service.createEndpoint(
+      'conn-auto-dis',
+      'provider-test',
+      'user-1',
+    );
 
     for (let i = 0; i < CONSECUTIVE_FAILURE_THRESHOLD; i++) {
       await service.processWebhook(
@@ -317,7 +380,11 @@ describe('WebhookEndpointService — disabled endpoint (Req 17.5)', () => {
   it('calls onNotify callback when endpoint is auto-disabled', async () => {
     const onNotify = jest.fn();
     const { service } = makeService(undefined, undefined, onNotify);
-    const endpoint = await service.createEndpoint('conn-notify', 'provider-test', 'user-1');
+    const endpoint = await service.createEndpoint(
+      'conn-notify',
+      'provider-test',
+      'user-1',
+    );
 
     for (let i = 0; i < CONSECUTIVE_FAILURE_THRESHOLD; i++) {
       await service.processWebhook(
@@ -336,7 +403,11 @@ describe('WebhookEndpointService — disabled endpoint (Req 17.5)', () => {
   it('disabled endpoint logs "disabled" outcome in delivery log', async () => {
     const repo = createInMemoryEndpointRepository();
     const { service } = makeService(repo);
-    const endpoint = await service.createEndpoint('conn-dis-log', 'provider-test', 'user-1');
+    const endpoint = await service.createEndpoint(
+      'conn-dis-log',
+      'provider-test',
+      'user-1',
+    );
     await repo.updateEndpoint(endpoint.id, { isDisabledByFailures: true });
 
     await service.processWebhook(
@@ -355,7 +426,11 @@ describe('WebhookEndpointService — disabled endpoint (Req 17.5)', () => {
   it('enableEndpoint re-enables a disabled endpoint and resets failure counter', async () => {
     const repo = createInMemoryEndpointRepository();
     const { service } = makeService(repo);
-    const endpoint = await service.createEndpoint('conn-reenable', 'provider-test', 'user-1');
+    const endpoint = await service.createEndpoint(
+      'conn-reenable',
+      'provider-test',
+      'user-1',
+    );
 
     // Disable it
     await repo.updateEndpoint(endpoint.id, {
@@ -380,7 +455,11 @@ describe('WebhookEndpointService — timeout emits CHECK_FAILED (Req 10.8)', () 
     const repo = createInMemoryEndpointRepository();
     const onSignal = jest.fn();
     const { service } = makeService(repo, onSignal);
-    const endpoint = await service.createEndpoint('conn-timeout', 'provider-test', 'user-1');
+    const endpoint = await service.createEndpoint(
+      'conn-timeout',
+      'provider-test',
+      'user-1',
+    );
 
     const pastTime = new Date(Date.now() - 2 * 60 * 60 * 1000); // 2 hours ago
     await repo.updateEndpoint(endpoint.id, {
@@ -391,7 +470,9 @@ describe('WebhookEndpointService — timeout emits CHECK_FAILED (Req 10.8)', () 
     await service.checkEndpointTimeout(endpoint.id);
 
     expect(onSignal).toHaveBeenCalledTimes(1);
-    expect(onSignal.mock.calls[0][0].signalType).toBe(HeartbeatSignalType.CHECK_FAILED);
+    expect(onSignal.mock.calls[0][0].signalType).toBe(
+      HeartbeatSignalType.CHECK_FAILED,
+    );
     expect(onSignal.mock.calls[0][0].connectionId).toBe('conn-timeout');
   });
 
@@ -399,7 +480,11 @@ describe('WebhookEndpointService — timeout emits CHECK_FAILED (Req 10.8)', () 
     const repo = createInMemoryEndpointRepository();
     const onSignal = jest.fn();
     const { service } = makeService(repo, onSignal);
-    const endpoint = await service.createEndpoint('conn-no-timeout', 'provider-test', 'user-1');
+    const endpoint = await service.createEndpoint(
+      'conn-no-timeout',
+      'provider-test',
+      'user-1',
+    );
 
     const recentTime = new Date(Date.now() - 30 * 60 * 1000); // 30 minutes ago
     await repo.updateEndpoint(endpoint.id, {
@@ -416,7 +501,11 @@ describe('WebhookEndpointService — timeout emits CHECK_FAILED (Req 10.8)', () 
     const repo = createInMemoryEndpointRepository();
     const onSignal = jest.fn();
     const { service } = makeService(repo, onSignal);
-    const endpoint = await service.createEndpoint('conn-never', 'provider-test', 'user-1');
+    const endpoint = await service.createEndpoint(
+      'conn-never',
+      'provider-test',
+      'user-1',
+    );
     // lastReceivedAt is undefined — never received
 
     await service.checkEndpointTimeout(endpoint.id);
@@ -428,7 +517,11 @@ describe('WebhookEndpointService — timeout emits CHECK_FAILED (Req 10.8)', () 
     const repo = createInMemoryEndpointRepository();
     const onSignal = jest.fn();
     const { service } = makeService(repo, onSignal);
-    const endpoint = await service.createEndpoint('conn-dis-timeout', 'provider-test', 'user-1');
+    const endpoint = await service.createEndpoint(
+      'conn-dis-timeout',
+      'provider-test',
+      'user-1',
+    );
 
     const pastTime = new Date(Date.now() - 2 * 60 * 60 * 1000);
     await repo.updateEndpoint(endpoint.id, {
@@ -446,7 +539,11 @@ describe('WebhookEndpointService — timeout emits CHECK_FAILED (Req 10.8)', () 
     const repo = createInMemoryEndpointRepository();
     const onSignal = jest.fn();
     const { service } = makeService(repo, onSignal);
-    const endpoint = await service.createEndpoint('conn-chk-fields', 'provider-test', 'user-1');
+    const endpoint = await service.createEndpoint(
+      'conn-chk-fields',
+      'provider-test',
+      'user-1',
+    );
 
     const pastTime = new Date(Date.now() - 2 * 60 * 60 * 1000);
     await repo.updateEndpoint(endpoint.id, {
@@ -470,7 +567,11 @@ describe('WebhookEndpointService — timeout emits CHECK_FAILED (Req 10.8)', () 
 describe('WebhookEndpointService — delivery logging (Req 17.4)', () => {
   it('logs a successful delivery with all required fields', async () => {
     const { service } = makeService();
-    const endpoint = await service.createEndpoint('conn-log-ok', 'provider-test', 'user-1');
+    const endpoint = await service.createEndpoint(
+      'conn-log-ok',
+      'provider-test',
+      'user-1',
+    );
 
     await service.processWebhook(
       'conn-log-ok',
@@ -494,7 +595,11 @@ describe('WebhookEndpointService — delivery logging (Req 17.4)', () => {
 
   it('logs an invalid-signature delivery with signatureValid=false', async () => {
     const { service } = makeService();
-    const endpoint = await service.createEndpoint('conn-log-fail', 'provider-test', 'user-1');
+    const endpoint = await service.createEndpoint(
+      'conn-log-fail',
+      'provider-test',
+      'user-1',
+    );
 
     await service.processWebhook(
       'conn-log-fail',
@@ -518,15 +623,33 @@ describe('WebhookEndpointService — delivery logging (Req 17.4)', () => {
   it('logs a rate-limited delivery with outcome=rate_limited', async () => {
     const repo = createInMemoryEndpointRepository();
     const { service } = makeService(repo);
-    const endpoint = await service.createEndpoint('conn-log-rl', 'provider-test', 'user-1');
+    const endpoint = await service.createEndpoint(
+      'conn-log-rl',
+      'provider-test',
+      'user-1',
+    );
     await repo.updateEndpoint(endpoint.id, { rateLimitPerMinute: 1 });
 
-    const headers = { 'X-Hub-Signature-256': validSig(SAMPLE_PAYLOAD, endpoint.secret) };
+    const headers = {
+      'X-Hub-Signature-256': validSig(SAMPLE_PAYLOAD, endpoint.secret),
+    };
 
     // First request succeeds
-    await service.processWebhook('conn-log-rl', endpoint.secret, headers, SAMPLE_PAYLOAD, '127.0.0.1');
+    await service.processWebhook(
+      'conn-log-rl',
+      endpoint.secret,
+      headers,
+      SAMPLE_PAYLOAD,
+      '127.0.0.1',
+    );
     // Second request is rate-limited
-    await service.processWebhook('conn-log-rl', endpoint.secret, headers, SAMPLE_PAYLOAD, '127.0.0.1');
+    await service.processWebhook(
+      'conn-log-rl',
+      endpoint.secret,
+      headers,
+      SAMPLE_PAYLOAD,
+      '127.0.0.1',
+    );
 
     const log = service.getDeliveryLog(endpoint.id);
     const rateLimitedEntry = log.find((e) => e.outcome === 'rate_limited');
@@ -538,14 +661,38 @@ describe('WebhookEndpointService — delivery logging (Req 17.4)', () => {
 
   it('accumulates multiple log entries across deliveries', async () => {
     const { service } = makeService();
-    const endpoint = await service.createEndpoint('conn-log-multi', 'provider-test', 'user-1');
+    const endpoint = await service.createEndpoint(
+      'conn-log-multi',
+      'provider-test',
+      'user-1',
+    );
 
-    const goodHeaders = { 'X-Hub-Signature-256': validSig(SAMPLE_PAYLOAD, endpoint.secret) };
+    const goodHeaders = {
+      'X-Hub-Signature-256': validSig(SAMPLE_PAYLOAD, endpoint.secret),
+    };
     const badHeaders = { 'X-Hub-Signature-256': BAD_SIG };
 
-    await service.processWebhook('conn-log-multi', endpoint.secret, goodHeaders, SAMPLE_PAYLOAD, '127.0.0.1');
-    await service.processWebhook('conn-log-multi', endpoint.secret, badHeaders, SAMPLE_PAYLOAD, '127.0.0.1');
-    await service.processWebhook('conn-log-multi', endpoint.secret, goodHeaders, SAMPLE_PAYLOAD, '127.0.0.1');
+    await service.processWebhook(
+      'conn-log-multi',
+      endpoint.secret,
+      goodHeaders,
+      SAMPLE_PAYLOAD,
+      '127.0.0.1',
+    );
+    await service.processWebhook(
+      'conn-log-multi',
+      endpoint.secret,
+      badHeaders,
+      SAMPLE_PAYLOAD,
+      '127.0.0.1',
+    );
+    await service.processWebhook(
+      'conn-log-multi',
+      endpoint.secret,
+      goodHeaders,
+      SAMPLE_PAYLOAD,
+      '127.0.0.1',
+    );
 
     const log = service.getDeliveryLog(endpoint.id);
     expect(log).toHaveLength(3);
@@ -556,7 +703,11 @@ describe('WebhookEndpointService — delivery logging (Req 17.4)', () => {
 
   it('getDeliveryLog returns empty array for endpoint with no deliveries', async () => {
     const { service } = makeService();
-    const endpoint = await service.createEndpoint('conn-log-empty', 'provider-test', 'user-1');
+    const endpoint = await service.createEndpoint(
+      'conn-log-empty',
+      'provider-test',
+      'user-1',
+    );
 
     const log = service.getDeliveryLog(endpoint.id);
     expect(log).toEqual([]);
@@ -570,7 +721,11 @@ describe('WebhookEndpointService — delivery logging (Req 17.4)', () => {
 describe('WebhookEndpointService — sendTestWebhook (Req 17.7)', () => {
   it('sendTestWebhook returns success=true for a valid active endpoint', async () => {
     const { service } = makeService();
-    const endpoint = await service.createEndpoint('conn-test-wh', 'provider-test', 'user-1');
+    const endpoint = await service.createEndpoint(
+      'conn-test-wh',
+      'provider-test',
+      'user-1',
+    );
 
     const result = await service.sendTestWebhook(endpoint.id);
 
@@ -590,19 +745,30 @@ describe('WebhookEndpointService — sendTestWebhook (Req 17.7)', () => {
   it('sendTestWebhook emits a heartbeat signal via onSignal callback', async () => {
     const onSignal = jest.fn();
     const { service } = makeService(undefined, onSignal);
-    const endpoint = await service.createEndpoint('conn-test-signal', 'provider-test', 'user-1');
+    const endpoint = await service.createEndpoint(
+      'conn-test-signal',
+      'provider-test',
+      'user-1',
+    );
 
     await service.sendTestWebhook(endpoint.id);
 
     expect(onSignal).toHaveBeenCalledTimes(1);
     const call = onSignal.mock.calls[0][0];
     expect(call.connectionId).toBe('conn-test-signal');
-    expect([HeartbeatSignalType.PRESENCE, HeartbeatSignalType.ABSENCE]).toContain(call.signalType);
+    expect([
+      HeartbeatSignalType.PRESENCE,
+      HeartbeatSignalType.ABSENCE,
+    ]).toContain(call.signalType);
   });
 
   it('sendTestWebhook logs the delivery attempt', async () => {
     const { service } = makeService();
-    const endpoint = await service.createEndpoint('conn-test-log', 'provider-test', 'user-1');
+    const endpoint = await service.createEndpoint(
+      'conn-test-log',
+      'provider-test',
+      'user-1',
+    );
 
     await service.sendTestWebhook(endpoint.id);
 
@@ -613,7 +779,11 @@ describe('WebhookEndpointService — sendTestWebhook (Req 17.7)', () => {
 
   it('sendTestWebhook returns a result with processingTimeMs field', async () => {
     const { service } = makeService();
-    const endpoint = await service.createEndpoint('conn-test-time', 'provider-test', 'user-1');
+    const endpoint = await service.createEndpoint(
+      'conn-test-time',
+      'provider-test',
+      'user-1',
+    );
 
     const result = await service.sendTestWebhook(endpoint.id);
 
@@ -623,7 +793,11 @@ describe('WebhookEndpointService — sendTestWebhook (Req 17.7)', () => {
   it('sendTestWebhook increments successfullyProcessed stat', async () => {
     const repo = createInMemoryEndpointRepository();
     const { service } = makeService(repo);
-    const endpoint = await service.createEndpoint('conn-test-stats', 'provider-test', 'user-1');
+    const endpoint = await service.createEndpoint(
+      'conn-test-stats',
+      'provider-test',
+      'user-1',
+    );
 
     await service.sendTestWebhook(endpoint.id);
 

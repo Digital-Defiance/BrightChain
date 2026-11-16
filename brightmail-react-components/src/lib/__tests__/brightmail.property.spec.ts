@@ -57,13 +57,13 @@ import {
   Route,
   Routes,
   useLocation,
-} from 'react-router-dom';
+} from 'react-router';
 
 // ─── Mocks ──────────────────────────────────────────────────────────────────
 
 const mockNavigate = jest.fn();
-jest.mock('react-router-dom', () => ({
-  ...jest.requireActual('react-router-dom'),
+jest.mock('react-router', () => ({
+  ...jest.requireActual('react-router'),
   useNavigate: () => mockNavigate,
 }));
 

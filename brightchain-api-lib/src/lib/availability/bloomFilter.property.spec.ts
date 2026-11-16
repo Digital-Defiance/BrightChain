@@ -9,6 +9,7 @@
  * **Validates: Requirements 4.1, 4.6**
  */
 
+import { BlockId } from '@brightchain/brightchain-lib';
 import fc from 'fast-check';
 import { mkdirSync, rmSync } from 'fs';
 import { join } from 'path';
@@ -28,7 +29,7 @@ const arbHexString = (minLength: number, maxLength: number) =>
 /**
  * Generate a valid block ID (hex string of at least 32 characters)
  */
-const arbBlockId = arbHexString(32, 64);
+const arbBlockId = arbHexString(32, 64).map((id) => id as BlockId);
 
 /**
  * Generate a unique set of block IDs

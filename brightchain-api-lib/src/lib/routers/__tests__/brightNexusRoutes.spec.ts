@@ -26,9 +26,7 @@ describe('BrightNexus ApiRouter feature gate', () => {
 
   it('mounts when BrightNexus is in enabledFeatures', () => {
     const registerSpy = jest.fn();
-    const features: BrightChainFeatures[] = [
-      BrightChainFeatures.BrightNexus,
-    ];
+    const features: BrightChainFeatures[] = [BrightChainFeatures.BrightNexus];
 
     if (isBrightNexusEnabled(features)) {
       registerSpy();

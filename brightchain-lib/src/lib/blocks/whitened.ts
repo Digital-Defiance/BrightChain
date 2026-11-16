@@ -5,11 +5,11 @@ import { BlockSize } from '../enumerations/blockSize';
 import { BlockType } from '../enumerations/blockType';
 import { WhitenedErrorType } from '../enumerations/whitenedErrorType';
 import { WhitenedError } from '../errors/whitenedError';
-import type { BrightDateTimestamp } from '../types/brightDateTimestamp';
 import type { ChecksumService } from '../services/checksum.service';
-import { brightDateNow } from '../utils/brightDateConversions';
 import { getGlobalServiceProvider } from '../services/globalServiceProvider';
+import type { BrightDateTimestamp } from '../types/brightDateTimestamp';
 import { Checksum } from '../types/checksum';
+import { brightDateNow } from '../utils/brightDateConversions';
 import { BaseBlock } from './base';
 import { RawDataBlock } from './rawData';
 

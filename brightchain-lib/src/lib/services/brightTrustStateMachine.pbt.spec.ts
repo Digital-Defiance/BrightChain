@@ -37,10 +37,10 @@ import { RedistributionJournalEntry } from '../interfaces/redistributionJournalE
 import { IBrightTrustDatabase } from '../interfaces/services/brightTrustDatabase';
 import { IBrightTrustMember } from '../interfaces/services/brightTrustService';
 import { Vote } from '../interfaces/vote';
+import { brightDateNow } from '../utils/brightDateConversions';
 import { BrightTrustStateMachine } from './brightTrustStateMachine';
 import { SealingService } from './sealing.service';
 import { ServiceProvider } from './service.provider';
-import { brightDateNow } from '../utils/brightDateConversions';
 
 // Handle both ESM default export and CommonJS module.exports patterns
 const secretsLib =

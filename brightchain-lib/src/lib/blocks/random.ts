@@ -5,11 +5,11 @@ import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockSize } from '../enumerations/blockSize';
 import { BlockType } from '../enumerations/blockType';
 import { TranslatableBrightChainError } from '../errors/translatableBrightChainError';
-import type { BrightDateTimestamp } from '../types/brightDateTimestamp';
 import type { ChecksumService } from '../services/checksum.service';
-import { brightDateNow } from '../utils/brightDateConversions';
 import { getGlobalServiceProvider } from '../services/globalServiceProvider';
+import type { BrightDateTimestamp } from '../types/brightDateTimestamp';
 import { Checksum } from '../types/checksum';
+import { brightDateNow } from '../utils/brightDateConversions';
 import { BaseBlock } from './base';
 import { RawDataBlock } from './rawData';
 
@@ -48,7 +48,10 @@ export class RandomBlock extends RawDataBlock {
   /**
    * Create a new random block
    */
-  public static new(blockSize: BlockSize, dateCreated?: BrightDateTimestamp): RandomBlock {
+  public static new(
+    blockSize: BlockSize,
+    dateCreated?: BrightDateTimestamp,
+  ): RandomBlock {
     const data = randomBytes(blockSize as number);
     return new RandomBlock(blockSize, new Uint8Array(data), dateCreated);
   }

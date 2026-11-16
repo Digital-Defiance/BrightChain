@@ -7,6 +7,9 @@
  * Validates: Requirements 8.1, 8.4, 8.5
  */
 
+// scripts/ is a folder of standalone CLI tools, not an Nx project, so it has
+// no npm-scoped alias; its tests run here.
+// eslint-disable-next-line @nx/enforce-module-boundaries
 import {
   parseArgs,
   runPipeline,

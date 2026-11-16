@@ -21,6 +21,8 @@
  */
 
 import {
+  BlockId,
+  dateToBrightDate,
   DurabilityLevel,
   IMessageMetadata,
   MessageEncryptionScheme,
@@ -104,13 +106,13 @@ class InMemoryMessageStore {
 
     const metadata: IMessageMetadata = {
       // IBlockMetadata fields
-      blockId: messageId,
-      createdAt: now,
+      blockId: messageId as BlockId,
+      createdAt: dateToBrightDate(now),
       expiresAt: null,
       durabilityLevel: DurabilityLevel.Standard,
       parityBlockIds: [],
       accessCount: 0,
-      lastAccessedAt: now,
+      lastAccessedAt: dateToBrightDate(now),
       replicationStatus: ReplicationStatus.Pending,
       targetReplicationFactor: 0,
       replicaNodeIds: [],

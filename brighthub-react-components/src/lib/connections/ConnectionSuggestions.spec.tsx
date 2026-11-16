@@ -38,8 +38,11 @@ const makeProfile = (id: string, displayName: string, username: string) => ({
   privacySettings: {
     hideFollowerCount: false,
     hideFollowingCount: false,
-    hideFollowersList: false,
-    hideFollowingList: false,
+    hideFollowersFromNonFollowers: false,
+    hideFollowingFromNonFollowers: false,
+    allowDmsFromNonFollowers: true,
+    showOnlineStatus: true,
+    showReadReceipts: true,
   },
   createdAt: '2024-01-01T00:00:00Z',
 });

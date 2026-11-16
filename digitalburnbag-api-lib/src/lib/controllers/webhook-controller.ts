@@ -11,7 +11,11 @@
 import type { IWebhookEndpointService } from '@brightchain/digitalburnbag-lib';
 import type { PlatformID } from '@digitaldefiance/ecies-lib';
 import { PlatformID as NodePlatformID } from '@digitaldefiance/node-ecies-lib';
-import type { NextFunction, Request as ExpressRequest, Response } from 'express';
+import type {
+  Request as ExpressRequest,
+  NextFunction,
+  Response,
+} from 'express';
 import { Router } from 'express';
 
 // ---------------------------------------------------------------------------
@@ -204,7 +208,7 @@ export class WebhookController<TID extends NodePlatformID = NodePlatformID> {
 
       // Generic failure — return 400
       res.status(400).json({ error: 'Bad Request' });
-    } catch (err) {
+    } catch {
       clearTimeout(timeoutHandle);
       if (!responded) {
         responded = true;

@@ -19,7 +19,7 @@ import {
 } from '@brightchain/brightchain-lib';
 import * as fc from 'fast-check';
 import { WebSocket } from 'ws';
-import { EventNotificationSystem } from './eventNotificationSystem';
+import { CommunicationTestEventSystem } from './eventNotificationSystem.test-helpers';
 
 // --- helpers ---
 
@@ -75,7 +75,7 @@ describe('Real-time events – Property 18: Real-time message event delivery', (
           const recipientId = `recipient-${recipientIdRaw}`;
           fc.pre(senderId !== recipientId);
 
-          const eventSystem = new EventNotificationSystem();
+          const eventSystem = new CommunicationTestEventSystem();
           const service = new ConversationService(null, eventSystem);
           service.registerMember(senderId);
           service.registerMember(recipientId);
@@ -133,7 +133,7 @@ describe('Real-time events – Property 18: Real-time message event delivery', (
           // Ensure all unique
           fc.pre(new Set(allIds).size === allIds.length);
 
-          const eventSystem = new EventNotificationSystem();
+          const eventSystem = new CommunicationTestEventSystem();
           const permissionService = new PermissionService();
           const groupService = new GroupService(
             permissionService,
@@ -201,7 +201,7 @@ describe('Real-time events – Property 18: Real-time message event delivery', (
 
           fc.pre(new Set(allIds).size === allIds.length);
 
-          const eventSystem = new EventNotificationSystem();
+          const eventSystem = new CommunicationTestEventSystem();
           const permissionService = new PermissionService();
           const channelService = new ChannelService(
             permissionService,

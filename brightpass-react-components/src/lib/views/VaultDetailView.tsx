@@ -46,7 +46,7 @@ import {
   Typography,
 } from '@mui/material';
 import React, { useCallback, useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router';
 import BreadcrumbNav from '../components/BreadcrumbNav';
 import MasterPasswordPrompt from '../components/MasterPasswordPrompt';
 import { useBrightPass } from '../context/BrightPassProvider';

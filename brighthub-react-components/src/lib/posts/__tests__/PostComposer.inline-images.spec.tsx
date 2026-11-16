@@ -25,6 +25,7 @@ jest.mock('../../hooks/useBrightHubTranslation', () => ({
 }));
 
 import type { ITempUploadResponse } from '@brightchain/brightchain-lib';
+import { PostType } from '@brightchain/brighthub-lib';
 import '@testing-library/jest-dom';
 import {
   act,
@@ -75,17 +76,6 @@ function createMockStagingApi(overrides?: {
 
 function createImageFile(name = 'test.jpg', type = 'image/jpeg'): File {
   return new File(['fake-image-data'], name, { type });
-}
-
-/**
- * Build content with N inline images to test the limit.
- */
-function buildContentWithImages(n: number): string {
-  return Array.from(
-    { length: n },
-    (_, i) =>
-      `![img](/api/temp-upload/${String(i).padStart(8, '0')}-0000-4000-8000-000000000000/preview)`,
-  ).join('\n');
 }
 
 // ---------------------------------------------------------------------------
@@ -307,11 +297,18 @@ describe('PostComposer inline image features', () => {
             _id: 'reply-1',
             content: 'test',
             formattedContent: '<p>test</p>',
+            postType: PostType.Original,
             authorId: 'user-1',
             hubIds: [],
             mediaAttachments: [],
-            createdAt: new Date(),
-            updatedAt: new Date(),
+            mentions: [],
+            hashtags: [],
+            isEdited: false,
+            isDeleted: false,
+            createdBy: 'user-1',
+            updatedBy: 'user-1',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
             likeCount: 0,
             replyCount: 0,
             repostCount: 0,

@@ -24,6 +24,10 @@
  *  13. Original bug scenario (registration → restart → login)
  */
 
+import type {
+  IBlockStore,
+  IHydrationSchema,
+} from '@brightchain/brightchain-lib';
 import {
   initializeBrightChain,
   PooledMemoryBlockStore,
@@ -31,15 +35,14 @@ import {
 } from '@brightchain/brightchain-lib';
 import type { ICollectionHeadRegistry } from '../../lib/collection';
 import { BrightDb } from '../../lib/database';
+import type { BsonDocument } from '../../lib/types';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
 export interface StoreTestFactory {
   label: string;
   createStore(): Promise<{
-    store:
-      | PooledMemoryBlockStore
-      | import('@brightchain/brightchain-lib').IBlockStore;
+    store: PooledMemoryBlockStore | IBlockStore;
     registry: ICollectionHeadRegistry;
   }>;
   createFreshRegistry(): Promise<ICollectionHeadRegistry>;
@@ -49,7 +52,7 @@ export interface StoreTestFactory {
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
 async function makeDb(
-  store: import('@brightchain/brightchain-lib').IBlockStore,
+  store: IBlockStore,
   registry: ICollectionHeadRegistry,
   name = 'conformance',
 ): Promise<BrightDb> {
@@ -61,7 +64,7 @@ async function makeDb(
 // ─── Conformance Suite ──────────────────────────────────────────────────────
 
 export function runPersistenceConformance(factory: StoreTestFactory): void {
-  let store: import('@brightchain/brightchain-lib').IBlockStore;
+  let store: IBlockStore;
   let registry: ICollectionHeadRegistry;
 
   beforeAll(async () => {
@@ -96,8 +99,8 @@ export function runPersistenceConformance(factory: StoreTestFactory): void {
         .collection('t_ins')
         .findOne({ name: 'alice' } as never);
       expect(found).not.toBeNull();
-      expect((found as any)._id).toBe('i1');
-      expect((found as any).age).toBe(30);
+      expect(found?._id).toBe('i1');
+      expect(found?.['age']).toBe(30);
     });
 
     it('should persist auto-generated _id', async () => {
@@ -108,7 +111,7 @@ export function runPersistenceConformance(factory: StoreTestFactory): void {
       const db2 = await restart();
       const found = await db2.collection('t_ins').findById(r.insertedId);
       expect(found).not.toBeNull();
-      expect((found as any).color).toBe('red');
+      expect(found?.['color']).toBe('red');
     });
   });
 
@@ -143,8 +146,8 @@ export function runPersistenceConformance(factory: StoreTestFactory): void {
         .limit(2)
         .toArray();
       expect(results).toHaveLength(2);
-      expect((results[0] as any).seq).toBe(3);
-      expect((results[1] as any).seq).toBe(2);
+      expect(results[0]?.['seq']).toBe(3);
+      expect(results[1]?.['seq']).toBe(2);
     });
   });
 
@@ -163,8 +166,8 @@ export function runPersistenceConformance(factory: StoreTestFactory): void {
         .updateOne({ _id: 'us' } as never, { $set: { a: 99 } } as never);
       const db2 = await restart();
       const d = await db2.collection('t_upd').findById('us');
-      expect((d as any).a).toBe(99);
-      expect((d as any).b).toBe(2);
+      expect(d?.['a']).toBe(99);
+      expect(d?.['b']).toBe(2);
     });
 
     it('$inc', async () => {
@@ -176,9 +179,9 @@ export function runPersistenceConformance(factory: StoreTestFactory): void {
         .collection('t_upd')
         .updateOne({ _id: 'ui' } as never, { $inc: { counter: 3 } } as never);
       const db2 = await restart();
-      expect(
-        ((await db2.collection('t_upd').findById('ui')) as any).counter,
-      ).toBe(8);
+      expect((await db2.collection('t_upd').findById('ui'))?.['counter']).toBe(
+        8,
+      );
     });
 
     it('$mul', async () => {
@@ -188,9 +191,7 @@ export function runPersistenceConformance(factory: StoreTestFactory): void {
         .collection('t_upd')
         .updateOne({ _id: 'um' } as never, { $mul: { val: 3 } } as never);
       const db2 = await restart();
-      expect(((await db2.collection('t_upd').findById('um')) as any).val).toBe(
-        12,
-      );
+      expect((await db2.collection('t_upd').findById('um'))?.['val']).toBe(12);
     });
 
     it('$min / $max', async () => {
@@ -206,8 +207,8 @@ export function runPersistenceConformance(factory: StoreTestFactory): void {
         );
       const db2 = await restart();
       const d = await db2.collection('t_upd').findById('umm');
-      expect((d as any).lo).toBe(3);
-      expect((d as any).hi).toBe(20);
+      expect(d?.['lo']).toBe(3);
+      expect(d?.['hi']).toBe(20);
     });
 
     it('$unset', async () => {
@@ -220,8 +221,8 @@ export function runPersistenceConformance(factory: StoreTestFactory): void {
         .updateOne({ _id: 'uu' } as never, { $unset: { remove: '' } } as never);
       const db2 = await restart();
       const d = await db2.collection('t_upd').findById('uu');
-      expect((d as any).keep).toBe(1);
-      expect((d as any).remove).toBeUndefined();
+      expect(d?.['keep']).toBe(1);
+      expect(d?.['remove']).toBeUndefined();
     });
 
     it('$push', async () => {
@@ -233,9 +234,10 @@ export function runPersistenceConformance(factory: StoreTestFactory): void {
         .collection('t_upd')
         .updateOne({ _id: 'up' } as never, { $push: { tags: 'b' } } as never);
       const db2 = await restart();
-      expect(
-        ((await db2.collection('t_upd').findById('up')) as any).tags,
-      ).toEqual(['a', 'b']);
+      expect((await db2.collection('t_upd').findById('up'))?.['tags']).toEqual([
+        'a',
+        'b',
+      ]);
     });
 
     it('$pop', async () => {
@@ -247,9 +249,9 @@ export function runPersistenceConformance(factory: StoreTestFactory): void {
         .collection('t_upd')
         .updateOne({ _id: 'upo' } as never, { $pop: { arr: 1 } } as never);
       const db2 = await restart();
-      expect(
-        ((await db2.collection('t_upd').findById('upo')) as any).arr,
-      ).toEqual([1, 2]);
+      expect((await db2.collection('t_upd').findById('upo'))?.['arr']).toEqual([
+        1, 2,
+      ]);
     });
 
     it('$pull', async () => {
@@ -261,9 +263,9 @@ export function runPersistenceConformance(factory: StoreTestFactory): void {
         .collection('t_upd')
         .updateOne({ _id: 'upl' } as never, { $pull: { arr: 2 } } as never);
       const db2 = await restart();
-      expect(
-        ((await db2.collection('t_upd').findById('upl')) as any).arr,
-      ).toEqual([1, 3]);
+      expect((await db2.collection('t_upd').findById('upl'))?.['arr']).toEqual([
+        1, 3,
+      ]);
     });
 
     it('$addToSet', async () => {
@@ -284,9 +286,9 @@ export function runPersistenceConformance(factory: StoreTestFactory): void {
           { $addToSet: { tags: 'c' } } as never,
         );
       const db2 = await restart();
-      expect(
-        ((await db2.collection('t_upd').findById('uas')) as any).tags,
-      ).toEqual(['a', 'b', 'c']);
+      expect((await db2.collection('t_upd').findById('uas'))?.['tags']).toEqual(
+        ['a', 'b', 'c'],
+      );
     });
 
     it('$rename', async () => {
@@ -302,8 +304,8 @@ export function runPersistenceConformance(factory: StoreTestFactory): void {
         );
       const db2 = await restart();
       const d = await db2.collection('t_upd').findById('urn');
-      expect((d as any).newName).toBe('val');
-      expect((d as any).oldName).toBeUndefined();
+      expect(d?.['newName']).toBe('val');
+      expect(d?.['oldName']).toBeUndefined();
     });
 
     it('$currentDate', async () => {
@@ -317,9 +319,9 @@ export function runPersistenceConformance(factory: StoreTestFactory): void {
         );
       const db2 = await restart();
       const d = await db2.collection('t_upd').findById('ucd');
-      expect((d as any).updatedAt).toBeDefined();
+      expect(d?.['updatedAt']).toBeDefined();
       // Should be a valid ISO date string
-      expect(new Date((d as any).updatedAt).getTime()).not.toBeNaN();
+      expect(new Date(String(d?.['updatedAt'])).getTime()).not.toBeNaN();
     });
 
     it('upsert', async () => {
@@ -348,8 +350,8 @@ export function runPersistenceConformance(factory: StoreTestFactory): void {
         );
       const db2 = await restart();
       const d = await db2.collection('t_upd').findById('urep');
-      expect((d as any).replaced).toBe(true);
-      expect((d as any).old).toBeUndefined();
+      expect(d?.['replaced']).toBe(true);
+      expect(d?.['old']).toBeUndefined();
     });
 
     it('nested dot-path $set', async () => {
@@ -365,7 +367,11 @@ export function runPersistenceConformance(factory: StoreTestFactory): void {
         );
       const db2 = await restart();
       expect(
-        ((await db2.collection('t_upd').findById('udot')) as any).meta.score,
+        (
+          (await db2.collection('t_upd').findById('udot'))?.['meta'] as
+            | { score?: number }
+            | undefined
+        )?.score,
       ).toBe(42);
     });
   });
@@ -382,9 +388,9 @@ export function runPersistenceConformance(factory: StoreTestFactory): void {
       await col.updateMany({ g: 'a' } as never, { $set: { v: 0 } } as never);
       const db2 = await restart();
       const c2 = db2.collection('t_umany');
-      expect(((await c2.findById('um1')) as any).v).toBe(0);
-      expect(((await c2.findById('um2')) as any).v).toBe(0);
-      expect(((await c2.findById('um3')) as any).v).toBe(3);
+      expect((await c2.findById('um1'))?.['v']).toBe(0);
+      expect((await c2.findById('um2'))?.['v']).toBe(0);
+      expect((await c2.findById('um3'))?.['v']).toBe(3);
     });
   });
 
@@ -432,8 +438,8 @@ export function runPersistenceConformance(factory: StoreTestFactory): void {
         .replaceOne({ _id: 'r1' } as never, { _id: 'r1', new: true } as never);
       const db2 = await restart();
       const d = await db2.collection('t_rep').findById('r1');
-      expect((d as any).new).toBe(true);
-      expect((d as any).old).toBeUndefined();
+      expect(d?.['new']).toBe(true);
+      expect(d?.['old']).toBeUndefined();
     });
   });
 
@@ -691,8 +697,8 @@ export function runPersistenceConformance(factory: StoreTestFactory): void {
         .collection(COL)
         .aggregate([{ $sort: { salary: -1 } }, { $skip: 1 }, { $limit: 2 }]);
       expect(r).toHaveLength(2);
-      expect((r[0] as any).salary).toBe(200);
-      expect((r[1] as any).salary).toBe(150);
+      expect(r[0]?.['salary']).toBe(200);
+      expect(r[1]?.['salary']).toBe(150);
     });
 
     it('$project', async () => {
@@ -713,10 +719,8 @@ export function runPersistenceConformance(factory: StoreTestFactory): void {
         .collection(COL)
         .aggregate([{ $group: { _id: '$dept', total: { $sum: '$salary' } } }]);
       expect(r).toHaveLength(2);
-      const eng = r.find((d: any) => d._id === 'eng') as any;
-      const sales = r.find((d: any) => d._id === 'sales') as any;
-      expect(eng.total).toBe(300);
-      expect(sales.total).toBe(400);
+      expect(r.find((d) => d._id === 'eng')?.['total']).toBe(300);
+      expect(r.find((d) => d._id === 'sales')?.['total']).toBe(400);
     });
 
     it('$count', async () => {
@@ -725,7 +729,7 @@ export function runPersistenceConformance(factory: StoreTestFactory): void {
         .collection(COL)
         .aggregate([{ $match: { dept: 'eng' } }, { $count: 'total' }]);
       expect(r).toHaveLength(1);
-      expect((r[0] as any).total).toBe(2);
+      expect(r[0]?.['total']).toBe(2);
     });
 
     it('$addFields', async () => {
@@ -733,8 +737,8 @@ export function runPersistenceConformance(factory: StoreTestFactory): void {
       const r = await db2
         .collection(COL)
         .aggregate([{ $match: { _id: 'a1' } }, { $addFields: { bonus: 50 } }]);
-      expect((r[0] as any).bonus).toBe(50);
-      expect((r[0] as any).salary).toBe(100);
+      expect(r[0]?.['bonus']).toBe(50);
+      expect(r[0]?.['salary']).toBe(100);
     });
 
     it('$unwind', async () => {
@@ -749,7 +753,7 @@ export function runPersistenceConformance(factory: StoreTestFactory): void {
         .collection('t_unwind')
         .aggregate([{ $unwind: '$items' }]);
       expect(r).toHaveLength(3);
-      expect(r.map((d: any) => d.items).sort()).toEqual(['x', 'y', 'z']);
+      expect(r.map((d) => d['items']).sort()).toEqual(['x', 'y', 'z']);
     });
   });
 
@@ -854,8 +858,8 @@ export function runPersistenceConformance(factory: StoreTestFactory): void {
       // This test verifies the data round-trips correctly with schema-validated writes.
       const db2 = await restart();
       const d = await db2.collection('t_schema').findById('sv1');
-      expect((d as any).name).toBe('valid');
-      expect((d as any).age).toBe(25);
+      expect(d?.['name']).toBe('valid');
+      expect(d?.['age']).toBe(25);
     });
   });
 
@@ -864,26 +868,37 @@ export function runPersistenceConformance(factory: StoreTestFactory): void {
   // ═══════════════════════════════════════════════════════════════════════
 
   describe('model hydration', () => {
+    interface IStoredModelDoc extends BsonDocument {
+      createdAt: string;
+      status: string;
+      name: string;
+    }
+    interface ITypedModelDoc {
+      createdAt: Date;
+      active: boolean;
+      name: string;
+    }
+    const modelHydration: IHydrationSchema<IStoredModelDoc, ITypedModelDoc> = {
+      hydrate: (stored) => ({
+        name: stored.name,
+        createdAt: new Date(stored.createdAt),
+        active: stored.status === 'active',
+      }),
+      dehydrate: (typed) => ({
+        name: typed.name,
+        createdAt: typed.createdAt.toISOString(),
+        status: typed.active ? 'active' : 'inactive',
+      }),
+    };
     it('typed model round-trips through persistence', async () => {
       const db1 = await makeDb(store, registry);
 
       // Register a model with hydration
-      db1.model('t_model', {
-        hydration: {
-          hydrate: (stored: any) => ({
-            ...stored,
-            createdAt: new Date(stored.createdAt),
-            active: stored.status === 'active',
-          }),
-          dehydrate: (typed: any) => ({
-            ...typed,
-            createdAt: typed.createdAt.toISOString(),
-            status: typed.active ? 'active' : 'inactive',
-          }),
-        },
+      db1.model<IStoredModelDoc, ITypedModelDoc>('t_model', {
+        hydration: modelHydration,
       });
 
-      const model = db1.model('t_model');
+      const model = db1.model<IStoredModelDoc, ITypedModelDoc>('t_model');
       await model.insertOne({
         createdAt: new Date('2024-01-15'),
         active: true,
@@ -892,25 +907,14 @@ export function runPersistenceConformance(factory: StoreTestFactory): void {
 
       const db2 = await restart();
       // Re-register the model on the new db instance
-      db2.model('t_model', {
-        hydration: {
-          hydrate: (stored: any) => ({
-            ...stored,
-            createdAt: new Date(stored.createdAt),
-            active: stored.status === 'active',
-          }),
-          dehydrate: (typed: any) => ({
-            ...typed,
-            createdAt: typed.createdAt.toISOString(),
-            status: typed.active ? 'active' : 'inactive',
-          }),
-        },
+      db2.model<IStoredModelDoc, ITypedModelDoc>('t_model', {
+        hydration: modelHydration,
       });
 
-      const model2 = db2.model('t_model');
+      const model2 = db2.model<IStoredModelDoc, ITypedModelDoc>('t_model');
       const all = await model2.find({}).toArray();
       expect(all.length).toBeGreaterThanOrEqual(1);
-      const doc = all[0] as any;
+      const doc = all[0];
       expect(doc.createdAt).toBeInstanceOf(Date);
       expect(doc.active).toBe(true);
       expect(doc.name).toBe('test');
@@ -1000,9 +1004,9 @@ export function runPersistenceConformance(factory: StoreTestFactory): void {
         { deleteOne: { filter: { _id: 'bk2' } as never } },
       ]);
       const db2 = await restart();
-      expect(
-        ((await db2.collection('t_bulk').findById('bk1')) as any).val,
-      ).toBe(99);
+      expect((await db2.collection('t_bulk').findById('bk1'))?.['val']).toBe(
+        99,
+      );
       expect(await db2.collection('t_bulk').findById('bk2')).toBeNull();
     });
   });
@@ -1013,12 +1017,8 @@ export function runPersistenceConformance(factory: StoreTestFactory): void {
       await db1.collection('t_ma').insertOne({ _id: 'a1', src: 'a' } as never);
       await db1.collection('t_mb').insertOne({ _id: 'b1', src: 'b' } as never);
       const db2 = await restart();
-      expect(((await db2.collection('t_ma').findById('a1')) as any).src).toBe(
-        'a',
-      );
-      expect(((await db2.collection('t_mb').findById('b1')) as any).src).toBe(
-        'b',
-      );
+      expect((await db2.collection('t_ma').findById('a1'))?.['src']).toBe('a');
+      expect((await db2.collection('t_mb').findById('b1'))?.['src']).toBe('b');
       expect(await db2.collection('t_ma').findById('b1')).toBeNull();
     });
   });
@@ -1065,7 +1065,7 @@ export function runPersistenceConformance(factory: StoreTestFactory): void {
         .collection('users')
         .findOne({ username: 'jessica' } as never);
       expect(userDoc).not.toBeNull();
-      const idHex = ((userDoc as any)._id as string).replace(/-/g, '');
+      const idHex = (userDoc?._id as string).replace(/-/g, '');
       const indexDoc = await db2
         .collection('member_index')
         .findOne({ id: idHex } as never);

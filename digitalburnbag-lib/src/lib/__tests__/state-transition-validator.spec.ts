@@ -64,12 +64,9 @@ const INVALID_TRANSITIONS: [VaultContainerState, VaultContainerState][] = [
 describe('State Transition Validator', () => {
   describe('isValidTransition', () => {
     describe('valid transitions', () => {
-      it.each(VALID_TRANSITIONS)(
-        '%s → %s returns true',
-        (current, target) => {
-          expect(isValidTransition(current, target)).toBe(true);
-        },
-      );
+      it.each(VALID_TRANSITIONS)('%s → %s returns true', (current, target) => {
+        expect(isValidTransition(current, target)).toBe(true);
+      });
     });
 
     describe('invalid transitions', () => {
@@ -174,7 +171,7 @@ describe('State Transition Validator', () => {
             VaultContainerState.Destroyed,
             VaultContainerState.Active,
           );
-          fail('Expected InvalidStateTransitionError to be thrown');
+          throw new Error('Expected InvalidStateTransitionError to be thrown');
         } catch (err) {
           expect(err).toBeInstanceOf(InvalidStateTransitionError);
           const error = err as InvalidStateTransitionError;
@@ -190,7 +187,7 @@ describe('State Transition Validator', () => {
             VaultContainerState.Disowned,
             VaultContainerState.Active,
           );
-          fail('Expected InvalidStateTransitionError to be thrown');
+          throw new Error('Expected InvalidStateTransitionError to be thrown');
         } catch (err) {
           expect(err).toBeInstanceOf(InvalidStateTransitionError);
           const error = err as InvalidStateTransitionError;

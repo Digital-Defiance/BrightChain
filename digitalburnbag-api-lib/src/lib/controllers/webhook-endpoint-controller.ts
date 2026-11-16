@@ -39,7 +39,9 @@ type EndpointResponse = IApiMessageResponse | ApiErrorResponse;
 // ---------------------------------------------------------------------------
 
 /** Convert a TID to a string for JSON-safe responses. */
-function sid<TID extends PlatformID>(value: TID | undefined | null): string | null {
+function sid<TID extends PlatformID>(
+  value: TID | undefined | null,
+): string | null {
   if (value === undefined || value === null) return null;
   if (value instanceof Uint8Array || Buffer.isBuffer(value)) {
     return Buffer.from(value).toString('hex');
@@ -186,7 +188,9 @@ export class WebhookEndpointController<
     }
 
     const body = req.body ?? {};
-    const connectionId = this.safeParseId(body.connectionId as string | undefined);
+    const connectionId = this.safeParseId(
+      body.connectionId as string | undefined,
+    );
     if (!connectionId) {
       return {
         statusCode: 400,
@@ -295,7 +299,7 @@ export class WebhookEndpointController<
       };
     }
 
-    const endpointId = this.safeParseId(req.params.id as string | undefined);
+    const endpointId = this.safeParseId(req.params['id'] as string | undefined);
     if (!endpointId) {
       return {
         statusCode: 400,
@@ -320,7 +324,8 @@ export class WebhookEndpointController<
         statusCode: 200,
         response: {
           newSecret: result.newSecret,
-          message: 'Secret rotated successfully. Previous secret remains valid during grace period.',
+          message:
+            'Secret rotated successfully. Previous secret remains valid during grace period.',
         } as unknown as IApiMessageResponse,
       };
     } catch (err) {
@@ -332,8 +337,12 @@ export class WebhookEndpointController<
         response: {
           message,
           error: isNotFound
-            ? getDigitalBurnbagTranslation(DigitalBurnbagStrings.Api_Http_NotFound)
-            : getDigitalBurnbagTranslation(DigitalBurnbagStrings.Api_Http_BadRequest),
+            ? getDigitalBurnbagTranslation(
+                DigitalBurnbagStrings.Api_Http_NotFound,
+              )
+            : getDigitalBurnbagTranslation(
+                DigitalBurnbagStrings.Api_Http_BadRequest,
+              ),
         } as unknown as EndpointResponse,
       };
     }
@@ -362,7 +371,7 @@ export class WebhookEndpointController<
       };
     }
 
-    const endpointId = this.safeParseId(req.params.id as string | undefined);
+    const endpointId = this.safeParseId(req.params['id'] as string | undefined);
     if (!endpointId) {
       return {
         statusCode: 400,
@@ -389,7 +398,10 @@ export class WebhookEndpointController<
     }
 
     try {
-      await this.deps.webhookEndpointService.updateIpAllowlist(endpointId, cidrs);
+      await this.deps.webhookEndpointService.updateIpAllowlist(
+        endpointId,
+        cidrs,
+      );
       return {
         statusCode: 200,
         response: {
@@ -406,8 +418,12 @@ export class WebhookEndpointController<
         response: {
           message,
           error: isNotFound
-            ? getDigitalBurnbagTranslation(DigitalBurnbagStrings.Api_Http_NotFound)
-            : getDigitalBurnbagTranslation(DigitalBurnbagStrings.Api_Http_BadRequest),
+            ? getDigitalBurnbagTranslation(
+                DigitalBurnbagStrings.Api_Http_NotFound,
+              )
+            : getDigitalBurnbagTranslation(
+                DigitalBurnbagStrings.Api_Http_BadRequest,
+              ),
         } as unknown as EndpointResponse,
       };
     }
@@ -436,7 +452,7 @@ export class WebhookEndpointController<
       };
     }
 
-    const endpointId = this.safeParseId(req.params.id as string | undefined);
+    const endpointId = this.safeParseId(req.params['id'] as string | undefined);
     if (!endpointId) {
       return {
         statusCode: 400,
@@ -465,8 +481,12 @@ export class WebhookEndpointController<
         response: {
           message,
           error: isNotFound
-            ? getDigitalBurnbagTranslation(DigitalBurnbagStrings.Api_Http_NotFound)
-            : getDigitalBurnbagTranslation(DigitalBurnbagStrings.Api_Http_BadRequest),
+            ? getDigitalBurnbagTranslation(
+                DigitalBurnbagStrings.Api_Http_NotFound,
+              )
+            : getDigitalBurnbagTranslation(
+                DigitalBurnbagStrings.Api_Http_BadRequest,
+              ),
         } as unknown as EndpointResponse,
       };
     }
@@ -495,7 +515,7 @@ export class WebhookEndpointController<
       };
     }
 
-    const endpointId = this.safeParseId(req.params.id as string | undefined);
+    const endpointId = this.safeParseId(req.params['id'] as string | undefined);
     if (!endpointId) {
       return {
         statusCode: 400,
@@ -524,8 +544,12 @@ export class WebhookEndpointController<
         response: {
           message,
           error: isNotFound
-            ? getDigitalBurnbagTranslation(DigitalBurnbagStrings.Api_Http_NotFound)
-            : getDigitalBurnbagTranslation(DigitalBurnbagStrings.Api_Http_BadRequest),
+            ? getDigitalBurnbagTranslation(
+                DigitalBurnbagStrings.Api_Http_NotFound,
+              )
+            : getDigitalBurnbagTranslation(
+                DigitalBurnbagStrings.Api_Http_BadRequest,
+              ),
         } as unknown as EndpointResponse,
       };
     }

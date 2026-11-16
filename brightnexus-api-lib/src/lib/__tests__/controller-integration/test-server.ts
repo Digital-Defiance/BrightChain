@@ -1,4 +1,5 @@
 import { I18nEngine, LanguageRegistry } from '@digitaldefiance/i18n-lib';
+import type { IApplication } from '@digitaldefiance/node-express-suite';
 import express, {
   Express,
   NextFunction,
@@ -10,7 +11,6 @@ import { registerBrightNexusRoutesOnRouter } from '../../controllers/register-ro
 import { createBrightNexusDeps } from '../../wiring/create-brightnexus-deps';
 import {
   createBrightNexusTestDb,
-  ensureTestMemberKeys,
   nextTestId,
   testBrightNexusExternalDeps,
   type IBrightNexusTestDb,
@@ -41,9 +41,7 @@ function createStubApplication() {
       const auth = req.headers.authorization;
       if (typeof auth === 'string' && auth.startsWith('Bearer ')) {
         const userId = auth.slice('Bearer '.length).trim();
-        (req as Request & { user?: { id: string } }).user = {
-          id: userId,
-        } as never;
+        req.user = { id: userId } as Request['user'];
       }
       next();
     },
@@ -101,7 +99,7 @@ export function createBrightNexusTestServer(): IBrightNexusTestServer {
   const application = createStubApplication();
   registerBrightNexusRoutesOnRouter(
     router,
-    application as never,
+    application as unknown as IApplication<string>,
     deps,
     '/brightnexus/location',
   );

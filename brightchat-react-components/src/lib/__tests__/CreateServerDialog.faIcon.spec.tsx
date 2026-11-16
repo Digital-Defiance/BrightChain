@@ -42,7 +42,7 @@ jest.mock('@brightchain/brightchain-lib', () => ({
 }));
 
 jest.mock('react-easy-crop', () => {
-  const React = require('react');
+  const React = jest.requireActual<typeof import('react')>('react');
   return {
     __esModule: true,
     default: React.forwardRef(function MockCropper() {
@@ -103,8 +103,6 @@ describe('CreateServerDialog — FontAwesome icon picker', () => {
 
   it('shows "Or choose a FontAwesome icon:" label', () => {
     renderDialog();
-    expect(
-      screen.getByText('Or choose a FontAwesome icon:'),
-    ).toBeTruthy();
+    expect(screen.getByText('Or choose a FontAwesome icon:')).toBeTruthy();
   });
 });

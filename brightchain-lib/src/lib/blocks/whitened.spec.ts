@@ -5,9 +5,8 @@ import { BlockType } from '../enumerations/blockType';
 import { WhitenedError } from '../errors/whitenedError';
 import { ChecksumService } from '../services/checksum.service';
 import { ServiceProvider } from '../services/service.provider';
-import { WhitenedBlock } from './whitened';
 import { brightDateNow } from '../utils/brightDateConversions';
-import type { BrightDateTimestamp } from '../types/brightDateTimestamp';
+import { WhitenedBlock } from './whitened';
 
 describe('WhitenedBlock', () => {
   let checksumService: ChecksumService;

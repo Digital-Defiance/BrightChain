@@ -659,7 +659,8 @@ export const BrightHubUkrainianStrings: ComponentStrings<BrightHubStringKey> = {
   [BrightHubStrings.EditProfileDialog_Title]: 'Редагувати профіль',
   [BrightHubStrings.EditProfileDialog_DisplayName]: "Ім'я для відображення",
   [BrightHubStrings.EditProfileDialog_Bio]: 'Біографія',
-  [BrightHubStrings.EditProfileDialog_BioPlaceholder]: 'Розкажіть людям про себе. Підтримуються Markdown та іконки.',
+  [BrightHubStrings.EditProfileDialog_BioPlaceholder]:
+    'Розкажіть людям про себе. Підтримуються Markdown та іконки.',
   [BrightHubStrings.EditProfileDialog_BioCharCountTemplate]: '{CURRENT}/{MAX}',
   [BrightHubStrings.EditProfileDialog_BioPreview]: 'Попередній перегляд',
   [BrightHubStrings.EditProfileDialog_Location]: 'Місцезнаходження',
@@ -667,8 +668,10 @@ export const BrightHubUkrainianStrings: ComponentStrings<BrightHubStringKey> = {
   [BrightHubStrings.EditProfileDialog_Save]: 'Зберегти',
   [BrightHubStrings.EditProfileDialog_Cancel]: 'Скасувати',
   [BrightHubStrings.EditProfileDialog_Saving]: 'Збереження\u2026',
-  [BrightHubStrings.EditProfileDialog_ErrorBioTooLong]: 'Біографія перевищує максимальну довжину {MAX} символів.',
-  [BrightHubStrings.EditProfileDialog_ErrorBioContainsImage]: 'Біографія не може містити синтаксис Markdown для зображень.',
+  [BrightHubStrings.EditProfileDialog_ErrorBioTooLong]:
+    'Біографія перевищує максимальну довжину {MAX} символів.',
+  [BrightHubStrings.EditProfileDialog_ErrorBioContainsImage]:
+    'Біографія не може містити синтаксис Markdown для зображень.',
 
   // UserProfileCard
   [BrightHubStrings.UserProfileCard_EditProfile]: 'Редагувати профіль',

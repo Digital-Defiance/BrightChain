@@ -15,7 +15,7 @@ import useMediaQuery from '@mui/material/useMediaQuery';
 import deepmerge from '@mui/utils/deepmerge';
 import * as React from 'react';
 import { useMemo, useState } from 'react';
-import { Outlet, useLocation } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router';
 import { AppSidebar } from './AppSidebar';
 import { BrandConfigContext } from './BrandConfigContext';
 import { LayoutShellProps } from './types';

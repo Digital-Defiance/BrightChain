@@ -59,7 +59,9 @@ describe('brightDateToDate', () => {
     it('converts Unix epoch BrightDateValue (-10957.5) to January 1, 1970, 00:00:00 UTC', () => {
       const result = brightDateToDate(UNIX_EPOCH_BRIGHT_DATE_VALUE);
       // Allow ≤1ms rounding tolerance
-      expect(Math.abs(result.getTime() - UNIX_EPOCH_DATE.getTime())).toBeLessThanOrEqual(1);
+      expect(
+        Math.abs(result.getTime() - UNIX_EPOCH_DATE.getTime()),
+      ).toBeLessThanOrEqual(1);
     });
   });
 
@@ -92,7 +94,9 @@ describe('brightDateToDate', () => {
       // 0.5 days after J2000.0 (UTC label 2000-01-01T11:58:55.816Z) is
       // 2000-01-01T23:58:55.816Z — 12 hours, not midnight.
       const expected = new Date('2000-01-01T23:58:55.816Z');
-      expect(Math.abs(result.getTime() - expected.getTime())).toBeLessThanOrEqual(1);
+      expect(
+        Math.abs(result.getTime() - expected.getTime()),
+      ).toBeLessThanOrEqual(1);
     });
   });
 });
@@ -106,7 +110,9 @@ describe('dateToBrightDate', () => {
       // J2000.0 is the anchor — round-trip is bit-exact for this single
       // instant only. Allow ≤120 ns (≈ 1.4e-12 days) of float64 round-trip
       // tax per BrightDate spec §4.1.
-      expect(Math.abs(result - J2000_BRIGHT_DATE_VALUE)).toBeLessThanOrEqual(2e-12);
+      expect(Math.abs(result - J2000_BRIGHT_DATE_VALUE)).toBeLessThanOrEqual(
+        2e-12,
+      );
     });
 
     it('converts Unix epoch date to BrightDateValue ~-10957.4995 (spec-correct, TAI-substrate)', () => {
@@ -135,13 +141,21 @@ describe('dateToBrightDate', () => {
 
   describe('round-trip with brightDateToDate', () => {
     it('round-trips J2000.0 within 1 microday', () => {
-      const roundTripped = dateToBrightDate(brightDateToDate(J2000_BRIGHT_DATE_VALUE));
-      expect(Math.abs(roundTripped - J2000_BRIGHT_DATE_VALUE)).toBeLessThanOrEqual(0.000001);
+      const roundTripped = dateToBrightDate(
+        brightDateToDate(J2000_BRIGHT_DATE_VALUE),
+      );
+      expect(
+        Math.abs(roundTripped - J2000_BRIGHT_DATE_VALUE),
+      ).toBeLessThanOrEqual(0.000001);
     });
 
     it('round-trips Unix epoch within 1 microday', () => {
-      const roundTripped = dateToBrightDate(brightDateToDate(UNIX_EPOCH_BRIGHT_DATE_VALUE));
-      expect(Math.abs(roundTripped - UNIX_EPOCH_BRIGHT_DATE_VALUE)).toBeLessThanOrEqual(0.000001);
+      const roundTripped = dateToBrightDate(
+        brightDateToDate(UNIX_EPOCH_BRIGHT_DATE_VALUE),
+      );
+      expect(
+        Math.abs(roundTripped - UNIX_EPOCH_BRIGHT_DATE_VALUE),
+      ).toBeLessThanOrEqual(0.000001);
     });
   });
 });
@@ -155,14 +169,18 @@ describe('brightDateToISO', () => {
       expect(typeof result).toBe('string');
       // Parse back and verify it matches J2000
       const parsed = new Date(result);
-      expect(Math.abs(parsed.getTime() - J2000_DATE.getTime())).toBeLessThanOrEqual(1);
+      expect(
+        Math.abs(parsed.getTime() - J2000_DATE.getTime()),
+      ).toBeLessThanOrEqual(1);
     });
 
     it('converts Unix epoch BrightDateValue to ISO string for 1970-01-01T00:00:00Z', () => {
       const result = brightDateToISO(UNIX_EPOCH_BRIGHT_DATE_VALUE);
       expect(typeof result).toBe('string');
       const parsed = new Date(result);
-      expect(Math.abs(parsed.getTime() - UNIX_EPOCH_DATE.getTime())).toBeLessThanOrEqual(1);
+      expect(
+        Math.abs(parsed.getTime() - UNIX_EPOCH_DATE.getTime()),
+      ).toBeLessThanOrEqual(1);
     });
   });
 
@@ -187,7 +205,9 @@ describe('isoToBrightDate', () => {
   describe('known epoch values', () => {
     it('converts J2000.0 ISO string (UTC label) to BrightDateValue 0', () => {
       const result = isoToBrightDate('2000-01-01T11:58:55.816Z');
-      expect(Math.abs(result - J2000_BRIGHT_DATE_VALUE)).toBeLessThanOrEqual(2e-12);
+      expect(Math.abs(result - J2000_BRIGHT_DATE_VALUE)).toBeLessThanOrEqual(
+        2e-12,
+      );
     });
 
     it('converts Unix epoch ISO string to BrightDateValue ~-10957.4995 (spec-correct, TAI-substrate)', () => {
@@ -200,13 +220,17 @@ describe('isoToBrightDate', () => {
     it('round-trips J2000.0 within 1 microday', () => {
       const iso = brightDateToISO(J2000_BRIGHT_DATE_VALUE);
       const roundTripped = isoToBrightDate(iso);
-      expect(Math.abs(roundTripped - J2000_BRIGHT_DATE_VALUE)).toBeLessThanOrEqual(0.000001);
+      expect(
+        Math.abs(roundTripped - J2000_BRIGHT_DATE_VALUE),
+      ).toBeLessThanOrEqual(0.000001);
     });
 
     it('round-trips Unix epoch within 1 microday', () => {
       const iso = brightDateToISO(UNIX_EPOCH_BRIGHT_DATE_VALUE);
       const roundTripped = isoToBrightDate(iso);
-      expect(Math.abs(roundTripped - UNIX_EPOCH_BRIGHT_DATE_VALUE)).toBeLessThanOrEqual(0.000001);
+      expect(
+        Math.abs(roundTripped - UNIX_EPOCH_BRIGHT_DATE_VALUE),
+      ).toBeLessThanOrEqual(0.000001);
     });
   });
 
@@ -216,7 +240,9 @@ describe('isoToBrightDate', () => {
     });
 
     it('throws TypeError containing "Invalid date string" for invalid input', () => {
-      expect(() => isoToBrightDate('not-a-date')).toThrow(/Invalid date string/);
+      expect(() => isoToBrightDate('not-a-date')).toThrow(
+        /Invalid date string/,
+      );
     });
 
     it('throws TypeError for an empty string', () => {
@@ -234,11 +260,15 @@ describe('isoToBrightDate', () => {
 describe('normalizeToBrightDate', () => {
   describe('known epoch values — number input', () => {
     it('returns J2000.0 BrightDateValue (0) unchanged', () => {
-      expect(normalizeToBrightDate(J2000_BRIGHT_DATE_VALUE)).toBe(J2000_BRIGHT_DATE_VALUE);
+      expect(normalizeToBrightDate(J2000_BRIGHT_DATE_VALUE)).toBe(
+        J2000_BRIGHT_DATE_VALUE,
+      );
     });
 
     it('returns Unix epoch BrightDateValue (-10957.5) unchanged', () => {
-      expect(normalizeToBrightDate(UNIX_EPOCH_BRIGHT_DATE_VALUE)).toBe(UNIX_EPOCH_BRIGHT_DATE_VALUE);
+      expect(normalizeToBrightDate(UNIX_EPOCH_BRIGHT_DATE_VALUE)).toBe(
+        UNIX_EPOCH_BRIGHT_DATE_VALUE,
+      );
     });
   });
 
@@ -257,7 +287,9 @@ describe('normalizeToBrightDate', () => {
   describe('known epoch values — string input', () => {
     it('converts J2000.0 ISO string (UTC label) to BrightDateValue 0', () => {
       const result = normalizeToBrightDate('2000-01-01T11:58:55.816Z');
-      expect(Math.abs(result - J2000_BRIGHT_DATE_VALUE)).toBeLessThanOrEqual(2e-12);
+      expect(Math.abs(result - J2000_BRIGHT_DATE_VALUE)).toBeLessThanOrEqual(
+        2e-12,
+      );
     });
 
     it('converts Unix epoch ISO string to BrightDateValue ~-10957.4995 (spec-correct, TAI-substrate)', () => {
@@ -329,7 +361,9 @@ describe('normalizeToBrightDate', () => {
     });
 
     it('throws TypeError for a numeric-looking but invalid string', () => {
-      expect(() => normalizeToBrightDate('not-a-date-string')).toThrow(TypeError);
+      expect(() => normalizeToBrightDate('not-a-date-string')).toThrow(
+        TypeError,
+      );
     });
   });
 });

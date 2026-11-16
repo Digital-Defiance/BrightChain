@@ -13,10 +13,11 @@
  */
 
 import {
+  brightDateNow,
   DeliveryStatus,
-  InMemoryEmailMetadataStore,
   type IDeliveryReceipt,
   type IGossipService,
+  InMemoryEmailMetadataStore,
   type MessageCBLService,
 } from '@brightchain/brightchain-lib';
 import {
@@ -55,7 +56,7 @@ function ensureI18nContext(): void {
   }
   const ctx = GlobalActiveContext.getInstance();
   try {
-    ctx.context;
+    void ctx.context; // throws if the default context is missing
   } catch {
     ctx.createContext('en-US');
   }
@@ -889,7 +890,7 @@ describe('Email API – Multi-Node E2E Integration', () => {
 
       // 2. Seed delivery receipts into the store for both recipients
       //    (In production, gossip acks would populate these; here we simulate.)
-      const now = new Date();
+      const now = brightDateNow();
       const receipts = new Map<string, IDeliveryReceipt>([
         [
           recipientA,

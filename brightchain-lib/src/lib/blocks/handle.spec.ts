@@ -6,6 +6,7 @@ import { EnhancedValidationError } from '../errors/enhancedValidationError';
 import { ChecksumService } from '../services/checksum.service';
 import { ServiceProvider } from '../services/service.provider';
 import { Checksum } from '../types/checksum';
+import { brightDateNow } from '../utils/brightDateConversions';
 import {
   BLOCK_HANDLE_SYMBOL,
   BlockHandle,
@@ -13,8 +14,6 @@ import {
   isBlockHandle,
 } from './handle';
 import { RawDataBlock } from './rawData';
-import { brightDateNow } from '../utils/brightDateConversions';
-import type { BrightDateTimestamp } from '../types/brightDateTimestamp';
 
 describe('BlockHandle', () => {
   let checksumService: ChecksumService;

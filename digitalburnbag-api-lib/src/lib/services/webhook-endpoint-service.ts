@@ -11,7 +11,6 @@
  * Requirements: 10.1, 10.2, 10.3, 10.4, 10.5, 10.6, 10.7, 10.8,
  *               17.1, 17.2, 17.3, 17.5, 17.6, 17.7
  */
-import * as crypto from 'crypto';
 import type {
   IWebhookDeliveryStats,
   IWebhookEndpointBase,
@@ -21,6 +20,7 @@ import type {
 } from '@brightchain/digitalburnbag-lib';
 import { HeartbeatSignalType } from '@brightchain/digitalburnbag-lib';
 import type { PlatformID } from '@digitaldefiance/ecies-lib';
+import * as crypto from 'crypto';
 import type { BrightDBWebhookEndpointRepository } from '../collections/webhook-endpoint-collection';
 
 // ---------------------------------------------------------------------------
@@ -61,7 +61,13 @@ export interface IWebhookDeliveryLogEntry {
   /** Whether signature validation passed */
   signatureValid: boolean;
   /** Processing outcome */
-  outcome: 'success' | 'invalid_signature' | 'rate_limited' | 'ip_blocked' | 'disabled' | 'error';
+  outcome:
+    | 'success'
+    | 'invalid_signature'
+    | 'rate_limited'
+    | 'ip_blocked'
+    | 'disabled'
+    | 'error';
   /** Error message if applicable */
   error?: string;
   /** Processing time in milliseconds */
@@ -160,10 +166,7 @@ export function computeHmacSignature(
   secret: string,
   algorithm: 'sha256' | 'sha1',
 ): string {
-  return crypto
-    .createHmac(algorithm, secret)
-    .update(payload)
-    .digest('hex');
+  return crypto.createHmac(algorithm, secret).update(payload).digest('hex');
 }
 
 /**
@@ -372,7 +375,11 @@ export function extractSignalFromPayload(
  */
 export function extractByPath(obj: unknown, path: string): unknown {
   // Strip JSONPath prefix
-  const cleanPath = path.startsWith('$.') ? path.slice(2) : path.startsWith('$') ? path.slice(1) : path;
+  const cleanPath = path.startsWith('$.')
+    ? path.slice(2)
+    : path.startsWith('$')
+      ? path.slice(1)
+      : path;
   if (!cleanPath) return obj;
 
   const parts = cleanPath.split('.');
@@ -408,7 +415,6 @@ export function generateTestPayload(providerId: string): Buffer {
   };
   return Buffer.from(JSON.stringify(payload), 'utf8');
 }
-
 
 // ---------------------------------------------------------------------------
 // WebhookEndpointService Implementation
@@ -523,7 +529,8 @@ export class WebhookEndpointService<TID extends PlatformID = string>
     const startTime = Date.now();
 
     // Look up endpoint by connectionId
-    const endpoint = await this.repository.getEndpointByConnectionId(connectionId);
+    const endpoint =
+      await this.repository.getEndpointByConnectionId(connectionId);
 
     if (!endpoint) {
       return {
@@ -546,7 +553,8 @@ export class WebhookEndpointService<TID extends PlatformID = string>
       });
       return {
         success: false,
-        error: 'Endpoint is temporarily disabled due to consecutive signature failures',
+        error:
+          'Endpoint is temporarily disabled due to consecutive signature failures',
         processingTimeMs: Date.now() - startTime,
       };
     }
@@ -580,7 +588,10 @@ export class WebhookEndpointService<TID extends PlatformID = string>
     }
 
     // Step 2: Check rate limit (Req 17.3)
-    const rateLimiter = this.getOrCreateRateLimiter(endpointIdStr, endpoint.rateLimitPerMinute);
+    const rateLimiter = this.getOrCreateRateLimiter(
+      endpointIdStr,
+      endpoint.rateLimitPerMinute,
+    );
     if (!rateLimiter.isAllowed(startTime)) {
       this.logDelivery(endpointIdStr, {
         timestamp: now,
@@ -602,8 +613,11 @@ export class WebhookEndpointService<TID extends PlatformID = string>
     rateLimiter.record(startTime);
 
     // Step 3: Verify signature (Req 10.2, 10.5, 17.2)
-    const signatureHeader = endpoint.signatureHeader ?? this.getDefaultSignatureHeader(endpoint.signatureMethod);
-    const providedSignature = headers[signatureHeader] ?? headers[signatureHeader.toLowerCase()] ?? '';
+    const signatureHeader =
+      endpoint.signatureHeader ??
+      this.getDefaultSignatureHeader(endpoint.signatureMethod);
+    const providedSignature =
+      headers[signatureHeader] ?? headers[signatureHeader.toLowerCase()] ?? '';
 
     // Try current secret first, then previousSecret during grace period (Req 10.6)
     let signatureValid = verifySignature(
@@ -613,7 +627,11 @@ export class WebhookEndpointService<TID extends PlatformID = string>
       providedSignature,
     );
 
-    if (!signatureValid && endpoint.previousSecret && endpoint.previousSecretExpiresAt) {
+    if (
+      !signatureValid &&
+      endpoint.previousSecret &&
+      endpoint.previousSecretExpiresAt
+    ) {
       const expiresAt = new Date(endpoint.previousSecretExpiresAt);
       if (expiresAt > now) {
         signatureValid = verifySignature(
@@ -670,7 +688,10 @@ export class WebhookEndpointService<TID extends PlatformID = string>
       const extractionResult = await Promise.race([
         this.extractSignal(body, endpoint.providerId),
         new Promise<HeartbeatSignalType>((resolve) =>
-          setTimeout(() => resolve(HeartbeatSignalType.PRESENCE), MAX_PROCESSING_TIME_MS),
+          setTimeout(
+            () => resolve(HeartbeatSignalType.PRESENCE),
+            MAX_PROCESSING_TIME_MS,
+          ),
         ),
       ]);
       signal = extractionResult;
@@ -807,7 +828,8 @@ export class WebhookEndpointService<TID extends PlatformID = string>
    */
   async checkEndpointTimeout(endpointId: TID, now = Date.now()): Promise<void> {
     const endpoint = await this.repository.getEndpointById(endpointId);
-    if (!endpoint || !endpoint.isActive || endpoint.isDisabledByFailures) return;
+    if (!endpoint || !endpoint.isActive || endpoint.isDisabledByFailures)
+      return;
 
     if (!endpoint.lastReceivedAt) return; // Never received — no timeout yet
 
@@ -882,7 +904,9 @@ export class WebhookEndpointService<TID extends PlatformID = string>
     const testPayload = generateTestPayload(endpoint.providerId);
 
     // Compute a valid signature for the test payload
-    const signatureHeader = endpoint.signatureHeader ?? this.getDefaultSignatureHeader(endpoint.signatureMethod);
+    const signatureHeader =
+      endpoint.signatureHeader ??
+      this.getDefaultSignatureHeader(endpoint.signatureMethod);
     const testSignature = this.computeTestSignature(
       endpoint.signatureMethod,
       testPayload,

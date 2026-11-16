@@ -161,7 +161,9 @@ export class ProviderController<
       };
     }
 
-    const connectionId = this.safeParseId(req.params.id as string | undefined);
+    const connectionId = this.safeParseId(
+      req.params['id'] as string | undefined,
+    );
     if (!connectionId) {
       return {
         statusCode: 400,
@@ -177,9 +179,9 @@ export class ProviderController<
     }
 
     // Parse optional filters
-    const signalTypesParam = req.query.signalTypes as string | undefined;
-    const sinceParam = req.query.since as string | undefined;
-    const untilParam = req.query.until as string | undefined;
+    const signalTypesParam = req.query['signalTypes'] as string | undefined;
+    const sinceParam = req.query['since'] as string | undefined;
+    const untilParam = req.query['until'] as string | undefined;
 
     const options: {
       signalTypes?: HeartbeatSignalType[];
@@ -228,7 +230,9 @@ export class ProviderController<
       };
     }
 
-    const connectionId = this.safeParseId(req.params.id as string | undefined);
+    const connectionId = this.safeParseId(
+      req.params['id'] as string | undefined,
+    );
     if (!connectionId) {
       return {
         statusCode: 400,
@@ -273,7 +277,9 @@ export class ProviderController<
       };
     }
 
-    const connectionId = this.safeParseId(req.params.id as string | undefined);
+    const connectionId = this.safeParseId(
+      req.params['id'] as string | undefined,
+    );
     if (!connectionId) {
       return {
         statusCode: 400,
@@ -390,7 +396,7 @@ export class ProviderController<
       };
     }
 
-    const providerId = this.safeParseId(req.params.id as string | undefined);
+    const providerId = this.safeParseId(req.params['id'] as string | undefined);
     if (!providerId) {
       return {
         statusCode: 400,

@@ -15,7 +15,7 @@ import * as crypto from 'crypto';
 import fc from 'fast-check';
 
 import type { IAclDocument } from '@brightchain/brightchain-lib';
-import { WriteMode } from '@brightchain/brightchain-lib';
+import { dateToBrightDate, WriteMode } from '@brightchain/brightchain-lib';
 
 import { AclDocumentStore } from './aclDocumentStore';
 import { ECDSANodeAuthenticator } from './ecdsaNodeAuthenticator';
@@ -76,8 +76,8 @@ function buildAclDocument(
     aclAdministrators: [admin.publicKey],
     scope: { dbName: 'testdb' },
     version: 1,
-    createdAt: now,
-    updatedAt: now,
+    createdAt: dateToBrightDate(now),
+    updatedAt: dateToBrightDate(now),
     creatorPublicKey: admin.publicKey,
     creatorSignature: new Uint8Array(0),
     ...overrides,

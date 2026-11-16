@@ -173,9 +173,9 @@ describe('MemberStore Unit Tests', () => {
       expect(typeof publicProfile.storageQuota).toBe('bigint');
       expect(publicProfile.storageUsed).toBeDefined();
       expect(typeof publicProfile.storageUsed).toBe('bigint');
-      expect(typeof publicProfile.lastActive).toBe("number");
-      expect(typeof publicProfile.dateCreated).toBe("number");
-      expect(typeof publicProfile.dateUpdated).toBe("number");
+      expect(typeof publicProfile.lastActive).toBe('number');
+      expect(typeof publicProfile.dateCreated).toBe('number');
+      expect(typeof publicProfile.dateUpdated).toBe('number');
     });
 
     it('should retrieve private profile with all fields', async () => {
@@ -196,8 +196,8 @@ describe('MemberStore Unit Tests', () => {
       expect(privateProfile.settings.minRedundancy).toBeDefined();
       expect(privateProfile.activityLog).toBeDefined();
       expect(Array.isArray(privateProfile.activityLog)).toBe(true);
-      expect(typeof privateProfile.dateCreated).toBe("number");
-      expect(typeof privateProfile.dateUpdated).toBe("number");
+      expect(typeof privateProfile.dateCreated).toBe('number');
+      expect(typeof privateProfile.dateUpdated).toBe('number');
     });
 
     it('should throw MemberNotFound for unknown ID', async () => {

@@ -2,7 +2,10 @@
  * @fileoverview Unit tests for BrightNexusSubsystemPlugin.
  */
 
-import type { ISubsystemContext } from '@brightchain/brightchain-lib';
+import type {
+  IAppSubsystemPlugin,
+  ISubsystemContext,
+} from '@brightchain/brightchain-lib';
 import { describe, expect, it, jest } from '@jest/globals';
 import { BrightNexusSubsystemPlugin } from '../brightNexusSubsystemPlugin';
 
@@ -10,12 +13,10 @@ function createMockContext(withApiRouter = true): ISubsystemContext {
   return {
     services: {
       register: jest.fn(),
-      get: jest.fn(),
+      get: <T>(_key: string): T => undefined as T,
       has: jest.fn(() => false),
     },
-    apiRouter: withApiRouter
-      ? { mountBrightNexusRoutes: jest.fn() }
-      : null,
+    apiRouter: withApiRouter ? { mountBrightNexusRoutes: jest.fn() } : null,
     expressApp: {} as ISubsystemContext['expressApp'],
     environment: { debug: false },
     blockStore: {},
@@ -34,7 +35,7 @@ describe('BrightNexusSubsystemPlugin', () => {
   });
 
   it('should have isOptional set to true', () => {
-    const plugin = new BrightNexusSubsystemPlugin();
+    const plugin: IAppSubsystemPlugin = new BrightNexusSubsystemPlugin();
     expect(plugin.isOptional).toBe(true);
   });
 

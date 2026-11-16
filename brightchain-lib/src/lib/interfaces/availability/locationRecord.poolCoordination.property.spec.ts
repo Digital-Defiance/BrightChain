@@ -1,11 +1,11 @@
 import fc from 'fast-check';
+import { normalizeToBrightDate } from '../../utils/brightDateConversions';
 import { PoolId } from '../storage/pooledBlockStore';
 import {
   ILocationRecord,
   locationRecordFromJSON,
   locationRecordToJSON,
 } from './locationRecord';
-import { normalizeToBrightDate } from '../../utils/brightDateConversions';
 
 /**
  * Property tests for ILocationRecord poolId round-trip serialization

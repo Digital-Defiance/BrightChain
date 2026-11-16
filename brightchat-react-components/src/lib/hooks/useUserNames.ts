@@ -14,7 +14,6 @@ const nameCache = new Map<string, string>();
 
 /** IDs currently being fetched (dedup in-flight requests). */
 let pendingIds = new Set<string>();
-let pendingPromise: Promise<void> | null = null;
 
 /**
  * Given a set of user IDs, returns a Map<id, displayName>.
@@ -89,9 +88,11 @@ export function useUserNames(ids: string[]): Map<string, string> {
     });
   }, [chatApi]);
 
+  // A stable key for the ID list, so the effect re-runs only when the IDs change.
+  const idsKey = ids.join(',');
   useEffect(() => {
     resolve();
-  }, [resolve, ids.join(',')]);
+  }, [resolve, idsKey]);
 
   return names;
 }

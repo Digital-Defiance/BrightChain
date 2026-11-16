@@ -7,7 +7,13 @@
  */
 
 import type { IChannel, IPaginatedResult } from '@brightchain/brightchain-lib';
-import { brightDateNow, brightDateToDate, dateToBrightDate, ChannelVisibility, toBrightDateString } from '@brightchain/brightchain-lib';
+import {
+  brightDateNow,
+  brightDateToDate,
+  ChannelVisibility,
+  dateToBrightDate,
+  toBrightDateString,
+} from '@brightchain/brightchain-lib';
 import { BrightChatStrings } from '@brightchain/brightchat-lib';
 import { useI18n } from '@digitaldefiance/express-suite-react-components';
 import {
@@ -22,7 +28,7 @@ import {
   Typography,
 } from '@mui/material';
 import { FC, memo, useCallback, useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 
 import React from 'react';
 import { useChatApi } from './hooks/useChatApi';
@@ -53,7 +59,12 @@ const INITIAL_STATE: ChannelListState = {
  * Format a BrightDateTimestamp (number), Date, or date-string into a short human-readable timestamp.
  */
 function formatTimestamp(date: number | Date | string): string {
-  const d = typeof date === 'number' ? brightDateToDate(date) : typeof date === 'string' ? new Date(date) : date;
+  const d =
+    typeof date === 'number'
+      ? brightDateToDate(date)
+      : typeof date === 'string'
+        ? new Date(date)
+        : date;
   const bdValue = typeof date === 'number' ? date : dateToBrightDate(d);
   const nowBd = brightDateNow();
   const diffDays = Math.floor(nowBd - bdValue);
@@ -70,7 +81,10 @@ function formatTimestamp(date: number | Date | string): string {
   if (diffDays < 7) {
     return d.toLocaleDateString(undefined, { weekday: 'short' });
   }
-  const localeStr = d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  const localeStr = d.toLocaleDateString(undefined, {
+    month: 'short',
+    day: 'numeric',
+  });
   const bd = toBrightDateString(d, 3);
   return bd ? `${localeStr} (BD ${bd})` : localeStr;
 }
@@ -120,7 +134,9 @@ const ChannelListView: FC = () => {
             : discoverable;
 
           // Sort by lastMessageAt descending (most recent first)
-          const sorted = [...merged].sort((a, b) => b.lastMessageAt - a.lastMessageAt);
+          const sorted = [...merged].sort(
+            (a, b) => b.lastMessageAt - a.lastMessageAt,
+          );
 
           return {
             ...prev,

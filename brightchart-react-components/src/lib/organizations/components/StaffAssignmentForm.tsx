@@ -116,15 +116,6 @@ export const StaffAssignmentForm: React.FC<StaffAssignmentFormProps> = ({
     }
   }, [orgApi, memberId, roleCode, organizationId, onAssigned]);
 
-  const handleReset = useCallback(() => {
-    setSuccess(false);
-    setError(null);
-    setMemberId('');
-    setRoleCode('');
-    setMemberIdError(null);
-    setRoleCodeError(null);
-  }, []);
-
   return (
     <Box data-testid="staff-assignment-form" sx={{ p: 2 }}>
       <Typography variant="h6" gutterBottom>

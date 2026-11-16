@@ -2,16 +2,14 @@ import { PlatformID } from '@digitaldefiance/ecies-lib';
 import type { HeartbeatSignalType } from '../canary-provider/canary-provider-adapter';
 import type {
   INativeCanaryConfigBase,
-  NativeCanaryType,
   IPlatformEvent,
+  NativeCanaryType,
 } from '../canary-provider/native-canary-config';
 
 /**
  * Parameters for configuring a new native canary.
  */
-export interface IConfigureNativeCanaryParams<
-  TID extends PlatformID = string,
-> {
+export interface IConfigureNativeCanaryParams<TID extends PlatformID = string> {
   /** User configuring the native canary */
   userId: TID;
   /** Which native canary type to configure */

@@ -1,9 +1,16 @@
-import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@digitaldefiance/express-suite-react-components';
+import { useCallback, useEffect, useState } from 'react';
+
+/** A parsed WebSocket event. `metadata` is narrowed by the consumer per `type`. */
+export interface ISubspaceLatticeSocketMessage {
+  type?: string;
+  metadata?: unknown;
+}
 
 export const useSubspaceLatticeSocket = (roomId: string | null) => {
   const [socket, setSocket] = useState<WebSocket | null>(null);
-  const [lastMessage, setLastMessage] = useState<any | null>(null);
+  const [lastMessage, setLastMessage] =
+    useState<ISubspaceLatticeSocketMessage | null>(null);
   const { token } = useAuth();
 
   const connect = useCallback(() => {
@@ -21,7 +28,7 @@ export const useSubspaceLatticeSocket = (roomId: string | null) => {
 
     newSocket.onmessage = (event) => {
       try {
-        const message = JSON.parse(event.data);
+        const message = JSON.parse(event.data) as ISubspaceLatticeSocketMessage;
         setLastMessage(message);
       } catch (e) {
         console.error('Failed to parse WebSocket message:', e);

@@ -16,10 +16,10 @@ import {
   validBlockSizes,
 } from '@brightchain/brightchain-lib';
 import { BrightDb, InMemoryHeadRegistry } from '@brightchain/db';
-import { createCalendarCollectionModel } from '../../models/calendarCollection.model.ts';
-import { createCalendarShareModel } from '../../models/calendarShare.model.ts';
-import { CalendarEngineService } from '../calendarEngineService.ts';
-import { EncryptionService } from '../encryptionService.ts';
+import { createCalendarCollectionModel } from '../../models/calendarCollection.model.js';
+import { createCalendarShareModel } from '../../models/calendarShare.model.js';
+import { CalendarEngineService } from '../calendarEngineService.js';
+import { EncryptionService } from '../encryptionService.js';
 
 // ─── Setup ───────────────────────────────────────────────────────────────────
 
@@ -31,8 +31,7 @@ beforeAll(() => {
 function makeDb(name = 'testdb'): BrightDb {
   const store = new MemoryBlockStore(validBlockSizes);
   const registry = InMemoryHeadRegistry.createIsolated();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return new BrightDb(store as any, { name, headRegistry: registry });
+  return new BrightDb(store, { name, headRegistry: registry });
 }
 
 function createService() {
@@ -284,9 +283,7 @@ describe('CalendarEngineService', () => {
       expect(found).toBeNull();
 
       // Shares should be gone
-      const shares = await shareModel
-        .find({ calendarId: cal.id } as any)
-        .toArray();
+      const shares = await shareModel.find({ calendarId: cal.id }).toArray();
       expect(shares).toHaveLength(0);
     });
 

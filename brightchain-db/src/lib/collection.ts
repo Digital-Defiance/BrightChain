@@ -8,19 +8,19 @@
  */
 
 import type {
+  BrightDateTimestamp,
   DeferredHeadUpdate,
   HeadRecord,
 } from '@brightchain/brightchain-lib';
 import {
+  brightDateNow,
   Checksum,
+  dateToBrightDate,
   IBlockStore,
+  normalizeToBrightDate,
   StoreError,
   StoreErrorType,
-  brightDateNow,
-  dateToBrightDate,
-  normalizeToBrightDate,
 } from '@brightchain/brightchain-lib';
-import type { BrightDateTimestamp } from '@brightchain/brightchain-lib';
 import { sha3_512 } from '@noble/hashes/sha3';
 import { randomUUID } from 'crypto';
 import { runAggregation } from './aggregation';
@@ -1558,7 +1558,10 @@ export class HeadRegistry {
     return new Map(this.heads);
   }
 
-  getHeadTimestamp(_dbName: string, _collectionName: string): BrightDateTimestamp | undefined {
+  getHeadTimestamp(
+    _dbName: string,
+    _collectionName: string,
+  ): BrightDateTimestamp | undefined {
     return undefined;
   }
 

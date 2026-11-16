@@ -51,9 +51,7 @@ export class SearchService {
     this.searchChannels(memberId, lowerQuery, results);
 
     // Sort by createdAt descending (newest first)
-    results.sort(
-      (a, b) => b.message.createdAt - a.message.createdAt,
-    );
+    results.sort((a, b) => b.message.createdAt - a.message.createdAt);
 
     return paginateItems(results, cursor, limit);
   }

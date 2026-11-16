@@ -1,4 +1,6 @@
 import {
+  BlockId,
+  brightDateNow,
   DurabilityLevel,
   IMessageMetadata,
   MessageEncryptionScheme,
@@ -138,8 +140,8 @@ describe('Task 13.5: WebSocket /messages/events endpoint', () => {
     handler.handleConnection(mockWs);
     (mockWs.send as jest.Mock) = jest.fn(); // Reset after connection message
 
-    const metadata = {
-      blockId: 'block-1',
+    const metadata: IMessageMetadata = {
+      blockId: 'block-1' as BlockId,
       messageType: 'test',
       senderId: 'sender-1',
       recipients: [],
@@ -149,12 +151,12 @@ describe('Task 13.5: WebSocket /messages/events endpoint', () => {
       encryptionScheme: MessageEncryptionScheme.NONE,
       isCBL: false,
       cblBlockIds: [],
-      createdAt: new Date(),
+      createdAt: brightDateNow(),
       expiresAt: null,
       durabilityLevel: DurabilityLevel.Standard,
       parityBlockIds: [],
       accessCount: 0,
-      lastAccessedAt: new Date(),
+      lastAccessedAt: brightDateNow(),
       replicationStatus: ReplicationStatus.Pending,
       targetReplicationFactor: 3,
       replicaNodeIds: [],
@@ -162,10 +164,7 @@ describe('Task 13.5: WebSocket /messages/events endpoint', () => {
       checksum: '',
     };
 
-    eventSystem.emit(
-      MessageEventType.MESSAGE_STORED,
-      metadata as IMessageMetadata,
-    );
+    eventSystem.emit(MessageEventType.MESSAGE_STORED, metadata);
 
     expect(mockWs.send).toHaveBeenCalledWith(
       expect.stringContaining('"type":"message:stored"'),
@@ -187,8 +186,8 @@ describe('Task 13.5: WebSocket /messages/events endpoint', () => {
     );
     (mockWs.send as jest.Mock) = jest.fn(); // Reset again
 
-    const metadata = {
-      blockId: 'block-1',
+    const metadata: IMessageMetadata = {
+      blockId: 'block-1' as BlockId,
       messageType: 'test',
       senderId: 'sender-1',
       recipients: [],
@@ -198,12 +197,12 @@ describe('Task 13.5: WebSocket /messages/events endpoint', () => {
       encryptionScheme: MessageEncryptionScheme.NONE,
       isCBL: false,
       cblBlockIds: [],
-      createdAt: new Date(),
+      createdAt: brightDateNow(),
       expiresAt: null,
       durabilityLevel: DurabilityLevel.Standard,
       parityBlockIds: [],
       accessCount: 0,
-      lastAccessedAt: new Date(),
+      lastAccessedAt: brightDateNow(),
       replicationStatus: ReplicationStatus.Pending,
       targetReplicationFactor: 3,
       replicaNodeIds: [],
@@ -212,17 +211,11 @@ describe('Task 13.5: WebSocket /messages/events endpoint', () => {
     };
 
     // Emit non-matching event
-    eventSystem.emit(
-      MessageEventType.MESSAGE_STORED,
-      metadata as IMessageMetadata,
-    );
+    eventSystem.emit(MessageEventType.MESSAGE_STORED, metadata);
     expect(mockWs.send).not.toHaveBeenCalled();
 
     // Emit matching event
-    eventSystem.emit(
-      MessageEventType.MESSAGE_DELIVERED,
-      metadata as IMessageMetadata,
-    );
+    eventSystem.emit(MessageEventType.MESSAGE_DELIVERED, metadata);
     expect(mockWs.send).toHaveBeenCalledWith(
       expect.stringContaining('"type":"message:delivered"'),
     );

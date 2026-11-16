@@ -170,7 +170,7 @@ describe('BrightChainBackupCodeService Property-Based Tests', () => {
             );
             const plaintextCodes = await service.generateCodes(memberId);
             const profile = await memberStore.getMemberProfile(memberId);
-            const storedCodes = profile.privateProfile!.backupCodes;
+            const storedCodes = profile.privateProfile!.backupCodes!;
             for (const code of plaintextCodes) {
               expect(BackupCode.validateBackupCode(storedCodes, code)).toBe(
                 true,
@@ -206,7 +206,7 @@ describe('BrightChainBackupCodeService Property-Based Tests', () => {
             const plaintextCodes = await service.generateCodes(memberId);
             const N = plaintextCodes.length;
             const profile = await memberStore.getMemberProfile(memberId);
-            const storedCodes = profile.privateProfile!.backupCodes;
+            const storedCodes = profile.privateProfile!.backupCodes!;
             const chosenCode = plaintextCodes[codeIndex];
             const { newCodesArray, code: consumedCode } = service.useBackupCode(
               storedCodes,
@@ -282,7 +282,7 @@ describe('BrightChainBackupCodeService Property-Based Tests', () => {
             expect(code).toMatch(TEST_CONSTANTS.DisplayRegex);
           }
           const profile = await memberStore.getMemberProfile(memberId);
-          const storedCodes = profile.privateProfile!.backupCodes;
+          const storedCodes = profile.privateProfile!.backupCodes!;
           for (const oldCode of oldCodes) {
             expect(BackupCode.validateBackupCode(storedCodes, oldCode)).toBe(
               false,
@@ -336,7 +336,7 @@ describe('BrightChainBackupCodeService Property-Based Tests', () => {
             expect(rewrapped).toBeGreaterThanOrEqual(1);
             service.setSystemUser(newSysUser);
             const profile = await memberStore.getMemberProfile(memberId);
-            const storedCodes = profile.privateProfile!.backupCodes;
+            const storedCodes = profile.privateProfile!.backupCodes!;
             for (const code of plaintextCodes) {
               expect(BackupCode.validateBackupCode(storedCodes, code)).toBe(
                 true,

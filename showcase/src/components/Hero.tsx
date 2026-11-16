@@ -2,7 +2,7 @@ import { motion } from 'framer-motion';
 import { FC } from 'react';
 import { FaGithub, FaLock, FaNewspaper } from 'react-icons/fa';
 import { GiCookingPot } from 'react-icons/gi';
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 import { useShowcaseI18n } from '../i18n/ShowcaseI18nContext';
 import { ShowcaseStrings } from '../i18n/showcaseStrings';
 import { AnimatedParticles } from './AnimatedParticles';

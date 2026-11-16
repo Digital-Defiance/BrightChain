@@ -19,10 +19,10 @@ import {
 } from '@brightchain/brightchain-lib';
 import { BrightDb, InMemoryHeadRegistry } from '@brightchain/db';
 import fc from 'fast-check';
-import { createCalendarEventModel } from '../models/calendarEvent.model.ts';
-import type { IStoredCalendarReminder } from '../models/calendarReminder.model.ts';
-import { createCalendarReminderModel } from '../models/calendarReminder.model.ts';
-import { CalendarNotificationService } from '../services/calendarNotificationService.ts';
+import { createCalendarEventModel } from '../models/calendarEvent.model.js';
+import type { IStoredCalendarReminder } from '../models/calendarReminder.model.js';
+import { createCalendarReminderModel } from '../models/calendarReminder.model.js';
+import { CalendarNotificationService } from '../services/calendarNotificationService.js';
 
 // ─── Setup ───────────────────────────────────────────────────────────────────
 
@@ -34,8 +34,7 @@ beforeAll(() => {
 function makeDb(name = 'testdb'): BrightDb {
   const store = new MemoryBlockStore(validBlockSizes);
   const registry = InMemoryHeadRegistry.createIsolated();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return new BrightDb(store as any, { name, headRegistry: registry });
+  return new BrightDb(store, { name, headRegistry: registry });
 }
 
 function createServices() {

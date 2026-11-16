@@ -337,8 +337,7 @@ export const DigitalBurnbagMandarinStrings: ComponentStrings<DigitalBurnbagStrin
     [DigitalBurnbagStrings.ProviderCategory_CustomIntegrationDesc]:
       '创建与任何服务的自定义集成',
     [DigitalBurnbagStrings.ProviderCategory_Location]: '位置',
-    [DigitalBurnbagStrings.ProviderCategory_LocationDesc]:
-      '位置和地图服务',
+    [DigitalBurnbagStrings.ProviderCategory_LocationDesc]: '位置和地图服务',
     [DigitalBurnbagStrings.ProviderCategory_Entertainment]: '娱乐',
     [DigitalBurnbagStrings.ProviderCategory_EntertainmentDesc]:
       '娱乐和流媒体服务',

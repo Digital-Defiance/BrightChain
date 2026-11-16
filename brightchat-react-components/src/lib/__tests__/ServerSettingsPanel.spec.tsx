@@ -53,7 +53,7 @@ jest.mock('@digitaldefiance/express-suite-react-components', () => ({
 
 // Mock react-easy-crop to avoid canvas issues in test environment
 jest.mock('react-easy-crop', () => {
-  const React = require('react');
+  const React = jest.requireActual<typeof import('react')>('react');
   return {
     __esModule: true,
     default: React.forwardRef(function MockCropper(
@@ -65,6 +65,7 @@ jest.mock('react-easy-crop', () => {
   };
 });
 
+import type { DefaultRole } from '@brightchain/brightchain-lib';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import type { ServerSettingsPanelProps } from '../ServerSettingsPanel';
 import ServerSettingsPanel from '../ServerSettingsPanel';
@@ -81,20 +82,20 @@ const testServer = {
   categories: [
     { id: 'cat-1', name: 'General', position: 0, channelIds: ['ch-1'] },
   ],
-  createdAt: new Date(),
-  updatedAt: new Date(),
+  createdAt: 0,
+  updatedAt: 0,
 };
 
 const testMembers = [
   {
     id: 'u1',
     displayName: 'Alice (Owner)',
-    role: DefaultRoleEnum.OWNER as any,
+    role: DefaultRoleEnum.OWNER as DefaultRole,
   },
   {
     id: 'u2',
     displayName: 'Bob (Member)',
-    role: DefaultRoleEnum.MEMBER as any,
+    role: DefaultRoleEnum.MEMBER as DefaultRole,
   },
 ];
 
@@ -103,7 +104,7 @@ const testInvites = [
     token: 'abc123def456ghi789',
     serverId: 'srv-1',
     createdBy: 'u1',
-    createdAt: new Date(),
+    createdAt: 0,
     currentUses: 3,
     maxUses: 10,
   },
@@ -128,7 +129,7 @@ function renderPanel(overrides: Partial<ServerSettingsPanelProps> = {}) {
     server: testServer,
     members: testMembers,
     invites: testInvites,
-    currentUserRole: DefaultRoleEnum.OWNER as any,
+    currentUserRole: DefaultRoleEnum.OWNER as DefaultRole,
     onUpdateServer: jest.fn().mockResolvedValue(undefined),
     onAssignRole: jest.fn().mockResolvedValue(undefined),
     onRemoveMember: jest.fn().mockResolvedValue(undefined),
@@ -136,7 +137,7 @@ function renderPanel(overrides: Partial<ServerSettingsPanelProps> = {}) {
       token: 'new-token-xyz',
       serverId: 'srv-1',
       createdBy: 'u1',
-      createdAt: new Date(),
+      createdAt: 0,
       currentUses: 0,
     }),
     onCreateCategory: jest.fn().mockResolvedValue(undefined),
@@ -209,7 +210,7 @@ describe('ServerSettingsPanel', () => {
   });
 
   it('shows role assignment dropdowns for owner (Req 8.4)', () => {
-    renderPanel({ currentUserRole: DefaultRoleEnum.OWNER as any });
+    renderPanel({ currentUserRole: DefaultRoleEnum.OWNER as DefaultRole });
 
     fireEvent.click(screen.getByText('Server_Settings_Members'));
 
@@ -218,7 +219,7 @@ describe('ServerSettingsPanel', () => {
   });
 
   it('hides role assignment dropdowns for non-owner', () => {
-    renderPanel({ currentUserRole: DefaultRoleEnum.ADMIN as any });
+    renderPanel({ currentUserRole: DefaultRoleEnum.ADMIN as DefaultRole });
 
     fireEvent.click(screen.getByText('Server_Settings_Members'));
 

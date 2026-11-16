@@ -119,27 +119,6 @@ const arbContextName = fc
 /** Unique channel name to avoid name conflicts across runs. */
 const arbUniqueChannelName = fc.uuid().map((id) => `ch-${id}`);
 
-// ─── Helpers ────────────────────────────────────────────────────────────────
-
-/**
- * Compare two Map<number, Map<string, string>> structures for equality.
- * Used to compare encryptedSharedKey epoch maps.
- */
-function epochMapsEqual(
-  a: Map<number, Map<string, string>>,
-  b: Map<number, Map<string, string>>,
-): boolean {
-  if (a.size !== b.size) return false;
-  for (const [epoch, aMap] of a) {
-    const bMap = b.get(epoch);
-    if (!bMap || aMap.size !== bMap.size) return false;
-    for (const [key, val] of aMap) {
-      if (bMap.get(key) !== val) return false;
-    }
-  }
-  return true;
-}
-
 // ─── Property Tests ─────────────────────────────────────────────────────────
 
 describe('Feature: brightchat-block-storage-fix, Property 2: Preservation — Non-Content Metadata Operations', () => {
@@ -181,11 +160,9 @@ describe('Feature: brightchat-block-storage-fix, Property 2: Preservation — No
           expect(epoch0Keys.has(memberB)).toBe(true);
 
           // Timestamps are valid dates
-          expect(typeof conv.createdAt).toBe("number");
-          expect(typeof conv.lastMessageAt).toBe("number");
-          expect(conv.createdAt).toBeLessThanOrEqual(
-            conv.lastMessageAt,
-          );
+          expect(typeof conv.createdAt).toBe('number');
+          expect(typeof conv.lastMessageAt).toBe('number');
+          expect(conv.createdAt).toBeLessThanOrEqual(conv.lastMessageAt);
         }),
         { numRuns: 30 },
       );
@@ -241,9 +218,7 @@ describe('Feature: brightchat-block-storage-fix, Property 2: Preservation — No
 
             // Sorted by lastMessageAt descending
             for (let i = 0; i < result.items.length - 1; i++) {
-              expect(
-                result.items[i].lastMessageAt,
-              ).toBeGreaterThanOrEqual(
+              expect(result.items[i].lastMessageAt).toBeGreaterThanOrEqual(
                 result.items[i + 1].lastMessageAt,
               );
             }
@@ -280,9 +255,7 @@ describe('Feature: brightchat-block-storage-fix, Property 2: Preservation — No
 
           // lastMessageAt was updated
           const updatedConv = service.getConversation(conv.id);
-          expect(updatedConv!.lastMessageAt).toBeGreaterThanOrEqual(
-            beforeTime,
-          );
+          expect(updatedConv!.lastMessageAt).toBeGreaterThanOrEqual(beforeTime);
 
           // emitMessageSent was called
           const sentEvents = spy.events.filter(
@@ -385,8 +358,8 @@ describe('Feature: brightchat-block-storage-fix, Property 2: Preservation — No
             expect(epoch0Keys.has(memberId)).toBe(true);
 
             // Timestamps are valid
-            expect(typeof group.createdAt).toBe("number");
-            expect(typeof group.lastMessageAt).toBe("number");
+            expect(typeof group.createdAt).toBe('number');
+            expect(typeof group.lastMessageAt).toBe('number');
 
             // pinnedMessageIds starts empty
             expect(group.pinnedMessageIds).toEqual([]);
@@ -670,8 +643,8 @@ describe('Feature: brightchat-block-storage-fix, Property 2: Preservation — No
             );
 
             // Timestamps are valid
-            expect(typeof channel.createdAt).toBe("number");
-            expect(typeof channel.lastMessageAt).toBe("number");
+            expect(typeof channel.createdAt).toBe('number');
+            expect(typeof channel.lastMessageAt).toBe('number');
 
             // pinnedMessageIds starts empty
             expect(channel.pinnedMessageIds).toEqual([]);
@@ -835,11 +808,9 @@ describe('Feature: brightchat-block-storage-fix, Property 2: Preservation — No
             expect(invite.createdBy).toBe(creatorId);
             expect(invite.maxUses).toBe(1);
             expect(invite.currentUses).toBe(0);
-            expect(typeof invite.createdAt).toBe("number");
-            expect(typeof invite.expiresAt).toBe("number");
-            expect(invite.expiresAt).toBeGreaterThan(
-              invite.createdAt,
-            );
+            expect(typeof invite.createdAt).toBe('number');
+            expect(typeof invite.expiresAt).toBe('number');
+            expect(invite.expiresAt).toBeGreaterThan(invite.createdAt);
 
             // Redeem invite
             await service.redeemInvite(invite.token, joinerId);
@@ -1117,7 +1088,7 @@ describe('Feature: brightchat-block-storage-fix, Property 2: Preservation — No
               expect(item.contextType).toBe('group');
               expect(item.contextId).toBe(group.id);
               expect(item.senderId).toBe(creatorId);
-              expect(typeof item.createdAt).toBe("number");
+              expect(typeof item.createdAt).toBe('number');
               expect(typeof item.keyEpoch).toBe('number');
             }
           },
@@ -1163,7 +1134,7 @@ describe('Feature: brightchat-block-storage-fix, Property 2: Preservation — No
               expect(item.contextType).toBe('channel');
               expect(item.contextId).toBe(channel.id);
               expect(item.senderId).toBe(creatorId);
-              expect(typeof item.createdAt).toBe("number");
+              expect(typeof item.createdAt).toBe('number');
               expect(typeof item.keyEpoch).toBe('number');
             }
           },

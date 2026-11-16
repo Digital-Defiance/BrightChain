@@ -61,7 +61,7 @@ export class AdminDevReseedController<
   }
 
   private async handleReseed(
-    req: Request,
+    _req: Request,
   ): Promise<IStatusCodeResponse<AdminDevReseedApiResponse>> {
     if (!this.application.environment.devDatabasePoolName) {
       return {

@@ -1,4 +1,4 @@
-import { brightDateToISO, MemberStore } from '@brightchain/brightchain-lib';
+import { MemberStore } from '@brightchain/brightchain-lib';
 import { IIdProvider } from '@digitaldefiance/ecies-lib';
 import { CoreLanguageCode } from '@digitaldefiance/i18n-lib';
 import { PlatformID } from '@digitaldefiance/node-ecies-lib';

@@ -10,6 +10,7 @@
 import {
   asBlockId,
   BlockSize,
+  brightDateNow,
   type IAclDocument,
   type IBanListCache,
   type IBanRecord,
@@ -96,8 +97,9 @@ function makeBanRecord(memberId: Uint8Array): IBanRecord<Uint8Array> {
     bannedAt: new Date(),
     reason: 'Adversarial behavior',
     proposalId: new Uint8Array(32),
+    epoch: 1,
     approvalSignatures: [],
-    enactedAt: new Date(),
+    requiredSignatures: 0,
   };
 }
 
@@ -278,7 +280,7 @@ describe('Ban Enforcement — Adversarial E2E Tests', () => {
         type: 'add',
         blockId: asBlockId('a'.repeat(64)),
         nodeId: 'banned-node',
-        timestamp: new Date(),
+        timestamp: brightDateNow(),
         ttl: 3,
       }),
     ).toBe(false);
@@ -289,7 +291,7 @@ describe('Ban Enforcement — Adversarial E2E Tests', () => {
         type: 'add',
         blockId: asBlockId('b'.repeat(64)),
         nodeId: 'admin-node',
-        timestamp: new Date(),
+        timestamp: brightDateNow(),
         ttl: 3,
       }),
     ).toBe(true);
@@ -300,7 +302,7 @@ describe('Ban Enforcement — Adversarial E2E Tests', () => {
         type: 'add',
         blockId: asBlockId('c'.repeat(64)),
         nodeId: 'unknown-node',
-        timestamp: new Date(),
+        timestamp: brightDateNow(),
         ttl: 3,
       }),
     ).toBe(true);

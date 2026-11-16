@@ -21,7 +21,10 @@ jest.mock('@brightchain/brightchain-lib', () => ({
     HoverReverse: 'hoverReverse',
   },
   toBrightDateString: () => '9146.438',
-  BrightChainStrings: new Proxy({}, { get: (_t: unknown, p: string | symbol) => String(p) }),
+  BrightChainStrings: new Proxy(
+    {},
+    { get: (_t: unknown, p: string | symbol) => String(p) },
+  ),
   PresenceStatus: {
     ONLINE: 'online',
     OFFLINE: 'offline',
@@ -114,7 +117,7 @@ jest.mock('@brightchain/brightchain-react-components', () => ({
 
 // Mock react-easy-crop to avoid canvas issues in test environment
 jest.mock('react-easy-crop', () => {
-  const React = require('react');
+  const React = jest.requireActual<typeof import('react')>('react');
   return {
     __esModule: true,
     default: React.forwardRef(function MockCropper(
@@ -147,7 +150,7 @@ jest.mock('../hooks/useChatApi', () => ({
 
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import React from 'react';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { MemoryRouter, Route, Routes } from 'react-router';
 import BrightChatDiscordApp from '../BrightChatApp';
 import {
   applyServerChannelCreated,

@@ -1,4 +1,6 @@
 import {
+  BlockId,
+  brightDateNow,
   DeliveryStatus,
   DurabilityLevel,
   IMessageMetadata,
@@ -21,7 +23,7 @@ describe('Feature: message-passing-and-events, Property: Event Emission on Messa
   const createMetadata = (
     overrides?: Partial<IMessageMetadata>,
   ): IMessageMetadata => ({
-    blockId: 'block-1',
+    blockId: 'block-1' as BlockId,
     messageType: 'test',
     senderId: 'sender-1',
     recipients: ['recipient-1'],
@@ -31,12 +33,12 @@ describe('Feature: message-passing-and-events, Property: Event Emission on Messa
     encryptionScheme: MessageEncryptionScheme.NONE,
     isCBL: false,
     cblBlockIds: [],
-    createdAt: new Date(),
+    createdAt: brightDateNow(),
     expiresAt: null,
     durabilityLevel: DurabilityLevel.Standard,
     parityBlockIds: [],
     accessCount: 0,
-    lastAccessedAt: new Date(),
+    lastAccessedAt: brightDateNow(),
     replicationStatus: ReplicationStatus.Pending,
     targetReplicationFactor: 3,
     replicaNodeIds: [],

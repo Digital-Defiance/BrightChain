@@ -3,12 +3,20 @@ import './Lobby.css';
 
 interface LobbyProps {
   onCreateRoom: (name: string, password?: string) => void;
-  onJoinRoom: (roomCode: string, password?: string, asObserver?: boolean) => void;
+  onJoinRoom: (
+    roomCode: string,
+    password?: string,
+    asObserver?: boolean,
+  ) => void;
   /** Pre-fill the join form and switch to the Join tab automatically. */
   initialRoomCode?: string;
 }
 
-export const Lobby: React.FC<LobbyProps> = ({ onCreateRoom, onJoinRoom, initialRoomCode }) => {
+export const Lobby: React.FC<LobbyProps> = ({
+  onCreateRoom,
+  onJoinRoom,
+  initialRoomCode,
+}) => {
   const [isCreating, setIsCreating] = useState(!initialRoomCode);
   const [roomName, setRoomName] = useState('');
   const [roomCode, setRoomCode] = useState(initialRoomCode ?? '');
@@ -27,13 +35,13 @@ export const Lobby: React.FC<LobbyProps> = ({ onCreateRoom, onJoinRoom, initialR
   return (
     <div className="subspace-lobby">
       <div className="lobby-tabs">
-        <button 
+        <button
           className={`tab-btn ${isCreating ? 'active' : ''}`}
           onClick={() => setIsCreating(true)}
         >
           Create Room
         </button>
-        <button 
+        <button
           className={`tab-btn ${!isCreating ? 'active' : ''}`}
           onClick={() => setIsCreating(false)}
         >
@@ -46,11 +54,11 @@ export const Lobby: React.FC<LobbyProps> = ({ onCreateRoom, onJoinRoom, initialR
           <>
             <div className="form-group">
               <label>Room Name</label>
-              <input 
-                type="text" 
-                value={roomName} 
-                onChange={e => setRoomName(e.target.value)} 
-                required 
+              <input
+                type="text"
+                value={roomName}
+                onChange={(e) => setRoomName(e.target.value)}
+                required
                 placeholder="e.g. Ten-Forward"
               />
             </div>
@@ -59,21 +67,21 @@ export const Lobby: React.FC<LobbyProps> = ({ onCreateRoom, onJoinRoom, initialR
           <>
             <div className="form-group">
               <label>Room Code (5 chars)</label>
-              <input 
-                type="text" 
-                value={roomCode} 
-                onChange={e => setRoomCode(e.target.value.toUpperCase())} 
+              <input
+                type="text"
+                value={roomCode}
+                onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
                 maxLength={5}
-                required 
+                required
                 placeholder="ABC12"
               />
             </div>
             <div className="form-group checkbox">
               <label>
-                <input 
-                  type="checkbox" 
-                  checked={asObserver} 
-                  onChange={e => setAsObserver(e.target.checked)} 
+                <input
+                  type="checkbox"
+                  checked={asObserver}
+                  onChange={(e) => setAsObserver(e.target.checked)}
                 />
                 Join as Observer
               </label>
@@ -83,10 +91,10 @@ export const Lobby: React.FC<LobbyProps> = ({ onCreateRoom, onJoinRoom, initialR
 
         <div className="form-group">
           <label>Password (Optional)</label>
-          <input 
-            type="password" 
-            value={password} 
-            onChange={e => setPassword(e.target.value)} 
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
             placeholder="Leave blank for public"
           />
         </div>

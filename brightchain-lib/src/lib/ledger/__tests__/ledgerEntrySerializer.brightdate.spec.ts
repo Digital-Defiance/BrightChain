@@ -18,10 +18,7 @@ import {
 import { ILedgerEntry } from '../../interfaces/ledger/ledgerEntry';
 import { ChecksumService } from '../../services/checksum.service';
 import { BrightDateTimestamp } from '../../types/brightDateTimestamp';
-import { Checksum } from '../../types/checksum';
 import { LedgerEntrySerializer } from '../ledgerEntrySerializer';
-
-const HASH_LENGTH = 64;
 const SIGNATURE_LENGTH = 64;
 
 /**
@@ -40,10 +37,6 @@ const KNOWN_TIMESTAMPS = {
 describe('LedgerEntrySerializer — BrightDate timestamp handling', () => {
   let checksumService: ChecksumService;
   let serializer: LedgerEntrySerializer;
-
-  function makeChecksum(fill: number): Checksum {
-    return Checksum.fromUint8Array(new Uint8Array(HASH_LENGTH).fill(fill));
-  }
 
   function makeSignature(fill: number): SignatureUint8Array {
     return new Uint8Array(SIGNATURE_LENGTH).fill(fill) as SignatureUint8Array;

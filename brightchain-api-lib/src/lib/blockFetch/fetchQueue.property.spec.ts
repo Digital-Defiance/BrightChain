@@ -10,7 +10,7 @@
  * **Validates: Requirements 4.1**
  */
 
-import { BlockFetchResult } from '@brightchain/brightchain-lib';
+import { BlockFetchResult, BlockId } from '@brightchain/brightchain-lib';
 import fc from 'fast-check';
 import { FetchExecutor, FetchQueue } from './fetchQueue';
 
@@ -25,7 +25,7 @@ describe('Feature: cross-node-eventual-consistency, Property 8: FetchQueue dedup
    */
   const arbBlockId = fc
     .array(fc.integer({ min: 0, max: 15 }), { minLength: 8, maxLength: 64 })
-    .map((digits) => digits.map((d) => d.toString(16)).join(''));
+    .map((digits) => digits.map((d) => d.toString(16)).join('') as BlockId);
 
   /**
    * Arbitrary: block data payload

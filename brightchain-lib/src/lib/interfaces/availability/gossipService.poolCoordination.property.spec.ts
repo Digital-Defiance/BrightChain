@@ -1,4 +1,5 @@
 import fc from 'fast-check';
+import { normalizeToBrightDate } from '../../utils/brightDateConversions';
 import type { BlockId } from '../branded/primitives/blockId';
 import {
   BlockAnnouncement,
@@ -6,7 +7,6 @@ import {
   MessageDeliveryMetadata,
   validateBlockAnnouncement,
 } from './gossipService';
-import { normalizeToBrightDate } from '../../utils/brightDateConversions';
 
 const bid = (s: string) => s as unknown as BlockId;
 

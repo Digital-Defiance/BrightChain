@@ -52,7 +52,8 @@ export class MemoryMessageMetadataStore
       if (recipientId && !meta.recipients.includes(recipientId)) continue;
       if (senderId && meta.senderId !== senderId) continue;
       if (messageType && meta.messageType !== messageType) continue;
-      if (startDate && meta.createdAt < normalizeToBrightDate(startDate)) continue;
+      if (startDate && meta.createdAt < normalizeToBrightDate(startDate))
+        continue;
       if (endDate && meta.createdAt > normalizeToBrightDate(endDate)) continue;
       if (priority !== undefined && meta.priority !== priority) continue;
 
@@ -112,7 +113,8 @@ export class MemoryMessageMetadataStore
 
     for (const meta of this.messageMetadata.values()) {
       if (!meta.recipients.includes(recipientId)) continue;
-      if (startDate && meta.createdAt < normalizeToBrightDate(startDate)) continue;
+      if (startDate && meta.createdAt < normalizeToBrightDate(startDate))
+        continue;
       if (endDate && meta.createdAt > normalizeToBrightDate(endDate)) continue;
       if (messageType && meta.messageType !== messageType) continue;
       if (priority !== undefined && meta.priority !== priority) continue;
@@ -139,7 +141,8 @@ export class MemoryMessageMetadataStore
 
     for (const meta of this.messageMetadata.values()) {
       if (meta.senderId !== senderId) continue;
-      if (startDate && meta.createdAt < normalizeToBrightDate(startDate)) continue;
+      if (startDate && meta.createdAt < normalizeToBrightDate(startDate))
+        continue;
       if (endDate && meta.createdAt > normalizeToBrightDate(endDate)) continue;
       if (messageType && meta.messageType !== messageType) continue;
       if (priority !== undefined && meta.priority !== priority) continue;

@@ -13,7 +13,7 @@ import type {
 import { BrightChartStrings } from '@brightchain/brightchart-lib';
 import * as React from 'react';
 import { useCallback, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router';
 import { useBrightChartTranslation } from '../../../hooks/useBrightChartTranslation';
 import { usePermissionContext } from '../../contexts/PermissionContext';
 

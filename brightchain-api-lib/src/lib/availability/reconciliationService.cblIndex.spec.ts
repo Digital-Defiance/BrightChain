@@ -8,13 +8,14 @@
  */
 
 import type {
+  BlockId,
   BlockManifest,
   CBLIndexManifest,
   ICBLIndexEntry,
   PoolScopedManifest,
   ReconciliationConfig,
 } from '@brightchain/brightchain-lib';
-import { CBLVisibility } from '@brightchain/brightchain-lib';
+import { CBLVisibility, dateToBrightDate } from '@brightchain/brightchain-lib';
 import { mkdirSync, rmSync } from 'fs';
 import { join } from 'path';
 import {
@@ -76,7 +77,7 @@ function createCBLIndexAwareProvider(options: {
     // Pool-scoped manifest support
     getLocalPoolScopedManifest: (): PoolScopedManifest => ({
       nodeId: options.localNodeId,
-      pools: options.localBlocksByPool,
+      pools: options.localBlocksByPool as Map<string, BlockId[]>,
       generatedAt: 9000,
       checksum: 'local-pool-checksum',
     }),
@@ -84,7 +85,7 @@ function createCBLIndexAwareProvider(options: {
       PoolScopedManifest | undefined
     > => ({
       nodeId: 'peer-1',
-      pools: options.peerBlocksByPool,
+      pools: options.peerBlocksByPool as Map<string, BlockId[]>,
       generatedAt: 9000,
       checksum: 'peer-pool-checksum',
     }),
@@ -128,11 +129,11 @@ describe('ReconciliationService – CBL Index manifest exchange (Req 8.4)', () =
     const remoteEntry: ICBLIndexEntry = {
       _id: 'remote-entry-1',
       magnetUrl: 'magnet:remote-only',
-      blockId1: 'block-r1',
-      blockId2: 'block-r2',
+      blockId1: 'block-r1' as BlockId,
+      blockId2: 'block-r2' as BlockId,
       blockSize: 256,
       poolId: 'pool-a',
-      createdAt: new Date('2025-01-15T10:00:00Z'),
+      createdAt: dateToBrightDate(new Date('2025-01-15T10:00:00Z')),
       visibility: CBLVisibility.Public,
       sequenceNumber: 5,
     };

@@ -14,9 +14,12 @@ import {
   createContentType,
   type IMimePart,
 } from '../../interfaces/messaging/mimePart';
+import {
+  brightDateToDate,
+  normalizeToBrightDate,
+} from '../../utils/brightDateConversions';
 import { EmailParser } from './emailParser';
 import { EmailSerializer } from './emailSerializer';
-import { normalizeToBrightDate, brightDateToDate } from '../../utils/brightDateConversions';
 
 describe('EmailSerializer', () => {
   let serializer: EmailSerializer;

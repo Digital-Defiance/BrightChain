@@ -8,11 +8,10 @@ import { arraysEqual } from '@digitaldefiance/ecies-lib';
 import { BlockSize } from '../enumerations/blockSize';
 import { ChecksumMismatchError } from '../errors/checksumMismatch';
 import { ServiceProvider } from '../services/service.provider';
+import { brightDateNow } from '../utils/brightDateConversions';
 import { RandomBlock } from './random';
 import { RawDataBlock } from './rawData';
 import { WhitenedBlock } from './whitened';
-import { brightDateNow } from '../utils/brightDateConversions';
-import type { BrightDateTimestamp } from '../types/brightDateTimestamp';
 
 describe('Block Edge Cases', () => {
   beforeEach(() => {
@@ -358,9 +357,9 @@ describe('Block Edge Cases', () => {
       const block = new RawDataBlock(BlockSize.Small, data, now);
 
       // Allow small tolerance for test execution time (1 second = 1/86400 days)
-      expect(
-        Math.abs(block.metadata.dateCreated - now),
-      ).toBeLessThan(1 / 86400);
+      expect(Math.abs(block.metadata.dateCreated - now)).toBeLessThan(
+        1 / 86400,
+      );
     });
 
     it('should reject future dates', () => {

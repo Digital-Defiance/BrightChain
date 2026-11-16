@@ -124,7 +124,7 @@ async function createTestVault(opts?: {
 
   const vault = new Vault(
     internals,
-    ledgerGateway as unknown as import('../ledger-gateway').LedgerGateway,
+    ledgerGateway as unknown as import('../ledger/ledger-gateway').LedgerGateway,
     custodian,
     aesGcm,
     pbkdf2,
@@ -318,15 +318,11 @@ describe('Vault', () => {
 
     // Patch ledger to count read entries
     const origLedger = ctx.vault['ledgerGateway'];
-    (
-      ctx.vault as unknown as { ledgerGateway: typeof origLedger }
-    ).ledgerGateway = {
-      ...origLedger,
-      async recordRead(hash: Uint8Array) {
-        ledgerReadCount++;
-        return origLedger.recordRead(hash);
-      },
-    };
+    const origRecordRead = origLedger.recordRead.bind(origLedger);
+    jest.spyOn(origLedger, 'recordRead').mockImplementation(async (hash) => {
+      ledgerReadCount++;
+      return origRecordRead(hash);
+    });
 
     // Fire two concurrent reads
     const [result1, result2] = await Promise.all([

@@ -7,6 +7,7 @@
  * **Validates: Requirements 3.5, 4.5**
  */
 
+import { BlockId } from '@brightchain/brightchain-lib';
 import { mkdtempSync } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
@@ -23,21 +24,21 @@ describe('BlockRegistry pool-scoped support', () => {
 
   describe('addLocal with poolId', () => {
     it('should add a block with pool association', () => {
-      registry.addLocal('block-1', 'pool-A');
-      expect(registry.hasLocal('block-1')).toBe(true);
+      registry.addLocal('block-1' as BlockId, 'pool-A');
+      expect(registry.hasLocal('block-1' as BlockId)).toBe(true);
       expect(registry.getLocalCount()).toBe(1);
     });
 
     it('should add a block without pool association (backward compat)', () => {
-      registry.addLocal('block-1');
-      expect(registry.hasLocal('block-1')).toBe(true);
+      registry.addLocal('block-1' as BlockId);
+      expect(registry.hasLocal('block-1' as BlockId)).toBe(true);
       expect(registry.getLocalCount()).toBe(1);
     });
 
     it('should track pool association in pool-scoped manifest', () => {
-      registry.addLocal('block-1', 'pool-A');
-      registry.addLocal('block-2', 'pool-B');
-      registry.addLocal('block-3', 'pool-A');
+      registry.addLocal('block-1' as BlockId, 'pool-A');
+      registry.addLocal('block-2' as BlockId, 'pool-B');
+      registry.addLocal('block-3' as BlockId, 'pool-A');
 
       const manifest = registry.exportPoolScopedManifest();
       expect(manifest.pools.size).toBe(2);
@@ -48,8 +49,8 @@ describe('BlockRegistry pool-scoped support', () => {
     });
 
     it('should group blocks without poolId under __default__', () => {
-      registry.addLocal('block-1');
-      registry.addLocal('block-2', 'pool-A');
+      registry.addLocal('block-1' as BlockId);
+      registry.addLocal('block-2' as BlockId, 'pool-A');
 
       const manifest = registry.exportPoolScopedManifest();
       expect(manifest.pools.size).toBe(2);
@@ -60,22 +61,22 @@ describe('BlockRegistry pool-scoped support', () => {
 
   describe('removeLocal with poolId', () => {
     it('should remove a block and its pool association', () => {
-      registry.addLocal('block-1', 'pool-A');
-      registry.addLocal('block-2', 'pool-A');
-      registry.removeLocal('block-1', 'pool-A');
+      registry.addLocal('block-1' as BlockId, 'pool-A');
+      registry.addLocal('block-2' as BlockId, 'pool-A');
+      registry.removeLocal('block-1' as BlockId, 'pool-A');
 
-      expect(registry.hasLocal('block-1')).toBe(false);
-      expect(registry.hasLocal('block-2')).toBe(true);
+      expect(registry.hasLocal('block-1' as BlockId)).toBe(false);
+      expect(registry.hasLocal('block-2' as BlockId)).toBe(true);
 
       const manifest = registry.exportPoolScopedManifest();
       expect(manifest.pools.get('pool-A')).toEqual(['block-2']);
     });
 
     it('should remove a block even without poolId param', () => {
-      registry.addLocal('block-1', 'pool-A');
-      registry.removeLocal('block-1');
+      registry.addLocal('block-1' as BlockId, 'pool-A');
+      registry.removeLocal('block-1' as BlockId);
 
-      expect(registry.hasLocal('block-1')).toBe(false);
+      expect(registry.hasLocal('block-1' as BlockId)).toBe(false);
       const manifest = registry.exportPoolScopedManifest();
       expect(manifest.pools.size).toBe(0);
     });
@@ -90,31 +91,33 @@ describe('BlockRegistry pool-scoped support', () => {
     });
 
     it('should create per-pool filters with poolId:blockId keys', () => {
-      registry.addLocal('block-1', 'pool-A');
-      registry.addLocal('block-2', 'pool-B');
+      registry.addLocal('block-1' as BlockId, 'pool-A');
+      registry.addLocal('block-2' as BlockId, 'pool-B');
 
       const result = registry.exportPoolScopedBloomFilter();
       expect(result.filters.size).toBe(2);
 
       const filterA = result.filters.get('pool-A');
       expect(filterA).toBeDefined();
-      expect(filterA?.mightContain('pool-A:block-1')).toBe(true);
-      expect(filterA?.mightContain('pool-B:block-1')).toBe(false);
+      expect(filterA?.mightContain('pool-A:block-1' as BlockId)).toBe(true);
+      expect(filterA?.mightContain('pool-B:block-1' as BlockId)).toBe(false);
 
       const filterB = result.filters.get('pool-B');
       expect(filterB).toBeDefined();
-      expect(filterB?.mightContain('pool-B:block-2')).toBe(true);
-      expect(filterB?.mightContain('pool-A:block-2')).toBe(false);
+      expect(filterB?.mightContain('pool-B:block-2' as BlockId)).toBe(true);
+      expect(filterB?.mightContain('pool-A:block-2' as BlockId)).toBe(false);
     });
 
     it('should include a global filter for backward compatibility', () => {
-      registry.addLocal('block-1', 'pool-A');
-      registry.addLocal('block-2', 'pool-B');
+      registry.addLocal('block-1' as BlockId, 'pool-A');
+      registry.addLocal('block-2' as BlockId, 'pool-B');
 
       const result = registry.exportPoolScopedBloomFilter();
-      expect(result.globalFilter.mightContain('block-1')).toBe(true);
-      expect(result.globalFilter.mightContain('block-2')).toBe(true);
-      expect(result.globalFilter.mightContain('nonexistent')).toBe(false);
+      expect(result.globalFilter.mightContain('block-1' as BlockId)).toBe(true);
+      expect(result.globalFilter.mightContain('block-2' as BlockId)).toBe(true);
+      expect(result.globalFilter.mightContain('nonexistent' as BlockId)).toBe(
+        false,
+      );
     });
   });
 
@@ -123,14 +126,14 @@ describe('BlockRegistry pool-scoped support', () => {
       const manifest = registry.exportPoolScopedManifest();
       expect(manifest.pools.size).toBe(0);
       expect(manifest.nodeId).toBe('test-node');
-      expect(typeof manifest.generatedAt).toBe("number");
+      expect(typeof manifest.generatedAt).toBe('number');
       expect(manifest.checksum).toBeDefined();
     });
 
     it('should group blocks by pool correctly', () => {
-      registry.addLocal('b1', 'p1');
-      registry.addLocal('b2', 'p1');
-      registry.addLocal('b3', 'p2');
+      registry.addLocal('b1' as BlockId, 'p1');
+      registry.addLocal('b2' as BlockId, 'p1');
+      registry.addLocal('b3' as BlockId, 'p2');
 
       const manifest = registry.exportPoolScopedManifest();
       expect(manifest.pools.size).toBe(2);
@@ -139,10 +142,10 @@ describe('BlockRegistry pool-scoped support', () => {
     });
 
     it('should produce a checksum that changes when blocks change', () => {
-      registry.addLocal('b1', 'p1');
+      registry.addLocal('b1' as BlockId, 'p1');
       const checksum1 = registry.exportPoolScopedManifest().checksum;
 
-      registry.addLocal('b2', 'p1');
+      registry.addLocal('b2' as BlockId, 'p1');
       const checksum2 = registry.exportPoolScopedManifest().checksum;
 
       expect(checksum1).not.toBe(checksum2);
@@ -156,8 +159,8 @@ describe('BlockRegistry pool-scoped support', () => {
 
   describe('clear', () => {
     it('should clear pool associations along with blocks', () => {
-      registry.addLocal('block-1', 'pool-A');
-      registry.addLocal('block-2', 'pool-B');
+      registry.addLocal('block-1' as BlockId, 'pool-A');
+      registry.addLocal('block-2' as BlockId, 'pool-B');
       registry.clear();
 
       expect(registry.getLocalCount()).toBe(0);

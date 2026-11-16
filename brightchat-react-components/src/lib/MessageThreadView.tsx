@@ -14,7 +14,13 @@ import type {
   IPaginatedResult,
   IReaction,
 } from '@brightchain/brightchain-lib';
-import { BrightDateDisplayMode, brightDateNow, brightDateToDate, dateToBrightDate, formatDateByMode } from '@brightchain/brightchain-lib';
+import {
+  BrightDateDisplayMode,
+  brightDateNow,
+  brightDateToDate,
+  dateToBrightDate,
+  formatDateByMode,
+} from '@brightchain/brightchain-lib';
 import { useAuth } from '@digitaldefiance/express-suite-react-components';
 import PushPinIcon from '@mui/icons-material/PushPin';
 import {
@@ -34,7 +40,7 @@ import {
   useRef,
   useState,
 } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams } from 'react-router';
 
 import { BrightChatStrings } from '@brightchain/brightchat-lib';
 import { useI18n } from '@digitaldefiance/express-suite-react-components';
@@ -75,8 +81,16 @@ const PARAM_KEY_MAP: Record<MessageThreadViewProps['contextType'], string> = {
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
 /** Format a BrightDateTimestamp (number), Date, or date-string into a short human-readable timestamp with BrightDate support. */
-function formatTimestamp(date: number | Date | string, mode: BrightDateDisplayMode = BrightDateDisplayMode.Dual): string {
-  const d = typeof date === 'number' ? brightDateToDate(date) : typeof date === 'string' ? new Date(date) : date;
+function formatTimestamp(
+  date: number | Date | string,
+  mode: BrightDateDisplayMode = BrightDateDisplayMode.Dual,
+): string {
+  const d =
+    typeof date === 'number'
+      ? brightDateToDate(date)
+      : typeof date === 'string'
+        ? new Date(date)
+        : date;
   const bdValue = typeof date === 'number' ? date : dateToBrightDate(d);
   const nowBd = brightDateNow();
   const diffDays = Math.floor(nowBd - bdValue);
@@ -95,7 +109,10 @@ function formatTimestamp(date: number | Date | string, mode: BrightDateDisplayMo
     const dayStr = d.toLocaleDateString(undefined, { weekday: 'short' });
     return formatDateByMode(d, dayStr, mode, 3);
   }
-  const localeStr = d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  const localeStr = d.toLocaleDateString(undefined, {
+    month: 'short',
+    day: 'numeric',
+  });
   return formatDateByMode(d, localeStr, mode, 3);
 }
 

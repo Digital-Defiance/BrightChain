@@ -13,6 +13,9 @@
 import {
   BlockFetcherConfig,
   BlockFetchResult,
+  BlockId,
+  brightDateNow,
+  BrightDateTimestamp,
   ChecksumService,
   DEFAULT_BLOCK_FETCHER_CONFIG,
   IAvailabilityService,
@@ -22,7 +25,6 @@ import {
   IFetchQueue,
   IGossipService,
   PoolId,
-  brightDateNow,
 } from '@brightchain/brightchain-lib';
 import fc from 'fast-check';
 import { BlockFetcher } from './blockFetcher';
@@ -74,13 +76,19 @@ class MockTransport implements IBlockFetchTransport {
 class MockAvailabilityService {
   readonly locations = new Map<
     string,
-    Array<{ nodeId: string; lastSeen: Date; isAuthoritative: boolean }>
+    Array<{
+      nodeId: string;
+      lastSeen: BrightDateTimestamp;
+      isAuthoritative: boolean;
+    }>
   >();
 
-  async getBlockLocations(
-    blockId: string,
-  ): Promise<
-    Array<{ nodeId: string; lastSeen: Date; isAuthoritative: boolean }>
+  async getBlockLocations(blockId: string): Promise<
+    Array<{
+      nodeId: string;
+      lastSeen: BrightDateTimestamp;
+      isAuthoritative: boolean;
+    }>
   > {
     return this.locations.get(blockId) ?? [];
   }
@@ -905,7 +913,7 @@ describe('Feature: cross-node-eventual-consistency, Property 12: Proactive fetch
       minLength: 128,
       maxLength: 128,
     })
-    .map((chars) => chars.join(''));
+    .map((chars) => chars.join('') as BlockId);
 
   /** Arbitrary announcement type */
   const arbAnnouncementType = fc.constantFrom(

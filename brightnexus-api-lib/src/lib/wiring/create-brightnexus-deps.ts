@@ -13,7 +13,9 @@ export interface IBrightNexusExternalDeps<TID extends PlatformID> {
   parseId: (idString: string) => TID;
   parseSafeId?: (idString: string) => TID | undefined;
   getMemberPublicKeyHex: (memberId: TID) => Promise<string | null>;
-  getMemberPublicKeyHexByIdString?: (memberIdHex: string) => Promise<string | null>;
+  getMemberPublicKeyHexByIdString?: (
+    memberIdHex: string,
+  ) => Promise<string | null>;
   signatureVerifier?: BslpSignatureVerifier;
 }
 

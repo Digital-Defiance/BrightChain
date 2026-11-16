@@ -3,7 +3,10 @@
  *
  * Feature: canary-provider-system
  */
-import type { ICanaryProviderConfig } from '@brightchain/digitalburnbag-lib';
+import type {
+  ICanaryProviderConfig,
+  ProviderCategory,
+} from '@brightchain/digitalburnbag-lib';
 import * as fc from 'fast-check';
 import { ProviderConfigValidator } from '../../services/provider-config-validator';
 
@@ -39,7 +42,11 @@ const PROVIDER_CATEGORIES = [
 ] as const;
 
 /** Arbitrary for a valid ProviderCategory. */
-const arbCategory = fc.constantFrom(...PROVIDER_CATEGORIES);
+// The ProviderCategory enum is type-only in the lib barrel, so the raw string
+// values are cast to the enum type.
+const arbCategory = fc.constantFrom(
+  ...PROVIDER_CATEGORIES,
+) as unknown as fc.Arbitrary<ProviderCategory>;
 
 /** Arbitrary for a valid IResponseMapping. */
 const arbResponseMapping = fc.record({

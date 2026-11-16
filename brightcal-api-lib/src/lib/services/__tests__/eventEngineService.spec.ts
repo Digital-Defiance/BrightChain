@@ -20,15 +20,15 @@ import {
   validBlockSizes,
 } from '@brightchain/brightchain-lib';
 import { BrightDb, InMemoryHeadRegistry } from '@brightchain/db';
-import type { ICreateEventBody } from '../../controllers/eventController.ts';
-import { createCalendarCollectionModel } from '../../models/calendarCollection.model.ts';
-import { createCalendarEventModel } from '../../models/calendarEvent.model.ts';
-import { createCalendarShareModel } from '../../models/calendarShare.model.ts';
-import { CalendarEngineService } from '../calendarEngineService.ts';
-import { decryptEventBody } from '../calendarEventCrypto.ts';
-import { CalendarPermissionService } from '../calendarPermissionService.ts';
-import { EncryptionService } from '../encryptionService.ts';
-import { EventEngineService } from '../eventEngineService.ts';
+import type { ICreateEventBody } from '../../controllers/eventController.js';
+import { createCalendarCollectionModel } from '../../models/calendarCollection.model.js';
+import { createCalendarEventModel } from '../../models/calendarEvent.model.js';
+import { createCalendarShareModel } from '../../models/calendarShare.model.js';
+import { CalendarEngineService } from '../calendarEngineService.js';
+import { decryptEventBody } from '../calendarEventCrypto.js';
+import { CalendarPermissionService } from '../calendarPermissionService.js';
+import { EncryptionService } from '../encryptionService.js';
+import { EventEngineService } from '../eventEngineService.js';
 
 // ─── Setup ───────────────────────────────────────────────────────────────────
 
@@ -40,8 +40,7 @@ beforeAll(() => {
 function makeDb(name = 'testdb'): BrightDb {
   const store = new MemoryBlockStore(validBlockSizes);
   const registry = InMemoryHeadRegistry.createIsolated();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return new BrightDb(store as any, { name, headRegistry: registry });
+  return new BrightDb(store, { name, headRegistry: registry });
 }
 
 function createServices() {
@@ -67,7 +66,9 @@ function createServices() {
   );
 
   /** Helper to decrypt an event retrieved from the model. */
-  async function decryptEvent(event: NonNullable<Awaited<ReturnType<typeof eventModel.findById>>>) {
+  async function decryptEvent(
+    event: NonNullable<Awaited<ReturnType<typeof eventModel.findById>>>,
+  ) {
     const calendar = await calendarModel.findById(event.calendarId);
     if (!calendar?.encryptionKey) throw new Error('No encryption key');
     return decryptEventBody(event, calendar.encryptionKey, encryption);
@@ -352,7 +353,8 @@ describe('EventEngineService', () => {
 
     describe('recurrence mode: single', () => {
       it('should create a RECURRENCE-ID exception and add EXDATE to parent', async () => {
-        const { eventService, calendarService, eventModel, decryptEvent } = createServices();
+        const { eventService, calendarService, eventModel, decryptEvent } =
+          createServices();
         const cal = await setupCalendar(calendarService, 'user-1');
         const parent = await eventService.createEvent(
           'user-1',
@@ -385,7 +387,8 @@ describe('EventEngineService', () => {
 
     describe('recurrence mode: thisAndFuture', () => {
       it('should split the series into two', async () => {
-        const { eventService, calendarService, eventModel, decryptEvent } = createServices();
+        const { eventService, calendarService, eventModel, decryptEvent } =
+          createServices();
         const cal = await setupCalendar(calendarService, 'user-1');
         const original = await eventService.createEvent(
           'user-1',
@@ -462,7 +465,8 @@ describe('EventEngineService', () => {
 
     describe('recurrence mode: single', () => {
       it('should add EXDATE instead of deleting the series', async () => {
-        const { eventService, calendarService, eventModel, decryptEvent } = createServices();
+        const { eventService, calendarService, eventModel, decryptEvent } =
+          createServices();
         const cal = await setupCalendar(calendarService, 'user-1');
         const event = await eventService.createEvent(
           'user-1',
@@ -490,7 +494,8 @@ describe('EventEngineService', () => {
 
     describe('recurrence mode: thisAndFuture', () => {
       it('should set UNTIL on the rrule', async () => {
-        const { eventService, calendarService, eventModel, decryptEvent } = createServices();
+        const { eventService, calendarService, eventModel, decryptEvent } =
+          createServices();
         const cal = await setupCalendar(calendarService, 'user-1');
         const event = await eventService.createEvent(
           'user-1',

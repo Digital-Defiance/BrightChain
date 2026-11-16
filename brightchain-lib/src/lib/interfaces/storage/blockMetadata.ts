@@ -1,9 +1,9 @@
 import { RawDataBlock } from '../../blocks/rawData';
 import { DurabilityLevel } from '../../enumerations/durabilityLevel';
 import { ReplicationStatus } from '../../enumerations/replicationStatus';
-import type { BlockId } from '../branded/primitives/blockId';
 import type { BrightDateTimestamp } from '../../types/brightDateTimestamp';
 import { brightDateNow } from '../../utils/brightDateConversions';
+import type { BlockId } from '../branded/primitives/blockId';
 
 import { PoolId } from './pooledBlockStore';
 

@@ -3,6 +3,7 @@
  *
  * Requirements: 10.1, 10.6, 10.7, 14.5, 17.6, 17.7
  */
+import { toBrightDateString } from '@brightchain/brightchain-lib';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import VisibilityIcon from '@mui/icons-material/Visibility';
@@ -25,7 +26,6 @@ import {
 } from '@mui/material';
 import { useCallback, useState } from 'react';
 import { formatDateWithBD } from '../utils/formatBrightDate';
-import { toBrightDateString } from '@brightchain/brightchain-lib';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -67,12 +67,19 @@ export interface IDeliveryDataPoint {
 
 export interface IWebhookEndpointPanelProps {
   endpoints: IWebhookEndpointDisplay[];
-  onRotateSecret: (endpointId: string, gracePeriodMs?: number) => Promise<{ newSecret: string }>;
+  onRotateSecret: (
+    endpointId: string,
+    gracePeriodMs?: number,
+  ) => Promise<{ newSecret: string }>;
   onUpdateIpAllowlist: (endpointId: string, cidrs: string[]) => Promise<void>;
-  onSendTestWebhook: (endpointId: string) => Promise<{ success: boolean; error?: string; processingTimeMs: number }>;
+  onSendTestWebhook: (
+    endpointId: string,
+  ) => Promise<{ success: boolean; error?: string; processingTimeMs: number }>;
   onRefreshStats: (endpointId: string) => Promise<IWebhookDeliveryStats>;
   /** Optional: fetch delivery history for chart display */
-  onFetchDeliveryHistory?: (endpointId: string) => Promise<IDeliveryDataPoint[]>;
+  onFetchDeliveryHistory?: (
+    endpointId: string,
+  ) => Promise<IDeliveryDataPoint[]>;
 }
 
 // ---------------------------------------------------------------------------
@@ -93,20 +100,44 @@ function successRate(stats: IWebhookDeliveryStats): string {
 // SecretDisplay
 // ---------------------------------------------------------------------------
 
-function SecretDisplay({ secret, onCopy }: { secret: string; onCopy: (text: string) => void }) {
+function SecretDisplay({
+  secret,
+  onCopy,
+}: {
+  secret: string;
+  onCopy: (text: string) => void;
+}) {
   const [visible, setVisible] = useState(false);
   return (
     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-      <Typography variant="caption" sx={{ fontFamily: 'monospace', wordBreak: 'break-all', flex: 1 }} data-testid="secret-display">
+      <Typography
+        variant="caption"
+        sx={{ fontFamily: 'monospace', wordBreak: 'break-all', flex: 1 }}
+        data-testid="secret-display"
+      >
         {visible ? secret : '•'.repeat(Math.min(secret.length, 32))}
       </Typography>
       <Tooltip title={visible ? 'Hide secret' : 'Show secret'}>
-        <IconButton size="small" onClick={() => setVisible(v => !v)} aria-label={visible ? 'Hide secret' : 'Show secret'} data-testid="secret-visibility-toggle">
-          {visible ? <VisibilityOffIcon fontSize="small" /> : <VisibilityIcon fontSize="small" />}
+        <IconButton
+          size="small"
+          onClick={() => setVisible((v) => !v)}
+          aria-label={visible ? 'Hide secret' : 'Show secret'}
+          data-testid="secret-visibility-toggle"
+        >
+          {visible ? (
+            <VisibilityOffIcon fontSize="small" />
+          ) : (
+            <VisibilityIcon fontSize="small" />
+          )}
         </IconButton>
       </Tooltip>
       <Tooltip title="Copy secret">
-        <IconButton size="small" onClick={() => onCopy(secret)} aria-label="Copy secret" data-testid="copy-secret-button">
+        <IconButton
+          size="small"
+          onClick={() => onCopy(secret)}
+          aria-label="Copy secret"
+          data-testid="copy-secret-button"
+        >
           <ContentCopyIcon fontSize="small" />
         </IconButton>
       </Tooltip>
@@ -118,7 +149,15 @@ function SecretDisplay({ secret, onCopy }: { secret: string; onCopy: (text: stri
 // IpAllowlistEditor
 // ---------------------------------------------------------------------------
 
-function IpAllowlistEditor({ endpointId, initialCidrs, onSave }: { endpointId: string; initialCidrs: string[]; onSave: (cidrs: string[]) => Promise<void> }) {
+function IpAllowlistEditor({
+  endpointId,
+  initialCidrs,
+  onSave,
+}: {
+  endpointId: string;
+  initialCidrs: string[];
+  onSave: (cidrs: string[]) => Promise<void>;
+}) {
   const [cidrs, setCidrs] = useState(initialCidrs.join('\n'));
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -127,7 +166,10 @@ function IpAllowlistEditor({ endpointId, initialCidrs, onSave }: { endpointId: s
     setError('');
     setSaving(true);
     try {
-      const list = cidrs.split('\n').map(s => s.trim()).filter(Boolean);
+      const list = cidrs
+        .split('\n')
+        .map((s) => s.trim())
+        .filter(Boolean);
       await onSave(list);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to update allowlist');
@@ -138,10 +180,18 @@ function IpAllowlistEditor({ endpointId, initialCidrs, onSave }: { endpointId: s
 
   return (
     <Box data-testid={`ip-allowlist-editor-${endpointId}`}>
-      <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
+      <Typography
+        variant="caption"
+        color="text.secondary"
+        sx={{ display: 'block', mb: 0.5 }}
+      >
         IP Allowlist (CIDR ranges, one per line — empty = allow all)
       </Typography>
-      {error && <Alert severity="error" sx={{ mb: 1 }}>{error}</Alert>}
+      {error && (
+        <Alert severity="error" sx={{ mb: 1 }}>
+          {error}
+        </Alert>
+      )}
       <TextField
         multiline
         minRows={2}
@@ -149,11 +199,18 @@ function IpAllowlistEditor({ endpointId, initialCidrs, onSave }: { endpointId: s
         fullWidth
         size="small"
         value={cidrs}
-        onChange={e => setCidrs(e.target.value)}
+        onChange={(e) => setCidrs(e.target.value)}
         placeholder="192.168.1.0/24&#10;10.0.0.0/8"
         inputProps={{ 'data-testid': `ip-allowlist-input-${endpointId}` }}
       />
-      <Button size="small" variant="outlined" onClick={handleSave} disabled={saving} sx={{ mt: 1 }} data-testid={`save-allowlist-${endpointId}`}>
+      <Button
+        size="small"
+        variant="outlined"
+        onClick={handleSave}
+        disabled={saving}
+        sx={{ mt: 1 }}
+        data-testid={`save-allowlist-${endpointId}`}
+      >
         Save Allowlist
       </Button>
     </Box>
@@ -167,20 +224,30 @@ function IpAllowlistEditor({ endpointId, initialCidrs, onSave }: { endpointId: s
 function DeliveryChart({ data }: { data: IDeliveryDataPoint[] }) {
   if (data.length === 0) {
     return (
-      <Typography variant="caption" color="text.secondary" data-testid="delivery-chart-empty">
+      <Typography
+        variant="caption"
+        color="text.secondary"
+        data-testid="delivery-chart-empty"
+      >
         No delivery history available.
       </Typography>
     );
   }
 
-  const maxValue = Math.max(...data.map(d => d.successful + d.failed), 1);
+  const maxValue = Math.max(...data.map((d) => d.successful + d.failed), 1);
 
   return (
     <Box data-testid="delivery-chart" sx={{ mt: 1 }}>
-      <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
+      <Typography
+        variant="caption"
+        color="text.secondary"
+        sx={{ display: 'block', mb: 0.5 }}
+      >
         Delivery History
       </Typography>
-      <Box sx={{ display: 'flex', alignItems: 'flex-end', gap: '2px', height: 60 }}>
+      <Box
+        sx={{ display: 'flex', alignItems: 'flex-end', gap: '2px', height: 60 }}
+      >
         {data.map((point, idx) => {
           const total = point.successful + point.failed;
           const barHeight = (total / maxValue) * 100;
@@ -207,21 +274,51 @@ function DeliveryChart({ data }: { data: IDeliveryDataPoint[] }) {
         })}
       </Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 0.25 }}>
-        <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.55rem' }}>
-          {data.length > 0 ? new Date(data[0].timestamp).toLocaleDateString() : ''}
+        <Typography
+          variant="caption"
+          color="text.secondary"
+          sx={{ fontSize: '0.55rem' }}
+        >
+          {data.length > 0
+            ? new Date(data[0].timestamp).toLocaleDateString()
+            : ''}
         </Typography>
-        <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.55rem' }}>
-          {data.length > 0 ? new Date(data[data.length - 1].timestamp).toLocaleDateString() : ''}
+        <Typography
+          variant="caption"
+          color="text.secondary"
+          sx={{ fontSize: '0.55rem' }}
+        >
+          {data.length > 0
+            ? new Date(data[data.length - 1].timestamp).toLocaleDateString()
+            : ''}
         </Typography>
       </Box>
       <Box sx={{ display: 'flex', gap: 1, mt: 0.5 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25 }}>
-          <Box sx={{ width: 8, height: 8, borderRadius: 1, backgroundColor: '#4caf50' }} />
-          <Typography variant="caption" color="text.secondary">Success</Typography>
+          <Box
+            sx={{
+              width: 8,
+              height: 8,
+              borderRadius: 1,
+              backgroundColor: '#4caf50',
+            }}
+          />
+          <Typography variant="caption" color="text.secondary">
+            Success
+          </Typography>
         </Box>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25 }}>
-          <Box sx={{ width: 8, height: 8, borderRadius: 1, backgroundColor: '#f44336' }} />
-          <Typography variant="caption" color="text.secondary">Failed</Typography>
+          <Box
+            sx={{
+              width: 8,
+              height: 8,
+              borderRadius: 1,
+              backgroundColor: '#f44336',
+            }}
+          />
+          <Typography variant="caption" color="text.secondary">
+            Failed
+          </Typography>
         </Box>
       </Box>
     </Box>
@@ -247,25 +344,47 @@ const GRACE_PERIOD_OPTIONS = [
 
 interface IEndpointCardProps {
   endpoint: IWebhookEndpointDisplay;
-  onRotateSecret: (endpointId: string, gracePeriodMs?: number) => Promise<{ newSecret: string }>;
+  onRotateSecret: (
+    endpointId: string,
+    gracePeriodMs?: number,
+  ) => Promise<{ newSecret: string }>;
   onUpdateIpAllowlist: (endpointId: string, cidrs: string[]) => Promise<void>;
-  onSendTestWebhook: (endpointId: string) => Promise<{ success: boolean; error?: string; processingTimeMs: number }>;
+  onSendTestWebhook: (
+    endpointId: string,
+  ) => Promise<{ success: boolean; error?: string; processingTimeMs: number }>;
   onRefreshStats: (endpointId: string) => Promise<IWebhookDeliveryStats>;
-  onFetchDeliveryHistory?: (endpointId: string) => Promise<IDeliveryDataPoint[]>;
+  onFetchDeliveryHistory?: (
+    endpointId: string,
+  ) => Promise<IDeliveryDataPoint[]>;
 }
 
-function EndpointCard({ endpoint, onRotateSecret, onUpdateIpAllowlist, onSendTestWebhook, onRefreshStats, onFetchDeliveryHistory }: IEndpointCardProps) {
+function EndpointCard({
+  endpoint,
+  onRotateSecret,
+  onUpdateIpAllowlist,
+  onSendTestWebhook,
+  onRefreshStats,
+  onFetchDeliveryHistory,
+}: IEndpointCardProps) {
   const [rotatingSecret, setRotatingSecret] = useState(false);
   const [rotateResult, setRotateResult] = useState<string | null>(null);
-  const [gracePeriodMs, setGracePeriodMs] = useState<number>(GRACE_PERIOD_OPTIONS[2].value); // default 15 min
+  const [gracePeriodMs, setGracePeriodMs] = useState<number>(
+    GRACE_PERIOD_OPTIONS[2].value,
+  ); // default 15 min
   const [showGracePeriod, setShowGracePeriod] = useState(false);
-  const [testResult, setTestResult] = useState<{ success: boolean; error?: string; processingTimeMs: number } | null>(null);
+  const [testResult, setTestResult] = useState<{
+    success: boolean;
+    error?: string;
+    processingTimeMs: number;
+  } | null>(null);
   const [testingWebhook, setTestingWebhook] = useState(false);
   const [stats, setStats] = useState(endpoint.stats);
   const [refreshingStats, setRefreshingStats] = useState(false);
   const [copied, setCopied] = useState(false);
   const [showAllowlistEditor, setShowAllowlistEditor] = useState(false);
-  const [deliveryHistory, setDeliveryHistory] = useState<IDeliveryDataPoint[] | null>(null);
+  const [deliveryHistory, setDeliveryHistory] = useState<
+    IDeliveryDataPoint[] | null
+  >(null);
   const [loadingHistory, setLoadingHistory] = useState(false);
 
   const handleCopy = useCallback((text: string) => {
@@ -279,12 +398,19 @@ function EndpointCard({ endpoint, onRotateSecret, onUpdateIpAllowlist, onSendTes
     setRotatingSecret(true);
     setRotateResult(null);
     try {
-      const result = await onRotateSecret(endpoint.id, gracePeriodMs > 0 ? gracePeriodMs : undefined);
-      setRotateResult(`New secret: ${result.newSecret.slice(0, 8)}… (copied to clipboard)`);
+      const result = await onRotateSecret(
+        endpoint.id,
+        gracePeriodMs > 0 ? gracePeriodMs : undefined,
+      );
+      setRotateResult(
+        `New secret: ${result.newSecret.slice(0, 8)}… (copied to clipboard)`,
+      );
       void navigator.clipboard.writeText(result.newSecret);
       setShowGracePeriod(false);
     } catch (e) {
-      setRotateResult(`Error: ${e instanceof Error ? e.message : 'Failed to rotate'}`);
+      setRotateResult(
+        `Error: ${e instanceof Error ? e.message : 'Failed to rotate'}`,
+      );
     } finally {
       setRotatingSecret(false);
     }
@@ -297,7 +423,11 @@ function EndpointCard({ endpoint, onRotateSecret, onUpdateIpAllowlist, onSendTes
       const result = await onSendTestWebhook(endpoint.id);
       setTestResult(result);
     } catch (e) {
-      setTestResult({ success: false, error: e instanceof Error ? e.message : 'Test failed', processingTimeMs: 0 });
+      setTestResult({
+        success: false,
+        error: e instanceof Error ? e.message : 'Test failed',
+        processingTimeMs: 0,
+      });
     } finally {
       setTestingWebhook(false);
     }
@@ -325,24 +455,54 @@ function EndpointCard({ endpoint, onRotateSecret, onUpdateIpAllowlist, onSendTes
   };
 
   return (
-    <Paper variant="outlined" sx={{ p: 2, mb: 2 }} data-testid={`endpoint-card-${endpoint.id}`}>
+    <Paper
+      variant="outlined"
+      sx={{ p: 2, mb: 2 }}
+      data-testid={`endpoint-card-${endpoint.id}`}
+    >
       {/* Header */}
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
-        <Typography variant="subtitle2" sx={{ flex: 1 }}>{endpoint.providerName}</Typography>
-        {endpoint.isDisabledByFailures && <Chip label="Disabled" color="error" size="small" />}
-        {!endpoint.isDisabledByFailures && endpoint.isActive && <Chip label="Active" color="success" size="small" />}
-        <Typography variant="caption" color="text.secondary">Last received: {formatTimestamp(endpoint.lastReceivedAt)}</Typography>
+        <Typography variant="subtitle2" sx={{ flex: 1 }}>
+          {endpoint.providerName}
+        </Typography>
+        {endpoint.isDisabledByFailures && (
+          <Chip label="Disabled" color="error" size="small" />
+        )}
+        {!endpoint.isDisabledByFailures && endpoint.isActive && (
+          <Chip label="Active" color="success" size="small" />
+        )}
+        <Typography variant="caption" color="text.secondary">
+          Last received: {formatTimestamp(endpoint.lastReceivedAt)}
+        </Typography>
       </Box>
 
       {/* Webhook URL */}
       <Box sx={{ mb: 1.5 }}>
-        <Typography variant="caption" color="text.secondary">Webhook URL</Typography>
+        <Typography variant="caption" color="text.secondary">
+          Webhook URL
+        </Typography>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.25 }}>
-          <Typography variant="caption" sx={{ fontFamily: 'monospace', wordBreak: 'break-all', flex: 1, backgroundColor: 'action.hover', p: 0.5, borderRadius: 0.5 }} data-testid={`webhook-url-${endpoint.id}`}>
+          <Typography
+            variant="caption"
+            sx={{
+              fontFamily: 'monospace',
+              wordBreak: 'break-all',
+              flex: 1,
+              backgroundColor: 'action.hover',
+              p: 0.5,
+              borderRadius: 0.5,
+            }}
+            data-testid={`webhook-url-${endpoint.id}`}
+          >
             {endpoint.webhookUrl}
           </Typography>
           <Tooltip title={copied ? 'Copied!' : 'Copy URL'}>
-            <IconButton size="small" onClick={() => handleCopy(endpoint.webhookUrl)} aria-label="Copy webhook URL" data-testid={`copy-url-${endpoint.id}`}>
+            <IconButton
+              size="small"
+              onClick={() => handleCopy(endpoint.webhookUrl)}
+              aria-label="Copy webhook URL"
+              data-testid={`copy-url-${endpoint.id}`}
+            >
               <ContentCopyIcon fontSize="small" />
             </IconButton>
           </Tooltip>
@@ -351,25 +511,62 @@ function EndpointCard({ endpoint, onRotateSecret, onUpdateIpAllowlist, onSendTes
 
       {/* Secret */}
       <Box sx={{ mb: 1.5 }}>
-        <Typography variant="caption" color="text.secondary">Webhook Secret</Typography>
+        <Typography variant="caption" color="text.secondary">
+          Webhook Secret
+        </Typography>
         <SecretDisplay secret={endpoint.secret} onCopy={handleCopy} />
       </Box>
 
       {/* Delivery stats */}
       <Box sx={{ mb: 1.5 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
-          <Typography variant="caption" color="text.secondary">Delivery Stats</Typography>
+          <Typography variant="caption" color="text.secondary">
+            Delivery Stats
+          </Typography>
           <Tooltip title="Refresh stats">
-            <IconButton size="small" onClick={handleRefreshStats} disabled={refreshingStats} aria-label="Refresh stats" data-testid={`refresh-stats-${endpoint.id}`}>
+            <IconButton
+              size="small"
+              onClick={handleRefreshStats}
+              disabled={refreshingStats}
+              aria-label="Refresh stats"
+              data-testid={`refresh-stats-${endpoint.id}`}
+            >
               <RefreshIcon fontSize="small" />
             </IconButton>
           </Tooltip>
         </Box>
-        <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }} data-testid={`delivery-stats-${endpoint.id}`}>
-          <Box><Typography variant="caption" color="text.secondary">Total</Typography><Typography variant="body2">{stats.totalReceived}</Typography></Box>
-          <Box><Typography variant="caption" color="text.secondary">Success</Typography><Typography variant="body2" color="success.main">{stats.successfullyProcessed}</Typography></Box>
-          <Box><Typography variant="caption" color="text.secondary">Failed</Typography><Typography variant="body2" color="error.main">{stats.failedValidation}</Typography></Box>
-          <Box><Typography variant="caption" color="text.secondary">Rate</Typography><Typography variant="body2">{successRate(stats)}</Typography></Box>
+        <Box
+          sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}
+          data-testid={`delivery-stats-${endpoint.id}`}
+        >
+          <Box>
+            <Typography variant="caption" color="text.secondary">
+              Total
+            </Typography>
+            <Typography variant="body2">{stats.totalReceived}</Typography>
+          </Box>
+          <Box>
+            <Typography variant="caption" color="text.secondary">
+              Success
+            </Typography>
+            <Typography variant="body2" color="success.main">
+              {stats.successfullyProcessed}
+            </Typography>
+          </Box>
+          <Box>
+            <Typography variant="caption" color="text.secondary">
+              Failed
+            </Typography>
+            <Typography variant="body2" color="error.main">
+              {stats.failedValidation}
+            </Typography>
+          </Box>
+          <Box>
+            <Typography variant="caption" color="text.secondary">
+              Rate
+            </Typography>
+            <Typography variant="body2">{successRate(stats)}</Typography>
+          </Box>
         </Box>
       </Box>
 
@@ -377,17 +574,40 @@ function EndpointCard({ endpoint, onRotateSecret, onUpdateIpAllowlist, onSendTes
 
       {/* Actions */}
       <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mb: 1 }}>
-        <Button size="small" variant="outlined" onClick={() => setShowGracePeriod(v => !v)} disabled={rotatingSecret} data-testid={`rotate-secret-${endpoint.id}`}>
+        <Button
+          size="small"
+          variant="outlined"
+          onClick={() => setShowGracePeriod((v) => !v)}
+          disabled={rotatingSecret}
+          data-testid={`rotate-secret-${endpoint.id}`}
+        >
           Rotate Secret
         </Button>
-        <Button size="small" variant="outlined" onClick={handleTestWebhook} disabled={testingWebhook} data-testid={`test-webhook-${endpoint.id}`}>
+        <Button
+          size="small"
+          variant="outlined"
+          onClick={handleTestWebhook}
+          disabled={testingWebhook}
+          data-testid={`test-webhook-${endpoint.id}`}
+        >
           Test Webhook
         </Button>
-        <Button size="small" variant="outlined" onClick={() => setShowAllowlistEditor(v => !v)} data-testid={`edit-allowlist-${endpoint.id}`}>
+        <Button
+          size="small"
+          variant="outlined"
+          onClick={() => setShowAllowlistEditor((v) => !v)}
+          data-testid={`edit-allowlist-${endpoint.id}`}
+        >
           IP Allowlist
         </Button>
         {onFetchDeliveryHistory && (
-          <Button size="small" variant="outlined" onClick={handleLoadHistory} disabled={loadingHistory} data-testid={`show-chart-${endpoint.id}`}>
+          <Button
+            size="small"
+            variant="outlined"
+            onClick={handleLoadHistory}
+            disabled={loadingHistory}
+            data-testid={`show-chart-${endpoint.id}`}
+          >
             {deliveryHistory ? 'Refresh Chart' : 'Show Chart'}
           </Button>
         )}
@@ -395,9 +615,18 @@ function EndpointCard({ endpoint, onRotateSecret, onUpdateIpAllowlist, onSendTes
 
       {/* Grace period configuration for secret rotation */}
       {showGracePeriod && (
-        <Paper variant="outlined" sx={{ p: 1.5, mb: 1 }} data-testid={`grace-period-config-${endpoint.id}`}>
-          <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
-            Grace period: both old and new secrets will be accepted during this time.
+        <Paper
+          variant="outlined"
+          sx={{ p: 1.5, mb: 1 }}
+          data-testid={`grace-period-config-${endpoint.id}`}
+        >
+          <Typography
+            variant="caption"
+            color="text.secondary"
+            sx={{ display: 'block', mb: 1 }}
+          >
+            Grace period: both old and new secrets will be accepted during this
+            time.
           </Typography>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <FormControl size="small" sx={{ minWidth: 160 }}>
@@ -405,11 +634,13 @@ function EndpointCard({ endpoint, onRotateSecret, onUpdateIpAllowlist, onSendTes
               <Select
                 value={gracePeriodMs}
                 label="Grace Period"
-                onChange={e => setGracePeriodMs(e.target.value as number)}
+                onChange={(e) => setGracePeriodMs(e.target.value as number)}
                 data-testid={`grace-period-select-${endpoint.id}`}
               >
-                {GRACE_PERIOD_OPTIONS.map(opt => (
-                  <MenuItem key={opt.value} value={opt.value}>{opt.label}</MenuItem>
+                {GRACE_PERIOD_OPTIONS.map((opt) => (
+                  <MenuItem key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </MenuItem>
                 ))}
               </Select>
             </FormControl>
@@ -423,19 +654,29 @@ function EndpointCard({ endpoint, onRotateSecret, onUpdateIpAllowlist, onSendTes
             >
               Confirm Rotation
             </Button>
-            <Button size="small" onClick={() => setShowGracePeriod(false)}>Cancel</Button>
+            <Button size="small" onClick={() => setShowGracePeriod(false)}>
+              Cancel
+            </Button>
           </Box>
         </Paper>
       )}
 
       {rotateResult && (
-        <Alert severity={rotateResult.startsWith('Error') ? 'error' : 'success'} sx={{ mb: 1 }} data-testid={`rotate-result-${endpoint.id}`}>
+        <Alert
+          severity={rotateResult.startsWith('Error') ? 'error' : 'success'}
+          sx={{ mb: 1 }}
+          data-testid={`rotate-result-${endpoint.id}`}
+        >
           {rotateResult}
         </Alert>
       )}
 
       {testResult && (
-        <Alert severity={testResult.success ? 'success' : 'error'} sx={{ mb: 1 }} data-testid={`test-result-${endpoint.id}`}>
+        <Alert
+          severity={testResult.success ? 'success' : 'error'}
+          sx={{ mb: 1 }}
+          data-testid={`test-result-${endpoint.id}`}
+        >
           {testResult.success
             ? `Test webhook delivered successfully in ${testResult.processingTimeMs}ms`
             : `Test failed: ${testResult.error}`}
@@ -446,7 +687,7 @@ function EndpointCard({ endpoint, onRotateSecret, onUpdateIpAllowlist, onSendTes
         <IpAllowlistEditor
           endpointId={endpoint.id}
           initialCidrs={endpoint.ipAllowlist}
-          onSave={cidrs => onUpdateIpAllowlist(endpoint.id, cidrs)}
+          onSave={(cidrs) => onUpdateIpAllowlist(endpoint.id, cidrs)}
         />
       )}
 
@@ -468,22 +709,39 @@ function EndpointCard({ endpoint, onRotateSecret, onUpdateIpAllowlist, onSendTes
  * Management UI for webhook endpoints.
  * Requirements: 10.1, 10.6, 10.7, 14.5, 17.6, 17.7
  */
-export function WebhookEndpointPanel({ endpoints, onRotateSecret, onUpdateIpAllowlist, onSendTestWebhook, onRefreshStats, onFetchDeliveryHistory }: IWebhookEndpointPanelProps) {
+export function WebhookEndpointPanel({
+  endpoints,
+  onRotateSecret,
+  onUpdateIpAllowlist,
+  onSendTestWebhook,
+  onRefreshStats,
+  onFetchDeliveryHistory,
+}: IWebhookEndpointPanelProps) {
   return (
     <Box data-testid="webhook-endpoint-panel">
-      <Typography variant="h6" gutterBottom>Webhook Endpoints</Typography>
+      <Typography variant="h6" gutterBottom>
+        Webhook Endpoints
+      </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
         Manage inbound webhook URLs for push-based canary providers.
       </Typography>
 
       {endpoints.length === 0 && (
-        <Box sx={{ textAlign: 'center', py: 4 }} data-testid="no-endpoints-state">
-          <Typography variant="body2" color="text.secondary">No webhook endpoints configured.</Typography>
-          <Typography variant="caption" color="text.secondary">Webhook endpoints are created automatically when you connect a push-based provider.</Typography>
+        <Box
+          sx={{ textAlign: 'center', py: 4 }}
+          data-testid="no-endpoints-state"
+        >
+          <Typography variant="body2" color="text.secondary">
+            No webhook endpoints configured.
+          </Typography>
+          <Typography variant="caption" color="text.secondary">
+            Webhook endpoints are created automatically when you connect a
+            push-based provider.
+          </Typography>
         </Box>
       )}
 
-      {endpoints.map(endpoint => (
+      {endpoints.map((endpoint) => (
         <EndpointCard
           key={endpoint.id}
           endpoint={endpoint}

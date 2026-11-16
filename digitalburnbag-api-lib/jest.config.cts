@@ -34,6 +34,9 @@ module.exports = {
   moduleNameMapper: {
     '^@brightchain/digitalburnbag-lib$':
       '<rootDir>/../digitalburnbag-lib/src/index.ts',
+    // Deep imports (e.g. shared test arbitraries), mirroring tsconfig.base paths.
+    '^@brightchain/digitalburnbag-lib/(.*)$':
+      '<rootDir>/../digitalburnbag-lib/src/$1',
     '^@brightchain/digitalburnbag-api-lib$': '<rootDir>/src/index.ts',
     '^uuid$': '<rootDir>/../node_modules/uuid/dist/cjs/index.js',
     '^@digitaldefiance/i18n-lib$':

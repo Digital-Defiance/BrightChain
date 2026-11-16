@@ -42,9 +42,9 @@ import { AppConstants } from '../appConstants';
 import type { IWriteAclApiManager } from '../auth/writeAclApiRouter';
 import { PoolDiscoveryService } from '../availability/poolDiscoveryService';
 import { AdminBlockController } from '../controllers/api/adminBlock';
-import { AdminDevReseedController } from '../controllers/api/adminDevReseed';
 import { AdminChatController } from '../controllers/api/adminChat';
 import { AdminChatServersController } from '../controllers/api/adminChatServers';
+import { AdminDevReseedController } from '../controllers/api/adminDevReseed';
 import { AdminHubController } from '../controllers/api/adminHub';
 import { AdminJouleController } from '../controllers/api/adminJoule';
 import { AdminMailController } from '../controllers/api/adminMail';
@@ -100,7 +100,10 @@ import { UserController } from '../controllers/api/user';
 import { UserSearchController } from '../controllers/api/userSearch';
 import { IBrightChainApplication } from '../interfaces';
 import { RateTableCache } from '../joule/rateTableCache';
-import { requireAuth, requireAuthWithRoles } from '../middlewares/authentication';
+import {
+  requireAuth,
+  requireAuthWithRoles,
+} from '../middlewares/authentication';
 import { createBrightDateRateLimiter } from '../middlewares/brightdate-rate-limiter';
 import { createBrightNexusLookupRateLimiter } from '../middlewares/brightnexus-lookup-rate-limiter';
 import { EventNotificationSystem } from '../services/eventNotificationSystem';
@@ -162,7 +165,8 @@ export class ApiRouter<
   private readonly adminPassController: AdminPassController<TID>;
   private readonly adminMailController: AdminMailController<TID>;
   private readonly adminJouleController: AdminJouleController<TID>;
-  private readonly adminDevReseedController: AdminDevReseedController<TID> | null = null;
+  private readonly adminDevReseedController: AdminDevReseedController<TID> | null =
+    null;
   private readonly jouleRateTableController: JouleRateTableController<TID>;
   private readonly brightdateNowController: BrightDateNowController<TID>;
   private readonly jouleMemberController: JouleMemberController<TID>;
@@ -540,7 +544,11 @@ export class ApiRouter<
 
     // Admin dev reseed — only available in DEV_DATABASE (in-memory) mode
     if (this.adminDevReseedController) {
-      this.router.use('/admin/dev', ...adminAuth, this.adminDevReseedController.router);
+      this.router.use(
+        '/admin/dev',
+        ...adminAuth,
+        this.adminDevReseedController.router,
+      );
     }
 
     // Mount the fake-email inspection router when using the fake/disabled email service.

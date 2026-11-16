@@ -207,7 +207,9 @@ export class PooledMemoryBlockStore
   ): Promise<void> {
     validatePoolId(pool);
     if (!/^[0-9a-f]{128}$/u.test(id)) {
-      throw new Error('A named block id must be 128 lowercase hexadecimal digits');
+      throw new Error(
+        'A named block id must be 128 lowercase hexadecimal digits',
+      );
     }
     const key = makeStorageKey(pool, id);
     if (this.poolBlocks.has(key)) {
@@ -215,12 +217,20 @@ export class PooledMemoryBlockStore
       return; // idempotent
     }
     this.poolBlocks.set(key, new Uint8Array(data));
-    const metadata = createDefaultBlockMetadata(toStorageKey(id), data.length, id, options, pool);
+    const metadata = createDefaultBlockMetadata(
+      toStorageKey(id),
+      data.length,
+      id,
+      options,
+      pool,
+    );
     try {
       await this.getMetadataStore().create(metadata);
     } catch {
       if (this.getMetadataStore().has(id)) {
-        await this.getMetadataStore().update(toStorageKey(id), { poolId: pool });
+        await this.getMetadataStore().update(toStorageKey(id), {
+          poolId: pool,
+        });
       }
     }
     this.recordPut(pool, data.length);

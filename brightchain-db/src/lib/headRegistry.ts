@@ -1,5 +1,7 @@
-import { DriverBackedHeadRegistry } from '@brightchain/brightchain-lib';
-import { brightDateNow, isoToBrightDate } from '@brightchain/brightchain-lib';
+import {
+  DriverBackedHeadRegistry,
+  isoToBrightDate,
+} from '@brightchain/brightchain-lib';
 import { promises as fs } from 'fs';
 import { join } from 'path';
 import { FileHeadRegistryDriver } from './fileHeadRegistryDriver';

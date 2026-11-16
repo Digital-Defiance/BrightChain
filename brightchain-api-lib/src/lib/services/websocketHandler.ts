@@ -3,7 +3,6 @@
  */
 
 import {
-  brightDateNow,
   brightDateToISO,
   IAvailabilityService,
   IBlockRegistry,

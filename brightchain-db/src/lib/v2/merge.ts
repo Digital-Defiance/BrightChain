@@ -3,6 +3,7 @@
  * merge one side into the other. The result is deterministic, so merging in
  * either direction, or in any order, gives the same root.
  */
+import type { BrightDbV2BlockSource } from './block-source';
 import {
   compareVersions,
   decodeDocument,
@@ -14,10 +15,9 @@ import {
   type V2IndexDefinition,
   type V2Record,
 } from './codec';
-import type { BrightDbV2BlockSource } from './block-source';
-import type { BrightDbV2DiskWriter, BrightDbV2Storage } from './storage';
 import { extractIndexKeys } from './index-key';
 import { V2IndexTree } from './index-tree';
+import type { BrightDbV2DiskWriter, BrightDbV2Storage } from './storage';
 import { V2Tree, type V2TreeBlockStore } from './tree';
 
 export interface PortableMergeResult {
@@ -68,7 +68,8 @@ class ClosureCopier {
     const bytes = await this.remote.readBlock(digest);
     const page = decodeMetadata(bytes, digest);
     if (page.kind === 'branch') {
-      for (const child of page.children) await this.ensureTree(kind, child.digest);
+      for (const child of page.children)
+        await this.ensureTree(kind, child.digest);
     } else if (page.kind === kind) {
       for (const record of page.records) {
         if (record.target === null) continue;
@@ -85,9 +86,12 @@ class ClosureCopier {
     if (!(await this.missing(digest))) return;
     const bytes = await this.remote.readBlock(digest);
     const collection = decodeMetadata(bytes, digest);
-    if (collection.kind !== 'collection') throw new V2MergeError('Not a collection root');
-    if (collection.primary !== null) await this.ensureTree('primary', collection.primary);
-    if (collection.indexes !== null) await this.ensureIndexes(collection.indexes);
+    if (collection.kind !== 'collection')
+      throw new V2MergeError('Not a collection root');
+    if (collection.primary !== null)
+      await this.ensureTree('primary', collection.primary);
+    if (collection.indexes !== null)
+      await this.ensureIndexes(collection.indexes);
     await this.writer.writeBlock(bytes);
   }
 
@@ -107,7 +111,8 @@ class ClosureCopier {
     const bytes = await this.remote.readBlock(digest);
     const page = decodeMetadata(bytes, digest);
     if (page.kind === 'index-branch') {
-      for (const child of page.children) await this.ensureIndexTree(child.digest);
+      for (const child of page.children)
+        await this.ensureIndexTree(child.digest);
     } else if (page.kind !== 'index-leaf') {
       throw new V2MergeError('Expected an index page');
     }
@@ -120,7 +125,9 @@ class ClosureCopier {
     const document = decodeDocument(bytes, undefined, digest);
     const files = (document as Record<string, unknown>)['_files'];
     if (files && typeof files === 'object') {
-      for (const entry of Object.values(files as Record<string, { digest: string }>)) {
+      for (const entry of Object.values(
+        files as Record<string, { digest: string }>,
+      )) {
         await this.ensureBlob(entry.digest);
       }
     }
@@ -131,7 +138,8 @@ class ClosureCopier {
     if (!(await this.missing(digest))) return;
     const bytes = await this.remote.readBlock(digest);
     const manifest = decodeMetadata(bytes, digest);
-    if (manifest.kind !== 'blob') throw new V2MergeError('Not an attachment manifest');
+    if (manifest.kind !== 'blob')
+      throw new V2MergeError('Not an attachment manifest');
     for (const entry of manifest.entries) {
       if (manifest.depth > 0) {
         await this.ensureBlob(entry);
@@ -166,7 +174,8 @@ async function readCollection(
   digest: Digest,
 ): Promise<V2CollectionRoot> {
   const block = decodeMetadata(await blocks.get(digest), digest);
-  if (block.kind !== 'collection') throw new V2MergeError('Not a collection root');
+  if (block.kind !== 'collection')
+    throw new V2MergeError('Not a collection root');
   return block;
 }
 
@@ -175,7 +184,10 @@ async function readDefinitions(
   collection: V2CollectionRoot,
 ): Promise<V2IndexDefinition[]> {
   if (collection.indexes === null) return [];
-  const set = decodeMetadata(await blocks.get(collection.indexes), collection.indexes);
+  const set = decodeMetadata(
+    await blocks.get(collection.indexes),
+    collection.indexes,
+  );
   if (set.kind !== 'indexes') throw new V2MergeError('Not an index set');
   return [...set.definitions];
 }
@@ -202,7 +214,9 @@ export async function mergeReplica(
   // Trees read pages from whichever store has them and write only to the local store.
   const union: V2TreeBlockStore = {
     get: async (digest) =>
-      (await local.hasBlock(digest)) ? local.readBlock(digest) : remote.readBlock(digest),
+      (await local.hasBlock(digest))
+        ? local.readBlock(digest)
+        : remote.readBlock(digest),
     put: async (digest, bytes) => {
       if ((await writer.writeBlock(bytes)) !== digest) {
         throw new V2MergeError('Block writer returned a different digest');
@@ -228,7 +242,8 @@ export async function mergeReplica(
     for await (const change of primary.diff(lc.primary, rc.primary)) {
       if (!change.after) continue;
       if (change.before && !remoteWins(change.before, change.after)) continue;
-      if (change.after.target !== null) await copier.ensureDocument(change.after.target);
+      if (change.after.target !== null)
+        await copier.ensureDocument(change.after.target);
       taken.push({ before: change.before, after: change.after });
     }
     const mergedPrimary = await primary.setMany(
@@ -236,12 +251,18 @@ export async function mergeReplica(
       taken.map((t) => t.after),
     );
 
-    const definitions = new Map<string, { local?: V2IndexDefinition; remote?: V2IndexDefinition }>();
+    const definitions = new Map<
+      string,
+      { local?: V2IndexDefinition; remote?: V2IndexDefinition }
+    >();
     for (const definition of await readDefinitions(union, lc)) {
       definitions.set(definition.name, { local: definition });
     }
     for (const definition of await readDefinitions(union, rc)) {
-      definitions.set(definition.name, { ...definitions.get(definition.name), remote: definition });
+      definitions.set(definition.name, {
+        ...definitions.get(definition.name),
+        remote: definition,
+      });
     }
     const readDoc = async (digest: Digest | null | undefined, id: string) =>
       digest ? decodeDocument(await union.get(digest), id) : null;
@@ -252,7 +273,8 @@ export async function mergeReplica(
         remote?: V2IndexDefinition;
       };
       // Equal names with different fields: the greater field list wins, on both sides.
-      const keepLocal = l && (!r || l.fields.join('\u0000') >= r.fields.join('\u0000'));
+      const keepLocal =
+        l && (!r || l.fields.join('\u0000') >= r.fields.join('\u0000'));
       if (keepLocal && l) {
         const adds: Buffer[] = [];
         const removes: Buffer[] = [];
@@ -264,24 +286,41 @@ export async function mergeReplica(
           const newKeys = newDoc ? extractIndexKeys(newDoc, l.fields, id) : [];
           const newSet = new Set(newKeys.map((k) => k.toString('hex')));
           const oldSet = new Set(oldKeys.map((k) => k.toString('hex')));
-          removes.push(...oldKeys.filter((k) => !newSet.has(k.toString('hex'))));
+          removes.push(
+            ...oldKeys.filter((k) => !newSet.has(k.toString('hex'))),
+          );
           adds.push(...newKeys.filter((k) => !oldSet.has(k.toString('hex'))));
         }
-        merged.push({ ...l, root: await indexTree.apply(l.root, adds, removes) });
+        merged.push({
+          ...l,
+          root: await indexTree.apply(l.root, adds, removes),
+        });
       } else if (r) {
         // The index exists only here or loses a name conflict: rebuild it from the merged documents.
         const keys: Buffer[] = [];
         for await (const record of primary.entries(mergedPrimary)) {
           if (record.target === null) continue;
-          keys.push(...extractIndexKeys(await readDoc(record.target, record.key), r.fields, record.key));
+          keys.push(
+            ...extractIndexKeys(
+              await readDoc(record.target, record.key),
+              r.fields,
+              record.key,
+            ),
+          );
         }
-        merged.push({ name, fields: [...r.fields], root: await indexTree.apply(null, keys, []) });
+        merged.push({
+          name,
+          fields: [...r.fields],
+          root: await indexTree.apply(null, keys, []),
+        });
       }
     }
     const indexes =
       merged.length === 0
         ? null
-        : await writer.writeBlock(encodeMetadata({ kind: 'indexes', definitions: merged }));
+        : await writer.writeBlock(
+            encodeMetadata({ kind: 'indexes', definitions: merged }),
+          );
     const rootBytes = encodeMetadata({
       kind: 'collection',
       generation: lc.generation,
@@ -295,11 +334,19 @@ export async function mergeReplica(
     adopted += taken.length;
   };
 
-  for await (const change of catalog.diff(localRoot.catalog, remoteRoot.catalog)) {
+  for await (const change of catalog.diff(
+    localRoot.catalog,
+    remoteRoot.catalog,
+  )) {
     const l = change.before;
     const r = change.after;
     if (!r) continue; // only local: keep
-    if (l && compareVersions(r.version, l.version) === 0 && l.target !== null && r.target !== null) {
+    if (
+      l &&
+      compareVersions(r.version, l.version) === 0 &&
+      l.target !== null &&
+      r.target !== null
+    ) {
       await mergeCollection(change.key, l, r); // same generation: merge the contents
       continue;
     }
@@ -309,9 +356,13 @@ export async function mergeReplica(
     adopted++;
   }
 
-  const clock = localRoot.clock > remoteRoot.clock ? localRoot.clock : remoteRoot.clock;
+  const clock =
+    localRoot.clock > remoteRoot.clock ? localRoot.clock : remoteRoot.clock;
   if (catalogUpdates.length === 0 && clock === localRoot.clock) return null;
-  const mergedCatalog = await catalog.setMany(localRoot.catalog, catalogUpdates);
+  const mergedCatalog = await catalog.setMany(
+    localRoot.catalog,
+    catalogUpdates,
+  );
   const head = await writer.writeBlock(
     encodeMetadata({ ...localRoot, clock, catalog: mergedCatalog }),
   );

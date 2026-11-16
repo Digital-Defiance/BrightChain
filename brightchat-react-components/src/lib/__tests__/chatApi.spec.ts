@@ -758,10 +758,9 @@ describe('ChatApiClient — Staging & Server Icon', () => {
 
     await client.uploadServerIcon(specialId, 'tok-xyz');
 
-    expect(mockAxios.post).toHaveBeenCalledWith(
-      `/servers/${encoded}/icon`,
-      { commitToken: 'tok-xyz' },
-    );
+    expect(mockAxios.post).toHaveBeenCalledWith(`/servers/${encoded}/icon`, {
+      commitToken: 'tok-xyz',
+    });
   });
 
   it('removeServerIcon → DELETE /servers/:id/icon', async () => {
@@ -776,9 +775,7 @@ describe('ChatApiClient — Staging & Server Icon', () => {
 
     await client.removeServerIcon(specialId);
 
-    expect(mockAxios.delete).toHaveBeenCalledWith(
-      `/servers/${encoded}/icon`,
-    );
+    expect(mockAxios.delete).toHaveBeenCalledWith(`/servers/${encoded}/icon`);
   });
 
   it('getServerIconUrl returns correct URL pattern', () => {

@@ -3,11 +3,13 @@
   "compilerOptions": {
     "outDir": "../dist/out-tsc",
     "module": "commonjs",
+    "moduleResolution": "node",
     "types": ["jest", "node"]
   },
   "include": [
     "jest.config.cts",
     "src/**/*.spec.ts",
-    "src/**/*.test.ts"
+    "src/**/*.test.ts",
+    "src/**/__tests__/**/*.ts"
   ]
 }

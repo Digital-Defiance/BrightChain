@@ -33,7 +33,10 @@ jest.mock('@brightchain/brightchain-lib', () => ({
     Hover: 'hover',
     HoverReverse: 'hoverReverse',
   },
-  BrightChainStrings: new Proxy({}, { get: (_t: unknown, p: string | symbol) => String(p) }),
+  BrightChainStrings: new Proxy(
+    {},
+    { get: (_t: unknown, p: string | symbol) => String(p) },
+  ),
   BrightPassStrings: new Proxy({}, { get: (_target, prop) => String(prop) }),
   toBrightDateString: (date: Date | string, _precision?: number) => {
     const d = typeof date === 'string' ? new Date(date) : date;
@@ -68,7 +71,7 @@ jest.mock('../hooks/useBrightPassTranslation', () => ({
   }),
 }));
 
-jest.mock('react-router-dom', () => ({
+jest.mock('react-router', () => ({
   __esModule: true,
   useNavigate: () => jest.fn(),
   useLocation: () => ({ pathname: '/brightpass' }),

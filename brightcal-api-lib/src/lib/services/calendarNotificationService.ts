@@ -19,11 +19,11 @@ import {
 } from '@brightchain/brightcal-lib';
 import type { Model } from '@brightchain/db';
 import { randomUUID } from 'crypto';
+import type { IInvitationService } from '../controllers/invitationController.js';
 import type {
   IStoredCalendarCollection,
   ITypedCalendarCollection,
 } from '../models/calendarCollection.model.js';
-import type { IInvitationService } from '../controllers/invitationController.js';
 import type {
   IStoredCalendarEvent,
   ITypedCalendarEvent,
@@ -232,7 +232,7 @@ export class CalendarNotificationService implements IInvitationService {
   async declineCounter(
     userId: string,
     eventId: string,
-    counterProposalId: string,
+    _counterProposalId: string,
   ): Promise<void> {
     const event = await this.getDecryptedEvent(eventId);
     if (!event) {
@@ -521,7 +521,11 @@ export class CalendarNotificationService implements IInvitationService {
         event.calendarId,
       );
       if (calendar?.encryptionKey) {
-        return decryptEventBody(event, calendar.encryptionKey, this.encryptionService);
+        return decryptEventBody(
+          event,
+          calendar.encryptionKey,
+          this.encryptionService,
+        );
       }
     }
 

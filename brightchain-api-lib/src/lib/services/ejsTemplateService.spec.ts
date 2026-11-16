@@ -55,6 +55,8 @@ function makeLocals(
     emailDomain: 'brightchain.org',
     fontAwesomeKitId: 'abc123',
     enabledFeatures: ['BrightChat', 'BrightHub'],
+    gtag: undefined,
+    totpAvailable: false,
     ...overrides,
   };
 }

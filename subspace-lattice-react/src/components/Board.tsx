@@ -1,5 +1,12 @@
 import React, { useState } from 'react';
-import { GameState, PieceType, PlayerColor, Coordinate, CellType, Cell } from 'subspace-lattice';
+import {
+  Cell,
+  CellType,
+  Coordinate,
+  GameState,
+  PieceType,
+  PlayerColor,
+} from 'subspace-lattice';
 import './Board.css';
 
 interface BoardProps {
@@ -9,14 +16,20 @@ interface BoardProps {
   localPlayer: PlayerColor | 'OBSERVER';
 }
 
-export const Board: React.FC<BoardProps> = ({ gameState, onMovePiece, localPlayer }) => {
+export const Board: React.FC<BoardProps> = ({
+  gameState,
+  onMovePiece,
+  localPlayer,
+}) => {
   const [selectedPieceId, setSelectedPieceId] = useState<string | null>(null);
 
   const handleCellClick = (x: number, y: number) => {
     if (localPlayer === 'OBSERVER') return;
 
-    const cell = gameState.cells.find((c: Cell) => c.coordinate.x === x && c.coordinate.y === y);
-    
+    const cell = gameState.cells.find(
+      (c: Cell) => c.coordinate.x === x && c.coordinate.y === y,
+    );
+
     // Select own piece
     if (cell?.pieceId) {
       const piece = gameState.pieces[cell.pieceId];
@@ -36,17 +49,22 @@ export const Board: React.FC<BoardProps> = ({ gameState, onMovePiece, localPlaye
   const getPieceSymbol = (type: PieceType, color: PlayerColor) => {
     const isWhite = color === PlayerColor.White;
     switch (type) {
-      case PieceType.CommandHub: return isWhite ? '♔' : '♚';
-      case PieceType.Escort: return isWhite ? '♙' : '♟';
-      case PieceType.Infiltrator: return isWhite ? '♘' : '♞';
-      case PieceType.Beam: return isWhite ? '♖' : '♜';
-      default: return '?';
+      case PieceType.CommandHub:
+        return isWhite ? '♔' : '♚';
+      case PieceType.Escort:
+        return isWhite ? '♙' : '♟';
+      case PieceType.Infiltrator:
+        return isWhite ? '♘' : '♞';
+      case PieceType.Beam:
+        return isWhite ? '♖' : '♜';
+      default:
+        return '?';
     }
   };
 
   return (
-    <div 
-      className="subspace-board" 
+    <div
+      className="subspace-board"
       style={{ gridTemplateColumns: `repeat(${gameState.boardSize}, 40px)` }}
     >
       {gameState.cells.map((cell: Cell) => {
@@ -58,7 +76,9 @@ export const Board: React.FC<BoardProps> = ({ gameState, onMovePiece, localPlaye
           <div
             key={`${cell.coordinate.x}-${cell.coordinate.y}`}
             className={`subspace-cell ${isGravityWell ? 'gravity-well' : ''} ${isSelected ? 'selected' : ''}`}
-            onClick={() => handleCellClick(cell.coordinate.x, cell.coordinate.y)}
+            onClick={() =>
+              handleCellClick(cell.coordinate.x, cell.coordinate.y)
+            }
           >
             {piece && (
               <span className={`piece ${piece.owner.toLowerCase()}`}>

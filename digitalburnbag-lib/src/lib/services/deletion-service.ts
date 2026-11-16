@@ -191,14 +191,10 @@ export class DeletionService<TID extends PlatformID>
     }
 
     // Restore previous state
-    const restoredState =
-      container.previousState ?? VaultContainerState.Active;
+    const restoredState = container.previousState ?? VaultContainerState.Active;
 
     // Validate the restoration transition
-    assertValidTransition(
-      VaultContainerState.PendingDeletion,
-      restoredState,
-    );
+    assertValidTransition(VaultContainerState.PendingDeletion, restoredState);
 
     const now = new Date().toISOString();
 
@@ -277,15 +273,10 @@ export class DeletionService<TID extends PlatformID>
 
     // If vault is sealed, verify non-access first
     let nonAccessResult:
-      | Awaited<
-          ReturnType<IVaultContainerService<TID>['verifyNonAccess']>
-        >
+      | Awaited<ReturnType<IVaultContainerService<TID>['verifyNonAccess']>>
       | undefined;
     let certificate: ICertificateOfDestruction | undefined;
-    let certificateOmittedReason:
-      | 'NOT_SEALED'
-      | 'SEAL_BROKEN'
-      | undefined;
+    let certificateOmittedReason: 'NOT_SEALED' | 'SEAL_BROKEN' | undefined;
     let accessedFileIds: string[] | undefined;
 
     if (container.state === VaultContainerState.Sealed) {
@@ -299,11 +290,10 @@ export class DeletionService<TID extends PlatformID>
     assertValidTransition(container.state, VaultContainerState.Destroyed);
 
     // Execute cascade destruction
-    const destructionResult =
-      await this.vaultContainerService.destroyContainer(
-        containerId,
-        requesterId,
-      );
+    const destructionResult = await this.vaultContainerService.destroyContainer(
+      containerId,
+      requesterId,
+    );
 
     // Generate certificate if vault was sealed and non-access confirmed
     if (container.state === VaultContainerState.Sealed) {
@@ -359,10 +349,7 @@ export class DeletionService<TID extends PlatformID>
     }
 
     // Validate state transition
-    assertValidTransition(
-      container.state,
-      VaultContainerState.PendingDeletion,
-    );
+    assertValidTransition(container.state, VaultContainerState.PendingDeletion);
 
     // Calculate pending deletion timestamp
     const now = new Date();

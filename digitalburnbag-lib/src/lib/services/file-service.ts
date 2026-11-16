@@ -48,9 +48,7 @@ export interface IFileServiceDeps<TID extends PlatformID> {
    * Read vault and return raw encrypted bytes for E2EE download.
    * Returns ciphertext, IV, and auth tag WITHOUT decrypting.
    */
-  readVaultEncrypted?: (
-    vaultCreationLedgerEntryHash: Uint8Array,
-  ) => Promise<{
+  readVaultEncrypted?: (vaultCreationLedgerEntryHash: Uint8Array) => Promise<{
     encryptedContent: Uint8Array;
     iv: Uint8Array;
     authTag: Uint8Array;

@@ -63,7 +63,7 @@ export type AllowedMediaType = (typeof ALLOWED_MEDIA_TYPES)[number];
 /**
  * Database record type for posts
  */
-interface PostRecord {
+export interface PostRecord {
   _id: string;
   authorId: string;
   content: string;
@@ -96,7 +96,7 @@ interface PostRecord {
 /**
  * Database record type for likes
  */
-interface LikeRecord {
+export interface LikeRecord {
   _id: string;
   userId: string;
   postId: string;
@@ -106,7 +106,7 @@ interface LikeRecord {
 /**
  * Database record type for reposts
  */
-interface RepostRecord {
+export interface RepostRecord {
   _id: string;
   userId: string;
   postId: string;
@@ -425,7 +425,9 @@ export class PostService implements IPostService {
 
     // Format content (using rewritten content if URL rewriter was applied)
     const isBlogPost = !options?.parentPostId;
-    const formatted = this.textFormatter.format(processedContent, { isBlogPost });
+    const formatted = this.textFormatter.format(processedContent, {
+      isBlogPost,
+    });
 
     const now = new Date().toISOString();
     const postId = randomUUID();
@@ -1063,7 +1065,9 @@ export class PostService implements IPostService {
     this.validateContent(commentary);
 
     // Format content
-    const formatted = this.textFormatter.format(commentary, { isBlogPost: true });
+    const formatted = this.textFormatter.format(commentary, {
+      isBlogPost: true,
+    });
 
     const now = new Date().toISOString();
     const quoteId = randomUUID();
@@ -1184,19 +1188,19 @@ export class PostService implements IPostService {
       .exec();
     for (const pinned of currentlyPinned) {
       await this.postsCollection
-        .updateOne(
-          { _id: pinned._id },
-          { isPinned: false, updatedAt: now } as Partial<PostRecord>,
-        )
+        .updateOne({ _id: pinned._id }, {
+          isPinned: false,
+          updatedAt: now,
+        } as Partial<PostRecord>)
         .exec();
     }
 
     // Pin the requested post
     await this.postsCollection
-      .updateOne(
-        { _id: postId },
-        { isPinned: true, updatedAt: now } as Partial<PostRecord>,
-      )
+      .updateOne({ _id: postId }, {
+        isPinned: true,
+        updatedAt: now,
+      } as Partial<PostRecord>)
       .exec();
   }
 
@@ -1217,10 +1221,10 @@ export class PostService implements IPostService {
 
     const now = new Date().toISOString();
     await this.postsCollection
-      .updateOne(
-        { _id: postId },
-        { isPinned: false, updatedAt: now } as Partial<PostRecord>,
-      )
+      .updateOne({ _id: postId }, {
+        isPinned: false,
+        updatedAt: now,
+      } as Partial<PostRecord>)
       .exec();
   }
 

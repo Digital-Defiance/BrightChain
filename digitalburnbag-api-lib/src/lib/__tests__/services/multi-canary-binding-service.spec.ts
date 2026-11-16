@@ -4,21 +4,25 @@
  * Feature: canary-provider-expansion
  * Requirements: 9.1, 9.5, 9.7, 9.8
  */
-import { HeartbeatSignalType } from '@brightchain/digitalburnbag-lib';
 import type { IMultiCanaryBindingBase } from '@brightchain/digitalburnbag-lib';
 import {
+  CanaryCondition,
+  HeartbeatSignalType,
+  ProtocolAction,
+} from '@brightchain/digitalburnbag-lib';
+import type { BrightDBMultiCanaryBindingRepository } from '../../collections/multi-canary-binding-collection';
+import type { IMultiCanaryConnectionRepository } from '../../services/multi-canary-binding-service';
+import {
+  MAX_PROVIDERS,
+  MAX_WEIGHT,
+  MIN_PROVIDERS,
+  MIN_WEIGHT,
   MultiCanaryBindingService,
   computeAggregateStatus,
   detectCircularCascade,
   validateProviderCount,
   validateWeights,
-  MIN_PROVIDERS,
-  MAX_PROVIDERS,
-  MIN_WEIGHT,
-  MAX_WEIGHT,
 } from '../../services/multi-canary-binding-service';
-import type { IMultiCanaryConnectionRepository } from '../../services/multi-canary-binding-service';
-import type { BrightDBMultiCanaryBindingRepository } from '../../collections/multi-canary-binding-collection';
 
 // ---------------------------------------------------------------------------
 // In-memory repository helpers (same pattern as property test file)
@@ -106,8 +110,8 @@ function buildCreateParams(
     folderIds: [] as string[],
     providerConnectionIds,
     redundancyPolicy: 'all_must_fail' as const,
-    protocolAction: 'destroy' as const,
-    canaryCondition: 'absence' as const,
+    protocolAction: ProtocolAction.DeleteFiles,
+    canaryCondition: CanaryCondition.ABSENCE,
     absenceThresholdMs: 3600000,
     ...overrides,
   };
@@ -137,9 +141,9 @@ describe('MultiCanaryBindingService — provider count validation (Req 9.8)', ()
 
   it('rejects binding creation with 0 providers', async () => {
     const service = makeService();
-    await expect(
-      service.createBinding(buildCreateParams([])),
-    ).rejects.toThrow(/at least 2 providers/i);
+    await expect(service.createBinding(buildCreateParams([]))).rejects.toThrow(
+      /at least 2 providers/i,
+    );
   });
 
   it('rejects binding creation with 1 provider', async () => {
@@ -151,18 +155,24 @@ describe('MultiCanaryBindingService — provider count validation (Req 9.8)', ()
 
   it(`rejects binding creation with ${MAX_PROVIDERS + 1} providers`, async () => {
     const service = makeService();
-    const ids = Array.from({ length: MAX_PROVIDERS + 1 }, (_, i) => `conn-${i}`);
-    await expect(
-      service.createBinding(buildCreateParams(ids)),
-    ).rejects.toThrow(/maximum 20 providers/i);
+    const ids = Array.from(
+      { length: MAX_PROVIDERS + 1 },
+      (_, i) => `conn-${i}`,
+    );
+    await expect(service.createBinding(buildCreateParams(ids))).rejects.toThrow(
+      /maximum 20 providers/i,
+    );
   });
 
   it(`rejects binding creation with ${MAX_PROVIDERS + 10} providers`, async () => {
     const service = makeService();
-    const ids = Array.from({ length: MAX_PROVIDERS + 10 }, (_, i) => `conn-${i}`);
-    await expect(
-      service.createBinding(buildCreateParams(ids)),
-    ).rejects.toThrow(/maximum 20 providers/i);
+    const ids = Array.from(
+      { length: MAX_PROVIDERS + 10 },
+      (_, i) => `conn-${i}`,
+    );
+    await expect(service.createBinding(buildCreateParams(ids))).rejects.toThrow(
+      /maximum 20 providers/i,
+    );
   });
 
   it(`accepts binding creation with exactly ${MIN_PROVIDERS} providers`, async () => {
@@ -596,11 +606,7 @@ describe('MultiCanaryBindingService — circular cascade detection', () => {
   });
 
   it('detectCircularCascade returns false when no existing bindings', () => {
-    const result = detectCircularCascade(
-      ['vault-1'],
-      ['conn-1', 'conn-2'],
-      [],
-    );
+    const result = detectCircularCascade(['vault-1'], ['conn-1', 'conn-2'], []);
     expect(result).toBe(false);
   });
 
@@ -614,8 +620,8 @@ describe('MultiCanaryBindingService — circular cascade detection', () => {
       folderIds: [],
       providerConnectionIds: ['conn-x', 'conn-y'], // different providers
       redundancyPolicy: 'all_must_fail',
-      protocolAction: 'destroy',
-      canaryCondition: 'absence',
+      protocolAction: ProtocolAction.DeleteFiles,
+      canaryCondition: CanaryCondition.ABSENCE,
       absenceThresholdMs: 3600000,
       aggregateStatus: 'all_present',
       providerSignals: {},
@@ -642,8 +648,8 @@ describe('MultiCanaryBindingService — circular cascade detection', () => {
       folderIds: [],
       providerConnectionIds: ['conn-1', 'conn-2'],
       redundancyPolicy: 'all_must_fail',
-      protocolAction: 'destroy',
-      canaryCondition: 'absence',
+      protocolAction: ProtocolAction.DeleteFiles,
+      canaryCondition: CanaryCondition.ABSENCE,
       absenceThresholdMs: 3600000,
       aggregateStatus: 'all_present',
       providerSignals: {},
@@ -670,8 +676,8 @@ describe('MultiCanaryBindingService — circular cascade detection', () => {
       folderIds: [],
       providerConnectionIds: ['conn-1', 'conn-2'], // shared providers
       redundancyPolicy: 'all_must_fail',
-      protocolAction: 'destroy',
-      canaryCondition: 'absence',
+      protocolAction: ProtocolAction.DeleteFiles,
+      canaryCondition: CanaryCondition.ABSENCE,
       absenceThresholdMs: 3600000,
       aggregateStatus: 'all_present',
       providerSignals: {},
@@ -698,8 +704,8 @@ describe('MultiCanaryBindingService — circular cascade detection', () => {
       folderIds: [],
       providerConnectionIds: ['conn-1', 'conn-2'],
       redundancyPolicy: 'all_must_fail',
-      protocolAction: 'destroy',
-      canaryCondition: 'absence',
+      protocolAction: ProtocolAction.DeleteFiles,
+      canaryCondition: CanaryCondition.ABSENCE,
       absenceThresholdMs: 3600000,
       aggregateStatus: 'all_present',
       providerSignals: {},
@@ -726,8 +732,8 @@ describe('MultiCanaryBindingService — circular cascade detection', () => {
       folderIds: ['folder-1'], // folder target
       providerConnectionIds: ['conn-1', 'conn-2'],
       redundancyPolicy: 'all_must_fail',
-      protocolAction: 'destroy',
-      canaryCondition: 'absence',
+      protocolAction: ProtocolAction.DeleteFiles,
+      canaryCondition: CanaryCondition.ABSENCE,
       absenceThresholdMs: 3600000,
       aggregateStatus: 'all_present',
       providerSignals: {},

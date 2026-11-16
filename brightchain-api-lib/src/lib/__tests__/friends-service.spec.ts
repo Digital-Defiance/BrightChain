@@ -153,7 +153,7 @@ describe('Feature: brightchain-friends-system, FriendsService Edge Cases', () =>
         recipientId: userC,
         status: FriendRequestStatus.Pending,
         createdAt: new Date().toISOString(),
-      } as any);
+      });
 
       // Status should be 'friends' (friendship takes priority over pending request)
       const status = await service.getFriendshipStatus(userA, userC);

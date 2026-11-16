@@ -59,7 +59,11 @@ const STYLE_OPTIONS = [
   { label: 'Brands', prefix: 'fa-brands', faPrefix: 'fab' },
   // ── Duotone family ──
   { label: 'Duotone', prefix: 'fa-duotone', faPrefix: 'fad' },
-  { label: 'Duotone Regular', prefix: 'fa-duotone fa-regular', faPrefix: 'fadr' },
+  {
+    label: 'Duotone Regular',
+    prefix: 'fa-duotone fa-regular',
+    faPrefix: 'fadr',
+  },
   { label: 'Duotone Light', prefix: 'fa-duotone fa-light', faPrefix: 'fadl' },
   { label: 'Duotone Thin', prefix: 'fa-duotone fa-thin', faPrefix: 'fadt' },
   // ── Sharp family ──
@@ -68,26 +72,62 @@ const STYLE_OPTIONS = [
   { label: 'Sharp Light', prefix: 'fa-sharp fa-light', faPrefix: 'fasl' },
   { label: 'Sharp Thin', prefix: 'fa-sharp fa-thin', faPrefix: 'fast' },
   // ── Sharp Duotone family ──
-  { label: 'Sharp Duotone Solid', prefix: 'fa-sharp-duotone fa-solid', faPrefix: 'fasds' },
-  { label: 'Sharp Duotone Regular', prefix: 'fa-sharp-duotone fa-regular', faPrefix: 'fasdr' },
-  { label: 'Sharp Duotone Light', prefix: 'fa-sharp-duotone fa-light', faPrefix: 'fasdl' },
-  { label: 'Sharp Duotone Thin', prefix: 'fa-sharp-duotone fa-thin', faPrefix: 'fasdt' },
+  {
+    label: 'Sharp Duotone Solid',
+    prefix: 'fa-sharp-duotone fa-solid',
+    faPrefix: 'fasds',
+  },
+  {
+    label: 'Sharp Duotone Regular',
+    prefix: 'fa-sharp-duotone fa-regular',
+    faPrefix: 'fasdr',
+  },
+  {
+    label: 'Sharp Duotone Light',
+    prefix: 'fa-sharp-duotone fa-light',
+    faPrefix: 'fasdl',
+  },
+  {
+    label: 'Sharp Duotone Thin',
+    prefix: 'fa-sharp-duotone fa-thin',
+    faPrefix: 'fasdt',
+  },
   // ── Specialty families ──
   { label: 'Chisel', prefix: 'fa-chisel fa-regular', faPrefix: 'facr' },
   { label: 'Etch', prefix: 'fa-etch fa-solid', faPrefix: 'faes' },
   { label: 'Graphite', prefix: 'fa-graphite fa-thin', faPrefix: 'fagt' },
   { label: 'Jelly', prefix: 'fa-jelly fa-regular', faPrefix: 'fajr' },
   { label: 'Jelly Duo', prefix: 'fa-jelly-duo fa-regular', faPrefix: 'fajdr' },
-  { label: 'Jelly Fill', prefix: 'fa-jelly-fill fa-regular', faPrefix: 'fajfr' },
+  {
+    label: 'Jelly Fill',
+    prefix: 'fa-jelly-fill fa-regular',
+    faPrefix: 'fajfr',
+  },
   { label: 'Notdog', prefix: 'fa-notdog fa-solid', faPrefix: 'fans' },
   { label: 'Notdog Duo', prefix: 'fa-notdog-duo fa-solid', faPrefix: 'fands' },
   { label: 'Slab', prefix: 'fa-slab fa-regular', faPrefix: 'faslr' },
-  { label: 'Slab Press', prefix: 'fa-slab-press fa-regular', faPrefix: 'faslpr' },
+  {
+    label: 'Slab Press',
+    prefix: 'fa-slab-press fa-regular',
+    faPrefix: 'faslpr',
+  },
   { label: 'Thumbprint', prefix: 'fa-thumbprint fa-light', faPrefix: 'fatl' },
   { label: 'Utility', prefix: 'fa-utility fa-semibold', faPrefix: 'fausb' },
-  { label: 'Utility Duo', prefix: 'fa-utility-duo fa-semibold', faPrefix: 'faudsb' },
-  { label: 'Utility Fill', prefix: 'fa-utility-fill fa-semibold', faPrefix: 'faufsb' },
-  { label: 'Whiteboard', prefix: 'fa-whiteboard fa-semibold', faPrefix: 'fawsb' },
+  {
+    label: 'Utility Duo',
+    prefix: 'fa-utility-duo fa-semibold',
+    faPrefix: 'faudsb',
+  },
+  {
+    label: 'Utility Fill',
+    prefix: 'fa-utility-fill fa-semibold',
+    faPrefix: 'faufsb',
+  },
+  {
+    label: 'Whiteboard',
+    prefix: 'fa-whiteboard fa-semibold',
+    faPrefix: 'fawsb',
+  },
 ];
 
 // ─── Component ──────────────────────────────────────────────────────────────
@@ -127,7 +167,7 @@ const FontAwesomeIconPicker: FC<FontAwesomeIconPickerProps> = ({
       ? allAvailableIcons.filter((name) => name.includes(query))
       : allAvailableIcons;
     return filtered.slice(0, maxDisplay);
-  }, [deferredSearch, allAvailableIcons]);
+  }, [deferredSearch, allAvailableIcons, maxDisplay]);
 
   const handleSelect = useCallback(
     (iconName: string) => {

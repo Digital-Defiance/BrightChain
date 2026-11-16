@@ -144,9 +144,11 @@ export interface IServerIconControllerDeps {
       ownerId: PlatformID;
       visibility?: string;
     }): Promise<{ id: PlatformID; rootFolderId: PlatformID }>;
-    listContainers(
-      ownerId: PlatformID,
-    ): Promise<Array<{ container: { id: PlatformID; name: string; rootFolderId: PlatformID } }>>;
+    listContainers(ownerId: PlatformID): Promise<
+      Array<{
+        container: { id: PlatformID; name: string; rootFolderId: PlatformID };
+      }>
+    >;
   };
   uploadService: {
     createSession(params: {
@@ -172,7 +174,11 @@ export interface IServerIconControllerDeps {
     }>;
   };
   fileService: {
-    readFile(vaultContainerId: PlatformID, fileId: PlatformID, ownerId?: PlatformID): Promise<Buffer>;
+    readFile(
+      vaultContainerId: PlatformID,
+      fileId: PlatformID,
+      ownerId?: PlatformID,
+    ): Promise<Buffer>;
     deleteFile(vaultContainerId: PlatformID, fileId: PlatformID): Promise<void>;
   };
   parseId: (idString: string) => PlatformID;
@@ -499,7 +505,9 @@ export class ServerController<
     try {
       const { serverId } = (req as UpdateServerBody).params;
       const { name, iconUrl, categories } = (req as UpdateServerBody).body;
-      const iconFaClass = ((req as UpdateServerBody).body as Record<string, unknown>)['iconFaClass'] as string | undefined;
+      const iconFaClass = (
+        (req as UpdateServerBody).body as Record<string, unknown>
+      )['iconFaClass'] as string | undefined;
       const memberId = this.getMemberId(req);
       const update: Record<string, unknown> = {};
       if (name !== undefined) update['name'] = name;
@@ -803,7 +811,9 @@ export class ServerController<
       // If the server already has a vault container from a previous icon upload, reuse it
       if (server.iconVaultContainerId) {
         try {
-          vaultContainerId = deps.parseId(server.iconVaultContainerId as string);
+          vaultContainerId = deps.parseId(
+            server.iconVaultContainerId as string,
+          );
           targetFolderId = vaultContainerId; // use container ID as folder ID fallback
         } catch {
           // If parsing fails, fall through to create a new container
@@ -848,7 +858,8 @@ export class ServerController<
             );
             if (match) {
               vaultContainerId = match.container.id;
-              targetFolderId = match.container.rootFolderId ?? match.container.id;
+              targetFolderId =
+                match.container.rootFolderId ?? match.container.id;
             }
           } catch {
             // Lookup failed — fall through to error
@@ -890,7 +901,9 @@ export class ServerController<
         for (let i = 0; i < totalChunks; i++) {
           const start = i * chunkSize;
           const end = Math.min(start + chunkSize, processedBuffer.length);
-          const chunkData = new Uint8Array(processedBuffer.subarray(start, end));
+          const chunkData = new Uint8Array(
+            processedBuffer.subarray(start, end),
+          );
           const chunkChecksum = djb2Checksum(chunkData);
           await deps.uploadService.receiveChunk(
             session.id,

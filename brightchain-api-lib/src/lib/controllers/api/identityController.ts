@@ -119,9 +119,9 @@ export class IdentityController<
 
     try {
       // Resolve idProvider from the service container (same pattern as members.ts)
-      const idProvider = this.application.services.get(
-        'idProvider',
-      ) as IIdProvider<TID> | undefined;
+      const idProvider = this.application.services.get('idProvider') as
+        | IIdProvider<TID>
+        | undefined;
       if (!idProvider) {
         return {
           statusCode: 500,

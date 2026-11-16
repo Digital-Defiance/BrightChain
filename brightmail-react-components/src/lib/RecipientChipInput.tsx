@@ -126,7 +126,7 @@ const RecipientChipInput: FC<RecipientChipInputProps> = ({
       );
       setInputValue('');
     },
-    [value, onChange, onChipCommit],
+    [value, onChange, onChipCommit, t],
   );
 
   /** Handle key presses that commit the current input. */
@@ -159,7 +159,7 @@ const RecipientChipInput: FC<RecipientChipInputProps> = ({
         );
       }
     },
-    [inputValue, commitEmails, value, onChange],
+    [inputValue, commitEmails, value, onChange, t],
   );
 
   /** Handle paste of comma-separated addresses. */
@@ -189,7 +189,7 @@ const RecipientChipInput: FC<RecipientChipInputProps> = ({
       // Return focus to the input after removal
       inputRef.current?.focus();
     },
-    [value, onChange],
+    [value, onChange, t],
   );
 
   return (

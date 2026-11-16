@@ -9,7 +9,7 @@
  */
 
 import type { BlockId } from '@brightchain/brightchain-lib';
-import { brightDateNow, CBLVisibility, dateToBrightDate } from '@brightchain/brightchain-lib';
+import { brightDateNow, CBLVisibility } from '@brightchain/brightchain-lib';
 import * as fc from 'fast-check';
 import { CBLIndex } from '../lib/cblIndex';
 import { BrightDb } from '../lib/database';

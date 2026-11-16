@@ -19,7 +19,7 @@ import {
 import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
 import { Button, Menu, MenuItem, Typography } from '@mui/material';
 import React, { useCallback, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { useBrightChartTranslation } from '../../../hooks/useBrightChartTranslation';
 import { useActiveContext } from '../../contexts/ActiveContext';
 

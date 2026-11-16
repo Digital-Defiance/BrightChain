@@ -60,9 +60,13 @@ export const useGameSync = (localPlayerId: string) => {
     // We assume a format like { event: 'game:piece-moved', data: { ... } }
 
     if (lastMessage.type === 'game:piece-moved') {
-      handleIncomingMove(lastMessage.metadata as IMovePieceEventPayload<string>);
+      handleIncomingMove(
+        lastMessage.metadata as IMovePieceEventPayload<string>,
+      );
     } else if (lastMessage.type === 'game:chat-message') {
-      handleIncomingChat(lastMessage.metadata as IChatMessageSentEventPayload<string>);
+      handleIncomingChat(
+        lastMessage.metadata as IChatMessageSentEventPayload<string>,
+      );
     }
   }, [lastMessage, handleIncomingMove, handleIncomingChat]);
 
@@ -165,11 +169,11 @@ export const useGameSync = (localPlayerId: string) => {
   };
 
   const sendPlacement = async (
-    roomId: string,
-    pieceType: PieceType,
-    to: Coordinate,
+    _roomId: string,
+    _pieceType: PieceType,
+    _to: Coordinate,
   ) => {
-    // Placeholder
+    // Placeholder: placement is not wired to the API yet.
   };
 
   return {

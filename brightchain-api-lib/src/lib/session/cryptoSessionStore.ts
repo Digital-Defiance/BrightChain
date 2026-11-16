@@ -19,10 +19,10 @@
  * @module session/cryptoSessionStore
  */
 
-import { toUnixMs } from '@brightchain/brightdate';
-import { CryptoSessionStore } from '@digitaldefiance/node-express-suite';
-import type { PlatformID } from '@digitaldefiance/node-ecies-lib';
 import { brightDateNow } from '@brightchain/brightchain-lib';
+import { toUnixMs } from '@brightchain/brightdate';
+import type { PlatformID } from '@digitaldefiance/node-ecies-lib';
+import { CryptoSessionStore } from '@digitaldefiance/node-express-suite';
 
 export type { CryptoSessionStore };
 
@@ -54,9 +54,7 @@ export interface BrightDateCryptoSessionStoreOptions {
  */
 export function createBrightDateCryptoSessionStore<
   TID extends PlatformID = Buffer,
->(
-  options: BrightDateCryptoSessionStoreOptions = {},
-): CryptoSessionStore<TID> {
+>(options: BrightDateCryptoSessionStoreOptions = {}): CryptoSessionStore<TID> {
   return new CryptoSessionStore<TID>({
     ...options,
     // Bridge: BrightDateValue → Unix milliseconds

@@ -166,8 +166,8 @@ export class ShareController<
   private async handleAccessShareLink(
     req: ExpressRequest,
   ): Promise<IStatusCodeResponse<BurnbagResponse>> {
-    const token = req.params.token as string;
-    const password = req.query.password as string | undefined;
+    const token = req.params['token'] as string;
+    const password = req.query['password'] as string | undefined;
     const access = await this.deps.shareService.accessShareLink(
       token,
       password,
@@ -198,7 +198,7 @@ export class ShareController<
           ),
         } as unknown as BurnbagResponse,
       };
-    const shareLinkId = this.safeParseId(req.params.id as string);
+    const shareLinkId = this.safeParseId(req.params['id'] as string);
     if (!shareLinkId)
       return {
         statusCode: 400,
@@ -234,7 +234,7 @@ export class ShareController<
           ),
         } as unknown as BurnbagResponse,
       };
-    const fileId = this.safeParseId(req.params.fileId as string);
+    const fileId = this.safeParseId(req.params['fileId'] as string);
     if (!fileId)
       return {
         statusCode: 400,
@@ -273,7 +273,7 @@ export class ShareController<
           ),
         } as unknown as BurnbagResponse,
       };
-    const fileId = this.safeParseId(req.params.fileId as string);
+    const fileId = this.safeParseId(req.params['fileId'] as string);
     if (!fileId)
       return {
         statusCode: 400,

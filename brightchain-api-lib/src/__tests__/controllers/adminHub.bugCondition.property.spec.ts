@@ -176,19 +176,10 @@ describe('Property 1: Bug Condition — Admin Hub Wrong Collection & Missing get
     const service: PostService = createPostService(mockApp);
 
     // The method must exist
-    expect(
-      typeof (service as unknown as Record<string, unknown>).getStats,
-    ).toBe('function');
+    expect(typeof service.getStats).toBe('function');
 
     // Call it and verify the shape
-    const stats = await (
-      service as unknown as {
-        getStats(): Promise<{
-          totalPosts: number;
-          activeUsersLast30Days: number;
-        }>;
-      }
-    ).getStats();
+    const stats = await service.getStats();
     expect(stats).toHaveProperty('totalPosts');
     expect(stats).toHaveProperty('activeUsersLast30Days');
     expect(typeof stats.totalPosts).toBe('number');

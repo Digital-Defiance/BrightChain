@@ -52,7 +52,4 @@ export type {
 } from './useCalendarSubscription';
 
 export { useItipRsvp } from './useItipRsvp';
-export type {
-  UseItipRsvpOptions,
-  UseItipRsvpResult,
-} from './useItipRsvp';
+export type { UseItipRsvpOptions, UseItipRsvpResult } from './useItipRsvp';

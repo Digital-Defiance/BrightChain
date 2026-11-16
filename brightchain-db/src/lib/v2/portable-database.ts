@@ -3,15 +3,16 @@
  * storage), with fork, clone, garbage collection and encryption at rest. The
  * platform-neutral core lives in portable-core.ts, which browsers use directly.
  */
-import { randomBytes } from 'node:crypto';
 import './node-hash';
+
+import { randomBytes } from 'node:crypto';
+import type { BrightDbV2BlockSource } from './block-source';
 import { decodeMetadata, encodeMetadata } from './codec';
 import {
   BrightDbV2DiskStore,
   BrightDbV2StorageError,
   type BrightDbV2Storage,
 } from './disk-store';
-import type { BrightDbV2BlockSource } from './block-source';
 import { BrightDbV2AesCipher, type BrightDbV2KeyRing } from './encryption';
 import { copyDatabase } from './merge';
 import { PortableBrightDbCore, readDatabaseRoot } from './portable-core';
@@ -93,7 +94,11 @@ export class PortableBrightDb extends PortableBrightDbCore {
       path,
       emptyRoot,
       undefined,
-      encryption ? new BrightDbV2AesCipher('keyRing' in encryption ? encryption.keyRing : encryption.key) : null,
+      encryption
+        ? new BrightDbV2AesCipher(
+            'keyRing' in encryption ? encryption.keyRing : encryption.key,
+          )
+        : null,
     );
     if (packed) await store.enablePacks();
     await readDatabaseRoot(store);
@@ -109,19 +114,33 @@ export class PortableBrightDb extends PortableBrightDbCore {
   static async cloneFrom(
     path: string,
     source: BrightDbV2BlockSource,
-    options: { encryption?: { key: Uint8Array } | { keyRing: BrightDbV2KeyRing }; packed?: boolean } = {},
+    options: {
+      encryption?: { key: Uint8Array } | { keyRing: BrightDbV2KeyRing };
+      packed?: boolean;
+    } = {},
   ): Promise<PortableBrightDb> {
     const head = await source.readHead();
     const root = decodeMetadata(await source.readBlock(head), head);
     if (root.kind !== 'database') {
-      throw new BrightDbV2StorageError('The source head does not reference a database root');
+      throw new BrightDbV2StorageError(
+        'The source head does not reference a database root',
+      );
     }
     const encryption = options.encryption;
     const store = await BrightDbV2DiskStore.create(
       path,
-      encodeMetadata({ kind: 'database', databaseId: root.databaseId, clock: 0n, catalog: null }),
+      encodeMetadata({
+        kind: 'database',
+        databaseId: root.databaseId,
+        clock: 0n,
+        catalog: null,
+      }),
       undefined,
-      encryption ? new BrightDbV2AesCipher('keyRing' in encryption ? encryption.keyRing : encryption.key) : null,
+      encryption
+        ? new BrightDbV2AesCipher(
+            'keyRing' in encryption ? encryption.keyRing : encryption.key,
+          )
+        : null,
     );
     if (options.packed) await store.enablePacks();
     await store.withWriteLock(async (writer) => {
@@ -140,7 +159,9 @@ export class PortableBrightDb extends PortableBrightDbCore {
     this.requireOpen();
     const source = this.store;
     if (!(source instanceof BrightDbV2DiskStore)) {
-      throw new Error('fork copies into a new directory and needs a directory store');
+      throw new Error(
+        'fork copies into a new directory and needs a directory store',
+      );
     }
     const head = await this.store.readHead();
     const root = await readDatabaseRoot(this.store);
@@ -187,8 +208,17 @@ export class PortableBrightDb extends PortableBrightDbCore {
    * Needs a directory store.
    */
   override async collectGarbage(
-    options: { keepRoots?: readonly string[]; graceMs?: number; dryRun?: boolean } = {},
-  ): Promise<{ keptReachable: number; keptRecent: number; removed: number; bytesFreed: number }> {
+    options: {
+      keepRoots?: readonly string[];
+      graceMs?: number;
+      dryRun?: boolean;
+    } = {},
+  ): Promise<{
+    keptReachable: number;
+    keptRecent: number;
+    removed: number;
+    bytesFreed: number;
+  }> {
     this.requireOpen();
     const store = this.store;
     if (!(store instanceof BrightDbV2DiskStore)) {
@@ -198,9 +228,16 @@ export class PortableBrightDb extends PortableBrightDbCore {
     return store.withWriteLock(async () => {
       const roots = [await store.readHead(), ...(options.keepRoots ?? [])];
       const reachable = await collectReachable(store, roots);
-      const keep = new Set([...reachable].map((digest) => store.fileNameOf(digest)));
+      const keep = new Set(
+        [...reachable].map((digest) => store.fileNameOf(digest)),
+      );
       const now = Date.now();
-      const result = { keptReachable: 0, keptRecent: 0, removed: 0, bytesFreed: 0 };
+      const result = {
+        keptReachable: 0,
+        keptRecent: 0,
+        removed: 0,
+        bytesFreed: 0,
+      };
       const doomed: string[] = [];
       for (const file of await store.listBlockFiles()) {
         if (keep.has(file.name)) {
@@ -230,7 +267,11 @@ export class PortableBrightDb extends PortableBrightDbCore {
    */
   async resealBlocks(
     options: { keepRoots?: readonly string[]; dryRun?: boolean } = {},
-  ): Promise<{ resealed: number; alreadyCurrent: number; headResealed: boolean }> {
+  ): Promise<{
+    resealed: number;
+    alreadyCurrent: number;
+    headResealed: boolean;
+  }> {
     this.requireOpen();
     const store = this.store;
     if (!(store instanceof BrightDbV2DiskStore) || !store.isEncrypted) {
@@ -238,7 +279,10 @@ export class PortableBrightDb extends PortableBrightDbCore {
     }
     return store.withWriteLock(async (writer) => {
       const head = await store.readHead();
-      const reachable = await collectReachable(store, [head, ...(options.keepRoots ?? [])]);
+      const reachable = await collectReachable(store, [
+        head,
+        ...(options.keepRoots ?? []),
+      ]);
       const counts = await store.resealBlocks(reachable, options.dryRun);
       const result = { ...counts, headResealed: false };
       if (!options.dryRun && (await store.headNeedsReseal())) {

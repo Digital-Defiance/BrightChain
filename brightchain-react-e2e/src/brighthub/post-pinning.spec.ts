@@ -21,7 +21,9 @@ test.describe('BrightHub Post Pinning', () => {
     await waitForPageContent(page);
 
     // The pin button should be visible on own posts (aria-label contains "Pin")
-    const pinButton = page.getByRole('button', { name: /pin post to profile/i });
+    const pinButton = page.getByRole('button', {
+      name: /pin post to profile/i,
+    });
     await expect(pinButton.first()).toBeVisible({ timeout: 15_000 });
   });
 
@@ -97,9 +99,11 @@ test.describe('BrightHub Thread View', () => {
 
     // The author name should NOT be "Unknown"
     const unknownText = page.getByText('Unknown @unknown');
-    await expect(unknownText).not.toBeVisible({ timeout: 10_000 }).catch(() => {
-      // If the text doesn't exist at all, that's fine
-    });
+    await expect(unknownText)
+      .not.toBeVisible({ timeout: 10_000 })
+      .catch(() => {
+        // If the text doesn't exist at all, that's fine
+      });
 
     // The author's username should be visible
     const authorText = page.getByText(`@${authResult.username}`);

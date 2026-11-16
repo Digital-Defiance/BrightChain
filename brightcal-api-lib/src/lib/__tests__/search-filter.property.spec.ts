@@ -7,7 +7,12 @@
  * Uses fast-check with in-memory BrightDb, mirroring the existing test setup.
  */
 
-import { EventTransparency, EventVisibility } from '@brightchain/brightcal-lib';
+import {
+  EventTransparency,
+  EventVisibility,
+  ParticipationStatus,
+  RecurrenceFrequency,
+} from '@brightchain/brightcal-lib';
 import {
   initializeBrightChain,
   MemoryBlockStore,
@@ -17,17 +22,17 @@ import {
 } from '@brightchain/brightchain-lib';
 import { BrightDb, InMemoryHeadRegistry } from '@brightchain/db';
 import fc from 'fast-check';
-import type { ICreateEventBody } from '../controllers/eventController.ts';
-import { createCalendarCollectionModel } from '../models/calendarCollection.model.ts';
-import type { ITypedCalendarEvent } from '../models/calendarEvent.model.ts';
-import { createCalendarEventModel } from '../models/calendarEvent.model.ts';
-import { createCalendarShareModel } from '../models/calendarShare.model.ts';
-import { CalendarEngineService } from '../services/calendarEngineService.ts';
-import { CalendarPermissionService } from '../services/calendarPermissionService.ts';
-import { EncryptionService } from '../services/encryptionService.ts';
-import { EventEngineService } from '../services/eventEngineService.ts';
-import type { IFilterCriteria } from '../services/searchService.ts';
-import { SearchService } from '../services/searchService.ts';
+import type { ICreateEventBody } from '../controllers/eventController.js';
+import { createCalendarCollectionModel } from '../models/calendarCollection.model.js';
+import type { ITypedCalendarEvent } from '../models/calendarEvent.model.js';
+import { createCalendarEventModel } from '../models/calendarEvent.model.js';
+import { createCalendarShareModel } from '../models/calendarShare.model.js';
+import { CalendarEngineService } from '../services/calendarEngineService.js';
+import { CalendarPermissionService } from '../services/calendarPermissionService.js';
+import { EncryptionService } from '../services/encryptionService.js';
+import { EventEngineService } from '../services/eventEngineService.js';
+import type { IFilterCriteria } from '../services/searchService.js';
+import { SearchService } from '../services/searchService.js';
 
 // ─── Setup ───────────────────────────────────────────────────────────────────
 
@@ -39,8 +44,7 @@ beforeAll(() => {
 function makeDb(name = 'testdb'): BrightDb {
   const store = new MemoryBlockStore(validBlockSizes);
   const registry = InMemoryHeadRegistry.createIsolated();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return new BrightDb(store as any, { name, headRegistry: registry });
+  return new BrightDb(store, { name, headRegistry: registry });
 }
 
 function createServices() {
@@ -64,7 +68,12 @@ function createServices() {
     permissionService,
     encryption,
   );
-  const searchService = new SearchService(eventModel, permissionService, calendarModel, encryption);
+  const searchService = new SearchService(
+    eventModel,
+    permissionService,
+    calendarModel,
+    encryption,
+  );
   return {
     eventService,
     calendarService,
@@ -117,14 +126,6 @@ const statusArb = fc.oneof(
   fc.constant('CONFIRMED' as const),
   fc.constant('TENTATIVE' as const),
   fc.constant('CANCELLED' as const),
-);
-
-/** Generate a random date within a 30-day window. */
-const dateInRangeArb = fc.integer({ min: 0, max: 29 }).chain((dayOffset) =>
-  fc.integer({ min: 0, max: 23 }).map((hour) => {
-    const d = new Date(2024, 5, 1 + dayOffset, hour, 0, 0);
-    return d.toISOString();
-  }),
 );
 
 /** Generate a random event configuration for property tests. */
@@ -217,13 +218,13 @@ describe('Search & Filter — Property Tests', () => {
                     {
                       email: `${config.attendeeId}@test.com`,
                       userId: config.attendeeId,
-                      partstat: 'NEEDS-ACTION' as any,
+                      partstat: ParticipationStatus.NeedsAction,
                       role: 'REQ-PARTICIPANT',
                       rsvp: true,
                     },
                   ],
                   rrule: config.isRecurring
-                    ? { freq: 'DAILY' as any, count: 3 }
+                    ? { freq: RecurrenceFrequency.Daily, count: 3 }
                     : undefined,
                 }),
               );

@@ -3,7 +3,7 @@ import MDEditor from '@uiw/react-md-editor';
 
 import { Octokit } from 'octokit';
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import './BlogEditor.css';
 
 function BlogEditor() {

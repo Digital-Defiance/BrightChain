@@ -41,7 +41,7 @@ yarn add @brightchain/brightpass-react-components
 - `@digitaldefiance/express-suite-react-components`
 - `@mui/material` / `@mui/icons-material`
 - `react` / `react-dom`
-- `react-router-dom`
+- `react-router`
 
 ## Usage
 

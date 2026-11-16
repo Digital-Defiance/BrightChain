@@ -99,10 +99,7 @@ export class EmailGatewaySubsystemPlugin implements IAppSubsystemPlugin {
         `[ ready ] RecipientLookupService listening on 127.0.0.1:${gatewayConfig.recipientLookupPort}`,
       );
     } catch (err) {
-      console.error(
-        '[ error ] Failed to start RecipientLookupService:',
-        err,
-      );
+      console.error('[ error ] Failed to start RecipientLookupService:', err);
       this.recipientLookupService = null;
       // Don't throw — the plugin is optional.
       return false;

@@ -17,7 +17,7 @@ jest.setTimeout(30000);
 import { render } from '@testing-library/react';
 import fc from 'fast-check';
 import React from 'react';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { MemoryRouter, Route, Routes } from 'react-router';
 
 // ── Mocks ────────────────────────────────────────────────────────────
 
@@ -43,7 +43,7 @@ jest.mock('@brightchain/brightpass-react-components', () => ({
     <>{children}</>
   ),
   BrightPassLayout: () => {
-    const { Outlet } = jest.requireActual('react-router-dom');
+    const { Outlet } = jest.requireActual('react-router');
     return <Outlet />;
   },
   VaultListView: () => <div data-testid="vault-list-view">VaultListView</div>,

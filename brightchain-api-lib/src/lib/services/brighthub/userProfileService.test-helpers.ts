@@ -3,17 +3,28 @@
  * Provides mock implementations of database collections and application.
  */
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import {
   ApproveFollowersMode,
   IBasePrivacySettings,
 } from '@brightchain/brighthub-lib';
+import type { UserProfileRecord } from './userProfileService';
+
+/** Read a field from a record by name. */
+function fieldOf<T>(item: T, key: string): unknown {
+  return (item as Record<string, unknown>)[key];
+}
+
+/** True when every entry in the filter equals the record's field. */
+function matchesFilter<T>(item: T, filter: object): boolean {
+  return Object.entries(filter).every(
+    ([key, value]) => fieldOf(item, key) === value,
+  );
+}
 
 /**
  * Mock collection that stores data in memory with sorting/pagination support
  */
-export class MockCollection<T extends { _id: string }> {
+export class MockCollection<T> {
   data: T[] = [];
 
   async create(record: T): Promise<T> {
@@ -24,13 +35,7 @@ export class MockCollection<T extends { _id: string }> {
   findOne(filter: Partial<T>): { exec(): Promise<T | null> } {
     return {
       exec: async () => {
-        return (
-          this.data.find((item) =>
-            Object.entries(filter).every(
-              ([key, value]) => (item as any)[key] === value,
-            ),
-          ) || null
-        );
+        return this.data.find((item) => matchesFilter(item, filter)) || null;
       },
     };
   }
@@ -46,9 +51,7 @@ export class MockCollection<T extends { _id: string }> {
     return {
       exec: async () => {
         const index = this.data.findIndex((item) =>
-          Object.entries(filter).every(
-            ([key, value]) => (item as any)[key] === value,
-          ),
+          matchesFilter(item, filter),
         );
         if (index >= 0) {
           this.data[index] = { ...this.data[index], ...update };
@@ -63,9 +66,7 @@ export class MockCollection<T extends { _id: string }> {
     return {
       exec: async () => {
         const index = this.data.findIndex((item) =>
-          Object.entries(filter).every(
-            ([key, value]) => (item as any)[key] === value,
-          ),
+          matchesFilter(item, filter),
         );
         if (index >= 0) {
           this.data.splice(index, 1);
@@ -84,7 +85,7 @@ export class MockCollection<T extends { _id: string }> {
 /**
  * Mock find query with chaining support
  */
-class MockFindQuery<T extends { _id: string }> {
+class MockFindQuery<T> {
   private filteredData: T[];
   private sortField?: Record<string, 1 | -1>;
   private skipCount = 0;
@@ -94,11 +95,7 @@ class MockFindQuery<T extends { _id: string }> {
     if (Object.keys(filter).length === 0) {
       this.filteredData = [...data];
     } else {
-      this.filteredData = data.filter((item) =>
-        Object.entries(filter).every(
-          ([key, value]) => (item as any)[key] === value,
-        ),
-      );
+      this.filteredData = data.filter((item) => matchesFilter(item, filter));
     }
   }
 
@@ -124,8 +121,8 @@ class MockFindQuery<T extends { _id: string }> {
     if (this.sortField) {
       const [field, direction] = Object.entries(this.sortField)[0];
       result.sort((a, b) => {
-        const aVal = (a as any)[field];
-        const bVal = (b as any)[field];
+        const aVal = fieldOf(a, field) as string | number;
+        const bVal = fieldOf(b, field) as string | number;
         if (aVal < bVal) return direction === 1 ? -1 : 1;
         if (aVal > bVal) return direction === 1 ? 1 : -1;
         return 0;
@@ -164,8 +161,8 @@ export const DEFAULT_PRIVACY_SETTINGS: IBasePrivacySettings = {
  */
 export function createMockUserProfile(
   userId: string,
-  overrides: Partial<any> = {},
-) {
+  overrides: Partial<UserProfileRecord> = {},
+): UserProfileRecord {
   const now = new Date().toISOString();
   return {
     _id: userId,
@@ -189,7 +186,7 @@ export function createMockUserProfile(
  * Create a mock application with in-memory collections
  */
 export function createMockApplication() {
-  const collections = new Map<string, MockCollection<any>>();
+  const collections = new Map<string, MockCollection<unknown>>();
 
   // Pre-create the collections we need
   collections.set('brighthub_user_profiles', new MockCollection());
@@ -200,9 +197,9 @@ export function createMockApplication() {
 
   return {
     collections,
-    getModel<T extends { _id: string }>(name: string): MockCollection<T> {
+    getModel<T>(name: string): MockCollection<T> {
       if (!collections.has(name)) {
-        collections.set(name, new MockCollection<T>());
+        collections.set(name, new MockCollection<unknown>());
       }
       return collections.get(name) as MockCollection<T>;
     },

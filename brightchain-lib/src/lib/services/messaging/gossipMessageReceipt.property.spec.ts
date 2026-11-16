@@ -1,5 +1,3 @@
-import { brightDateNow } from '../../utils/brightDateConversions';
-import { normalizeToBrightDate } from '../../utils/brightDateConversions';
 import fc from 'fast-check';
 import {
   BlockAnnouncement,
@@ -9,6 +7,10 @@ import {
   MessageDeliveryMetadata,
 } from '../../interfaces/availability/gossipService';
 import type { BlockId } from '../../interfaces/branded/primitives/blockId';
+import {
+  brightDateNow,
+  normalizeToBrightDate,
+} from '../../utils/brightDateConversions';
 
 /** Cast a test string to BlockId without validation — for test data only. */
 const bid = (s: string) => s as unknown as BlockId;

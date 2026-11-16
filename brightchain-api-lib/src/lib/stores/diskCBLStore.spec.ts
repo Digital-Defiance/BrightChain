@@ -2,7 +2,6 @@ import {
   BlockEncryptionType,
   BlockSize,
   BlockType,
-  brightDateNow,
   CBLService,
   CblError,
   CblErrorType,
@@ -12,6 +11,7 @@ import {
   ServiceProvider,
   StoreError,
   StoreErrorType,
+  brightDateNow,
   getBrightChainIdProvider,
   initializeBrightChain,
 } from '@brightchain/brightchain-lib';

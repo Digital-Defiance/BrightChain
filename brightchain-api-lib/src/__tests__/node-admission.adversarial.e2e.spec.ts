@@ -8,17 +8,18 @@
  */
 
 import {
+  type AnnouncementHandler,
+  type BlockAnnouncement,
+  type BlockId,
   BlockSize,
+  brightDateNow,
+  type GossipConfig,
+  type IAclDocument,
+  type IGossipService,
   initializeBrightChain,
   MemoryBlockStore,
   ServiceLocator,
   ServiceProvider,
-  type AnnouncementHandler,
-  type BlockAnnouncement,
-  type BlockId,
-  type GossipConfig,
-  type IAclDocument,
-  type IGossipService,
 } from '@brightchain/brightchain-lib';
 import {
   AuthorizedHeadRegistry,
@@ -405,7 +406,7 @@ describe('Node Admission — Adversarial E2E Tests', () => {
       type: 'pool_join_approved',
       blockId: '' as BlockId,
       nodeId: 'attacker-node',
-      timestamp: new Date(),
+      timestamp: brightDateNow(),
       ttl: 7,
       poolJoinApproval: {
         poolId: POOL_NAME,
@@ -480,7 +481,7 @@ describe('Node Admission — Gossip Signature Verification', () => {
       type: 'pool_join_approved',
       blockId: '' as BlockId,
       nodeId: 'attacker-node',
-      timestamp: new Date(),
+      timestamp: brightDateNow(),
       ttl: 7,
       poolJoinApproval: {
         poolId: POOL_NAME,
@@ -523,7 +524,7 @@ describe('Node Admission — Gossip Signature Verification', () => {
       type: 'pool_join_approved',
       blockId: '' as BlockId,
       nodeId: 'admin-node',
-      timestamp: new Date(),
+      timestamp: brightDateNow(),
       ttl: 7,
       poolJoinApproval: {
         poolId: POOL_NAME,
@@ -553,7 +554,7 @@ describe('Node Admission — Gossip Signature Verification', () => {
       type: 'pool_join_request',
       blockId: '' as BlockId,
       nodeId: 'some-node',
-      timestamp: new Date(),
+      timestamp: brightDateNow(),
       ttl: 7,
     };
 
@@ -577,7 +578,7 @@ describe('Node Admission — Gossip Signature Verification', () => {
       type: 'pool_join_approved',
       blockId: '' as BlockId,
       nodeId: 'attacker-node',
-      timestamp: new Date(),
+      timestamp: brightDateNow(),
       ttl: 7,
       poolJoinApproval: {
         poolId: POOL_NAME,
@@ -619,7 +620,7 @@ describe('Node Admission — Gossip Signature Verification', () => {
       type: 'pool_join_approved',
       blockId: '' as BlockId,
       nodeId: 'admin-node',
-      timestamp: new Date(),
+      timestamp: brightDateNow(),
       ttl: 7,
       poolJoinApproval: {
         poolId: POOL_NAME,

@@ -102,6 +102,7 @@ function createMockConstants(
       deserialize: () => new Uint8Array(12),
       toBytes: () => new Uint8Array(12),
       fromBytes: () => new Uint8Array(12),
+      parseSafe: () => undefined,
     },
     CHECKSUM: {
       SHA3_DEFAULT_HASH_BITS: 256,

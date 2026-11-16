@@ -108,7 +108,7 @@ const EntryDetailView: React.FC<EntryDetailViewProps> = ({
     return () => {
       cancelled = true;
     };
-  }, [vaultId, entryId, brightPassApi, t]);
+  }, [vaultId, entryId, brightPassApi, t, getVaultKey]);
 
   // Auto-check breach status for login entries
   useEffect(() => {

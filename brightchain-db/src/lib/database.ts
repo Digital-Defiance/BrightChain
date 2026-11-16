@@ -269,9 +269,10 @@ export class BrightDb {
     options?: CollectionOptions,
   ): Collection<T> {
     if (!this.collections.has(name)) {
-      const collOptions = this.storeLock || this.nowBd
-        ? { ...options, storeLock: this.storeLock, nowBd: this.nowBd }
-        : options;
+      const collOptions =
+        this.storeLock || this.nowBd
+          ? { ...options, storeLock: this.storeLock, nowBd: this.nowBd }
+          : options;
       const coll = new Collection<T>(
         name,
         this.store,

@@ -41,7 +41,12 @@ const STORAGE_KEY = 'brightDateDisplayMode';
 function readPersistedMode(): BrightDateDisplayMode | undefined {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored && Object.values(BrightDateDisplayMode).includes(stored as BrightDateDisplayMode)) {
+    if (
+      stored &&
+      Object.values(BrightDateDisplayMode).includes(
+        stored as BrightDateDisplayMode,
+      )
+    ) {
       return stored as BrightDateDisplayMode;
     }
   } catch {
@@ -61,14 +66,22 @@ export interface BrightDateContextValue {
    * Format a date according to the user's preference.
    * Convenience wrapper around `formatDateByMode`.
    */
-  formatDate: (date: BrightDateValue | Date | string, localeStr: string, precision?: number) => string;
+  formatDate: (
+    date: BrightDateValue | Date | string,
+    localeStr: string,
+    precision?: number,
+  ) => string;
   /**
    * Get the tooltip for hover modes.
    * In `hover` mode: returns BrightDate string.
    * In `hoverReverse` mode: returns locale date string.
    * In other modes: returns empty string.
    */
-  getTooltip: (date: BrightDateValue | Date | string, localeStr?: string, precision?: number) => string;
+  getTooltip: (
+    date: BrightDateValue | Date | string,
+    localeStr?: string,
+    precision?: number,
+  ) => string;
   /**
    * Get just the BrightDate string (for custom rendering).
    */
@@ -127,13 +140,17 @@ export const BrightDateProvider: FC<BrightDateProviderProps> = ({
   );
 
   const getTooltip = useCallback(
-    (date: BrightDateValue | Date | string, localeStr?: string, precision = 3) =>
-      getDateTooltip(date, mode, localeStr, precision),
+    (
+      date: BrightDateValue | Date | string,
+      localeStr?: string,
+      precision = 3,
+    ) => getDateTooltip(date, mode, localeStr, precision),
     [mode],
   );
 
   const toBD = useCallback(
-    (date: BrightDateValue | Date | string, precision = 3) => toBrightDateString(date, precision),
+    (date: BrightDateValue | Date | string, precision = 3) =>
+      toBrightDateString(date, precision),
     [],
   );
 
@@ -167,9 +184,14 @@ export function useBrightDateMode(): BrightDateContextValue {
     setMode: () => {
       /* no-op outside provider */
     },
-    formatDate: (date: BrightDateValue | Date | string, localeStr: string, precision = 3) =>
+    formatDate: (
+      date: BrightDateValue | Date | string,
+      localeStr: string,
+      precision = 3,
+    ) =>
       formatDateByMode(date, localeStr, BrightDateDisplayMode.Dual, precision),
     getTooltip: () => '',
-    toBD: (date: BrightDateValue | Date | string, precision = 3) => toBrightDateString(date, precision),
+    toBD: (date: BrightDateValue | Date | string, precision = 3) =>
+      toBrightDateString(date, precision),
   };
 }

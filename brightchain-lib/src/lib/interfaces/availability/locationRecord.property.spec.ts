@@ -33,23 +33,12 @@ const bid = (s: string) => s as unknown as BlockId;
 const arbNodeId = fc.stringMatching(/^[a-zA-Z0-9-]{8,32}$/);
 
 /**
- * Generate a valid Date object (not too far in past or future)
- * Filter out invalid dates (NaN) that can't be serialized
- */
-const arbDate = fc
-  .date({
-    min: new Date('2020-01-01'),
-    max: new Date('2030-12-31'),
-  })
-  .filter((date) => !isNaN(date.getTime()));
-
-/**
  * Generate a valid BrightDateTimestamp (decimal days since J2000.0)
  * Range covers 2020-01-01 to 2030-12-31 approximately
  */
 const arbBrightDate = fc.double({
-  min: 7305,   // approx 2020-01-01
-  max: 11323,  // approx 2030-12-31
+  min: 7305, // approx 2020-01-01
+  max: 11323, // approx 2030-12-31
   noNaN: true,
   noDefaultInfinity: true,
 });
@@ -163,9 +152,7 @@ describe('Location Metadata Serialization Property Tests', () => {
 
           // Verify all fields are preserved
           expect(deserialized.nodeId).toBe(record.nodeId);
-          expect(deserialized.lastSeen).toBe(
-            record.lastSeen,
-          );
+          expect(deserialized.lastSeen).toBe(record.lastSeen);
           expect(deserialized.isAuthoritative).toBe(record.isAuthoritative);
 
           // Check optional latencyMs
@@ -234,9 +221,7 @@ describe('Location Metadata Serialization Property Tests', () => {
             const deserializedRecord = deserialized.locationRecords[i];
 
             expect(deserializedRecord.nodeId).toBe(originalRecord.nodeId);
-            expect(deserializedRecord.lastSeen).toBe(
-              originalRecord.lastSeen,
-            );
+            expect(deserializedRecord.lastSeen).toBe(originalRecord.lastSeen);
             expect(deserializedRecord.isAuthoritative).toBe(
               originalRecord.isAuthoritative,
             );

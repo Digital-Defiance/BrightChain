@@ -4,9 +4,9 @@ import { PlatformID } from '@digitaldefiance/ecies-lib';
  * Decoded challenge token structure.
  * The token is transmitted as a base64-encoded HMAC-signed JSON string.
  *
- * @template TID - Platform ID type. Defaults to string for JSON/frontend.
+ * @template _TID - Platform ID type (reserved; no field uses it yet). Defaults to string for JSON/frontend.
  */
-export interface IChallengeToken<TID extends PlatformID = string> {
+export interface IChallengeToken<_TID extends PlatformID = string> {
   /** The work unit this token is bound to */
   workUnitId: string;
   /** The client identifier this token is bound to */

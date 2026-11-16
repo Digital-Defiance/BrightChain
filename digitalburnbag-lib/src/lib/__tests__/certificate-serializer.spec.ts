@@ -6,9 +6,7 @@
 
 import { EciesCryptoCore, EciesSignature } from '@digitaldefiance/ecies-lib';
 import { sha256 } from '@noble/hashes/sha256';
-import type {
-  ICertificateOfDestruction,
-} from '../interfaces/bases/certificate-of-destruction';
+import type { ICertificateOfDestruction } from '../interfaces/bases/certificate-of-destruction';
 import {
   serializeCertificate,
   verifyCertificate,
@@ -29,7 +27,8 @@ function createSamplePayload(): Omit<ICertificateOfDestruction, 'signature'> {
     version: 1,
     containerId: 'container-abc-123',
     containerName: 'My Sealed Vault',
-    sealHash: 'a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2',
+    sealHash:
+      'a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2',
     sealedAt: '2025-01-15T10:30:00.000Z',
     destroyedAt: '2025-06-20T14:45:00.000Z',
     nonAccessVerification: {
@@ -42,19 +41,25 @@ function createSamplePayload(): Omit<ICertificateOfDestruction, 'signature'> {
     fileDestructionProofs: [
       {
         fileId: 'file-001',
-        destructionHash: 'deadbeef01234567deadbeef01234567deadbeef01234567deadbeef01234567',
-        ledgerEntryHash: 'cafebabe01234567cafebabe01234567cafebabe01234567cafebabe01234567',
+        destructionHash:
+          'deadbeef01234567deadbeef01234567deadbeef01234567deadbeef01234567',
+        ledgerEntryHash:
+          'cafebabe01234567cafebabe01234567cafebabe01234567cafebabe01234567',
         timestamp: '2025-06-20T14:44:58.000Z',
       },
       {
         fileId: 'file-002',
-        destructionHash: '1111111122222222333333334444444455555555666666667777777788888888',
-        ledgerEntryHash: 'aaaaaaaa11111111bbbbbbbb22222222cccccccc33333333dddddddd44444444',
+        destructionHash:
+          '1111111122222222333333334444444455555555666666667777777788888888',
+        ledgerEntryHash:
+          'aaaaaaaa11111111bbbbbbbb22222222cccccccc33333333dddddddd44444444',
         timestamp: '2025-06-20T14:44:59.000Z',
       },
     ],
-    containerLedgerEntryHash: 'abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789',
-    operatorPublicKey: '02abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789',
+    containerLedgerEntryHash:
+      'abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789',
+    operatorPublicKey:
+      '02abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789',
   };
 }
 
@@ -67,7 +72,7 @@ function signPayload(
   privateKey: Uint8Array,
 ): ICertificateOfDestruction {
   // Produce canonical JSON
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
   const { ...rest } = payload;
   const sorted = JSON.stringify(sortKeysDeep(rest));
   const encoder = new TextEncoder();

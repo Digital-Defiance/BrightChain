@@ -110,7 +110,7 @@ export class ApprovalController<
           ),
         } as unknown as BurnbagResponse,
       };
-    const requestId = this.safeParseId(req.params.requestId as string);
+    const requestId = this.safeParseId(req.params['requestId'] as string);
     if (!requestId)
       return {
         statusCode: 400,
@@ -151,7 +151,7 @@ export class ApprovalController<
           ),
         } as unknown as BurnbagResponse,
       };
-    const requestId = this.safeParseId(req.params.requestId as string);
+    const requestId = this.safeParseId(req.params['requestId'] as string);
     if (!requestId)
       return {
         statusCode: 400,

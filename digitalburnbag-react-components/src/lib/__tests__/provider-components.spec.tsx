@@ -2,6 +2,7 @@
  * Unit tests for Provider System frontend components.
  * Tests for Tasks 13.4, 14.2, 15.3, 16.2, 17.1, 17.4
  */
+import { ProviderCategory } from '@brightchain/digitalburnbag-lib';
 import { IApiProviderConnectionDTO } from '../services/burnbag-api-client';
 import {
   canCreateBinding,
@@ -217,7 +218,7 @@ describe('Provider Connection Flow', () => {
         id: 'github',
         name: 'GitHub',
         description: '',
-        category: 'developer' as any,
+        category: ProviderCategory.DEVELOPER,
         baseUrl: 'https://api.github.com',
         auth: { type: 'oauth2' as const },
         endpoints: {
@@ -240,7 +241,7 @@ describe('Provider Connection Flow', () => {
         id: 'fitbit',
         name: 'Fitbit',
         description: '',
-        category: 'health_fitness' as any,
+        category: ProviderCategory.HEALTH_FITNESS,
         baseUrl: 'https://api.fitbit.com',
         auth: { type: 'oauth2' as const },
         endpoints: {

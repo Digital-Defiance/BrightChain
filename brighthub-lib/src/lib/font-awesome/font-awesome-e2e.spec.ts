@@ -7,10 +7,7 @@
  * parser and produces the correct CSS class string.
  */
 
-import {
-  isValidIconMarkup,
-  parseIconMarkup,
-} from './font-awesome';
+import { isValidIconMarkup, parseIconMarkup } from './font-awesome';
 
 /**
  * Every style option the picker can emit.
@@ -27,35 +24,135 @@ const PICKER_STYLE_OPTIONS = [
   { label: 'Brands', markupStyle: 'brands', expectedCssPrefix: 'fa-brands' },
   // Duotone family
   { label: 'Duotone', markupStyle: 'duotone', expectedCssPrefix: 'fa-duotone' },
-  { label: 'Duotone Regular', markupStyle: 'duotoneregular', expectedCssPrefix: 'fa-duotone fa-regular' },
-  { label: 'Duotone Light', markupStyle: 'duotonelight', expectedCssPrefix: 'fa-duotone fa-light' },
-  { label: 'Duotone Thin', markupStyle: 'duotonethin', expectedCssPrefix: 'fa-duotone fa-thin' },
+  {
+    label: 'Duotone Regular',
+    markupStyle: 'duotoneregular',
+    expectedCssPrefix: 'fa-duotone fa-regular',
+  },
+  {
+    label: 'Duotone Light',
+    markupStyle: 'duotonelight',
+    expectedCssPrefix: 'fa-duotone fa-light',
+  },
+  {
+    label: 'Duotone Thin',
+    markupStyle: 'duotonethin',
+    expectedCssPrefix: 'fa-duotone fa-thin',
+  },
   // Sharp family
-  { label: 'Sharp Solid', markupStyle: 'sharpsolid', expectedCssPrefix: 'fa-sharp fa-solid' },
-  { label: 'Sharp Regular', markupStyle: 'sharpregular', expectedCssPrefix: 'fa-sharp fa-regular' },
-  { label: 'Sharp Light', markupStyle: 'sharplight', expectedCssPrefix: 'fa-sharp fa-light' },
-  { label: 'Sharp Thin', markupStyle: 'sharpthin', expectedCssPrefix: 'fa-sharp fa-thin' },
+  {
+    label: 'Sharp Solid',
+    markupStyle: 'sharpsolid',
+    expectedCssPrefix: 'fa-sharp fa-solid',
+  },
+  {
+    label: 'Sharp Regular',
+    markupStyle: 'sharpregular',
+    expectedCssPrefix: 'fa-sharp fa-regular',
+  },
+  {
+    label: 'Sharp Light',
+    markupStyle: 'sharplight',
+    expectedCssPrefix: 'fa-sharp fa-light',
+  },
+  {
+    label: 'Sharp Thin',
+    markupStyle: 'sharpthin',
+    expectedCssPrefix: 'fa-sharp fa-thin',
+  },
   // Sharp Duotone family
-  { label: 'Sharp Duotone Solid', markupStyle: 'sharpduotonesolid', expectedCssPrefix: 'fa-sharp-duotone fa-solid' },
-  { label: 'Sharp Duotone Regular', markupStyle: 'sharpduotoneregular', expectedCssPrefix: 'fa-sharp-duotone fa-regular' },
-  { label: 'Sharp Duotone Light', markupStyle: 'sharpduotonelight', expectedCssPrefix: 'fa-sharp-duotone fa-light' },
-  { label: 'Sharp Duotone Thin', markupStyle: 'sharpduotonethin', expectedCssPrefix: 'fa-sharp-duotone fa-thin' },
+  {
+    label: 'Sharp Duotone Solid',
+    markupStyle: 'sharpduotonesolid',
+    expectedCssPrefix: 'fa-sharp-duotone fa-solid',
+  },
+  {
+    label: 'Sharp Duotone Regular',
+    markupStyle: 'sharpduotoneregular',
+    expectedCssPrefix: 'fa-sharp-duotone fa-regular',
+  },
+  {
+    label: 'Sharp Duotone Light',
+    markupStyle: 'sharpduotonelight',
+    expectedCssPrefix: 'fa-sharp-duotone fa-light',
+  },
+  {
+    label: 'Sharp Duotone Thin',
+    markupStyle: 'sharpduotonethin',
+    expectedCssPrefix: 'fa-sharp-duotone fa-thin',
+  },
   // Specialty families
-  { label: 'Chisel', markupStyle: 'chisel', expectedCssPrefix: 'fa-chisel fa-regular' },
+  {
+    label: 'Chisel',
+    markupStyle: 'chisel',
+    expectedCssPrefix: 'fa-chisel fa-regular',
+  },
   { label: 'Etch', markupStyle: 'etch', expectedCssPrefix: 'fa-etch fa-solid' },
-  { label: 'Graphite', markupStyle: 'graphite', expectedCssPrefix: 'fa-graphite fa-thin' },
-  { label: 'Jelly', markupStyle: 'jelly', expectedCssPrefix: 'fa-jelly fa-regular' },
-  { label: 'Jelly Duo', markupStyle: 'jelly-duo', expectedCssPrefix: 'fa-jelly-duo fa-regular' },
-  { label: 'Jelly Fill', markupStyle: 'jelly-fill', expectedCssPrefix: 'fa-jelly-fill fa-regular' },
-  { label: 'Notdog', markupStyle: 'notdog', expectedCssPrefix: 'fa-notdog fa-solid' },
-  { label: 'Notdog Duo', markupStyle: 'notdog-duo', expectedCssPrefix: 'fa-notdog-duo fa-solid' },
-  { label: 'Slab', markupStyle: 'slab', expectedCssPrefix: 'fa-slab fa-regular' },
-  { label: 'Slab Press', markupStyle: 'slab-press', expectedCssPrefix: 'fa-slab-press fa-regular' },
-  { label: 'Thumbprint', markupStyle: 'thumbprint', expectedCssPrefix: 'fa-thumbprint fa-light' },
-  { label: 'Utility', markupStyle: 'utility', expectedCssPrefix: 'fa-utility fa-semibold' },
-  { label: 'Utility Duo', markupStyle: 'utility-duo', expectedCssPrefix: 'fa-utility-duo fa-semibold' },
-  { label: 'Utility Fill', markupStyle: 'utility-fill', expectedCssPrefix: 'fa-utility-fill fa-semibold' },
-  { label: 'Whiteboard', markupStyle: 'whiteboard', expectedCssPrefix: 'fa-whiteboard fa-semibold' },
+  {
+    label: 'Graphite',
+    markupStyle: 'graphite',
+    expectedCssPrefix: 'fa-graphite fa-thin',
+  },
+  {
+    label: 'Jelly',
+    markupStyle: 'jelly',
+    expectedCssPrefix: 'fa-jelly fa-regular',
+  },
+  {
+    label: 'Jelly Duo',
+    markupStyle: 'jelly-duo',
+    expectedCssPrefix: 'fa-jelly-duo fa-regular',
+  },
+  {
+    label: 'Jelly Fill',
+    markupStyle: 'jelly-fill',
+    expectedCssPrefix: 'fa-jelly-fill fa-regular',
+  },
+  {
+    label: 'Notdog',
+    markupStyle: 'notdog',
+    expectedCssPrefix: 'fa-notdog fa-solid',
+  },
+  {
+    label: 'Notdog Duo',
+    markupStyle: 'notdog-duo',
+    expectedCssPrefix: 'fa-notdog-duo fa-solid',
+  },
+  {
+    label: 'Slab',
+    markupStyle: 'slab',
+    expectedCssPrefix: 'fa-slab fa-regular',
+  },
+  {
+    label: 'Slab Press',
+    markupStyle: 'slab-press',
+    expectedCssPrefix: 'fa-slab-press fa-regular',
+  },
+  {
+    label: 'Thumbprint',
+    markupStyle: 'thumbprint',
+    expectedCssPrefix: 'fa-thumbprint fa-light',
+  },
+  {
+    label: 'Utility',
+    markupStyle: 'utility',
+    expectedCssPrefix: 'fa-utility fa-semibold',
+  },
+  {
+    label: 'Utility Duo',
+    markupStyle: 'utility-duo',
+    expectedCssPrefix: 'fa-utility-duo fa-semibold',
+  },
+  {
+    label: 'Utility Fill',
+    markupStyle: 'utility-fill',
+    expectedCssPrefix: 'fa-utility-fill fa-semibold',
+  },
+  {
+    label: 'Whiteboard',
+    markupStyle: 'whiteboard',
+    expectedCssPrefix: 'fa-whiteboard fa-semibold',
+  },
 ];
 
 describe('Picker → Markup → HTML end-to-end', () => {
@@ -66,8 +163,7 @@ describe('Picker → Markup → HTML end-to-end', () => {
       const markup = markupStyle
         ? `{{${markupStyle} ${iconName}}}`
         : `{{${iconName}}}`;
-      const expectedHtml =
-        `<i class="${expectedCssPrefix} fa-${iconName}" style="display: inline-block;"></i>`;
+      const expectedHtml = `<i class="${expectedCssPrefix} fa-${iconName}" style="display: inline-block;"></i>`;
 
       it(`markup "${markup}" is valid`, () => {
         expect(isValidIconMarkup(markup)).toBe(true);
@@ -123,7 +219,8 @@ describe('Picker → Markup → HTML end-to-end', () => {
     });
 
     it('handles full combo: family + additional classes + CSS', () => {
-      const markup = '{{sharpduotonesolid heart lg spin; color: red; font-size: 20px}}';
+      const markup =
+        '{{sharpduotonesolid heart lg spin; color: red; font-size: 20px}}';
       expect(isValidIconMarkup(markup)).toBe(true);
       expect(parseIconMarkup(markup)).toBe(
         '<i class="fa-sharp-duotone fa-solid fa-heart fa-lg fa-spin" style="display: inline-block; color: red; font-size: 20px"></i>',
@@ -133,9 +230,9 @@ describe('Picker → Markup → HTML end-to-end', () => {
 
   describe('uniqueness — each picker option produces distinct markup', () => {
     it('all markupStyle tokens are unique', () => {
-      const nonEmpty = PICKER_STYLE_OPTIONS
-        .map((o) => o.markupStyle)
-        .filter((s) => s !== '');
+      const nonEmpty = PICKER_STYLE_OPTIONS.map((o) => o.markupStyle).filter(
+        (s) => s !== '',
+      );
       const unique = new Set(nonEmpty);
       expect(unique.size).toBe(nonEmpty.length);
     });

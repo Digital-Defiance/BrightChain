@@ -8,10 +8,7 @@
  * @requirements joule-resource-credits spec, Req 7.3
  */
 
-import {
-  BrightChainStrings,
-  formatJoule,
-} from '@brightchain/brightchain-lib';
+import { BrightChainStrings, formatJoule } from '@brightchain/brightchain-lib';
 import { useI18n } from '@digitaldefiance/express-suite-react-components';
 import * as React from 'react';
 import { useFormattedDate } from '../hooks/useFormattedDate';
@@ -109,12 +106,8 @@ export const JouleEventLog: React.FC<JouleEventLogProps> = ({
       <table className="joule-event-log__table" role="table">
         <thead>
           <tr>
-            <th scope="col">
-              {t(BrightChainStrings.JouleEventLog_Col_Time)}
-            </th>
-            <th scope="col">
-              {t(BrightChainStrings.JouleEventLog_Col_Kind)}
-            </th>
+            <th scope="col">{t(BrightChainStrings.JouleEventLog_Col_Time)}</th>
+            <th scope="col">{t(BrightChainStrings.JouleEventLog_Col_Kind)}</th>
             <th scope="col">
               {t(BrightChainStrings.JouleEventLog_Col_Amount)}
             </th>
@@ -126,9 +119,7 @@ export const JouleEventLog: React.FC<JouleEventLogProps> = ({
         <tbody>
           {events.map((ev) => (
             <tr key={ev.id}>
-              <td>
-                {formatDateTime(new Date(ev.timestamp))}
-              </td>
+              <td>{formatDateTime(new Date(ev.timestamp))}</td>
               <td>{ev.kind}</td>
               <td className="joule-event-log__amount">
                 {formatJoule(ev.microJoules)}

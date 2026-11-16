@@ -19,7 +19,7 @@ import { BrightPassStrings } from '@brightchain/brightpass-lib';
 import NavigateNextIcon from '@mui/icons-material/NavigateNext';
 import { Breadcrumbs, Link, Typography } from '@mui/material';
 import React from 'react';
-import { Link as RouterLink, useLocation } from 'react-router-dom';
+import { Link as RouterLink, useLocation } from 'react-router';
 import { useBrightPass } from '../context/BrightPassProvider';
 import { useBrightPassTranslation } from '../hooks/useBrightPassTranslation';
 

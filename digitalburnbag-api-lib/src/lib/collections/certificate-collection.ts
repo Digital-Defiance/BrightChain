@@ -36,7 +36,9 @@ export class BrightDBCertificateRepository implements ICertificateRepository {
     this.indexesEnsured = true;
   }
 
-  async storeCertificate(certificate: ICertificateOfDestruction): Promise<void> {
+  async storeCertificate(
+    certificate: ICertificateOfDestruction,
+  ): Promise<void> {
     const now = new Date().toISOString();
     const doc: Record<string, unknown> = {
       _id: certificate.containerId,
@@ -55,10 +57,13 @@ export class BrightDBCertificateRepository implements ICertificateRepository {
     } as Record<string, unknown>);
     if (!doc) return null;
 
-    const { _id, createdAt, expiresAt, ...rest } = doc as Record<
-      string,
-      unknown
-    >;
+    // Strip storage-only fields; the rest is the certificate.
+    const {
+      _id,
+      createdAt: _createdAt,
+      expiresAt: _expiresAt,
+      ...rest
+    } = doc as Record<string, unknown>;
     return rest as unknown as ICertificateOfDestruction;
   }
 }

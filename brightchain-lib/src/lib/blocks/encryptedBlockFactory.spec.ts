@@ -16,9 +16,9 @@ import { initializeBrightChain } from '../init';
 import { ChecksumService } from '../services/checksum.service';
 import { ServiceProvider } from '../services/service.provider';
 import { Checksum } from '../types/checksum';
+import { dateToBrightDate } from '../utils/brightDateConversions';
 import { EncryptedBlock } from './encrypted';
 import { EncryptedBlockFactory } from './encryptedBlockFactory';
-import { dateToBrightDate } from '../utils/brightDateConversions';
 
 // Wrapper class to match factory signature
 class TestEncryptedBlock extends EncryptedBlock<Uint8Array> {

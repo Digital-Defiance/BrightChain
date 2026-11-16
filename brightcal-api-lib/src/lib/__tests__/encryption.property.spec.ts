@@ -10,7 +10,7 @@
  */
 
 import fc from 'fast-check';
-import { EncryptionService } from '../services/encryptionService.ts';
+import { EncryptionService } from '../services/encryptionService.js';
 
 // ─── Setup ───────────────────────────────────────────────────────────────────
 
@@ -34,11 +34,6 @@ const eventBodyArb = fc
 const keyArb = fc
   .uint8Array({ minLength: 32, maxLength: 32 })
   .map((bytes) => Buffer.from(bytes).toString('hex'));
-
-/**
- * Generate a pair of distinct keys (owner + recipient).
- */
-const distinctKeyPairArb = fc.tuple(keyArb, keyArb).filter(([a, b]) => a !== b);
 
 /**
  * Generate three distinct keys (owner, recipient, third-party).

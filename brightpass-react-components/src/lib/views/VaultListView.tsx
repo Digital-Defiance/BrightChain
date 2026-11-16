@@ -11,8 +11,8 @@
  */
 
 import type { VaultMetadata } from '@brightchain/brightchain-lib';
-import { BrightPassStrings } from '@brightchain/brightpass-lib';
 import { useFormattedDate } from '@brightchain/brightchain-react-components';
+import { BrightPassStrings } from '@brightchain/brightpass-lib';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import LockIcon from '@mui/icons-material/Lock';

@@ -6,9 +6,14 @@ export default {
     __PACKAGE_VERSIONS__: { brightchain: '0.0.0-test' },
   },
   transform: {
+    // react-router v8 and its dependencies are ESM-only: see tools/jest-esm-transformer.js
+    '/node_modules/.+\\.[cm]?js$': '<rootDir>/../tools/jest-esm-transformer.js',
     '^(?!.*\\.(js|jsx|ts|tsx|css|json)$)': '@nx/react/plugins/jest',
     '^.+\\.[tj]sx?$': ['babel-jest', { presets: ['@nx/react/babel'] }],
   },
+  transformIgnorePatterns: [
+    'node_modules/(?!(?:\\.store/)?(?:react-router|@remix-run[-/]route-pattern|cookie-es)[-/])',
+  ],
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
   coverageDirectory: '../coverage/brightchain-react',
   moduleNameMapper: {

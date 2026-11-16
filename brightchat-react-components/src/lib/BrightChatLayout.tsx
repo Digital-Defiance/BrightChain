@@ -31,7 +31,7 @@ import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { FC, memo, ReactNode, useCallback, useMemo, useState } from 'react';
-import { Link as RouterLink, useLocation } from 'react-router-dom';
+import { Link as RouterLink, useLocation } from 'react-router';
 import { BrightChatProvider, useBrightChat } from './BrightChatContext';
 import type { ChannelSidebarProps } from './ChannelSidebar';
 import ChannelSidebar, { CHANNEL_SIDEBAR_WIDTH } from './ChannelSidebar';
@@ -54,7 +54,10 @@ export interface BrightChatLayoutProps {
   /** Currently active server ID */
   activeServerId: string | null;
   /** Props forwarded to ChannelSidebar */
-  channelSidebarProps: Omit<ChannelSidebarProps, 'serverName' | 'serverIconUrl' | 'serverIconFaClass'>;
+  channelSidebarProps: Omit<
+    ChannelSidebarProps,
+    'serverName' | 'serverIconUrl' | 'serverIconFaClass'
+  >;
   /** Props forwarded to DMSidebar (shown when no server is selected) */
   dmSidebarProps?: Omit<DMSidebarProps, never>;
   /** Server name for the sidebar header */
@@ -367,15 +370,14 @@ const BrightChatLayoutInner: FC<Omit<BrightChatLayoutProps, 'chatApi'>> = ({
       </Box>
     );
   }, [
-      servers,
-      serverName,
-      activeServerId,
-      channelSidebarProps,
-      dmSidebarProps,
-      isMobile,
-      handleCloseDrawer,
-    ],
-  );
+    servers,
+    serverName,
+    activeServerId,
+    channelSidebarProps,
+    dmSidebarProps,
+    isMobile,
+    handleCloseDrawer,
+  ]);
 
   const sidebarContent = (
     <>

@@ -181,10 +181,14 @@ export class V2IndexTree {
       };
       bytes = page.children.reduce((sum, child) => sum + child.recordBytes, 0n);
     } else {
-      throw new Error('BrightDB v2 index tree expected an index leaf or branch');
+      throw new Error(
+        'BrightDB v2 index tree expected an index leaf or branch',
+      );
     }
     if (expected !== undefined && expected !== bytes) {
-      throw new Error('BrightDB v2 index child byte count does not match its page');
+      throw new Error(
+        'BrightDB v2 index child byte count does not match its page',
+      );
     }
     return { node, bytes };
   }
@@ -194,7 +198,10 @@ export class V2IndexTree {
     return (await this.readNode(ref.digest, prefix, ref.bytes)).node;
   }
 
-  private async collect(ref: Ref, prefix: readonly number[]): Promise<Buffer[]> {
+  private async collect(
+    ref: Ref,
+    prefix: readonly number[],
+  ): Promise<Buffer[]> {
     const node = await this.loadNode(ref, prefix);
     if (node.kind === 'leaf') return node.keys;
     const path = [...prefix, ...node.skip];
@@ -273,7 +280,8 @@ export class V2IndexTree {
   private async writeDraft(ref: Ref): Promise<void> {
     if (!ref.draft) return;
     if (ref.draft.node.kind === 'branch') {
-      for (const child of ref.draft.node.children) await this.writeDraft(child.ref);
+      for (const child of ref.draft.node.children)
+        await this.writeDraft(child.ref);
     }
     await this.blocks.put(ref.digest, ref.draft.bytes);
   }
@@ -301,7 +309,10 @@ export class V2IndexTree {
     const skipLength = node.skip.length;
     const mismatch = (key: Buffer): number => {
       for (let i = 0; i < skipLength; i++) {
-        if (depth + i >= nibbleLength(key) || nibbleAt(key, depth + i) !== node.skip[i]) {
+        if (
+          depth + i >= nibbleLength(key) ||
+          nibbleAt(key, depth + i) !== node.skip[i]
+        ) {
           return i;
         }
       }
@@ -309,7 +320,9 @@ export class V2IndexTree {
     };
 
     const diverging = adds.filter((key) => mismatch(key) < skipLength);
-    const children = new Map(node.children.map((child) => [child.nibble, child.ref]));
+    const children = new Map(
+      node.children.map((child) => [child.nibble, child.ref]),
+    );
 
     if (diverging.length === 0) {
       const split = depth + skipLength;
@@ -326,7 +339,9 @@ export class V2IndexTree {
       };
       adds.forEach((key) => place(key, 'adds'));
       // A remove that leaves this branch's prefix cannot be present here.
-      removes.filter((key) => mismatch(key) === skipLength).forEach((key) => place(key, 'removes'));
+      removes
+        .filter((key) => mismatch(key) === skipLength)
+        .forEach((key) => place(key, 'removes'));
       for (const [nibble, group] of groups) {
         const next = await this.update(
           children.get(nibble) ?? null,
@@ -365,13 +380,22 @@ export class V2IndexTree {
       }
     }
     for (const key of removes) {
-      if (nibbleLength(key) > split && stillInPrefix(key) && nibbleAt(key, split) === oldNibble) {
+      if (
+        nibbleLength(key) > split &&
+        stillInPrefix(key) &&
+        nibbleAt(key, split) === oldNibble
+      ) {
         old.removes.push(key);
       }
     }
     const reduced = this.makeBranch(node.skip.slice(j + 1), node.children);
     const oldPath = [...prefix, ...node.skip.slice(0, j), oldNibble];
-    const oldResult = await this.update(reduced, oldPath, old.adds, old.removes);
+    const oldResult = await this.update(
+      reduced,
+      oldPath,
+      old.adds,
+      old.removes,
+    );
     const merged = new Map<number, Ref>();
     if (oldResult) merged.set(oldNibble, oldResult);
     for (const [nibble, group] of others) {

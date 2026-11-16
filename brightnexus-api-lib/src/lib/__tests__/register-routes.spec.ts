@@ -1,5 +1,6 @@
+import type { IApplication } from '@digitaldefiance/node-express-suite';
+import express, { Router, type RequestHandler } from 'express';
 import request from 'supertest';
-import express, { Router } from 'express';
 import { registerBrightNexusRoutesOnRouter } from '../controllers/register-routes';
 import { createBrightNexusDeps } from '../wiring/create-brightnexus-deps';
 import {
@@ -9,6 +10,10 @@ import {
   signSamplePublishBody,
   testBrightNexusExternalDeps,
 } from './helpers/brightnexus-db';
+
+type RouteApplication = IApplication<string>;
+
+const passThrough: RequestHandler = (_req, _res, next) => next();
 
 describe('registerBrightNexusRoutesOnRouter', () => {
   it('mounts lookup route under the configured prefix', async () => {
@@ -32,12 +37,12 @@ describe('registerBrightNexusRoutesOnRouter', () => {
     registerBrightNexusRoutesOnRouter(
       router,
       {
-        authenticationMiddleware: (_req, _res, next) => next(),
-        cryptoAuthenticationMiddleware: (_req, _res, next) => next(),
+        authenticationMiddleware: passThrough,
+        cryptoAuthenticationMiddleware: passThrough,
         environment: { enabledFeatures: [] },
         authProvider: {},
         constants: {},
-      } as never,
+      } as unknown as RouteApplication,
       deps,
       '/brightnexus/location',
     );

@@ -53,11 +53,7 @@ export default defineConfig(({ mode }) => ({
   root: import.meta.dirname,
   cacheDir: '../node_modules/.vite/brightchain-react',
 
-  plugins: [
-    react(),
-    nxViteTsPaths(),
-    nxCopyAssetsPlugin(['*.md']),
-  ],
+  plugins: [react(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
 
   build: {
     outDir: '../dist/brightchain-react',
@@ -95,7 +91,7 @@ export default defineConfig(({ mode }) => ({
     dedupe: [
       'react',
       'react-dom',
-      'react-router-dom',
+      'react-router',
       '@digitaldefiance/express-suite-react-components',
       '@digitaldefiance/i18n-lib',
       '@digitaldefiance/ecies-lib',

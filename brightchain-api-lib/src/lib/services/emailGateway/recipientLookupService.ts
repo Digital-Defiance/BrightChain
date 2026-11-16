@@ -200,9 +200,7 @@ export class RecipientLookupService
 
     // 1. Cache hit → return OK immediately (Req 13.6).
     if (this.cache.get(normalised)) {
-      console.info(
-        `[RecipientLookup] Cache hit for ${normalised} → OK`,
-      );
+      console.info(`[RecipientLookup] Cache hit for ${normalised} → OK`);
       return 'OK';
     }
 
@@ -377,7 +375,9 @@ export class RecipientLookupService
       }
 
       // Extract the payload (between ':' and ',').
-      const payload = buffer.slice(colonIdx + 1, colonIdx + 1 + length).toString('utf-8');
+      const payload = buffer
+        .slice(colonIdx + 1, colonIdx + 1 + length)
+        .toString('utf-8');
       const terminator = buffer[colonIdx + 1 + length];
 
       // Consume this netstring from the buffer.
@@ -420,7 +420,9 @@ export class RecipientLookupService
 
     const key = payload.slice(spaceIdx + 1).trim();
     if (key.length === 0) {
-      console.log(`[RecipientLookup] Malformed request (empty key): ${payload}`);
+      console.log(
+        `[RecipientLookup] Malformed request (empty key): ${payload}`,
+      );
       return 'TEMP malformed request';
     }
 
@@ -434,7 +436,9 @@ export class RecipientLookupService
         console.log(`[RecipientLookup] ✗ ${key} → NOTFOUND`);
         return 'NOTFOUND ';
       case 'TEMP':
-        console.log(`[RecipientLookup] ⚠ ${key} → TEMP (registry unavailable)`);
+        console.log(
+          `[RecipientLookup] ⚠ ${key} → TEMP (registry unavailable)`,
+        );
         return 'TEMP registry unavailable';
     }
   }

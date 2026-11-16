@@ -1,6 +1,6 @@
+import { workspaceRoot } from '@nx/devkit';
 import { nxE2EPreset } from '@nx/playwright/preset';
 import { defineConfig, devices } from '@playwright/test';
-import { workspaceRoot } from '@nx/devkit';
 import path from 'path';
 
 // The API server serves both REST endpoints and the React SPA on port 3000.
@@ -8,7 +8,10 @@ const baseURL = process.env['BASE_URL'] || 'http://localhost:3000';
 
 export default defineConfig({
   ...nxE2EPreset(__filename, { testDir: './src' }),
-  globalSetup: path.join(workspaceRoot, 'brightchain-react-e2e/src/global-setup.ts'),
+  globalSetup: path.join(
+    workspaceRoot,
+    'brightchain-react-e2e/src/global-setup.ts',
+  ),
   /* Generous timeout — lazy chunks + API calls + rendering + server load */
   timeout: 120_000,
   /* Retry flaky tests caused by transient server overload */
@@ -29,7 +32,7 @@ export default defineConfig({
   },
   reporter: [
     ['html'],
-    [path.join(workspaceRoot, 'tools/custom-playwright-reporter.js')]
+    [path.join(workspaceRoot, 'tools/custom-playwright-reporter.js')],
   ],
   /* Start the built API server directly (builds are handled by the e2e
      target's dependsOn in project.json, so we skip Nx executor overhead). */

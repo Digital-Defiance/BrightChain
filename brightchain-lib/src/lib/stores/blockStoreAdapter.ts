@@ -58,7 +58,12 @@ export class MemoryBlockStoreAdapter implements IBlockStore {
   ): Promise<void> {
     const id = normalizeId(blockId);
     const validated = validateSize(data, this.blockSize);
-    const block = new RawDataBlock(this.blockSize, validated, brightDateNow(), id);
+    const block = new RawDataBlock(
+      this.blockSize,
+      validated,
+      brightDateNow(),
+      id,
+    );
     await this.store.setData(block, options);
   }
 

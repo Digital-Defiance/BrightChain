@@ -14,7 +14,11 @@ import type {
 import { randomBytes } from 'node:crypto';
 import type { BrightDbV2BlockSource } from './block-source';
 import { digestPayload, encodeMetadata } from './codec';
-import { BrightDbV2AesCipher, BrightDbV2DecryptionError, type BrightDbV2KeyRing } from './encryption';
+import {
+  BrightDbV2AesCipher,
+  BrightDbV2DecryptionError,
+  type BrightDbV2KeyRing,
+} from './encryption';
 import { copyDatabase } from './merge';
 import {
   BrightDbV2MissingBlockError,
@@ -25,7 +29,8 @@ import {
 
 /** The head registry collection that holds a database's current root in a pool. Scoped by pool, because the registry is not. */
 export const V2_HEAD_COLLECTION = '__brightdb_v2_head__';
-export const headCollection = (poolId: string): string => `${V2_HEAD_COLLECTION}:${poolId}`;
+export const headCollection = (poolId: string): string =>
+  `${V2_HEAD_COLLECTION}:${poolId}`;
 
 export interface BrightChainV2StorageOptions {
   store: IPooledBlockStore;
@@ -57,7 +62,11 @@ const locks = new WeakMap<object, Map<string, Promise<unknown>>>();
 function isNotFound(error: unknown): boolean {
   const type = (error as { type?: string; name?: string } | null)?.type;
   const name = (error as { name?: string } | null)?.name;
-  return type === 'KeyNotFound' || name === 'StoreError' || /not found/iu.test(String((error as Error)?.message));
+  return (
+    type === 'KeyNotFound' ||
+    name === 'StoreError' ||
+    /not found/iu.test(String((error as Error)?.message))
+  );
 }
 
 export class BrightChainV2Storage implements BrightDbV2Storage {
@@ -73,11 +82,17 @@ export class BrightChainV2Storage implements BrightDbV2Storage {
     }
     this.writerId = Uint8Array.from(id);
     this.cipher = options.poolEncryption
-      ? new BrightDbV2AesCipher('keyRing' in options.poolEncryption ? options.poolEncryption.keyRing : options.poolEncryption.key)
+      ? new BrightDbV2AesCipher(
+          'keyRing' in options.poolEncryption
+            ? options.poolEncryption.keyRing
+            : options.poolEncryption.key,
+        )
       : null;
     this.encryptsAtRest = options.poolEncrypts === true || this.cipher !== null;
     if (this.cipher && !options.store.putInPoolWithId) {
-      throw new BrightDbV2StorageError('This store cannot hold named blocks, which an encrypting pool needs');
+      throw new BrightDbV2StorageError(
+        'This store cannot hold named blocks, which an encrypting pool needs',
+      );
     }
     this.lockKey = `${options.poolId}:${options.dbName}`;
   }
@@ -86,12 +101,25 @@ export class BrightChainV2Storage implements BrightDbV2Storage {
    * Open the database in this pool, creating an empty one if the head registry
    * has none. Pass the result to `PortableBrightDb.open({ storage })`.
    */
-  static async openOrCreate(options: BrightChainV2StorageOptions): Promise<BrightChainV2Storage> {
+  static async openOrCreate(
+    options: BrightChainV2StorageOptions,
+  ): Promise<BrightChainV2Storage> {
     const storage = new BrightChainV2Storage(options);
-    if (storage.options.headRegistry.getHead(options.dbName, headCollection(options.poolId)) === undefined) {
+    if (
+      storage.options.headRegistry.getHead(
+        options.dbName,
+        headCollection(options.poolId),
+      ) === undefined
+    ) {
       await storage.withWriteLock(async (writer) => {
         // Re-check under the lock so two openers do not both initialize.
-        if (options.headRegistry.getHead(options.dbName, headCollection(options.poolId)) !== undefined) return;
+        if (
+          options.headRegistry.getHead(
+            options.dbName,
+            headCollection(options.poolId),
+          ) !== undefined
+        )
+          return;
         const root = await writer.writeBlock(
           encodeMetadata({
             kind: 'database',
@@ -118,7 +146,13 @@ export class BrightChainV2Storage implements BrightDbV2Storage {
   ): Promise<BrightChainV2Storage> {
     const storage = new BrightChainV2Storage(options);
     await storage.withWriteLock(async (writer) => {
-      if (options.headRegistry.getHead(options.dbName, headCollection(options.poolId)) !== undefined) return;
+      if (
+        options.headRegistry.getHead(
+          options.dbName,
+          headCollection(options.poolId),
+        ) !== undefined
+      )
+        return;
       const head = await source.readHead();
       await copyDatabase(storage, writer, source, head);
       await writer.publishHead(head);
@@ -127,7 +161,10 @@ export class BrightChainV2Storage implements BrightDbV2Storage {
   }
 
   async readHead(): Promise<string> {
-    const head = this.options.headRegistry.getHead(this.options.dbName, headCollection(this.options.poolId));
+    const head = this.options.headRegistry.getHead(
+      this.options.dbName,
+      headCollection(this.options.poolId),
+    );
     if (head === undefined) {
       throw new BrightDbV2StorageError(
         `No BrightDB v2 database named ${this.options.dbName} in pool ${this.options.poolId}`,
@@ -138,7 +175,10 @@ export class BrightChainV2Storage implements BrightDbV2Storage {
       // The registry holds the sealed head, so the root digest is not visible there.
       return this.cipher.openHead(Buffer.from(head, 'hex'));
     } catch (error) {
-      throw new BrightDbV2StorageError('Cannot decrypt the database head: wrong key or damaged registry entry', { cause: error });
+      throw new BrightDbV2StorageError(
+        'Cannot decrypt the database head: wrong key or damaged registry entry',
+        { cause: error },
+      );
     }
   }
 
@@ -147,13 +187,19 @@ export class BrightChainV2Storage implements BrightDbV2Storage {
   }
 
   async hasBlock(digest: string): Promise<boolean> {
-    return this.options.store.hasInPool(this.options.poolId, this.nameOf(digest));
+    return this.options.store.hasInPool(
+      this.options.poolId,
+      this.nameOf(digest),
+    );
   }
 
   async readBlock(digest: string): Promise<Uint8Array> {
     let bytes: Uint8Array;
     try {
-      bytes = await this.options.store.getFromPool(this.options.poolId, this.nameOf(digest));
+      bytes = await this.options.store.getFromPool(
+        this.options.poolId,
+        this.nameOf(digest),
+      );
     } catch (error) {
       if (isNotFound(error) && !(await this.hasBlock(digest))) {
         throw new BrightDbV2MissingBlockError(digest, { cause: error });
@@ -174,7 +220,9 @@ export class BrightChainV2Storage implements BrightDbV2Storage {
       }
     }
     if (digestPayload(bytes) !== digest) {
-      throw new BrightDbV2StorageError(`BrightChain block digest mismatch: ${digest}`);
+      throw new BrightDbV2StorageError(
+        `BrightChain block digest mismatch: ${digest}`,
+      );
     }
     return bytes;
   }
@@ -188,7 +236,11 @@ export class BrightChainV2Storage implements BrightDbV2Storage {
     const expected = digestPayload(payload);
     if (this.cipher) {
       // The pool keeps the sealed bytes under the keyed name; the plaintext digest never reaches it.
-      await (this.options.store.putInPoolWithId as NonNullable<IPooledBlockStore['putInPoolWithId']>)(
+      await (
+        this.options.store.putInPoolWithId as NonNullable<
+          IPooledBlockStore['putInPoolWithId']
+        >
+      )(
         this.options.poolId,
         this.cipher.physicalName(expected),
         this.cipher.seal(expected, payload),
@@ -205,7 +257,9 @@ export class BrightChainV2Storage implements BrightDbV2Storage {
   }
 
   /** One writer at a time per database in this process. Other nodes converge through merge. */
-  withWriteLock<T>(write: (writer: BrightDbV2DiskWriter) => Promise<T>): Promise<T> {
+  withWriteLock<T>(
+    write: (writer: BrightDbV2DiskWriter) => Promise<T>,
+  ): Promise<T> {
     let byKey = locks.get(this.options.headRegistry);
     if (!byKey) locks.set(this.options.headRegistry, (byKey = new Map()));
     const previous = byKey.get(this.lockKey) ?? Promise.resolve();
@@ -216,9 +270,16 @@ export class BrightChainV2Storage implements BrightDbV2Storage {
       },
       syncBlocks: async () => undefined,
       publishHead: async (digest) => {
-        if (!(await this.hasBlock(digest))) throw new BrightDbV2MissingBlockError(digest);
-        const value = this.cipher ? this.cipher.sealHead(digest).toString('hex') : digest;
-        await this.options.headRegistry.setHead(this.options.dbName, headCollection(this.options.poolId), value);
+        if (!(await this.hasBlock(digest)))
+          throw new BrightDbV2MissingBlockError(digest);
+        const value = this.cipher
+          ? this.cipher.sealHead(digest).toString('hex')
+          : digest;
+        await this.options.headRegistry.setHead(
+          this.options.dbName,
+          headCollection(this.options.poolId),
+          value,
+        );
       },
     };
     const run = previous.then(() => write(writer));

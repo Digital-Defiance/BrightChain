@@ -4,9 +4,9 @@
  * Each command prints one JSON line on success.
  */
 import { readFileSync } from 'node:fs';
-import { digestPayload } from '../src/lib/v2/codec';
 import { serveBlocks } from '../src/lib/v2/block-server';
 import { HttpBlockSource } from '../src/lib/v2/block-source';
+import { digestPayload } from '../src/lib/v2/codec';
 import { PortableBrightDb } from '../src/lib/v2/portable-database';
 
 async function main(): Promise<void> {
@@ -15,7 +15,13 @@ async function main(): Promise<void> {
     // clone <target directory> <url> [token]: copy a served database into a new directory
     const [url, token] = args;
     const keyHex = process.env['BRIGHTDB_KEY'];
-    (await PortableBrightDb.cloneFrom(path, new HttpBlockSource(url, { token }), keyHex ? { encryption: { key: Buffer.from(keyHex, 'hex') } } : {})).close();
+    (
+      await PortableBrightDb.cloneFrom(
+        path,
+        new HttpBlockSource(url, { token }),
+        keyHex ? { encryption: { key: Buffer.from(keyHex, 'hex') } } : {},
+      )
+    ).close();
     console.log(JSON.stringify({ ok: true }));
     return;
   }
@@ -23,7 +29,11 @@ async function main(): Promise<void> {
   const hex = process.env['BRIGHTDB_KEY'];
   const encryption = hex ? { key: Buffer.from(hex, 'hex') } : undefined;
   // BRIGHTDB_PACKED=1 turns on the packed extension (spec section 5.1) for this directory.
-  const db = await PortableBrightDb.open({ path, encryption, packed: process.env['BRIGHTDB_PACKED'] === '1' });
+  const db = await PortableBrightDb.open({
+    path,
+    encryption,
+    packed: process.env['BRIGHTDB_PACKED'] === '1',
+  });
   try {
     switch (command) {
       case 'write': {
@@ -58,7 +68,9 @@ async function main(): Promise<void> {
       }
       case 'insertjson': {
         const [collection, json] = args;
-        const result = await db.collection(collection).insertOne(JSON.parse(json));
+        const result = await db
+          .collection(collection)
+          .insertOne(JSON.parse(json));
         console.log(JSON.stringify({ insertedId: result.insertedId }));
         break;
       }
@@ -70,19 +82,25 @@ async function main(): Promise<void> {
       }
       case 'findindex': {
         const [collection, index, query] = args;
-        const docs = await db.collection(collection).findByIndex(index, JSON.parse(query));
+        const docs = await db
+          .collection(collection)
+          .findByIndex(index, JSON.parse(query));
         console.log(JSON.stringify(docs.map((d) => d['_id'])));
         break;
       }
       case 'putfile': {
         const [file, type] = args;
-        console.log(JSON.stringify(await db.putAttachment(readFileSync(file), { type })));
+        console.log(
+          JSON.stringify(await db.putAttachment(readFileSync(file), { type })),
+        );
         break;
       }
       case 'getfile': {
         const [digest] = args;
         const bytes = await db.getAttachment({ digest });
-        console.log(JSON.stringify({ size: bytes.length, sha3: digestPayload(bytes) }));
+        console.log(
+          JSON.stringify({ size: bytes.length, sha3: digestPayload(bytes) }),
+        );
         break;
       }
       case 'fork': {
@@ -120,13 +138,18 @@ async function main(): Promise<void> {
       case 'pull': {
         // pull <url> [token]: merge a served replica into this one
         const [url, token] = args;
-        console.log(JSON.stringify(await db.merge(new HttpBlockSource(url, { token }))));
+        console.log(
+          JSON.stringify(await db.merge(new HttpBlockSource(url, { token }))),
+        );
         break;
       }
       case 'find': {
         // find <collection> <filter json>: ids of matching documents, sorted
         const [collection, filter] = args;
-        const docs = await db.collection(collection).find(JSON.parse(filter)).toArray();
+        const docs = await db
+          .collection(collection)
+          .find(JSON.parse(filter))
+          .toArray();
         console.log(JSON.stringify(docs.map((d) => d['_id']).sort()));
         break;
       }
@@ -137,8 +160,16 @@ async function main(): Promise<void> {
       case 'gc': {
         // gc [graceMs]: delete blocks the current root does not reach
         const [grace] = args;
-        const r = await db.collectGarbage({ graceMs: grace ? Number(grace) : undefined });
-        console.log(JSON.stringify({ keptReachable: r.keptReachable, keptRecent: r.keptRecent, removed: r.removed }));
+        const r = await db.collectGarbage({
+          graceMs: grace ? Number(grace) : undefined,
+        });
+        console.log(
+          JSON.stringify({
+            keptReachable: r.keptReachable,
+            keptRecent: r.keptRecent,
+            removed: r.removed,
+          }),
+        );
         break;
       }
       case 'root': {
@@ -164,7 +195,11 @@ async function main(): Promise<void> {
             Array.from({ length: Number(size) }, (_, index) => ({
               type: 'insert' as const,
               collection,
-              document: { _id: `b${batch}-${index}`, batch, size: Number(size) },
+              document: {
+                _id: `b${batch}-${index}`,
+                batch,
+                size: Number(size),
+              },
             })),
           );
         }

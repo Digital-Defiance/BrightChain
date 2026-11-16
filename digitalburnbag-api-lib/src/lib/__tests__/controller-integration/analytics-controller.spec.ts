@@ -20,6 +20,24 @@ import type {
   IStatusHistoryRepository,
 } from '../../services/health-monitor-service';
 
+/** Shape returned by the controller's (private) handler methods. */
+interface IHandlerResult {
+  statusCode: number;
+  response: unknown;
+}
+/** Response bodies asserted on below. */
+interface IStatsBody {
+  totalCheckCount: number;
+  uptimePercentage: number | null;
+}
+interface ICompareDatasetBody {
+  buckets: unknown[];
+}
+interface IExportBody {
+  _contentType: string;
+  _contentDisposition: string;
+  _exportData: string;
+}
 // ---------------------------------------------------------------------------
 // Mock factories
 // ---------------------------------------------------------------------------
@@ -170,8 +188,12 @@ function createTestSetup() {
     constants: {},
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const controller = new AnalyticsController(application as any, deps as any);
+  const controller = new AnalyticsController(
+    application as unknown as ConstructorParameters<
+      typeof AnalyticsController<string>
+    >[0],
+    deps as unknown as IAnalyticsControllerDeps<string>,
+  );
 
   return { controller, statusHistoryRepo, connectionRepo, deps };
 }
@@ -184,11 +206,18 @@ describe('AnalyticsController', () => {
   // Helper to call private handler methods
 
   function callHandler(
-    controller: any,
+    controller: object,
     methodName: string,
     req: Record<string, unknown>,
-  ) {
-    return controller[methodName](req);
+  ): Promise<IHandlerResult> {
+    // Handlers are private; look them up by name.
+    const handler = (
+      controller as unknown as Record<
+        string,
+        (r: Record<string, unknown>) => Promise<IHandlerResult>
+      >
+    )[methodName];
+    return handler.call(controller, req);
   }
 
   // -----------------------------------------------------------------------
@@ -580,7 +609,7 @@ describe('AnalyticsController', () => {
       const result = await callHandler(controller, 'handleGetStats', req);
       expect(result.statusCode).toBe(200);
 
-      const stats = result.response as Record<string, unknown>;
+      const stats = result.response as IStatsBody;
       expect(stats).toHaveProperty('uptimePercentage');
       expect(stats).toHaveProperty('averageResponseTimeMs');
       expect(stats).toHaveProperty('failureRate');
@@ -660,7 +689,7 @@ describe('AnalyticsController', () => {
       const result = await callHandler(controller, 'handleGetCompare', req);
       expect(result.statusCode).toBe(200);
 
-      const datasets = result.response as Record<string, unknown>[];
+      const datasets = result.response as ICompareDatasetBody[];
       expect(Array.isArray(datasets)).toBe(true);
       expect(datasets.length).toBe(2);
 
@@ -684,7 +713,7 @@ describe('AnalyticsController', () => {
       const result = await callHandler(controller, 'handleGetStats', req);
       expect(result.statusCode).toBe(200);
 
-      const stats = result.response as Record<string, unknown>;
+      const stats = result.response as IStatsBody;
       expect(stats.totalCheckCount).toBe(0);
       expect(stats.uptimePercentage).toBeNull();
     });
@@ -718,7 +747,7 @@ describe('AnalyticsController', () => {
       const result = await callHandler(controller, 'handleGetExport', req);
       expect(result.statusCode).toBe(200);
 
-      const response = result.response as Record<string, unknown>;
+      const response = result.response as IExportBody;
       expect(response._contentType).toBe('text/csv');
       expect(response._contentDisposition).toMatch(
         /attachment; filename="history-conn-1\.csv"/,
@@ -745,7 +774,7 @@ describe('AnalyticsController', () => {
       const result = await callHandler(controller, 'handleGetExport', req);
       expect(result.statusCode).toBe(200);
 
-      const response = result.response as Record<string, unknown>;
+      const response = result.response as IExportBody;
       expect(response._contentType).toBe('application/json');
       expect(response._contentDisposition).toMatch(
         /attachment; filename="history-conn-1\.json"/,

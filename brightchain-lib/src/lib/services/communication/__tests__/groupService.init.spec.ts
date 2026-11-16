@@ -179,9 +179,7 @@ describe('GroupService.init()', () => {
       id: 'group-malformed',
       name: 'Malformed Group',
       creatorId: 'alice',
-      members: [
-        { memberId: 'alice', role: DefaultRole.OWNER, joinedAt: 9000 },
-      ],
+      members: [{ memberId: 'alice', role: DefaultRole.OWNER, joinedAt: 9000 }],
       encryptedSharedKey: null as unknown as Map<number, Map<string, string>>,
       createdAt: 9000,
       lastMessageAt: 9000,

@@ -112,12 +112,8 @@ describe('signCertificate', () => {
     expect(signed.sealHash).toBe(payload.sealHash);
     expect(signed.sealedAt).toBe(payload.sealedAt);
     expect(signed.destroyedAt).toBe(payload.destroyedAt);
-    expect(signed.nonAccessVerification).toEqual(
-      payload.nonAccessVerification,
-    );
-    expect(signed.fileDestructionProofs).toEqual(
-      payload.fileDestructionProofs,
-    );
+    expect(signed.nonAccessVerification).toEqual(payload.nonAccessVerification);
+    expect(signed.fileDestructionProofs).toEqual(payload.fileDestructionProofs);
     expect(signed.containerLedgerEntryHash).toBe(
       payload.containerLedgerEntryHash,
     );

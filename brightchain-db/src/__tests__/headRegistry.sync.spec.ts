@@ -11,11 +11,7 @@
  * Requirements: 2.2, 2.3, 2.4
  */
 
-import {
-  BrightDateTimestamp,
-  brightDateNow,
-  dateToBrightDate,
-} from '@brightchain/brightchain-lib';
+import { brightDateNow, dateToBrightDate } from '@brightchain/brightchain-lib';
 import { promises as fs } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';

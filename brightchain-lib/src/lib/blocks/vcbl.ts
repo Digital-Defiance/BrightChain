@@ -6,9 +6,9 @@ import { CblError } from '../errors/cblError';
 import { IVCBLBlock } from '../interfaces/blocks/vcbl';
 import { EntryPropertyRecord } from '../interfaces/brightpass';
 import { ICBLServices } from '../interfaces/services/cblServices';
+import { VCBLService } from '../services/vcblService';
 import type { BrightDateTimestamp } from '../types/brightDateTimestamp';
 import { dateToBrightDate } from '../utils/brightDateConversions';
-import { VCBLService } from '../services/vcblService';
 import { ExtendedCBL } from './extendedCbl';
 
 export class VCBLBlock<TID extends PlatformID = Uint8Array>

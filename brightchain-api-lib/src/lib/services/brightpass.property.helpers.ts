@@ -4,6 +4,7 @@
  */
 import {
   CreditCardEntry,
+  IEncryptedVaultEntry,
   IdentityEntry,
   LoginEntry,
   SecureNoteEntry,
@@ -139,4 +140,24 @@ export async function createServiceWithVault() {
   const password = 'test-password-123';
   const metadata = await service.createVault(memberId, 'TestVault', password);
   return { service, memberId, password, vaultId: metadata.id };
+}
+
+/**
+ * BrightPassService.addEntry/updateEntry accept client-encrypted entries.
+ * When `encryptedData` is absent the service serializes the plaintext
+ * entry itself (its server-side import path), which is how these tests feed
+ * plaintext entries through it.
+ */
+export function asEntryInput(entry: Partial<VaultEntry>): IEncryptedVaultEntry {
+  return entry as unknown as IEncryptedVaultEntry;
+}
+
+/**
+ * For entries stored through the plaintext path, getEntry returns the
+ * deserialized plaintext fields alongside the encrypted envelope.
+ */
+export function asPlaintextEntry<T extends VaultEntry = VaultEntry>(
+  entry: IEncryptedVaultEntry,
+): T {
+  return entry as unknown as T;
 }

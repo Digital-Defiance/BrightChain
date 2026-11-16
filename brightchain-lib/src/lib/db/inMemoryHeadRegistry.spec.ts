@@ -4,9 +4,9 @@
  * Validates that last-writer-wins conflict resolution uses BrightDateTimestamp
  * (numeric decimal days since J2000.0) for comparisons.
  */
-import { InMemoryHeadRegistry } from './inMemoryHeadRegistry';
-import { brightDateNow } from '../utils/brightDateConversions';
 import type { BrightDateTimestamp } from '../types/brightDateTimestamp';
+import { brightDateNow } from '../utils/brightDateConversions';
+import { InMemoryHeadRegistry } from './inMemoryHeadRegistry';
 
 describe('InMemoryHeadRegistry — LWW merge', () => {
   let registry: InMemoryHeadRegistry;
@@ -17,21 +17,26 @@ describe('InMemoryHeadRegistry — LWW merge', () => {
 
   it('applies a remote update with a higher BrightDateTimestamp', async () => {
     const localTs: BrightDateTimestamp = brightDateNow() - 1; // 1 day ago
-    const remoteTs: BrightDateTimestamp = brightDateNow();    // now (higher)
+    const remoteTs: BrightDateTimestamp = brightDateNow(); // now (higher)
 
     // Seed a local head with an older timestamp
     await registry.mergeHeadUpdate('db', 'col', 'block-local', localTs);
     expect(registry.getHead('db', 'col')).toBe('block-local');
 
     // Remote update with a newer timestamp should win
-    const applied = await registry.mergeHeadUpdate('db', 'col', 'block-remote', remoteTs);
+    const applied = await registry.mergeHeadUpdate(
+      'db',
+      'col',
+      'block-remote',
+      remoteTs,
+    );
     expect(applied).toBe(true);
     expect(registry.getHead('db', 'col')).toBe('block-remote');
     expect(registry.getHeadTimestamp('db', 'col')).toBe(remoteTs);
   });
 
   it('rejects a remote update with a lower BrightDateTimestamp', async () => {
-    const localTs: BrightDateTimestamp = brightDateNow();     // now (higher)
+    const localTs: BrightDateTimestamp = brightDateNow(); // now (higher)
     const remoteTs: BrightDateTimestamp = brightDateNow() - 1; // 1 day ago (lower)
 
     // Seed a local head with a newer timestamp
@@ -39,7 +44,12 @@ describe('InMemoryHeadRegistry — LWW merge', () => {
     expect(registry.getHead('db', 'col')).toBe('block-local');
 
     // Remote update with an older timestamp should be rejected
-    const applied = await registry.mergeHeadUpdate('db', 'col', 'block-remote', remoteTs);
+    const applied = await registry.mergeHeadUpdate(
+      'db',
+      'col',
+      'block-remote',
+      remoteTs,
+    );
     expect(applied).toBe(false);
     expect(registry.getHead('db', 'col')).toBe('block-local');
     expect(registry.getHeadTimestamp('db', 'col')).toBe(localTs);
@@ -53,7 +63,12 @@ describe('InMemoryHeadRegistry — LWW merge', () => {
     expect(registry.getHead('db', 'col')).toBe('block-local');
 
     // Remote update with the same timestamp should be rejected (local wins)
-    const applied = await registry.mergeHeadUpdate('db', 'col', 'block-remote', ts);
+    const applied = await registry.mergeHeadUpdate(
+      'db',
+      'col',
+      'block-remote',
+      ts,
+    );
     expect(applied).toBe(false);
     expect(registry.getHead('db', 'col')).toBe('block-local');
   });
@@ -61,7 +76,12 @@ describe('InMemoryHeadRegistry — LWW merge', () => {
   it('applies a remote update when no local head exists', async () => {
     const ts: BrightDateTimestamp = brightDateNow();
 
-    const applied = await registry.mergeHeadUpdate('db', 'col', 'block-first', ts);
+    const applied = await registry.mergeHeadUpdate(
+      'db',
+      'col',
+      'block-first',
+      ts,
+    );
     expect(applied).toBe(true);
     expect(registry.getHead('db', 'col')).toBe('block-first');
     expect(registry.getHeadTimestamp('db', 'col')).toBe(ts);

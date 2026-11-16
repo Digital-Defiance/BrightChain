@@ -1,5 +1,5 @@
-import { IRoleDTO, IRoleFrontendObject } from '@digitaldefiance/suite-core-lib';
 import type { BrightDateTimestamp } from '@brightchain/brightchain-lib';
+import { IRoleDTO, IRoleFrontendObject } from '@digitaldefiance/suite-core-lib';
 import type { DefaultBackendIdType } from '../types/backend-id';
 import { IRoleBackendObject } from './backend-objects/role';
 

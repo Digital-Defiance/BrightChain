@@ -21,7 +21,9 @@ function createMockDeps(
     calls: 0,
     executePendingDeletions: jest.fn(async () => {
       mock.calls++;
-      return result ?? { vaultsDestroyed: 0, certificatesGenerated: 0, failures: 0 };
+      return (
+        result ?? { vaultsDestroyed: 0, certificatesGenerated: 0, failures: 0 }
+      );
     }),
   };
   return mock;

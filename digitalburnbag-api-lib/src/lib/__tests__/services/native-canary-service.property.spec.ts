@@ -10,12 +10,12 @@ import type {
 } from '@brightchain/digitalburnbag-lib';
 import { HeartbeatSignalType } from '@brightchain/digitalburnbag-lib';
 import * as fc from 'fast-check';
+import type { BrightDBNativeCanaryConfigRepository } from '../../collections/native-canary-config-collection';
+import type { IEncryptionService } from '../../services/credential-service';
 import {
   InMemoryPlatformEventStore,
   NativeCanaryService,
 } from '../../services/native-canary-service';
-import type { BrightDBNativeCanaryConfigRepository } from '../../collections/native-canary-config-collection';
-import type { IEncryptionService } from '../../services/credential-service';
 
 // ---------------------------------------------------------------------------
 // Arbitraries
@@ -44,8 +44,9 @@ const CANARY_TYPE_TO_EVENT_TYPE: Record<
 };
 
 /** Arbitrary for a threshold-based native canary type. */
-const arbThresholdCanaryType: fc.Arbitrary<NativeCanaryType> =
-  fc.constantFrom(...THRESHOLD_CANARY_TYPES);
+const arbThresholdCanaryType: fc.Arbitrary<NativeCanaryType> = fc.constantFrom(
+  ...THRESHOLD_CANARY_TYPES,
+);
 
 /** Arbitrary for a positive threshold (1–50). */
 const arbThreshold: fc.Arbitrary<number> = fc.integer({ min: 1, max: 50 });

@@ -7,10 +7,7 @@
  * @see Requirements 4.1, 4.8, 15.1
  */
 
-import {
-  EventTransparency,
-  EventVisibility,
-} from '@brightchain/brightcal-lib';
+import { EventTransparency, EventVisibility } from '@brightchain/brightcal-lib';
 import {
   initializeBrightChain,
   MemoryBlockStore,
@@ -30,7 +27,7 @@ import {
   createCalendarEventModel,
   type IStoredCalendarEvent,
   type ITypedCalendarEvent,
-} from '../calendarEvent.model.ts';
+} from '../calendarEvent.model.js';
 
 // ─── Setup ───────────────────────────────────────────────────────────────────
 
@@ -44,8 +41,7 @@ beforeAll(() => {
 function makeDb(name = 'testdb'): BrightDb {
   const store = new MemoryBlockStore(validBlockSizes);
   const registry = InMemoryHeadRegistry.createIsolated();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return new BrightDb(store as any, { name, headRegistry: registry });
+  return new BrightDb(store, { name, headRegistry: registry });
 }
 
 const NOW = new Date('2025-06-15T10:00:00.000Z');

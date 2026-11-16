@@ -15,13 +15,13 @@ import {
 } from '@brightchain/brightchain-lib';
 import { ChecksumTransform } from '@digitaldefiance/node-ecies-lib';
 import {
-  ReadStream,
-  WriteStream,
   createReadStream,
   createWriteStream,
   existsSync,
   readFileSync,
+  ReadStream,
   statSync,
+  WriteStream,
 } from 'fs';
 import { Readable } from 'stream';
 

@@ -132,8 +132,7 @@ describe('TempUploadController Integration', () => {
       const stagingService = new StagingService(config, deps);
       await stagingService.initialize();
 
-      const { vaultContainerService, uploadService, calls } =
-        createMockVaultServices();
+      const { uploadService, calls } = createMockVaultServices();
 
       // 1. Stage a file
       const fileContent = Buffer.from('Hello, BrightChain!');
@@ -183,7 +182,7 @@ describe('TempUploadController Integration', () => {
 
       // Finalize
       const fileMetadata = await uploadService.finalize(session.id);
-      expect(fileMetadata.fileId ?? fileMetadata.id).toBeTruthy();
+      expect(fileMetadata.id).toBeTruthy();
       expect(fileMetadata.vaultContainerId).toBeTruthy();
 
       // Remove staged file after successful commit

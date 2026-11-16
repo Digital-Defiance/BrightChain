@@ -12,6 +12,7 @@ import {
   IGpgKeyMetadata,
   IKeyStoreEntry,
   ISmimeCertificateMetadata,
+  isoToBrightDate,
   MessageEncryptionScheme,
 } from '@brightchain/brightchain-lib';
 import { IApiMessageResponse } from '@digitaldefiance/node-express-suite';
@@ -69,12 +70,25 @@ interface KeyStoreControllerHandlers {
   };
 }
 
+/** Fields KeyStoreController adds to its message responses. */
+interface IKeyStoreResponseBody extends IApiMessageResponse {
+  privateMaterial?: string;
+  publicKeyArmored?: string;
+  type?: string;
+  metadata?: ISmimeCertificateMetadata;
+  email?: string;
+  hasGpgKey?: boolean;
+  hasSmimeCert?: boolean;
+  isInternal?: boolean;
+  preference?: { userId: string; scheme: MessageEncryptionScheme } | null;
+}
+
 // ─── Mock Data ───────────────────────────────────────────────────────────────
 
 const mockGpgMetadata: IGpgKeyMetadata = {
   keyId: 'ABCD1234EFGH5678',
   fingerprint: 'ABCD1234EFGH5678ABCD1234EFGH5678ABCD1234',
-  createdAt: new Date('2025-01-01T00:00:00Z'),
+  createdAt: isoToBrightDate('2025-01-01T00:00:00Z'),
   expiresAt: null,
   userId: 'Test User <test@example.com>',
   algorithm: 'rsa4096',
@@ -90,16 +104,16 @@ const mockGpgEntry: IKeyStoreEntry<string> = {
   privateMaterial:
     '-----BEGIN PGP PRIVATE KEY BLOCK-----\nmock\n-----END PGP PRIVATE KEY BLOCK-----',
   metadata: mockGpgMetadata,
-  createdAt: new Date('2025-01-01T00:00:00Z'),
-  updatedAt: new Date('2025-01-01T00:00:00Z'),
+  createdAt: isoToBrightDate('2025-01-01T00:00:00Z'),
+  updatedAt: isoToBrightDate('2025-01-01T00:00:00Z'),
 };
 
 const mockSmimeMetadata: ISmimeCertificateMetadata = {
   subject: 'CN=Test User, O=Example Corp',
   issuer: 'CN=Example CA',
   serialNumber: '01AB',
-  validFrom: new Date('2025-01-01T00:00:00Z'),
-  validTo: new Date('2026-01-01T00:00:00Z'),
+  validFrom: isoToBrightDate('2025-01-01T00:00:00Z'),
+  validTo: isoToBrightDate('2026-01-01T00:00:00Z'),
   emailAddresses: ['test@example.com'],
   fingerprint: 'aabbccdd',
   isExpired: false,
@@ -113,8 +127,8 @@ const mockSmimeEntry: IKeyStoreEntry<string> = {
   publicMaterial:
     '-----BEGIN CERTIFICATE-----\nmock\n-----END CERTIFICATE-----',
   metadata: mockSmimeMetadata,
-  createdAt: new Date('2025-01-01T00:00:00Z'),
-  updatedAt: new Date('2025-01-01T00:00:00Z'),
+  createdAt: isoToBrightDate('2025-01-01T00:00:00Z'),
+  updatedAt: isoToBrightDate('2025-01-01T00:00:00Z'),
 };
 
 // ─── Mock Factories ──────────────────────────────────────────────────────────
@@ -126,19 +140,28 @@ function createMockKeyStore() {
       ...mockGpgEntry,
       type: 'gpg_public' as const,
     })),
-    getGpgKeyPair: jest.fn(async () => mockGpgEntry),
+    getGpgKeyPair: jest.fn(
+      async (): Promise<IKeyStoreEntry<string> | null> => mockGpgEntry,
+    ),
     getGpgPublicKey: jest.fn(async () => null),
     deleteGpgKeyPair: jest.fn(async () => undefined),
     storeSmimeCertificate: jest.fn(async () => mockSmimeEntry),
     storeSmimeContactCert: jest.fn(async () => mockSmimeEntry),
-    getSmimeCertificate: jest.fn(async () => mockSmimeEntry),
+    getSmimeCertificate: jest.fn(
+      async (): Promise<IKeyStoreEntry<string> | null> => mockSmimeEntry,
+    ),
     getSmimeContactCert: jest.fn(async () => null),
     deleteSmimeCertificate: jest.fn(async () => undefined),
     setEncryptionPreference: jest.fn(async () => undefined),
-    getEncryptionPreference: jest.fn(async () => ({
-      userId: 'user-1',
-      scheme: MessageEncryptionScheme.GPG,
-    })),
+    getEncryptionPreference: jest.fn(
+      async (): Promise<{
+        userId: string;
+        scheme: MessageEncryptionScheme;
+      } | null> => ({
+        userId: 'user-1',
+        scheme: MessageEncryptionScheme.GPG,
+      }),
+    ),
     getKeysForEmail: jest.fn(async () => [mockGpgEntry, mockSmimeEntry]),
   };
 }
@@ -265,8 +288,8 @@ describe('KeyStoreController', () => {
       );
 
       expect(result.statusCode).toBe(201);
-      const body = result.response as Record<string, unknown>;
-      expect(body['privateMaterial']).toBeUndefined();
+      const body = result.response as IKeyStoreResponseBody;
+      expect(body.privateMaterial).toBeUndefined();
     });
   });
 
@@ -305,8 +328,8 @@ describe('KeyStoreController', () => {
       const result = await handlers.exportGpgPublicKey(authReq());
 
       expect(result.statusCode).toBe(200);
-      const body = result.response as Record<string, unknown>;
-      expect(body['publicKeyArmored']).toBe(mockGpgEntry.publicMaterial);
+      const body = result.response as IKeyStoreResponseBody;
+      expect(body.publicKeyArmored).toBe(mockGpgEntry.publicMaterial);
     });
 
     it('returns 404 when no keypair exists', async () => {
@@ -426,9 +449,9 @@ describe('KeyStoreController', () => {
       const result = await handlers.getSmimeCertificate(authReq());
 
       expect(result.statusCode).toBe(200);
-      const body = result.response as Record<string, unknown>;
-      expect(body['type']).toBe('smime_bundle');
-      expect(body['metadata']).toEqual(mockSmimeMetadata);
+      const body = result.response as IKeyStoreResponseBody;
+      expect(body.type).toBe('smime_bundle');
+      expect(body.metadata).toEqual(mockSmimeMetadata);
     });
 
     it('returns 404 when no certificate exists', async () => {
@@ -463,11 +486,11 @@ describe('KeyStoreController', () => {
       );
 
       expect(result.statusCode).toBe(200);
-      const body = result.response as Record<string, unknown>;
-      expect(body['email']).toBe('test@example.com');
-      expect(body['hasGpgKey']).toBe(true);
-      expect(body['hasSmimeCert']).toBe(true);
-      expect(body['isInternal']).toBe(true);
+      const body = result.response as IKeyStoreResponseBody;
+      expect(body.email).toBe('test@example.com');
+      expect(body.hasGpgKey).toBe(true);
+      expect(body.hasSmimeCert).toBe(true);
+      expect(body.isInternal).toBe(true);
     });
 
     it('returns false availability when no keys found', async () => {
@@ -478,10 +501,10 @@ describe('KeyStoreController', () => {
       );
 
       expect(result.statusCode).toBe(200);
-      const body = result.response as Record<string, unknown>;
-      expect(body['hasGpgKey']).toBe(false);
-      expect(body['hasSmimeCert']).toBe(false);
-      expect(body['isInternal']).toBe(false);
+      const body = result.response as IKeyStoreResponseBody;
+      expect(body.hasGpgKey).toBe(false);
+      expect(body.hasSmimeCert).toBe(false);
+      expect(body.isInternal).toBe(false);
     });
 
     it('returns validation error when email param is missing', async () => {
@@ -531,8 +554,9 @@ describe('KeyStoreController', () => {
       );
 
       expect(result.statusCode).toBe(400);
-      const body = result.response as Record<string, unknown>;
-      expect(JSON.stringify(body)).toContain('Invalid encryption scheme');
+      expect(JSON.stringify(result.response)).toContain(
+        'Invalid encryption scheme',
+      );
     });
 
     it('returns validation error when scheme is missing', async () => {
@@ -549,8 +573,8 @@ describe('KeyStoreController', () => {
       const result = await handlers.getPreference(authReq());
 
       expect(result.statusCode).toBe(200);
-      const body = result.response as Record<string, unknown>;
-      expect(body['preference']).toEqual({
+      const body = result.response as IKeyStoreResponseBody;
+      expect(body.preference).toEqual({
         userId: 'user-1',
         scheme: MessageEncryptionScheme.GPG,
       });
@@ -562,8 +586,8 @@ describe('KeyStoreController', () => {
       const result = await handlers.getPreference(authReq());
 
       expect(result.statusCode).toBe(200);
-      const body = result.response as Record<string, unknown>;
-      expect(body['preference']).toBeNull();
+      const body = result.response as IKeyStoreResponseBody;
+      expect(body.preference).toBeNull();
     });
 
     it('passes contactEmail query param', async () => {

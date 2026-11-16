@@ -12,7 +12,8 @@
     "src/**/*.spec.ts",
     "src/**/*.mock.ts",
     "src/**/*.d.ts",
-    "src/**/*.ts"
+    "src/**/*.ts",
+    "jest.conformance.config.ts"
   ],
   "files": ["src/test-setup.ts"]
 }

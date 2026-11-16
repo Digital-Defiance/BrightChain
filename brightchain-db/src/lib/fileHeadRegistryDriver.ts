@@ -60,7 +60,7 @@ export class FileHeadRegistryDriver implements IHeadRegistryDriver {
    *     resulting `%HH` escapes are rewritten to `_pc_<lowercase hh>`.
    */
   private encodeSegment(segment: string): string {
-    return segment.replace(/[^a-z0-9.\-]/g, (c) => {
+    return segment.replace(/[^a-z0-9.-]/g, (c) => {
       const code = c.charCodeAt(0);
       if (code < 128) {
         return '_pc_' + code.toString(16).padStart(2, '0');

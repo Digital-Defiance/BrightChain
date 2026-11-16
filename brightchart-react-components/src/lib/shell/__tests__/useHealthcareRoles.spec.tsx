@@ -19,7 +19,7 @@ import {
 } from '@brightchain/brightchart-lib';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import * as React from 'react';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter } from 'react-router';
 import { RoleSwitcher } from '../components/Header/RoleSwitcher';
 import {
   ActiveContextProvider,

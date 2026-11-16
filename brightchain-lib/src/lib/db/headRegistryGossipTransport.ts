@@ -167,7 +167,10 @@ export class HeadRegistryGossipTransport implements IHeadRegistry {
     return this.inner.getAllHeads();
   }
 
-  getHeadTimestamp(dbName: string, collectionName: string): BrightDateTimestamp | undefined {
+  getHeadTimestamp(
+    dbName: string,
+    collectionName: string,
+  ): BrightDateTimestamp | undefined {
     return this.inner.getHeadTimestamp(dbName, collectionName);
   }
 

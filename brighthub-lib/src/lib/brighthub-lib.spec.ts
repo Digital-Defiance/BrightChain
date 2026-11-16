@@ -1,16 +1,16 @@
 import * as fc from 'fast-check';
 import sanitizeHtml from 'sanitize-html';
 import {
-  FontAwesomeIconNames,
-  FontAwesomeIconStyleStrings,
-} from './font-awesome/font-awesome';
-import {
   getCharacterCount,
   parseBioContent,
   parseMarkdown,
   parsePostContent,
   prepareContentForCharacterCount,
 } from './brighthub-lib';
+import {
+  FontAwesomeIconNames,
+  FontAwesomeIconStyleStrings,
+} from './font-awesome/font-awesome';
 
 describe('BrightHub lib', () => {
   describe('parseMarkdown', () => {
@@ -486,7 +486,10 @@ note. <a href="${currentUrl}#fnref-doc-1" class="footnote-backref">↩︎</a></p
     // 6. Inline image throws
     it('should throw an error for inline image markdown ![alt](url)', () => {
       expect(() =>
-        parseBioContent('Look at this ![cat](https://example.com/cat.png)', MAX_LENGTH),
+        parseBioContent(
+          'Look at this ![cat](https://example.com/cat.png)',
+          MAX_LENGTH,
+        ),
       ).toThrow();
     });
 
@@ -500,7 +503,9 @@ note. <a href="${currentUrl}#fnref-doc-1" class="footnote-backref">↩︎</a></p
     // 8. Bio exceeding maxLength throws
     it('should throw a validation error when bio exceeds maxLength', () => {
       const longBio = 'a'.repeat(101);
-      expect(() => parseBioContent(longBio, 100)).toThrow('bio_exceeds_max_length');
+      expect(() => parseBioContent(longBio, 100)).toThrow(
+        'bio_exceeds_max_length',
+      );
     });
 
     // 9. Bio at exactly maxLength is accepted
@@ -530,7 +535,9 @@ describe('parseBioContent — property-based tests', () => {
       fc.property(
         fc.string({
           unit: fc.constantFrom(
-            ...'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 '.split(''),
+            ...'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 '.split(
+              '',
+            ),
           ),
           minLength: 0,
           maxLength: 5000,
@@ -563,9 +570,15 @@ describe('parseBioContent — property-based tests', () => {
     // Generate random alphanumeric strings with optional markdown formatting.
     // No images, no raw HTML — only bold, italic, links.
     const alphanumChar = fc.constantFrom(
-      ...'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'.split(''),
+      ...'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'.split(
+        '',
+      ),
     );
-    const wordArb = fc.string({ unit: alphanumChar, minLength: 1, maxLength: 15 });
+    const wordArb = fc.string({
+      unit: alphanumChar,
+      minLength: 1,
+      maxLength: 15,
+    });
 
     // Arbitrary that produces a plain word, bold word, italic word, or link
     const segmentArb = fc.oneof(
@@ -615,18 +628,35 @@ describe('parseBioContent — property-based tests', () => {
   // Validates: Requirements 2.3
   it('Property 3: none of the injected raw HTML tags survive in parseBioContent output', () => {
     // Tags to inject — these should all be stripped by Phase 1 sanitization
-    const injectedTags = ['script', 'div', 'span', 'b', 'iframe', 'style', 'object'];
+    const injectedTags = [
+      'script',
+      'div',
+      'span',
+      'b',
+      'iframe',
+      'style',
+      'object',
+    ];
 
     const alphanumChar = fc.constantFrom(
-      ...'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 '.split(''),
+      ...'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 '.split(
+        '',
+      ),
     );
-    const textArb = fc.string({ unit: alphanumChar, minLength: 0, maxLength: 100 });
+    const textArb = fc.string({
+      unit: alphanumChar,
+      minLength: 0,
+      maxLength: 100,
+    });
     const tagArb = fc.constantFrom(...injectedTags);
 
     // Build a bio with an injected HTML tag somewhere in it
     const bioWithTagArb = fc
       .tuple(textArb, tagArb, textArb, textArb)
-      .map(([before, tag, inner, after]) => `${before}<${tag}>${inner}</${tag}>${after}`);
+      .map(
+        ([before, tag, inner, after]) =>
+          `${before}<${tag}>${inner}</${tag}>${after}`,
+      );
 
     fc.assert(
       fc.property(bioWithTagArb, (bio) => {
@@ -650,18 +680,34 @@ describe('parseBioContent — property-based tests', () => {
   // Validates: Requirements 2.5
   it('Property 4: parseBioContent always throws for any input containing image markdown', () => {
     const alphanumChar = fc.constantFrom(
-      ...'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 '.split(''),
+      ...'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 '.split(
+        '',
+      ),
     );
-    const textArb = fc.string({ unit: alphanumChar, minLength: 0, maxLength: 100 });
-    const altArb = fc.string({ unit: alphanumChar, minLength: 0, maxLength: 30 });
+    const textArb = fc.string({
+      unit: alphanumChar,
+      minLength: 0,
+      maxLength: 100,
+    });
+    const altArb = fc.string({
+      unit: alphanumChar,
+      minLength: 0,
+      maxLength: 30,
+    });
     const urlArb = fc
       .string({
-        unit: fc.constantFrom(...'abcdefghijklmnopqrstuvwxyz0123456789'.split('')),
+        unit: fc.constantFrom(
+          ...'abcdefghijklmnopqrstuvwxyz0123456789'.split(''),
+        ),
         minLength: 1,
         maxLength: 30,
       })
       .map((s) => `https://${s}.example.com`);
-    const refArb = fc.string({ unit: alphanumChar, minLength: 1, maxLength: 20 });
+    const refArb = fc.string({
+      unit: alphanumChar,
+      minLength: 1,
+      maxLength: 20,
+    });
 
     // Either inline image ![alt](url) or reference image ![alt][ref]
     const imageMarkdownArb = fc.oneof(
@@ -686,9 +732,15 @@ describe('parseBioContent — property-based tests', () => {
   // Validates: Requirements 2.1, 2.2
   it('Property 5: parseBioContent output contains <i> with correct fa- classes for valid icon markup', () => {
     const alphanumChar = fc.constantFrom(
-      ...'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 '.split(''),
+      ...'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 '.split(
+        '',
+      ),
     );
-    const textArb = fc.string({ unit: alphanumChar, minLength: 0, maxLength: 50 });
+    const textArb = fc.string({
+      unit: alphanumChar,
+      minLength: 0,
+      maxLength: 50,
+    });
 
     // Pick a random valid icon name and a random valid style string
     const iconNameArb = fc.constantFrom(...FontAwesomeIconNames);
@@ -696,7 +748,10 @@ describe('parseBioContent — property-based tests', () => {
 
     const bioWithIconArb = fc
       .tuple(textArb, iconStyleArb, iconNameArb, textArb)
-      .map(([before, style, name, after]) => `${before} {{ ${style} ${name} }} ${after}`);
+      .map(
+        ([before, style, name, after]) =>
+          `${before} {{ ${style} ${name} }} ${after}`,
+      );
 
     fc.assert(
       fc.property(bioWithIconArb, (bio) => {

@@ -10,6 +10,7 @@
  *   BRIGHTDB_V2_UPDATE_FIXTURES=1 yarn jest -c brightchain-db/jest.config.ts \
  *     brightchain-db/src/lib/v2/fixtures.spec.ts
  */
+import { readFileSync } from 'node:fs';
 import {
   mkdir,
   mkdtemp,
@@ -20,6 +21,8 @@ import {
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, relative, resolve } from 'node:path';
+import { matchesFilter } from '../queryEngine';
+import { writeAttachment } from './attachments';
 import {
   decodeMetadata,
   digestPayload,
@@ -32,8 +35,8 @@ import {
   type V2Version,
 } from './codec';
 import { BrightDbV2DiskStore } from './disk-store';
+import { BrightDbV2AesCipher } from './encryption';
 import {
-  decodeIndexId,
   encodeIndexValue,
   extractIndexKeys,
   indexRange,
@@ -41,9 +44,6 @@ import {
   type IndexScalar,
 } from './index-key';
 import { V2IndexTree } from './index-tree';
-import { BrightDbV2AesCipher } from './encryption';
-import { matchesFilter } from '../queryEngine';
-import { writeAttachment } from './attachments';
 import { copyDatabase } from './merge';
 import { PortableBrightDb } from './portable-database';
 import { V2Tree, type V2TreeBlockStore } from './tree';
@@ -58,13 +58,15 @@ const UPDATE = process.env['BRIGHTDB_V2_UPDATE_FIXTURES'] === '1';
 const WRITER_ID = '000102030405060708090a0b0c0d0e0f';
 const DATABASE_ID = '101112131415161718191a1b1c1d1e1f';
 
-type Json =
-  | null
-  | boolean
-  | number
-  | string
-  | Json[]
-  | { [key: string]: Json };
+type Json = null | boolean | number | string | Json[] | { [key: string]: Json };
+
+/** A query plus its result ids as plain JSON (IndexQuery has optional and readonly members, which Json does not accept). */
+function queryResult(
+  q: { collection: string; index: string; query: IndexQuery },
+  ids: string[],
+): Json {
+  return { ...q, query: JSON.parse(JSON.stringify(q.query)), ids };
+}
 
 function version(counter: bigint, writerId = WRITER_ID): V2Version {
   return { counter, writerId };
@@ -118,7 +120,10 @@ function jsonMetadata(block: V2Metadata): Json {
         })),
       };
     case 'index-leaf':
-      return { kind: block.kind, entries: block.entries.map((e) => e.toString('hex')) };
+      return {
+        kind: block.kind,
+        entries: block.entries.map((e) => e.toString('hex')),
+      };
     case 'index-branch':
       return {
         kind: block.kind,
@@ -130,7 +135,12 @@ function jsonMetadata(block: V2Metadata): Json {
         })),
       };
     case 'blob':
-      return { kind: block.kind, size: block.size.toString(), depth: block.depth, entries: [...block.entries] };
+      return {
+        kind: block.kind,
+        size: block.size.toString(),
+        depth: block.depth,
+        entries: [...block.entries],
+      };
     default:
       return { kind: block.kind, records: block.records.map(jsonRecord) };
   }
@@ -219,7 +229,7 @@ async function treeVector(
 }
 
 function appendixVectors(): Map<string, { payload: string; digest: string }> {
-  const text = require('node:fs').readFileSync(SPEC_PATH, 'utf8') as string;
+  const text = readFileSync(SPEC_PATH, 'utf8');
   const block = text
     .split('## Appendix A. Encoding vectors')[1]
     .split('```text')[1]
@@ -255,7 +265,10 @@ async function buildVectors(): Promise<Json> {
     }
     blocks.push({
       name,
-      type: name === 'document' || name.startsWith('json-') ? 'document' : 'metadata',
+      type:
+        name === 'document' || name.startsWith('json-')
+          ? 'document'
+          : 'metadata',
       input,
       ...(decoded === undefined ? {} : { decoded }),
       payload: bytes.toString('hex'),
@@ -274,7 +287,11 @@ async function buildVectors(): Promise<Json> {
   const primary: V2Metadata = {
     kind: 'primary',
     records: [
-      { key: deadKey, version: version(documentVersion.counter - 1n), target: null },
+      {
+        key: deadKey,
+        version: version(documentVersion.counter - 1n),
+        target: null,
+      },
       { key: liveKey, version: documentVersion, target: documentDigest },
     ],
   };
@@ -287,7 +304,7 @@ async function buildVectors(): Promise<Json> {
     kind: 'collection',
     generation,
     primary: primaryDigest,
-      indexes: null,
+    indexes: null,
   };
   const collectionDigest = addBlock(
     'collection',
@@ -324,10 +341,22 @@ async function buildVectors(): Promise<Json> {
   // Canonical JSON cases beyond the appendix. Inputs are given as the JSON
   // text an application would supply; `payload` is the RFC 8785 output.
   const canonicalCases: Array<[string, string]> = [
-    ['json-key-order', '{"z":1,"_id":"k","a":2,"\\u00e9":3,"\\ud83d\\ude00":4,"\\ue000":5}'],
-    ['json-numbers', '{"_id":"n","a":4.5e-7,"b":1e-7,"c":-0,"d":0.1,"e":9007199254740991,"f":-9007199254740991,"g":123.456,"h":5e-324}'],
-    ['json-strings', '{"_id":"s","t":"tab\\tline\\nquote\\"slash\\\\ctl\\u0001 del\\u007f"}'],
-    ['json-nested', '{"_id":"x","list":[true,false,null,{"b":[],"a":{}}],"obj":{"y":"2","x":"1"}}'],
+    [
+      'json-key-order',
+      '{"z":1,"_id":"k","a":2,"\\u00e9":3,"\\ud83d\\ude00":4,"\\ue000":5}',
+    ],
+    [
+      'json-numbers',
+      '{"_id":"n","a":4.5e-7,"b":1e-7,"c":-0,"d":0.1,"e":9007199254740991,"f":-9007199254740991,"g":123.456,"h":5e-324}',
+    ],
+    [
+      'json-strings',
+      '{"_id":"s","t":"tab\\tline\\nquote\\"slash\\\\ctl\\u0001 del\\u007f"}',
+    ],
+    [
+      'json-nested',
+      '{"_id":"x","list":[true,false,null,{"b":[],"a":{}}],"obj":{"y":"2","x":"1"}}',
+    ],
   ];
   for (const [name, text] of canonicalCases) {
     const input = JSON.parse(text) as { [key: string]: Json };
@@ -349,7 +378,6 @@ async function buildVectors(): Promise<Json> {
     rejected.push({ name, json: text });
   }
 
-
   // ---- index and attachment blocks ------------------------------------------
   const indexLeafKeys = [
     ...extractIndexKeys({ city: 'Oslo', age: 30 }, ['city', 'age'], 'u1'),
@@ -357,7 +385,11 @@ async function buildVectors(): Promise<Json> {
     ...extractIndexKeys({ city: 'Oslo', age: 25 }, ['city', 'age'], 'u3'),
   ].sort(Buffer.compare);
   const indexLeaf: V2Metadata = { kind: 'index-leaf', entries: indexLeafKeys };
-  const indexLeafDigest = addBlock('index-leaf', jsonMetadata(indexLeaf), encodeMetadata(indexLeaf));
+  const indexLeafDigest = addBlock(
+    'index-leaf',
+    jsonMetadata(indexLeaf),
+    encodeMetadata(indexLeaf),
+  );
   const indexSet: V2Metadata = {
     kind: 'indexes',
     definitions: [
@@ -374,15 +406,41 @@ async function buildVectors(): Promise<Json> {
       { nibble: 15, recordBytes: 100n, digest: '22'.repeat(64) },
     ],
   };
-  addBlock('index-branch', jsonMetadata(indexBranch), encodeMetadata(indexBranch));
-  const blob: V2Metadata = { kind: 'blob', size: 1_048_577n, depth: 0, entries: ['33'.repeat(64), '44'.repeat(64)] };
+  addBlock(
+    'index-branch',
+    jsonMetadata(indexBranch),
+    encodeMetadata(indexBranch),
+  );
+  const blob: V2Metadata = {
+    kind: 'blob',
+    size: 1_048_577n,
+    depth: 0,
+    entries: ['33'.repeat(64), '44'.repeat(64)],
+  };
   addBlock('blob', jsonMetadata(blob), encodeMetadata(blob));
-  const blobEmpty: V2Metadata = { kind: 'blob', size: 0n, depth: 0, entries: [] };
+  const blobEmpty: V2Metadata = {
+    kind: 'blob',
+    size: 0n,
+    depth: 0,
+    entries: [],
+  };
   addBlock('blob-empty', jsonMetadata(blobEmpty), encodeMetadata(blobEmpty));
   // A file just over one manifest's reach (63 chunks) needs a second level.
-  const blobDeep: V2Metadata = { kind: 'blob', size: 63n * 1_048_576n + 1n, depth: 1, entries: ['55'.repeat(64), '66'.repeat(64)] };
+  const blobDeep: V2Metadata = {
+    kind: 'blob',
+    size: 63n * 1_048_576n + 1n,
+    depth: 1,
+    entries: ['55'.repeat(64), '66'.repeat(64)],
+  };
   addBlock('blob-deep', jsonMetadata(blobDeep), encodeMetadata(blobDeep));
-  const blobFull: V2Metadata = { kind: 'blob', size: 63n * 1_048_576n, depth: 0, entries: Array.from({ length: 63 }, (_, i) => i.toString(16).padStart(2, '0').repeat(64)) };
+  const blobFull: V2Metadata = {
+    kind: 'blob',
+    size: 63n * 1_048_576n,
+    depth: 0,
+    entries: Array.from({ length: 63 }, (_, i) =>
+      i.toString(16).padStart(2, '0').repeat(64),
+    ),
+  };
   addBlock('blob-full', jsonMetadata(blobFull), encodeMetadata(blobFull));
   const collectionWithIndexes: V2Metadata = {
     kind: 'collection',
@@ -390,13 +448,29 @@ async function buildVectors(): Promise<Json> {
     primary: primaryDigest,
     indexes: digestPayload(encodeMetadata(indexSet)),
   };
-  addBlock('collection-indexed', jsonMetadata(collectionWithIndexes), encodeMetadata(collectionWithIndexes));
+  addBlock(
+    'collection-indexed',
+    jsonMetadata(collectionWithIndexes),
+    encodeMetadata(collectionWithIndexes),
+  );
 
   const valueCases: Array<[string, IndexScalar | undefined]> = [
-    ['absent', undefined], ['null', null], ['false', false], ['true', true],
-    ['number', -1.5e300], ['number', -2.5], ['number', 0], ['number', 7], ['number', 1e300],
+    ['absent', undefined],
+    ['null', null],
+    ['false', false],
+    ['true', true],
+    ['number', -1.5e300],
+    ['number', -2.5],
+    ['number', 0],
+    ['number', 7],
+    ['number', 1e300],
     ['number', 1_700_000_000_000],
-    ['string', ''], ['string', 'a'], ['string', 'a\u0000b'], ['string', 'ab'], ['string', 'é'], ['string', '\u{1F600}'],
+    ['string', ''],
+    ['string', 'a'],
+    ['string', 'a\u0000b'],
+    ['string', 'ab'],
+    ['string', 'é'],
+    ['string', '\u{1F600}'],
   ];
   const indexValues = valueCases.map(([type, value]) => ({
     type,
@@ -405,14 +479,20 @@ async function buildVectors(): Promise<Json> {
   }));
   const keyCases: Array<{ document: Json; fields: string[]; id: string }> = [
     { document: { city: 'Oslo', age: 30 }, fields: ['city', 'age'], id: 'u1' },
-    { document: { tags: ['x', 'y', 'x'], n: 1 }, fields: ['tags', 'n'], id: 'd' },
+    {
+      document: { tags: ['x', 'y', 'x'], n: 1 },
+      fields: ['tags', 'n'],
+      id: 'd',
+    },
     { document: {}, fields: ['missing'], id: '\u{1F600}' },
     { document: { a: { b: 5 }, e: [] }, fields: ['a.b', 'e'], id: 'a\u0000b' },
     { document: { f: [true, null, 'z', 3] }, fields: ['f'], id: 'k' },
   ];
   const indexKeys = keyCases.map((c) => ({
     ...c,
-    keys: extractIndexKeys(c.document, c.fields, c.id).map((k) => k.toString('hex')).sort(),
+    keys: extractIndexKeys(c.document, c.fields, c.id)
+      .map((k) => k.toString('hex'))
+      .sort(),
   }));
   const rangeCases: Array<{ fieldCount: number; query: IndexQuery }> = [
     { fieldCount: 2, query: {} },
@@ -430,15 +510,30 @@ async function buildVectors(): Promise<Json> {
   ];
   const indexRanges = rangeCases.map((c) => {
     const { lo, hi } = indexRange(c.fieldCount, c.query);
-    return { ...c, query: c.query as unknown as Json, lo: lo.toString('hex'), hi: hi === null ? null : hi.toString('hex') };
+    return {
+      ...c,
+      query: c.query as unknown as Json,
+      lo: lo.toString('hex'),
+      hi: hi === null ? null : hi.toString('hex'),
+    };
   });
 
   const indexTrees: Json[] = [];
-  const indexTreeVector = async (name: string, description: string, keys: Buffer[]): Promise<Json> => {
+  const indexTreeVector = async (
+    name: string,
+    description: string,
+    keys: Buffer[],
+  ): Promise<Json> => {
     const memory = new MemoryBlocks();
     const tree = new V2IndexTree(memory);
     const root = await tree.apply(null, shuffled(keys, 0x1d3), []);
-    expect(await new V2IndexTree(new MemoryBlocks()).apply(null, shuffled(keys, 0x77), [])).toBe(root);
+    expect(
+      await new V2IndexTree(new MemoryBlocks()).apply(
+        null,
+        shuffled(keys, 0x77),
+        [],
+      ),
+    ).toBe(root);
     // Insert in two halves and delete a few extras to prove history independence.
     const half = Math.floor(keys.length / 2);
     const staged = new V2IndexTree(new MemoryBlocks());
@@ -447,7 +542,13 @@ async function buildVectors(): Promise<Json> {
     expect(rolling).toBe(root);
     const sorted = [...keys].sort(Buffer.compare);
     const pages = await reachablePages(memory, root as Digest);
-    expect(pages.some((page) => (page as { decoded: { kind: string } }).decoded.kind === 'index-branch')).toBe(true);
+    expect(
+      pages.some(
+        (page) =>
+          (page as { decoded: { kind: string } }).decoded.kind ===
+          'index-branch',
+      ),
+    ).toBe(true);
     return {
       name,
       description,
@@ -472,36 +573,53 @@ async function buildVectors(): Promise<Json> {
     await indexTreeVector(
       'index-compound-1500',
       'Compound index (number, string) over timestamps 1700000000000+i and "x"+(i%7) with ids d0..d1499.',
-      Array.from({ length: 1500 }, (_, i) =>
-        extractIndexKeys({ a: 1_700_000_000_000 + i, b: `x${i % 7}` }, ['a', 'b'], `d${i}`)[0],
+      Array.from(
+        { length: 1500 },
+        (_, i) =>
+          extractIndexKeys(
+            { a: 1_700_000_000_000 + i, b: `x${i % 7}` },
+            ['a', 'b'],
+            `d${i}`,
+          )[0],
       ),
     ),
   );
 
-
   // ---- encryption known answers ---------------------------------------------
   const encKey = Buffer.from(Array.from({ length: 32 }, (_, i) => i));
   const encCipher = new BrightDbV2AesCipher(encKey);
-  const encCases = ['', 'hello', 'a block of é\u{1F600} text'].map((text, index) => {
-    const plaintext = Buffer.from(text, 'utf8');
-    const digest = digestPayload(plaintext);
-    const nonce = Buffer.from(Array.from({ length: 12 }, (_, i) => index * 16 + i + 1));
-    return {
-      plaintext: plaintext.toString('hex'),
-      digest,
-      nonce: nonce.toString('hex'),
-      physicalName: encCipher.physicalName(digest),
-      sealed: encCipher.seal(digest, plaintext, nonce).toString('hex'),
-    };
-  });
+  const encCases = ['', 'hello', 'a block of é\u{1F600} text'].map(
+    (text, index) => {
+      const plaintext = Buffer.from(text, 'utf8');
+      const digest = digestPayload(plaintext);
+      const nonce = Buffer.from(
+        Array.from({ length: 12 }, (_, i) => index * 16 + i + 1),
+      );
+      return {
+        plaintext: plaintext.toString('hex'),
+        digest,
+        nonce: nonce.toString('hex'),
+        physicalName: encCipher.physicalName(digest),
+        sealed: encCipher.seal(digest, plaintext, nonce).toString('hex'),
+      };
+    },
+  );
   const headNonce = Buffer.from(Array.from({ length: 12 }, (_, i) => 0xa0 + i));
   const headDigest = digestPayload(Buffer.from('head'));
   // A key ring after one rotation: names are the same, new blocks use version 2, version 1 still opens.
   const ringName = Buffer.from(Array.from({ length: 32 }, (_, i) => 100 + i));
   const ringK1 = Buffer.from(Array.from({ length: 32 }, (_, i) => 150 + i));
   const ringK2 = Buffer.from(Array.from({ length: 32 }, (_, i) => 200 + i));
-  const ringOld = new BrightDbV2AesCipher({ nameSecret: ringName, dataKeys: { 1: ringK1 }, currentVersion: 1 });
-  const ringNew = new BrightDbV2AesCipher({ nameSecret: ringName, dataKeys: { 1: ringK1, 2: ringK2 }, currentVersion: 2 });
+  const ringOld = new BrightDbV2AesCipher({
+    nameSecret: ringName,
+    dataKeys: { 1: ringK1 },
+    currentVersion: 1,
+  });
+  const ringNew = new BrightDbV2AesCipher({
+    nameSecret: ringName,
+    dataKeys: { 1: ringK1, 2: ringK2 },
+    currentVersion: 2,
+  });
   const ringPlain = Buffer.from('ring block', 'utf8');
   const ringDigest = digestPayload(ringPlain);
   const ringNonce = Buffer.from(Array.from({ length: 12 }, (_, i) => 0x40 + i));
@@ -515,14 +633,23 @@ async function buildVectors(): Promise<Json> {
       digest: ringDigest,
       nonce: ringNonce.toString('hex'),
       physicalName: ringNew.physicalName(ringDigest),
-      sealedVersion1: ringOld.seal(ringDigest, ringPlain, ringNonce).toString('hex'),
-      sealedVersion2: ringNew.seal(ringDigest, ringPlain, ringNonce).toString('hex'),
-      sealedHeadVersion2: ringNew.sealHead(ringDigest, ringNonce).toString('hex'),
+      sealedVersion1: ringOld
+        .seal(ringDigest, ringPlain, ringNonce)
+        .toString('hex'),
+      sealedVersion2: ringNew
+        .seal(ringDigest, ringPlain, ringNonce)
+        .toString('hex'),
+      sealedHeadVersion2: ringNew
+        .sealHead(ringDigest, ringNonce)
+        .toString('hex'),
     },
     cases: encCases,
-    head: { digest: headDigest, nonce: headNonce.toString('hex'), sealed: encCipher.sealHead(headDigest, headNonce).toString('hex') },
+    head: {
+      digest: headDigest,
+      nonce: headNonce.toString('hex'),
+      sealed: encCipher.sealHead(headDigest, headNonce).toString('hex'),
+    },
   };
-
 
   // ---- manifest trees over zero-filled files ----------------------------------
   const MIB = 1_048_576;
@@ -530,15 +657,29 @@ async function buildVectors(): Promise<Json> {
   const zeroDigests = new Map<number, string>();
   const blobTrees: Json[] = [];
   const treeSizes = [
-    0, 1, MIB - 1, MIB, MIB + 1, 62 * MIB + 1, 63 * MIB, 63 * MIB + 1, 64 * MIB,
-    126 * MIB, 126 * MIB + 5, 63 * 63 * MIB, 63 * 63 * MIB + 1, 63 * 63 * MIB + 63 * MIB + 7,
+    0,
+    1,
+    MIB - 1,
+    MIB,
+    MIB + 1,
+    62 * MIB + 1,
+    63 * MIB,
+    63 * MIB + 1,
+    64 * MIB,
+    126 * MIB,
+    126 * MIB + 5,
+    63 * 63 * MIB,
+    63 * 63 * MIB + 1,
+    63 * 63 * MIB + 63 * MIB + 7,
   ];
   for (const size of treeSizes) {
     const manifests = new Map<string, V2Metadata>();
     const writer = {
       writeBlock: async (payload: Uint8Array) => {
         let digest: string;
-        if (Buffer.compare(payload, zeroBlock.subarray(0, payload.length)) === 0) {
+        if (
+          Buffer.compare(payload, zeroBlock.subarray(0, payload.length)) === 0
+        ) {
           const known = zeroDigests.get(payload.length);
           digest = known ?? digestPayload(payload);
           zeroDigests.set(payload.length, digest);
@@ -553,7 +694,8 @@ async function buildVectors(): Promise<Json> {
       publishHead: async () => undefined,
     };
     async function* zeros(): AsyncGenerator<Uint8Array> {
-      for (let left = size; left > 0; left -= 700_000) yield zeroBlock.subarray(0, Math.min(left, 700_000));
+      for (let left = size; left > 0; left -= 700_000)
+        yield zeroBlock.subarray(0, Math.min(left, 700_000));
     }
     const ref = await writeAttachment(writer, zeros());
     const root = manifests.get(ref.digest);
@@ -607,7 +749,7 @@ async function buildVectors(): Promise<Json> {
                 kind: 'collection',
                 generation: version(BigInt(index + 1)),
                 primary: null,
-      indexes: null,
+                indexes: null,
               }),
             ),
     });
@@ -656,9 +798,17 @@ async function buildBasicStore(path: string): Promise<Json> {
 
   await mark();
   await db.writeBatch([
-    { type: 'insert', collection: 'users', document: { _id: 'alice', age: 31 } },
+    {
+      type: 'insert',
+      collection: 'users',
+      document: { _id: 'alice', age: 31 },
+    },
     { type: 'insert', collection: 'users', document: { _id: 'bob', age: 27 } },
-    { type: 'insert', collection: 'notes', document: { _id: 'n1', text: 'first' } },
+    {
+      type: 'insert',
+      collection: 'notes',
+      document: { _id: 'n1', text: 'first' },
+    },
   ]);
   await mark();
   await db.collection('users').replaceById('bob', { _id: 'bob', age: 28 });
@@ -672,14 +822,20 @@ async function buildBasicStore(path: string): Promise<Json> {
   }));
   await db.collection('items').insertMany(items);
   await mark();
-  await db.writeBatch([
-    { type: 'dropCollection', collection: 'notes' },
-  ]);
+  await db.writeBatch([{ type: 'dropCollection', collection: 'notes' }]);
   await mark();
   await db.writeBatch([
-    { type: 'insert', collection: 'notes', document: { _id: 'n2', text: 'second generation' } },
+    {
+      type: 'insert',
+      collection: 'notes',
+      document: { _id: 'n2', text: 'second generation' },
+    },
     { type: 'delete', collection: 'items', id: 'item-0007' },
-    { type: 'insert', collection: 'unicode', document: { _id: '\u{1F600}', v: [1, 2.5, 'x'] } },
+    {
+      type: 'insert',
+      collection: 'unicode',
+      document: { _id: '\u{1F600}', v: [1, 2.5, 'x'] },
+    },
   ]);
   await mark();
 
@@ -714,7 +870,6 @@ async function buildBasicStore(path: string): Promise<Json> {
   };
 }
 
-
 /** The attachment bytes used by the `indexed` store; shared with the C++ tests. */
 function attachmentBytes(kind: 'small' | 'large'): Buffer {
   if (kind === 'small') return Buffer.from('hello attachment', 'utf8');
@@ -738,7 +893,12 @@ function person(index: number): Record<string, Json> {
 async function buildIndexedStore(path: string): Promise<Json> {
   await BrightDbV2DiskStore.create(
     path,
-    encodeMetadata({ kind: 'database', databaseId: DATABASE_ID, clock: 0n, catalog: null }),
+    encodeMetadata({
+      kind: 'database',
+      databaseId: DATABASE_ID,
+      clock: 0n,
+      catalog: null,
+    }),
     Buffer.from(WRITER_ID, 'hex'),
   );
   const db = await PortableBrightDb.open({ path });
@@ -749,20 +909,45 @@ async function buildIndexedStore(path: string): Promise<Json> {
 
   const first = Array.from({ length: 6 }, (_, i) => person(i));
   await db.writeBatch([
-    ...first.map((document) => ({ type: 'insert' as const, collection: 'people', document })),
-    { type: 'createIndex', collection: 'people', name: 'by_city_age', fields: ['city', 'age'] },
-    { type: 'createIndex', collection: 'people', name: 'by_tag', fields: ['tags'] },
-    { type: 'createIndex', collection: 'people', name: 'by_score', fields: ['profile.score'] },
+    ...first.map((document) => ({
+      type: 'insert' as const,
+      collection: 'people',
+      document,
+    })),
+    {
+      type: 'createIndex',
+      collection: 'people',
+      name: 'by_city_age',
+      fields: ['city', 'age'],
+    },
+    {
+      type: 'createIndex',
+      collection: 'people',
+      name: 'by_tag',
+      fields: ['tags'],
+    },
+    {
+      type: 'createIndex',
+      collection: 'people',
+      name: 'by_score',
+      fields: ['profile.score'],
+    },
   ]);
   await mark();
-  await db.collection('people').insertMany(Array.from({ length: 294 }, (_, i) => person(i + 6)));
+  await db
+    .collection('people')
+    .insertMany(Array.from({ length: 294 }, (_, i) => person(i + 6)));
   await mark();
-  await db.collection('people').replaceById('p0002', { ...person(2), city: 'Oslo', age: 99, tags: ['z'] });
+  await db
+    .collection('people')
+    .replaceById('p0002', { ...person(2), city: 'Oslo', age: 99, tags: ['z'] });
   await mark();
   await db.collection('people').deleteById('p0003');
   await mark();
 
-  const small = await db.putAttachment(attachmentBytes('small'), { type: 'text/plain' });
+  const small = await db.putAttachment(attachmentBytes('small'), {
+    type: 'text/plain',
+  });
   const large = await db.putAttachment(attachmentBytes('large'));
   await db.collection('files').insertOne({
     _id: 'with-files',
@@ -776,30 +961,62 @@ async function buildIndexedStore(path: string): Promise<Json> {
   await mark();
   await db.writeBatch([
     { type: 'dropCollection', collection: 'files' },
-    { type: 'insert', collection: 'files', document: { _id: 'after-drop', v: 1 } },
+    {
+      type: 'insert',
+      collection: 'files',
+      document: { _id: 'after-drop', v: 1 },
+    },
     { type: 'createIndex', collection: 'files', name: 'by_v', fields: ['v'] },
   ]);
   await mark();
 
-  const queries: Array<{ collection: string; index: string; query: IndexQuery }> = [
+  const queries: Array<{
+    collection: string;
+    index: string;
+    query: IndexQuery;
+  }> = [
     { collection: 'people', index: 'by_city_age', query: {} },
     { collection: 'people', index: 'by_city_age', query: { equals: ['Oslo'] } },
-    { collection: 'people', index: 'by_city_age', query: { equals: ['Oslo'], gte: 30, lt: 50 } },
-    { collection: 'people', index: 'by_city_age', query: { equals: ['Bergen'], gt: 40, descending: true } },
+    {
+      collection: 'people',
+      index: 'by_city_age',
+      query: { equals: ['Oslo'], gte: 30, lt: 50 },
+    },
+    {
+      collection: 'people',
+      index: 'by_city_age',
+      query: { equals: ['Bergen'], gt: 40, descending: true },
+    },
     { collection: 'people', index: 'by_city_age', query: { prefix: 'T' } },
-    { collection: 'people', index: 'by_city_age', query: { equals: ['Oslo'], lte: 40, limit: 5 } },
+    {
+      collection: 'people',
+      index: 'by_city_age',
+      query: { equals: ['Oslo'], lte: 40, limit: 5 },
+    },
     { collection: 'people', index: 'by_score', query: { gte: 90 } },
-    { collection: 'people', index: 'by_score', query: { gt: 10, lt: 14, descending: true } },
+    {
+      collection: 'people',
+      index: 'by_score',
+      query: { gt: 10, lt: 14, descending: true },
+    },
     { collection: 'files', index: 'by_v', query: { equals: [1] } },
   ];
-  const results = [];
+  const results: Json[] = [];
   for (const q of queries) {
-    const documents = await db.collection(q.collection).findByIndex(q.index, q.query);
-    results.push({ ...q, ids: documents.map((d) => d['_id']) });
+    const documents = await db
+      .collection(q.collection)
+      .findByIndex(q.index, q.query);
+    results.push(
+      queryResult(
+        q,
+        documents.map((d) => String(d['_id'])),
+      ),
+    );
   }
   const names = (await db.listCollections()).sort();
   const indexes: Record<string, Json> = {};
-  for (const name of names) indexes[name] = (await db.collection(name).listIndexes()) as Json;
+  for (const name of names)
+    indexes[name] = (await db.collection(name).listIndexes()) as Json;
   const collections: Record<string, Json> = {};
   for (const name of names) {
     const documents = await db.collection(name).find({}).toArray();
@@ -807,7 +1024,9 @@ async function buildIndexedStore(path: string): Promise<Json> {
       Buffer.compare(encodeKey(String(a['_id'])), encodeKey(String(b['_id']))),
     ) as Json;
   }
-  expect((await db.getAttachment(large)).equals(attachmentBytes('large'))).toBe(true);
+  expect((await db.getAttachment(large)).equals(attachmentBytes('large'))).toBe(
+    true,
+  );
   db.close();
 
   return {
@@ -822,29 +1041,50 @@ async function buildIndexedStore(path: string): Promise<Json> {
     head: heads[heads.length - 1],
     attachments: { small: { ...small }, large: { ...large } } as Json,
     indexes,
-    queries: results as Json,
+    queries: results,
     absent: { people: ['p0003'], files: ['with-files'] },
     collections,
   };
 }
-
 
 const WRITER_A = '0a0b0c0d0e0f10111213141516171819';
 const WRITER_B = '1a1b1c1d1e1f20212223242526272829';
 
 /** Two replicas with fixed writer IDs that diverge and merge; both runtimes must reach the same roots. */
 async function buildMergeManifest(scratch: string): Promise<Json> {
-  const empty = encodeMetadata({ kind: 'database', databaseId: DATABASE_ID, clock: 0n, catalog: null });
+  const empty = encodeMetadata({
+    kind: 'database',
+    databaseId: DATABASE_ID,
+    clock: 0n,
+    catalog: null,
+  });
   const pathA = join(scratch, 'merge-a');
   const pathB = join(scratch, 'merge-b');
   await BrightDbV2DiskStore.create(pathA, empty, Buffer.from(WRITER_A, 'hex'));
   const a = await PortableBrightDb.open({ path: pathA });
   await a.writeBatch([
-    { type: 'insert', collection: 'people', document: { _id: 'p1', city: 'Oslo', age: 30 } },
-    { type: 'insert', collection: 'people', document: { _id: 'p2', city: 'Bergen', age: 40 } },
-    { type: 'createIndex', collection: 'people', name: 'by_city', fields: ['city'] },
+    {
+      type: 'insert',
+      collection: 'people',
+      document: { _id: 'p1', city: 'Oslo', age: 30 },
+    },
+    {
+      type: 'insert',
+      collection: 'people',
+      document: { _id: 'p2', city: 'Bergen', age: 40 },
+    },
+    {
+      type: 'createIndex',
+      collection: 'people',
+      name: 'by_city',
+      fields: ['city'],
+    },
   ]);
-  const storeB = await BrightDbV2DiskStore.create(pathB, empty, Buffer.from(WRITER_B, 'hex'));
+  const storeB = await BrightDbV2DiskStore.create(
+    pathB,
+    empty,
+    Buffer.from(WRITER_B, 'hex'),
+  );
   const storeA = await BrightDbV2DiskStore.open(pathA);
   const head = await a.root();
   await storeB.withWriteLock(async (writer) => {
@@ -853,8 +1093,12 @@ async function buildMergeManifest(scratch: string): Promise<Json> {
   });
   const b = await PortableBrightDb.open({ path: pathB });
   await a.collection('people').insertOne({ _id: 'p3', city: 'Oslo', age: 20 });
-  await a.collection('people').replaceById('p2', { _id: 'p2', city: 'Oslo', age: 41 });
-  await b.collection('people').insertOne({ _id: 'p4', city: 'Bergen', age: 25 });
+  await a
+    .collection('people')
+    .replaceById('p2', { _id: 'p2', city: 'Oslo', age: 41 });
+  await b
+    .collection('people')
+    .insertOne({ _id: 'p4', city: 'Bergen', age: 25 });
   await b.collection('people').createIndex('by_age', ['age']);
   await b.collection('people').deleteById('p1');
   const rootA = await a.root();
@@ -877,7 +1121,6 @@ async function buildMergeManifest(scratch: string): Promise<Json> {
   };
 }
 
-
 const ENCRYPTION_KEY = Buffer.from(Array.from({ length: 32 }, (_, i) => i));
 
 /** The `encrypted` store: same operations as a plain store, written under a key. Nonces are random, so only logical content is compared. */
@@ -885,11 +1128,19 @@ async function buildEncryptedStore(path: string): Promise<Json> {
   const cipher = new BrightDbV2AesCipher(ENCRYPTION_KEY);
   await BrightDbV2DiskStore.create(
     path,
-    encodeMetadata({ kind: 'database', databaseId: DATABASE_ID, clock: 0n, catalog: null }),
+    encodeMetadata({
+      kind: 'database',
+      databaseId: DATABASE_ID,
+      clock: 0n,
+      catalog: null,
+    }),
     Buffer.from(WRITER_ID, 'hex'),
     cipher,
   );
-  const db = await PortableBrightDb.open({ path, encryption: { key: ENCRYPTION_KEY } });
+  const db = await PortableBrightDb.open({
+    path,
+    encryption: { key: ENCRYPTION_KEY },
+  });
   const store = await BrightDbV2DiskStore.open(path, cipher);
   const heads: string[] = [];
   const mark = async () => heads.push(await store.readHead());
@@ -898,29 +1149,55 @@ async function buildEncryptedStore(path: string): Promise<Json> {
     ...Array.from({ length: 40 }, (_, i) => ({
       type: 'insert' as const,
       collection: 'people',
-      document: { _id: `p${i.toString().padStart(3, '0')}`, city: CITIES[i % 4], age: 20 + (i % 30) },
+      document: {
+        _id: `p${i.toString().padStart(3, '0')}`,
+        city: CITIES[i % 4],
+        age: 20 + (i % 30),
+      },
     })),
-    { type: 'createIndex', collection: 'people', name: 'by_city_age', fields: ['city', 'age'] },
+    {
+      type: 'createIndex',
+      collection: 'people',
+      name: 'by_city_age',
+      fields: ['city', 'age'],
+    },
   ]);
   await mark();
-  const ref = await db.putAttachment(Buffer.from('hello attachment', 'utf8'), { type: 'text/plain' });
+  const ref = await db.putAttachment(Buffer.from('hello attachment', 'utf8'), {
+    type: 'text/plain',
+  });
   await db.collection('people').replaceById('p001', {
-    _id: 'p001', city: 'Oslo', age: 99, _files: { note: { ...ref } },
+    _id: 'p001',
+    city: 'Oslo',
+    age: 99,
+    _files: { note: { ...ref } },
   });
   await mark();
   await db.collection('people').deleteById('p002');
   await mark();
   const queries = [
     { collection: 'people', index: 'by_city_age', query: { equals: ['Oslo'] } },
-    { collection: 'people', index: 'by_city_age', query: { equals: ['Bergen'], gte: 25, lt: 35 } },
+    {
+      collection: 'people',
+      index: 'by_city_age',
+      query: { equals: ['Bergen'], gte: 25, lt: 35 },
+    },
   ] as Array<{ collection: string; index: string; query: IndexQuery }>;
-  const results = [];
+  const results: Json[] = [];
   for (const q of queries) {
-    const docs = await db.collection(q.collection).findByIndex(q.index, q.query);
-    results.push({ ...q, ids: docs.map((d) => d['_id']) });
+    const docs = await db
+      .collection(q.collection)
+      .findByIndex(q.index, q.query);
+    results.push(
+      queryResult(
+        q,
+        docs.map((d) => String(d['_id'])),
+      ),
+    );
   }
-  const documents = (await db.collection('people').find({}).toArray()).sort((a, b) =>
-    Buffer.compare(encodeKey(String(a['_id'])), encodeKey(String(b['_id']))),
+  const documents = (await db.collection('people').find({}).toArray()).sort(
+    (a, b) =>
+      Buffer.compare(encodeKey(String(a['_id'])), encodeKey(String(b['_id']))),
   );
   db.close();
   return {
@@ -933,26 +1210,47 @@ async function buildEncryptedStore(path: string): Promise<Json> {
     heads,
     head: heads[heads.length - 1],
     attachment: { ...ref } as Json,
-    queries: results as Json,
+    queries: results,
     documents: documents as Json,
   };
 }
 
-
 /** Documents and filters whose results both runtimes must agree on (see filter.hpp for the one string-ordering difference). */
 function buildFilterVectors(): Json {
-  const names = ['alice', 'bob', 'carol', 'dave', 'erin', 'frank', 'grace', 'heidi'];
-  const documents: Array<Record<string, Json>> = Array.from({ length: 24 }, (_, i) => ({
-    _id: `u${i.toString().padStart(2, '0')}`,
-    name: names[i % names.length],
-    age: 20 + ((i * 7) % 40),
-    active: i % 3 !== 0,
-    score: i % 5 === 0 ? null : (i * 1.5) % 17,
-    tags: i % 4 === 0 ? [] : i % 4 === 1 ? ['a'] : i % 4 === 2 ? ['a', 'b'] : ['b', 'c', 'd'],
-    address: { city: ['oslo', 'bergen', 'tromso'][i % 3], zip: 1000 + i },
-    items: [{ sku: `s${i % 3}`, qty: i % 4 }, { sku: `s${(i + 1) % 3}`, qty: (i + 2) % 4 }],
-    ...(i % 6 === 0 ? {} : { nickname: `n${i % 5}` }),
-  }));
+  const names = [
+    'alice',
+    'bob',
+    'carol',
+    'dave',
+    'erin',
+    'frank',
+    'grace',
+    'heidi',
+  ];
+  const documents: Array<Record<string, Json>> = Array.from(
+    { length: 24 },
+    (_, i) => ({
+      _id: `u${i.toString().padStart(2, '0')}`,
+      name: names[i % names.length],
+      age: 20 + ((i * 7) % 40),
+      active: i % 3 !== 0,
+      score: i % 5 === 0 ? null : (i * 1.5) % 17,
+      tags:
+        i % 4 === 0
+          ? []
+          : i % 4 === 1
+            ? ['a']
+            : i % 4 === 2
+              ? ['a', 'b']
+              : ['b', 'c', 'd'],
+      address: { city: ['oslo', 'bergen', 'tromso'][i % 3], zip: 1000 + i },
+      items: [
+        { sku: `s${i % 3}`, qty: i % 4 },
+        { sku: `s${(i + 1) % 3}`, qty: (i + 2) % 4 },
+      ],
+      ...(i % 6 === 0 ? {} : { nickname: `n${i % 5}` }),
+    }),
+  );
   const filters: Json[] = [
     {},
     { name: 'alice' },
@@ -1069,7 +1367,10 @@ describe('BrightDB v2 golden fixtures', () => {
           await rm(target, { recursive: true, force: true });
           for (const file of builtFiles) {
             await mkdir(resolve(target, file, '..'), { recursive: true });
-            await writeFile(join(target, file), await readFile(join(built, file)));
+            await writeFile(
+              join(target, file),
+              await readFile(join(built, file)),
+            );
           }
         } else {
           expect(await listFiles(target)).toEqual(builtFiles);
@@ -1081,7 +1382,10 @@ describe('BrightDB v2 golden fixtures', () => {
             ).toBe(true);
           }
         }
-        await checkOrWrite(join(FIXTURE_ROOT, 'stores', `${name}.json`), expected);
+        await checkOrWrite(
+          join(FIXTURE_ROOT, 'stores', `${name}.json`),
+          expected,
+        );
       } finally {
         await rm(scratch, { recursive: true, force: true });
       }
@@ -1098,19 +1402,35 @@ describe('BrightDB v2 golden fixtures', () => {
         await rm(target, { recursive: true, force: true });
         for (const file of await listFiles(built)) {
           await mkdir(resolve(target, file, '..'), { recursive: true });
-          await writeFile(join(target, file), await readFile(join(built, file)));
+          await writeFile(
+            join(target, file),
+            await readFile(join(built, file)),
+          );
         }
-        await writeFile(join(FIXTURE_ROOT, 'stores', 'encrypted.json'), manifest);
+        await writeFile(
+          join(FIXTURE_ROOT, 'stores', 'encrypted.json'),
+          manifest,
+        );
       } else {
-        expect(await readFile(join(FIXTURE_ROOT, 'stores', 'encrypted.json'), 'utf8')).toBe(manifest);
+        expect(
+          await readFile(
+            join(FIXTURE_ROOT, 'stores', 'encrypted.json'),
+            'utf8',
+          ),
+        ).toBe(manifest);
         // The checked-in directory opens with the key and holds the same logical state.
         const checked = await PortableBrightDb.open({
           path: target,
           encryption: { key: ENCRYPTION_KEY },
         });
-        const recorded = JSON.parse(manifest) as { head: string; documents: unknown[] };
+        const recorded = JSON.parse(manifest) as {
+          head: string;
+          documents: unknown[];
+        };
         expect(await checked.root()).toBe(recorded.head);
-        expect(await checked.collection('people').find({}).toArray()).toHaveLength(recorded.documents.length);
+        expect(
+          await checked.collection('people').find({}).toArray(),
+        ).toHaveLength(recorded.documents.length);
         checked.close();
       }
     } finally {
@@ -1119,7 +1439,10 @@ describe('BrightDB v2 golden fixtures', () => {
   });
 
   it('match the filter vectors computed by the TypeScript query engine', async () => {
-    await checkOrWrite(join(FIXTURE_ROOT, 'filters.json'), stringify(buildFilterVectors()));
+    await checkOrWrite(
+      join(FIXTURE_ROOT, 'filters.json'),
+      stringify(buildFilterVectors()),
+    );
   });
 
   it('match the merged replicas fixture', async () => {
@@ -1169,12 +1492,21 @@ describe('BrightDB v2 golden fixtures', () => {
     const manifest = JSON.parse(
       await readFile(join(FIXTURE_ROOT, 'stores', 'indexed.json'), 'utf8'),
     ) as {
-      queries: Array<{ collection: string; index: string; query: IndexQuery; ids: string[] }>;
+      queries: Array<{
+        collection: string;
+        index: string;
+        query: IndexQuery;
+        ids: string[];
+      }>;
       attachments: { small: { digest: string }; large: { digest: string } };
     };
-    const db = await PortableBrightDb.open({ path: join(FIXTURE_ROOT, 'stores', 'indexed') });
+    const db = await PortableBrightDb.open({
+      path: join(FIXTURE_ROOT, 'stores', 'indexed'),
+    });
     for (const q of manifest.queries) {
-      const documents = await db.collection(q.collection).findByIndex(q.index, q.query);
+      const documents = await db
+        .collection(q.collection)
+        .findByIndex(q.index, q.query);
       expect(documents.map((d) => d['_id'])).toEqual(q.ids);
     }
     db.close();

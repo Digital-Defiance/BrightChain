@@ -28,9 +28,11 @@ import {
   BaseBlock,
   BlockAnnouncement,
   BlockHandle,
+  BlockId,
   BlockSize,
   BlockStoreOptions,
   BloomFilter,
+  brightDateNow,
   BrightenResult,
   CBLMagnetComponents,
   CBLMetadataSearchQuery,
@@ -39,6 +41,7 @@ import {
   CBLWhiteningOptions,
   Checksum,
   ConnectivityEventHandler,
+  dateToBrightDate,
   DEFAULT_RECONCILIATION_CONFIG,
   DiscoveryConfig,
   DiscoveryResult,
@@ -64,7 +67,6 @@ import {
   ServiceProvider,
   StoreError,
   StoreErrorType,
-  brightDateNow,
 } from '@brightchain/brightchain-lib';
 import { AvailabilityService } from '../lib/availability/availabilityService';
 import { BlockRegistry } from '../lib/availability/blockRegistry';
@@ -92,7 +94,7 @@ function createTestMetadata(
 ): IBlockMetadata {
   const now = brightDateNow();
   return {
-    blockId,
+    blockId: blockId as BlockId,
     createdAt: now,
     expiresAt: null,
     durabilityLevel: DurabilityLevel.Standard,
@@ -113,7 +115,12 @@ function createTestBlock(): { block: RawDataBlock; blockId: string } {
   const data = new Uint8Array(BlockSize.Small);
   crypto.getRandomValues(data);
   const checksum = checksumService.calculateChecksum(data);
-  const block = new RawDataBlock(BlockSize.Small, data, brightDateNow(), checksum);
+  const block = new RawDataBlock(
+    BlockSize.Small,
+    data,
+    brightDateNow(),
+    checksum,
+  );
   return { block, blockId: checksum.toHex() };
 }
 
@@ -416,7 +423,11 @@ class InMemoryPooledBlockStore implements IPooledBlockStore {
     _key: Checksum | string,
     _randomBlockCount: number,
   ): Promise<BrightenResult> {
-    return { brightenedBlockId: '', randomBlockIds: [], originalBlockId: '' };
+    return {
+      brightenedBlockId: '' as BlockId,
+      randomBlockIds: [],
+      originalBlockId: '' as BlockId,
+    };
   }
 
   async storeCBLWithWhitening(
@@ -593,7 +604,7 @@ class InMemoryDiscoveryProtocol implements IDiscoveryProtocol {
     _poolId?: PoolId,
   ): Promise<DiscoveryResult> {
     return {
-      blockId: _blockId,
+      blockId: _blockId as BlockId,
       found: false,
       locations: [],
       queriedPeers: 0,
@@ -760,7 +771,7 @@ function connectNodes(nodeA: TestNode, nodeB: TestNode): void {
       for (const announcement of batch) {
         const rehydrated: BlockAnnouncement = {
           ...announcement,
-          timestamp: new Date(announcement.timestamp),
+          timestamp: dateToBrightDate(new Date(announcement.timestamp)),
         };
         nodeB.gossipService.handleAnnouncement(rehydrated);
       }
@@ -772,7 +783,7 @@ function connectNodes(nodeA: TestNode, nodeB: TestNode): void {
       for (const announcement of batch) {
         const rehydrated: BlockAnnouncement = {
           ...announcement,
-          timestamp: new Date(announcement.timestamp),
+          timestamp: dateToBrightDate(new Date(announcement.timestamp)),
         };
         nodeA.gossipService.handleAnnouncement(rehydrated);
       }
@@ -820,7 +831,7 @@ describe('Pool Coordination Integration Tests', () => {
         await new Promise((resolve) => setTimeout(resolve, 100));
 
         // Verify the registry on node A has the block
-        expect(nodeA.registry.hasLocal(blockId)).toBe(true);
+        expect(nodeA.registry.hasLocal(blockId as BlockId)).toBe(true);
 
         // The announcement handler on node B should have received it
         const addAnnouncements = nodeB.receivedAnnouncements.filter(
@@ -834,8 +845,9 @@ describe('Pool Coordination Integration Tests', () => {
         }
 
         // Also verify the location record includes pool context
-        const locations =
-          await nodeA.availabilityService.getBlockLocations(blockId);
+        const locations = await nodeA.availabilityService.getBlockLocations(
+          blockId as BlockId,
+        );
         expect(locations.length).toBeGreaterThanOrEqual(1);
         const localLocation = locations.find((l) => l.nodeId === 'node-A');
         expect(localLocation).toBeDefined();
@@ -858,8 +870,9 @@ describe('Pool Coordination Integration Tests', () => {
         // When the inner store is a pooled store, blocks without explicit pool
         // context get assigned to the 'default' pool. The location record
         // reflects this default pool assignment.
-        const locations =
-          await nodeA.availabilityService.getBlockLocations(blockId);
+        const locations = await nodeA.availabilityService.getBlockLocations(
+          blockId as BlockId,
+        );
         const localLocation = locations.find((l) => l.nodeId === 'node-A');
         expect(localLocation).toBeDefined();
         // The inner store assigns to 'default' pool, so poolId is 'default'
@@ -889,14 +902,14 @@ describe('Pool Coordination Integration Tests', () => {
         const blockId = checksum.toHex();
 
         nodeA.innerStore.seedBlock('beta', blockId, blockData);
-        nodeA.registry.addLocal(blockId, 'beta');
+        nodeA.registry.addLocal(blockId as BlockId, 'beta');
 
         nodeB.innerStore.seedBlock('beta', blockId, blockData);
-        nodeB.registry.addLocal(blockId, 'beta');
+        nodeB.registry.addLocal(blockId as BlockId, 'beta');
 
         // Verify both nodes have the block
-        expect(nodeA.registry.hasLocal(blockId)).toBe(true);
-        expect(nodeB.registry.hasLocal(blockId)).toBe(true);
+        expect(nodeA.registry.hasLocal(blockId as BlockId)).toBe(true);
+        expect(nodeB.registry.hasLocal(blockId as BlockId)).toBe(true);
 
         // Node A announces pool deletion
         await nodeA.gossipService.announcePoolDeletion('beta');
@@ -934,7 +947,7 @@ describe('Pool Coordination Integration Tests', () => {
         // Seed a block in pool "gamma"
         const { block, blockId } = createTestBlock();
         nodeA.innerStore.seedBlock('gamma', blockId, block.data);
-        nodeA.registry.addLocal(blockId, 'gamma');
+        nodeA.registry.addLocal(blockId as BlockId, 'gamma');
 
         // Delete pool "gamma" (creates tombstone)
         await nodeA.store.handlePoolDeletion('gamma', 'node-B');
@@ -1044,13 +1057,13 @@ describe('Pool Coordination Integration Tests', () => {
 
       // Node B has block1 in pool "epsilon" and block2 in pool "zeta"
       nodeB.innerStore.seedBlock('epsilon', blockId1, blockData1);
-      nodeB.registry.addLocal(blockId1, 'epsilon');
+      nodeB.registry.addLocal(blockId1 as BlockId, 'epsilon');
       nodeB.innerStore.seedBlock('zeta', blockId2, blockData2);
-      nodeB.registry.addLocal(blockId2, 'zeta');
+      nodeB.registry.addLocal(blockId2 as BlockId, 'zeta');
 
       // Node A has neither block
-      expect(nodeA.registry.hasLocal(blockId1)).toBe(false);
-      expect(nodeA.registry.hasLocal(blockId2)).toBe(false);
+      expect(nodeA.registry.hasLocal(blockId1 as BlockId)).toBe(false);
+      expect(nodeA.registry.hasLocal(blockId2 as BlockId)).toBe(false);
 
       // Create a reconciliation service for node A that can get node B's manifest
       const storedBlocks: Array<{
@@ -1137,7 +1150,7 @@ describe('Pool Coordination Integration Tests', () => {
       const blockId = cs.calculateChecksum(blockData).toHex();
 
       nodeB.innerStore.seedBlock('eta', blockId, blockData);
-      nodeB.registry.addLocal(blockId, 'eta');
+      nodeB.registry.addLocal(blockId as BlockId, 'eta');
 
       // Node A has a tombstone for pool "eta"
       const storedBlocks: Array<{ poolId: PoolId; blockId: string }> = [];
@@ -1197,8 +1210,8 @@ describe('Pool Coordination Integration Tests', () => {
       const blockIdB =
         'ffeeddccbbaa99887766554433221100ffeeddccbbaa99887766554433221100';
 
-      registry.addLocal(blockIdA, 'pool-one');
-      registry.addLocal(blockIdB, 'pool-two');
+      registry.addLocal(blockIdA as BlockId, 'pool-one');
+      registry.addLocal(blockIdB as BlockId, 'pool-two');
 
       // Export pool-scoped Bloom filter
       const poolScopedFilter = registry.exportPoolScopedBloomFilter();
@@ -1236,7 +1249,7 @@ describe('Pool Coordination Integration Tests', () => {
       ];
 
       for (const b of blocks) {
-        registry.addLocal(b.id, b.pool);
+        registry.addLocal(b.id as BlockId, b.pool);
       }
 
       // Export pool-scoped manifest
@@ -1264,7 +1277,7 @@ describe('Pool Coordination Integration Tests', () => {
       const nodeA = createTestNode('node-A');
 
       // Update location for block "abc123" in pool "pool-x" on node-1
-      await nodeA.availabilityService.updateLocation('abc123', {
+      await nodeA.availabilityService.updateLocation('abc123' as BlockId, {
         nodeId: 'node-1',
         lastSeen: brightDateNow(),
         isAuthoritative: true,
@@ -1272,7 +1285,7 @@ describe('Pool Coordination Integration Tests', () => {
       });
 
       // Update location for block "abc123" in pool "pool-y" on node-2
-      await nodeA.availabilityService.updateLocation('abc123', {
+      await nodeA.availabilityService.updateLocation('abc123' as BlockId, {
         nodeId: 'node-2',
         lastSeen: brightDateNow(),
         isAuthoritative: true,
@@ -1280,13 +1293,14 @@ describe('Pool Coordination Integration Tests', () => {
       });
 
       // Get all locations for the block
-      const allLocations =
-        await nodeA.availabilityService.getBlockLocations('abc123');
+      const allLocations = await nodeA.availabilityService.getBlockLocations(
+        'abc123' as BlockId,
+      );
       expect(allLocations.length).toBeGreaterThanOrEqual(2);
 
       // Filter by pool-x — should only return node-1
       const poolXLocations = await nodeA.availabilityService.getBlockLocations(
-        'abc123',
+        'abc123' as BlockId,
         'pool-x',
       );
       expect(poolXLocations.length).toBe(1);
@@ -1295,7 +1309,7 @@ describe('Pool Coordination Integration Tests', () => {
 
       // Filter by pool-y — should only return node-2
       const poolYLocations = await nodeA.availabilityService.getBlockLocations(
-        'abc123',
+        'abc123' as BlockId,
         'pool-y',
       );
       expect(poolYLocations.length).toBe(1);
@@ -1321,14 +1335,15 @@ describe('Pool Coordination Integration Tests', () => {
         await nodeA.store.recordReplication(blockId, 'node-B');
 
         // Verify the location record for node-B includes poolId
-        const locations =
-          await nodeA.availabilityService.getBlockLocations(blockId);
+        const locations = await nodeA.availabilityService.getBlockLocations(
+          blockId as BlockId,
+        );
         const nodeBLocation = locations.find((l) => l.nodeId === 'node-B');
         expect(nodeBLocation).toBeDefined();
         expect(nodeBLocation!.poolId).toBe('rho');
 
         // Now add a location for the same block in a DIFFERENT pool on node-C
-        await nodeA.availabilityService.updateLocation(blockId, {
+        await nodeA.availabilityService.updateLocation(blockId as BlockId, {
           nodeId: 'node-C',
           lastSeen: brightDateNow(),
           isAuthoritative: false,
@@ -1337,7 +1352,7 @@ describe('Pool Coordination Integration Tests', () => {
 
         // Get pool-scoped locations for "rho"
         const rhoLocations = await nodeA.availabilityService.getBlockLocations(
-          blockId,
+          blockId as BlockId,
           'rho',
         );
         // Should include node-A (local) and node-B, but NOT node-C
@@ -1348,7 +1363,10 @@ describe('Pool Coordination Integration Tests', () => {
 
         // Get pool-scoped locations for "sigma"
         const sigmaLocations =
-          await nodeA.availabilityService.getBlockLocations(blockId, 'sigma');
+          await nodeA.availabilityService.getBlockLocations(
+            blockId as BlockId,
+            'sigma',
+          );
         const sigmaNodeIds = sigmaLocations.map((l) => l.nodeId);
         expect(sigmaNodeIds).toContain('node-C');
         expect(sigmaNodeIds).not.toContain('node-B');

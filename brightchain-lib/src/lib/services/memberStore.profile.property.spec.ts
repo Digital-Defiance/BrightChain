@@ -36,10 +36,9 @@ import {
   IPrivateMemberProfileHydratedData,
   IPublicMemberProfileHydratedData,
 } from '../interfaces/member/profileStorage';
+import { brightDateNow } from '../utils/brightDateConversions';
 import { MemberStore } from './memberStore';
 import { ServiceProvider } from './service.provider';
-import { brightDateNow } from '../utils/brightDateConversions';
-import type { BrightDateTimestamp } from '../types/brightDateTimestamp';
 
 describe('MemberStore Profile CBL Round-Trip Property Tests', () => {
   let blockStore: ReturnType<typeof BlockStoreFactory.createMemoryStore>;

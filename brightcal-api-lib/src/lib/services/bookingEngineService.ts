@@ -240,8 +240,6 @@ export class BookingEngineService {
     const minNoticeThreshold = new Date(
       now.getTime() + page.minNoticeMinutes * 60 * 1000,
     );
-
-    const durationMs = apptType.durationMinutes * 60 * 1000;
     const bufferMs = (apptType.bufferMinutes ?? 0) * 60 * 1000;
     const slots: IAvailableSlot[] = [];
 

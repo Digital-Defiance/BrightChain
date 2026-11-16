@@ -11,6 +11,7 @@
 import {
   asBlockId,
   BlockSize,
+  brightDateNow,
   ChecksumService,
   initializeBrightChain,
   Ledger,
@@ -338,7 +339,7 @@ describe('Member Pool Ledger — Gossip Replication Logic', () => {
       type: 'ledger_entry' as const,
       blockId: dummyBlockId,
       nodeId: 'peer-node',
-      timestamp: new Date(),
+      timestamp: brightDateNow(),
       ttl: 5,
       ledgerEntry: {
         ledgerId: MEMBER_POOL_LEDGER_ID,
@@ -362,7 +363,7 @@ describe('Member Pool Ledger — Gossip Replication Logic', () => {
       type: 'ledger_entry' as const,
       blockId: dummyBlockId,
       nodeId: 'peer-node',
-      timestamp: new Date(),
+      timestamp: brightDateNow(),
       ttl: 5,
       ledgerEntry: {
         ledgerId: MEMBER_POOL_LEDGER_ID,
@@ -387,7 +388,7 @@ describe('Member Pool Ledger — Gossip Replication Logic', () => {
       type: 'ledger_entry' as const,
       blockId: dummyBlockId,
       nodeId: 'peer-node',
-      timestamp: new Date(),
+      timestamp: brightDateNow(),
       ttl: 5,
       ledgerEntry: {
         ledgerId: MEMBER_POOL_LEDGER_ID,
@@ -412,7 +413,7 @@ describe('Member Pool Ledger — Gossip Replication Logic', () => {
       type: 'ledger_entry' as const,
       blockId: dummyBlockId,
       nodeId: 'peer-node',
-      timestamp: new Date(),
+      timestamp: brightDateNow(),
       ttl: 5,
       ledgerEntry: {
         ledgerId: 'wrong-ledger-id',

@@ -125,7 +125,9 @@ describe('Block API Round-Trip Property Tests', () => {
             // Verify metadata is valid
             expect(metadata).not.toBeNull();
             expect(metadata!.blockId).toBe(blockIdHex);
-            expect(brightDateToDate(metadata!.createdAt).getTime()).toBeGreaterThanOrEqual(
+            expect(
+              brightDateToDate(metadata!.createdAt).getTime(),
+            ).toBeGreaterThanOrEqual(
               beforeStore.getTime() - 1000, // Allow 1 second tolerance
             );
             expect(metadata!.size).toBeGreaterThan(0);

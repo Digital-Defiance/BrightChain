@@ -272,6 +272,9 @@ export const BrightChatAmericanEnglishStrings: ComponentStrings<BrightChatString
       'Drop an image or click to browse',
     [BrightChatStrings.Server_Icon_StagingFailed]:
       'Failed to stage file for upload',
+    [BrightChatStrings.Server_Icon_CropFailed]: 'Failed to crop the image',
+    [BrightChatStrings.Server_Icon_PreviewLoadFailed]:
+      'Could not load the image. Please select it again.',
     [BrightChatStrings.Server_Icon_StagingExpired]:
       'Staged file has expired. Please select the image again.',
 

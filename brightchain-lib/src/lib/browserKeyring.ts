@@ -8,7 +8,10 @@ import { SystemKeyringErrorType } from './enumerations/systemKeyringErrorType';
 import { SystemKeyringError } from './errors/systemKeyringError';
 import { translate } from './i18n';
 import { IKeyringEntry } from './interfaces/keyringEntry';
-import { brightDateNow, normalizeToBrightDate } from './utils/brightDateConversions';
+import {
+  brightDateNow,
+  normalizeToBrightDate,
+} from './utils/brightDateConversions';
 
 export class BrowserKeyring {
   private static instance: BrowserKeyring;

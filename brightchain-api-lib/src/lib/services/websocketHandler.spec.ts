@@ -3,6 +3,8 @@
  */
 
 import {
+  BlockId,
+  BlockManifest,
   IAvailabilityService,
   IBlockRegistry,
   IDiscoveryProtocol,
@@ -150,7 +152,7 @@ describe('WebSocketHandler', () => {
       const query: IBlockQueryMessage = {
         type: DiscoveryMessageType.BLOCK_QUERY,
         payload: {
-          blockId: 'block-123',
+          blockId: 'block-123' as BlockId,
           requestingNodeId: 'remote-node-1',
         },
         timestamp: new Date().toISOString(),
@@ -177,9 +179,9 @@ describe('WebSocketHandler', () => {
     });
 
     it('should handle manifest request', async () => {
-      const manifest = {
+      const manifest: BlockManifest = {
         nodeId: 'local-node-1',
-        blockIds: ['block-1', 'block-2', 'block-3'],
+        blockIds: ['block-1', 'block-2', 'block-3'] as BlockId[],
         generatedAt: 9000,
         checksum: 'abc123',
       };
@@ -221,7 +223,7 @@ describe('WebSocketHandler', () => {
       const announcement: IBlockAnnouncementMessage = {
         type: GossipMessageType.BLOCK_ANNOUNCEMENT,
         payload: {
-          blockId: 'block-456',
+          blockId: 'block-456' as BlockId,
           nodeId: 'remote-node-2',
           ttl: 3,
         },
@@ -254,7 +256,7 @@ describe('WebSocketHandler', () => {
       const removal: IBlockRemovalMessage = {
         type: GossipMessageType.BLOCK_REMOVAL,
         payload: {
-          blockId: 'block-789',
+          blockId: 'block-789' as BlockId,
           nodeId: 'remote-node-3',
           ttl: 2,
         },

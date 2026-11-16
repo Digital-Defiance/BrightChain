@@ -63,8 +63,6 @@ import {
 
 const LEDGER_ID = 'joule-e2e-ledger';
 const NOW = 1_700_000_000_000;
-// One week in ms; ensures settlement at NOW lands well inside dispute window (24h).
-const FAR_FUTURE = NOW + 8 * 24 * 60 * 60 * 1000;
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -218,8 +216,6 @@ function parseCsv(text: string): Record<string, string>[] {
 const JOULE_ASSET_ID = makeAssetIdBuf(1);
 const JOULE_HEX = assetHex(1);
 
-const PROCESS_KEY_FP = fill32(PROCESS_KEY_SEED);
-
 function ctx(overrides: Partial<ILedgerContext> = {}): ILedgerContext {
   return {
     signerPublicKeys: [ISSUER_SIGNER.publicKey],
@@ -245,13 +241,6 @@ describe('Joule asset — end-to-end E2E', () => {
   let ledger: MockLedger;
   let projectionService: BalanceProjectionService;
   let submissionService: SubmissionService;
-
-  // ── Sequence number tracking ──────────────────────────────────────────────
-
-  let issueSeq: number;
-  let mintSeq: number;
-  let settlement1Seq: number;
-  let settlement2Seq: number;
 
   beforeEach(async () => {
     const svc = makeServices();

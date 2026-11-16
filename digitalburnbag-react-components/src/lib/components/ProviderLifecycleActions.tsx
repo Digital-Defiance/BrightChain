@@ -61,7 +61,9 @@ export interface IProviderLifecycleActionsProps {
   /** Called to resume a paused provider */
   onResume: (connectionId: string) => Promise<void>;
   /** Called to get the disconnect impact report before confirming */
-  onGetDisconnectImpact: (connectionId: string) => Promise<IDisconnectImpactReport>;
+  onGetDisconnectImpact: (
+    connectionId: string,
+  ) => Promise<IDisconnectImpactReport>;
   /** Called to permanently disconnect the provider */
   onDisconnect: (connectionId: string) => Promise<void>;
   /** Optional: compact layout for embedding in cards */
@@ -115,7 +117,8 @@ export function ProviderLifecycleActions({
   const [pauseLoading, setPauseLoading] = useState(false);
   const [disconnectDialogOpen, setDisconnectDialogOpen] = useState(false);
   const [disconnectLoading, setDisconnectLoading] = useState(false);
-  const [impactReport, setImpactReport] = useState<IDisconnectImpactReport | null>(null);
+  const [impactReport, setImpactReport] =
+    useState<IDisconnectImpactReport | null>(null);
   const [impactLoading, setImpactLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -133,7 +136,9 @@ export function ProviderLifecycleActions({
         await onPause(connection.id);
       }
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to update provider state');
+      setError(
+        e instanceof Error ? e.message : 'Failed to update provider state',
+      );
     } finally {
       setPauseLoading(false);
     }
@@ -149,7 +154,9 @@ export function ProviderLifecycleActions({
       setImpactReport(report);
       setDisconnectDialogOpen(true);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to check disconnect impact');
+      setError(
+        e instanceof Error ? e.message : 'Failed to check disconnect impact',
+      );
     } finally {
       setImpactLoading(false);
     }
@@ -162,7 +169,9 @@ export function ProviderLifecycleActions({
       await onDisconnect(connection.id);
       setDisconnectDialogOpen(false);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to disconnect provider');
+      setError(
+        e instanceof Error ? e.message : 'Failed to disconnect provider',
+      );
     } finally {
       setDisconnectLoading(false);
     }
@@ -175,8 +184,12 @@ export function ProviderLifecycleActions({
 
   // ── Render ──────────────────────────────────────────────────────────────
 
-  const showDisconnectWarning = impactReport ? shouldShowDisconnectWarning(impactReport) : false;
-  const showBelowMinimumWarning = impactReport ? shouldShowBelowMinimumWarning(impactReport) : false;
+  const showDisconnectWarning = impactReport
+    ? shouldShowDisconnectWarning(impactReport)
+    : false;
+  const showBelowMinimumWarning = impactReport
+    ? shouldShowBelowMinimumWarning(impactReport)
+    : false;
 
   return (
     <Box data-testid="provider-lifecycle-actions">
@@ -211,7 +224,11 @@ export function ProviderLifecycleActions({
             )
           }
           data-testid={connection.isPaused ? 'resume-button' : 'pause-button'}
-          aria-label={connection.isPaused ? `Resume ${displayName}` : `Pause ${displayName}`}
+          aria-label={
+            connection.isPaused
+              ? `Resume ${displayName}`
+              : `Pause ${displayName}`
+          }
         >
           {connection.isPaused ? 'Resume' : 'Pause'}
         </Button>
@@ -265,10 +282,12 @@ export function ProviderLifecycleActions({
             >
               <Typography variant="body2" sx={{ fontWeight: 600, mb: 0.5 }}>
                 This provider is part of {impactReport.affectedBindings.length}{' '}
-                multi-canary binding{impactReport.affectedBindings.length !== 1 ? 's' : ''}.
+                multi-canary binding
+                {impactReport.affectedBindings.length !== 1 ? 's' : ''}.
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Disconnecting will remove it from all bindings, reducing their redundancy.
+                Disconnecting will remove it from all bindings, reducing their
+                redundancy.
               </Typography>
               <List dense disablePadding sx={{ mt: 0.5 }}>
                 {impactReport.affectedBindings.map((binding) => (
@@ -276,7 +295,10 @@ export function ProviderLifecycleActions({
                     <ListItemText
                       primary={binding.name}
                       secondary={`${binding.providerCount} providers currently`}
-                      primaryTypographyProps={{ variant: 'caption', fontWeight: 600 }}
+                      primaryTypographyProps={{
+                        variant: 'caption',
+                        fontWeight: 600,
+                      }}
                       secondaryTypographyProps={{ variant: 'caption' }}
                     />
                   </ListItem>
@@ -297,8 +319,12 @@ export function ProviderLifecycleActions({
                 Multi-canary redundancy will be lost!
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                The following binding{impactReport.bindingsReducedBelowMinimum.length !== 1 ? 's' : ''}{' '}
-                will be reduced to fewer than 2 providers and will revert to single-provider mode:
+                The following binding
+                {impactReport.bindingsReducedBelowMinimum.length !== 1
+                  ? 's'
+                  : ''}{' '}
+                will be reduced to fewer than 2 providers and will revert to
+                single-provider mode:
               </Typography>
               <List dense disablePadding sx={{ mt: 0.5 }}>
                 {impactReport.bindingsReducedBelowMinimum.map((binding) => (
@@ -306,7 +332,10 @@ export function ProviderLifecycleActions({
                     <ListItemText
                       primary={binding.name}
                       secondary={`Will have ${binding.providerCount - 1} provider${binding.providerCount - 1 !== 1 ? 's' : ''} remaining`}
-                      primaryTypographyProps={{ variant: 'caption', fontWeight: 600 }}
+                      primaryTypographyProps={{
+                        variant: 'caption',
+                        fontWeight: 600,
+                      }}
                       secondaryTypographyProps={{ variant: 'caption' }}
                     />
                   </ListItem>
@@ -327,7 +356,13 @@ export function ProviderLifecycleActions({
             color="error"
             variant="contained"
             disabled={disconnectLoading}
-            startIcon={disconnectLoading ? <CircularProgress size={16} /> : <DeleteForeverIcon />}
+            startIcon={
+              disconnectLoading ? (
+                <CircularProgress size={16} />
+              ) : (
+                <DeleteForeverIcon />
+              )
+            }
             data-testid="disconnect-confirm-button"
           >
             {disconnectLoading ? 'Disconnecting…' : 'Disconnect'}

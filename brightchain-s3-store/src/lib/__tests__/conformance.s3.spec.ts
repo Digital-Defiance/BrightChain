@@ -141,7 +141,7 @@ describeOrSkip('Conformance: S3BlockStore + CloudHeadRegistry (REAL)', () => {
       .collection('users')
       .findOne({ username: 'jessica' } as never);
     expect(found).not.toBeNull();
-    expect((found as any)._id).toBe(memberId);
+    expect(found?._id).toBe(memberId);
   });
 
   it('should persist full registration → login chain across restart', async () => {
@@ -184,7 +184,7 @@ describeOrSkip('Conformance: S3BlockStore + CloudHeadRegistry (REAL)', () => {
     expect(userDoc).not.toBeNull();
 
     const indexDoc = await db2.collection('member_index').findOne({
-      id: (userDoc as any)._id.replace(/-/g, ''),
+      id: String(userDoc?._id).replace(/-/g, ''),
     } as never);
     expect(indexDoc).not.toBeNull();
   });
@@ -219,7 +219,7 @@ describeOrSkip('Conformance: S3BlockStore + CloudHeadRegistry (REAL)', () => {
     const found = await db2
       .collection('users')
       .findOne({ _id: 'upd_s3' } as never);
-    expect((found as any).email).toBe('new@test.com');
+    expect(found?.['email']).toBe('new@test.com');
   });
 
   it('should persist deletes across restart', async () => {

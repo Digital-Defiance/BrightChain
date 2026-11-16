@@ -4,9 +4,8 @@ import { BlockSize } from '../enumerations/blockSize';
 import { BlockType } from '../enumerations/blockType';
 import { ChecksumService } from '../services/checksum.service';
 import { ServiceProvider } from '../services/service.provider';
-import { RandomBlock } from './random';
 import { brightDateNow } from '../utils/brightDateConversions';
-import type { BrightDateTimestamp } from '../types/brightDateTimestamp';
+import { RandomBlock } from './random';
 
 describe('RandomBlock', () => {
   let checksumService: ChecksumService;

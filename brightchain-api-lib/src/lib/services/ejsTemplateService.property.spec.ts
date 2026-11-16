@@ -10,7 +10,7 @@ jest.setTimeout(30000);
 
 import { afterEach, beforeEach, describe, expect, it } from '@jest/globals';
 import * as fc from 'fast-check';
-import { mkdtempSync, rmSync, writeFileSync } from 'fs';
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
 import { IEjsTemplateContext } from '../interfaces/ejsTemplateContext';
@@ -738,7 +738,7 @@ describe('Feature: node-ejs-splash-page, Property 9: Path resolution accepts abs
         // Create a temp directory with the generated name as a subdirectory
         const parentDir = mkdtempSync(join(tmpdir(), 'ejs-abs-'));
         const absDir = join(parentDir, dirName);
-        require('fs').mkdirSync(absDir, { recursive: true });
+        mkdirSync(absDir, { recursive: true });
         dirsToCleanup.push(parentDir);
 
         // Place index.ejs in the directory
@@ -769,7 +769,7 @@ describe('Feature: node-ejs-splash-page, Property 9: Path resolution accepts abs
         // Create a directory relative to process.cwd()
         const relDir = join('tmp-ejs-rel-test', dirName);
         const absResolved = join(process.cwd(), relDir);
-        require('fs').mkdirSync(absResolved, { recursive: true });
+        mkdirSync(absResolved, { recursive: true });
         dirsToCleanup.push(join(process.cwd(), 'tmp-ejs-rel-test'));
 
         // Place index.ejs in the directory
@@ -806,7 +806,7 @@ describe('Feature: node-ejs-splash-page, Property 9: Path resolution accepts abs
         // Create a directory under cwd so we can reference it both ways
         const relDir = join('tmp-ejs-consist-test', dirName);
         const absDir = join(process.cwd(), relDir);
-        require('fs').mkdirSync(absDir, { recursive: true });
+        mkdirSync(absDir, { recursive: true });
         dirsToCleanup.push(join(process.cwd(), 'tmp-ejs-consist-test'));
 
         // Place index.ejs with content that includes the dirName

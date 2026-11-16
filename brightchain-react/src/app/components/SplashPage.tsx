@@ -24,7 +24,7 @@ import {
   Typography,
 } from '@mui/material';
 import { FC, JSX } from 'react';
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 
 interface ShowcaseCard {
   logo?: JSX.Element;

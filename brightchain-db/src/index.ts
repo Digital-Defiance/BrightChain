@@ -48,33 +48,16 @@ export type {
 } from './lib/collection';
 export { BrightDb } from './lib/database';
 export type { BrightDbOptions } from './lib/database';
-export type {
-  PortableBrightDbOptions,
-  PortableChange,
-  PortableChangeEvent,
-  PortableSubscribeOptions,
-  PortableCollection,
-  PortableReadCollection,
-  PortableSnapshot,
-  PortableWriteOperation,
-} from './lib/v2/portable-database';
-export type { IndexQuery, IndexScalar } from './lib/v2/index-key';
-export type { AttachmentRef } from './lib/v2/attachments';
-export type { PortableMergeResult } from './lib/v2/merge';
-export { V2MergeError } from './lib/v2/merge';
 export { V2AttachmentError } from './lib/v2/attachments';
-export { V2IndexError } from './lib/v2/index-key';
-export { BrightDbV2DecryptionError, type BrightDbV2KeyRing } from './lib/v2/encryption';
-export type { BrightDbV2DiskWriter, BrightDbV2Storage } from './lib/v2/disk-store';
-export { PortableBrightDb } from './lib/v2/portable-database';
-export type { BrightDbV2BlockSource } from './lib/v2/block-source';
-export { HttpBlockSource } from './lib/v2/block-source';
-export type { BlockServer } from './lib/v2/block-server';
+export type { AttachmentRef } from './lib/v2/attachments';
 export { serveBlocks } from './lib/v2/block-server';
+export type { BlockServer } from './lib/v2/block-server';
+export { HttpBlockSource } from './lib/v2/block-source';
+export type { BrightDbV2BlockSource } from './lib/v2/block-source';
 export {
   BrightChainV2Storage,
-  headCollection,
   V2_HEAD_COLLECTION,
+  headCollection,
   type BrightChainV2StorageOptions,
 } from './lib/v2/brightchain-storage';
 export {
@@ -82,6 +65,29 @@ export {
   BrightDbV2MissingBlockError,
   BrightDbV2StorageError,
 } from './lib/v2/disk-store';
+export type {
+  BrightDbV2DiskWriter,
+  BrightDbV2Storage,
+} from './lib/v2/disk-store';
+export {
+  BrightDbV2DecryptionError,
+  type BrightDbV2KeyRing,
+} from './lib/v2/encryption';
+export { V2IndexError } from './lib/v2/index-key';
+export type { IndexQuery, IndexScalar } from './lib/v2/index-key';
+export { V2MergeError } from './lib/v2/merge';
+export type { PortableMergeResult } from './lib/v2/merge';
+export { PortableBrightDb } from './lib/v2/portable-database';
+export type {
+  PortableBrightDbOptions,
+  PortableChange,
+  PortableChangeEvent,
+  PortableCollection,
+  PortableReadCollection,
+  PortableSnapshot,
+  PortableSubscribeOptions,
+  PortableWriteOperation,
+} from './lib/v2/portable-database';
 
 // Head registries
 export {

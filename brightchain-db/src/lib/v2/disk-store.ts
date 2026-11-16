@@ -1,3 +1,5 @@
+import './node-hash';
+
 import { spawn } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
 import { constants } from 'node:fs';
@@ -14,7 +16,13 @@ import {
   utimes,
 } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
-import './node-hash';
+import { digestPayload, MAX_DOCUMENT_BYTES } from './codec';
+import {
+  BrightDbV2DecryptionError,
+  ENCRYPTION_MARKER,
+  SEAL_OVERHEAD,
+  type BrightDbV2BlockCipher,
+} from './encryption';
 import {
   encodePack,
   PACKS_MARKER,
@@ -22,7 +30,6 @@ import {
   readPackIndex,
   type PackEntryLocation,
 } from './pack-file';
-import { digestPayload, MAX_DOCUMENT_BYTES } from './codec';
 import {
   BrightDbV2CommitOutcomeUnknownError,
   BrightDbV2MissingBlockError,
@@ -39,12 +46,6 @@ export {
   type BrightDbV2DiskWriter,
   type BrightDbV2Storage,
 };
-import {
-  BrightDbV2DecryptionError,
-  ENCRYPTION_MARKER,
-  SEAL_OVERHEAD,
-  type BrightDbV2BlockCipher,
-} from './encryption';
 
 const FORMAT = 'BrightDB storage 2\n';
 const BLOCK_WRITE_CONCURRENCY = 16;
@@ -216,9 +217,15 @@ export class BrightDbV2DiskStore implements BrightDbV2Storage {
   private readonly packsPath: string;
   /** Packed extension: new blocks are written into pack files, one fsync per pack. */
   private packed = false;
-  private readonly packIndex = new Map<string, { pack: string; location: PackEntryLocation }>();
+  private readonly packIndex = new Map<
+    string,
+    { pack: string; location: PackEntryLocation }
+  >();
   private readonly packMtimes = new Map<string, number>();
-  private readonly packEntries = new Map<string, Map<string, PackEntryLocation>>();
+  private readonly packEntries = new Map<
+    string,
+    Map<string, PackEntryLocation>
+  >();
   /** Blocks of the current write scope not yet in a pack. Only set inside `withWriteLock`. */
   private pending: Map<string, Buffer> | null = null;
   private pendingBytes = 0;
@@ -350,9 +357,14 @@ export class BrightDbV2DiskStore implements BrightDbV2Storage {
     const store = new BrightDbV2DiskStore(directory, writerId, cipher);
     await requireDirectory(store.blocksPath);
     try {
-      const packsMarker = await readBoundedFile(join(directory, 'PACKED'), PACKS_MARKER.length);
+      const packsMarker = await readBoundedFile(
+        join(directory, 'PACKED'),
+        PACKS_MARKER.length,
+      );
       if (packsMarker.toString('latin1') !== PACKS_MARKER) {
-        throw new BrightDbV2StorageError(`Unsupported BrightDB packs profile: ${directory}`);
+        throw new BrightDbV2StorageError(
+          `Unsupported BrightDB packs profile: ${directory}`,
+        );
       }
       store.packed = true;
     } catch (error) {
@@ -388,7 +400,8 @@ export class BrightDbV2DiskStore implements BrightDbV2Storage {
         join(stage, 'WRITER'),
         `${Buffer.from(id).toString('hex')}\n`,
       );
-      if (cipher) await writeSyncedFile(join(stage, 'ENCRYPTION'), ENCRYPTION_MARKER);
+      if (cipher)
+        await writeSyncedFile(join(stage, 'ENCRYPTION'), ENCRYPTION_MARKER);
       await writeSyncedFile(join(stage, 'FORMAT'), FORMAT);
       const dirty = new Set<string>();
       const head = await store.installBlock(root, dirty);
@@ -443,13 +456,20 @@ export class BrightDbV2DiskStore implements BrightDbV2Storage {
   }
 
   async readHead(): Promise<string> {
-    if (!this.cipher) return readHexLine(join(this.path, 'HEAD'), DIGEST_LENGTH);
-    const sealed = await readBoundedFile(join(this.path, 'HEAD'), this.cipher.sealedHeadBytes);
+    if (!this.cipher)
+      return readHexLine(join(this.path, 'HEAD'), DIGEST_LENGTH);
+    const sealed = await readBoundedFile(
+      join(this.path, 'HEAD'),
+      this.cipher.sealedHeadBytes,
+    );
     try {
       return this.cipher.openHead(sealed);
     } catch (error) {
       if (error instanceof BrightDbV2DecryptionError) {
-        throw new BrightDbV2StorageError(`Cannot decrypt HEAD: ${error.message}`, { cause: error });
+        throw new BrightDbV2StorageError(
+          `Cannot decrypt HEAD: ${error.message}`,
+          { cause: error },
+        );
       }
       throw error;
     }
@@ -591,7 +611,10 @@ export class BrightDbV2DiskStore implements BrightDbV2Storage {
       const stored = this.cipher ? this.cipher.seal(digest, bytes) : bytes;
       this.pending.set(file, stored);
       this.pendingBytes += stored.byteLength;
-      if (this.pendingBytes >= PACK_FLUSH_BYTES || this.pending.size >= PACK_FLUSH_BLOCKS) {
+      if (
+        this.pendingBytes >= PACK_FLUSH_BYTES ||
+        this.pending.size >= PACK_FLUSH_BLOCKS
+      ) {
         await this.flushPending();
       }
       return digest;
@@ -605,7 +628,10 @@ export class BrightDbV2DiskStore implements BrightDbV2Storage {
     }
     const temporary = temporaryPath(directory);
     try {
-      await writeSyncedFile(temporary, this.cipher ? this.cipher.seal(digest, bytes) : bytes);
+      await writeSyncedFile(
+        temporary,
+        this.cipher ? this.cipher.seal(digest, bytes) : bytes,
+      );
       try {
         await link(temporary, join(directory, file));
       } catch (error) {
@@ -643,23 +669,31 @@ export class BrightDbV2DiskStore implements BrightDbV2Storage {
    * and modification time. A packed block reports its pack's modification time,
    * and a name present both loose and packed is listed twice.
    */
-  async listBlockFiles(): Promise<Array<{ name: string; bytes: number; modifiedMs: number }>> {
+  async listBlockFiles(): Promise<
+    Array<{ name: string; bytes: number; modifiedMs: number }>
+  > {
     const out: Array<{ name: string; bytes: number; modifiedMs: number }> = [];
     for (const prefix of await readdir(this.blocksPath)) {
       const directory = join(this.blocksPath, prefix);
       for (const name of await readdir(directory)) {
         const stat = await lstat(join(directory, name));
-        if (stat.isFile()) out.push({ name, bytes: stat.size, modifiedMs: stat.mtimeMs });
+        if (stat.isFile())
+          out.push({ name, bytes: stat.size, modifiedMs: stat.mtimeMs });
       }
     }
     await this.refreshPacks();
     for (const [name, { pack, location }] of this.packIndex) {
-      out.push({ name, bytes: location.length, modifiedMs: this.packMtimes.get(pack) ?? 0 });
+      out.push({
+        name,
+        bytes: location.length,
+        modifiedMs: this.packMtimes.get(pack) ?? 0,
+      });
     }
     for (const name of await this.readPacksDirectory()) {
       if (name.startsWith('.')) {
         const stat = await lstat(join(this.packsPath, name));
-        if (stat.isFile()) out.push({ name, bytes: stat.size, modifiedMs: stat.mtimeMs });
+        if (stat.isFile())
+          out.push({ name, bytes: stat.size, modifiedMs: stat.mtimeMs });
       }
     }
     return out;
@@ -681,7 +715,9 @@ export class BrightDbV2DiskStore implements BrightDbV2Storage {
       if (name.startsWith('.')) {
         // A leftover temporary file may sit in any prefix directory or in packs/.
         for (const prefix of await readdir(this.blocksPath)) {
-          await unlink(join(this.blocksPath, prefix, name)).catch(() => undefined);
+          await unlink(join(this.blocksPath, prefix, name)).catch(
+            () => undefined,
+          );
         }
         await unlink(join(this.packsPath, name)).catch(() => undefined);
         continue;
@@ -704,7 +740,9 @@ export class BrightDbV2DiskStore implements BrightDbV2Storage {
       if (entry) byPack.set(entry.pack, (byPack.get(entry.pack) ?? 0) + 1);
     }
     for (const pack of byPack.keys()) {
-      await this.rewritePack(pack, (name) => (packed.has(name) ? null : undefined));
+      await this.rewritePack(pack, (name) =>
+        packed.has(name) ? null : undefined,
+      );
     }
   }
 
@@ -716,14 +754,26 @@ export class BrightDbV2DiskStore implements BrightDbV2Storage {
   async compactPacks(): Promise<{ before: number; after: number }> {
     await this.refreshPacks();
     const before = [...this.packMtimes.keys()];
-    if (before.length <= 1) return { before: before.length, after: before.length };
+    if (before.length <= 1)
+      return { before: before.length, after: before.length };
     const entries = new Map<string, Buffer>();
     for (const [name, { pack, location }] of this.packIndex) {
-      if (!entries.has(name)) entries.set(name, await readPackEntry(join(this.packsPath, pack), location, this.maxStoredBytes()));
+      if (!entries.has(name))
+        entries.set(
+          name,
+          await readPackEntry(
+            join(this.packsPath, pack),
+            location,
+            this.maxStoredBytes(),
+          ),
+        );
     }
-    const created = await this.writePack([...entries].map(([name, bytes]) => ({ name, bytes })));
+    const created = await this.writePack(
+      [...entries].map(([name, bytes]) => ({ name, bytes })),
+    );
     for (const pack of before) {
-      if (pack !== created) await unlink(join(this.packsPath, pack)).catch(() => undefined);
+      if (pack !== created)
+        await unlink(join(this.packsPath, pack)).catch(() => undefined);
     }
     await syncDirectory(this.packsPath);
     await this.refreshPacks();
@@ -741,7 +791,8 @@ export class BrightDbV2DiskStore implements BrightDbV2Storage {
     dryRun = false,
   ): Promise<{ resealed: number; alreadyCurrent: number }> {
     const cipher = this.cipher;
-    if (!cipher) throw new BrightDbV2StorageError('Re-sealing needs an encrypted store');
+    if (!cipher)
+      throw new BrightDbV2StorageError('Re-sealing needs an encrypted store');
     await this.refreshPacks();
     const byName = new Map<string, string>();
     for (const digest of digests) {
@@ -754,17 +805,25 @@ export class BrightDbV2DiskStore implements BrightDbV2Storage {
       const { directory, file } = this.blockLocation(digest);
       let loose: Buffer | null = null;
       try {
-        loose = await readBoundedFile(join(directory, file), MAX_DOCUMENT_BYTES + SEAL_OVERHEAD);
+        loose = await readBoundedFile(
+          join(directory, file),
+          MAX_DOCUMENT_BYTES + SEAL_OVERHEAD,
+        );
       } catch (error) {
         if (!isErrorCode(error, 'ENOENT')) throw error;
       }
       if (loose !== null && loose[0] !== cipher.currentKeyVersion) {
         stale.add(name);
-        if (!dryRun) await this.replaceLooseBlock(digest, directory, file, loose);
+        if (!dryRun)
+          await this.replaceLooseBlock(digest, directory, file, loose);
       }
       const entry = this.packIndex.get(name);
       if (entry) {
-        const sealed = await readPackEntry(join(this.packsPath, entry.pack), entry.location, this.maxStoredBytes());
+        const sealed = await readPackEntry(
+          join(this.packsPath, entry.pack),
+          entry.location,
+          this.maxStoredBytes(),
+        );
         if (sealed[0] !== cipher.currentKeyVersion) {
           stale.add(name);
           touched.add(entry.pack);
@@ -775,7 +834,8 @@ export class BrightDbV2DiskStore implements BrightDbV2Storage {
       for (const pack of touched) {
         await this.rewritePack(pack, (name, bytes) => {
           const digest = byName.get(name);
-          if (digest === undefined || bytes[0] === cipher.currentKeyVersion) return undefined;
+          if (digest === undefined || bytes[0] === cipher.currentKeyVersion)
+            return undefined;
           return cipher.reseal(digest, bytes) ?? undefined;
         });
       }
@@ -784,7 +844,12 @@ export class BrightDbV2DiskStore implements BrightDbV2Storage {
     return { resealed: stale.size, alreadyCurrent: byName.size - stale.size };
   }
 
-  private async replaceLooseBlock(digest: string, directory: string, file: string, sealed: Buffer): Promise<void> {
+  private async replaceLooseBlock(
+    digest: string,
+    directory: string,
+    file: string,
+    sealed: Buffer,
+  ): Promise<void> {
     const next = (this.cipher as BrightDbV2BlockCipher).reseal(digest, sealed);
     if (next === null) return;
     const temporary = temporaryPath(directory);
@@ -820,7 +885,11 @@ export class BrightDbV2DiskStore implements BrightDbV2Storage {
    * are gone. Returns whether any new pack was added.
    */
   private async refreshPacks(): Promise<boolean> {
-    const present = new Set((await this.readPacksDirectory()).filter((n) => n.endsWith('.pack') && !n.startsWith('.')));
+    const present = new Set(
+      (await this.readPacksDirectory()).filter(
+        (n) => n.endsWith('.pack') && !n.startsWith('.'),
+      ),
+    );
     let removed = false;
     for (const pack of [...this.packMtimes.keys()]) {
       if (!present.has(pack)) {
@@ -833,7 +902,9 @@ export class BrightDbV2DiskStore implements BrightDbV2Storage {
       // A block may also live in a pack that stays: rebuild the lookup from the packs that remain.
       this.packIndex.clear();
       for (const [pack, entries] of this.packEntries) {
-        for (const [name, location] of entries) if (!this.packIndex.has(name)) this.packIndex.set(name, { pack, location });
+        for (const [name, location] of entries)
+          if (!this.packIndex.has(name))
+            this.packIndex.set(name, { pack, location });
       }
     }
     let added = false;
@@ -850,7 +921,8 @@ export class BrightDbV2DiskStore implements BrightDbV2Storage {
       this.packMtimes.set(pack, (await lstat(path)).mtimeMs);
       this.packEntries.set(pack, index.entries);
       for (const [name, location] of index.entries) {
-        if (!this.packIndex.has(name)) this.packIndex.set(name, { pack, location });
+        if (!this.packIndex.has(name))
+          this.packIndex.set(name, { pack, location });
       }
       added = true;
     }
@@ -858,25 +930,36 @@ export class BrightDbV2DiskStore implements BrightDbV2Storage {
   }
 
   /** The stored bytes of a block (sealed when encrypted), from this write scope, a pack or a loose file; null when absent. */
-  private async readStored(name: string, directory: string): Promise<Buffer | null> {
+  private async readStored(
+    name: string,
+    directory: string,
+  ): Promise<Buffer | null> {
     const waiting = this.pending?.get(name);
     if (waiting) return waiting;
     for (let attempt = 0; attempt < 2; attempt++) {
       const entry = this.packIndex.get(name);
       if (entry) {
         try {
-          return await readPackEntry(join(this.packsPath, entry.pack), entry.location, this.maxStoredBytes());
+          return await readPackEntry(
+            join(this.packsPath, entry.pack),
+            entry.location,
+            this.maxStoredBytes(),
+          );
         } catch (error) {
           if (!isErrorCode(error, 'ENOENT')) throw error;
           await this.refreshPacks(); // the pack was rewritten or removed by another process
         }
       }
       try {
-        return await readBoundedFile(join(directory, name), this.maxStoredBytes());
+        return await readBoundedFile(
+          join(directory, name),
+          this.maxStoredBytes(),
+        );
       } catch (error) {
         if (!isErrorCode(error, 'ENOENT')) throw error;
       }
-      if (!(await this.refreshPacks()) && !this.packIndex.has(name)) return null;
+      if (!(await this.refreshPacks()) && !this.packIndex.has(name))
+        return null;
     }
     return null;
   }
@@ -900,8 +983,14 @@ export class BrightDbV2DiskStore implements BrightDbV2Storage {
   }
 
   /** Durably create a pack file holding the entries, register it, and return its file name. */
-  private async writePack(entries: ReadonlyArray<{ name: string; bytes: Uint8Array }>, mtime?: Date): Promise<string> {
-    const created = await mkdir(this.packsPath, { mode: 0o700, recursive: true });
+  private async writePack(
+    entries: ReadonlyArray<{ name: string; bytes: Uint8Array }>,
+    mtime?: Date,
+  ): Promise<string> {
+    const created = await mkdir(this.packsPath, {
+      mode: 0o700,
+      recursive: true,
+    });
     if (created !== undefined) await syncDirectory(this.path);
     const file = `${randomBytes(16).toString('hex')}.pack`;
     const temporary = temporaryPath(this.packsPath);
@@ -956,7 +1045,10 @@ export class BrightDbV2DiskStore implements BrightDbV2Storage {
   /** Whether HEAD is sealed with an older data key than the current one. */
   async headNeedsReseal(): Promise<boolean> {
     if (!this.cipher) return false;
-    const sealed = await readBoundedFile(join(this.path, 'HEAD'), this.cipher.sealedHeadBytes);
+    const sealed = await readBoundedFile(
+      join(this.path, 'HEAD'),
+      this.cipher.sealedHeadBytes,
+    );
     return sealed[0] !== this.cipher.currentKeyVersion;
   }
 

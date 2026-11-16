@@ -85,6 +85,11 @@ class InMemoryUploadRepository implements IUploadRepository<string> {
     return metadata;
   }
 
+  async getFileMetadata(
+    fileId: string,
+  ): Promise<IFileMetadataBase<string> | null> {
+    return this.files.find((f) => f.id === fileId) ?? null;
+  }
   // Escrow stubs (Joule economy — not exercised by these unit tests)
   async storeEscrowData(
     _sessionId: string,

@@ -10,9 +10,25 @@
  * @see Requirements 4.1, 4.6, 8.1, 8.4, 8.5, 13.3, 10.4
  */
 
-import { computeWorkUnit } from '@brightchain/brightchain-lib';
+import { computeWorkUnit, IWorkUnit } from '@brightchain/brightchain-lib';
 import { NextFunction, Request, Response } from 'express';
 import { createPoUWMiddleware, pouwEvents } from '../../middleware';
+
+/** JSON body written by the PoUW middleware on 4xx responses. */
+interface IPoUWResponseBody {
+  statusCode?: number;
+  error?: string;
+  message?: string;
+  workUnit?: IWorkUnit;
+}
+
+/** Return the body's work unit, failing the test if the middleware issued none. */
+function requireWorkUnit(body: IPoUWResponseBody): IWorkUnit {
+  if (!body.workUnit) {
+    throw new Error('Expected a work unit in the response body');
+  }
+  return body.workUnit;
+}
 
 // ---------------------------------------------------------------------------
 // Mock helpers (same pattern as middleware.spec.ts)
@@ -33,22 +49,22 @@ function createMockRes(): {
   res: Response;
   getHeaders: () => Record<string, string | number>;
   getStatus: () => number;
-  getBody: () => any;
+  getBody: () => IPoUWResponseBody;
 } {
   const headers: Record<string, string | number> = {};
   let statusCode = 200;
-  let body: any = null;
+  let body: IPoUWResponseBody = {};
 
   const res = {
     setHeader: jest.fn((name: string, value: string | number) => {
       headers[name.toLowerCase()] = value;
     }),
     getHeader: jest.fn((name: string) => headers[name.toLowerCase()]),
-    status: jest.fn(function (this: any, code: number) {
+    status: jest.fn(function (code: number) {
       statusCode = code;
       return res;
     }),
-    json: jest.fn(function (this: any, data: any) {
+    json: jest.fn(function (data: IPoUWResponseBody) {
       body = data;
       return res;
     }),
@@ -115,15 +131,15 @@ describe('PoUW Integration Tests — Full Challenge-Response Flow', () => {
       const rateLimited = sendRequest(middleware, TEST_IP);
       expect(rateLimited.status).toBe(429);
       expect(rateLimited.body.workUnit).toBeDefined();
-      expect(rateLimited.body.workUnit.id).toBeDefined();
-      expect(rateLimited.body.workUnit.inputData).toBeDefined();
-      expect(rateLimited.body.workUnit.operation).toBeDefined();
-      expect(rateLimited.body.workUnit.challengeToken).toBeDefined();
+      expect(rateLimited.body.workUnit?.id).toBeDefined();
+      expect(rateLimited.body.workUnit?.inputData).toBeDefined();
+      expect(rateLimited.body.workUnit?.operation).toBeDefined();
+      expect(rateLimited.body.workUnit?.challengeToken).toBeDefined();
       expect(rateLimited.headers['x-pouw-challenge']).toBeDefined();
       expect(rateLimited.headers['retry-after']).toBeDefined();
 
       // Step 3: Compute the work unit using the client-side library
-      const workUnit = rateLimited.body.workUnit;
+      const workUnit = requireWorkUnit(rateLimited.body);
       const workResult = await computeWorkUnit(workUnit);
 
       expect(workResult.workUnitId).toBe(workUnit.id);
@@ -135,7 +151,7 @@ describe('PoUW Integration Tests — Full Challenge-Response Flow', () => {
       const submission = sendRequest(middleware, TEST_IP, {
         headers: { 'x-pouw-response': workUnit.challengeToken },
         body: { workResult },
-      } as any);
+      });
 
       // Step 5: Verify the request proceeds
       expect(submission.next).toHaveBeenCalledTimes(1);
@@ -148,7 +164,7 @@ describe('PoUW Integration Tests — Full Challenge-Response Flow', () => {
         rateLimit: 1,
       });
 
-      const events: Array<{ name: string; data: any }> = [];
+      const events: Array<{ name: string; data: unknown }> = [];
       for (const eventName of [
         'rate-limited',
         'work-issued',
@@ -170,13 +186,13 @@ describe('PoUW Integration Tests — Full Challenge-Response Flow', () => {
       expect(events.some((e) => e.name === 'work-issued')).toBe(true);
 
       // Compute and submit correct result
-      const workUnit = rateLimited.body.workUnit;
+      const workUnit = requireWorkUnit(rateLimited.body);
       const workResult = await computeWorkUnit(workUnit);
 
       sendRequest(middleware, TEST_IP, {
         headers: { 'x-pouw-response': workUnit.challengeToken },
         body: { workResult },
-      } as any);
+      });
 
       // work-verified event should fire
       expect(events.some((e) => e.name === 'work-verified')).toBe(true);
@@ -199,7 +215,7 @@ describe('PoUW Integration Tests — Full Challenge-Response Flow', () => {
       // Get rate-limited with work unit
       const rateLimited = sendRequest(middleware, TEST_IP);
       expect(rateLimited.status).toBe(429);
-      const workUnit = rateLimited.body.workUnit;
+      const workUnit = requireWorkUnit(rateLimited.body);
 
       // Submit an incorrect result
       const incorrectResult = {
@@ -213,12 +229,12 @@ describe('PoUW Integration Tests — Full Challenge-Response Flow', () => {
       const failedSubmission = sendRequest(middleware, TEST_IP, {
         headers: { 'x-pouw-response': workUnit.challengeToken },
         body: { workResult: incorrectResult },
-      } as any);
+      });
 
       // Should get a 429 with a new work unit (harder difficulty)
       expect(failedSubmission.status).toBe(429);
       expect(failedSubmission.body.workUnit).toBeDefined();
-      expect(failedSubmission.body.workUnit.id).not.toBe(workUnit.id);
+      expect(requireWorkUnit(failedSubmission.body).id).not.toBe(workUnit.id);
       expect(failedSubmission.headers['x-pouw-challenge']).toBeDefined();
     });
 
@@ -233,7 +249,7 @@ describe('PoUW Integration Tests — Full Challenge-Response Flow', () => {
 
       // Get rate-limited
       const rateLimited = sendRequest(middleware, TEST_IP);
-      const workUnit = rateLimited.body.workUnit;
+      const workUnit = requireWorkUnit(rateLimited.body);
 
       // Submit incorrect result
       const incorrectResult = {
@@ -247,10 +263,10 @@ describe('PoUW Integration Tests — Full Challenge-Response Flow', () => {
       const failedSubmission = sendRequest(middleware, TEST_IP, {
         headers: { 'x-pouw-response': workUnit.challengeToken },
         body: { workResult: incorrectResult },
-      } as any);
+      });
 
       // Get the new (harder) work unit
-      const newWorkUnit = failedSubmission.body.workUnit;
+      const newWorkUnit = requireWorkUnit(failedSubmission.body);
       expect(newWorkUnit).toBeDefined();
 
       // Compute the new work unit correctly
@@ -260,7 +276,7 @@ describe('PoUW Integration Tests — Full Challenge-Response Flow', () => {
       const successSubmission = sendRequest(middleware, TEST_IP, {
         headers: { 'x-pouw-response': newWorkUnit.challengeToken },
         body: { workResult: correctResult },
-      } as any);
+      });
 
       // Request should now proceed
       expect(successSubmission.next).toHaveBeenCalledTimes(1);
@@ -284,7 +300,7 @@ describe('PoUW Integration Tests — Full Challenge-Response Flow', () => {
 
       // Get rate-limited with work unit
       const rateLimited = sendRequest(middleware, TEST_IP);
-      const workUnit = rateLimited.body.workUnit;
+      const workUnit = requireWorkUnit(rateLimited.body);
 
       // Compute the work unit
       const workResult = await computeWorkUnit(workUnit);
@@ -296,7 +312,7 @@ describe('PoUW Integration Tests — Full Challenge-Response Flow', () => {
       const expiredSubmission = sendRequest(middleware, TEST_IP, {
         headers: { 'x-pouw-response': workUnit.challengeToken },
         body: { workResult },
-      } as any);
+      });
 
       // Should be rejected with 403
       expect(expiredSubmission.status).toBe(403);
@@ -379,7 +395,7 @@ describe('PoUW Integration Tests — Full Challenge-Response Flow', () => {
             'x-pouw-response': rateLimited.body.workUnit.challengeToken,
           },
           body: { workResult },
-        } as any);
+        });
 
         // After a successful verification, the circuit breaker records success
         // This keeps the circuit closed (or closes it if it was half-open)
@@ -417,7 +433,7 @@ describe('PoUW Integration Tests — Full Challenge-Response Flow', () => {
 
       // Simulate Express middleware chain: helmet → pouw → handler
       const req = createMockReq({ ip: '10.0.0.1' });
-      const { res, getHeaders, getStatus } = createMockRes();
+      const { res, getHeaders } = createMockRes();
       const finalHandler: NextFunction = jest.fn();
 
       // Run helmet first
@@ -475,7 +491,7 @@ describe('PoUW Integration Tests — Full Challenge-Response Flow', () => {
       ) => {
         // Simulate body-parser setting req.body
         if (!req.body) {
-          (req as any).body = {};
+          req.body = {};
         }
         next();
       };
@@ -514,7 +530,7 @@ describe('PoUW Integration Tests — Full Challenge-Response Flow', () => {
         _res: Response,
         next: NextFunction,
       ) => {
-        if (!req.body) (req as any).body = {};
+        if (!req.body) req.body = {};
         next();
       };
 

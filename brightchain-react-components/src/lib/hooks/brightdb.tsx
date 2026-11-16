@@ -32,7 +32,9 @@ interface BrightDbCollectionLike<T extends BrightDbDocument> {
 
 /** The part of a BrightDB v2 database the hooks use. */
 export interface BrightDbLike {
-  collection<T extends BrightDbDocument = BrightDbDocument>(name: string): BrightDbCollectionLike<T>;
+  collection<T extends BrightDbDocument = BrightDbDocument>(
+    name: string,
+  ): BrightDbCollectionLike<T>;
   /** Called after the database root moves; returns a function that stops listening. */
   subscribe(
     listener: () => void | Promise<void>,
@@ -56,7 +58,11 @@ export interface BrightDbProviderProps {
 }
 
 /** Provides a database to the hooks below and watches it so they stay current. */
-export function BrightDbProvider({ db, intervalMs = 250, children }: BrightDbProviderProps) {
+export function BrightDbProvider({
+  db,
+  intervalMs = 250,
+  children,
+}: BrightDbProviderProps) {
   const [version, setVersion] = useState(0);
   useEffect(() => {
     let stop: (() => void) | undefined;
@@ -73,12 +79,17 @@ export function BrightDbProvider({ db, intervalMs = 250, children }: BrightDbPro
     };
   }, [db, intervalMs]);
   const value = useMemo(() => ({ db, version }), [db, version]);
-  return <BrightDbContext.Provider value={value}>{children}</BrightDbContext.Provider>;
+  return (
+    <BrightDbContext.Provider value={value}>
+      {children}
+    </BrightDbContext.Provider>
+  );
 }
 
 function useContextValue(): BrightDbContextValue {
   const value = useContext(BrightDbContext);
-  if (!value) throw new Error('BrightDB hooks must be used inside a <BrightDbProvider>');
+  if (!value)
+    throw new Error('BrightDB hooks must be used inside a <BrightDbProvider>');
   return value;
 }
 
@@ -95,17 +106,35 @@ export interface QueryState<T> {
 }
 
 /** Run an async read now and again whenever the database changes or `key` does. */
-function useRead<T>(initial: T, key: string, read: (db: BrightDbLike) => Promise<T>): QueryState<T> {
+function useRead<T>(
+  initial: T,
+  key: string,
+  read: (db: BrightDbLike) => Promise<T>,
+): QueryState<T> {
   const { db, version } = useContextValue();
-  const [state, setState] = useState<QueryState<T>>({ data: initial, loading: true, error: null });
+  const [state, setState] = useState<QueryState<T>>({
+    data: initial,
+    loading: true,
+    error: null,
+  });
   const readRef = useRef(read);
   readRef.current = read;
   useEffect(() => {
     let current = true;
     readRef
       .current(db)
-      .then((data) => current && setState({ data, loading: false, error: null }))
-      .catch((error: unknown) => current && setState((s) => ({ data: s.data, loading: false, error: error as Error })));
+      .then(
+        (data) => current && setState({ data, loading: false, error: null }),
+      )
+      .catch(
+        (error: unknown) =>
+          current &&
+          setState((s) => ({
+            data: s.data,
+            loading: false,
+            error: error as Error,
+          })),
+      );
     return () => {
       current = false;
     };
@@ -118,8 +147,10 @@ export function useLiveQuery<T extends BrightDbDocument = BrightDbDocument>(
   collection: string,
   filter: Record<string, unknown> = {},
 ): QueryState<T[]> {
-  return useRead<T[]>([], `${collection}\u0000${JSON.stringify(filter)}`, (db) =>
-    db.collection<T>(collection).find(filter).toArray(),
+  return useRead<T[]>(
+    [],
+    `${collection}\u0000${JSON.stringify(filter)}`,
+    (db) => db.collection<T>(collection).find(filter).toArray(),
   );
 }
 
@@ -129,12 +160,15 @@ export function useIndexQuery<T extends BrightDbDocument = BrightDbDocument>(
   index: string,
   query: Record<string, unknown> = {},
 ): QueryState<T[]> {
-  return useRead<T[]>([], `${collection}\u0000${index}\u0000${JSON.stringify(query)}`, (db) =>
-    db.collection<T>(collection).findByIndex(index, query),
+  return useRead<T[]>(
+    [],
+    `${collection}\u0000${index}\u0000${JSON.stringify(query)}`,
+    (db) => db.collection<T>(collection).findByIndex(index, query),
   );
 }
 
-export interface DocumentState<T extends BrightDbDocument> extends QueryState<T | null> {
+export interface DocumentState<T extends BrightDbDocument>
+  extends QueryState<T | null> {
   /** Insert the document, or replace it if it already exists. */
   save(document: T): Promise<void>;
   remove(): Promise<void>;
@@ -146,11 +180,14 @@ export function useDocument<T extends BrightDbDocument = BrightDbDocument>(
   id: string,
 ): DocumentState<T> {
   const { db } = useContextValue();
-  const state = useRead<T | null>(null, `${collection}\u0000${id}`, (d) => d.collection<T>(collection).findById(id));
+  const state = useRead<T | null>(null, `${collection}\u0000${id}`, (d) =>
+    d.collection<T>(collection).findById(id),
+  );
   const save = useCallback(
     async (document: T) => {
       const target = db.collection<T>(collection);
-      if ((await target.findById(id)) === null) await target.insertOne({ ...document, _id: id });
+      if ((await target.findById(id)) === null)
+        await target.insertOne({ ...document, _id: id });
       else await target.replaceById(id, { ...document, _id: id });
     },
     [db, collection, id],

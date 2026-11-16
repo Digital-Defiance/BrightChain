@@ -14,11 +14,10 @@ import { BlockSize } from '../../enumerations/blockSize';
 import { IBlockStore } from '../../interfaces/storage/blockStore';
 import { ServiceProvider } from '../../services/service.provider';
 import { initializeTestServices } from '../../test/service.initializer.helper';
+import { brightDateNow } from '../../utils/brightDateConversions';
 import { RawDataBlock } from '../rawData';
 import { enumerateAttachmentEntries } from './tcblAttachmentUtils';
 import { TcblBuilder } from './tcblBuilder';
-import { brightDateNow } from '../../utils/brightDateConversions';
-import type { BrightDateTimestamp } from '../../types/brightDateTimestamp';
 
 // Mock CBLBase to avoid signature validation issues in tests
 jest.mock('../cblBase', () => {

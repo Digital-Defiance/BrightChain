@@ -17,9 +17,9 @@ describe('isAllowedImageUrl', () => {
   });
 
   it('returns true for a permanent URL with base64 ID', () => {
-    expect(
-      isAllowedImageUrl('/api/post-images/qiQkdhLZSYmw8giMFGK22w=='),
-    ).toBe(true);
+    expect(isAllowedImageUrl('/api/post-images/qiQkdhLZSYmw8giMFGK22w==')).toBe(
+      true,
+    );
   });
 
   it('returns true for a staging URL', () => {

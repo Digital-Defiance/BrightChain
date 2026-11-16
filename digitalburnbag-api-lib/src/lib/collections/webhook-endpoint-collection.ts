@@ -31,9 +31,7 @@ export class BrightDBWebhookEndpointRepository<TID extends PlatformID> {
     const doc = await this.endpoints.findOne(
       filter({ _id: endpointId }, this.ids),
     );
-    return doc
-      ? fromDoc<TID, IWebhookEndpointBase<TID>>(doc, this.ids)
-      : null;
+    return doc ? fromDoc<TID, IWebhookEndpointBase<TID>>(doc, this.ids) : null;
   }
 
   /**
@@ -46,17 +44,13 @@ export class BrightDBWebhookEndpointRepository<TID extends PlatformID> {
     const doc = await this.endpoints.findOne(
       filter({ connectionId }, this.ids),
     );
-    return doc
-      ? fromDoc<TID, IWebhookEndpointBase<TID>>(doc, this.ids)
-      : null;
+    return doc ? fromDoc<TID, IWebhookEndpointBase<TID>>(doc, this.ids) : null;
   }
 
   /**
    * Retrieve all webhook endpoints belonging to a user.
    */
-  async getEndpointsForUser(
-    userId: TID,
-  ): Promise<IWebhookEndpointBase<TID>[]> {
+  async getEndpointsForUser(userId: TID): Promise<IWebhookEndpointBase<TID>[]> {
     const docs = await this.endpoints
       .find(filter({ userId }, this.ids))
       .toArray();
@@ -73,12 +67,8 @@ export class BrightDBWebhookEndpointRepository<TID extends PlatformID> {
   async getEndpointByUrlPath(
     urlPath: string,
   ): Promise<IWebhookEndpointBase<TID> | null> {
-    const doc = await this.endpoints.findOne(
-      filter({ urlPath }, this.ids),
-    );
-    return doc
-      ? fromDoc<TID, IWebhookEndpointBase<TID>>(doc, this.ids)
-      : null;
+    const doc = await this.endpoints.findOne(filter({ urlPath }, this.ids));
+    return doc ? fromDoc<TID, IWebhookEndpointBase<TID>>(doc, this.ids) : null;
   }
 
   /**

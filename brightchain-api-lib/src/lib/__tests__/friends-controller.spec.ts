@@ -17,6 +17,7 @@ import {
   FriendshipStatus,
   FriendsServiceError,
   type IFriendsService,
+  isoToBrightDate,
 } from '@brightchain/brightchain-lib';
 import express, { Express, NextFunction, Request, Response } from 'express';
 import request from 'supertest';
@@ -54,7 +55,7 @@ function createTestApp(
   // Simulate JWT middleware
   if (authenticated) {
     app.use((req, _res, next) => {
-      (req as any).user = { id: userId };
+      Object.assign(req, { user: { id: userId } });
       next();
     });
   }
@@ -90,7 +91,7 @@ const MOCK_FRIEND_REQUEST = {
   requesterId: USER_ID,
   recipientId: OTHER_USER_ID,
   status: FriendRequestStatus.Pending,
-  createdAt: '2024-01-01T00:00:00.000Z',
+  createdAt: isoToBrightDate('2024-01-01T00:00:00.000Z'),
 };
 
 // ── Tests ──────────────────────────────────────────────────────────────

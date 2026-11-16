@@ -45,11 +45,6 @@ function summarizeDeliveryStatus(raw: unknown): string {
   return 'unknown';
 }
 
-interface AdminMailHandlers extends TypedHandlers {
-  listEmails: ApiRequestHandler<AdminMailApiResponse>;
-  deleteEmail: ApiRequestHandler<AdminMailApiResponse>;
-}
-
 /**
  * Admin-only BrightMail email management controller.
  *

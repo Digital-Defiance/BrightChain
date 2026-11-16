@@ -12,7 +12,6 @@ import {
   type IUploadCommitResultDTO,
 } from '@brightchain/digitalburnbag-lib';
 import { useI18n } from '@digitaldefiance/express-suite-react-components';
-import { formatDateWithBD } from '../utils/formatBrightDate';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import BarChartIcon from '@mui/icons-material/BarChart';
@@ -76,7 +75,7 @@ import type { IUploadProgress } from '../components/UploadWidget';
 import { UploadWidget } from '../components/UploadWidget';
 import { VaultPicker } from '../components/VaultPicker';
 import { JouleUploadForm } from '../components/joule';
-import { decryptAuthenticatedUserFile, encryptFileForUpload } from '../crypto';
+import { decryptAuthenticatedUserFile } from '../crypto';
 import type {
   IApiCanaryBindingDTO,
   IApiFileDTO,
@@ -86,7 +85,7 @@ import type {
   IApiVaultContainerSummaryDTO,
 } from '../services/burnbag-api-client';
 import { ApiError, BurnbagApiClient } from '../services/burnbag-api-client';
-import { computeChunkChecksum } from '../utils/upload-utils';
+import { formatDateWithBD } from '../utils/formatBrightDate';
 
 // ---------------------------------------------------------------------------
 // Props
@@ -1035,219 +1034,11 @@ export const BurnbagPage: React.FC<IBurnbagPageProps> = ({
       handleError,
       handlePaste,
       t,
-    ],
-  );
-
-  // -- Upload handlers -------------------------------------------------------
-
-  const handleUploadFiles = useCallback(
-    async (files: File[]) => {
-      for (const file of files) {
-        const progressEntry: IUploadProgress = {
-          fileName: file.name,
-          progress: 0,
-          status: 'uploading',
-        };
-        setUploadProgress((prev) => [...prev, progressEntry]);
-
-        try {
-          if (!currentFolderId) {
-            throw new Error(t(DigitalBurnbagStrings.Page_LoadFolderFailed));
-          }
-
-          const privateKey = getPrivateKey?.();
-
-          let session;
-          let uploadSource: Uint8Array | null = null;
-          let chunkSize: number;
-          let totalChunks: number;
-          let sessionId: string;
-
-          if (privateKey) {
-            // ── E2EE path: encrypt the whole file client-side first ──
-            const fileBuffer = await file.arrayBuffer();
-            const { ciphertext, ivB64, authTagB64, wrappedKeyB64 } =
-              await encryptFileForUpload(
-                new Uint8Array(fileBuffer),
-                privateKey,
-              );
-
-            uploadSource = ciphertext;
-
-            session = await api.initUpload(
-              file.name,
-              file.type || 'application/octet-stream',
-              ciphertext.length,
-              currentFolderId,
-              selectedVaultId ?? undefined,
-              undefined,
-              undefined,
-              { wrappedKeyB64, ivB64, authTagB64 },
-            );
-
-            chunkSize = session.chunkSize;
-            totalChunks = session.totalChunks;
-            sessionId = session.sessionId;
-
-            for (let i = 0; i < totalChunks; i++) {
-              const start = i * chunkSize;
-              const end = Math.min(start + chunkSize, uploadSource.length);
-              const chunk = uploadSource.slice(start, end)
-                .buffer as ArrayBuffer;
-              const checksum = computeChunkChecksum(chunk);
-
-              const result = await api.uploadChunk(
-                sessionId,
-                i,
-                chunk,
-                checksum,
-              );
-
-              setUploadProgress((prev) =>
-                prev.map((p) =>
-                  p.fileName === file.name
-                    ? { ...p, progress: Math.round(result.progress * 100) }
-                    : p,
-                ),
-              );
-            }
-          } else {
-            // ── Plaintext path: stream file chunks directly ──
-            session = await api.initUpload(
-              file.name,
-              file.type || 'application/octet-stream',
-              file.size,
-              currentFolderId,
-              selectedVaultId ?? undefined,
-            );
-
-            chunkSize = session.chunkSize;
-            totalChunks = session.totalChunks;
-            sessionId = session.sessionId;
-
-            for (let i = 0; i < totalChunks; i++) {
-              const start = i * chunkSize;
-              const end = Math.min(start + chunkSize, file.size);
-              const chunk = await file.slice(start, end).arrayBuffer();
-              const checksum = computeChunkChecksum(chunk);
-
-              const result = await api.uploadChunk(
-                sessionId,
-                i,
-                chunk,
-                checksum,
-              );
-
-              setUploadProgress((prev) =>
-                prev.map((p) =>
-                  p.fileName === file.name
-                    ? { ...p, progress: Math.round(result.progress * 100) }
-                    : p,
-                ),
-              );
-            }
-          }
-
-          await api.finalizeUpload(sessionId);
-
-          setUploadProgress((prev) =>
-            prev.map((p) =>
-              p.fileName === file.name
-                ? { ...p, progress: 100, status: 'complete' as const }
-                : p,
-            ),
-          );
-        } catch (err) {
-          setUploadProgress((prev) =>
-            prev.map((p) =>
-              p.fileName === file.name
-                ? {
-                    ...p,
-                    status: 'error' as const,
-                    error:
-                      err instanceof ApiError
-                        ? err.message
-                        : t(DigitalBurnbagStrings.Page_UploadFailed),
-                  }
-                : p,
-            ),
-          );
-        }
-      }
-
-      // Refresh folder after all uploads
-      loadFolderContents(currentFolderId);
-      loadVaults();
-
-      // Clear completed uploads after a delay
-      setTimeout(() => {
-        setUploadProgress((prev) =>
-          prev.filter((p) => p.status === 'uploading'),
-        );
-      }, 3000);
-    },
-    [
-      api,
-      currentFolderId,
-      getPrivateKey,
+      vaults,
       selectedVaultId,
-      loadFolderContents,
-      loadVaults,
-      t,
+      breadcrumbs,
+      getPrivateKey,
     ],
-  );
-
-  const handleUploadNewVersion = useCallback(
-    async (fileId: string, file: File) => {
-      const privateKey = getPrivateKey?.();
-
-      if (privateKey) {
-        // ── E2EE path ──
-        const fileBuffer = await file.arrayBuffer();
-        const { ciphertext, ivB64, authTagB64, wrappedKeyB64 } =
-          await encryptFileForUpload(new Uint8Array(fileBuffer), privateKey);
-
-        const session = await api.initUploadNewVersion(
-          fileId,
-          file.type || 'application/octet-stream',
-          ciphertext.length,
-          file.name,
-          { wrappedKeyB64, ivB64, authTagB64 },
-        );
-
-        const { chunkSize, totalChunks, sessionId } = session;
-
-        for (let i = 0; i < totalChunks; i++) {
-          const start = i * chunkSize;
-          const end = Math.min(start + chunkSize, ciphertext.length);
-          const chunk = ciphertext.slice(start, end).buffer as ArrayBuffer;
-          const checksum = computeChunkChecksum(chunk);
-          await api.uploadChunk(sessionId, i, chunk, checksum);
-        }
-        await api.finalizeUpload(sessionId);
-      } else {
-        // ── Plaintext path ──
-        const session = await api.initUploadNewVersion(
-          fileId,
-          file.type || 'application/octet-stream',
-          file.size,
-          file.name,
-        );
-        const { chunkSize, totalChunks, sessionId } = session;
-        for (let i = 0; i < totalChunks; i++) {
-          const start = i * chunkSize;
-          const end = Math.min(start + chunkSize, file.size);
-          const chunk = await file.slice(start, end).arrayBuffer();
-          const checksum = computeChunkChecksum(chunk);
-          await api.uploadChunk(sessionId, i, chunk, checksum);
-        }
-        await api.finalizeUpload(sessionId);
-      }
-
-      showSnack(t(DigitalBurnbagStrings.Upload_NewVersionSuccess), 'success');
-      loadFolderContents(currentFolderId);
-    },
-    [api, currentFolderId, getPrivateKey, loadFolderContents, showSnack, t],
   );
 
   // -- Joule upload handlers -------------------------------------------------

@@ -116,7 +116,8 @@ export function decodeIndexId(key: Buffer, fieldCount: number): string {
     throw new V2IndexError('An index key must end with a document _id');
   }
   const end = offset + componentLength(key, offset);
-  if (end !== key.length) throw new V2IndexError('Trailing bytes in an index key');
+  if (end !== key.length)
+    throw new V2IndexError('Trailing bytes in an index key');
   const raw = key.subarray(offset + 1, end - 1);
   const bytes: number[] = [];
   for (let i = 0; i < raw.length; i++) {
@@ -151,7 +152,9 @@ function fieldValues(document: unknown, path: string): IndexScalar[] {
     return current as IndexScalar[];
   }
   if (current !== null && typeof current === 'object') {
-    throw new V2IndexError(`Field ${path} holds an object that cannot be indexed`);
+    throw new V2IndexError(
+      `Field ${path} holds an object that cannot be indexed`,
+    );
   }
   return [current as IndexScalar];
 }
@@ -171,7 +174,9 @@ export function extractIndexKeys(
     const encoded = [
       ...new Set(
         fieldValues(document, field).map((value) =>
-          encodeIndexValue(value === undefined ? undefined : value).toString('hex'),
+          encodeIndexValue(value === undefined ? undefined : value).toString(
+            'hex',
+          ),
         ),
       ),
     ].map((hex) => Buffer.from(hex, 'hex'));
@@ -187,7 +192,9 @@ export function extractIndexKeys(
   const keys = combinations.map((parts) => Buffer.concat([...parts, idBytes]));
   for (const key of keys) {
     if (key.length > MAX_INDEX_KEY_BYTES) {
-      throw new V2IndexError(`An index key exceeds ${MAX_INDEX_KEY_BYTES} bytes`);
+      throw new V2IndexError(
+        `An index key exceeds ${MAX_INDEX_KEY_BYTES} bytes`,
+      );
     }
   }
   return keys;
@@ -241,7 +248,11 @@ export function indexRange(
       : prefixSuccessor(base);
 
   if (query.prefix !== undefined) {
-    const lo = Buffer.concat([base, Buffer.from([TAG_STRING]), escapeString(query.prefix)]);
+    const lo = Buffer.concat([
+      base,
+      Buffer.from([TAG_STRING]),
+      escapeString(query.prefix),
+    ]);
     return { lo, hi: prefixSuccessor(lo) };
   }
   if (!hasBounds) return { lo: base, hi: baseEnd() };

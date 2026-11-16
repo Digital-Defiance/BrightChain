@@ -14,7 +14,10 @@
 import { describe, expect, it } from '@jest/globals';
 import fc from 'fast-check';
 
-import type { BrightDateTimestamp, IAclScope } from '@brightchain/brightchain-lib';
+import type {
+  BrightDateTimestamp,
+  IAclScope,
+} from '@brightchain/brightchain-lib';
 import { brightDateNow } from '@brightchain/brightchain-lib';
 
 import { AuditOperationType, WriteAclAuditLogger } from './writeAclAuditLogger';

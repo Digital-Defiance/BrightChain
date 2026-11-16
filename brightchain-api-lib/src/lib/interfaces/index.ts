@@ -1,9 +1,9 @@
 export type * from './api-constants';
-export type * from './baseResponse';
 export type * from './application';
 export type * from './auth-credentials';
 export type * from './auth-token';
 export type * from './backend-objects';
+export type * from './baseResponse';
 export type * from './bases';
 export type * from './blockRequest';
 export type * from './blockResponses';

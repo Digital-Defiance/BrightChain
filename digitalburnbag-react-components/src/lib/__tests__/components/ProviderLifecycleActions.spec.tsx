@@ -10,7 +10,6 @@
 // ---------------------------------------------------------------------------
 
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import React from 'react';
 import {
   IDisconnectImpactReport,
   IProviderLifecycleActionsProps,
@@ -47,7 +46,9 @@ function makeImpactReport(
   };
 }
 
-function renderComponent(overrides: Partial<IProviderLifecycleActionsProps> = {}) {
+function renderComponent(
+  overrides: Partial<IProviderLifecycleActionsProps> = {},
+) {
   const defaultProps: IProviderLifecycleActionsProps = {
     connection: makeConnection(),
     onPause: jest.fn().mockResolvedValue(undefined),
@@ -109,7 +110,9 @@ describe('ProviderLifecycleActions', () => {
       renderComponent({ onPause });
       fireEvent.click(screen.getByTestId('pause-button'));
       await waitFor(() => {
-        expect(screen.getByTestId('lifecycle-error')).toHaveTextContent('Network error');
+        expect(screen.getByTestId('lifecycle-error')).toHaveTextContent(
+          'Network error',
+        );
       });
     });
   });
@@ -134,7 +137,9 @@ describe('ProviderLifecycleActions', () => {
       const { props } = renderComponent();
       fireEvent.click(screen.getByTestId('disconnect-button'));
       await waitFor(() => {
-        expect(screen.getByTestId('disconnect-confirm-button')).toBeInTheDocument();
+        expect(
+          screen.getByTestId('disconnect-confirm-button'),
+        ).toBeInTheDocument();
       });
       fireEvent.click(screen.getByTestId('disconnect-confirm-button'));
       await waitFor(() => {
@@ -150,7 +155,9 @@ describe('ProviderLifecycleActions', () => {
       });
       fireEvent.click(screen.getByTestId('disconnect-cancel-button'));
       await waitFor(() => {
-        expect(screen.queryByTestId('disconnect-dialog')).not.toBeInTheDocument();
+        expect(
+          screen.queryByTestId('disconnect-dialog'),
+        ).not.toBeInTheDocument();
       });
     });
   });
@@ -172,9 +179,13 @@ describe('ProviderLifecycleActions', () => {
       renderComponent({ onGetDisconnectImpact });
       fireEvent.click(screen.getByTestId('disconnect-button'));
       await waitFor(() => {
-        expect(screen.getByTestId('disconnect-binding-warning')).toBeInTheDocument();
+        expect(
+          screen.getByTestId('disconnect-binding-warning'),
+        ).toBeInTheDocument();
       });
-      expect(screen.getByText(/This provider is part of 1 multi-canary binding/)).toBeInTheDocument();
+      expect(
+        screen.getByText(/This provider is part of 1 multi-canary binding/),
+      ).toBeInTheDocument();
       expect(screen.getByText('My Vault Binding')).toBeInTheDocument();
     });
 
@@ -184,7 +195,9 @@ describe('ProviderLifecycleActions', () => {
       await waitFor(() => {
         expect(screen.getByTestId('disconnect-dialog')).toBeInTheDocument();
       });
-      expect(screen.queryByTestId('disconnect-binding-warning')).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId('disconnect-binding-warning'),
+      ).not.toBeInTheDocument();
     });
   });
 
@@ -207,7 +220,9 @@ describe('ProviderLifecycleActions', () => {
       await waitFor(() => {
         expect(screen.getByTestId('below-minimum-warning')).toBeInTheDocument();
       });
-      expect(screen.getByText(/Multi-canary redundancy will be lost/)).toBeInTheDocument();
+      expect(
+        screen.getByText(/Multi-canary redundancy will be lost/),
+      ).toBeInTheDocument();
       // "Critical Binding" appears in both warnings; verify it's in the below-minimum section
       const belowMinWarning = screen.getByTestId('below-minimum-warning');
       expect(belowMinWarning).toHaveTextContent('Critical Binding');
@@ -229,7 +244,9 @@ describe('ProviderLifecycleActions', () => {
       await waitFor(() => {
         expect(screen.getByTestId('disconnect-dialog')).toBeInTheDocument();
       });
-      expect(screen.queryByTestId('below-minimum-warning')).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId('below-minimum-warning'),
+      ).not.toBeInTheDocument();
     });
   });
 
@@ -256,7 +273,9 @@ describe('ProviderLifecycleActions', () => {
       expect(
         shouldShowBelowMinimumWarning(
           makeImpactReport({
-            bindingsReducedBelowMinimum: [{ id: 'b1', name: 'Binding', providerCount: 2 }],
+            bindingsReducedBelowMinimum: [
+              { id: 'b1', name: 'Binding', providerCount: 2 },
+            ],
           }),
         ),
       ).toBe(true);

@@ -213,7 +213,9 @@ describe('Owner Free Filesystem (OFF) Integration Tests', () => {
           ServiceLocator.getServiceProvider().checksumService.calculateChecksum(
             chunk,
           );
-        blocks.push(new RawDataBlock(blockSize, chunk, brightDateNow(), checksum));
+        blocks.push(
+          new RawDataBlock(blockSize, chunk, brightDateNow(), checksum),
+        );
 
         // Create 3 random blocks for each message block
         const randoms = [

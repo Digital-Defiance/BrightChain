@@ -1,3 +1,4 @@
+/// <reference path="../../test/types/jest.d.ts" />
 import { StoreErrorType } from '../enumerations/storeErrorType';
 import { StoreError } from '../errors/storeError';
 import { JsonStore } from './jsonStore';

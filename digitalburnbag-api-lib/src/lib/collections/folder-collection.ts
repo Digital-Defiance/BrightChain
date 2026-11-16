@@ -30,7 +30,7 @@ export class BrightDBFolderRepository<TID extends PlatformID>
       parentFolderId: null,
     };
     if (vaultContainerId) {
-      query.vaultContainerId = vaultContainerId;
+      query['vaultContainerId'] = vaultContainerId;
     }
     const doc = await this.folders.findOne(filter(query, this.ids));
     return doc ? fromDoc<TID, IFolderMetadataBase<TID>>(doc, this.ids) : null;
@@ -64,20 +64,6 @@ export class BrightDBFolderRepository<TID extends PlatformID>
   async getFilesInFolder(folderId: TID): Promise<IFileMetadataBase<TID>[]> {
     const queryFilter = filter({ folderId, deletedAt: null }, this.ids);
     const docs = await this.fileMetadata.find(queryFilter).toArray();
-    // Debug: log all documents in the collection to compare
-    const allDocs = await this.fileMetadata.find({}).toArray();
-    console.debug(
-      '[FolderRepo] getFilesInFolder: query=%j matchCount=%d totalDocs=%d',
-      queryFilter,
-      docs.length,
-      allDocs.length,
-    );
-    if (allDocs.length > 0 && docs.length === 0) {
-      console.debug(
-        '[FolderRepo] stored folderIds: %j',
-        allDocs.map((d) => (d as Record<string, unknown>).folderId),
-      );
-    }
     return docs.map((d) => fromDoc<TID, IFileMetadataBase<TID>>(d, this.ids));
   }
 

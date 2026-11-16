@@ -14,7 +14,10 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { brightDateNow, InMemoryHeadRegistry } from '@brightchain/brightchain-lib';
+import {
+  brightDateNow,
+  InMemoryHeadRegistry,
+} from '@brightchain/brightchain-lib';
 import { MockBlockStore } from '../../__tests__/helpers/mockBlockStore';
 import { Collection, ICollectionHeadRegistry } from '../collection';
 
@@ -199,7 +202,13 @@ describe('Gossip consistency – LWW rejects stale gossip', () => {
     const staleRegistry = new InMemoryHeadRegistry();
 
     // Write old state first (lower BrightDate timestamp)
-    const staleNode = makeCollection(COL, DB, store, staleRegistry, () => 9000.1);
+    const staleNode = makeCollection(
+      COL,
+      DB,
+      store,
+      staleRegistry,
+      () => 9000.1,
+    );
     await staleNode.insertOne({ _id: 'prod-1', price: 9.99 });
 
     // Capture the stale head
@@ -242,7 +251,13 @@ describe('Gossip consistency – tombstone vs live LWW', () => {
 
     // ── Build a "deleter" node that deletes at T=5 ────────────────────────
     let deleterClock = 9000.001;
-    const deleterNode = makeCollection(COL, DB, store, deleteRegistry, () => deleterClock);
+    const deleterNode = makeCollection(
+      COL,
+      DB,
+      store,
+      deleteRegistry,
+      () => deleterClock,
+    );
     // First insert (needed so there's something to delete)
     await deleterNode.insertOne({ _id: 'note-1', text: 'initial' });
     await deleterNode.find({}); // load
@@ -255,7 +270,13 @@ describe('Gossip consistency – tombstone vs live LWW', () => {
     expect(deleteHead).toBeDefined();
 
     // ── Build a "writer" node that writes at T=10 ─────────────────────────
-    const writerNode = makeCollection(COL, DB, store, liveRegistry, () => 9000.010);
+    const writerNode = makeCollection(
+      COL,
+      DB,
+      store,
+      liveRegistry,
+      () => 9000.01,
+    );
     await writerNode.insertOne({ _id: 'note-1', text: 'updated' });
     await writerNode.find({}); // load
 
@@ -278,7 +299,13 @@ describe('Gossip consistency – tombstone vs live LWW', () => {
     const liveRegistry = new InMemoryHeadRegistry();
 
     // ── Build a "writer" node that writes at T=10 ─────────────────────────
-    const writerNode = makeCollection(COL, DB, store, liveRegistry, () => 9000.010);
+    const writerNode = makeCollection(
+      COL,
+      DB,
+      store,
+      liveRegistry,
+      () => 9000.01,
+    );
     await writerNode.insertOne({ _id: 'note-2', text: 'alive' });
     await writerNode.find({}); // load
 
@@ -287,8 +314,14 @@ describe('Gossip consistency – tombstone vs live LWW', () => {
     const writerHead = liveRegistry.getHead(DB, COL)!;
     deleteRegistry.mergeHeadUpdate(DB, COL, writerHead, brightDateNow());
 
-    let deleterClock = 9000.010;
-    const deleterNode = makeCollection(COL, DB, store, deleteRegistry, () => deleterClock);
+    let deleterClock = 9000.01;
+    const deleterNode = makeCollection(
+      COL,
+      DB,
+      store,
+      deleteRegistry,
+      () => deleterClock,
+    );
     await deleterNode.find({}); // load (triggers merge of writer's state)
     await flushAsync();
 
@@ -301,17 +334,11 @@ describe('Gossip consistency – tombstone vs live LWW', () => {
 
     // ── Gossip the delete (T=15) to the writer node (local write T=10) ────
     // Use a future timestamp so the strict-newer check always fires.
-    liveRegistry.mergeHeadUpdate(
-      DB,
-      COL,
-      deleteHead,
-      brightDateNow() + 0.0012,
-    );
+    liveRegistry.mergeHeadUpdate(DB, COL, deleteHead, brightDateNow() + 0.0012);
     await flushAsync();
 
     // The T=15 tombstone beats the T=10 write — doc must be gone
     const docs = await writerNode.find({});
     expect(docs).toHaveLength(0);
-
   });
 });

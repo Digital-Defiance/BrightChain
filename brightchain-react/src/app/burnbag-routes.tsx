@@ -28,13 +28,7 @@ import {
 } from '@digitaldefiance/express-suite-react-components';
 import { Box, CircularProgress } from '@mui/material';
 import React, { Suspense, useCallback, useMemo } from 'react';
-import {
-  Navigate,
-  Route,
-  Routes,
-  useNavigate,
-  useParams,
-} from 'react-router-dom';
+import { Navigate, Route, Routes, useNavigate, useParams } from 'react-router';
 
 /** Sections that are NOT "files" — used to distinguish section routes from virtual paths. */
 const NON_FILE_SECTIONS = new Set<string>([

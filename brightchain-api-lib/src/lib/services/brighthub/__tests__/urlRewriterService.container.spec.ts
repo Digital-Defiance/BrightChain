@@ -186,11 +186,13 @@ describe('UrlRewriterService — container handling & checksum', () => {
 
   describe('duplicate container is handled by looking up existing', () => {
     it('should fall back to listContainers when createContainer throws "already exists"', async () => {
-      const createContainerMock = jest.fn().mockRejectedValue(
-        new Error(
-          'A vault container named "user-test-post-images" already exists',
-        ),
-      );
+      const createContainerMock = jest
+        .fn()
+        .mockRejectedValue(
+          new Error(
+            'A vault container named "user-test-post-images" already exists',
+          ),
+        );
 
       const listContainersMock = jest.fn().mockResolvedValue([
         {

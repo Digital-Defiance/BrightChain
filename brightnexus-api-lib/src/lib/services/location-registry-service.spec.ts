@@ -1,12 +1,11 @@
 import { DEFAULT_POOL } from '@brightchain/brightchain-lib';
-import { BrightDb } from '@brightchain/db';
 import {
   BrightNexusBrightDBName,
   BrightNexusBrightDBPoolID,
   BslpPrivacyMode,
   LocationLookupSource,
 } from '@brightchain/brightnexus-lib';
-import { LocationRegistryService } from './location-registry-service';
+import { BrightDb } from '@brightchain/db';
 import {
   collectPoolBlocks,
   createBrightNexusTestDb,
@@ -14,13 +13,17 @@ import {
   samplePublishPayload,
   signSamplePublishBody,
 } from '../__tests__/helpers/brightnexus-db';
+import { LocationRegistryService } from './location-registry-service';
 
 describe('LocationRegistryService', () => {
   it('publishes and looks up by IP with DHT source', async () => {
     const { service } = createBrightNexusTestDb();
     const memberId = nextTestId();
 
-    const record = await service.publish(memberId, signSamplePublishBody(memberId));
+    const record = await service.publish(
+      memberId,
+      signSamplePublishBody(memberId),
+    );
     expect(record.ipAddress).toBe('203.0.113.55');
     expect(record.lookupSource).toBe(LocationLookupSource.Dht);
 
@@ -34,7 +37,10 @@ describe('LocationRegistryService', () => {
     const { service } = createBrightNexusTestDb();
     const memberId = nextTestId();
 
-    const first = await service.publish(memberId, signSamplePublishBody(memberId));
+    const first = await service.publish(
+      memberId,
+      signSamplePublishBody(memberId),
+    );
     const second = await service.publish(
       memberId,
       signSamplePublishBody(memberId, {
@@ -131,7 +137,10 @@ describe('LocationRegistryService', () => {
     const memberId = nextTestId();
     await service.publish(memberId, signSamplePublishBody(memberId));
 
-    const nexusBlocks = await collectPoolBlocks(store, BrightNexusBrightDBPoolID);
+    const nexusBlocks = await collectPoolBlocks(
+      store,
+      BrightNexusBrightDBPoolID,
+    );
     const defaultBlocks = await collectPoolBlocks(store, DEFAULT_POOL);
 
     expect(nexusBlocks.length).toBeGreaterThan(0);

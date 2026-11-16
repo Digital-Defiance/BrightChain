@@ -88,6 +88,15 @@ function makeConfig(
 ): IEmailGatewayConfig {
   return {
     canonicalDomain: 'brightchain.org',
+    testMode: {
+      enabled: false,
+      catchallEnabled: false,
+      catchallDirectory: '',
+      skipDkim: false,
+      skipSpamFilter: false,
+      acceptAllRecipients: false,
+      testRecipients: [],
+    },
     postfixHost: 'localhost',
     postfixPort: 25,
     dkimKeyPath: '/etc/dkim/private.key',

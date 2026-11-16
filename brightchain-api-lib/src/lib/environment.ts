@@ -1,6 +1,5 @@
 import {
   BrightChainFeatures,
-  CONSTANTS,
   NodeIdSource,
 } from '@brightchain/brightchain-lib';
 import { BrightDbEnvironment } from '@brightchain/node-express-suite';

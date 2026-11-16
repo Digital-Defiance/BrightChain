@@ -84,7 +84,10 @@ export class DiskMessageMetadataStore
       version: MESSAGE_METADATA_FILE_VERSION,
       blockId: metadata.blockId,
       createdAt: brightDateToISO(metadata.createdAt),
-      expiresAt: metadata.expiresAt !== null ? brightDateToISO(metadata.expiresAt) : null,
+      expiresAt:
+        metadata.expiresAt !== null
+          ? brightDateToISO(metadata.expiresAt)
+          : null,
       durabilityLevel: metadata.durabilityLevel,
       parityBlockIds: [...metadata.parityBlockIds],
       accessCount: metadata.accessCount,

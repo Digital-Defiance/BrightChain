@@ -105,7 +105,7 @@ describeOrSkip(
         .collection('users')
         .findOne({ username: 'jessica' } as never);
       expect(found).not.toBeNull();
-      expect((found as any)._id).toBe(memberId);
+      expect(found?._id).toBe(memberId);
     });
 
     it('should persist member_index doc across restart', async () => {
@@ -171,7 +171,7 @@ describeOrSkip(
       const found = await db2
         .collection('users')
         .findOne({ _id: 'upd_az' } as never);
-      expect((found as any).email).toBe('new@test.com');
+      expect(found?.['email']).toBe('new@test.com');
     });
 
     it('should persist deletes across restart', async () => {
@@ -239,7 +239,7 @@ describeOrSkip(
         .collection('users')
         .findOne({ username: 'alice' } as never);
       expect(userDoc).not.toBeNull();
-      const foundId = (userDoc as any)._id;
+      const foundId = String(userDoc?._id);
 
       const indexDoc = await db2.collection('member_index').findOne({
         id: foundId.replace(/-/g, ''),

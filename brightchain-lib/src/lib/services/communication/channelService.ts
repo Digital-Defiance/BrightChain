@@ -48,8 +48,8 @@ import {
   ICommunicationEventEmitter,
   NullEventEmitter,
 } from '../../interfaces/events';
-import { paginateItems } from '../../utils/pagination';
 import { brightDateNow } from '../../utils/brightDateConversions';
+import { paginateItems } from '../../utils/pagination';
 import { validateAndPrepareAttachments } from './attachmentUtils';
 import { IKeyEpochState } from './keyEpochManager';
 import { MessageOperationsService } from './messageOperationsService';
@@ -652,9 +652,7 @@ export class ChannelService {
       return ch.members.some((m) => m.memberId === memberId);
     });
 
-    visible.sort(
-      (a, b) => b.lastMessageAt - a.lastMessageAt,
-    );
+    visible.sort((a, b) => b.lastMessageAt - a.lastMessageAt);
 
     return paginateItems(visible, cursor, limit);
   }

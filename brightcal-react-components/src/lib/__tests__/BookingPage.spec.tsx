@@ -4,7 +4,10 @@ import { fireEvent, render, screen } from '@testing-library/react';
 // Mock useI18n to avoid requiring I18nProvider in tests
 jest.mock(
   '@digitaldefiance/express-suite-react-components',
-  () => require('./helpers/i18nMock').expressSuiteReactComponentsMock,
+  () =>
+    jest.requireActual<typeof import('./helpers/i18nMock')>(
+      './helpers/i18nMock',
+    ).expressSuiteReactComponentsMock,
 );
 
 import type {
@@ -36,7 +39,7 @@ const mockBookingPage: IBookingPageDTO = {
   maxAdvanceDays: 30,
   active: true,
   dateCreated: '2024-01-01T00:00:00Z',
-} as any;
+};
 
 const mockSlots: BookingSlot[] = [
   { start: '2024-06-15T09:00:00Z', end: '2024-06-15T09:30:00Z' },

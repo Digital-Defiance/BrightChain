@@ -13,6 +13,7 @@
  * @module organizations/components/InvitationManagementPanel
  */
 
+import { useFormattedDate } from '@brightchain/brightchain-react-components';
 import type { IInvitation } from '@brightchain/brightchart-lib';
 import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
@@ -24,7 +25,6 @@ import TextField from '@mui/material/TextField';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import React, { useCallback, useState } from 'react';
-import { useFormattedDate } from '@brightchain/brightchain-react-components';
 import { useOrgApi } from '../hooks/useOrgApi';
 
 export interface InvitationManagementPanelProps {

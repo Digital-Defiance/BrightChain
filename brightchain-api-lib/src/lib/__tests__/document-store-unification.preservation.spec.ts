@@ -15,7 +15,12 @@
  * EXPECTED OUTCOME: All tests PASS on unfixed code (confirms baseline to preserve).
  */
 
-import { brightDateToDate, ConversationService } from '@brightchain/brightchain-lib';
+import {
+  brightDateToDate,
+  ConversationService,
+  InMemoryEmailMetadataStore,
+  LoginEntry,
+} from '@brightchain/brightchain-lib';
 import * as fc from 'fast-check';
 import * as fs from 'fs';
 import * as http from 'http';
@@ -33,6 +38,10 @@ import type { DefaultBackendIdType } from '../shared-types';
 
 // Ensure the disk store factory is registered
 import '../factories/blockStoreFactory';
+import {
+  asEntryInput,
+  asPlaintextEntry,
+} from '../services/brightpass.property.helpers';
 
 jest.setTimeout(180_000);
 
@@ -300,7 +309,9 @@ describe('Property 2: Preservation — Registered Models and Service API Signatu
           expect(conversation.participants).toContain(memberB);
           expect(conversation.createdAt).toBeDefined();
           expect(brightDateToDate(conversation.createdAt)).toBeInstanceOf(Date);
-          expect(brightDateToDate(conversation.lastMessageAt)).toBeInstanceOf(Date);
+          expect(brightDateToDate(conversation.lastMessageAt)).toBeInstanceOf(
+            Date,
+          );
 
           // sendMessage returns ICommunicationMessage
           const message = await service.sendMessage(
@@ -384,23 +395,30 @@ describe('Property 2: Preservation — Registered Models and Service API Signatu
           expect(vaultMeta.ownerId).toBe(memberId);
 
           // addEntry stores encrypted data — returns VaultEntry
-          const entry = await passService.addEntry(vaultMeta.id, {
+          const loginEntry: LoginEntry = {
             id: '',
             title: entryTitle,
             type: 'login',
+            siteUrl: '',
             username: entryUsername,
             password: entryPassword,
-            fields: {},
+            favorite: false,
             tags: [],
             createdAt: new Date(),
             updatedAt: new Date(),
-          });
+          };
+          const entry = await passService.addEntry(
+            vaultMeta.id,
+            asEntryInput(loginEntry),
+          );
           expect(entry).toBeDefined();
           expect(entry.id).toBeDefined();
           expect(entry.title).toBe(entryTitle);
 
           // getEntry retrieves and decrypts from block store — returns VaultEntry
-          const retrieved = await passService.getEntry(vaultMeta.id, entry.id);
+          const retrieved = asPlaintextEntry<LoginEntry>(
+            await passService.getEntry(vaultMeta.id, entry.id),
+          );
           expect(retrieved).toBeDefined();
           expect(retrieved.title).toBe(entryTitle);
           expect(retrieved.username).toBe(entryUsername);
@@ -443,11 +461,6 @@ describe('Property 2: Preservation — Registered Models and Service API Signatu
    * Any replacement implementation must satisfy the same contract.
    */
   it('IEmailMetadataStore interface contract is satisfied by InMemoryEmailMetadataStore', () => {
-    // Import dynamically to avoid pulling in all messaging deps at top level
-
-    const {
-      InMemoryEmailMetadataStore,
-    } = require('@brightchain/brightchain-lib');
     const store = new InMemoryEmailMetadataStore();
 
     // Verify all required IEmailMetadataStore methods exist

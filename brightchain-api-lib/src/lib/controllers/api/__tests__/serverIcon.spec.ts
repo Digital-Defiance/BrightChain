@@ -12,6 +12,13 @@
 import type { IStagingConfig } from '@brightchain/brightchain-lib';
 import {
   ChannelService,
+  IAddServerMembersResponse,
+  IApiEnvelope,
+  IChatCollection,
+  IChatStorageProvider,
+  ICreateServerResponse,
+  IDeleteServerIconResponse,
+  IUploadServerIconResponse,
   PermissionService,
   ServerService,
 } from '@brightchain/brightchain-lib';
@@ -27,29 +34,53 @@ import { IServerIconControllerDeps, ServerController } from '../servers';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
+type HandlerResult<T> = Promise<{
+  statusCode: number;
+  response: T | ApiErrorResponse;
+}>;
+
+/** Binary icon payload returned by serveIcon when no Express response is attached. */
+interface IBinaryIconResponse {
+  _binary: true;
+  _buffer: Buffer;
+  _contentType: string;
+  _headers: Record<string, string>;
+}
+
+/** Error body produced by ServerController error paths. */
+interface IServerErrorBody {
+  error: { code: string; message: string };
+}
+
 interface ServerControllerHandlers {
   handlers: {
-    uploadIcon: (req: unknown) => Promise<{
-      statusCode: number;
-      response: Record<string, unknown> | ApiErrorResponse;
-    }>;
-    serveIcon: (req: unknown) => Promise<{
-      statusCode: number;
-      response: Record<string, unknown> | ApiErrorResponse;
-    }>;
-    removeIcon: (req: unknown) => Promise<{
-      statusCode: number;
-      response: Record<string, unknown> | ApiErrorResponse;
-    }>;
-    createServer: (req: unknown) => Promise<{
-      statusCode: number;
-      response: Record<string, unknown> | ApiErrorResponse;
-    }>;
-    addMembers: (req: unknown) => Promise<{
-      statusCode: number;
-      response: Record<string, unknown> | ApiErrorResponse;
-    }>;
+    uploadIcon: (req: unknown) => HandlerResult<IUploadServerIconResponse>;
+    serveIcon: (req: unknown) => HandlerResult<IBinaryIconResponse>;
+    removeIcon: (req: unknown) => HandlerResult<IDeleteServerIconResponse>;
+    createServer: (req: unknown) => HandlerResult<ICreateServerResponse>;
+    addMembers: (req: unknown) => HandlerResult<IAddServerMembersResponse>;
   };
+}
+
+/** Treat a handler response as the success envelope the test expects. */
+function envelope<T>(
+  response: IApiEnvelope<T> | ApiErrorResponse,
+): IApiEnvelope<T> {
+  return response as IApiEnvelope<T>;
+}
+
+/** Return the envelope's data, failing the test if it is missing. */
+function dataOf<T>(response: IApiEnvelope<T> | ApiErrorResponse): T {
+  const data = envelope(response).data;
+  if (data === undefined) {
+    throw new Error('Expected response data');
+  }
+  return data;
+}
+
+/** Return the error code from a ServerController error response. */
+function errorCode(response: unknown): string {
+  return (response as IServerErrorBody).error.code;
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -120,13 +151,14 @@ function createMockIconDeps(
     stagingService,
     vaultContainerService: {
       createContainer: async () => ({
-        id: Buffer.from('vault-container-id') as never,
-        rootFolderId: Buffer.from('root-folder-id') as never,
+        id: Buffer.from('vault-container-id'),
+        rootFolderId: Buffer.from('root-folder-id'),
       }),
+      listContainers: async () => [],
     },
     uploadService: {
       createSession: async () => ({
-        id: Buffer.from('session-id') as never,
+        id: Buffer.from('session-id'),
       }),
       receiveChunk: async (_sid, _idx, data) => {
         // Store the uploaded data for later retrieval
@@ -137,8 +169,8 @@ function createMockIconDeps(
         fileCounter++;
         const fileId = `file-${fileCounter}`;
         return {
-          id: Buffer.from(fileId) as never,
-          vaultContainerId: Buffer.from('vault-container-id') as never,
+          id: Buffer.from(fileId),
+          vaultContainerId: Buffer.from('vault-container-id'),
           fileName: 'icon.png',
           mimeType: 'image/png',
           sizeBytes: storedFiles.get('latest')?.length ?? 0,
@@ -155,39 +187,37 @@ function createMockIconDeps(
         storedFiles.delete('latest');
       },
     },
-    parseId: (id: string) => Buffer.from(id) as never,
+    parseId: (id: string) => Buffer.from(id),
+  };
+}
+
+/** Documents are keyed by `id`, or `token` for invite tokens. */
+interface IKeyedDocument {
+  id?: string;
+  token?: string;
+  _id?: string;
+}
+
+function makeCol<T>(): IChatCollection<T> {
+  const store = new Map<string, T>();
+  return {
+    create: async (doc: T) => {
+      const keyed = doc as IKeyedDocument;
+      store.set(String(keyed.id ?? keyed.token ?? keyed._id), doc);
+    },
+    findById: async (key: string) => store.get(key) ?? null,
+    findMany: async () => Array.from(store.values()),
+    update: async (key: string, doc: T) => {
+      store.set(key, doc);
+    },
+    delete: async (key: string) => {
+      store.delete(key);
+    },
   };
 }
 
 function authReq(userId: string, extra: Record<string, unknown> = {}) {
   return { user: { id: userId }, ...extra };
-}
-
-/** Create a minimal valid PNG buffer (1x1 pixel) */
-function createMinimalPng(): Buffer {
-  // Minimal valid PNG: 1x1 pixel, RGBA
-  const header = Buffer.from([
-    0x89,
-    0x50,
-    0x4e,
-    0x47,
-    0x0d,
-    0x0a,
-    0x1a,
-    0x0a, // PNG signature
-  ]);
-  // IHDR chunk
-  const ihdrData = Buffer.alloc(13);
-  ihdrData.writeUInt32BE(1, 0); // width
-  ihdrData.writeUInt32BE(1, 4); // height
-  ihdrData[8] = 8; // bit depth
-  ihdrData[9] = 6; // color type (RGBA)
-  ihdrData[10] = 0; // compression
-  ihdrData[11] = 0; // filter
-  ihdrData[12] = 0; // interlace
-
-  // We'll use sharp to create a proper minimal PNG instead
-  return header; // This won't be a valid PNG, but we'll use sharp in tests
 }
 
 // ─── Test Setup ──────────────────────────────────────────────────────────────
@@ -211,18 +241,8 @@ beforeEach(async () => {
   const permissionService = new PermissionService();
   const channelService = new ChannelService(permissionService);
   // Create an in-memory storage provider that actually stores data
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const makeCol = () => {
-    const store = new Map<string, any>();
-    return {
-      create: async (doc: any) => { store.set(doc.id ?? doc.token ?? doc._id, doc); },
-      findById: async (key: string) => store.get(key) ?? null,
-      findMany: async () => Array.from(store.values()),
-      update: async (key: string, doc: any) => { store.set(key, doc); },
-      delete: async (key: string) => { store.delete(key); },
-    };
-  };
-  const storageProvider = {
+
+  const storageProvider: IChatStorageProvider = {
     conversations: makeCol(),
     messages: makeCol(),
     groups: makeCol(),
@@ -232,8 +252,7 @@ beforeEach(async () => {
     inviteTokens: makeCol(),
     servers: makeCol(),
     serverInvites: makeCol(),
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } as any;
+  };
   serverService = new ServerService({ channelService, storageProvider });
 
   const app = createMockApplication();
@@ -255,9 +274,7 @@ async function createTestServer(ownerId: string): Promise<string> {
     authReq(ownerId, { body: { name: 'Test Server' } }),
   );
   expect(result.statusCode).toBe(201);
-  return (
-    (result.response as Record<string, unknown>).data as Record<string, unknown>
-  ).id as string;
+  return dataOf(result.response).id as string;
 }
 
 /** Stage a valid PNG image and return the commit token */
@@ -302,9 +319,9 @@ describe('ServerController — Icon Endpoints', () => {
       );
 
       expect(result.statusCode).toBe(200);
-      const body = result.response as Record<string, unknown>;
+      const body = envelope(result.response);
       expect(body.status).toBe('success');
-      const data = body.data as Record<string, unknown>;
+      const data = dataOf(body);
       expect(data.iconUrl).toBe(`/api/servers/${serverId}/icon`);
       expect(data.iconAssetId).toBeTruthy();
       expect(data.iconVaultContainerId).toBeTruthy();
@@ -369,9 +386,7 @@ describe('ServerController — Icon Endpoints', () => {
       );
 
       expect(result.statusCode).toBe(404);
-      const error = (result.response as Record<string, unknown>)
-        .error as Record<string, unknown>;
-      expect(error.code).toBe('STAGED_FILE_NOT_FOUND');
+      expect(errorCode(result.response)).toBe('STAGED_FILE_NOT_FOUND');
     });
 
     it('returns 410 when staged file is expired', async () => {
@@ -419,9 +434,7 @@ describe('ServerController — Icon Endpoints', () => {
       );
 
       expect(result.statusCode).toBe(410);
-      const error = (result.response as Record<string, unknown>)
-        .error as Record<string, unknown>;
-      expect(error.code).toBe('STAGED_FILE_EXPIRED');
+      expect(errorCode(result.response)).toBe('STAGED_FILE_EXPIRED');
     });
 
     it('returns 403 when uploader does not match authenticated user', async () => {
@@ -437,9 +450,7 @@ describe('ServerController — Icon Endpoints', () => {
       );
 
       expect(result.statusCode).toBe(403);
-      const error = (result.response as Record<string, unknown>)
-        .error as Record<string, unknown>;
-      expect(error.code).toBe('STAGING_PERMISSION_ERROR');
+      expect(errorCode(result.response)).toBe('STAGING_PERMISSION_ERROR');
     });
 
     it('returns 400 when MIME type is not allowed', async () => {
@@ -461,9 +472,7 @@ describe('ServerController — Icon Endpoints', () => {
       );
 
       expect(result.statusCode).toBe(400);
-      const error = (result.response as Record<string, unknown>)
-        .error as Record<string, unknown>;
-      expect(error.code).toBe('INVALID_FILE_TYPE');
+      expect(errorCode(result.response)).toBe('INVALID_FILE_TYPE');
     });
 
     it('returns 400 when file size exceeds limit', async () => {
@@ -487,9 +496,7 @@ describe('ServerController — Icon Endpoints', () => {
       );
 
       expect(result.statusCode).toBe(400);
-      const error = (result.response as Record<string, unknown>)
-        .error as Record<string, unknown>;
-      expect(error.code).toBe('FILE_TOO_LARGE');
+      expect(errorCode(result.response)).toBe('FILE_TOO_LARGE');
     });
 
     it('returns 404 when server does not exist', async () => {
@@ -527,10 +534,10 @@ describe('ServerController — Icon Endpoints', () => {
       });
 
       expect(result.statusCode).toBe(200);
-      const response = result.response as Record<string, unknown>;
+      const response = result.response as IBinaryIconResponse;
       expect(response._binary).toBe(true);
       expect(response._buffer).toBeDefined();
-      const headers = response._headers as Record<string, string>;
+      const headers = response._headers;
       expect(headers['Content-Type']).toBe('image/png');
       expect(headers['Cache-Control']).toBe('public, max-age=86400, immutable');
       expect(headers['ETag']).toBeTruthy();
@@ -545,9 +552,7 @@ describe('ServerController — Icon Endpoints', () => {
       });
 
       expect(result.statusCode).toBe(404);
-      const error = (result.response as Record<string, unknown>)
-        .error as Record<string, unknown>;
-      expect(error.code).toBe('SERVER_ICON_NOT_FOUND');
+      expect(errorCode(result.response)).toBe('SERVER_ICON_NOT_FOUND');
     });
 
     it('returns 304 when If-None-Match matches ETag', async () => {
@@ -561,12 +566,7 @@ describe('ServerController — Icon Endpoints', () => {
           body: { commitToken },
         }),
       );
-      const iconAssetId = (
-        (uploadResult.response as Record<string, unknown>).data as Record<
-          string,
-          unknown
-        >
-      ).iconAssetId as string;
+      const iconAssetId = dataOf(uploadResult.response).iconAssetId as string;
 
       // Request with matching ETag
       const result = await handlers.serveIcon({
@@ -629,9 +629,9 @@ describe('ServerController — Icon Endpoints', () => {
       );
 
       expect(result.statusCode).toBe(200);
-      const body = result.response as Record<string, unknown>;
+      const body = envelope(result.response);
       expect(body.status).toBe('success');
-      const data = body.data as Record<string, unknown>;
+      const data = dataOf(body);
       expect(data.iconUrl).toBeUndefined();
       expect(data.iconAssetId).toBeUndefined();
       expect(data.iconVaultContainerId).toBeUndefined();
@@ -647,9 +647,7 @@ describe('ServerController — Icon Endpoints', () => {
       );
 
       expect(result.statusCode).toBe(404);
-      const error = (result.response as Record<string, unknown>)
-        .error as Record<string, unknown>;
-      expect(error.code).toBe('SERVER_ICON_NOT_FOUND');
+      expect(errorCode(result.response)).toBe('SERVER_ICON_NOT_FOUND');
     });
 
     it('returns 403 when user is not owner or admin', async () => {

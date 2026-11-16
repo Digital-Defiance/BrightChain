@@ -11,6 +11,7 @@ import {
   BlockSize,
   PooledMemoryBlockStore,
 } from '@brightchain/brightchain-lib';
+import type { ICollectionHeadRegistry } from '../lib/collection';
 import { InMemoryHeadRegistry } from '../lib/headRegistry';
 import {
   runPersistenceConformance,
@@ -19,6 +20,8 @@ import {
 
 jest.setTimeout(30_000);
 
+let sharedRegistry: ICollectionHeadRegistry | undefined;
+
 const factory: StoreTestFactory = {
   label: 'PooledMemoryBlockStore + InMemoryHeadRegistry',
 
@@ -26,14 +29,17 @@ const factory: StoreTestFactory = {
     const store = new PooledMemoryBlockStore(BlockSize.Small);
     const registry = InMemoryHeadRegistry.createIsolated();
     // Stash for createFreshRegistry
-    (this as any)._registry = registry;
+    sharedRegistry = registry;
     return { store, registry };
   },
 
   async createFreshRegistry() {
     // In-memory: same instance (heads are still in memory).
     // This tests the BrightDb collection reload path, not persistence.
-    return (this as any)._registry;
+    if (!sharedRegistry) {
+      throw new Error('createStore must run before createFreshRegistry');
+    }
+    return sharedRegistry;
   },
 
   async cleanup() {

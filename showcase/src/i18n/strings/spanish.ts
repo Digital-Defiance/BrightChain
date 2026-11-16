@@ -33,10 +33,8 @@ export const ShowcaseSpanishStrings: Partial<
     'Sin zonas horarias, sin horario de verano, sin ambigüedad — solo un número en una línea temporal.',
   [ShowcaseStrings.DatePage_Format_BrightDateFull]:
     'BrightDate (precisión completa)',
-  [ShowcaseStrings.DatePage_Format_BrightDateCompact]:
-    'BrightDate (compacto)',
-  [ShowcaseStrings.DatePage_Format_BrightDateStandard]:
-    'BrightDate (estándar)',
+  [ShowcaseStrings.DatePage_Format_BrightDateCompact]: 'BrightDate (compacto)',
+  [ShowcaseStrings.DatePage_Format_BrightDateStandard]: 'BrightDate (estándar)',
   [ShowcaseStrings.DatePage_Format_ISO8601]: 'ISO 8601',
   [ShowcaseStrings.DatePage_Format_UTC]: 'UTC',
   [ShowcaseStrings.DatePage_Format_LocalDateTime]: 'Fecha y hora local',

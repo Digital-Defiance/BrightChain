@@ -29,7 +29,9 @@ export interface ILocationControllerDeps<TID extends NodePlatformID> {
   locationRegistryService: LocationRegistryService<TID>;
   signatureVerifier: BslpSignatureVerifier;
   getMemberPublicKeyHex: (memberId: TID) => Promise<string | null>;
-  getMemberPublicKeyHexByIdString: (memberIdHex: string) => Promise<string | null>;
+  getMemberPublicKeyHexByIdString: (
+    memberIdHex: string,
+  ) => Promise<string | null>;
   idToString: (memberId: TID) => string;
   parseId: (idString: string) => TID;
   parseSafeId?: (idString: string) => TID | undefined;
@@ -234,7 +236,10 @@ export class LocationController<
       };
     }
 
-    const record = await this.deps.locationRegistryService.publish(memberId, body);
+    const record = await this.deps.locationRegistryService.publish(
+      memberId,
+      body,
+    );
 
     const dnsTxt = formatBrightDnsTxt(record.vector, record.privacy);
     const wellKnown = toWellKnownManifest(
@@ -287,7 +292,8 @@ export class LocationController<
     return {
       statusCode: 200,
       response: {
-        message: 'Sign payloadHex with your member private key (ECDSA secp256k1)',
+        message:
+          'Sign payloadHex with your member private key (ECDSA secp256k1)',
         payloadHex,
         canonicalJson,
         memberIdHex,
@@ -338,7 +344,8 @@ export class LocationController<
       };
     }
 
-    const records = await this.deps.locationRegistryService.listByMember(memberId);
+    const records =
+      await this.deps.locationRegistryService.listByMember(memberId);
     return {
       statusCode: 200,
       response: { message: 'OK', records },
@@ -364,11 +371,17 @@ export class LocationController<
       };
     }
 
-    const removed = await this.deps.locationRegistryService.revoke(memberId, ip);
+    const removed = await this.deps.locationRegistryService.revoke(
+      memberId,
+      ip,
+    );
     if (!removed) {
       return {
         statusCode: 404,
-        response: { message: 'No announcement found for this IP', error: 'Not found' },
+        response: {
+          message: 'No announcement found for this IP',
+          error: 'Not found',
+        },
       };
     }
 

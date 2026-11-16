@@ -273,19 +273,14 @@ export const BrightMailUkrainianStrings: RequiredBrandedStringsCollection<
   [BrightMailStrings.CalInvite_AddToCalendar]: 'Додати до календаря',
   [BrightMailStrings.CalInvite_ViewInCalendar]: 'Переглянути в календарі',
   [BrightMailStrings.CalInvite_AlreadyResponded]: 'Ви вже відповіли',
-  [BrightMailStrings.CalInvite_ResponseTemplate]:
-    'Ваша відповідь: {RESPONSE}',
+  [BrightMailStrings.CalInvite_ResponseTemplate]: 'Ваша відповідь: {RESPONSE}',
   [BrightMailStrings.CalInvite_Cancelled]: 'Подію скасовано',
-  [BrightMailStrings.CalInvite_CancelledBody]:
-    'Організатор скасував цю подію.',
+  [BrightMailStrings.CalInvite_CancelledBody]: 'Організатор скасував цю подію.',
   [BrightMailStrings.CalInvite_Updated]: 'Подію оновлено',
-  [BrightMailStrings.CalInvite_UpdatedBody]:
-    'Організатор оновив цю подію.',
+  [BrightMailStrings.CalInvite_UpdatedBody]: 'Організатор оновив цю подію.',
   [BrightMailStrings.CalInvite_Counter]: 'Зустрічна пропозиція',
-  [BrightMailStrings.CalInvite_CounterBody]:
-    'Учасник запропонував новий час.',
-  [BrightMailStrings.CalInvite_ErrorRsvp]:
-    'Не вдалося надіслати відповідь',
+  [BrightMailStrings.CalInvite_CounterBody]: 'Учасник запропонував новий час.',
+  [BrightMailStrings.CalInvite_ErrorRsvp]: 'Не вдалося надіслати відповідь',
   [BrightMailStrings.CalInvite_ErrorImport]:
     'Не вдалося імпортувати подію до календаря',
   [BrightMailStrings.CalInvite_SuccessAccepted]: 'Запрошення прийнято',

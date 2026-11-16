@@ -3,8 +3,9 @@
  *
  * Uses react-easy-crop for the crop UI with a circular guide and 1:1 aspect ratio.
  * On file select, stages the raw file via chatApi.stageFile(), then displays
- * the crop preview from the staging previewUrl. On confirm, passes the
- * commitToken to the parent via onCropComplete.
+ * the crop preview from the staging previewUrl. On confirm, crops the selected
+ * area client-side, stages the cropped PNG, and passes its commitToken to the
+ * parent via onCropComplete (the server only resizes; it does not crop).
  *
  * Requirements: 5.1, 5.2, 5.3, 5.4, 5.5, 5.6, 5.7, 5.8, 5.9, 5.10, 9.1, 9.2, 9.3, 9.4, 9.6
  */
@@ -32,11 +33,13 @@ import {
   memo,
   useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from 'react';
 import type { Area, Point } from 'react-easy-crop';
 import Cropper from 'react-easy-crop';
+import { cropImageToFile, IconCropError } from './IconCropDialog.helpers';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -91,9 +94,20 @@ const IconCropDialog: FC<IconCropDialogProps> = ({
   // Crop state
   const [crop, setCrop] = useState<Point>({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(MIN_ZOOM);
-  const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
+  // The area is stored with the image it was measured on, so an area from a
+  // previous image is never applied to the current one.
+  const [croppedSelection, setCroppedSelection] = useState<{
+    imageUrl: string;
+    area: Area;
+  } | null>(null);
+  const croppedAreaPixels =
+    croppedSelection && croppedSelection.imageUrl === previewUrl
+      ? croppedSelection.area
+      : null;
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  // Set synchronously so a second confirm in the same tick cannot start.
+  const confirmInFlightRef = useRef(false);
 
   // Sync initial values when dialog opens
   useEffect(() => {
@@ -103,7 +117,9 @@ const IconCropDialog: FC<IconCropDialogProps> = ({
       setError(null);
       setCrop({ x: 0, y: 0 });
       setZoom(MIN_ZOOM);
-      setCroppedAreaPixels(null);
+      // The cropped area is not reset here: the cropper reports it once per
+      // image, and this effect also runs after onImageStaged feeds the freshly
+      // staged URL back in as initialPreviewUrl, after that report.
       if (!initialPreviewUrl) {
         setStaging(false);
       }
@@ -137,6 +153,8 @@ const IconCropDialog: FC<IconCropDialogProps> = ({
         setPreviewUrl(response.previewUrl);
         setCrop({ x: 0, y: 0 });
         setZoom(MIN_ZOOM);
+        // The new image's cropper reports its own area once loaded.
+        setCroppedSelection(null);
         onImageStaged(response.commitToken, response.previewUrl);
       } catch (err) {
         setError(
@@ -170,18 +188,78 @@ const IconCropDialog: FC<IconCropDialogProps> = ({
 
   const handleCropAreaComplete = useCallback(
     (_croppedArea: Area, croppedPixels: Area) => {
-      setCroppedAreaPixels(croppedPixels);
+      if (previewUrl) {
+        setCroppedSelection({ imageUrl: previewUrl, area: croppedPixels });
+      }
     },
-    [],
+    [previewUrl],
+  );
+
+  // The cropper reports an area only after its image loads. If the staged
+  // preview cannot be loaded, Confirm would stay disabled with no
+  // explanation, so tell the user to pick the image again.
+  const handleCropperMediaError = useCallback(() => {
+    setError(t(BrightChatStrings.Server_Icon_PreviewLoadFailed));
+  }, [t]);
+  const cropperMediaProps = useMemo(
+    () => ({ onError: handleCropperMediaError }),
+    [handleCropperMediaError],
   );
 
   // ─── Confirm / Cancel ───────────────────────────────────────────────
 
-  const handleConfirm = useCallback(() => {
-    if (commitToken) {
-      onCropComplete(commitToken);
+  // The server only resizes at commit, so the selection is applied here: crop
+  // the staged image, stage the cropped file, and hand on that commit token.
+  const handleConfirm = useCallback(async () => {
+    // Confirm is disabled until the cropper has reported an area, so the
+    // uncropped image is never committed.
+    if (
+      confirmInFlightRef.current ||
+      !commitToken ||
+      staging ||
+      !previewUrl ||
+      !croppedAreaPixels
+    )
+      return;
+    confirmInFlightRef.current = true;
+    setError(null);
+    setStaging(true);
+    try {
+      let croppedFile: File;
+      try {
+        croppedFile = await cropImageToFile(previewUrl, croppedAreaPixels);
+      } catch (cropErr) {
+        setError(
+          t(
+            cropErr instanceof IconCropError && cropErr.code === 'too-large'
+              ? BrightChatStrings.Server_Icon_FileTooLarge
+              : BrightChatStrings.Server_Icon_CropFailed,
+          ),
+        );
+        return;
+      }
+      const response = await chatApi.stageFile(croppedFile);
+      setCommitToken(response.commitToken);
+      setPreviewUrl(response.previewUrl);
+      onImageStaged(response.commitToken, response.previewUrl);
+      onCropComplete(response.commitToken);
+    } catch {
+      // The underlying error is not shown to the user.
+      setError(t(BrightChatStrings.Server_Icon_StagingFailed));
+    } finally {
+      confirmInFlightRef.current = false;
+      setStaging(false);
     }
-  }, [commitToken, onCropComplete]);
+  }, [
+    commitToken,
+    staging,
+    previewUrl,
+    croppedAreaPixels,
+    chatApi,
+    onImageStaged,
+    onCropComplete,
+    t,
+  ]);
 
   const handleCancel = useCallback(() => {
     onClose();
@@ -189,9 +267,12 @@ const IconCropDialog: FC<IconCropDialogProps> = ({
 
   // ─── Keyboard support (Req 9.2) ────────────────────────────────────
 
+  const canConfirm =
+    !!commitToken && !!previewUrl && !!croppedAreaPixels && !staging;
+
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
-      if (e.key === 'Enter' && commitToken && !staging) {
+      if (e.key === 'Enter' && canConfirm) {
         e.preventDefault();
         handleConfirm();
       } else if (e.key === 'Escape') {
@@ -199,7 +280,7 @@ const IconCropDialog: FC<IconCropDialogProps> = ({
         handleCancel();
       }
     },
-    [commitToken, staging, handleConfirm, handleCancel],
+    [canConfirm, handleConfirm, handleCancel],
   );
 
   return (
@@ -301,6 +382,7 @@ const IconCropDialog: FC<IconCropDialogProps> = ({
                 onCropChange={handleCropChange}
                 onZoomChange={setZoom}
                 onCropComplete={handleCropAreaComplete}
+                mediaProps={cropperMediaProps}
               />
             </Box>
 
@@ -363,7 +445,7 @@ const IconCropDialog: FC<IconCropDialogProps> = ({
         <Button
           variant="contained"
           onClick={handleConfirm}
-          disabled={!commitToken || staging}
+          disabled={!canConfirm}
         >
           {t(BrightChatStrings.Server_Icon_CropConfirm)}
         </Button>

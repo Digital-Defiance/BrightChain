@@ -673,7 +673,8 @@ export const BrightHubGermanStrings: ComponentStrings<BrightHubStringKey> = {
   [BrightHubStrings.EditProfileDialog_Title]: 'Profil bearbeiten',
   [BrightHubStrings.EditProfileDialog_DisplayName]: 'Anzeigename',
   [BrightHubStrings.EditProfileDialog_Bio]: 'Bio',
-  [BrightHubStrings.EditProfileDialog_BioPlaceholder]: 'Erzählen Sie den Leuten von sich. Markdown und Icons werden unterstützt.',
+  [BrightHubStrings.EditProfileDialog_BioPlaceholder]:
+    'Erzählen Sie den Leuten von sich. Markdown und Icons werden unterstützt.',
   [BrightHubStrings.EditProfileDialog_BioCharCountTemplate]: '{CURRENT}/{MAX}',
   [BrightHubStrings.EditProfileDialog_BioPreview]: 'Vorschau',
   [BrightHubStrings.EditProfileDialog_Location]: 'Ort',
@@ -681,8 +682,10 @@ export const BrightHubGermanStrings: ComponentStrings<BrightHubStringKey> = {
   [BrightHubStrings.EditProfileDialog_Save]: 'Speichern',
   [BrightHubStrings.EditProfileDialog_Cancel]: 'Abbrechen',
   [BrightHubStrings.EditProfileDialog_Saving]: 'Speichern\u2026',
-  [BrightHubStrings.EditProfileDialog_ErrorBioTooLong]: 'Die Bio überschreitet die maximale Länge von {MAX} Zeichen.',
-  [BrightHubStrings.EditProfileDialog_ErrorBioContainsImage]: 'Die Bio darf keine Markdown-Bildsyntax enthalten.',
+  [BrightHubStrings.EditProfileDialog_ErrorBioTooLong]:
+    'Die Bio überschreitet die maximale Länge von {MAX} Zeichen.',
+  [BrightHubStrings.EditProfileDialog_ErrorBioContainsImage]:
+    'Die Bio darf keine Markdown-Bildsyntax enthalten.',
 
   // UserProfileCard
   [BrightHubStrings.UserProfileCard_EditProfile]: 'Profil bearbeiten',

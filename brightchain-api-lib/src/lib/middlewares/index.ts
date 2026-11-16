@@ -5,7 +5,6 @@ export {
 } from '@digitaldefiance/node-express-suite';
 export { mapStatusToOutcome } from './access-outcome-mapper';
 export { AuditRateLimiter } from './audit-rate-limiter';
-export { createBrightDateRateLimiter } from './brightdate-rate-limiter';
 export {
   IAuthenticatedRequest,
   IJwtAuthConfig,
@@ -22,6 +21,7 @@ export {
   requireMemberTypes,
   requireRoles,
 } from './authentication';
+export { createBrightDateRateLimiter } from './brightdate-rate-limiter';
 export { cleanupCrypto } from './cleanup-crypto';
 export { orgAdminGuard } from './orgAdminGuard';
 export { REQUEST_ID_HEADER, requestIdMiddleware } from './request-id';

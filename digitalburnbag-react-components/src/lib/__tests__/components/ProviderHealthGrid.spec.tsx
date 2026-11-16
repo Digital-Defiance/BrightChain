@@ -20,9 +20,11 @@ jest.mock('@digitaldefiance/express-suite-react-components', () => ({
 // Imports
 // ---------------------------------------------------------------------------
 
-import { HeartbeatSignalType, ProviderCategory } from '@brightchain/digitalburnbag-lib';
-import { act, fireEvent, render, screen, within } from '@testing-library/react';
-import React from 'react';
+import {
+  HeartbeatSignalType,
+  ProviderCategory,
+} from '@brightchain/digitalburnbag-lib';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import {
   IProviderConnectionExtendedForGrid,
   IProviderHealthGridProps,
@@ -42,8 +44,10 @@ function makeConnection(
     providerId: overrides.providerId ?? 'github',
     providerDisplayName: overrides.providerDisplayName ?? 'GitHub',
     status: overrides.status ?? 'connected',
-    lastCheckSignalType: overrides.lastCheckSignalType ?? HeartbeatSignalType.PRESENCE,
-    lastCheckedAt: overrides.lastCheckedAt ?? new Date(Date.now() - 60000).toISOString(),
+    lastCheckSignalType:
+      overrides.lastCheckSignalType ?? HeartbeatSignalType.PRESENCE,
+    lastCheckedAt:
+      overrides.lastCheckedAt ?? new Date(Date.now() - 60000).toISOString(),
     lastActivityAt: overrides.lastActivityAt,
     isPaused: overrides.isPaused ?? false,
     providerConfig: overrides.providerConfig ?? {
@@ -144,7 +148,11 @@ const SLACK_CONNECTION = makeConnection({
   },
 });
 
-const ALL_CONNECTIONS = [GITHUB_CONNECTION, FITBIT_CONNECTION, SLACK_CONNECTION];
+const ALL_CONNECTIONS = [
+  GITHUB_CONNECTION,
+  FITBIT_CONNECTION,
+  SLACK_CONNECTION,
+];
 
 function renderGrid(overrides: Partial<IProviderHealthGridProps> = {}) {
   const defaultProps: IProviderHealthGridProps = {
@@ -177,18 +185,29 @@ describe('ProviderHealthGrid', () => {
 
     it('renders a card for each connected provider', () => {
       renderGrid();
-      expect(screen.getByTestId('provider-card-expanded-conn-github')).toBeInTheDocument();
-      expect(screen.getByTestId('provider-card-expanded-conn-fitbit')).toBeInTheDocument();
-      expect(screen.getByTestId('provider-card-expanded-conn-slack')).toBeInTheDocument();
+      expect(
+        screen.getByTestId('provider-card-expanded-conn-github'),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByTestId('provider-card-expanded-conn-fitbit'),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByTestId('provider-card-expanded-conn-slack'),
+      ).toBeInTheDocument();
     });
 
     it('renders all providers when multiple connections are provided', () => {
       const connections = Array.from({ length: 10 }, (_, i) =>
-        makeConnection({ id: `conn-${i}`, providerDisplayName: `Provider ${i}` }),
+        makeConnection({
+          id: `conn-${i}`,
+          providerDisplayName: `Provider ${i}`,
+        }),
       );
       renderGrid({ connections });
       for (let i = 0; i < 10; i++) {
-        expect(screen.getByTestId(`provider-card-expanded-conn-${i}`)).toBeInTheDocument();
+        expect(
+          screen.getByTestId(`provider-card-expanded-conn-${i}`),
+        ).toBeInTheDocument();
       }
     });
 
@@ -208,14 +227,22 @@ describe('ProviderHealthGrid', () => {
   describe('Req 12.2 — card displays all required fields with correct status colors', () => {
     it('displays provider name on each card', () => {
       renderGrid();
-      expect(screen.getByTestId('provider-name-conn-github')).toHaveTextContent('GitHub');
-      expect(screen.getByTestId('provider-name-conn-fitbit')).toHaveTextContent('Fitbit');
+      expect(screen.getByTestId('provider-name-conn-github')).toHaveTextContent(
+        'GitHub',
+      );
+      expect(screen.getByTestId('provider-name-conn-fitbit')).toHaveTextContent(
+        'Fitbit',
+      );
     });
 
     it('displays provider icon on each card', () => {
       renderGrid();
-      expect(screen.getByTestId('provider-icon-conn-github')).toBeInTheDocument();
-      expect(screen.getByTestId('provider-icon-conn-fitbit')).toBeInTheDocument();
+      expect(
+        screen.getByTestId('provider-icon-conn-github'),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByTestId('provider-icon-conn-fitbit'),
+      ).toBeInTheDocument();
     });
 
     it('displays status chip with correct label for PRESENCE', () => {
@@ -252,13 +279,19 @@ describe('ProviderHealthGrid', () => {
 
     it('displays time since last heartbeat on each card', () => {
       renderGrid();
-      expect(screen.getByTestId('last-heartbeat-conn-github')).toBeInTheDocument();
-      expect(screen.getByTestId('last-heartbeat-conn-github')).toHaveTextContent('Last heartbeat:');
+      expect(
+        screen.getByTestId('last-heartbeat-conn-github'),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByTestId('last-heartbeat-conn-github'),
+      ).toHaveTextContent('Last heartbeat:');
     });
 
     it('displays sparkline for each card', () => {
       renderGrid();
-      expect(screen.getByTestId('sparkline-container-conn-github')).toBeInTheDocument();
+      expect(
+        screen.getByTestId('sparkline-container-conn-github'),
+      ).toBeInTheDocument();
     });
   });
 
@@ -274,10 +307,12 @@ describe('ProviderHealthGrid', () => {
 
     it('updates provider status when WebSocket message arrives', async () => {
       let capturedHandler: ((event: MessageEvent) => void) | null = null;
-      const onStatusUpdate = jest.fn((handler: (event: MessageEvent) => void) => {
-        capturedHandler = handler;
-        return () => undefined;
-      });
+      const onStatusUpdate = jest.fn(
+        (handler: (event: MessageEvent) => void) => {
+          capturedHandler = handler;
+          return () => undefined;
+        },
+      );
 
       renderGrid({
         connections: [GITHUB_CONNECTION],
@@ -285,7 +320,9 @@ describe('ProviderHealthGrid', () => {
       });
 
       // Initially PRESENCE
-      expect(screen.getByTestId('status-chip-conn-github')).toHaveTextContent('Presence');
+      expect(screen.getByTestId('status-chip-conn-github')).toHaveTextContent(
+        'Presence',
+      );
 
       // Simulate WebSocket message with ABSENCE signal
       await act(async () => {
@@ -301,15 +338,19 @@ describe('ProviderHealthGrid', () => {
       });
 
       // Status should update without page refresh
-      expect(screen.getByTestId('status-chip-conn-github')).toHaveTextContent('Absence');
+      expect(screen.getByTestId('status-chip-conn-github')).toHaveTextContent(
+        'Absence',
+      );
     });
 
     it('ignores WebSocket messages for unknown connection IDs', async () => {
       let capturedHandler: ((event: MessageEvent) => void) | null = null;
-      const onStatusUpdate = jest.fn((handler: (event: MessageEvent) => void) => {
-        capturedHandler = handler;
-        return () => undefined;
-      });
+      const onStatusUpdate = jest.fn(
+        (handler: (event: MessageEvent) => void) => {
+          capturedHandler = handler;
+          return () => undefined;
+        },
+      );
 
       renderGrid({
         connections: [GITHUB_CONNECTION],
@@ -328,15 +369,19 @@ describe('ProviderHealthGrid', () => {
       });
 
       // GitHub should remain PRESENCE
-      expect(screen.getByTestId('status-chip-conn-github')).toHaveTextContent('Presence');
+      expect(screen.getByTestId('status-chip-conn-github')).toHaveTextContent(
+        'Presence',
+      );
     });
 
     it('ignores malformed WebSocket messages', async () => {
       let capturedHandler: ((event: MessageEvent) => void) | null = null;
-      const onStatusUpdate = jest.fn((handler: (event: MessageEvent) => void) => {
-        capturedHandler = handler;
-        return () => undefined;
-      });
+      const onStatusUpdate = jest.fn(
+        (handler: (event: MessageEvent) => void) => {
+          capturedHandler = handler;
+          return () => undefined;
+        },
+      );
 
       renderGrid({
         connections: [GITHUB_CONNECTION],
@@ -350,7 +395,9 @@ describe('ProviderHealthGrid', () => {
         );
       });
 
-      expect(screen.getByTestId('status-chip-conn-github')).toHaveTextContent('Presence');
+      expect(screen.getByTestId('status-chip-conn-github')).toHaveTextContent(
+        'Presence',
+      );
     });
 
     it('calls the unsubscribe function returned by onStatusUpdate on unmount', () => {
@@ -390,40 +437,60 @@ describe('ProviderHealthGrid', () => {
 
     it('starts in expanded view by default', () => {
       renderGrid();
-      expect(screen.getByTestId('provider-card-expanded-conn-github')).toBeInTheDocument();
-      expect(screen.queryByTestId('provider-card-compact-conn-github')).not.toBeInTheDocument();
+      expect(
+        screen.getByTestId('provider-card-expanded-conn-github'),
+      ).toBeInTheDocument();
+      expect(
+        screen.queryByTestId('provider-card-compact-conn-github'),
+      ).not.toBeInTheDocument();
     });
 
     it('starts in compact view when initialView is compact', () => {
       renderGrid({ initialView: 'compact' });
-      expect(screen.getByTestId('provider-card-compact-conn-github')).toBeInTheDocument();
-      expect(screen.queryByTestId('provider-card-expanded-conn-github')).not.toBeInTheDocument();
+      expect(
+        screen.getByTestId('provider-card-compact-conn-github'),
+      ).toBeInTheDocument();
+      expect(
+        screen.queryByTestId('provider-card-expanded-conn-github'),
+      ).not.toBeInTheDocument();
     });
 
     it('switches to compact view when compact toggle is clicked', () => {
       renderGrid();
       // Initially expanded
-      expect(screen.getByTestId('provider-card-expanded-conn-github')).toBeInTheDocument();
+      expect(
+        screen.getByTestId('provider-card-expanded-conn-github'),
+      ).toBeInTheDocument();
 
       // Click compact toggle
       fireEvent.click(screen.getByTestId('view-toggle-compact'));
 
       // Should now show compact cards
-      expect(screen.getByTestId('provider-card-compact-conn-github')).toBeInTheDocument();
-      expect(screen.queryByTestId('provider-card-expanded-conn-github')).not.toBeInTheDocument();
+      expect(
+        screen.getByTestId('provider-card-compact-conn-github'),
+      ).toBeInTheDocument();
+      expect(
+        screen.queryByTestId('provider-card-expanded-conn-github'),
+      ).not.toBeInTheDocument();
     });
 
     it('switches back to expanded view when expanded toggle is clicked', () => {
       renderGrid({ initialView: 'compact' });
       // Initially compact
-      expect(screen.getByTestId('provider-card-compact-conn-github')).toBeInTheDocument();
+      expect(
+        screen.getByTestId('provider-card-compact-conn-github'),
+      ).toBeInTheDocument();
 
       // Click expanded toggle
       fireEvent.click(screen.getByTestId('view-toggle-expanded'));
 
       // Should now show expanded cards
-      expect(screen.getByTestId('provider-card-expanded-conn-github')).toBeInTheDocument();
-      expect(screen.queryByTestId('provider-card-compact-conn-github')).not.toBeInTheDocument();
+      expect(
+        screen.getByTestId('provider-card-expanded-conn-github'),
+      ).toBeInTheDocument();
+      expect(
+        screen.queryByTestId('provider-card-compact-conn-github'),
+      ).not.toBeInTheDocument();
     });
 
     it('compact view shows status dot instead of full card', () => {
@@ -433,14 +500,26 @@ describe('ProviderHealthGrid', () => {
 
     it('compact toggle button has aria-pressed=true when in compact mode', () => {
       renderGrid({ initialView: 'compact' });
-      expect(screen.getByTestId('view-toggle-compact')).toHaveAttribute('aria-pressed', 'true');
-      expect(screen.getByTestId('view-toggle-expanded')).toHaveAttribute('aria-pressed', 'false');
+      expect(screen.getByTestId('view-toggle-compact')).toHaveAttribute(
+        'aria-pressed',
+        'true',
+      );
+      expect(screen.getByTestId('view-toggle-expanded')).toHaveAttribute(
+        'aria-pressed',
+        'false',
+      );
     });
 
     it('expanded toggle button has aria-pressed=true when in expanded mode', () => {
       renderGrid({ initialView: 'expanded' });
-      expect(screen.getByTestId('view-toggle-expanded')).toHaveAttribute('aria-pressed', 'true');
-      expect(screen.getByTestId('view-toggle-compact')).toHaveAttribute('aria-pressed', 'false');
+      expect(screen.getByTestId('view-toggle-expanded')).toHaveAttribute(
+        'aria-pressed',
+        'true',
+      );
+      expect(screen.getByTestId('view-toggle-compact')).toHaveAttribute(
+        'aria-pressed',
+        'false',
+      );
     });
   });
 
@@ -449,10 +528,12 @@ describe('ProviderHealthGrid', () => {
   describe('Req 12.6 — status transition pulse animation class', () => {
     it('applies pulse class when WebSocket delivers CHECK_FAILED signal', async () => {
       let capturedHandler: ((event: MessageEvent) => void) | null = null;
-      const onStatusUpdate = jest.fn((handler: (event: MessageEvent) => void) => {
-        capturedHandler = handler;
-        return () => undefined;
-      });
+      const onStatusUpdate = jest.fn(
+        (handler: (event: MessageEvent) => void) => {
+          capturedHandler = handler;
+          return () => undefined;
+        },
+      );
 
       renderGrid({
         connections: [GITHUB_CONNECTION], // starts as PRESENCE
@@ -478,10 +559,12 @@ describe('ProviderHealthGrid', () => {
 
     it('applies pulse class when WebSocket delivers ABSENCE signal', async () => {
       let capturedHandler: ((event: MessageEvent) => void) | null = null;
-      const onStatusUpdate = jest.fn((handler: (event: MessageEvent) => void) => {
-        capturedHandler = handler;
-        return () => undefined;
-      });
+      const onStatusUpdate = jest.fn(
+        (handler: (event: MessageEvent) => void) => {
+          capturedHandler = handler;
+          return () => undefined;
+        },
+      );
 
       renderGrid({
         connections: [GITHUB_CONNECTION], // starts as PRESENCE
@@ -506,10 +589,12 @@ describe('ProviderHealthGrid', () => {
 
     it('does not apply pulse class when signal stays PRESENCE', async () => {
       let capturedHandler: ((event: MessageEvent) => void) | null = null;
-      const onStatusUpdate = jest.fn((handler: (event: MessageEvent) => void) => {
-        capturedHandler = handler;
-        return () => undefined;
-      });
+      const onStatusUpdate = jest.fn(
+        (handler: (event: MessageEvent) => void) => {
+          capturedHandler = handler;
+          return () => undefined;
+        },
+      );
 
       renderGrid({
         connections: [GITHUB_CONNECTION], // starts as PRESENCE
@@ -544,44 +629,72 @@ describe('ProviderHealthGrid', () => {
     it('shows presence percentage when providers have PRESENCE signal', () => {
       renderGrid({
         connections: [
-          makeConnection({ id: 'c1', lastCheckSignalType: HeartbeatSignalType.PRESENCE }),
-          makeConnection({ id: 'c2', lastCheckSignalType: HeartbeatSignalType.PRESENCE }),
+          makeConnection({
+            id: 'c1',
+            lastCheckSignalType: HeartbeatSignalType.PRESENCE,
+          }),
+          makeConnection({
+            id: 'c2',
+            lastCheckSignalType: HeartbeatSignalType.PRESENCE,
+          }),
         ],
       });
-      expect(screen.getByTestId('health-pct-presence')).toHaveTextContent('100%');
+      expect(screen.getByTestId('health-pct-presence')).toHaveTextContent(
+        '100%',
+      );
     });
 
     it('shows absence percentage when providers have ABSENCE signal', () => {
       renderGrid({
         connections: [
-          makeConnection({ id: 'c1', lastCheckSignalType: HeartbeatSignalType.ABSENCE }),
+          makeConnection({
+            id: 'c1',
+            lastCheckSignalType: HeartbeatSignalType.ABSENCE,
+          }),
         ],
       });
-      expect(screen.getByTestId('health-pct-absence')).toHaveTextContent('100%');
+      expect(screen.getByTestId('health-pct-absence')).toHaveTextContent(
+        '100%',
+      );
     });
 
     it('shows check-failed percentage when providers have CHECK_FAILED signal', () => {
       renderGrid({
         connections: [
-          makeConnection({ id: 'c1', lastCheckSignalType: HeartbeatSignalType.CHECK_FAILED }),
+          makeConnection({
+            id: 'c1',
+            lastCheckSignalType: HeartbeatSignalType.CHECK_FAILED,
+          }),
         ],
       });
-      expect(screen.getByTestId('health-pct-check-failed')).toHaveTextContent('100%');
+      expect(screen.getByTestId('health-pct-check-failed')).toHaveTextContent(
+        '100%',
+      );
     });
 
     it('shows "No providers connected" when connections list is empty', () => {
       renderGrid({ connections: [] });
-      expect(screen.getByTestId('aggregate-health-bar')).toHaveTextContent('No providers connected');
+      expect(screen.getByTestId('aggregate-health-bar')).toHaveTextContent(
+        'No providers connected',
+      );
     });
 
     it('shows mixed percentages for mixed signals', () => {
       renderGrid({
         connections: [
-          makeConnection({ id: 'c1', lastCheckSignalType: HeartbeatSignalType.PRESENCE }),
-          makeConnection({ id: 'c2', lastCheckSignalType: HeartbeatSignalType.ABSENCE }),
+          makeConnection({
+            id: 'c1',
+            lastCheckSignalType: HeartbeatSignalType.PRESENCE,
+          }),
+          makeConnection({
+            id: 'c2',
+            lastCheckSignalType: HeartbeatSignalType.ABSENCE,
+          }),
         ],
       });
-      expect(screen.getByTestId('health-pct-presence')).toHaveTextContent('50%');
+      expect(screen.getByTestId('health-pct-presence')).toHaveTextContent(
+        '50%',
+      );
       expect(screen.getByTestId('health-pct-absence')).toHaveTextContent('50%');
     });
   });
@@ -591,23 +704,45 @@ describe('ProviderHealthGrid', () => {
   describe('Req 16.3 — paused provider visual state', () => {
     it('shows paused chip instead of status chip for paused providers in expanded view', () => {
       renderGrid({
-        connections: [makeConnection({ id: 'conn-paused', isPaused: true, status: 'paused' })],
+        connections: [
+          makeConnection({
+            id: 'conn-paused',
+            isPaused: true,
+            status: 'paused',
+          }),
+        ],
       });
       expect(screen.getByTestId('paused-chip-conn-paused')).toBeInTheDocument();
-      expect(screen.getByTestId('paused-chip-conn-paused')).toHaveTextContent('Paused');
-      expect(screen.queryByTestId('status-chip-conn-paused')).not.toBeInTheDocument();
+      expect(screen.getByTestId('paused-chip-conn-paused')).toHaveTextContent(
+        'Paused',
+      );
+      expect(
+        screen.queryByTestId('status-chip-conn-paused'),
+      ).not.toBeInTheDocument();
     });
 
     it('shows pause icon on paused provider card in expanded view', () => {
       renderGrid({
-        connections: [makeConnection({ id: 'conn-paused', isPaused: true, status: 'paused' })],
+        connections: [
+          makeConnection({
+            id: 'conn-paused',
+            isPaused: true,
+            status: 'paused',
+          }),
+        ],
       });
       expect(screen.getByTestId('pause-icon-conn-paused')).toBeInTheDocument();
     });
 
     it('shows pause icon on paused provider card in compact view', () => {
       renderGrid({
-        connections: [makeConnection({ id: 'conn-paused', isPaused: true, status: 'paused' })],
+        connections: [
+          makeConnection({
+            id: 'conn-paused',
+            isPaused: true,
+            status: 'paused',
+          }),
+        ],
         initialView: 'compact',
       });
       expect(screen.getByTestId('pause-icon-conn-paused')).toBeInTheDocument();
@@ -615,20 +750,36 @@ describe('ProviderHealthGrid', () => {
 
     it('shows "Paused — heartbeat checks stopped" text for paused providers', () => {
       renderGrid({
-        connections: [makeConnection({ id: 'conn-paused', isPaused: true, status: 'paused' })],
+        connections: [
+          makeConnection({
+            id: 'conn-paused',
+            isPaused: true,
+            status: 'paused',
+          }),
+        ],
       });
-      expect(screen.getByTestId('last-heartbeat-conn-paused')).toHaveTextContent('Paused — heartbeat checks stopped');
+      expect(
+        screen.getByTestId('last-heartbeat-conn-paused'),
+      ).toHaveTextContent('Paused — heartbeat checks stopped');
     });
 
     it('does not apply pulse animation to paused providers', async () => {
       let capturedHandler: ((event: MessageEvent) => void) | null = null;
-      const onStatusUpdate = jest.fn((handler: (event: MessageEvent) => void) => {
-        capturedHandler = handler;
-        return () => undefined;
-      });
+      const onStatusUpdate = jest.fn(
+        (handler: (event: MessageEvent) => void) => {
+          capturedHandler = handler;
+          return () => undefined;
+        },
+      );
 
       renderGrid({
-        connections: [makeConnection({ id: 'conn-paused', isPaused: true, status: 'paused' })],
+        connections: [
+          makeConnection({
+            id: 'conn-paused',
+            isPaused: true,
+            status: 'paused',
+          }),
+        ],
         onStatusUpdate,
       });
 

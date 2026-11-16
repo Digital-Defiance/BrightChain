@@ -27,7 +27,6 @@ import { IMessageMetadata } from '../interfaces/messaging/messageMetadata';
 import { IBrightTrustMember } from '../interfaces/services/brightTrustService';
 import { IBlockMetadata } from '../interfaces/storage/blockMetadata';
 import { brightDateNow } from '../utils/brightDateConversions';
-import type { BrightDateTimestamp } from '../types/brightDateTimestamp';
 
 jest.setTimeout(30_000);
 

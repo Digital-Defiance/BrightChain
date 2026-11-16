@@ -127,8 +127,8 @@ export { BrightDateDisplayMode } from './lib/enumerations/brightDateDisplayMode'
 export {
   formatDateByMode,
   formatDualDate,
-  getDateTooltip,
   getBrightDateTooltip,
+  getDateTooltip,
   nowAsBrightDate,
   toBrightDateCompact,
   toBrightDateLog,

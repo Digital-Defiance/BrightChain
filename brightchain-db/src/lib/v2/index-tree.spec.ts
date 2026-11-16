@@ -67,9 +67,13 @@ describe('BrightDB v2 index keys', () => {
     ];
     const encoded = ordered.map((value) => encodeIndexValue(value));
     const sorted = [...encoded].sort(Buffer.compare);
-    expect(sorted.map((b) => b.toString('hex'))).toEqual(encoded.map((b) => b.toString('hex')));
+    expect(sorted.map((b) => b.toString('hex'))).toEqual(
+      encoded.map((b) => b.toString('hex')),
+    );
     expect(encodeIndexValue(0).equals(encodeIndexValue(-0))).toBe(true);
-    expect(Buffer.compare(encodeIndexValue(undefined), encodeIndexValue(null))).toBeLessThan(0);
+    expect(
+      Buffer.compare(encodeIndexValue(undefined), encodeIndexValue(null)),
+    ).toBeLessThan(0);
   });
 
   it('is prefix-free and round-trips the document id', () => {
@@ -87,12 +91,24 @@ describe('BrightDB v2 index keys', () => {
   });
 
   it('extracts one entry per array element and indexes absent fields', () => {
-    const keys = extractIndexKeys({ _id: 'd', tags: ['x', 'y', 'x'], n: 1 }, ['tags', 'n'], 'd');
+    const keys = extractIndexKeys(
+      { _id: 'd', tags: ['x', 'y', 'x'], n: 1 },
+      ['tags', 'n'],
+      'd',
+    );
     expect(keys).toHaveLength(2);
     expect(extractIndexKeys({ _id: 'd' }, ['missing'], 'd')).toHaveLength(1);
-    expect(extractIndexKeys({ _id: 'd', a: { b: 5 } }, ['a.b'], 'd')[0].equals(key(5, 'd'))).toBe(true);
-    expect(() => extractIndexKeys({ _id: 'd', a: { b: 1 } }, ['a'], 'd')).toThrow();
-    expect(() => extractIndexKeys({ _id: 'd', a: [[1]] }, ['a'], 'd')).toThrow();
+    expect(
+      extractIndexKeys({ _id: 'd', a: { b: 5 } }, ['a.b'], 'd')[0].equals(
+        key(5, 'd'),
+      ),
+    ).toBe(true);
+    expect(() =>
+      extractIndexKeys({ _id: 'd', a: { b: 1 } }, ['a'], 'd'),
+    ).toThrow();
+    expect(() =>
+      extractIndexKeys({ _id: 'd', a: [[1]] }, ['a'], 'd'),
+    ).toThrow();
   });
 });
 
@@ -131,10 +147,12 @@ describe('BrightDB v2 index tree', () => {
       // a key both added and removed in one batch survives (adds win)
 
       const expected = [...model.values()].sort(Buffer.compare);
-      expect((await collect(tree.entries(root))).map((b) => b.toString('hex'))).toEqual(
-        expected.map((b) => b.toString('hex')),
-      );
-      const fresh: Digest | null = await new V2IndexTree(new MemoryBlocks()).apply(null, expected, []);
+      expect(
+        (await collect(tree.entries(root))).map((b) => b.toString('hex')),
+      ).toEqual(expected.map((b) => b.toString('hex')));
+      const fresh: Digest | null = await new V2IndexTree(
+        new MemoryBlocks(),
+      ).apply(null, expected, []);
       expect(root).toBe(fresh);
     }
   });
@@ -142,7 +160,9 @@ describe('BrightDB v2 index tree', () => {
   it('empties to null and rebuilds identically', async () => {
     const blocks = new MemoryBlocks();
     const tree = new V2IndexTree(blocks);
-    const keys = Array.from({ length: 500 }, (_, i) => key(`name-${i}`, `id${i}`));
+    const keys = Array.from({ length: 500 }, (_, i) =>
+      key(`name-${i}`, `id${i}`),
+    );
     const full = await tree.apply(null, keys, []);
     expect(full).not.toBeNull();
     expect(await tree.apply(full, [], keys)).toBeNull();
@@ -155,43 +175,72 @@ describe('BrightDB v2 index tree', () => {
     const tree = new V2IndexTree(blocks);
     const docs: Array<{ id: string; n: number; s: string }> = [];
     for (let i = 0; i < 1500; i++) {
-      docs.push({ id: `d${i}`, n: Math.floor(random() * 200) - 100, s: `s${Math.floor(random() * 80)}` });
+      docs.push({
+        id: `d${i}`,
+        n: Math.floor(random() * 200) - 100,
+        s: `s${Math.floor(random() * 80)}`,
+      });
     }
-    const entries = docs.flatMap((d) => extractIndexKeys({ n: d.n, s: d.s }, ['n', 's'], d.id));
+    const entries = docs.flatMap((d) =>
+      extractIndexKeys({ n: d.n, s: d.s }, ['n', 's'], d.id),
+    );
     const root = await tree.apply(null, entries, []);
 
     const query = async (q: Parameters<typeof indexRange>[1]) => {
       const { lo, hi } = indexRange(2, q);
-      const ids = (await collect(tree.range(root, lo, hi, q.descending))).map((k) => decodeIndexId(k, 2));
+      const ids = (await collect(tree.range(root, lo, hi, q.descending))).map(
+        (k) => decodeIndexId(k, 2),
+      );
       return ids;
     };
-    const model = (predicate: (d: (typeof docs)[number]) => boolean, descending = false) => {
+    const model = (
+      predicate: (d: (typeof docs)[number]) => boolean,
+      descending = false,
+    ) => {
       const sorted = docs
         .filter(predicate)
-        .sort((a, b) => a.n - b.n || (a.s < b.s ? -1 : a.s > b.s ? 1 : 0) || (a.id < b.id ? -1 : 1));
+        .sort(
+          (a, b) =>
+            a.n - b.n ||
+            (a.s < b.s ? -1 : a.s > b.s ? 1 : 0) ||
+            (a.id < b.id ? -1 : 1),
+        );
       return (descending ? sorted.reverse() : sorted).map((d) => d.id);
     };
 
     expect(await query({ equals: [5] })).toEqual(model((d) => d.n === 5));
     expect(await query({ gt: 10 })).toEqual(model((d) => d.n > 10));
-    expect(await query({ gte: 10, lt: 30 })).toEqual(model((d) => d.n >= 10 && d.n < 30));
+    expect(await query({ gte: 10, lt: 30 })).toEqual(
+      model((d) => d.n >= 10 && d.n < 30),
+    );
     expect(await query({ lte: -50 })).toEqual(model((d) => d.n <= -50));
-    expect(await query({ gt: -5, lte: 5, descending: true })).toEqual(model((d) => d.n > -5 && d.n <= 5, true));
-    expect(await query({ equals: [7], prefix: 's1' })).toEqual(model((d) => d.n === 7 && d.s.startsWith('s1')));
+    expect(await query({ gt: -5, lte: 5, descending: true })).toEqual(
+      model((d) => d.n > -5 && d.n <= 5, true),
+    );
+    expect(await query({ equals: [7], prefix: 's1' })).toEqual(
+      model((d) => d.n === 7 && d.s.startsWith('s1')),
+    );
     expect(await query({ equals: [7], gte: 's2', lt: 's4' })).toEqual(
       model((d) => d.n === 7 && d.s >= 's2' && d.s < 's4'),
     );
-    expect(await query({ equals: [7, 's9'] })).toEqual(model((d) => d.n === 7 && d.s === 's9'));
+    expect(await query({ equals: [7, 's9'] })).toEqual(
+      model((d) => d.n === 7 && d.s === 's9'),
+    );
     expect(await query({})).toEqual(model(() => true));
   });
 
   it('reads few blocks for a narrow range in a large index', async () => {
     const blocks = new MemoryBlocks();
     const tree = new V2IndexTree(blocks);
-    const entries = Array.from({ length: 20_000 }, (_, i) => key(1_700_000_000_000 + i, `id${i}`));
+    const entries = Array.from({ length: 20_000 }, (_, i) =>
+      key(1_700_000_000_000 + i, `id${i}`),
+    );
     const root = await tree.apply(null, entries, []);
     blocks.reads = 0;
-    const { lo, hi } = indexRange(1, { gte: 1_700_000_005_000, lt: 1_700_000_005_010 });
+    const { lo, hi } = indexRange(1, {
+      gte: 1_700_000_005_000,
+      lt: 1_700_000_005_010,
+    });
     const found = await collect(tree.range(root, lo, hi));
     expect(found).toHaveLength(10);
     expect(blocks.reads).toBeLessThan(25);

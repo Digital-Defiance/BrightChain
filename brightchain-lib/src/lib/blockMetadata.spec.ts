@@ -1,4 +1,6 @@
+/// <reference path="../test/types/jest.d.ts" />
 import { BlockMetadata } from './blockMetadata';
+import { RawDataBlock } from './blocks/rawData';
 import { BlockDataType } from './enumerations/blockDataType';
 import { BlockSize } from './enumerations/blockSize';
 import { BlockType } from './enumerations/blockType';
@@ -10,7 +12,6 @@ import {
   brightDateNow,
   normalizeToBrightDate,
 } from './utils/brightDateConversions';
-import { RawDataBlock } from './blocks/rawData';
 
 describe('BlockMetadata', () => {
   afterEach(() => {
@@ -116,12 +117,9 @@ describe('BaseBlock (via RawDataBlock) future-date validation using BrightDate n
 
     expect(() => {
       new RawDataBlock(BlockSize.Small, data, futureDate);
-    }).toThrowType(
-      BlockValidationError,
-      (error: BlockValidationError) => {
-        expect(error.type).toBe(BlockValidationErrorType.FutureCreationDate);
-      },
-    );
+    }).toThrowType(BlockValidationError, (error: BlockValidationError) => {
+      expect(error.type).toBe(BlockValidationErrorType.FutureCreationDate);
+    });
   });
 
   it('should succeed when dateCreated is in the past', () => {
@@ -161,11 +159,8 @@ describe('BaseBlock (via RawDataBlock) future-date validation using BrightDate n
 
     expect(() => {
       new RawDataBlock(BlockSize.Small, data2, justFuture);
-    }).toThrowType(
-      BlockValidationError,
-      (error: BlockValidationError) => {
-        expect(error.type).toBe(BlockValidationErrorType.FutureCreationDate);
-      },
-    );
+    }).toThrowType(BlockValidationError, (error: BlockValidationError) => {
+      expect(error.type).toBe(BlockValidationErrorType.FutureCreationDate);
+    });
   });
 });

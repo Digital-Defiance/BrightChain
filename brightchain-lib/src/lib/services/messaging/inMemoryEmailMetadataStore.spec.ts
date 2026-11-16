@@ -21,9 +21,11 @@ import type { BlockId } from '../../interfaces/branded/primitives/blockId';
 import { createMailbox } from '../../interfaces/messaging/emailAddress';
 import type { IEmailMetadata } from '../../interfaces/messaging/emailMetadata';
 import { createContentType } from '../../interfaces/messaging/mimePart';
+import {
+  brightDateNow,
+  normalizeToBrightDate,
+} from '../../utils/brightDateConversions';
 import { InMemoryEmailMetadataStore } from './inMemoryEmailMetadataStore';
-import { normalizeToBrightDate, brightDateNow } from '../../utils/brightDateConversions';
-import type { BrightDateTimestamp } from '../../types/brightDateTimestamp';
 
 const bid = (s: string) => s as unknown as BlockId;
 

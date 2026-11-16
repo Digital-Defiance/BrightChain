@@ -142,6 +142,8 @@ export function registerAllPlatformJobs(
   if (deps.cooldownExpiryJobDeps) {
     const ONE_HOUR = 3_600_000;
     const intervalMs = deps.cooldownExpiryJobDeps.intervalMs ?? ONE_HOUR;
-    runner.start(createCooldownExpiryJob(deps.cooldownExpiryJobDeps, intervalMs));
+    runner.start(
+      createCooldownExpiryJob(deps.cooldownExpiryJobDeps, intervalMs),
+    );
   }
 }

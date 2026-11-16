@@ -19,7 +19,10 @@ import { createMockStorageProvider } from './mockStorageProvider';
 const createServices = () => {
   const permissionService = new PermissionService();
   const channelService = new ChannelService(permissionService);
-  const serverService = new ServerService({ channelService, storageProvider: createMockStorageProvider() });
+  const serverService = new ServerService({
+    channelService,
+    storageProvider: createMockStorageProvider(),
+  });
   return { permissionService, channelService, serverService };
 };
 

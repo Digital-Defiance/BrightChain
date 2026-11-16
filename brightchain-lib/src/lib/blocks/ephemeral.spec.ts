@@ -18,9 +18,9 @@ import { Checksum } from '../types/checksum';
 import { ChecksumService } from '../services/checksum.service';
 import { ServiceProvider } from '../services/service.provider';
 import { initializeTestServices } from '../test/service.initializer.helper';
-import { EphemeralBlock } from './ephemeral';
-import { brightDateNow } from '../utils/brightDateConversions';
 import type { BrightDateTimestamp } from '../types/brightDateTimestamp';
+import { brightDateNow } from '../utils/brightDateConversions';
+import { EphemeralBlock } from './ephemeral';
 
 // Test class that properly implements abstract methods
 class TestEphemeralBlock extends EphemeralBlock {

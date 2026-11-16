@@ -205,8 +205,8 @@ describe('Feature: org-role-dev-seeding, Property 2: Idempotent upsert preserves
             findOne: jest.fn(async (filter: { _id: string }) =>
               preExistingSet.has(filter._id) ? { _id: filter._id } : null,
             ),
-            insertOne: jest.fn(async (doc: Record<string, unknown>) => {
-              insertedIds.push(doc._id as string);
+            insertOne: jest.fn(async (doc: { _id: string }) => {
+              insertedIds.push(doc._id);
             }),
           });
 

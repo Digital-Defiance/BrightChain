@@ -1,4 +1,5 @@
 import {
+  BlockId,
   BlockSize,
   brightDateNow,
   DurabilityLevel,
@@ -38,7 +39,7 @@ describe('DiskMessageMetadataStore - Query Performance Property Tests', () => {
     messageType: string,
     priority: MessagePriority,
   ): IMessageMetadata => ({
-    blockId,
+    blockId: blockId as BlockId,
     createdAt: brightDateNow(),
     expiresAt: null,
     durabilityLevel: DurabilityLevel.Standard,

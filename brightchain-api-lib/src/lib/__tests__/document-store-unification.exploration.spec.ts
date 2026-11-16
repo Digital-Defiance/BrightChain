@@ -15,12 +15,16 @@
  */
 
 import {
+  BlockId,
+  brightDateNow,
   ConversationService,
+  createContentType,
+  createMailbox,
   DurabilityLevel,
+  type IEmailMetadataStore,
   MessageEncryptionScheme,
   MessagePriority,
   ReplicationStatus,
-  type IEmailMetadataStore,
 } from '@brightchain/brightchain-lib';
 import * as fc from 'fast-check';
 import * as fs from 'fs';
@@ -348,11 +352,15 @@ describe('Property 1: Bug Condition — Document Store Divergence', () => {
             await emailStore.store({
               messageId,
               subject,
-              from: { address: senderEmail, name: 'Test Sender' },
-              to: [{ address: 'recipient@test.com', name: 'Recipient' }],
-              date: new Date(),
+              from: createMailbox(
+                senderEmail.slice(0, senderEmail.lastIndexOf('@')),
+                senderEmail.slice(senderEmail.lastIndexOf('@') + 1),
+                'Test Sender',
+              ),
+              to: [createMailbox('recipient', 'test.com', 'Recipient')],
+              date: brightDateNow(),
               mimeVersion: '1.0',
-              contentType: { type: 'text', subtype: 'plain' },
+              contentType: createContentType('text', 'plain'),
               customHeaders: new Map(),
               deliveryReceipts: new Map(),
               readReceipts: new Map(),
@@ -366,13 +374,13 @@ describe('Property 1: Bug Condition — Document Store Divergence', () => {
               encryptionScheme: MessageEncryptionScheme.NONE,
               isCBL: false,
               // IBlockMetadata fields
-              blockId: messageId as never,
-              createdAt: new Date(),
+              blockId: messageId as BlockId,
+              createdAt: brightDateNow(),
               expiresAt: null,
-              durabilityLevel: DurabilityLevel.None,
+              durabilityLevel: DurabilityLevel.Ephemeral,
               parityBlockIds: [],
               accessCount: 0,
-              lastAccessedAt: new Date(),
+              lastAccessedAt: brightDateNow(),
               replicationStatus: ReplicationStatus.Pending,
               targetReplicationFactor: 0,
               replicaNodeIds: [],

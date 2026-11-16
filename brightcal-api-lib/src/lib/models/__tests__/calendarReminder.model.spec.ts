@@ -26,7 +26,7 @@ import {
   createCalendarReminderModel,
   type IStoredCalendarReminder,
   type ITypedCalendarReminder,
-} from '../calendarReminder.model.ts';
+} from '../calendarReminder.model.js';
 
 // ─── Setup ───────────────────────────────────────────────────────────────────
 
@@ -40,8 +40,7 @@ beforeAll(() => {
 function makeDb(name = 'testdb'): BrightDb {
   const store = new MemoryBlockStore(validBlockSizes);
   const registry = InMemoryHeadRegistry.createIsolated();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return new BrightDb(store as any, { name, headRegistry: registry });
+  return new BrightDb(store, { name, headRegistry: registry });
 }
 
 const NOW = new Date('2025-06-01T12:00:00.000Z');

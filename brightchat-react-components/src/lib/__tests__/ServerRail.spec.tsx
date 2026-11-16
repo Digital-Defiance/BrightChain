@@ -38,8 +38,8 @@ const testServers = [
     memberIds: ['u1'],
     channelIds: ['ch-1'],
     categories: [],
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    createdAt: 0,
+    updatedAt: 0,
   },
   {
     id: 'srv-2',
@@ -49,8 +49,8 @@ const testServers = [
     memberIds: ['u1'],
     channelIds: ['ch-2'],
     categories: [],
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    createdAt: 0,
+    updatedAt: 0,
   },
 ];
 

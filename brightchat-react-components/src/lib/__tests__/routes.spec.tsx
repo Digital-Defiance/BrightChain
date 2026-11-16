@@ -14,7 +14,7 @@
 
 import { render, screen } from '@testing-library/react';
 import React, { Suspense } from 'react';
-import { MemoryRouter, Outlet, Route, Routes } from 'react-router-dom';
+import { MemoryRouter, Outlet, Route, Routes } from 'react-router';
 
 // ─── Track PrivateRoute rendering ───────────────────────────────────────────
 

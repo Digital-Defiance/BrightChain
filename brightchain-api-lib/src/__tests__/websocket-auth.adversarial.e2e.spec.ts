@@ -78,32 +78,30 @@ describe('WebSocket Authentication — Adversarial E2E Tests', () => {
   const bannedNode = generateKeyPair();
   const eciesService = new ECIESService(eciesConfig);
 
-  beforeAll((done) => {
+  beforeAll(async () => {
     httpServer = http.createServer();
-    httpServer.listen(0, () => {
-      const addr = httpServer.address();
-      port = typeof addr === 'object' && addr ? addr.port : 0;
+    await new Promise<void>((resolve) => httpServer.listen(0, resolve));
+    const addr = httpServer.address();
+    port = typeof addr === 'object' && addr ? addr.port : 0;
 
-      // Create server with auth REQUIRED
-      wsServer = new WebSocketMessageServer(httpServer, true);
+    // Create server with auth REQUIRED
+    wsServer = new WebSocketMessageServer(httpServer, true);
 
-      // Register the good node's public key
-      wsServer.registerNodeKey('good-node', goodNode.publicKey);
-      wsServer.registerNodeKey('banned-node', bannedNode.publicKey);
+    // Register the good node's public key
+    wsServer.registerNodeKey('good-node', goodNode.publicKey);
+    wsServer.registerNodeKey('banned-node', bannedNode.publicKey);
 
-      // Set ban check — banned node is refused
-      wsServer.setBanCheck((publicKey: Buffer) => {
-        return publicKey.equals(bannedNode.publicKey);
-      });
-
-      done();
+    // Set ban check — banned node is refused
+    wsServer.setBanCheck((publicKey: Buffer) => {
+      return publicKey.equals(bannedNode.publicKey);
     });
   });
 
-  afterAll((done) => {
-    wsServer.close(() => {
-      httpServer.close(done);
-    });
+  afterAll(async () => {
+    await new Promise<void>((resolve) => wsServer.close(() => resolve()));
+    await new Promise<void>((resolve, reject) =>
+      httpServer.close((error) => (error ? reject(error) : resolve())),
+    );
   });
 
   // ── Test: Unauthenticated connection closed after timeout ────────

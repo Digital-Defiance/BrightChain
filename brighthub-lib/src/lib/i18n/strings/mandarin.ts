@@ -57,8 +57,7 @@ export const BrightHubMandarinStrings: ComponentStrings<BrightHubStringKey> = {
   [BrightHubStrings.PostComposer_Cancel]: '取消',
   [BrightHubStrings.PostComposer_InsertIcon]: '插入图标',
   [BrightHubStrings.PostComposer_IconSearchPlaceholder]: '搜索图标...',
-  [BrightHubStrings.PostComposer_IconNoMatchTemplate]:
-    '没有匹配"{0}"的图标',
+  [BrightHubStrings.PostComposer_IconNoMatchTemplate]: '没有匹配"{0}"的图标',
   [BrightHubStrings.PostComposer_IconStyleOptions]: '样式选项',
   [BrightHubStrings.PostComposer_IconColor]: '颜色',
   [BrightHubStrings.PostComposer_IconColorNone]: '无',
@@ -581,7 +580,8 @@ export const BrightHubMandarinStrings: ComponentStrings<BrightHubStringKey> = {
   [BrightHubStrings.EditProfileDialog_Title]: '编辑资料',
   [BrightHubStrings.EditProfileDialog_DisplayName]: '显示名称',
   [BrightHubStrings.EditProfileDialog_Bio]: '简介',
-  [BrightHubStrings.EditProfileDialog_BioPlaceholder]: '向大家介绍自己。支持 Markdown 和图标。',
+  [BrightHubStrings.EditProfileDialog_BioPlaceholder]:
+    '向大家介绍自己。支持 Markdown 和图标。',
   [BrightHubStrings.EditProfileDialog_BioCharCountTemplate]: '{CURRENT}/{MAX}',
   [BrightHubStrings.EditProfileDialog_BioPreview]: '预览',
   [BrightHubStrings.EditProfileDialog_Location]: '位置',
@@ -589,8 +589,10 @@ export const BrightHubMandarinStrings: ComponentStrings<BrightHubStringKey> = {
   [BrightHubStrings.EditProfileDialog_Save]: '保存',
   [BrightHubStrings.EditProfileDialog_Cancel]: '取消',
   [BrightHubStrings.EditProfileDialog_Saving]: '保存中\u2026',
-  [BrightHubStrings.EditProfileDialog_ErrorBioTooLong]: '简介超过最大长度 {MAX} 个字符。',
-  [BrightHubStrings.EditProfileDialog_ErrorBioContainsImage]: '简介不能包含图片 Markdown 语法。',
+  [BrightHubStrings.EditProfileDialog_ErrorBioTooLong]:
+    '简介超过最大长度 {MAX} 个字符。',
+  [BrightHubStrings.EditProfileDialog_ErrorBioContainsImage]:
+    '简介不能包含图片 Markdown 语法。',
 
   // UserProfileCard
   [BrightHubStrings.UserProfileCard_EditProfile]: '编辑资料',

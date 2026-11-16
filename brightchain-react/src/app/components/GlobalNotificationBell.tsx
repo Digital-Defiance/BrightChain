@@ -18,7 +18,7 @@ import {
 } from '@digitaldefiance/express-suite-react-components';
 import { Box } from '@mui/material';
 import { FC, useCallback, useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 
 export const GlobalNotificationBell: FC = () => {
   const api = useAuthenticatedApi();

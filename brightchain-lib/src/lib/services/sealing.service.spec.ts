@@ -1,3 +1,4 @@
+/// <reference path="../../test/types/jest.d.ts" />
 import {
   EmailString,
   GuidV4Uint8Array,

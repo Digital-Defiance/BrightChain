@@ -8,7 +8,7 @@
  */
 
 import React from 'react';
-import { Route, Routes } from 'react-router-dom';
+import { Route, Routes } from 'react-router';
 import { EncounterDashboard } from './EncounterDashboard';
 import { InboxView } from './InboxView';
 import { PatientChart } from './PatientChart';

@@ -1,10 +1,11 @@
+import type { ICalendarCollectionDTO } from '@brightchain/brightcal-lib';
 import { act, renderHook } from '@testing-library/react';
 import type { UseCalendarManagementOptions } from '../hooks/useCalendarManagement';
 import { useCalendarManagement } from '../hooks/useCalendarManagement';
 
 // Mock global fetch
 const mockFetch = jest.fn();
-(globalThis as any).fetch = mockFetch;
+globalThis.fetch = mockFetch;
 
 const defaultOptions: UseCalendarManagementOptions = {
   apiBaseUrl: 'http://localhost:3000',
@@ -38,7 +39,7 @@ describe('useCalendarManagement', () => {
         useCalendarManagement(defaultOptions),
       );
 
-      let created: any;
+      let created = null as ICalendarCollectionDTO | null;
       await act(async () => {
         created = await result.current.createCalendar(
           'Work',
@@ -92,7 +93,7 @@ describe('useCalendarManagement', () => {
         useCalendarManagement(defaultOptions),
       );
 
-      let created: any;
+      let created = null as ICalendarCollectionDTO | null;
       await act(async () => {
         created = await result.current.createCalendar('Bad', '#000');
       });
@@ -109,7 +110,7 @@ describe('useCalendarManagement', () => {
         useCalendarManagement(defaultOptions),
       );
 
-      let created: any;
+      let created = null as ICalendarCollectionDTO | null;
       await act(async () => {
         created = await result.current.createCalendar('Fail', '#000');
       });
@@ -131,7 +132,7 @@ describe('useCalendarManagement', () => {
         useCalendarManagement(defaultOptions),
       );
 
-      let response: any;
+      let response = null as ICalendarCollectionDTO | null;
       await act(async () => {
         response = await result.current.updateCalendar('cal-1', {
           displayName: 'Personal',
@@ -156,7 +157,7 @@ describe('useCalendarManagement', () => {
         useCalendarManagement(defaultOptions),
       );
 
-      let response: any;
+      let response = null as ICalendarCollectionDTO | null;
       await act(async () => {
         response = await result.current.updateCalendar('cal-missing', {
           displayName: 'X',

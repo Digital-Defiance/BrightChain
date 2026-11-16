@@ -361,20 +361,6 @@ function expandMonthlyByday(periodStart: Date, rule: IRecurrenceRule): Date[] {
   return results;
 }
 
-/**
- * Compare two dates for EXDATE matching (full datetime precision).
- */
-function datesMatchForExdate(a: Date, b: Date): boolean {
-  return (
-    a.getFullYear() === b.getFullYear() &&
-    a.getMonth() === b.getMonth() &&
-    a.getDate() === b.getDate() &&
-    a.getHours() === b.getHours() &&
-    a.getMinutes() === b.getMinutes() &&
-    a.getSeconds() === b.getSeconds()
-  );
-}
-
 /** Safety limit for iteration to prevent infinite loops. */
 const MAX_ITERATIONS = 100_000;
 

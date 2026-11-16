@@ -21,10 +21,10 @@ import {
 import { ChecksumMismatchError } from '../errors/checksumMismatch';
 import { IEphemeralBlock } from '../interfaces/blocks/ephemeral';
 import { logValidationFailure } from '../logging/blockLogger';
-import type { BrightDateTimestamp } from '../types/brightDateTimestamp';
-import { brightDateNow } from '../utils/brightDateConversions';
 import { getGlobalServiceProvider } from '../services/globalServiceProvider';
+import type { BrightDateTimestamp } from '../types/brightDateTimestamp';
 import { Checksum } from '../types/checksum';
+import { brightDateNow } from '../utils/brightDateConversions';
 import { BaseBlock } from './base';
 // Remove circular import
 // import { EncryptedBlock } from './encrypted';

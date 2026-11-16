@@ -183,7 +183,7 @@ describe('BrightDB v2 codec', () => {
         kind: 'collection',
         generation: version(0n),
         primary: null,
-      indexes: null,
+        indexes: null,
       }),
     ).toThrow(/positive/u);
     expect(() =>
@@ -191,7 +191,7 @@ describe('BrightDB v2 codec', () => {
         kind: 'collection',
         generation: version(MAX_U64 + 1n),
         primary: null,
-      indexes: null,
+        indexes: null,
       }),
     ).toThrow(/64-bit/u);
     expect(() =>
@@ -199,7 +199,7 @@ describe('BrightDB v2 codec', () => {
         kind: 'collection',
         generation: { counter: 1n, writerId: '0'.repeat(32) },
         primary: null,
-      indexes: null,
+        indexes: null,
       }),
     ).toThrow(/nonzero/u);
     expect(() =>
@@ -334,18 +334,37 @@ describe('BrightDB v2 codec', () => {
     const d = (n: number) => n.toString(16).padStart(2, '0').repeat(64);
     const MIB = 1_048_576n;
     const encode = (size: bigint, depth: number, count: number) =>
-      encodeMetadata({ kind: 'blob', size, depth, entries: Array.from({ length: count }, (_, i) => d(i)) });
-    expect(decodeMetadata(encode(0n, 0, 0))).toMatchObject({ kind: 'blob', depth: 0 });
-    expect(decodeMetadata(encode(63n * MIB, 0, 63))).toMatchObject({ depth: 0 });
-    expect(decodeMetadata(encode(63n * MIB + 1n, 1, 2))).toMatchObject({ depth: 1 });
-    expect(decodeMetadata(encode(63n * 63n * MIB + 1n, 2, 2))).toMatchObject({ depth: 2 });
+      encodeMetadata({
+        kind: 'blob',
+        size,
+        depth,
+        entries: Array.from({ length: count }, (_, i) => d(i)),
+      });
+    expect(decodeMetadata(encode(0n, 0, 0))).toMatchObject({
+      kind: 'blob',
+      depth: 0,
+    });
+    expect(decodeMetadata(encode(63n * MIB, 0, 63))).toMatchObject({
+      depth: 0,
+    });
+    expect(decodeMetadata(encode(63n * MIB + 1n, 1, 2))).toMatchObject({
+      depth: 1,
+    });
+    expect(decodeMetadata(encode(63n * 63n * MIB + 1n, 2, 2))).toMatchObject({
+      depth: 2,
+    });
     expect(() => encode(MIB + 1n, 0, 1)).toThrow(/entry count/u); // needs two chunks
     expect(() => encode(63n * MIB + MIB, 0, 64)).toThrow(/entry count/u); // too many entries
     // Only a file's root must be minimal; an interior manifest may hold a small tail.
-    expect(decodeMetadata(encode(MIB, 1, 1))).toMatchObject({ depth: 1, size: MIB });
+    expect(decodeMetadata(encode(MIB, 1, 1))).toMatchObject({
+      depth: 1,
+      size: MIB,
+    });
     expect(() => encode(10n, 8, 1)).toThrow(/depth/u);
     expect(() => encode(63n * MIB + 1n, 1, 3)).toThrow(/entry count/u);
     const bytes = encode(63n * MIB + 1n, 1, 2);
-    expect(() => decodeMetadata(Buffer.concat([bytes, Buffer.from([0])]))).toThrow(/trailing/iu);
+    expect(() =>
+      decodeMetadata(Buffer.concat([bytes, Buffer.from([0])])),
+    ).toThrow(/trailing/iu);
   });
 });

@@ -32,7 +32,7 @@ import {
   Typography,
 } from '@mui/material';
 import React, { useCallback, useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams } from 'react-router';
 import BreadcrumbNav from '../components/BreadcrumbNav';
 import { useBrightPassApi } from '../hooks/useBrightPassApi';
 import { useBrightPassTranslation } from '../hooks/useBrightPassTranslation';
@@ -234,8 +234,10 @@ const AuditLogView: React.FC = () => {
             </TableHead>
             <TableBody>
               {displayed.map((entry) => {
-                const { formattedTimestamp, actionLabel } =
-                  formatAuditEntry(entry, formatDateTime);
+                const { formattedTimestamp, actionLabel } = formatAuditEntry(
+                  entry,
+                  formatDateTime,
+                );
                 return (
                   <TableRow key={entry.id}>
                     <TableCell>{formattedTimestamp}</TableCell>

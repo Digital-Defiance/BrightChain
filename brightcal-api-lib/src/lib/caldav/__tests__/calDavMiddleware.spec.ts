@@ -18,7 +18,7 @@ import {
   type CalDavCalendarInfo,
   type CalDavEventResource,
   type ICalDavService,
-} from '../calDavMiddleware.ts';
+} from '../calDavMiddleware.js';
 
 // ─── Mock service ────────────────────────────────────────────────────────────
 

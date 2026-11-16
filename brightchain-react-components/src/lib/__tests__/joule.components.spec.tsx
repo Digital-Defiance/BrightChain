@@ -10,6 +10,16 @@
 import '@testing-library/jest-dom';
 import { render, screen } from '@testing-library/react';
 
+import { DisputeNotice, JouleDispute } from '../joule/DisputeNotice';
+import { JouleBalance } from '../joule/JouleBalance';
+import {
+  JouleConsumptionChart,
+  JouleConsumptionEntry,
+} from '../joule/JouleConsumptionChart';
+import { JouleEvent, JouleEventLog } from '../joule/JouleEventLog';
+import { RateTransparency } from '../joule/RateTransparency';
+import { JouleRateTableData } from '../joule/hooks';
+
 // Mock the i18n hook so components render without an I18nProvider.
 // The mock performs basic {KEY} interpolation to match English translations.
 jest.mock('@digitaldefiance/express-suite-react-components', () => {
@@ -31,7 +41,10 @@ jest.mock('@digitaldefiance/express-suite-react-components', () => {
     RateTransparency_Empty: 'Rate table not available.',
   };
 
-  function interpolate(key: string, params?: Record<string, string | number>): string {
+  function interpolate(
+    key: string,
+    params?: Record<string, string | number>,
+  ): string {
     const template = translations[key] ?? key;
     if (!params) return template;
     return Object.entries(params).reduce(
@@ -42,26 +55,21 @@ jest.mock('@digitaldefiance/express-suite-react-components', () => {
 
   return {
     useI18n: () => ({
-      tComponent: (_componentId: string, key: string, params?: Record<string, string>) =>
+      tComponent: (
+        _componentId: string,
+        key: string,
+        params?: Record<string, string>,
+      ) => interpolate(key, params),
+      t: (key: string, params?: Record<string, string>) =>
         interpolate(key, params),
-      t: (key: string, params?: Record<string, string>) => interpolate(key, params),
-      tBranded: (key: string, params?: Record<string, string>) => interpolate(key, params),
+      tBranded: (key: string, params?: Record<string, string>) =>
+        interpolate(key, params),
       changeLanguage: jest.fn(),
       currentLanguage: 'en-US',
     }),
     I18nProvider: ({ children }: { children: unknown }) => children,
   };
 });
-
-import { DisputeNotice, JouleDispute } from '../joule/DisputeNotice';
-import { JouleBalance } from '../joule/JouleBalance';
-import {
-  JouleConsumptionChart,
-  JouleConsumptionEntry,
-} from '../joule/JouleConsumptionChart';
-import { JouleEvent, JouleEventLog } from '../joule/JouleEventLog';
-import { RateTransparency } from '../joule/RateTransparency';
-import { JouleRateTableData } from '../joule/hooks';
 
 // ---------------------------------------------------------------------------
 // Test bigint values per spec — Req 7.7

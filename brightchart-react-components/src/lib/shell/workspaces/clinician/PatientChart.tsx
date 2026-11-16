@@ -17,7 +17,7 @@ import {
 } from '@brightchain/brightchart-lib';
 import { Box, Tab, Tabs, Typography } from '@mui/material';
 import React, { useCallback, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams } from 'react-router';
 import { AllergyList } from '../../../clinical/AllergyList';
 import { ClinicalTimeline } from '../../../clinical/ClinicalTimeline';
 import { ConditionList } from '../../../clinical/ConditionList';

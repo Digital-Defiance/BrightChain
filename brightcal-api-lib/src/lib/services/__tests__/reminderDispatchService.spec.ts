@@ -15,12 +15,11 @@
  * @see Requirements 14.1, 14.2, 14.3
  */
 
-import { ReminderDispatchService } from '../reminderDispatchService.ts';
+import { ReminderDispatchService } from '../reminderDispatchService.js';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const PAST = new Date(Date.now() - 10_000).toISOString();
-const FUTURE = new Date(Date.now() + 600_000).toISOString();
 
 function makeTypedReminder(overrides: Record<string, unknown> = {}) {
   return {
@@ -46,14 +45,20 @@ function makeTypedEvent(overrides: Record<string, unknown> = {}) {
   };
 }
 
-function makeReminderModel(reminders: ReturnType<typeof makeTypedReminder>[] = []) {
+function makeReminderModel(
+  reminders: ReturnType<typeof makeTypedReminder>[] = [],
+) {
   return {
-    find: jest.fn().mockReturnValue({ toArray: jest.fn().mockResolvedValue(reminders) }),
+    find: jest
+      .fn()
+      .mockReturnValue({ toArray: jest.fn().mockResolvedValue(reminders) }),
     updateOne: jest.fn().mockResolvedValue(undefined),
   };
 }
 
-function makeEventModel(event: ReturnType<typeof makeTypedEvent> | null = makeTypedEvent()) {
+function makeEventModel(
+  event: ReturnType<typeof makeTypedEvent> | null = makeTypedEvent(),
+) {
   return {
     findById: jest.fn().mockResolvedValue(event),
   };
@@ -212,7 +217,10 @@ describe('ReminderDispatchService', () => {
 
     it('passes event summary and dtstart to sendEmailReminder', async () => {
       const eventStart = new Date(Date.now() + 900_000);
-      const event = makeTypedEvent({ summary: 'Sprint Review', dtstart: eventStart });
+      const event = makeTypedEvent({
+        summary: 'Sprint Review',
+        dtstart: eventStart,
+      });
       const reminder = makeTypedReminder({ channels: ['email'] });
       const mailDelivery = makeMailDelivery();
       const svc = new ReminderDispatchService(

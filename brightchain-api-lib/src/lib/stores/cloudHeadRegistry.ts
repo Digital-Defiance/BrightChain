@@ -120,7 +120,10 @@ export class CloudHeadRegistry implements IHeadRegistry {
           const entry = value as RegistryEntry;
           this.heads.set(key, entry.blockId);
           if (entry.timestamp !== undefined) {
-            this.timestamps.set(key, normalizeToBrightDate(entry.timestamp as string | number));
+            this.timestamps.set(
+              key,
+              normalizeToBrightDate(entry.timestamp as string | number),
+            );
           }
         }
       }
@@ -141,7 +144,10 @@ export class CloudHeadRegistry implements IHeadRegistry {
     return new Map(this.heads);
   }
 
-  getHeadTimestamp(dbName: string, collectionName: string): BrightDateTimestamp | undefined {
+  getHeadTimestamp(
+    dbName: string,
+    collectionName: string,
+  ): BrightDateTimestamp | undefined {
     return this.timestamps.get(this.makeKey(dbName, collectionName));
   }
 

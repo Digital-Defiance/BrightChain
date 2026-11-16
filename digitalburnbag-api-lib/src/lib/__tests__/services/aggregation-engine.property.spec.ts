@@ -363,9 +363,9 @@ describe('Feature: canary-provider-system, Property 21: All-failures aggregate s
           const config = makeConfig(strategy);
           const aggregated = engine.aggregate(results, config);
 
+          // CHECK_FAILED implies not ABSENCE (distinct enum members).
           return (
-            aggregated.overallSignalType === HeartbeatSignalType.CHECK_FAILED &&
-            aggregated.overallSignalType !== HeartbeatSignalType.ABSENCE
+            aggregated.overallSignalType === HeartbeatSignalType.CHECK_FAILED
           );
         },
       ),

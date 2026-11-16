@@ -20,11 +20,16 @@ import {
   BaseBlock,
   BlockAnnouncement,
   BlockHandle,
+  BlockId,
   BlockManifest,
   BlockSize,
   BlockStoreOptions,
   BloomFilter,
+  brightDateNow,
+  BrightDateTimestamp,
   BrightenResult,
+  BrightTrustProposalMetadata,
+  BrightTrustVoteMetadata,
   CBLMagnetComponents,
   CBLStorageResult,
   CBLWhiteningOptions,
@@ -43,7 +48,6 @@ import {
   initializeBrightChain,
   IPooledBlockStore,
   IReconciliationService,
-  brightDateNow,
   ListOptions,
   LocationQueryResult,
   MessageDeliveryMetadata,
@@ -103,7 +107,7 @@ const arbPoolId = fc
 /** Valid hex-encoded block ID (at least 32 hex chars) */
 const arbBlockId = fc
   .array(fc.integer({ min: 0, max: 15 }), { minLength: 32, maxLength: 64 })
-  .map((arr) => arr.map((n) => n.toString(16)).join(''));
+  .map((arr) => arr.map((n) => n.toString(16)).join('') as BlockId);
 
 /** Valid node ID */
 const arbNodeId = fc
@@ -131,7 +135,7 @@ const arbPoolBlockDistribution = fc
     ),
   )
   .map(([pools, blockArrays]) => {
-    const map = new Map<string, string[]>();
+    const map = new Map<string, BlockId[]>();
     for (let i = 0; i < pools.length; i++) {
       map.set(pools[i], [...new Set(blockArrays[i])]);
     }
@@ -267,8 +271,8 @@ class MockPooledBlockStore implements IPooledBlockStore {
     _options?: CBLWhiteningOptions,
   ): Promise<CBLStorageResult> {
     return {
-      blockId1: 'mock-block-id-1',
-      blockId2: 'mock-block-id-2',
+      blockId1: 'mock-block-id-1' as BlockId,
+      blockId2: 'mock-block-id-2' as BlockId,
       blockSize: BlockSize.Small,
       magnetUrl:
         'magnet:?xt=urn:brightchain:cbl&bs=256&b1=mock-block-id-1&b2=mock-block-id-2',
@@ -343,7 +347,7 @@ class MockPooledBlockStore implements IPooledBlockStore {
     for (const [pool, blockIds] of this.poolBlocks) {
       if (blockIds.has(keyHex)) {
         return {
-          blockId: keyHex,
+          blockId: keyHex as BlockId,
           createdAt: brightDateNow(),
           expiresAt: null,
           durabilityLevel: DurabilityLevel.Standard,
@@ -414,9 +418,9 @@ class MockPooledBlockStore implements IPooledBlockStore {
     _randomBlockCount: number,
   ): Promise<BrightenResult> {
     return {
-      brightenedBlockId: 'brightened-block-id',
+      brightenedBlockId: 'brightened-block-id' as BlockId,
       randomBlockIds: [],
-      originalBlockId: 'original-block-id',
+      originalBlockId: 'original-block-id' as BlockId,
     };
   }
 
@@ -425,8 +429,8 @@ class MockPooledBlockStore implements IPooledBlockStore {
     _options?: CBLWhiteningOptions,
   ): Promise<CBLStorageResult> {
     return {
-      blockId1: 'mock-block-id-1',
-      blockId2: 'mock-block-id-2',
+      blockId1: 'mock-block-id-1' as BlockId,
+      blockId2: 'mock-block-id-2' as BlockId,
       blockSize: BlockSize.Small,
       magnetUrl:
         'magnet:?xt=urn:brightchain:cbl&bs=256&b1=mock-block-id-1&b2=mock-block-id-2',
@@ -444,8 +448,8 @@ class MockPooledBlockStore implements IPooledBlockStore {
 
   parseCBLMagnetUrl(_magnetUrl: string): CBLMagnetComponents {
     return {
-      blockId1: 'mock-block-id-1',
-      blockId2: 'mock-block-id-2',
+      blockId1: 'mock-block-id-1' as BlockId,
+      blockId2: 'mock-block-id-2' as BlockId,
       blockSize: BlockSize.Small,
       isEncrypted: false,
     };
@@ -490,22 +494,22 @@ class MockPooledBlockStore implements IPooledBlockStore {
  */
 class MockPoolAwareBlockRegistry implements IBlockRegistry {
   /** blockId -> poolId mapping */
-  private blockPool = new Map<string, string>();
+  private blockPool = new Map<BlockId, PoolId>();
   /** All block IDs (flat set for IBlockRegistry compat) */
-  private blocks = new Set<string>();
+  private blocks = new Set<BlockId>();
 
-  hasLocal(blockId: string): boolean {
+  hasLocal(blockId: BlockId): boolean {
     return this.blocks.has(blockId);
   }
 
-  addLocal(blockId: string, poolId?: PoolId): void {
+  addLocal(blockId: BlockId, poolId?: PoolId): void {
     this.blocks.add(blockId);
     if (poolId) {
       this.blockPool.set(blockId, poolId);
     }
   }
 
-  removeLocal(blockId: string, _poolId?: PoolId): void {
+  removeLocal(blockId: BlockId, _poolId?: PoolId): void {
     this.blocks.delete(blockId);
     this.blockPool.delete(blockId);
   }
@@ -514,7 +518,7 @@ class MockPoolAwareBlockRegistry implements IBlockRegistry {
     return this.blocks.size;
   }
 
-  getLocalBlockIds(): string[] {
+  getLocalBlockIds(): BlockId[] {
     return [...this.blocks];
   }
 
@@ -524,7 +528,7 @@ class MockPoolAwareBlockRegistry implements IBlockRegistry {
       hashCount: 7,
       bitCount: 1000,
       itemCount: this.blocks.size,
-      mightContain: (blockId: string) => this.blocks.has(blockId),
+      mightContain: (blockId: BlockId) => this.blocks.has(blockId),
     };
   }
 
@@ -545,7 +549,7 @@ class MockPoolAwareBlockRegistry implements IBlockRegistry {
   }
 
   exportPoolScopedManifest(): PoolScopedManifest {
-    const pools = new Map<PoolId, string[]>();
+    const pools = new Map<PoolId, BlockId[]>();
     for (const [blockId, poolId] of this.blockPool) {
       if (!pools.has(poolId)) {
         pools.set(poolId, []);
@@ -576,7 +580,7 @@ class MockPoolAwareBlockRegistry implements IBlockRegistry {
   }
 
   /** Get the pool for a block */
-  getPoolForBlock(blockId: string): string | undefined {
+  getPoolForBlock(blockId: BlockId): string | undefined {
     return this.blockPool.get(blockId);
   }
 
@@ -612,7 +616,7 @@ class MockAvailabilityService implements IAvailabilityService {
 
   async queryBlockLocation(blockId: string): Promise<LocationQueryResult> {
     return {
-      blockId,
+      blockId: blockId as BlockId,
       state: await this.getAvailabilityState(blockId),
       locations: await this.getBlockLocations(blockId),
       isStale: false,
@@ -620,10 +624,10 @@ class MockAvailabilityService implements IAvailabilityService {
     };
   }
 
-  async listBlocksByState(state: AvailabilityState): Promise<string[]> {
-    const result: string[] = [];
+  async listBlocksByState(state: AvailabilityState): Promise<BlockId[]> {
+    const result: BlockId[] = [];
     for (const [blockId, s] of this.blockStates) {
-      if (s === state) result.push(blockId);
+      if (s === state) result.push(blockId as BlockId);
     }
     return result;
   }
@@ -816,6 +820,25 @@ class MockGossipService implements IGossipService {
     this.removedBlocks = [];
     this.announcedBlocksWithPool = [];
   }
+
+  async announceBrightTrustProposal(
+    _metadata: BrightTrustProposalMetadata,
+  ): Promise<void> {}
+  async announceBrightTrustVote(
+    _metadata: BrightTrustVoteMetadata,
+  ): Promise<void> {}
+  onBrightTrustProposal(
+    _handler: (announcement: BlockAnnouncement) => void,
+  ): void {}
+  offBrightTrustProposal(
+    _handler: (announcement: BlockAnnouncement) => void,
+  ): void {}
+  onBrightTrustVote(
+    _handler: (announcement: BlockAnnouncement) => void,
+  ): void {}
+  offBrightTrustVote(
+    _handler: (announcement: BlockAnnouncement) => void,
+  ): void {}
 }
 
 /**
@@ -847,7 +870,7 @@ class MockReconciliationService implements IReconciliationService {
 
   updateSyncVector(
     _peerId: string,
-    _timestamp: Date,
+    _timestamp: BrightDateTimestamp,
     _manifestChecksum: string,
   ): void {}
 
@@ -957,7 +980,7 @@ describe('AvailabilityAwareBlockStore Pool Coordination Property Tests', () => {
             const survivingPools = poolsArray.slice(1);
 
             // Record blocks before deletion for verification
-            const survivingPoolBlocks = new Map<string, string[]>();
+            const survivingPoolBlocks = new Map<string, BlockId[]>();
             for (const pool of survivingPools) {
               survivingPoolBlocks.set(pool, poolBlockMap.get(pool) ?? []);
             }
@@ -1151,11 +1174,11 @@ describe('AvailabilityAwareBlockStore Pool Coordination Property Tests', () => {
           const { store, innerStore } = createPooledTestStore();
 
           const block = createTestBlock();
-          const blockId = block.idChecksum.toHex();
+          const blockId = block.idChecksum.toHex() as BlockId;
 
           // Pre-seed the block's metadata so getMetadata returns poolId
           innerStore.metadataOverrides.set(blockId, {
-            blockId,
+            blockId: blockId as BlockId,
             createdAt: brightDateNow(),
             expiresAt: null,
             durabilityLevel: DurabilityLevel.Standard,
@@ -1191,11 +1214,11 @@ describe('AvailabilityAwareBlockStore Pool Coordination Property Tests', () => {
           });
 
           const block = createTestBlock();
-          const blockId = block.idChecksum.toHex();
+          const blockId = block.idChecksum.toHex() as BlockId;
 
           // Pre-seed the block's metadata so getMetadata returns poolId
           innerStore.metadataOverrides.set(blockId, {
-            blockId,
+            blockId: blockId as BlockId,
             createdAt: brightDateNow(),
             expiresAt: null,
             durabilityLevel: DurabilityLevel.Standard,
@@ -1229,11 +1252,11 @@ describe('AvailabilityAwareBlockStore Pool Coordination Property Tests', () => {
           const { store, innerStore } = createPooledTestStore();
 
           const block = createTestBlock();
-          const blockId = block.idChecksum.toHex();
+          const blockId = block.idChecksum.toHex() as BlockId;
 
           // Pre-seed the block's metadata so getMetadata returns poolId
           innerStore.metadataOverrides.set(blockId, {
-            blockId,
+            blockId: blockId as BlockId,
             createdAt: brightDateNow(),
             expiresAt: null,
             durabilityLevel: DurabilityLevel.Standard,
@@ -1295,11 +1318,11 @@ describe('AvailabilityAwareBlockStore Pool Coordination Property Tests', () => {
             createPooledTestStore();
 
           const block = createTestBlock();
-          const blockId = block.idChecksum.toHex();
+          const blockId = block.idChecksum.toHex() as BlockId;
 
           // Pre-seed metadata so getMetadata returns the poolId
           innerStore.metadataOverrides.set(blockId, {
-            blockId,
+            blockId: blockId as BlockId,
             createdAt: brightDateNow(),
             expiresAt: null,
             durabilityLevel: DurabilityLevel.Standard,
@@ -1337,7 +1360,7 @@ describe('AvailabilityAwareBlockStore Pool Coordination Property Tests', () => {
           const { store, availabilityService } = createPooledTestStore();
 
           const block = createTestBlock();
-          const blockId = block.idChecksum.toHex();
+          const blockId = block.idChecksum.toHex() as BlockId;
 
           // No metadata override — getMetadata returns null, so no poolId
 
@@ -1368,11 +1391,11 @@ describe('AvailabilityAwareBlockStore Pool Coordination Property Tests', () => {
           const blocksByPool = new Map<string, RawDataBlock>();
           for (const [poolId] of poolBlockMap) {
             const block = createTestBlock();
-            const blockId = block.idChecksum.toHex();
+            const blockId = block.idChecksum.toHex() as BlockId;
 
             // Pre-seed metadata with the pool context
             innerStore.metadataOverrides.set(blockId, {
-              blockId,
+              blockId: blockId as BlockId,
               createdAt: brightDateNow(),
               expiresAt: null,
               durabilityLevel: DurabilityLevel.Standard,
@@ -1397,7 +1420,7 @@ describe('AvailabilityAwareBlockStore Pool Coordination Property Tests', () => {
 
           // Verify each block's location record has the correct poolId
           for (const [poolId, block] of blocksByPool) {
-            const blockId = block.idChecksum.toHex();
+            const blockId = block.idChecksum.toHex() as BlockId;
             const locations =
               await availabilityService.getBlockLocations(blockId);
 
@@ -1446,11 +1469,11 @@ describe('AvailabilityAwareBlockStore Pool Coordination Property Tests', () => {
             createPooledTestStore();
 
           const block = createTestBlock();
-          const blockId = block.idChecksum.toHex();
+          const blockId = block.idChecksum.toHex() as BlockId;
 
           // Pre-seed metadata so getMetadata returns the poolId
           innerStore.metadataOverrides.set(blockId, {
-            blockId,
+            blockId: blockId as BlockId,
             createdAt: brightDateNow(),
             expiresAt: null,
             durabilityLevel: DurabilityLevel.Standard,
@@ -1488,7 +1511,7 @@ describe('AvailabilityAwareBlockStore Pool Coordination Property Tests', () => {
           const { store, gossipService } = createPooledTestStore();
 
           const block = createTestBlock();
-          const blockId = block.idChecksum.toHex();
+          const blockId = block.idChecksum.toHex() as BlockId;
 
           // No metadata override — getMetadata returns null, so no poolId
 
@@ -1516,10 +1539,10 @@ describe('AvailabilityAwareBlockStore Pool Coordination Property Tests', () => {
           const blocksByPool = new Map<string, RawDataBlock>();
           for (const [poolId] of poolBlockMap) {
             const block = createTestBlock();
-            const blockId = block.idChecksum.toHex();
+            const blockId = block.idChecksum.toHex() as BlockId;
 
             innerStore.metadataOverrides.set(blockId, {
-              blockId,
+              blockId: blockId as BlockId,
               createdAt: brightDateNow(),
               expiresAt: null,
               durabilityLevel: DurabilityLevel.Standard,
@@ -1544,7 +1567,7 @@ describe('AvailabilityAwareBlockStore Pool Coordination Property Tests', () => {
 
           // Verify each block's announcement carries the correct poolId
           for (const [poolId, block] of blocksByPool) {
-            const blockId = block.idChecksum.toHex();
+            const blockId = block.idChecksum.toHex() as BlockId;
 
             const announcement = gossipService.announcedBlocksWithPool.find(
               (a) => a.blockId === blockId,
@@ -1630,13 +1653,13 @@ describe('AvailabilityAwareBlockStore Pool Coordination Property Tests', () => {
             createPooledTestStore();
 
           const block = createTestBlock();
-          const blockId = block.idChecksum.toHex();
+          const blockId = block.idChecksum.toHex() as BlockId;
           const checksum = block.idChecksum;
 
           // Set up metadata with the target pool and a high replication factor
           // so the block is considered under-replicated
           innerStore.metadataOverrides.set(blockId, {
-            blockId,
+            blockId: blockId as BlockId,
             createdAt: brightDateNow(),
             expiresAt: null,
             durabilityLevel: DurabilityLevel.Standard,
@@ -1725,7 +1748,7 @@ describe('AvailabilityAwareBlockStore Pool Coordination Property Tests', () => {
             createPooledTestStore();
 
           const block = createTestBlock();
-          const blockId = block.idChecksum.toHex();
+          const blockId = block.idChecksum.toHex() as BlockId;
           const checksum = block.idChecksum;
 
           // Set target replication factor higher than target pool nodes
@@ -1738,7 +1761,7 @@ describe('AvailabilityAwareBlockStore Pool Coordination Property Tests', () => {
           );
 
           innerStore.metadataOverrides.set(blockId, {
-            blockId,
+            blockId: blockId as BlockId,
             createdAt: brightDateNow(),
             expiresAt: null,
             durabilityLevel: DurabilityLevel.Standard,
@@ -1809,11 +1832,11 @@ describe('AvailabilityAwareBlockStore Pool Coordination Property Tests', () => {
               createPooledTestStore();
 
             const block = createTestBlock();
-            const blockId = block.idChecksum.toHex();
+            const blockId = block.idChecksum.toHex() as BlockId;
             const checksum = block.idChecksum;
 
             innerStore.metadataOverrides.set(blockId, {
-              blockId,
+              blockId: blockId as BlockId,
               createdAt: brightDateNow(),
               expiresAt: null,
               durabilityLevel: DurabilityLevel.Standard,

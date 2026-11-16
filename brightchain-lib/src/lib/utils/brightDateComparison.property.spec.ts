@@ -2,7 +2,10 @@
 // Feature: brightdate-default-timestamp, Property 5: compareBrightDates Antisymmetry
 // Feature: brightdate-default-timestamp, Property 6: isInBrightDateRange Correctness
 import * as fc from 'fast-check';
-import { compareBrightDates, isInBrightDateRange } from './brightDateComparison';
+import {
+  compareBrightDates,
+  isInBrightDateRange,
+} from './brightDateComparison';
 import { brightDateToDate } from './brightDateConversions';
 
 /**
@@ -128,7 +131,9 @@ describe('Feature: brightdate-default-timestamp, Property 6: isInBrightDateRange
               noDefaultInfinity: true,
             }),
           )
-          .map(([a, b]) => [Math.min(a, b), Math.max(a, b)] as [number, number]),
+          .map(
+            ([a, b]) => [Math.min(a, b), Math.max(a, b)] as [number, number],
+          ),
         (t, [start, end]) => {
           const result = isInBrightDateRange(t, start, end);
           const expected = start <= t && t <= end;

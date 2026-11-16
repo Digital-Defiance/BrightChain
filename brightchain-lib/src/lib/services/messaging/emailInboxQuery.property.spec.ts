@@ -25,9 +25,9 @@ import {
 } from '../../interfaces/messaging/emailAddress';
 import type { IEmailMetadata } from '../../interfaces/messaging/emailMetadata';
 import { createContentType } from '../../interfaces/messaging/mimePart';
-import { InMemoryEmailMetadataStore } from './inMemoryEmailMetadataStore';
-import { brightDateNow } from '../../utils/brightDateConversions';
 import type { BrightDateTimestamp } from '../../types/brightDateTimestamp';
+import { brightDateNow } from '../../utils/brightDateConversions';
+import { InMemoryEmailMetadataStore } from './inMemoryEmailMetadataStore';
 
 /** Cast a test string to BlockId without validation — for test data only. */
 const bid = (s: string) => s as unknown as BlockId;

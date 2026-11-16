@@ -1,4 +1,6 @@
 import {
+  BlockId,
+  brightDateNow,
   DeliveryStatus,
   DurabilityLevel,
   IMessageMetadata,
@@ -17,7 +19,7 @@ describe('EventNotificationSystem', () => {
   let mockWs: jest.Mocked<WebSocket>;
 
   const createMockMetadata = (): IMessageMetadata => ({
-    blockId: 'block-1',
+    blockId: 'block-1' as BlockId,
     messageType: 'test',
     senderId: 'sender-1',
     recipients: ['recipient-1'],
@@ -27,12 +29,12 @@ describe('EventNotificationSystem', () => {
     encryptionScheme: MessageEncryptionScheme.NONE,
     isCBL: false,
     cblBlockIds: [],
-    createdAt: new Date(),
+    createdAt: brightDateNow(),
     expiresAt: null,
     durabilityLevel: DurabilityLevel.Standard,
     parityBlockIds: [],
     accessCount: 0,
-    lastAccessedAt: new Date(),
+    lastAccessedAt: brightDateNow(),
     replicationStatus: ReplicationStatus.Pending,
     targetReplicationFactor: 3,
     replicaNodeIds: [],
@@ -240,7 +242,7 @@ describe('EventNotificationSystem', () => {
       system.emit(MessageEventType.MESSAGE_STORED, metadata);
 
       const history = system.getEventHistory();
-      expect(typeof history[0].timestamp).toBe("number");
+      expect(typeof history[0].timestamp).toBe('number');
     });
   });
 

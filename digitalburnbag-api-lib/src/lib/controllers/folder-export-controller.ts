@@ -124,7 +124,7 @@ export class FolderExportController<
           ),
         } as unknown as BurnbagResponse,
       };
-    const folderId = this.safeParseId(req.params.id as string);
+    const folderId = this.safeParseId(req.params['id'] as string);
     if (!folderId)
       return {
         statusCode: 400,
@@ -140,7 +140,7 @@ export class FolderExportController<
 
     const exists = await this.deps.folderExists(folderId);
     if (!exists) {
-      throw new NotFoundError('Folder', req.params.id as string);
+      throw new NotFoundError('Folder', req.params['id'] as string);
     }
 
     const hasPermission = await this.deps.checkPermissionFlag(

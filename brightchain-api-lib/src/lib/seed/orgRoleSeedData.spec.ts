@@ -15,6 +15,7 @@ import {
 } from '@brightchain/brightchart-lib';
 import * as fc from 'fast-check';
 import {
+  type CollectionSchema,
   HEALTHCARE_ROLE_SCHEMA,
   INVITATION_SCHEMA,
   ORGANIZATION_SCHEMA,
@@ -38,6 +39,20 @@ import {
   SEED_ORGANIZATIONS,
 } from './orgRoleSeedData';
 
+/**
+ * Read a field named by a CollectionSchema from a seed record. Field names
+ * come from the schema at runtime, so this is a dynamic lookup.
+ */
+function fieldOf(record: object | undefined, field: string): unknown {
+  return (record as Record<string, unknown> | undefined)?.[field];
+}
+
+/** The schema's required field list; every schema under test declares one. */
+function requiredFields(schema: CollectionSchema): string[] {
+  expect(schema.required).toBeDefined();
+  return schema.required ?? [];
+}
+
 // ── Property Tests ──────────────────────────────────────────────
 
 describe('Feature: org-role-dev-seeding, Property 1: Seed record schema conformance', () => {
@@ -54,10 +69,10 @@ describe('Feature: org-role-dev-seeding, Property 1: Seed record schema conforma
       fc.property(
         fc.integer({ min: 0, max: SEED_ORGANIZATIONS.length - 1 }),
         (idx) => {
-          const record = SEED_ORGANIZATIONS[idx] as Record<string, unknown>;
-          for (const field of ORGANIZATION_SCHEMA.required) {
-            expect(record[field]).toBeDefined();
-            expect(record[field]).not.toBeNull();
+          const record: object | undefined = SEED_ORGANIZATIONS[idx];
+          for (const field of requiredFields(ORGANIZATION_SCHEMA)) {
+            expect(fieldOf(record, field)).toBeDefined();
+            expect(fieldOf(record, field)).not.toBeNull();
           }
         },
       ),
@@ -70,10 +85,10 @@ describe('Feature: org-role-dev-seeding, Property 1: Seed record schema conforma
       fc.property(
         fc.integer({ min: 0, max: SEED_HEALTHCARE_ROLES.length - 1 }),
         (idx) => {
-          const record = SEED_HEALTHCARE_ROLES[idx] as Record<string, unknown>;
-          for (const field of HEALTHCARE_ROLE_SCHEMA.required) {
-            expect(record[field]).toBeDefined();
-            expect(record[field]).not.toBeNull();
+          const record: object | undefined = SEED_HEALTHCARE_ROLES[idx];
+          for (const field of requiredFields(HEALTHCARE_ROLE_SCHEMA)) {
+            expect(fieldOf(record, field)).toBeDefined();
+            expect(fieldOf(record, field)).not.toBeNull();
           }
         },
       ),
@@ -86,10 +101,10 @@ describe('Feature: org-role-dev-seeding, Property 1: Seed record schema conforma
       fc.property(
         fc.integer({ min: 0, max: SEED_INVITATIONS.length - 1 }),
         (idx) => {
-          const record = SEED_INVITATIONS[idx] as Record<string, unknown>;
-          for (const field of INVITATION_SCHEMA.required) {
-            expect(record[field]).toBeDefined();
-            expect(record[field]).not.toBeNull();
+          const record: object | undefined = SEED_INVITATIONS[idx];
+          for (const field of requiredFields(INVITATION_SCHEMA)) {
+            expect(fieldOf(record, field)).toBeDefined();
+            expect(fieldOf(record, field)).not.toBeNull();
           }
         },
       ),
@@ -116,10 +131,10 @@ describe('Feature: patient-portal-registration, Property 1: Patient registration
         const role = SEED_HEALTHCARE_ROLES.find((r) => r._id === roleId);
         expect(role).toBeDefined();
 
-        const record = role as unknown as Record<string, unknown>;
-        for (const field of HEALTHCARE_ROLE_SCHEMA.required) {
-          expect(record[field]).toBeDefined();
-          expect(record[field]).not.toBeNull();
+        const record: object | undefined = role;
+        for (const field of requiredFields(HEALTHCARE_ROLE_SCHEMA)) {
+          expect(fieldOf(record, field)).toBeDefined();
+          expect(fieldOf(record, field)).not.toBeNull();
         }
 
         expect(role!.roleCode).toBe(PATIENT);
@@ -136,10 +151,10 @@ describe('Feature: patient-portal-registration, Property 1: Patient registration
         const inv = SEED_INVITATIONS.find((i) => i._id === invId);
         expect(inv).toBeDefined();
 
-        const record = inv as unknown as Record<string, unknown>;
-        for (const field of INVITATION_SCHEMA.required) {
-          expect(record[field]).toBeDefined();
-          expect(record[field]).not.toBeNull();
+        const record: object | undefined = inv;
+        for (const field of requiredFields(INVITATION_SCHEMA)) {
+          expect(fieldOf(record, field)).toBeDefined();
+          expect(fieldOf(record, field)).not.toBeNull();
         }
 
         expect(inv!.token).toBe(INV_SUNRISE_PATIENT_TOKEN);
@@ -322,9 +337,8 @@ describe('Seed data module – unit tests', () => {
 
     it('all invitations are unredeemed (usedBy/usedAt unset)', () => {
       for (const inv of SEED_INVITATIONS) {
-        const record = inv as Record<string, unknown>;
-        expect(record['usedBy']).toBeUndefined();
-        expect(record['usedAt']).toBeUndefined();
+        expect(inv.usedBy).toBeUndefined();
+        expect(inv.usedAt).toBeUndefined();
       }
     });
   });
@@ -358,23 +372,23 @@ describe('Seed data module – unit tests', () => {
 
   // Req 6.4: getDevUserId() returns default and respects MEMBER_ID env var
   describe('getDevUserId (Req 6.4)', () => {
-    const originalEnv = process.env.MEMBER_ID;
+    const originalEnv = process.env['MEMBER_ID'];
 
     afterEach(() => {
       if (originalEnv === undefined) {
-        delete process.env.MEMBER_ID;
+        delete process.env['MEMBER_ID'];
       } else {
-        process.env.MEMBER_ID = originalEnv;
+        process.env['MEMBER_ID'] = originalEnv;
       }
     });
 
     it('returns DEV_USER_ID when MEMBER_ID is not set', () => {
-      delete process.env.MEMBER_ID;
+      delete process.env['MEMBER_ID'];
       expect(getDevUserId()).toBe(DEV_USER_ID);
     });
 
     it('returns MEMBER_ID env var when set', () => {
-      process.env.MEMBER_ID = 'custom-member-id-12345';
+      process.env['MEMBER_ID'] = 'custom-member-id-12345';
       expect(getDevUserId()).toBe('custom-member-id-12345');
     });
   });

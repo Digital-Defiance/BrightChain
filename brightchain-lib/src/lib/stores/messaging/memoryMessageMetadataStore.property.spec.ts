@@ -17,9 +17,11 @@ import { MessagePriority } from '../../enumerations/messaging/messagePriority';
 import { ReplicationStatus } from '../../enumerations/replicationStatus';
 import type { BlockId } from '../../interfaces/branded/primitives/blockId';
 import { IMessageMetadata } from '../../interfaces/messaging/messageMetadata';
+import {
+  brightDateNow,
+  dateToBrightDate,
+} from '../../utils/brightDateConversions';
 import { MemoryMessageMetadataStore } from './memoryMessageMetadataStore';
-import { brightDateNow, dateToBrightDate } from '../../utils/brightDateConversions';
-import type { BrightDateTimestamp } from '../../types/brightDateTimestamp';
 
 /** Cast a test string to BlockId without validation — for test data only. */
 const bid = (s: string) => s as unknown as BlockId;
@@ -60,10 +62,12 @@ describe('Message Metadata Round-Trip Property Tests', () => {
           MessagePriority.NORMAL,
           MessagePriority.HIGH,
         ), // priority
-        fc.date({
-          min: new Date(),
-          max: new Date(Date.now() + 86400000 * 365),
-        }).map((d) => dateToBrightDate(d)), // expiresAt as BrightDateTimestamp
+        fc
+          .date({
+            min: new Date(),
+            max: new Date(Date.now() + 86400000 * 365),
+          })
+          .map((d) => dateToBrightDate(d)), // expiresAt as BrightDateTimestamp
         fc.constantFrom(
           MessageEncryptionScheme.NONE,
           MessageEncryptionScheme.SHARED_KEY,

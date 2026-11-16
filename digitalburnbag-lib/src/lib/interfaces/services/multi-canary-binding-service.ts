@@ -1,15 +1,15 @@
 import { PlatformID } from '@digitaldefiance/ecies-lib';
+import type { CanaryCondition } from '../../enumerations/canary-condition';
+import type { ProtocolAction } from '../../enumerations/protocol-action';
 import type { HeartbeatSignalType } from '../canary-provider/canary-provider-adapter';
-import type {
-  IMultiCanaryBindingBase,
-  RedundancyPolicy,
-} from '../canary-provider/multi-canary-binding';
 import type {
   IBindingImpactReport,
   IRedundancyEvaluationResult,
 } from '../canary-provider/expansion-types';
-import type { CanaryCondition } from '../../enumerations/canary-condition';
-import type { ProtocolAction } from '../../enumerations/protocol-action';
+import type {
+  IMultiCanaryBindingBase,
+  RedundancyPolicy,
+} from '../canary-provider/multi-canary-binding';
 
 /**
  * Parameters for creating a new multi-canary binding.

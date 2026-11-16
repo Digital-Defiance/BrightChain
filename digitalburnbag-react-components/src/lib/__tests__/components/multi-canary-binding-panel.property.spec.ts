@@ -37,11 +37,21 @@ const aggregateStatusArb = fc.constantFrom(
   'check_failed',
 );
 
-const signalArb = fc.constantFrom('presence', 'absence', 'check_failed', 'duress', 'unknown');
+const signalArb = fc.constantFrom(
+  'presence',
+  'absence',
+  'check_failed',
+  'duress',
+  'unknown',
+);
 
 const conditionArb = fc.constantFrom('ABSENCE' as const, 'DURESS' as const);
 
-const targetTypeArb = fc.constantFrom('vault' as const, 'file' as const, 'folder' as const);
+const targetTypeArb = fc.constantFrom(
+  'vault' as const,
+  'file' as const,
+  'folder' as const,
+);
 
 const validDateStringArb = fc
   .integer({ min: 946684800000, max: 1893456000000 })
@@ -61,14 +71,23 @@ const connectionArb: fc.Arbitrary<IApiProviderConnectionDTO> = fc.record({
   providerId: fc.string({ minLength: 1, maxLength: 20 }),
   status: fc.constantFrom('connected', 'expired', 'error', 'paused', 'pending'),
   providerUserId: fc.option(fc.string({ minLength: 1 }), { nil: undefined }),
-  providerUsername: fc.option(fc.string({ minLength: 1, maxLength: 30 }), { nil: undefined }),
-  providerDisplayName: fc.option(fc.string({ minLength: 1, maxLength: 40 }), { nil: undefined }),
+  providerUsername: fc.option(fc.string({ minLength: 1, maxLength: 30 }), {
+    nil: undefined,
+  }),
+  providerDisplayName: fc.option(fc.string({ minLength: 1, maxLength: 40 }), {
+    nil: undefined,
+  }),
   providerAvatarUrl: fc.option(fc.webUrl(), { nil: undefined }),
   connectedAt: fc.option(validDateStringArb, { nil: undefined }),
   lastValidatedAt: fc.option(validDateStringArb, { nil: undefined }),
   lastCheckedAt: fc.option(validDateStringArb, { nil: undefined }),
   lastCheckResult: fc.option(
-    fc.constantFrom('presence' as const, 'absence' as const, 'duress' as const, 'error' as const),
+    fc.constantFrom(
+      'presence' as const,
+      'absence' as const,
+      'duress' as const,
+      'error' as const,
+    ),
     { nil: undefined },
   ),
   errorMessage: fc.option(fc.string(), { nil: undefined }),
@@ -113,29 +132,34 @@ function bindingWithContextArb(): fc.Arbitrary<{
 
       // Select a subset of target IDs to bind
       const boundTargetIdsArb = fc
-        .shuffledSubarray(targetIds, { minLength: 1, maxLength: targetIds.length })
+        .shuffledSubarray(targetIds, {
+          minLength: 1,
+          maxLength: targetIds.length,
+        })
         .map((ids) => ids as string[]);
 
-      return fc.tuple(signalsArb, boundTargetIdsArb).map(([signals, boundIds]) => {
-        const binding: IMultiCanaryBinding = {
-          id: `binding-${name}`,
-          name,
-          providerConnectionIds: connIds,
-          redundancyPolicy: policy,
-          protocolAction: 'notify',
-          canaryCondition: condition,
-          absenceThresholdHours: 24,
-          aggregateStatus: status,
-          providerSignals: signals,
-        };
+      return fc
+        .tuple(signalsArb, boundTargetIdsArb)
+        .map(([signals, boundIds]) => {
+          const binding: IMultiCanaryBinding = {
+            id: `binding-${name}`,
+            name,
+            providerConnectionIds: connIds,
+            redundancyPolicy: policy,
+            protocolAction: 'notify',
+            canaryCondition: condition,
+            absenceThresholdHours: 24,
+            aggregateStatus: status,
+            providerSignals: signals,
+          };
 
-        return {
-          binding,
-          connections,
-          targets,
-          boundTargetIds: boundIds,
-        };
-      });
+          return {
+            binding,
+            connections,
+            targets,
+            boundTargetIds: boundIds,
+          };
+        });
     });
 }
 
@@ -152,164 +176,194 @@ describe('Feature: canary-provider-expansion, Property 20: Multi-canary binding 
    */
   it('display info includes target names (not IDs) for all bound targets', () => {
     fc.assert(
-      fc.property(bindingWithContextArb(), ({ binding, connections, targets, boundTargetIds }) => {
-        const info: IBindingDisplayInfo = getBindingDisplayInfo(
-          binding,
-          connections,
-          targets,
-          boundTargetIds,
-        );
+      fc.property(
+        bindingWithContextArb(),
+        ({ binding, connections, targets, boundTargetIds }) => {
+          const info: IBindingDisplayInfo = getBindingDisplayInfo(
+            binding,
+            connections,
+            targets,
+            boundTargetIds,
+          );
 
-        // All returned target names should be actual names from the targets list
-        const allTargetNames = targets.map((t) => t.name);
-        for (const name of info.targetNames) {
-          expect(allTargetNames).toContain(name);
-        }
+          // All returned target names should be actual names from the targets list
+          const allTargetNames = targets.map((t) => t.name);
+          for (const name of info.targetNames) {
+            expect(allTargetNames).toContain(name);
+          }
+          for (const name of info.targetNames) {
+            // A target name should not be a raw UUID (unless the user named it that way,
+            // but we verify it was resolved from the targets array)
+            const matchingTarget = targets.find((t) => t.name === name);
+            expect(matchingTarget).toBeDefined();
+          }
 
-        // No IDs should appear in target names — names come from target objects
-        const allTargetIds = targets.map((t) => t.id);
-        for (const name of info.targetNames) {
-          // A target name should not be a raw UUID (unless the user named it that way,
-          // but we verify it was resolved from the targets array)
-          const matchingTarget = targets.find((t) => t.name === name);
-          expect(matchingTarget).toBeDefined();
-        }
-
-        // Every bound target ID that exists in the targets array should have its name resolved
-        const expectedNames = boundTargetIds
-          .map((id) => targets.find((t) => t.id === id)?.name)
-          .filter((n): n is string => n !== undefined);
-        expect(info.targetNames).toEqual(expectedNames);
-      }),
+          // Every bound target ID that exists in the targets array should have its name resolved
+          const expectedNames = boundTargetIds
+            .map((id) => targets.find((t) => t.id === id)?.name)
+            .filter((n): n is string => n !== undefined);
+          expect(info.targetNames).toEqual(expectedNames);
+        },
+      ),
       { numRuns: 100 },
     );
   });
 
   it('display info includes correct bound provider count', () => {
     fc.assert(
-      fc.property(bindingWithContextArb(), ({ binding, connections, targets, boundTargetIds }) => {
-        const info: IBindingDisplayInfo = getBindingDisplayInfo(
-          binding,
-          connections,
-          targets,
-          boundTargetIds,
-        );
+      fc.property(
+        bindingWithContextArb(),
+        ({ binding, connections, targets, boundTargetIds }) => {
+          const info: IBindingDisplayInfo = getBindingDisplayInfo(
+            binding,
+            connections,
+            targets,
+            boundTargetIds,
+          );
 
-        // Provider count must equal the number of provider connection IDs in the binding
-        expect(info.providerCount).toBe(binding.providerConnectionIds.length);
-      }),
+          // Provider count must equal the number of provider connection IDs in the binding
+          expect(info.providerCount).toBe(binding.providerConnectionIds.length);
+        },
+      ),
       { numRuns: 100 },
     );
   });
 
   it('display info includes aggregate status', () => {
     fc.assert(
-      fc.property(bindingWithContextArb(), ({ binding, connections, targets, boundTargetIds }) => {
-        const info: IBindingDisplayInfo = getBindingDisplayInfo(
-          binding,
-          connections,
-          targets,
-          boundTargetIds,
-        );
+      fc.property(
+        bindingWithContextArb(),
+        ({ binding, connections, targets, boundTargetIds }) => {
+          const info: IBindingDisplayInfo = getBindingDisplayInfo(
+            binding,
+            connections,
+            targets,
+            boundTargetIds,
+          );
 
-        // Aggregate status must be present and match the binding's aggregate status
-        expect(info.aggregateStatus).toBeDefined();
-        expect(typeof info.aggregateStatus).toBe('string');
-        expect(info.aggregateStatus.length).toBeGreaterThan(0);
-        expect(info.aggregateStatus).toBe(binding.aggregateStatus);
-      }),
+          // Aggregate status must be present and match the binding's aggregate status
+          expect(info.aggregateStatus).toBeDefined();
+          expect(typeof info.aggregateStatus).toBe('string');
+          expect(info.aggregateStatus.length).toBeGreaterThan(0);
+          expect(info.aggregateStatus).toBe(binding.aggregateStatus);
+        },
+      ),
       { numRuns: 100 },
     );
   });
 
   it('display info includes per-provider signal indicators for every bound provider', () => {
     fc.assert(
-      fc.property(bindingWithContextArb(), ({ binding, connections, targets, boundTargetIds }) => {
-        const info: IBindingDisplayInfo = getBindingDisplayInfo(
-          binding,
-          connections,
-          targets,
-          boundTargetIds,
-        );
+      fc.property(
+        bindingWithContextArb(),
+        ({ binding, connections, targets, boundTargetIds }) => {
+          const info: IBindingDisplayInfo = getBindingDisplayInfo(
+            binding,
+            connections,
+            targets,
+            boundTargetIds,
+          );
 
-        // Must have one signal indicator per provider in the binding
-        expect(info.perProviderSignals.length).toBe(binding.providerConnectionIds.length);
+          // Must have one signal indicator per provider in the binding
+          expect(info.perProviderSignals.length).toBe(
+            binding.providerConnectionIds.length,
+          );
 
-        // Each signal indicator must have a name (not an ID) and a signal value
-        for (const indicator of info.perProviderSignals) {
-          expect(indicator.name).toBeDefined();
-          expect(typeof indicator.name).toBe('string');
-          expect(indicator.name.length).toBeGreaterThan(0);
-          expect(indicator.signal).toBeDefined();
-          expect(typeof indicator.signal).toBe('string');
-        }
-      }),
+          // Each signal indicator must have a name (not an ID) and a signal value
+          for (const indicator of info.perProviderSignals) {
+            expect(indicator.name).toBeDefined();
+            expect(typeof indicator.name).toBe('string');
+            expect(indicator.name.length).toBeGreaterThan(0);
+            expect(indicator.signal).toBeDefined();
+            expect(typeof indicator.signal).toBe('string');
+          }
+        },
+      ),
       { numRuns: 100 },
     );
   });
 
   it('per-provider signal names resolve to display names (not raw connection IDs) when available', () => {
     fc.assert(
-      fc.property(bindingWithContextArb(), ({ binding, connections, targets, boundTargetIds }) => {
-        const info: IBindingDisplayInfo = getBindingDisplayInfo(
-          binding,
-          connections,
-          targets,
-          boundTargetIds,
-        );
+      fc.property(
+        bindingWithContextArb(),
+        ({ binding, connections, targets, boundTargetIds }) => {
+          const info: IBindingDisplayInfo = getBindingDisplayInfo(
+            binding,
+            connections,
+            targets,
+            boundTargetIds,
+          );
 
-        // For each provider signal indicator, verify name resolution
-        for (let i = 0; i < info.perProviderSignals.length; i++) {
-          const connId = binding.providerConnectionIds[i];
-          const conn = connections.find((c) => c.id === connId);
-          const indicator = info.perProviderSignals[i];
+          // For each provider signal indicator, verify name resolution
+          for (let i = 0; i < info.perProviderSignals.length; i++) {
+            const connId = binding.providerConnectionIds[i];
+            const conn = connections.find((c) => c.id === connId);
+            const indicator = info.perProviderSignals[i];
 
-          if (conn) {
-            // Name should be resolved from connection display info, not the raw ID
-            const expectedName =
-              conn.providerDisplayName ?? conn.providerUsername ?? conn.providerId ?? connId;
-            expect(indicator.name).toBe(expectedName);
+            if (conn) {
+              // Name should be resolved from connection display info, not the raw ID
+              const expectedName =
+                conn.providerDisplayName ??
+                conn.providerUsername ??
+                conn.providerId ??
+                connId;
+              expect(indicator.name).toBe(expectedName);
+            }
           }
-        }
-      }),
+        },
+      ),
       { numRuns: 100 },
     );
   });
 
   it('per-provider signals match the binding providerSignals map', () => {
     fc.assert(
-      fc.property(bindingWithContextArb(), ({ binding, connections, targets, boundTargetIds }) => {
-        const info: IBindingDisplayInfo = getBindingDisplayInfo(
-          binding,
-          connections,
-          targets,
-          boundTargetIds,
-        );
+      fc.property(
+        bindingWithContextArb(),
+        ({ binding, connections, targets, boundTargetIds }) => {
+          const info: IBindingDisplayInfo = getBindingDisplayInfo(
+            binding,
+            connections,
+            targets,
+            boundTargetIds,
+          );
 
-        // Each signal value should match what's in the binding's providerSignals
-        for (let i = 0; i < info.perProviderSignals.length; i++) {
-          const connId = binding.providerConnectionIds[i];
-          const expectedSignal = binding.providerSignals?.[connId] ?? 'unknown';
-          expect(info.perProviderSignals[i].signal).toBe(expectedSignal);
-        }
-      }),
+          // Each signal value should match what's in the binding's providerSignals
+          for (let i = 0; i < info.perProviderSignals.length; i++) {
+            const connId = binding.providerConnectionIds[i];
+            const expectedSignal =
+              binding.providerSignals?.[connId] ?? 'unknown';
+            expect(info.perProviderSignals[i].signal).toBe(expectedSignal);
+          }
+        },
+      ),
       { numRuns: 100 },
     );
   });
 
   it('display info with no bound target IDs returns empty target names', () => {
     fc.assert(
-      fc.property(bindingWithContextArb(), ({ binding, connections, targets }) => {
-        // Call without boundTargetIds
-        const info: IBindingDisplayInfo = getBindingDisplayInfo(binding, connections, targets);
+      fc.property(
+        bindingWithContextArb(),
+        ({ binding, connections, targets }) => {
+          // Call without boundTargetIds
+          const info: IBindingDisplayInfo = getBindingDisplayInfo(
+            binding,
+            connections,
+            targets,
+          );
 
-        // Should return empty target names when no IDs provided
-        expect(info.targetNames).toEqual([]);
-        // But other fields should still be populated
-        expect(info.providerCount).toBe(binding.providerConnectionIds.length);
-        expect(info.aggregateStatus).toBe(binding.aggregateStatus);
-        expect(info.perProviderSignals.length).toBe(binding.providerConnectionIds.length);
-      }),
+          // Should return empty target names when no IDs provided
+          expect(info.targetNames).toEqual([]);
+          // But other fields should still be populated
+          expect(info.providerCount).toBe(binding.providerConnectionIds.length);
+          expect(info.aggregateStatus).toBe(binding.aggregateStatus);
+          expect(info.perProviderSignals.length).toBe(
+            binding.providerConnectionIds.length,
+          );
+        },
+      ),
       { numRuns: 100 },
     );
   });

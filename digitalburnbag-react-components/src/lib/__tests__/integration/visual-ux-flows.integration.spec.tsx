@@ -28,25 +28,42 @@ jest.mock('@digitaldefiance/express-suite-react-components', () => ({
 // ---------------------------------------------------------------------------
 
 import { ProviderCategory } from '@brightchain/digitalburnbag-lib';
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import React from 'react';
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from '@testing-library/react';
+import type {
+  ICanaryBinding,
+  ICanaryContextMenuProps,
+  ICanaryContextMenuTarget,
+} from '../../components/CanaryContextMenu';
 import { CanaryContextMenu } from '../../components/CanaryContextMenu';
-import type { ICanaryBinding, ICanaryContextMenuProps, ICanaryContextMenuTarget } from '../../components/CanaryContextMenu';
+import type {
+  ICanaryProviderApiClient,
+  ICanaryProviderPageProps,
+} from '../../components/CanaryProviderPage';
 import { CanaryProviderPage } from '../../components/CanaryProviderPage';
-import type { ICanaryProviderPageProps } from '../../components/CanaryProviderPage';
-import type { IApiProviderConnectionDTO, IApiTestConnectionResponseDTO } from '../../services/burnbag-api-client';
+import type {
+  IApiProviderConnectionDTO,
+  IApiTestConnectionResponseDTO,
+} from '../../services/burnbag-api-client';
 
 // ---------------------------------------------------------------------------
 // Test fixtures
 // ---------------------------------------------------------------------------
 
-function makeProvider(overrides: Partial<{
-  id: string;
-  name: string;
-  description: string;
-  category: ProviderCategory;
-  authType: string;
-}> = {}) {
+function makeProvider(
+  overrides: Partial<{
+    id: string;
+    name: string;
+    description: string;
+    category: ProviderCategory;
+    authType: string;
+  }> = {},
+) {
   const id = overrides.id ?? 'test-provider';
   return {
     id,
@@ -66,7 +83,11 @@ function makeProvider(overrides: Partial<{
           timestampFormat: 'iso8601' as const,
         },
       },
-      healthCheck: { path: '/health', method: 'GET' as const, expectedStatus: 200 },
+      healthCheck: {
+        path: '/health',
+        method: 'GET' as const,
+        expectedStatus: 200,
+      },
     },
     defaultLookbackMs: 86400000,
     minCheckIntervalMs: 3600000,
@@ -75,7 +96,9 @@ function makeProvider(overrides: Partial<{
   };
 }
 
-function makeConnection(overrides: Partial<IApiProviderConnectionDTO> = {}): IApiProviderConnectionDTO {
+function makeConnection(
+  overrides: Partial<IApiProviderConnectionDTO> = {},
+): IApiProviderConnectionDTO {
   return {
     id: overrides.id ?? 'conn-1',
     userId: 'user-1',
@@ -86,39 +109,82 @@ function makeConnection(overrides: Partial<IApiProviderConnectionDTO> = {}): IAp
     isEnabled: true,
     createdAt: '2024-01-01T00:00:00Z',
     updatedAt: '2024-01-01T00:00:00Z',
-    lastCheckResult: (overrides.lastCheckResult as any) ?? 'presence',
+    lastCheckResult: overrides.lastCheckResult ?? 'presence',
     ...overrides,
   };
 }
 
-function createMockApiClient() {
+/** Mock of one client method; its signature comes from the real client. */
+function mockMethod<K extends keyof ICanaryProviderApiClient>() {
+  return jest.fn<
+    ReturnType<ICanaryProviderApiClient[K]>,
+    Parameters<ICanaryProviderApiClient[K]>
+  >();
+}
+function createMockApiClient(): jest.Mocked<ICanaryProviderApiClient> {
   return {
-    baseUrl: 'http://localhost/burnbag',
-    getMyConnections: jest.fn().mockResolvedValue([
-      makeConnection({ id: 'conn-github', providerId: 'github', providerDisplayName: 'GitHub' }),
-      makeConnection({ id: 'conn-fitbit', providerId: 'fitbit', providerDisplayName: 'Fitbit' }),
+    getMyConnections: mockMethod<'getMyConnections'>().mockResolvedValue([
+      makeConnection({
+        id: 'conn-github',
+        providerId: 'github',
+        providerDisplayName: 'GitHub',
+      }),
+      makeConnection({
+        id: 'conn-fitbit',
+        providerId: 'fitbit',
+        providerDisplayName: 'Fitbit',
+      }),
     ]),
-    getMultiCanaryBindings: jest.fn().mockResolvedValue([]),
-    getWebhookEndpoints: jest.fn().mockResolvedValue([]),
-    createMultiCanaryBinding: jest.fn().mockResolvedValue({ id: 'binding-new' }),
-    deleteMultiCanaryBinding: jest.fn().mockResolvedValue(undefined),
-    getMultiCanaryBindingsForTarget: jest.fn().mockResolvedValue([]),
-    rotateWebhookSecret: jest.fn().mockResolvedValue({ newSecret: 'abc123' }),
-    updateWebhookIpAllowlist: jest.fn().mockResolvedValue(undefined),
-    sendTestWebhook: jest.fn().mockResolvedValue({ success: true, processingTimeMs: 50 }),
-    getWebhookDeliveryStats: jest.fn().mockResolvedValue({
-      totalReceived: 10,
-      successfullyProcessed: 9,
-      failedValidation: 1,
+    getMultiCanaryBindings:
+      mockMethod<'getMultiCanaryBindings'>().mockResolvedValue([]),
+    getWebhookEndpoints: mockMethod<'getWebhookEndpoints'>().mockResolvedValue(
+      [],
+    ),
+    createMultiCanaryBinding:
+      mockMethod<'createMultiCanaryBinding'>().mockResolvedValue({
+        id: 'binding-new',
+        name: 'Test binding',
+        providerConnectionIds: [],
+        redundancyPolicy: 'any',
+        protocolAction: 'none',
+        canaryCondition: 'absence',
+        absenceThresholdHours: 24,
+        aggregateStatus: 'healthy',
+        targetNames: [],
+        providerCount: 0,
+        isActive: true,
+        createdAt: '2024-01-01T00:00:00Z',
+        updatedAt: '2024-01-01T00:00:00Z',
+      }),
+    deleteMultiCanaryBinding:
+      mockMethod<'deleteMultiCanaryBinding'>().mockResolvedValue(undefined),
+    rotateWebhookSecret: mockMethod<'rotateWebhookSecret'>().mockResolvedValue({
+      newSecret: 'abc123',
     }),
-    initiateOAuth: jest.fn().mockResolvedValue({
+    updateWebhookIpAllowlist:
+      mockMethod<'updateWebhookIpAllowlist'>().mockResolvedValue(undefined),
+    sendTestWebhook: mockMethod<'sendTestWebhook'>().mockResolvedValue({
+      success: true,
+      processingTimeMs: 50,
+    }),
+    getWebhookDeliveryStats:
+      mockMethod<'getWebhookDeliveryStats'>().mockResolvedValue({
+        totalReceived: 10,
+        successfullyProcessed: 9,
+        failedValidation: 1,
+      }),
+    initiateOAuth: mockMethod<'initiateOAuth'>().mockResolvedValue({
       authorizationUrl: 'https://oauth.example.com/auth',
       state: 'state-1',
     }),
-    connectWithApiKey: jest.fn().mockResolvedValue(
-      makeConnection({ id: 'conn-new', providerId: 'github', providerDisplayName: 'GitHub' }),
+    connectWithApiKey: mockMethod<'connectWithApiKey'>().mockResolvedValue(
+      makeConnection({
+        id: 'conn-new',
+        providerId: 'github',
+        providerDisplayName: 'GitHub',
+      }),
     ),
-    testConnection: jest.fn().mockResolvedValue({
+    testConnection: mockMethod<'testConnection'>().mockResolvedValue({
       success: true,
       status: 'connected',
       responseTimeMs: 120,
@@ -128,9 +194,7 @@ function createMockApiClient() {
         displayName: 'Test User',
       },
     } as IApiTestConnectionResponseDTO),
-    getProviderCatalog: jest.fn().mockResolvedValue([]),
-    getRecommendedProviders: jest.fn().mockResolvedValue([]),
-  } as unknown as jest.Mocked<any>;
+  };
 }
 
 const GITHUB_CONNECTION = makeConnection({
@@ -157,7 +221,11 @@ const SLACK_CONNECTION = makeConnection({
   lastCheckResult: 'absence',
 });
 
-const ALL_CONNECTIONS = [GITHUB_CONNECTION, FITBIT_CONNECTION, SLACK_CONNECTION];
+const ALL_CONNECTIONS = [
+  GITHUB_CONNECTION,
+  FITBIT_CONNECTION,
+  SLACK_CONNECTION,
+];
 
 const DEFAULT_TARGET: ICanaryContextMenuTarget = {
   id: 'vault-1',
@@ -166,9 +234,24 @@ const DEFAULT_TARGET: ICanaryContextMenuTarget = {
 };
 
 const PROVIDERS = [
-  makeProvider({ id: 'github', name: 'GitHub', category: ProviderCategory.DEVELOPER, authType: 'api_key' }),
-  makeProvider({ id: 'fitbit', name: 'Fitbit', category: ProviderCategory.HEALTH_FITNESS, authType: 'api_key' }),
-  makeProvider({ id: 'spotify', name: 'Spotify', category: ProviderCategory.ENTERTAINMENT, authType: 'api_key' }),
+  makeProvider({
+    id: 'github',
+    name: 'GitHub',
+    category: ProviderCategory.DEVELOPER,
+    authType: 'api_key',
+  }),
+  makeProvider({
+    id: 'fitbit',
+    name: 'Fitbit',
+    category: ProviderCategory.HEALTH_FITNESS,
+    authType: 'api_key',
+  }),
+  makeProvider({
+    id: 'spotify',
+    name: 'Spotify',
+    category: ProviderCategory.ENTERTAINMENT,
+    authType: 'api_key',
+  }),
 ];
 
 // ---------------------------------------------------------------------------
@@ -198,7 +281,13 @@ describe('Integration: Context Menu → Select Provider → Configure → Create
     };
 
     const result = render(<CanaryContextMenu {...defaultProps} />);
-    return { ...result, props: defaultProps, anchorEl, onCreateBinding, onClose };
+    return {
+      ...result,
+      props: defaultProps,
+      anchorEl,
+      onCreateBinding,
+      onClose,
+    };
   }
 
   it('completes the full flow: right-click → Attach Canary → select provider → configure → attach (Req 13.1, 13.3)', async () => {
@@ -404,7 +493,10 @@ describe('Integration: Marketplace → Connect → Configure → Attach to Vault
 
     // Step 7: After auth success, test step appears
     await waitFor(() => {
-      expect(apiClient.connectWithApiKey).toHaveBeenCalledWith('github', 'test-api-key-12345');
+      expect(apiClient.connectWithApiKey).toHaveBeenCalledWith(
+        'github',
+        'test-api-key-12345',
+      );
       expect(screen.getByTestId('test-step')).toBeInTheDocument();
     });
 
@@ -415,7 +507,9 @@ describe('Integration: Marketplace → Connect → Configure → Attach to Vault
     await waitFor(() => {
       expect(apiClient.testConnection).toHaveBeenCalled();
       expect(screen.getByTestId('test-result')).toBeInTheDocument();
-      expect(screen.getByTestId('continue-after-test-button')).toBeInTheDocument();
+      expect(
+        screen.getByTestId('continue-after-test-button'),
+      ).toBeInTheDocument();
     });
 
     // Step 10: Click continue to go to configure step
@@ -458,7 +552,7 @@ describe('Integration: Marketplace → Connect → Configure → Attach to Vault
   });
 
   it('configure step uses visual controls only — no manual ID entry (Req 13.3, 16.1)', async () => {
-    const { apiClient } = renderPage();
+    renderPage();
 
     await waitFor(() => {
       expect(screen.getByTestId('provider-marketplace')).toBeInTheDocument();
@@ -470,7 +564,9 @@ describe('Integration: Marketplace → Connect → Configure → Attach to Vault
       expect(screen.getByTestId('auth-step')).toBeInTheDocument();
     });
 
-    fireEvent.change(screen.getByTestId('api-key-input'), { target: { value: 'key123' } });
+    fireEvent.change(screen.getByTestId('api-key-input'), {
+      target: { value: 'key123' },
+    });
     fireEvent.click(screen.getByTestId('api-key-connect-button'));
 
     await waitFor(() => {
@@ -479,7 +575,9 @@ describe('Integration: Marketplace → Connect → Configure → Attach to Vault
 
     fireEvent.click(screen.getByTestId('test-connection-button'));
     await waitFor(() => {
-      expect(screen.getByTestId('continue-after-test-button')).toBeInTheDocument();
+      expect(
+        screen.getByTestId('continue-after-test-button'),
+      ).toBeInTheDocument();
     });
 
     fireEvent.click(screen.getByTestId('continue-after-test-button'));
@@ -508,10 +606,18 @@ describe('Integration: Marketplace → Connect → Configure → Attach to Vault
 
     // Each provider card shows name, description, category, and connect button
     const githubCard = screen.getByTestId('provider-card-github');
-    expect(within(githubCard).getByTestId('provider-name-github')).toHaveTextContent('GitHub');
-    expect(within(githubCard).getByTestId('provider-description-github')).toBeInTheDocument();
-    expect(within(githubCard).getByTestId('category-badge-github')).toBeInTheDocument();
-    expect(within(githubCard).getByTestId('connect-button-github')).toBeInTheDocument();
+    expect(
+      within(githubCard).getByTestId('provider-name-github'),
+    ).toHaveTextContent('GitHub');
+    expect(
+      within(githubCard).getByTestId('provider-description-github'),
+    ).toBeInTheDocument();
+    expect(
+      within(githubCard).getByTestId('category-badge-github'),
+    ).toBeInTheDocument();
+    expect(
+      within(githubCard).getByTestId('connect-button-github'),
+    ).toBeInTheDocument();
   });
 
   it('can cancel activation flow at any step', async () => {
@@ -531,7 +637,9 @@ describe('Integration: Marketplace → Connect → Configure → Attach to Vault
     fireEvent.click(screen.getByTestId('activation-flow-close'));
 
     await waitFor(() => {
-      expect(screen.queryByTestId('activation-flow-dialog')).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId('activation-flow-dialog'),
+      ).not.toBeInTheDocument();
     });
   });
 
@@ -549,8 +657,12 @@ describe('Integration: Marketplace → Connect → Configure → Attach to Vault
     // Only Fitbit should be visible
     await waitFor(() => {
       expect(screen.getByTestId('provider-card-fitbit')).toBeInTheDocument();
-      expect(screen.queryByTestId('provider-card-github')).not.toBeInTheDocument();
-      expect(screen.queryByTestId('provider-card-spotify')).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId('provider-card-github'),
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId('provider-card-spotify'),
+      ).not.toBeInTheDocument();
     });
   });
 
@@ -569,6 +681,8 @@ describe('Integration: Marketplace → Connect → Configure → Attach to Vault
     });
     expect(screen.getByTestId('connected-badge-fitbit')).toBeInTheDocument();
     // Spotify is not connected
-    expect(screen.queryByTestId('connected-badge-spotify')).not.toBeInTheDocument();
+    expect(
+      screen.queryByTestId('connected-badge-spotify'),
+    ).not.toBeInTheDocument();
   });
 });

@@ -9,7 +9,7 @@
 import { BrightChartStrings } from '@brightchain/brightchart-lib';
 import * as React from 'react';
 import { Suspense, lazy } from 'react';
-import { Route, Routes } from 'react-router-dom';
+import { Route, Routes } from 'react-router';
 import { useBrightChartTranslation } from '../../../hooks/useBrightChartTranslation';
 
 const ClaimTrackingView = lazy(() =>

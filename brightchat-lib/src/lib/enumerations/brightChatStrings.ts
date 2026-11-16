@@ -154,7 +154,8 @@ export const BrightChatStrings = createI18nStringKeys(BrightChatComponentId, {
   Server_Settings_DeleteCategory: 'Server_Settings_DeleteCategory',
   Server_Settings_DeleteServer: 'Server_Settings_DeleteServer',
   Server_Settings_DeleteServerConfirm: 'Server_Settings_DeleteServerConfirm',
-  Server_Settings_DeleteServerConfirmTitle: 'Server_Settings_DeleteServerConfirmTitle',
+  Server_Settings_DeleteServerConfirmTitle:
+    'Server_Settings_DeleteServerConfirmTitle',
 
   // DM Sidebar
   DMSidebar_NoConversations: 'DMSidebar_NoConversations',
@@ -252,6 +253,8 @@ export const BrightChatStrings = createI18nStringKeys(BrightChatComponentId, {
   Server_Icon_DropOrBrowse: 'Server_Icon_DropOrBrowse',
   Server_Icon_StagingFailed: 'Server_Icon_StagingFailed',
   Server_Icon_StagingExpired: 'Server_Icon_StagingExpired',
+  Server_Icon_CropFailed: 'Server_Icon_CropFailed',
+  Server_Icon_PreviewLoadFailed: 'Server_Icon_PreviewLoadFailed',
 
   // FontAwesome Icon Picker
   IconPicker_Title: 'IconPicker_Title',

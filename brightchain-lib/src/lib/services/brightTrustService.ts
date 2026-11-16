@@ -18,9 +18,12 @@ import {
   SealedDocumentResult,
 } from '../interfaces/services/brightTrustService';
 import { SimpleStore } from '../stores/simpleStore';
+import {
+  brightDateNow,
+  normalizeToBrightDate,
+} from '../utils/brightDateConversions';
 import { SealingService } from './sealing.service';
 import { ServiceProvider } from './service.provider';
-import { brightDateNow, normalizeToBrightDate } from '../utils/brightDateConversions';
 
 /**
  * BrightTrustService provides member management and document sealing/unsealing

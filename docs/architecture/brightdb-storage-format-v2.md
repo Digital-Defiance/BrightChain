@@ -9,6 +9,8 @@ permalink: /docs/architecture/brightdb-storage-format-v2/
 
 **Status:** Draft. TypeScript is the reference implementation. The C++ port follows the TypeScript format and behavior defined here.
 
+The [BrightDB v2.5 operations and conformance spec](./brightdb-v2-5.md) defines the proposed API behavior and deployment test gates for this format.
+
 This specification defines the BrightDB content-addressed format and a portable local disk layout. Develop the reference codec, disk adapter, and fixtures in the TypeScript repository. A document lookup follows one path through the collection's primary index. A write replaces only the affected pages and publishes a single database root, even when a transaction changes several collections. A conforming C++ port can then read and write the same directory in a separate process.
 
 Version 2 is a breaking format change. Create v2 stores in a new directory. A v2 reader must report an unsupported format when opening a v1 store or encountering an unknown format version. Data worth keeping can be exported from v1 and imported as a new v2 database. The current TypeScript and C++ implementations have different legacy head layouts and block-size directory names, so neither legacy directory layout is the v2 contract.

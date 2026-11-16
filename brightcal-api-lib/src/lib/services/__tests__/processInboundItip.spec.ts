@@ -20,7 +20,7 @@ import {
   type IImportResult,
   type IItipInboundHandler,
 } from '@brightchain/brightcal-lib';
-import { processInboundItip } from '../processInboundItip.ts';
+import { processInboundItip } from '../processInboundItip.js';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -48,7 +48,9 @@ const importOk: IImportResult = {
   duplicates: [],
 };
 
-function makeHandler(overrides: Partial<IItipInboundHandler> = {}): jest.Mocked<IItipInboundHandler> {
+function makeHandler(
+  overrides: Partial<IItipInboundHandler> = {},
+): jest.Mocked<IItipInboundHandler> {
   return {
     handleRequest: jest.fn().mockResolvedValue(importOk),
     handleReply: jest.fn().mockResolvedValue(ParticipationStatus.Accepted),
@@ -89,7 +91,10 @@ describe('processInboundItip', () => {
         makeInvite(ITipMethod.Request),
       );
 
-      expect(result).toEqual({ method: ITipMethod.Request, result: importResult });
+      expect(result).toEqual({
+        method: ITipMethod.Request,
+        result: importResult,
+      });
     });
   });
 

@@ -30,6 +30,10 @@ jest.mock('@digitaldefiance/express-suite-react-components', () => ({
   }),
 }));
 
+import type {
+  ChannelVisibility,
+  DefaultRole,
+} from '@brightchain/brightchain-lib';
 import { fireEvent, render, screen } from '@testing-library/react';
 import type { ChannelSidebarProps } from '../ChannelSidebar';
 import ChannelSidebar from '../ChannelSidebar';
@@ -42,11 +46,11 @@ const testChannels = [
     name: 'general',
     topic: '',
     creatorId: 'u1',
-    visibility: 'public' as const,
+    visibility: 'public' as ChannelVisibility,
     members: [],
     encryptedSharedKey: new Map(),
-    createdAt: new Date(),
-    lastMessageAt: new Date(),
+    createdAt: 0,
+    lastMessageAt: 0,
     pinnedMessageIds: [],
     historyVisibleToNewMembers: true,
   },
@@ -55,11 +59,11 @@ const testChannels = [
     name: 'random',
     topic: '',
     creatorId: 'u1',
-    visibility: 'public' as const,
+    visibility: 'public' as ChannelVisibility,
     members: [],
     encryptedSharedKey: new Map(),
-    createdAt: new Date(),
-    lastMessageAt: new Date(),
+    createdAt: 0,
+    lastMessageAt: 0,
     pinnedMessageIds: [],
     historyVisibleToNewMembers: true,
   },
@@ -80,7 +84,7 @@ function renderSidebar(overrides: Partial<ChannelSidebarProps> = {}) {
     channels: testChannels,
     categories: testCategories,
     activeChannelId: null,
-    userRole: 'owner' as any,
+    userRole: 'owner' as DefaultRole,
     onChannelSelect: jest.fn(),
     onCreateChannel: jest.fn(),
     onEditChannel: jest.fn(),
@@ -133,37 +137,37 @@ describe('ChannelSidebar', () => {
   });
 
   it('shows Create Channel button for owner role (Req 7.5)', () => {
-    renderSidebar({ userRole: 'owner' as any });
+    renderSidebar({ userRole: 'owner' as DefaultRole });
     expect(screen.getByLabelText('Channel_Sidebar_CreateChannel')).toBeTruthy();
   });
 
   it('shows Create Channel button for admin role (Req 7.5)', () => {
-    renderSidebar({ userRole: 'admin' as any });
+    renderSidebar({ userRole: 'admin' as DefaultRole });
     expect(screen.getByLabelText('Channel_Sidebar_CreateChannel')).toBeTruthy();
   });
 
   it('hides Create Channel button for member role (Req 7.5)', () => {
-    renderSidebar({ userRole: 'member' as any });
+    renderSidebar({ userRole: 'member' as DefaultRole });
     expect(screen.queryByLabelText('Channel_Sidebar_CreateChannel')).toBeNull();
   });
 
   it('hides Create Channel button for moderator role (Req 7.5)', () => {
-    renderSidebar({ userRole: 'moderator' as any });
+    renderSidebar({ userRole: 'moderator' as DefaultRole });
     expect(screen.queryByLabelText('Channel_Sidebar_CreateChannel')).toBeNull();
   });
 
   it('shows Server Settings button for owner (Req 7.5)', () => {
-    renderSidebar({ userRole: 'owner' as any });
+    renderSidebar({ userRole: 'owner' as DefaultRole });
     expect(screen.getByLabelText('Server_Settings_Title')).toBeTruthy();
   });
 
   it('hides Server Settings button for member (Req 7.5)', () => {
-    renderSidebar({ userRole: 'member' as any });
+    renderSidebar({ userRole: 'member' as DefaultRole });
     expect(screen.queryByLabelText('Server_Settings_Title')).toBeNull();
   });
 
   it('opens context menu on right-click of a channel (Req 7.4)', () => {
-    renderSidebar({ userRole: 'owner' as any });
+    renderSidebar({ userRole: 'owner' as DefaultRole });
 
     const channelItem = screen.getByText('general');
     fireEvent.contextMenu(channelItem);
@@ -174,7 +178,7 @@ describe('ChannelSidebar', () => {
   });
 
   it('hides Edit/Delete from context menu for member role (Req 7.4)', () => {
-    renderSidebar({ userRole: 'member' as any });
+    renderSidebar({ userRole: 'member' as DefaultRole });
 
     const channelItem = screen.getByText('general');
     fireEvent.contextMenu(channelItem);

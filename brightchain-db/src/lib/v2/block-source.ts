@@ -12,7 +12,10 @@ import {
 } from './storage';
 
 /** What a merge needs from the replica it reads. Any `BrightDbV2Storage` already has it. */
-export type BrightDbV2BlockSource = Pick<BrightDbV2Storage, 'readHead' | 'readBlock'>;
+export type BrightDbV2BlockSource = Pick<
+  BrightDbV2Storage,
+  'readHead' | 'readBlock'
+>;
 
 const DIGEST = /^[0-9a-f]{128}$/u;
 
@@ -41,23 +44,31 @@ export class HttpBlockSource implements BrightDbV2BlockSource {
   async readHead(): Promise<string> {
     const response = await this.get('/head');
     if (!response.ok) {
-      throw new BrightDbV2StorageError(`Cannot read the remote head (HTTP ${response.status})`);
+      throw new BrightDbV2StorageError(
+        `Cannot read the remote head (HTTP ${response.status})`,
+      );
     }
     const head = (await response.text()).trim();
-    if (!DIGEST.test(head)) throw new BrightDbV2StorageError('The remote head is not a digest');
+    if (!DIGEST.test(head))
+      throw new BrightDbV2StorageError('The remote head is not a digest');
     return head;
   }
 
   async readBlock(digest: string): Promise<Uint8Array> {
-    if (!DIGEST.test(digest)) throw new BrightDbV2StorageError('Invalid block digest');
+    if (!DIGEST.test(digest))
+      throw new BrightDbV2StorageError('Invalid block digest');
     const response = await this.get(`/blocks/${digest}`);
     if (response.status === 404) throw new BrightDbV2MissingBlockError(digest);
     if (!response.ok) {
-      throw new BrightDbV2StorageError(`Cannot read remote block ${digest} (HTTP ${response.status})`);
+      throw new BrightDbV2StorageError(
+        `Cannot read remote block ${digest} (HTTP ${response.status})`,
+      );
     }
     const bytes = Buffer.from(await response.arrayBuffer());
     if (digestPayload(bytes) !== digest) {
-      throw new BrightDbV2StorageError(`Remote block failed its digest check: ${digest}`);
+      throw new BrightDbV2StorageError(
+        `Remote block failed its digest check: ${digest}`,
+      );
     }
     return bytes;
   }

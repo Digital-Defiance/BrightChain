@@ -155,7 +155,10 @@ export function locationRecordFromJSON(
       BrightChainStrings.Error_LocationRecord_NodeIdRequired,
     );
   }
-  if (typeof serialized.lastSeen !== 'number' || !isFinite(serialized.lastSeen)) {
+  if (
+    typeof serialized.lastSeen !== 'number' ||
+    !isFinite(serialized.lastSeen)
+  ) {
     throw new TranslatableBrightChainError(
       BrightChainStrings.Error_LocationRecord_LastSeenRequired,
     );
@@ -242,12 +245,18 @@ export function blockMetadataWithLocationFromJSON(
       BrightChainStrings.Error_Metadata_BlockIdRequired,
     );
   }
-  if (typeof serialized.createdAt !== 'number' || !isFinite(serialized.createdAt)) {
+  if (
+    typeof serialized.createdAt !== 'number' ||
+    !isFinite(serialized.createdAt)
+  ) {
     throw new TranslatableBrightChainError(
       BrightChainStrings.Error_Metadata_CreatedAtRequired,
     );
   }
-  if (typeof serialized.lastAccessedAt !== 'number' || !isFinite(serialized.lastAccessedAt)) {
+  if (
+    typeof serialized.lastAccessedAt !== 'number' ||
+    !isFinite(serialized.lastAccessedAt)
+  ) {
     throw new TranslatableBrightChainError(
       BrightChainStrings.Error_Metadata_LastAccessedAtRequired,
     );
@@ -269,7 +278,10 @@ export function blockMetadataWithLocationFromJSON(
 
   let expiresAt: BrightDateTimestamp | null = null;
   if (serialized.expiresAt !== null && serialized.expiresAt !== undefined) {
-    if (typeof serialized.expiresAt !== 'number' || !isFinite(serialized.expiresAt)) {
+    if (
+      typeof serialized.expiresAt !== 'number' ||
+      !isFinite(serialized.expiresAt)
+    ) {
       throw new TranslatableBrightChainError(
         BrightChainStrings.Error_Metadata_CreatedAtRequired,
       );

@@ -1,3 +1,7 @@
+// Needed by consumers (e.g. brightchain-api's ts-jest) that compile this file
+// through the path mapping without brightchain-api-lib's own tsconfig, where
+// this reference is the only thing loading the Request augmentation.
+// eslint-disable-next-line @typescript-eslint/triple-slash-reference
 /// <reference path="../types.d.ts" />
 import { NextFunction, Request, Response } from 'express';
 

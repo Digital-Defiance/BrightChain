@@ -13,7 +13,7 @@
  */
 
 import React, { useEffect } from 'react';
-import { Route, Routes } from 'react-router-dom';
+import { Route, Routes } from 'react-router';
 import { AccessDenied } from '../../components/AccessDenied';
 import { useActiveContext } from '../../contexts/ActiveContext';
 import { MyAppointments } from './MyAppointments';

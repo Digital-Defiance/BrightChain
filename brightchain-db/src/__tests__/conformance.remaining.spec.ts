@@ -11,6 +11,7 @@
  */
 
 import type {
+  BlockId,
   IAclDocument,
   ICapabilityToken,
   INodeAuthenticator,
@@ -133,7 +134,9 @@ describe('Remaining BrightDb features e2e', () => {
 
       // Get all doc IDs
       const allDocs = await col.find({}).toArray();
-      const allIds = allDocs.map((d: any) => d._id);
+      const allIds = allDocs.flatMap((d) =>
+        d._id === undefined ? [] : [d._id],
+      );
 
       // Create cursor with batch size 3
       const cursor = db.createCursorSession({
@@ -457,8 +460,8 @@ describe('Remaining BrightDb features e2e', () => {
           await store.put(h2, d2);
           await idx1.addEntry({
             magnetUrl: `magnet:?xt=urn:brightchain:cbl&bs=512&b1=${h1}&b2=${h2}`,
-            blockId1: h1 as any,
-            blockId2: h2 as any,
+            blockId1: h1 as BlockId,
+            blockId2: h2 as BlockId,
             blockSize: 512,
             createdAt: brightDateNow(),
             visibility: CBLVisibility.Public,
@@ -528,7 +531,7 @@ describe('Remaining BrightDb features e2e', () => {
         // Data is intact
         const found = await col2.findById('v1');
         expect(found).not.toBeNull();
-        expect((found as any).name).toBe('alice');
+        expect(found?.['name']).toBe('alice');
 
         // Without schema, invalid doc would be accepted
         await col2.insertOne({ _id: 'v3', age: 99 } as never); // no name — accepted

@@ -10,6 +10,7 @@
  * **Validates: Requirements 3.1, 3.2, 3.3, 3.7**
  */
 
+import { BlockId } from '@brightchain/brightchain-lib';
 import fc from 'fast-check';
 import { mkdirSync, rmSync, writeFileSync } from 'fs';
 import { join } from 'path';
@@ -29,7 +30,7 @@ const arbHexString = (minLength: number, maxLength: number) =>
 /**
  * Generate a valid block ID (hex string of at least 32 characters)
  */
-const arbBlockId = arbHexString(32, 64);
+const arbBlockId = arbHexString(32, 64).map((id) => id as BlockId);
 
 /**
  * Generate a unique set of block IDs
@@ -105,10 +106,10 @@ describe('BlockRegistry Property Tests', () => {
 
             for (const op of operations) {
               if (op.type === 'add') {
-                registry.addLocal(op.blockId);
+                registry.addLocal(op.blockId as BlockId);
                 expectedBlocks.add(op.blockId);
               } else {
-                registry.removeLocal(op.blockId);
+                registry.removeLocal(op.blockId as BlockId);
                 expectedBlocks.delete(op.blockId);
               }
 
@@ -116,7 +117,7 @@ describe('BlockRegistry Property Tests', () => {
               expect(registry.getLocalCount()).toBe(expectedBlocks.size);
 
               for (const blockId of expectedBlocks) {
-                expect(registry.hasLocal(blockId)).toBe(true);
+                expect(registry.hasLocal(blockId as BlockId)).toBe(true);
               }
             }
 
@@ -330,7 +331,7 @@ describe('BlockRegistry Property Tests', () => {
 
             expect(manifestBlockSet).toEqual(expectedBlockSet);
             expect(manifest.nodeId).toBe(nodeId);
-            expect(typeof manifest.generatedAt).toBe("number");
+            expect(typeof manifest.generatedAt).toBe('number');
             expect(typeof manifest.checksum).toBe('string');
             expect(manifest.checksum.length).toBe(64); // SHA-256 hex
 

@@ -24,10 +24,8 @@
 import {
   EventTransparency,
   EventVisibility,
-  ITipMethod,
   ParticipationStatus,
   parseICalendar,
-  serializeToICalendar,
   type ICalInviteEmailDTO,
   type IImportResult,
   type IItipInboundHandler,
@@ -76,7 +74,12 @@ export class ItipInboundService implements IItipInboundHandler {
     if (existing) {
       if (existing.sequence >= invite.sequence) {
         // Duplicate or outdated: skip
-        return { imported: 0, skipped: 1, overwritten: 0, duplicates: [invite.uid] };
+        return {
+          imported: 0,
+          skipped: 1,
+          overwritten: 0,
+          duplicates: [invite.uid],
+        };
       }
       // Update existing event with higher sequence
       await this.updateEventFromInvite(existing, invite);
@@ -118,7 +121,11 @@ export class ItipInboundService implements IItipInboundHandler {
     }
 
     // Decrypt, update PARTSTAT, re-encrypt
-    const decrypted = await decryptEventBody(existing, calendar.encryptionKey, this.encryptionService);
+    const decrypted = await decryptEventBody(
+      existing,
+      calendar.encryptionKey,
+      this.encryptionService,
+    );
     const updatedAttendeeIds = decrypted.attendeeIds ?? [];
 
     const newBody = { ...decrypted, attendeeIds: updatedAttendeeIds };
@@ -150,27 +157,30 @@ export class ItipInboundService implements IItipInboundHandler {
       return;
     }
 
-    const decrypted = await decryptEventBody(existing, calendar.encryptionKey, this.encryptionService);
+    const decrypted = await decryptEventBody(
+      existing,
+      calendar.encryptionKey,
+      this.encryptionService,
+    );
 
     if (invite.rawIcs.includes('RECURRENCE-ID')) {
       // Partial cancel: add recurrence-id to EXDATE list
       const parsed = parseICalendar(invite.rawIcs);
-      const recurrenceId =
-        parsed.events[0]?.recurrenceId ?? null;
+      const recurrenceId = parsed.events[0]?.recurrenceId ?? null;
 
-        const recurrenceDate = recurrenceId
-          ? new Date(
-              String(recurrenceId).replace(
-                /^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})(Z?)$/,
-                '$1-$2-$3T$4:$5:$6$7',
-              ),
-            )
-          : null;
-        if (recurrenceDate && !isNaN(recurrenceDate.getTime())) {
-          const exdates = [...(decrypted.exdates ?? []), recurrenceDate];
-          await this.persistEventBody(existing.id, { ...decrypted, exdates });
-          return;
-        }
+      const recurrenceDate = recurrenceId
+        ? new Date(
+            String(recurrenceId).replace(
+              /^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})(Z?)$/,
+              '$1-$2-$3T$4:$5:$6$7',
+            ),
+          )
+        : null;
+      if (recurrenceDate && !isNaN(recurrenceDate.getTime())) {
+        const exdates = [...(decrypted.exdates ?? []), recurrenceDate];
+        await this.persistEventBody(existing.id, { ...decrypted, exdates });
+        return;
+      }
     }
 
     // Full cancel: mark the event CANCELLED
@@ -188,8 +198,8 @@ export class ItipInboundService implements IItipInboundHandler {
    * in a future iteration.
    */
   async handleCounter(
-    organizerId: string,
-    invite: ICalInviteEmailDTO,
+    _organizerId: string,
+    _invite: ICalInviteEmailDTO,
   ): Promise<string | null> {
     // Counter proposals are stored as a comment on the event body.
     // Full counter-proposal handling (storing proposed times, surfacing them
@@ -202,7 +212,7 @@ export class ItipInboundService implements IItipInboundHandler {
   private async findEventByUid(
     uid: string,
   ): Promise<ITypedCalendarEvent | null> {
-    const results = await this.calendarEventModel.find({ uid } as any).toArray();
+    const results = await this.calendarEventModel.find({ uid }).toArray();
     return results[0] ?? null;
   }
 
@@ -218,7 +228,9 @@ export class ItipInboundService implements IItipInboundHandler {
       throw new Error(`No default calendar found for user ${userId}`);
     }
     if (!defaultCalendar.encryptionKey) {
-      throw new Error(`Default calendar for user ${userId} has no encryption key`);
+      throw new Error(
+        `Default calendar for user ${userId} has no encryption key`,
+      );
     }
 
     const parsed = parseICalendar(invite.rawIcs);
@@ -264,7 +276,8 @@ export class ItipInboundService implements IItipInboundHandler {
       attendeeIds: [],
       dateCreated: new Date(),
       dateModified: new Date(),
-      searchText: `${event.summary ?? ''} ${event.description ?? ''} ${event.location ?? ''}`.trim(),
+      searchText:
+        `${event.summary ?? ''} ${event.description ?? ''} ${event.location ?? ''}`.trim(),
     });
   }
 
@@ -282,7 +295,11 @@ export class ItipInboundService implements IItipInboundHandler {
     );
     if (!calendar?.encryptionKey) return;
 
-    const decrypted = await decryptEventBody(existing, calendar.encryptionKey, this.encryptionService);
+    const decrypted = await decryptEventBody(
+      existing,
+      calendar.encryptionKey,
+      this.encryptionService,
+    );
     const newBody = {
       ...decrypted,
       summary: event.summary ?? decrypted.summary,
@@ -294,15 +311,19 @@ export class ItipInboundService implements IItipInboundHandler {
 
     await this.calendarEventModel.updateOne(
       { _id: existing.id },
-      { $set: {
-        sequence: invite.sequence,
-        dtstart: (invite.dtstart as unknown as Date).toISOString(),
-        dtend: ((invite.dtend ?? existing.dtstart) as unknown as Date).toISOString(),
-        status: event.status ?? 'CONFIRMED',
-        dateModified: new Date().toISOString(),
-        searchText:
-          `${event.summary ?? ''} ${event.description ?? ''} ${event.location ?? ''}`.trim(),
-      } },
+      {
+        $set: {
+          sequence: invite.sequence,
+          dtstart: (invite.dtstart as unknown as Date).toISOString(),
+          dtend: (
+            (invite.dtend ?? existing.dtstart) as unknown as Date
+          ).toISOString(),
+          status: event.status ?? 'CONFIRMED',
+          dateModified: new Date().toISOString(),
+          searchText:
+            `${event.summary ?? ''} ${event.description ?? ''} ${event.location ?? ''}`.trim(),
+        },
+      },
     );
   }
 
@@ -326,7 +347,13 @@ export class ItipInboundService implements IItipInboundHandler {
 
     await this.calendarEventModel.updateOne(
       { _id: eventId },
-      { $set: { encryptedBody, blockId, dateModified: new Date().toISOString() } },
+      {
+        $set: {
+          encryptedBody,
+          blockId,
+          dateModified: new Date().toISOString(),
+        },
+      },
     );
   }
 }

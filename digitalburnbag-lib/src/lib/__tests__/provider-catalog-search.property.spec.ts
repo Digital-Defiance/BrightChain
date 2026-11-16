@@ -10,10 +10,8 @@
  */
 
 import fc from 'fast-check';
-import {
-  BUILTIN_PROVIDER_CONFIGS,
-} from '../providers/builtin-provider-configs';
 import { ICanaryProviderConfig } from '../interfaces/canary-provider';
+import { BUILTIN_PROVIDER_CONFIGS } from '../providers/builtin-provider-configs';
 
 // ── Pure search function under test ─────────────────────────────────
 

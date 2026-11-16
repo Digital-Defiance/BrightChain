@@ -1,4 +1,11 @@
-import { mkdtemp, readdir, readFile, rm, writeFile, copyFile } from 'node:fs/promises';
+import {
+  copyFile,
+  mkdtemp,
+  readdir,
+  readFile,
+  rm,
+  writeFile,
+} from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { digestPayload } from './codec';
@@ -40,8 +47,12 @@ describe('BrightDB v2 encrypted block-store profile', () => {
     // A fresh nonce each time.
     expect(cipher.seal(digest, plaintext).equals(sealed)).toBe(false);
     // Another digest, another key, or a changed byte all fail closed.
-    expect(() => cipher.open(digestPayload(Buffer.from('other')), sealed)).toThrow();
-    expect(() => new BrightDbV2AesCipher(OTHER_KEY).open(digest, sealed)).toThrow();
+    expect(() =>
+      cipher.open(digestPayload(Buffer.from('other')), sealed),
+    ).toThrow();
+    expect(() =>
+      new BrightDbV2AesCipher(OTHER_KEY).open(digest, sealed),
+    ).toThrow();
     const flipped = Buffer.from(sealed);
     flipped[20] ^= 1;
     expect(() => cipher.open(digest, flipped)).toThrow();
@@ -50,8 +61,12 @@ describe('BrightDB v2 encrypted block-store profile', () => {
     const name = cipher.physicalName(digest);
     expect(name).toMatch(/^[0-9a-f]{128}$/u);
     expect(name).not.toBe(digest);
-    expect(new BrightDbV2AesCipher(OTHER_KEY).physicalName(digest)).not.toBe(name);
-    expect(() => new BrightDbV2AesCipher(Buffer.alloc(16))).toThrow(/32 bytes/u);
+    expect(new BrightDbV2AesCipher(OTHER_KEY).physicalName(digest)).not.toBe(
+      name,
+    );
+    expect(() => new BrightDbV2AesCipher(Buffer.alloc(16))).toThrow(
+      /32 bytes/u,
+    );
   });
 
   it('stores nothing readable and survives reopening with the key', async () => {
@@ -63,14 +78,29 @@ describe('BrightDB v2 encrypted block-store profile', () => {
       { _id: 'alice', city: 'Oslo', note: secret },
       { _id: 'bob', city: 'Bergen', note: secret },
     ]);
-    const ref = await db.putAttachment(Buffer.from(`attachment ${secret}`), { type: 'text/plain' });
-    await db.collection('people').replaceById('bob', { _id: 'bob', city: 'Oslo', _files: { f: { ...ref } } });
+    const ref = await db.putAttachment(Buffer.from(`attachment ${secret}`), {
+      type: 'text/plain',
+    });
+    await db.collection('people').replaceById('bob', {
+      _id: 'bob',
+      city: 'Oslo',
+      _files: { f: { ...ref } },
+    });
     const root = await db.root();
     db.close();
 
-    const reopened = await PortableBrightDb.open({ path, encryption: { key: KEY } });
+    const reopened = await PortableBrightDb.open({
+      path,
+      encryption: { key: KEY },
+    });
     expect(await reopened.root()).toBe(root);
-    expect((await reopened.collection('people').findByIndex('by_city', { equals: ['Oslo'] })).map((d) => d['_id'])).toEqual(['alice', 'bob']);
+    expect(
+      (
+        await reopened
+          .collection('people')
+          .findByIndex('by_city', { equals: ['Oslo'] })
+      ).map((d) => d['_id']),
+    ).toEqual(['alice', 'bob']);
     expect((await reopened.getAttachment(ref)).toString()).toContain(secret);
     reopened.close();
 
@@ -80,10 +110,14 @@ describe('BrightDB v2 encrypted block-store profile', () => {
       expect(bytes.includes(Buffer.from(root))).toBe(false); // the head digest is not visible either
     }
     // No block is stored under its logical (plaintext) digest.
-    const names = (await filesUnder(join(path, 'blocks'))).map((f) => f.split('/').pop() as string);
+    const names = (await filesUnder(join(path, 'blocks'))).map(
+      (f) => f.split('/').pop() as string,
+    );
     expect(names.includes(root)).toBe(false);
     expect(names.every((n) => /^[0-9a-f]{128}$/u.test(n))).toBe(true);
-    expect((await readFile(join(path, 'ENCRYPTION'), 'utf8'))).toBe('BrightDB encryption 1\n');
+    expect(await readFile(join(path, 'ENCRYPTION'), 'utf8')).toBe(
+      'BrightDB encryption 1\n',
+    );
   });
 
   it('refuses a missing key, a wrong key and a mismatched directory', async () => {
@@ -91,18 +125,27 @@ describe('BrightDB v2 encrypted block-store profile', () => {
     const db = await PortableBrightDb.open({ path, encryption: { key: KEY } });
     await db.collection('c').insertOne({ _id: 'a' });
     db.close();
-    await expect(PortableBrightDb.open({ path })).rejects.toThrow(/encrypted; open it with an encryption key/u);
-    await expect(PortableBrightDb.open({ path, encryption: { key: OTHER_KEY } })).rejects.toThrow(/cannot decrypt|Wrong key/iu);
+    await expect(PortableBrightDb.open({ path })).rejects.toThrow(
+      /encrypted; open it with an encryption key/u,
+    );
+    await expect(
+      PortableBrightDb.open({ path, encryption: { key: OTHER_KEY } }),
+    ).rejects.toThrow(/cannot decrypt|Wrong key/iu);
 
     const plain = join(dir, 'plain');
     (await PortableBrightDb.open({ path: plain })).close();
-    await expect(PortableBrightDb.open({ path: plain, encryption: { key: KEY } })).rejects.toThrow(/not encrypted/u);
+    await expect(
+      PortableBrightDb.open({ path: plain, encryption: { key: KEY } }),
+    ).rejects.toThrow(/not encrypted/u);
   });
 
   it('detects a changed block and a block swapped for another', async () => {
     const path = join(dir, 'db');
     const db = await PortableBrightDb.open({ path, encryption: { key: KEY } });
-    await db.collection('c').insertMany([{ _id: 'a', v: 1 }, { _id: 'b', v: 2 }]);
+    await db.collection('c').insertMany([
+      { _id: 'a', v: 1 },
+      { _id: 'b', v: 2 },
+    ]);
     const root = await db.root();
     db.close();
     const blocks = await filesUnder(join(path, 'blocks'));
@@ -117,31 +160,50 @@ describe('BrightDB v2 encrypted block-store profile', () => {
     const [first, second] = pair as string[];
     const original = await readFile(first);
     await copyFile(second, first);
-    const swapped = await PortableBrightDb.open({ path, encryption: { key: KEY } });
+    const swapped = await PortableBrightDb.open({
+      path,
+      encryption: { key: KEY },
+    });
     expect(await swapped.root()).toBe(root);
-    await expect(swapped.collection('c').find({}).toArray()).rejects.toThrow(/cannot be decrypted/u);
+    await expect(swapped.collection('c').find({}).toArray()).rejects.toThrow(
+      /cannot be decrypted/u,
+    );
     swapped.close();
 
     await writeFile(first, original);
     const tampered = Buffer.from(original);
     tampered[tampered.length - 1] ^= 1;
     await writeFile(first, tampered);
-    const again = await PortableBrightDb.open({ path, encryption: { key: KEY } });
-    await expect(again.collection('c').find({}).toArray()).rejects.toThrow(/cannot be decrypted/u);
+    const again = await PortableBrightDb.open({
+      path,
+      encryption: { key: KEY },
+    });
+    await expect(again.collection('c').find({}).toArray()).rejects.toThrow(
+      /cannot be decrypted/u,
+    );
     again.close();
   });
 
   it('forks and merges encrypted replicas under the same key', async () => {
-    const a = await PortableBrightDb.open({ path: join(dir, 'a'), encryption: { key: KEY } });
+    const a = await PortableBrightDb.open({
+      path: join(dir, 'a'),
+      encryption: { key: KEY },
+    });
     await a.collection('docs').insertMany([{ _id: 'one' }, { _id: 'two' }]);
     const b = await a.fork(join(dir, 'b')); // the fork keeps the key
-    await expect(PortableBrightDb.open({ path: join(dir, 'b') })).rejects.toThrow(/encrypted/u);
+    await expect(
+      PortableBrightDb.open({ path: join(dir, 'b') }),
+    ).rejects.toThrow(/encrypted/u);
     await a.collection('docs').insertOne({ _id: 'from-a' });
     await b.collection('docs').insertOne({ _id: 'from-b' });
     await a.merge(b);
     await b.merge(a);
     expect(await a.root()).toBe(await b.root());
-    expect((await a.collection('docs').find({}).toArray()).map((d) => d['_id']).sort()).toEqual(['from-a', 'from-b', 'one', 'two']);
+    expect(
+      (await a.collection('docs').find({}).toArray())
+        .map((d) => d['_id'])
+        .sort(),
+    ).toEqual(['from-a', 'from-b', 'one', 'two']);
     a.close();
     b.close();
   });
@@ -156,7 +218,11 @@ describe('BrightDB v2 encrypted block-store profile', () => {
     it('keeps names stable, reads old blocks, and shuts out a holder of only the old key', () => {
       const old = new BrightDbV2AesCipher(ring1);
       const rotated = new BrightDbV2AesCipher(ring2);
-      const newOnly = new BrightDbV2AesCipher({ nameSecret, dataKeys: { 2: k2 }, currentVersion: 2 });
+      const newOnly = new BrightDbV2AesCipher({
+        nameSecret,
+        dataKeys: { 2: k2 },
+        currentVersion: 2,
+      });
       const plaintext = Buffer.from('a block');
       const digest = digestPayload(plaintext);
 
@@ -172,9 +238,13 @@ describe('BrightDB v2 encrypted block-store profile', () => {
       expect(rotated.open(digest, sealedOld).equals(plaintext)).toBe(true);
       expect(rotated.open(digest, sealedNew).equals(plaintext)).toBe(true);
       expect(old.open(digest, sealedOld).equals(plaintext)).toBe(true);
-      expect(() => old.open(digest, sealedNew)).toThrow(/No key for encryption key version 2/u);
+      expect(() => old.open(digest, sealedNew)).toThrow(
+        /No key for encryption key version 2/u,
+      );
       expect(newOnly.open(digest, sealedNew).equals(plaintext)).toBe(true);
-      expect(() => newOnly.open(digest, sealedOld)).toThrow(/No key for encryption key version 1/u);
+      expect(() => newOnly.open(digest, sealedOld)).toThrow(
+        /No key for encryption key version 1/u,
+      );
       // The head follows the current version.
       const head = rotated.sealHead(digest);
       expect(head[0]).toBe(2);
@@ -183,27 +253,70 @@ describe('BrightDB v2 encrypted block-store profile', () => {
     });
 
     it('rejects malformed rings', () => {
-      expect(() => new BrightDbV2AesCipher({ nameSecret, dataKeys: { 1: k1 }, currentVersion: 2 })).toThrow(/current key version/u);
-      expect(() => new BrightDbV2AesCipher({ nameSecret, dataKeys: { 0: k1 }, currentVersion: 0 })).toThrow(/1 to 255/u);
-      expect(() => new BrightDbV2AesCipher({ nameSecret, dataKeys: { 256: k1 }, currentVersion: 256 })).toThrow(/1 to 255/u);
-      expect(() => new BrightDbV2AesCipher({ nameSecret: Buffer.alloc(8), dataKeys: { 1: k1 }, currentVersion: 1 })).toThrow(/32 bytes/u);
+      expect(
+        () =>
+          new BrightDbV2AesCipher({
+            nameSecret,
+            dataKeys: { 1: k1 },
+            currentVersion: 2,
+          }),
+      ).toThrow(/current key version/u);
+      expect(
+        () =>
+          new BrightDbV2AesCipher({
+            nameSecret,
+            dataKeys: { 0: k1 },
+            currentVersion: 0,
+          }),
+      ).toThrow(/1 to 255/u);
+      expect(
+        () =>
+          new BrightDbV2AesCipher({
+            nameSecret,
+            dataKeys: { 256: k1 },
+            currentVersion: 256,
+          }),
+      ).toThrow(/1 to 255/u);
+      expect(
+        () =>
+          new BrightDbV2AesCipher({
+            nameSecret: Buffer.alloc(8),
+            dataKeys: { 1: k1 },
+            currentVersion: 1,
+          }),
+      ).toThrow(/32 bytes/u);
     });
 
     it('re-seals reachable blocks under the new key so the old key can be dropped', async () => {
       const path = join(dir, 'reseal');
-      const db = await PortableBrightDb.open({ path, encryption: { keyRing: ring1 } });
+      const db = await PortableBrightDb.open({
+        path,
+        encryption: { keyRing: ring1 },
+      });
       await db.collection('c').createIndex('by_v', ['v']);
-      await db.collection('c').insertMany(Array.from({ length: 40 }, (_, i) => ({ _id: `d${i}`, v: i })));
+      await db
+        .collection('c')
+        .insertMany(
+          Array.from({ length: 40 }, (_, i) => ({ _id: `d${i}`, v: i })),
+        );
       const ref = await db.putAttachment(Buffer.alloc(1_300_000, 7));
-      await db.collection('c').insertOne({ _id: 'file', v: -1, _files: { f: { ...ref } } });
+      await db
+        .collection('c')
+        .insertOne({ _id: 'file', v: -1, _files: { f: { ...ref } } });
       db.close();
 
-      const rotated = await PortableBrightDb.open({ path, encryption: { keyRing: ring2 } });
+      const rotated = await PortableBrightDb.open({
+        path,
+        encryption: { keyRing: ring2 },
+      });
       await rotated.collection('c').insertOne({ _id: 'late', v: 99 });
       // Superseded states are unreachable and would keep the old key, so collect them first.
       await rotated.collectGarbage({ graceMs: 0 });
       const names = await filesUnder(join(path, 'blocks'));
-      const versions = async () => (await Promise.all(names.map(async (f) => (await readFile(f))[0]))).filter((v) => v === 1).length;
+      const versions = async () =>
+        (
+          await Promise.all(names.map(async (f) => (await readFile(f))[0]))
+        ).filter((v) => v === 1).length;
       expect(await versions()).toBeGreaterThan(0);
 
       const dry = await rotated.resealBlocks({ dryRun: true });
@@ -219,9 +332,18 @@ describe('BrightDB v2 encrypted block-store profile', () => {
       rotated.close();
 
       // The old key is no longer needed: a ring with only version 2 opens everything.
-      const newOnly = await PortableBrightDb.open({ path, encryption: { keyRing: { nameSecret, dataKeys: { 2: k2 }, currentVersion: 2 } } });
-      expect((await newOnly.collection('c').find({}).toArray()).length).toBe(42);
-      expect(await newOnly.collection('c').findByIndex('by_v', { equals: [5] })).toEqual([{ _id: 'd5', v: 5 }]);
+      const newOnly = await PortableBrightDb.open({
+        path,
+        encryption: {
+          keyRing: { nameSecret, dataKeys: { 2: k2 }, currentVersion: 2 },
+        },
+      });
+      expect((await newOnly.collection('c').find({}).toArray()).length).toBe(
+        42,
+      );
+      expect(
+        await newOnly.collection('c').findByIndex('by_v', { equals: [5] }),
+      ).toEqual([{ _id: 'd5', v: 5 }]);
       const back = Buffer.from(await newOnly.getAttachment(ref));
       expect(back.equals(Buffer.alloc(1_300_000, 7))).toBe(true);
       newOnly.close();
@@ -229,15 +351,31 @@ describe('BrightDB v2 encrypted block-store profile', () => {
 
     it('rotates a directory store: old data stays readable, new blocks use the new key, the old key is shut out', async () => {
       const path = join(dir, 'rot');
-      const db = await PortableBrightDb.open({ path, encryption: { keyRing: ring1 } });
-      await db.collection('c').insertMany([{ _id: 'a', v: 1 }, { _id: 'b', v: 2 }]);
+      const db = await PortableBrightDb.open({
+        path,
+        encryption: { keyRing: ring1 },
+      });
+      await db.collection('c').insertMany([
+        { _id: 'a', v: 1 },
+        { _id: 'b', v: 2 },
+      ]);
       const before = new Set(await filesUnder(join(path, 'blocks')));
       db.close();
 
-      const rotated = await PortableBrightDb.open({ path, encryption: { keyRing: ring2 } });
-      expect(await rotated.collection('c').findById('a')).toEqual({ _id: 'a', v: 1 });
+      const rotated = await PortableBrightDb.open({
+        path,
+        encryption: { keyRing: ring2 },
+      });
+      expect(await rotated.collection('c').findById('a')).toEqual({
+        _id: 'a',
+        v: 1,
+      });
       await rotated.collection('c').insertOne({ _id: 'late', v: 3 });
-      expect((await rotated.collection('c').find({}).toArray()).map((d) => d['_id']).sort()).toEqual(['a', 'b', 'late']);
+      expect(
+        (await rotated.collection('c').find({}).toArray())
+          .map((d) => d['_id'])
+          .sort(),
+      ).toEqual(['a', 'b', 'late']);
       rotated.close();
 
       // Old files still carry version 1, new files version 2, and no existing file was renamed.
@@ -249,7 +387,9 @@ describe('BrightDB v2 encrypted block-store profile', () => {
       expect((await readFile(join(path, 'HEAD')))[0]).toBe(2);
 
       // Someone holding only the old key can no longer open the store.
-      await expect(PortableBrightDb.open({ path, encryption: { keyRing: ring1 } })).rejects.toThrow(/Cannot decrypt HEAD/u);
+      await expect(
+        PortableBrightDb.open({ path, encryption: { keyRing: ring1 } }),
+      ).rejects.toThrow(/Cannot decrypt HEAD/u);
     });
   });
 });

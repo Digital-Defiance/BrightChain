@@ -197,7 +197,6 @@ describe('cert confirmation guard', () => {
     const tmpDir = fs.mkdtempSync(
       path.join(os.tmpdir(), 'metering-unconfirmed-'),
     );
-    const shardId = UNCONFIRMED_SHARD;
     const processKey = generateProcessKey();
 
     // A ledger that accepts submitCert but always returns false for confirmation.
@@ -264,9 +263,6 @@ describe('compromise revocation', () => {
         path.join(fixture.tmpDir, 'sidecar.sigs'),
       );
       const records = toVerifiable(entries);
-      const key = generateProcessKey(); // re-derive from fixture is hard, so we grab it from sigs
-      // Reconstruct the process key public key from the ledger cert
-      const fpHex = toHex(sigs[0].processKeyFingerprint);
       // We need the pubKey — it's stored in the cert action submitted to the ledger.
       // InMemoryProcessKeyLedger doesn't expose certs; but we can get the pubKey
       // from the fixture's processKey (we pass it in above via createLedgerFixture).

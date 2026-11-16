@@ -24,7 +24,6 @@ const factory: MultiNodeFactory = {
 
   async createSharedStore() {
     const store = new PooledMemoryBlockStore(BlockSize.Small);
-    (this as any)._store = store;
     return { store };
   },
 

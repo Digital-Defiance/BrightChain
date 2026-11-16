@@ -307,9 +307,7 @@ describe('Integration: Vault Deletion Endpoints', () => {
         mockCertificate,
       );
 
-      const res = await agent
-        .get('/vaults/vault-1/certificate')
-        .expect(200);
+      const res = await agent.get('/vaults/vault-1/certificate').expect(200);
 
       expect(res.body).toHaveProperty('version', 1);
       expect(res.body).toHaveProperty('containerId', 'vault-1');
@@ -330,9 +328,7 @@ describe('Integration: Vault Deletion Endpoints', () => {
 
       deps.deletionService.getCertificate.mockResolvedValueOnce(null);
 
-      const res = await agent
-        .get('/vaults/vault-1/certificate')
-        .expect(404);
+      const res = await agent.get('/vaults/vault-1/certificate').expect(404);
 
       expect(res.body).toHaveProperty('error');
     });
@@ -343,13 +339,9 @@ describe('Integration: Vault Deletion Endpoints', () => {
 
       const forbiddenError = new Error('Forbidden');
       (forbiddenError as unknown as { code: string }).code = 'FORBIDDEN';
-      deps.deletionService.getCertificate.mockRejectedValueOnce(
-        forbiddenError,
-      );
+      deps.deletionService.getCertificate.mockRejectedValueOnce(forbiddenError);
 
-      const res = await agent
-        .get('/vaults/vault-1/certificate')
-        .expect(403);
+      const res = await agent.get('/vaults/vault-1/certificate').expect(403);
 
       expect(res.body).toHaveProperty('message');
     });

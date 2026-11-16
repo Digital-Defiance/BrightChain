@@ -326,7 +326,7 @@ describe('AdminBlockController', () => {
 
       expect(result.statusCode).toBe(200);
       const body = result.response as IApiMessageResponse & {
-        block: Record<string, unknown>;
+        block: { blockId: string; exists: boolean };
       };
       expect(body.message).toBe('OK');
       expect(body.block.blockId).toBe('block-001');

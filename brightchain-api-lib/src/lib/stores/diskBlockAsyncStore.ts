@@ -51,6 +51,7 @@ import {
   type BlockId,
 } from '@brightchain/brightchain-lib';
 import { PlatformID } from '@digitaldefiance/node-ecies-lib';
+import { sha3_512 } from '@noble/hashes/sha3';
 import { randomBytes } from 'crypto';
 import { existsSync, mkdirSync, readFileSync, rmSync } from 'fs';
 import { readdir, readFile, stat, unlink, writeFile } from 'fs/promises';
@@ -987,7 +988,6 @@ export class DiskBlockAsyncStore
    * Compute the SHA3-512 hash of data and return as hex string.
    */
   private computeHash(data: Uint8Array): string {
-    const { sha3_512 } = require('@noble/hashes/sha3');
     const hashBytes = sha3_512(data);
     return Checksum.fromUint8Array(hashBytes).toHex();
   }
@@ -1070,17 +1070,27 @@ export class DiskBlockAsyncStore
   ): Promise<void> {
     validatePoolId(pool);
     if (!/^[0-9a-f]{128}$/u.test(id)) {
-      throw new Error('A named block id must be 128 lowercase hexadecimal digits');
+      throw new Error(
+        'A named block id must be 128 lowercase hexadecimal digits',
+      );
     }
     const checksum = Checksum.fromHex(id);
-    const fitting = this._supportedBlockSizes.find((s) => data.length <= (s as number));
+    const fitting = this._supportedBlockSizes.find(
+      (s) => data.length <= (s as number),
+    );
     const blockSize = fitting ?? this._supportedBlockSizes[0];
     const filePath = this.poolBlockPath(pool, checksum, blockSize);
     if (existsSync(filePath)) return; // idempotent
     this.ensurePoolBlockPath(pool, checksum, blockSize);
     await writeFile(filePath, Buffer.from(data));
     const keyHex = this.keyToHex(checksum);
-    const metadata = createDefaultBlockMetadata(keyHex, data.length, keyHex, options, pool);
+    const metadata = createDefaultBlockMetadata(
+      keyHex,
+      data.length,
+      keyHex,
+      options,
+      pool,
+    );
     try {
       await this.metadataStore.create(metadata);
     } catch {
@@ -1393,7 +1403,12 @@ export class DiskBlockAsyncStore
       );
       putBlockSize = fitting ?? lengthToClosestBlockSize(data.length);
     }
-    const block = new RawDataBlock(putBlockSize, data, brightDateNow(), keyChecksum);
+    const block = new RawDataBlock(
+      putBlockSize,
+      data,
+      brightDateNow(),
+      keyChecksum,
+    );
     await this.setData(block, options);
   }
 

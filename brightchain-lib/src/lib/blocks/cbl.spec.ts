@@ -1,3 +1,4 @@
+/// <reference path="../../test/types/jest.d.ts" />
 // Mock createBlockHandleFromStore before any imports
 jest.mock('./handle', () => {
   const actual = jest.requireActual('./handle');
@@ -34,11 +35,14 @@ import {
 } from '../init';
 import { ChecksumService } from '../services/checksum.service';
 import { ServiceProvider } from '../services/service.provider';
+import type { BrightDateTimestamp } from '../types/brightDateTimestamp';
+import {
+  brightDateNow,
+  brightDateToDate,
+} from '../utils/brightDateConversions';
 import { ConstituentBlockListBlock } from './cbl';
 import { CBLBase } from './cblBase';
 import { createBlockHandleFromStore } from './handle';
-import { brightDateNow, brightDateToDate } from '../utils/brightDateConversions';
-import type { BrightDateTimestamp } from '../types/brightDateTimestamp';
 
 // We'll use jest.spyOn in beforeEach to mock validateSignature
 

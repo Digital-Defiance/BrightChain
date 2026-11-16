@@ -2,6 +2,7 @@
  * @fileoverview Tests for AssetRegistryView component.
  */
 
+import { QuorumType } from '@brightchain/brightchain-lib';
 import type { IAssetDescriptor } from '@brightchain/brightledger-assets-api-lib';
 import '@testing-library/jest-dom';
 import { render, screen } from '@testing-library/react';
@@ -15,7 +16,7 @@ const ASSET_A: IAssetDescriptor = {
   transferPolicy: 'open',
   freezable: true,
   burnable: true,
-  brightTrustPolicy: { type: 'majority', threshold: 1 },
+  brightTrustPolicy: { type: QuorumType.Majority, threshold: 1 },
 };
 
 const ASSET_B: IAssetDescriptor = {
@@ -26,7 +27,7 @@ const ASSET_B: IAssetDescriptor = {
   transferPolicy: 'whitelist',
   freezable: false,
   burnable: false,
-  brightTrustPolicy: { type: 'majority', threshold: 1 },
+  brightTrustPolicy: { type: QuorumType.Majority, threshold: 1 },
 };
 
 describe('AssetRegistryView', () => {

@@ -29,7 +29,7 @@ import type {
 
 // Use var for values referenced inside jest.mock factories (jest.mock is hoisted
 // above const/let declarations, causing temporal dead zone errors with const).
-// eslint-disable-next-line no-var
+
 var mockEngine = {
   translate: jest.fn((_componentId: string, key: string) => key),
   translateEnum: jest.fn((_enumType: unknown, value: unknown) => String(value)),
@@ -65,10 +65,14 @@ jest.mock('@brightchain/brightchain-lib', () => ({
     S_MIME: 's_mime',
     GPG: 'gpg',
   },
-  toBrightDateString: (date: Date | string, _precision?: number) => {
+  brightDateToDate: (value: number): Date =>
+    new Date(946_727_935_816 + value * 86_400_000),
+  toBrightDateString: (date: number | Date | string, precision = 3) => {
+    // A number is already a BrightDate timestamp (days since J2000).
+    if (typeof date === 'number') return date.toFixed(precision);
     const d = typeof date === 'string' ? new Date(date) : date;
     if (isNaN(d.getTime())) return '';
-    return ((d.getTime() - 946684800000) / 86400000).toFixed(3);
+    return ((d.getTime() - 946684800000) / 86400000).toFixed(precision);
   },
   getBrightChainI18nEngine: () => mockEngine,
 }));
@@ -91,11 +95,16 @@ jest.mock('@digitaldefiance/express-suite-react-components', () => ({
 }));
 
 // ─── Test data ──────────────────────────────────────────────────────────────
+const J2000_UNIX_MS = 946_727_935_816;
+const MS_PER_DAY = 86_400_000;
+/** Convert an ISO date string to a BrightDate timestamp (days since J2000). */
+const toBrightDate = (iso: string): number =>
+  (new Date(iso).getTime() - J2000_UNIX_MS) / MS_PER_DAY;
 
 const mockGpgKeyMetadata: IGpgKeyMetadata = {
   keyId: 'ABCD1234EFGH5678',
   fingerprint: 'ABCD1234EFGH5678ABCD1234EFGH5678ABCD1234',
-  createdAt: new Date('2024-01-15'),
+  createdAt: toBrightDate('2024-01-15'),
   expiresAt: null,
   userId: 'Test User <test@example.com>',
   algorithm: 'rsa4096',
@@ -105,8 +114,8 @@ const mockSmimeCertMetadata: ISmimeCertificateMetadata = {
   subject: 'CN=Test User, O=Example Corp',
   issuer: 'CN=Example CA',
   serialNumber: '01AB23CD',
-  validFrom: new Date('2024-01-01'),
-  validTo: new Date('2025-12-31'),
+  validFrom: toBrightDate('2024-01-01'),
+  validTo: toBrightDate('2025-12-31'),
   emailAddresses: ['test@example.com'],
   fingerprint: 'AA:BB:CC:DD:EE:FF',
   isExpired: false,
@@ -114,7 +123,7 @@ const mockSmimeCertMetadata: ISmimeCertificateMetadata = {
 
 const mockExpiredSmimeCertMetadata: ISmimeCertificateMetadata = {
   ...mockSmimeCertMetadata,
-  validTo: new Date('2023-01-01'),
+  validTo: toBrightDate('2023-01-01'),
   isExpired: true,
 };
 

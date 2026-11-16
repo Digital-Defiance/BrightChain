@@ -323,7 +323,7 @@ export class AggregationEngine<TID extends PlatformID = string>
     config: IAggregationConfig,
     presenceProviders: TID[],
     absenceProviders: TID[],
-    results: Map<TID, IHeartbeatCheckResult<TID>>,
+    _results: Map<TID, IHeartbeatCheckResult<TID>>,
   ): HeartbeatSignalType {
     let presenceWeight = 0;
     let absenceWeight = 0;

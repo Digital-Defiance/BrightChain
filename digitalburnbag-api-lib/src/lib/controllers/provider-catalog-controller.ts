@@ -150,17 +150,19 @@ export class ProviderCatalogController<
     // Parse optional query filters
     const filters: IProviderCatalogFilters = {};
 
-    if (req.query.category) {
-      filters.category = req.query.category as ProviderCategory;
+    if (req.query['category']) {
+      filters.category = req.query['category'] as ProviderCategory;
     }
-    if (req.query.authType) {
-      filters.authType = req.query.authType as IProviderCatalogFilters['authType'];
+    if (req.query['authType']) {
+      filters.authType = req.query[
+        'authType'
+      ] as IProviderCatalogFilters['authType'];
     }
-    if (req.query.supportsWebhooks !== undefined) {
-      filters.supportsWebhooks = req.query.supportsWebhooks === 'true';
+    if (req.query['supportsWebhooks'] !== undefined) {
+      filters.supportsWebhooks = req.query['supportsWebhooks'] === 'true';
     }
-    if (req.query.searchQuery) {
-      filters.searchQuery = req.query.searchQuery as string;
+    if (req.query['searchQuery']) {
+      filters.searchQuery = req.query['searchQuery'] as string;
     }
 
     const providers = this.deps.providerCatalogService.getProviders(
@@ -196,7 +198,7 @@ export class ProviderCatalogController<
       };
     }
 
-    const query = (req.query.q as string) ?? '';
+    const query = (req.query['q'] as string) ?? '';
     const providers = this.deps.providerCatalogService.searchProviders(query);
 
     return {
@@ -228,11 +230,13 @@ export class ProviderCatalogController<
       };
     }
 
-    const categoryMap = this.deps.providerCatalogService.getProvidersByCategory();
+    const categoryMap =
+      this.deps.providerCatalogService.getProvidersByCategory();
     const counts = this.deps.providerCatalogService.getCategoryCounts();
 
     // Convert Map to a JSON-serializable object
-    const categories: Record<string, { providers: unknown[]; count: number }> = {};
+    const categories: Record<string, { providers: unknown[]; count: number }> =
+      {};
     for (const [category, providers] of categoryMap.entries()) {
       categories[category] = {
         providers,
@@ -269,7 +273,8 @@ export class ProviderCatalogController<
       };
     }
 
-    const providers = this.deps.providerCatalogService.getRecommendedProviders();
+    const providers =
+      this.deps.providerCatalogService.getRecommendedProviders();
 
     return {
       statusCode: 200,

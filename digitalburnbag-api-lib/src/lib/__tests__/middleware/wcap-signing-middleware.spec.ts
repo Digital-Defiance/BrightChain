@@ -10,6 +10,7 @@ import {
   parseContentSignature,
   WCAP_DEFAULTS,
 } from '@brightchain/digitalburnbag-lib';
+import type { SignatureUint8Array } from '@digitaldefiance/ecies-lib';
 import { EciesCryptoCore, EciesSignature } from '@digitaldefiance/ecies-lib';
 import { createHash } from 'crypto';
 import type { Request, Response } from 'express';
@@ -157,7 +158,7 @@ describe('createWcapSigningMiddleware', () => {
       const valid = eciesSignature.verifyMessage(
         publicKey,
         new Uint8Array(hash),
-        new Uint8Array(sigBytes),
+        new Uint8Array(sigBytes) as SignatureUint8Array,
       );
       expect(valid).toBe(true);
     });
@@ -416,7 +417,7 @@ describe('createWcapSigningMiddleware', () => {
       const valid = eciesSignature.verifyMessage(
         publicKey,
         new Uint8Array(hash),
-        new Uint8Array(sigBytes),
+        new Uint8Array(sigBytes) as SignatureUint8Array,
       );
       expect(valid).toBe(true);
     });

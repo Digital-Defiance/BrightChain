@@ -15,11 +15,17 @@ import {
   AnnouncementHandler,
   AvailabilityState,
   BlockAnnouncement,
+  BlockId,
   BlockManifest,
   BloomFilter,
+  brightDateNow,
+  BrightDateTimestamp,
+  BrightTrustProposalMetadata,
+  BrightTrustVoteMetadata,
   CBLMetadataSearchQuery,
   CBLMetadataSearchResult,
   ConnectivityEventHandler,
+  dateToBrightDate,
   DeliveryAckMetadata,
   DiscoveryConfig,
   DiscoveryResult,
@@ -27,7 +33,6 @@ import {
   HeartbeatConfig,
   IBlockRegistry,
   ICBLIndexEntry,
-  brightDateNow,
   IDiscoveryProtocol,
   IGossipService,
   IHeartbeatMonitor,
@@ -61,7 +66,7 @@ const arbHexString = (minLength: number, maxLength: number) =>
 /**
  * Generate a valid block ID (hex string of at least 32 characters)
  */
-const arbBlockId = arbHexString(32, 64);
+const arbBlockId = arbHexString(32, 64).map((id) => id as BlockId);
 
 /**
  * Generate a valid node ID
@@ -92,17 +97,17 @@ const arbAvailabilityState = fc.constantFrom(
  * Mock BlockRegistry for testing
  */
 class MockBlockRegistry implements IBlockRegistry {
-  private blocks = new Set<string>();
+  private blocks = new Set<BlockId>();
 
-  hasLocal(blockId: string): boolean {
+  hasLocal(blockId: BlockId): boolean {
     return this.blocks.has(blockId);
   }
 
-  addLocal(blockId: string): void {
+  addLocal(blockId: BlockId): void {
     this.blocks.add(blockId);
   }
 
-  removeLocal(blockId: string): void {
+  removeLocal(blockId: BlockId): void {
     this.blocks.delete(blockId);
   }
 
@@ -110,7 +115,7 @@ class MockBlockRegistry implements IBlockRegistry {
     return this.blocks.size;
   }
 
-  getLocalBlockIds(): string[] {
+  getLocalBlockIds(): BlockId[] {
     return Array.from(this.blocks);
   }
 
@@ -120,14 +125,14 @@ class MockBlockRegistry implements IBlockRegistry {
       hashCount: 7,
       bitCount: 1000,
       itemCount: this.blocks.size,
-      mightContain: (blockId: string) => this.blocks.has(blockId),
+      mightContain: (blockId: BlockId) => this.blocks.has(blockId),
     };
   }
 
   exportManifest(): BlockManifest {
     return {
       nodeId: 'test-node',
-      blockIds: this.getLocalBlockIds(),
+      blockIds: this.getLocalBlockIds() as BlockId[],
       generatedAt: 9000,
       checksum: 'test-checksum',
     };
@@ -164,7 +169,7 @@ class MockBlockRegistry implements IBlockRegistry {
 class MockDiscoveryProtocol implements IDiscoveryProtocol {
   async discoverBlock(blockId: string): Promise<DiscoveryResult> {
     return {
-      blockId,
+      blockId: blockId as BlockId,
       found: false,
       locations: [],
       queriedPeers: 0,
@@ -302,6 +307,25 @@ class MockGossipService implements IGossipService {
   onDeliveryAck(_handler: (announcement: BlockAnnouncement) => void): void {}
 
   offDeliveryAck(_handler: (announcement: BlockAnnouncement) => void): void {}
+
+  async announceBrightTrustProposal(
+    _metadata: BrightTrustProposalMetadata,
+  ): Promise<void> {}
+  async announceBrightTrustVote(
+    _metadata: BrightTrustVoteMetadata,
+  ): Promise<void> {}
+  onBrightTrustProposal(
+    _handler: (announcement: BlockAnnouncement) => void,
+  ): void {}
+  offBrightTrustProposal(
+    _handler: (announcement: BlockAnnouncement) => void,
+  ): void {}
+  onBrightTrustVote(
+    _handler: (announcement: BlockAnnouncement) => void,
+  ): void {}
+  offBrightTrustVote(
+    _handler: (announcement: BlockAnnouncement) => void,
+  ): void {}
 }
 
 /**
@@ -419,7 +443,7 @@ class MockReconciliationService implements IReconciliationService {
 
   updateSyncVector(
     _peerId: string,
-    _timestamp: Date,
+    _timestamp: BrightDateTimestamp,
     _manifestChecksum: string,
   ): void {}
 
@@ -1432,15 +1456,15 @@ describe('AvailabilityService Property Tests - Events', () => {
 
       // Trigger events for different blocks
       await service.setAvailabilityState(
-        'abc123456789012345678901234567890',
+        'abc123456789012345678901234567890' as BlockId,
         AvailabilityState.Remote,
       );
       await service.setAvailabilityState(
-        'def123456789012345678901234567890',
+        'def123456789012345678901234567890' as BlockId,
         AvailabilityState.Remote,
       );
       await service.setAvailabilityState(
-        'abcdef789012345678901234567890123',
+        'abcdef789012345678901234567890123' as BlockId,
         AvailabilityState.Cached,
       );
 
@@ -1510,18 +1534,21 @@ describe('AvailabilityService Property Tests - Events', () => {
 
       // Trigger events
       await service.setAvailabilityState(
-        'test12345678901234567890123456789',
+        'test12345678901234567890123456789' as BlockId,
         AvailabilityState.Remote,
       );
       await service.setAvailabilityState(
-        'other1234567890123456789012345678',
+        'other1234567890123456789012345678' as BlockId,
         AvailabilityState.Remote,
       );
-      await service.updateLocation('test12345678901234567890123456789', {
-        nodeId: 'peer-1',
-        lastSeen: brightDateNow(),
-        isAuthoritative: false,
-      });
+      await service.updateLocation(
+        'test12345678901234567890123456789' as BlockId,
+        {
+          nodeId: 'peer-1',
+          lastSeen: brightDateNow(),
+          isAuthoritative: false,
+        },
+      );
 
       // Should only receive state_changed events for test* blocks
       expect(receivedEvents.length).toBe(1);
@@ -1605,7 +1632,7 @@ describe('AvailabilityService Property Tests - Staleness', () => {
             const locationTimestamp = new Date(Date.now() - ageWithinThreshold);
             await customService.updateLocation(blockId, {
               nodeId,
-              lastSeen: locationTimestamp,
+              lastSeen: dateToBrightDate(locationTimestamp),
               isAuthoritative: false,
             });
 
@@ -1657,7 +1684,7 @@ describe('AvailabilityService Property Tests - Staleness', () => {
               locations: [
                 {
                   nodeId,
-                  lastSeen: oldTimestamp,
+                  lastSeen: dateToBrightDate(oldTimestamp),
                   isAuthoritative: false,
                 },
               ],
@@ -1728,7 +1755,7 @@ describe('AvailabilityService Property Tests - Staleness', () => {
             locations: [
               {
                 nodeId,
-                lastSeen: oldTimestamp,
+                lastSeen: dateToBrightDate(oldTimestamp),
                 isAuthoritative: false,
               },
             ],
@@ -1843,7 +1870,7 @@ describe('AvailabilityService Property Tests - Staleness', () => {
               locations: [
                 {
                   nodeId,
-                  lastSeen: beyondThresholdTimestamp,
+                  lastSeen: dateToBrightDate(beyondThresholdTimestamp),
                   isAuthoritative: false,
                 },
               ],

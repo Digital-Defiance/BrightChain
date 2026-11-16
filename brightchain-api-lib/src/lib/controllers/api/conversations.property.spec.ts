@@ -104,9 +104,7 @@ describe('ConversationService – Property 2: Conversation inbox ordering', () =
 
           // Verify descending order by lastMessageAt
           for (let i = 0; i < result.items.length - 1; i++) {
-            expect(
-              result.items[i].lastMessageAt,
-            ).toBeGreaterThanOrEqual(
+            expect(result.items[i].lastMessageAt).toBeGreaterThanOrEqual(
               result.items[i + 1].lastMessageAt,
             );
           }

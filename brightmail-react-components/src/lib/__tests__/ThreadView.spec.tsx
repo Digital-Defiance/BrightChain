@@ -26,8 +26,8 @@ import ThreadView from '../ThreadView';
 const mockNavigate = jest.fn();
 const mockParams: Record<string, string> = { messageId: 'msg-thread-1' };
 
-jest.mock('react-router-dom', () => ({
-  ...jest.requireActual('react-router-dom'),
+jest.mock('react-router', () => ({
+  ...jest.requireActual('react-router'),
   useNavigate: () => mockNavigate,
   useParams: () => mockParams,
   Link: ({ children, to, ...props }: any) => (

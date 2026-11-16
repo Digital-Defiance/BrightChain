@@ -62,7 +62,10 @@ export class InMemoryHeadRegistry implements IHeadRegistry {
     return new Map(this.heads);
   }
 
-  getHeadTimestamp(dbName: string, collectionName: string): BrightDateTimestamp | undefined {
+  getHeadTimestamp(
+    dbName: string,
+    collectionName: string,
+  ): BrightDateTimestamp | undefined {
     return this.timestamps.get(this.makeKey(dbName, collectionName));
   }
 

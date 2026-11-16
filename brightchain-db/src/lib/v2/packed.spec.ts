@@ -1,8 +1,18 @@
-import { appendFile, copyFile, mkdtemp, open, readdir, readFile, rm, truncate, writeFile } from 'node:fs/promises';
+import {
+  appendFile,
+  copyFile,
+  mkdtemp,
+  open,
+  readdir,
+  readFile,
+  rm,
+  truncate,
+  writeFile,
+} from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { BrightDbV2StorageError } from './storage';
 import { PortableBrightDb } from './portable-database';
+import { BrightDbV2StorageError } from './storage';
 
 async function filesUnder(root: string): Promise<string[]> {
   const out: string[] = [];
@@ -17,7 +27,10 @@ async function filesUnder(root: string): Promise<string[]> {
   return out;
 }
 
-const packsOf = async (path: string) => (await readdir(join(path, 'packs')).catch(() => [])).filter((n) => n.endsWith('.pack'));
+const packsOf = async (path: string) =>
+  (await readdir(join(path, 'packs')).catch(() => [])).filter((n) =>
+    n.endsWith('.pack'),
+  );
 const looseOf = async (path: string) => filesUnder(join(path, 'blocks'));
 
 describe('BrightDB v2 packed extension', () => {
@@ -29,7 +42,8 @@ describe('BrightDB v2 packed extension', () => {
     await rm(dir, { recursive: true, force: true });
   });
 
-  const docs = (n: number, tag = 'a') => Array.from({ length: n }, (_, i) => ({ _id: `${tag}${i}`, n: i }));
+  const docs = (n: number, tag = 'a') =>
+    Array.from({ length: n }, (_, i) => ({ _id: `${tag}${i}`, n: i }));
 
   it('writes a commit as one pack, reads it back, and a second connection sees later commits', async () => {
     const path = join(dir, 'db');
@@ -39,18 +53,27 @@ describe('BrightDB v2 packed extension', () => {
     await db.collection('c').insertMany(docs(500));
     expect((await looseOf(path)).length).toBe(looseBefore); // nothing new is loose
     expect((await packsOf(path)).length).toBeGreaterThanOrEqual(2);
-    expect(await readFile(join(path, 'PACKED'), 'utf8')).toBe('BrightDB packs 1\n');
+    expect(await readFile(join(path, 'PACKED'), 'utf8')).toBe(
+      'BrightDB packs 1\n',
+    );
 
     const other = await PortableBrightDb.open({ path });
     expect((await other.collection('c').find({}).toArray()).length).toBe(500);
-    expect(await other.collection('c').findByIndex('by_n', { equals: [7] })).toEqual([{ _id: 'a7', n: 7 }]);
+    expect(
+      await other.collection('c').findByIndex('by_n', { equals: [7] }),
+    ).toEqual([{ _id: 'a7', n: 7 }]);
     await db.collection('c').insertOne({ _id: 'late', n: -1 });
-    expect(await other.collection('c').findById('late')).toEqual({ _id: 'late', n: -1 });
+    expect(await other.collection('c').findById('late')).toEqual({
+      _id: 'late',
+      n: -1,
+    });
     other.close();
     db.close();
 
     const reopened = await PortableBrightDb.open({ path });
-    expect((await reopened.collection('c').find({}).toArray()).length).toBe(501);
+    expect((await reopened.collection('c').find({}).toArray()).length).toBe(
+      501,
+    );
     reopened.close();
   });
 
@@ -83,10 +106,20 @@ describe('BrightDB v2 packed extension', () => {
     const db = await PortableBrightDb.open({ path, packed: true });
     await db.collection('c').insertMany(docs(200));
     for (let round = 0; round < 5; round++) {
-      for (let i = 0; i < 10; i++) await db.collection('c').replaceById(`a${i}`, { _id: `a${i}`, n: 1000 * (round + 1) + i });
+      for (let i = 0; i < 10; i++)
+        await db
+          .collection('c')
+          .replaceById(`a${i}`, { _id: `a${i}`, n: 1000 * (round + 1) + i });
     }
     await db.collection('c').deleteById('a199');
-    const size = async () => (await Promise.all((await packsOf(path)).map(async (p) => (await readFile(join(path, 'packs', p))).length))).reduce((a, b) => a + b, 0);
+    const size = async () =>
+      (
+        await Promise.all(
+          (await packsOf(path)).map(
+            async (p) => (await readFile(join(path, 'packs', p))).length,
+          ),
+        )
+      ).reduce((a, b) => a + b, 0);
     const before = await size();
 
     const dry = await db.collectGarbage({ graceMs: 0, dryRun: true });
@@ -97,19 +130,25 @@ describe('BrightDB v2 packed extension', () => {
     expect(real.removed).toBe(dry.removed);
     expect(await size()).toBeLessThan(before);
     expect((await db.collection('c').find({}).toArray()).length).toBe(199);
-    expect(await db.collection('c').findById('a3')).toEqual({ _id: 'a3', n: 5003 });
+    expect(await db.collection('c').findById('a3')).toEqual({
+      _id: 'a3',
+      n: 5003,
+    });
     expect((await db.collectGarbage({ graceMs: 0 })).removed).toBe(0);
     await db.collection('c').insertOne({ _id: 'after', n: 1 });
     db.close();
     const reopened = await PortableBrightDb.open({ path });
-    expect((await reopened.collection('c').find({}).toArray()).length).toBe(200);
+    expect((await reopened.collection('c').find({}).toArray()).length).toBe(
+      200,
+    );
     reopened.close();
   });
 
   it('merges many small packs into one without changing the data', async () => {
     const path = join(dir, 'db');
     const db = await PortableBrightDb.open({ path, packed: true });
-    for (let i = 0; i < 12; i++) await db.collection('c').insertOne({ _id: `d${i}`, n: i });
+    for (let i = 0; i < 12; i++)
+      await db.collection('c').insertOne({ _id: `d${i}`, n: i });
     const root = await db.root();
     expect((await packsOf(path)).length).toBeGreaterThan(5);
     const result = await db.compactPacks();
@@ -127,10 +166,17 @@ describe('BrightDB v2 packed extension', () => {
     const ring1 = { nameSecret, dataKeys: { 1: k1 }, currentVersion: 1 };
     const ring2 = { nameSecret, dataKeys: { 1: k1, 2: k2 }, currentVersion: 2 };
     const path = join(dir, 'db');
-    const db = await PortableBrightDb.open({ path, packed: true, encryption: { keyRing: ring1 } });
+    const db = await PortableBrightDb.open({
+      path,
+      packed: true,
+      encryption: { keyRing: ring1 },
+    });
     await db.collection('c').insertMany(docs(60));
     db.close();
-    const rotated = await PortableBrightDb.open({ path, encryption: { keyRing: ring2 } });
+    const rotated = await PortableBrightDb.open({
+      path,
+      encryption: { keyRing: ring2 },
+    });
     await rotated.collection('c').insertOne({ _id: 'late', n: 99 });
     await rotated.collectGarbage({ graceMs: 0 });
     const dry = await rotated.resealBlocks({ dryRun: true });
@@ -140,7 +186,12 @@ describe('BrightDB v2 packed extension', () => {
     expect((await rotated.resealBlocks()).resealed).toBe(0);
     rotated.close();
 
-    const newOnly = await PortableBrightDb.open({ path, encryption: { keyRing: { nameSecret, dataKeys: { 2: k2 }, currentVersion: 2 } } });
+    const newOnly = await PortableBrightDb.open({
+      path,
+      encryption: {
+        keyRing: { nameSecret, dataKeys: { 2: k2 }, currentVersion: 2 },
+      },
+    });
     expect((await newOnly.collection('c').find({}).toArray()).length).toBe(61);
     newOnly.close();
   });
@@ -157,14 +208,18 @@ describe('BrightDB v2 packed extension', () => {
     expect((await fine.collection('c').find({}).toArray()).length).toBe(20);
     const swept = await fine.collectGarbage({ graceMs: 0 });
     expect(swept.removed).toBeGreaterThanOrEqual(1);
-    expect(await readdir(join(path, 'packs'))).not.toContain('.brightdb-deadbeef.tmp');
+    expect(await readdir(join(path, 'packs'))).not.toContain(
+      '.brightdb-deadbeef.tmp',
+    );
     fine.close();
 
     // A damaged pack is an error, never a silently smaller database.
     const [victim] = await packsOf(path);
     await truncate(join(path, 'packs', victim), 40);
     await expect(
-      PortableBrightDb.open({ path }).then((d) => d.collection('c').find({}).toArray()),
+      PortableBrightDb.open({ path }).then((d) =>
+        d.collection('c').find({}).toArray(),
+      ),
     ).rejects.toThrow(BrightDbV2StorageError);
     await appendFile(join(path, 'packs', victim), 'x');
   });
@@ -175,7 +230,11 @@ describe('BrightDB v2 packed extension', () => {
     await db.collection('c').insertMany(docs(100));
     const root = await db.root();
     // Copy every pack under a new name: the state a crash leaves after a rewrite wrote the new pack but not yet removed the old.
-    for (const pack of await packsOf(path)) await copyFile(join(path, 'packs', pack), join(path, 'packs', `${'0'.repeat(31)}${pack.slice(0, 1)}.pack`));
+    for (const pack of await packsOf(path))
+      await copyFile(
+        join(path, 'packs', pack),
+        join(path, 'packs', `${'0'.repeat(31)}${pack.slice(0, 1)}.pack`),
+      );
     const again = await PortableBrightDb.open({ path });
     expect((await again.collection('c').find({}).toArray()).length).toBe(100);
     expect(await again.root()).toBe(root);
@@ -198,7 +257,9 @@ describe('BrightDB v2 packed extension', () => {
     await handle.write(byte, 0, 1, 40);
     await handle.close();
     const reopened = await PortableBrightDb.open({ path });
-    await expect(reopened.collection('c').find({}).toArray()).rejects.toThrow(/digest mismatch|cannot be decrypted/u);
+    await expect(reopened.collection('c').find({}).toArray()).rejects.toThrow(
+      /digest mismatch|cannot be decrypted/u,
+    );
     reopened.close();
   });
 
@@ -207,7 +268,9 @@ describe('BrightDB v2 packed extension', () => {
     const db = await PortableBrightDb.open({ path, packed: true });
     await db.collection('c').insertMany(docs(30));
     const copy = await db.fork(join(dir, 'fork'));
-    expect(await readFile(join(dir, 'fork', 'PACKED'), 'utf8')).toBe('BrightDB packs 1\n');
+    expect(await readFile(join(dir, 'fork', 'PACKED'), 'utf8')).toBe(
+      'BrightDB packs 1\n',
+    );
     expect((await copy.collection('c').find({}).toArray()).length).toBe(30);
     await copy.collection('c').insertOne({ _id: 'x', n: 1 });
     await db.merge(copy);

@@ -127,9 +127,9 @@ export class AnalyticsController<
     until: Date | undefined;
     signalTypes: HeartbeatSignalType[] | undefined;
   } {
-    const sinceParam = req.query.since as string | undefined;
-    const untilParam = req.query.until as string | undefined;
-    const signalTypesParam = req.query.signalTypes as string | undefined;
+    const sinceParam = req.query['since'] as string | undefined;
+    const untilParam = req.query['until'] as string | undefined;
+    const signalTypesParam = req.query['signalTypes'] as string | undefined;
 
     const since = sinceParam ? new Date(sinceParam) : undefined;
     const until = untilParam ? new Date(untilParam) : undefined;
@@ -180,7 +180,9 @@ export class AnalyticsController<
     | { ok: true; connectionId: TID }
     | { ok: false; response: IStatusCodeResponse<AnalyticsResponse> }
   > {
-    const connectionId = this.safeParseId(req.params.id as string | undefined);
+    const connectionId = this.safeParseId(
+      req.params['id'] as string | undefined,
+    );
     if (!connectionId) {
       return {
         ok: false,
@@ -469,7 +471,7 @@ export class AnalyticsController<
     const authResult = this.validateAuth(req);
     if (isErrorResult(authResult)) return authResult.response;
 
-    const connectionIdsParam = req.query.connectionIds as string | undefined;
+    const connectionIdsParam = req.query['connectionIds'] as string | undefined;
     if (!connectionIdsParam) {
       return {
         statusCode: 400,
@@ -634,7 +636,7 @@ export class AnalyticsController<
     );
     if (isErrorResult(ownerResult)) return ownerResult.response;
 
-    const format = req.query.format as string | undefined;
+    const format = req.query['format'] as string | undefined;
     if (!format || (format !== 'csv' && format !== 'json')) {
       return {
         statusCode: 400,

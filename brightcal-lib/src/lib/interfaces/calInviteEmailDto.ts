@@ -1,5 +1,5 @@
 import { PlatformID } from '@digitaldefiance/ecies-lib';
-import { ITipMethod, ParticipationStatus } from '../enums';
+import { ITipMethod } from '../enums';
 import { IAttendeeDTO } from './attendeeDto';
 
 /**

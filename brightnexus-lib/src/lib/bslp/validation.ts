@@ -36,14 +36,28 @@ function validateVector(vector: IBrightSpacetimeVector | undefined): string[] {
     errors.push('vector is required');
     return errors;
   }
-  if (typeof vector.lat !== 'number' || vector.lat < LAT_MIN || vector.lat > LAT_MAX) {
+  if (
+    typeof vector.lat !== 'number' ||
+    vector.lat < LAT_MIN ||
+    vector.lat > LAT_MAX
+  ) {
     errors.push(`lat must be a number between ${LAT_MIN} and ${LAT_MAX}`);
   }
-  if (typeof vector.lon !== 'number' || vector.lon < LON_MIN || vector.lon > LON_MAX) {
+  if (
+    typeof vector.lon !== 'number' ||
+    vector.lon < LON_MIN ||
+    vector.lon > LON_MAX
+  ) {
     errors.push(`lon must be a number between ${LON_MIN} and ${LON_MAX}`);
   }
-  if (typeof vector.alt !== 'number' || vector.alt < ALT_MIN || vector.alt > ALT_MAX) {
-    errors.push(`alt must be a number between ${ALT_MIN} and ${ALT_MAX} meters`);
+  if (
+    typeof vector.alt !== 'number' ||
+    vector.alt < ALT_MIN ||
+    vector.alt > ALT_MAX
+  ) {
+    errors.push(
+      `alt must be a number between ${ALT_MIN} and ${ALT_MAX} meters`,
+    );
   }
   if (typeof vector.epoch !== 'string' || vector.epoch.trim().length === 0) {
     errors.push('epoch must be a non-empty string');
@@ -51,7 +65,9 @@ function validateVector(vector: IBrightSpacetimeVector | undefined): string[] {
   return errors;
 }
 
-function validatePrivacy(privacy: IBrightSpacetimePrivacy | undefined): string[] {
+function validatePrivacy(
+  privacy: IBrightSpacetimePrivacy | undefined,
+): string[] {
   const errors: string[] = [];
   if (!privacy || typeof privacy !== 'object') {
     errors.push('privacy is required');
@@ -61,7 +77,9 @@ function validatePrivacy(privacy: IBrightSpacetimePrivacy | undefined): string[]
     privacy.mode !== BslpPrivacyMode.Exact &&
     privacy.mode !== BslpPrivacyMode.Heisenberg
   ) {
-    errors.push(`privacy.mode must be "${BslpPrivacyMode.Exact}" or "${BslpPrivacyMode.Heisenberg}"`);
+    errors.push(
+      `privacy.mode must be "${BslpPrivacyMode.Exact}" or "${BslpPrivacyMode.Heisenberg}"`,
+    );
   }
   if (
     typeof privacy.injectedDelayMd !== 'number' ||
@@ -84,7 +102,10 @@ function validatePrivacy(privacy: IBrightSpacetimePrivacy | undefined): string[]
       );
     }
   }
-  if (privacy.mode === BslpPrivacyMode.Heisenberg && privacy.fuzzRadiusKm <= 0) {
+  if (
+    privacy.mode === BslpPrivacyMode.Heisenberg &&
+    privacy.fuzzRadiusKm <= 0
+  ) {
     errors.push('privacy.mode "heisenberg" requires fuzzRadiusKm > 0');
   }
   return errors;
@@ -105,8 +126,13 @@ export function validateLocationPublishRequest(
   }
   errors.push(...validateVector(body.vector));
   errors.push(...validatePrivacy(body.privacy));
-  if (typeof body.signature !== 'string' || body.signature.trim().length === 0) {
-    errors.push('signature is required (hex ECDSA over canonical BSLP payload)');
+  if (
+    typeof body.signature !== 'string' ||
+    body.signature.trim().length === 0
+  ) {
+    errors.push(
+      'signature is required (hex ECDSA over canonical BSLP payload)',
+    );
   }
   return { valid: errors.length === 0, errors };
 }

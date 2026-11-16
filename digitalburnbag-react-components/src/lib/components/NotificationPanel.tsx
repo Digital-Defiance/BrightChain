@@ -1,6 +1,5 @@
 import { DigitalBurnbagStrings } from '@brightchain/digitalburnbag-lib';
 import { useI18n } from '@digitaldefiance/express-suite-react-components';
-import { formatDateWithBD } from '../utils/formatBrightDate';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import {
   Badge,
@@ -13,6 +12,7 @@ import {
   Typography,
 } from '@mui/material';
 import React, { useCallback, useState } from 'react';
+import { formatDateWithBD } from '../utils/formatBrightDate';
 
 export interface INotificationDisplay {
   id: string;

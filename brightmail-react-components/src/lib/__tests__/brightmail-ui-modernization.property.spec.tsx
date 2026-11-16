@@ -124,8 +124,8 @@ jest.mock('@digitaldefiance/express-suite-react-components', () => ({
   }),
 }));
 
-jest.mock('react-router-dom', () => {
-  const actual = jest.requireActual('react-router-dom');
+jest.mock('react-router', () => {
+  const actual = jest.requireActual('react-router');
   return {
     ...actual,
     useNavigate: () => jest.fn(),

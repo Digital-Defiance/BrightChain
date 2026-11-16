@@ -4,10 +4,7 @@ import type {
   IBrightSpacetimeVector,
   IBrightSpacetimeWellKnownManifest,
 } from '../interfaces/bright-spacetime';
-import {
-  BSLP_PROTOCOL,
-  BSLP_VERSION,
-} from '../interfaces/bright-spacetime';
+import { BSLP_PROTOCOL, BSLP_VERSION } from '../interfaces/bright-spacetime';
 
 export function toWellKnownManifest(
   nodeId: string | undefined,

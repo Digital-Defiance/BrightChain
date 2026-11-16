@@ -12,9 +12,7 @@
  * Feature: canary-provider-expansion
  * Requirements: 9.1, 9.2, 9.6
  */
-import type {
-  IMultiCanaryBindingService,
-} from '@brightchain/digitalburnbag-lib';
+import type { IMultiCanaryBindingService } from '@brightchain/digitalburnbag-lib';
 import {
   DigitalBurnbagStrings,
   getDigitalBurnbagTranslation,
@@ -41,7 +39,9 @@ type BindingResponse = IApiMessageResponse | ApiErrorResponse;
 // ---------------------------------------------------------------------------
 
 /** Convert a TID to a string for JSON-safe responses. */
-function sid<TID extends PlatformID>(value: TID | undefined | null): string | null {
+function sid<TID extends PlatformID>(
+  value: TID | undefined | null,
+): string | null {
   if (value === undefined || value === null) return null;
   if (value instanceof Uint8Array || Buffer.isBuffer(value)) {
     return Buffer.from(value).toString('hex');
@@ -223,7 +223,8 @@ export class MultiCanaryBindingController<
         response: serializeBinding(binding) as unknown as IApiMessageResponse,
       };
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to create binding';
+      const message =
+        err instanceof Error ? err.message : 'Failed to create binding';
       return {
         statusCode: 400,
         response: {
@@ -293,7 +294,7 @@ export class MultiCanaryBindingController<
       };
     }
 
-    const bindingId = this.safeParseId(req.params.id as string | undefined);
+    const bindingId = this.safeParseId(req.params['id'] as string | undefined);
     if (!bindingId) {
       return {
         statusCode: 400,
@@ -352,7 +353,7 @@ export class MultiCanaryBindingController<
       };
     }
 
-    const bindingId = this.safeParseId(req.params.id as string | undefined);
+    const bindingId = this.safeParseId(req.params['id'] as string | undefined);
     if (!bindingId) {
       return {
         statusCode: 400,
@@ -371,38 +372,38 @@ export class MultiCanaryBindingController<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const updates: Record<string, any> = {};
 
-    if (body.name !== undefined) updates.name = body.name;
+    if (body.name !== undefined) updates['name'] = body.name;
     if (body.redundancyPolicy !== undefined)
-      updates.redundancyPolicy = body.redundancyPolicy;
+      updates['redundancyPolicy'] = body.redundancyPolicy;
     if (body.providerWeights !== undefined)
-      updates.providerWeights = body.providerWeights;
+      updates['providerWeights'] = body.providerWeights;
     if (body.weightedThresholdPercent !== undefined)
-      updates.weightedThresholdPercent = body.weightedThresholdPercent;
+      updates['weightedThresholdPercent'] = body.weightedThresholdPercent;
     if (body.protocolAction !== undefined)
-      updates.protocolAction = body.protocolAction;
+      updates['protocolAction'] = body.protocolAction;
     if (body.canaryCondition !== undefined)
-      updates.canaryCondition = body.canaryCondition;
+      updates['canaryCondition'] = body.canaryCondition;
     if (body.absenceThresholdMs !== undefined)
-      updates.absenceThresholdMs = body.absenceThresholdMs;
-    if (body.isActive !== undefined) updates.isActive = body.isActive;
+      updates['absenceThresholdMs'] = body.absenceThresholdMs;
+    if (body.isActive !== undefined) updates['isActive'] = body.isActive;
 
     if (body.providerConnectionIds !== undefined) {
-      updates.providerConnectionIds = (
+      updates['providerConnectionIds'] = (
         body.providerConnectionIds as string[]
       ).map((id: string) => this.deps.parseId(id));
     }
     if (body.vaultContainerIds !== undefined) {
-      updates.vaultContainerIds = (body.vaultContainerIds as string[]).map(
+      updates['vaultContainerIds'] = (body.vaultContainerIds as string[]).map(
         (id: string) => this.deps.parseId(id),
       );
     }
     if (body.fileIds !== undefined) {
-      updates.fileIds = (body.fileIds as string[]).map((id: string) =>
+      updates['fileIds'] = (body.fileIds as string[]).map((id: string) =>
         this.deps.parseId(id),
       );
     }
     if (body.folderIds !== undefined) {
-      updates.folderIds = (body.folderIds as string[]).map((id: string) =>
+      updates['folderIds'] = (body.folderIds as string[]).map((id: string) =>
         this.deps.parseId(id),
       );
     }
@@ -425,8 +426,12 @@ export class MultiCanaryBindingController<
         response: {
           message,
           error: isNotFound
-            ? getDigitalBurnbagTranslation(DigitalBurnbagStrings.Api_Http_NotFound)
-            : getDigitalBurnbagTranslation(DigitalBurnbagStrings.Api_Http_BadRequest),
+            ? getDigitalBurnbagTranslation(
+                DigitalBurnbagStrings.Api_Http_NotFound,
+              )
+            : getDigitalBurnbagTranslation(
+                DigitalBurnbagStrings.Api_Http_BadRequest,
+              ),
         } as unknown as BindingResponse,
       };
     }
@@ -454,7 +459,7 @@ export class MultiCanaryBindingController<
       };
     }
 
-    const bindingId = this.safeParseId(req.params.id as string | undefined);
+    const bindingId = this.safeParseId(req.params['id'] as string | undefined);
     if (!bindingId) {
       return {
         statusCode: 400,
@@ -486,10 +491,16 @@ export class MultiCanaryBindingController<
         response: {
           message,
           error: isNotFound
-            ? getDigitalBurnbagTranslation(DigitalBurnbagStrings.Api_Http_NotFound)
+            ? getDigitalBurnbagTranslation(
+                DigitalBurnbagStrings.Api_Http_NotFound,
+              )
             : isUnauthorized
-              ? getDigitalBurnbagTranslation(DigitalBurnbagStrings.Api_Http_Forbidden)
-              : getDigitalBurnbagTranslation(DigitalBurnbagStrings.Api_Http_BadRequest),
+              ? getDigitalBurnbagTranslation(
+                  DigitalBurnbagStrings.Api_Http_Forbidden,
+                )
+              : getDigitalBurnbagTranslation(
+                  DigitalBurnbagStrings.Api_Http_BadRequest,
+                ),
         } as unknown as BindingResponse,
       };
     }
@@ -519,7 +530,7 @@ export class MultiCanaryBindingController<
     }
 
     const targetId = this.safeParseId(
-      req.params.targetId as string | undefined,
+      req.params['targetId'] as string | undefined,
     );
     if (!targetId) {
       return {
@@ -534,7 +545,8 @@ export class MultiCanaryBindingController<
     }
 
     // Parse optional targetType query param (defaults to 'vault')
-    const targetType = (req.query.targetType as 'vault' | 'file' | 'folder') ?? 'vault';
+    const targetType =
+      (req.query['targetType'] as 'vault' | 'file' | 'folder') ?? 'vault';
 
     const bindings =
       await this.deps.multiCanaryBindingService.getBindingsForTarget(

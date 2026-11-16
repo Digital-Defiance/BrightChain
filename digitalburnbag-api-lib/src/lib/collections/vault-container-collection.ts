@@ -122,16 +122,14 @@ export class BrightDBVaultContainerRepository<TID extends PlatformID>
     const folderDocs = await this.folders
       .find(filter({ vaultContainerId: containerId }, this.ids))
       .toArray();
-    const folderIds = folderDocs.map(
-      (d) => (d as Record<string, unknown>)._id as string,
-    );
+    const folderIds = folderDocs.map((d) => d._id as string);
     if (folderIds.length === 0) return [];
 
     const fileDocs = await this.fileMetadata
       .find({ folderId: { $in: folderIds } })
       .toArray();
     return fileDocs.map((d) => {
-      const id = (d as Record<string, unknown>)._id as string;
+      const id = d._id as string;
       return this.ids.parseId(id);
     });
   }
@@ -142,9 +140,7 @@ export class BrightDBVaultContainerRepository<TID extends PlatformID>
     const folderDocs = await this.folders
       .find(filter({ vaultContainerId: containerId }, this.ids))
       .toArray();
-    const folderIds = folderDocs.map(
-      (d) => (d as Record<string, unknown>)._id as string,
-    );
+    const folderIds = folderDocs.map((d) => d._id as string);
     if (folderIds.length === 0) return [];
 
     const fileDocs = await this.fileMetadata
@@ -159,9 +155,7 @@ export class BrightDBVaultContainerRepository<TID extends PlatformID>
     const folderDocs = await this.folders
       .find(filter({ vaultContainerId: containerId }, this.ids))
       .toArray();
-    const folderIds = folderDocs.map(
-      (d) => (d as Record<string, unknown>)._id as string,
-    );
+    const folderIds = folderDocs.map((d) => d._id as string);
     if (folderIds.length === 0) return 0;
     return this.fileMetadata.countDocuments({
       folderId: { $in: folderIds },

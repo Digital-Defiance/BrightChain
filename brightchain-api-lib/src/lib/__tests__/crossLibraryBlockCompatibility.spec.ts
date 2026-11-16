@@ -181,7 +181,7 @@ describe('Cross-Library Block Compatibility', () => {
       const addressList = Buffer.alloc(0);
       const result = cblService.makeCblHeader(
         testMember,
-        new Date(),
+        brightDateNow(),
         2, // addressCount
         200, // originalDataLength
         addressList,
@@ -197,7 +197,7 @@ describe('Cross-Library Block Compatibility', () => {
       const addressList = Buffer.alloc(0);
       const result = cblService.makeCblHeader(
         testMember,
-        new Date(),
+        brightDateNow(),
         1, // addressCount
         100, // originalDataLength
         addressList,
@@ -217,7 +217,7 @@ describe('Cross-Library Block Compatibility', () => {
 
       const result = cblService.makeCblHeader(
         testMember,
-        testDate,
+        dateToBrightDate(testDate),
         addressCount,
         dataLength,
         addressList,
@@ -236,7 +236,7 @@ describe('Cross-Library Block Compatibility', () => {
       const addressList = Buffer.alloc(0);
       const result = cblService.makeCblHeader(
         testMember,
-        new Date(),
+        brightDateNow(),
         1,
         100,
         addressList,
@@ -439,7 +439,7 @@ describe('Cross-Library Block Compatibility', () => {
       const addressList = Buffer.alloc(0);
       const result = cblService.makeCblHeader(
         testMember,
-        new Date(),
+        brightDateNow(),
         1,
         100,
         addressList,
@@ -461,7 +461,7 @@ describe('Cross-Library Block Compatibility', () => {
 
       const result = cblService.makeCblHeader(
         testMember,
-        new Date(),
+        brightDateNow(),
         1,
         100,
         addressList,
@@ -483,7 +483,7 @@ describe('Cross-Library Block Compatibility', () => {
 
       const result = cblService.makeCblHeader(
         testMember,
-        new Date(),
+        brightDateNow(),
         1,
         100,
         addressList,
@@ -515,7 +515,7 @@ describe('Cross-Library Block Compatibility', () => {
 
       const result = cblService.makeSuperCblHeader(
         testMember,
-        new Date(),
+        brightDateNow(),
         subCblCount, // subCblCount
         10, // totalBlockCount
         1, // depth
@@ -550,7 +550,7 @@ describe('Cross-Library Block Compatibility', () => {
 
       const result = cblService.makeSuperCblHeader(
         testMember,
-        new Date(),
+        brightDateNow(),
         subCblCount,
         totalBlockCount,
         depth,

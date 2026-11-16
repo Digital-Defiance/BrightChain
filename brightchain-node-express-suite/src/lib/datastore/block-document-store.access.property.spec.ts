@@ -62,6 +62,13 @@ describe('BlockDocumentStore Access Control Property Tests', () => {
     );
   });
 
+  /** Document metadata stores member IDs as hex strings. */
+  function toHex(id: GuidV4Buffer): HexString {
+    return ServiceProvider.getInstance<GuidV4Buffer>().idProvider.toString(
+      id,
+      'hex',
+    ) as HexString;
+  }
   /**
    * Helper to create a test member with random data
    */
@@ -116,7 +123,7 @@ describe('BlockDocumentStore Access Control Property Tests', () => {
 
             // Create 3 members
             const memberData: IMemberWithMnemonic<GuidV4Buffer>[] = [];
-            const memberIds: HexString[] = [];
+            const memberIds: GuidV4Buffer[] = [];
 
             for (let i = 0; i < 3; i++) {
               const uniqueSuffix = `${timestamp}${random}${i}`;
@@ -159,7 +166,7 @@ describe('BlockDocumentStore Access Control Property Tests', () => {
             }
 
             // Check access for member 0
-            const member0Id = memberIds[0];
+            const member0Id = toHex(memberIds[0]);
             const accessibleToMember0 =
               await collection.findAccessibleBy(member0Id);
 
@@ -205,7 +212,7 @@ describe('BlockDocumentStore Access Control Property Tests', () => {
             const random = Math.floor(Math.random() * 1000000);
 
             // Create 2 members
-            const memberIds: HexString[] = [];
+            const memberIds: GuidV4Buffer[] = [];
             for (let i = 0; i < 2; i++) {
               const uniqueSuffix = `${timestamp}${random}${i}`;
               const memberWithMnemonic = createTestMember(
@@ -233,7 +240,10 @@ describe('BlockDocumentStore Access Control Property Tests', () => {
 
             // Both members should have access
             for (const memberId of memberIds) {
-              const hasAccess = await collection.hasAccess(doc._id!, memberId);
+              const hasAccess = await collection.hasAccess(
+                doc._id!,
+                toHex(memberId),
+              );
               expect(hasAccess).toBe(true);
             }
 

@@ -102,7 +102,10 @@ export interface IHeadRegistry {
    *
    * @see Requirements 2.2, 2.3
    */
-  getHeadTimestamp(dbName: string, collectionName: string): BrightDateTimestamp | undefined;
+  getHeadTimestamp(
+    dbName: string,
+    collectionName: string,
+  ): BrightDateTimestamp | undefined;
 
   /**
    * Merge a remote head update using last-writer-wins conflict resolution.

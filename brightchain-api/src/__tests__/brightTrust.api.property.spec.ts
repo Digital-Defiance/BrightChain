@@ -14,9 +14,9 @@
  */
 
 import {
+  brightDateToDate,
   BrightTrustMemberMetadata,
   BrightTrustService,
-  brightDateToDate,
   initializeBrightChain,
   ServiceLocator,
   ServiceProvider,

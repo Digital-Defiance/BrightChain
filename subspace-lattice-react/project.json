@@ -26,6 +26,9 @@
       "options": {
         "jestConfig": "subspace-lattice-react/jest.config.ts"
       }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
     }
   }
 }

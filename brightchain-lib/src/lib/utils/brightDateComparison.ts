@@ -14,6 +14,6 @@
  */
 
 export {
-  isInRange as isInBrightDateRange,
   sortComparator as compareBrightDates,
+  isInRange as isInBrightDateRange,
 } from '@brightchain/brightdate';

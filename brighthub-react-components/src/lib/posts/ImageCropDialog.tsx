@@ -262,6 +262,7 @@ const ImageCropDialog: FC<ImageCropDialogProps> = ({
     croppedAreaPixels,
     imageObjectUrl,
     imageFile.type,
+    scalePercent,
     onCropComplete,
     onSkip,
   ]);
@@ -327,12 +328,8 @@ const ImageCropDialog: FC<ImageCropDialogProps> = ({
                   key={opt.label}
                   label={opt.label}
                   size="small"
-                  variant={
-                    selectedAspect === opt.value ? 'filled' : 'outlined'
-                  }
-                  color={
-                    selectedAspect === opt.value ? 'primary' : 'default'
-                  }
+                  variant={selectedAspect === opt.value ? 'filled' : 'outlined'}
+                  color={selectedAspect === opt.value ? 'primary' : 'default'}
                   onClick={() => setSelectedAspect(opt.value)}
                   data-testid={`aspect-${opt.label}`}
                 />
@@ -366,16 +363,21 @@ const ImageCropDialog: FC<ImageCropDialogProps> = ({
                 min={MIN_SCALE}
                 max={MAX_SCALE}
                 step={1}
-                onChange={(_: Event | React.SyntheticEvent, v: number | number[]) =>
-                  setScalePercent(v as number)
-                }
+                onChange={(
+                  _: Event | React.SyntheticEvent,
+                  v: number | number[],
+                ) => setScalePercent(v as number)}
                 valueLabelDisplay="auto"
                 valueLabelFormat={(v) => `${v}%`}
                 aria-labelledby="image-scale-slider-label"
                 data-testid="image-scale-slider"
                 sx={{ flex: 1 }}
               />
-              <Typography variant="caption" color="text.secondary" sx={{ minWidth: 36 }}>
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                sx={{ minWidth: 36 }}
+              >
                 {scalePercent}%
               </Typography>
             </Box>

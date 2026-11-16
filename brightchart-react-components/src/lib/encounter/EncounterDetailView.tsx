@@ -188,8 +188,7 @@ export const EncounterDetailView: React.FC<EncounterDetailViewProps> = ({
         <section className="encounter-detail__section">
           <h3 className="encounter-detail__heading">Period</h3>
           <p className="encounter-detail__value">
-            {fmtDate(encounter.period.start)} –{' '}
-            {fmtDate(encounter.period.end)}
+            {fmtDate(encounter.period.start)} – {fmtDate(encounter.period.end)}
           </p>
         </section>
       )}

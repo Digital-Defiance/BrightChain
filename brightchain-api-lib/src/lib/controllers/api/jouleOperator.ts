@@ -374,7 +374,7 @@ export class JouleOperatorController<
       const table = {
         version,
         effectiveAt,
-        entries: entries as any,
+        entries,
         signedBy: typeof signedBy === 'string' ? [signedBy] : [],
       } as Parameters<RateTableCache['addRateTable']>[0];
       this.rateTableCache.addRateTable(table);

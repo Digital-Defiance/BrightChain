@@ -29,7 +29,11 @@ import {
   MemberType,
   SecureString,
 } from '@digitaldefiance/ecies-lib';
-import { ECIESService, Member } from '@digitaldefiance/node-ecies-lib';
+import {
+  ECIESService,
+  GuidV4Buffer,
+  Member,
+} from '@digitaldefiance/node-ecies-lib';
 import { SystemUserService } from '@digitaldefiance/node-express-suite';
 import * as bcrypt from 'bcrypt';
 import * as fc from 'fast-check';
@@ -208,7 +212,7 @@ describe('AuthService Password Property-Based Tests', () => {
             // Look up the member to get the raw ID bytes
             const refs = await memberStore.queryIndex({ name: username });
             expect(refs.length).toBe(1);
-            const memberId = refs[0].id as Uint8Array;
+            const memberId = refs[0].id as GuidV4Buffer;
 
             // Change the password
             await authService.changePassword(
@@ -270,7 +274,7 @@ describe('AuthService Password Property-Based Tests', () => {
             // Look up the member to get the raw ID bytes
             const refs = await memberStore.queryIndex({ name: username });
             expect(refs.length).toBe(1);
-            const memberId = refs[0].id as Uint8Array;
+            const memberId = refs[0].id as GuidV4Buffer;
 
             // Capture the stored hash before the failed attempt
             const hashBefore = await authService.getPasswordHash(memberId);

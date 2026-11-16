@@ -9,8 +9,8 @@
  * Uint8Array for backend node IDs).
  */
 
-import { PoolId } from './pooledBlockStore';
 import type { BrightDateTimestamp } from '../../types/brightDateTimestamp';
+import { PoolId } from './pooledBlockStore';
 
 /**
  * Encryption modes for pool storage.

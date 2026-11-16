@@ -14,14 +14,17 @@
  */
 
 import { ITipMethod } from '@brightchain/brightcal-lib';
-import type { ITipMessage } from '../calendarNotificationService.ts';
-import type { IMailSender, IOutboundEmail } from '../itipMailDeliveryService.ts';
-import { ItipMailDeliveryService } from '../itipMailDeliveryService.ts';
+import type { ITipMessage } from '../calendarNotificationService.js';
+import type {
+  IMailSender,
+  IOutboundEmail,
+} from '../itipMailDeliveryService.js';
+import { ItipMailDeliveryService } from '../itipMailDeliveryService.js';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function makeMessage(
-  method: string,
+  method: ITipMethod,
   uid: string,
   recipients: string[],
 ): ITipMessage {
@@ -54,8 +57,8 @@ describe('ItipMailDeliveryService', () => {
   describe('flushQueue', () => {
     it('sends one email per queued iTIP message', async () => {
       const msgs = [
-        makeMessage('REQUEST', 'uid-1', ['alice@example.com']),
-        makeMessage('REQUEST', 'uid-2', ['bob@example.com']),
+        makeMessage(ITipMethod.Request, 'uid-1', ['alice@example.com']),
+        makeMessage(ITipMethod.Request, 'uid-2', ['bob@example.com']),
       ];
       const notifier = makeNotificationService(msgs);
       const sender = makeMailSender();
@@ -73,7 +76,7 @@ describe('ItipMailDeliveryService', () => {
 
     it('clears the queue before dispatching', async () => {
       const notifier = makeNotificationService([
-        makeMessage('REQUEST', 'uid-1', ['alice@example.com']),
+        makeMessage(ITipMethod.Request, 'uid-1', ['alice@example.com']),
       ]);
       const sender = makeMailSender();
       const svc = new ItipMailDeliveryService(
@@ -104,8 +107,8 @@ describe('ItipMailDeliveryService', () => {
 
     it('continues sending remaining messages after a per-message failure', async () => {
       const msgs = [
-        makeMessage('REQUEST', 'uid-1', ['bad@example.com']),
-        makeMessage('REQUEST', 'uid-2', ['good@example.com']),
+        makeMessage(ITipMethod.Request, 'uid-1', ['bad@example.com']),
+        makeMessage(ITipMethod.Request, 'uid-2', ['good@example.com']),
       ];
       const notifier = makeNotificationService(msgs);
       const sender = makeMailSender();
@@ -127,7 +130,9 @@ describe('ItipMailDeliveryService', () => {
     });
 
     it('sets the correct iTIP method on the calendar email', async () => {
-      const msgs = [makeMessage('CANCEL', 'uid-cancel', ['alice@example.com'])];
+      const msgs = [
+        makeMessage(ITipMethod.Cancel, 'uid-cancel', ['alice@example.com']),
+      ];
       const notifier = makeNotificationService(msgs);
       const sender = makeMailSender();
       const svc = new ItipMailDeliveryService(
@@ -145,7 +150,7 @@ describe('ItipMailDeliveryService', () => {
 
     it('uses subject "Cancelled: Calendar Event" for CANCEL method', async () => {
       const notifier = makeNotificationService([
-        makeMessage('CANCEL', 'uid-1', ['alice@example.com']),
+        makeMessage(ITipMethod.Cancel, 'uid-1', ['alice@example.com']),
       ]);
       const sender = makeMailSender();
       const svc = new ItipMailDeliveryService(
@@ -227,12 +232,12 @@ describe('ItipMailDeliveryService', () => {
   });
 
   describe('method subjects', () => {
-    const cases: Array<[string, RegExp]> = [
-      ['REQUEST', /calendar invite/i],
-      ['REPLY', /response to calendar invite/i],
-      ['CANCEL', /cancelled/i],
-      ['COUNTER', /counter-proposal/i],
-      ['DECLINECOUNTER', /counter declined/i],
+    const cases: Array<[ITipMethod, RegExp]> = [
+      [ITipMethod.Request, /calendar invite/i],
+      [ITipMethod.Reply, /response to calendar invite/i],
+      [ITipMethod.Cancel, /cancelled/i],
+      [ITipMethod.Counter, /counter-proposal/i],
+      [ITipMethod.DeclineCounter, /counter declined/i],
     ];
 
     it.each(cases)(
