@@ -132,6 +132,8 @@ describe('Brand vocabulary lint', () => {
         )
         .join('\n');
       throw new Error(
+        // This test enforces the vocabulary rule, so its report must name the forbidden terms.
+        // eslint-disable-next-line no-restricted-syntax
         `Found ${sourceViolations.length} forbidden vocabulary violation(s):\n${report}\n\nForbidden: coin, holder, tokenomics, airdrop, staking, marketCap\nAllowed: issue, transfer, burn, freeze, attest, asset, account, balance, entry, receipt`,
       );
     }

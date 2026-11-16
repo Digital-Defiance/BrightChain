@@ -23,6 +23,7 @@ import type {
 import { RESOURCE_CLASSES } from '@brightchain/brightchain-lib';
 import { AssetIdBuffer } from '../assetId.js';
 import { ActionKind } from './actionKind.js';
+import { MEMO_MAX_BYTES } from './memoLimits.js';
 
 /** The canonical `kind` discriminant string written on-ledger. */
 export const RATE_TABLE_UPDATE_KIND = 'rate_table_update' as const;
@@ -85,7 +86,8 @@ export type RateTableUpdateValidationError =
     }
   | { code: 'EFFECTIVE_AT_NOT_FUTURE'; effectiveAt: number; now: number }
   | { code: 'MISSING_RESOURCE_CLASS'; missingClass: ResourceClass }
-  | { code: 'INVALID_RATE'; cls: ResourceClass; reason: string };
+  | { code: 'INVALID_RATE'; cls: ResourceClass; reason: string }
+  | { code: 'MEMO_TOO_LONG'; length: number; max: number };
 
 /**
  * Validate a proposed `IRateTable` against the current active version and
@@ -94,14 +96,24 @@ export type RateTableUpdateValidationError =
  * @param proposed   - Incoming rate table to validate.
  * @param currentVersion - Version number of the currently active table (0 = none).
  * @param nowMs      - Current ledger timestamp in Unix milliseconds.
+ * @param action     - The action carrying the optional memo; must be <= `MEMO_MAX_BYTES`.
  * @returns `[]` when valid, or an array of validation errors.
  */
 export function validateRateTableUpdate(
   proposed: IRateTable,
   currentVersion: number,
   nowMs: number,
+  action: Pick<IRateTableUpdateAction, 'memo'>,
 ): RateTableUpdateValidationError[] {
   const errors: RateTableUpdateValidationError[] = [];
+  const { memo } = action;
+  if (memo !== undefined && memo.length > MEMO_MAX_BYTES) {
+    errors.push({
+      code: 'MEMO_TOO_LONG',
+      length: memo.length,
+      max: MEMO_MAX_BYTES,
+    });
+  }
 
   if (proposed.version <= currentVersion) {
     errors.push({

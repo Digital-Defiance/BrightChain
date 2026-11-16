@@ -14,6 +14,7 @@
 
 import { AssetIdBuffer } from '../assetId.js';
 import { ActionKind } from './actionKind.js';
+import { MEMO_MAX_BYTES } from './memoLimits.js';
 
 /**
  * On-ledger action that credits `microJoules` to `to` for a stated `reason`.
@@ -53,7 +54,8 @@ export type OperatorGrantValidationError =
   | { code: 'AMOUNT_MUST_BE_POSITIVE'; microJoules: bigint }
   | { code: 'REASON_EMPTY' }
   | { code: 'REASON_TOO_LONG'; length: number; max: number }
-  | { code: 'NO_SIGNATURES' };
+  | { code: 'NO_SIGNATURES' }
+  | { code: 'MEMO_TOO_LONG'; length: number; max: number };
 
 /** Maximum allowed length of `reason` in UTF-16 code units. */
 export const OPERATOR_GRANT_REASON_MAX_LENGTH = 256;
@@ -66,7 +68,7 @@ export const OPERATOR_GRANT_REASON_MAX_LENGTH = 256;
 export function validateOperatorGrant(
   action: Pick<
     IOperatorGrantAction,
-    'microJoules' | 'reason' | 'quorumSignatures'
+    'microJoules' | 'reason' | 'quorumSignatures' | 'memo'
   >,
 ): OperatorGrantValidationError[] {
   const errors: OperatorGrantValidationError[] = [];
@@ -90,6 +92,14 @@ export function validateOperatorGrant(
 
   if (!action.quorumSignatures || action.quorumSignatures.length === 0) {
     errors.push({ code: 'NO_SIGNATURES' });
+  }
+
+  if (action.memo !== undefined && action.memo.length > MEMO_MAX_BYTES) {
+    errors.push({
+      code: 'MEMO_TOO_LONG',
+      length: action.memo.length,
+      max: MEMO_MAX_BYTES,
+    });
   }
 
   return errors;

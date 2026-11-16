@@ -33,6 +33,7 @@ import {
   type IWhitelistAddAction,
   type IWhitelistRemoveAction,
   MAX_DISPUTE_WINDOW_MS,
+  MEMO_MAX_BYTES,
   MIN_DISPUTE_WINDOW_MS,
   PROCESS_KEY_MAX_VALIDITY_MS,
 } from '@brightchain/brightledger-assets-lib';
@@ -51,9 +52,6 @@ export {
   PROCESS_KEY_MAX_VALIDITY_MS,
 };
 
-/** Maximum byte length of memo fields. */
-const MEMO_MAX_BYTES = 256;
-
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 /** Convert a `Uint8Array` to a lower-case hex string for use as map key. */
@@ -61,11 +59,62 @@ function toHex(bytes: Uint8Array): string {
   return Buffer.from(bytes).toString('hex');
 }
 
-/** Encode a memo string to bytes and return its length. */
-function memoBytes(memo: string | Uint8Array | undefined | null): number {
-  if (!memo) return 0;
+/**
+ * Byte length of a memo/reason field; strings are measured as UTF-8.
+ * Returns `undefined` when the value is present but is neither a
+ * `Uint8Array` nor a string (e.g. a decoded CBOR map).
+ */
+function memoBytes(memo: unknown): number | undefined {
+  if (memo === undefined || memo === null) return 0;
   if (typeof memo === 'string') return new TextEncoder().encode(memo).length;
-  return memo.length;
+  if (memo instanceof Uint8Array) return memo.length;
+  return undefined;
+}
+
+/**
+ * Reject actions whose `memo` / `reason` exceeds `MEMO_MAX_BYTES`.
+ *
+ * Applies to new submissions only: replay goes through `AssetStateReducer`,
+ * which never calls the validator, so entries already on the ledger are
+ * unaffected.
+ */
+function checkMemoLimit(action: IAssetAction): ValidationResult {
+  let field: 'memo' | 'reason';
+  let value: unknown;
+  switch (action.kind) {
+    case ActionKind.Mint:
+    case ActionKind.Burn:
+    case ActionKind.Transfer:
+    case ActionKind.OperatorGrant:
+    case ActionKind.RateTableUpdate:
+      field = 'memo';
+      value = action.memo;
+      break;
+    case ActionKind.FreezeAccount:
+    case ActionKind.UnfreezeAccount:
+    case ActionKind.OperatorFreeze:
+    case ActionKind.RetireAsset:
+    case ActionKind.BatchSettlementResolution:
+      field = 'reason';
+      value = action.reason;
+      break;
+    default:
+      return ok();
+  }
+  const size = memoBytes(value);
+  if (size === undefined) {
+    return fail(
+      AssetValidationErrorCode.MemoTooLong,
+      `${action.kind} ${field} must be bytes or a string; its size cannot be checked against the ${MEMO_MAX_BYTES}-byte maximum`,
+    );
+  }
+  if (size > MEMO_MAX_BYTES) {
+    return fail(
+      AssetValidationErrorCode.MemoTooLong,
+      `${action.kind} ${field} is ${size} bytes; maximum is ${MEMO_MAX_BYTES}`,
+    );
+  }
+  return ok();
 }
 
 /**
@@ -134,6 +183,8 @@ export class AssetActionValidator {
     state: IAssetProjectedState,
     context: ILedgerContext,
   ): ValidationResult {
+    const memoResult = checkMemoLimit(action);
+    if (memoResult.valid === false) return memoResult;
     switch (action.kind) {
       case ActionKind.IssueAsset:
         return AssetActionValidator.validateIssueAsset(action, state, context);
@@ -1068,7 +1119,3 @@ function resolveDisputeWindow(disputeWindowMs: number | undefined): number {
     Math.min(MAX_DISPUTE_WINDOW_MS, disputeWindowMs),
   );
 }
-
-// Suppress unused variable lint for the memoBytes helper (used by future
-// actions that carry a memo field in the interface).
-void memoBytes;

@@ -90,6 +90,14 @@ export const PROJECTION_SERVICE_KEY = 'brightledger-assets.projectionService';
 /** Key used to register/resolve `SubmissionService` in the service container. */
 export const SUBMISSION_SERVICE_KEY = 'brightledger-assets.submissionService';
 
+/**
+ * Structural view of ISubsystemContext.apiRouter (declared loosely in
+ * brightchain-lib): only the underlying router is needed here.
+ */
+interface IApiRouterHandle {
+  router?: ISubsystemContext['expressApp'];
+}
+
 // ── Plugin ────────────────────────────────────────────────────────────────────
 
 /**
@@ -189,7 +197,8 @@ export class AssetsSubsystemPlugin implements IAppSubsystemPlugin {
     // Resolve the underlying express router/app to mount onto.
 
     const mountTarget =
-      (context.apiRouter as any)?.router ?? context.expressApp;
+      (context.apiRouter as IApiRouterHandle | null)?.router ??
+      context.expressApp;
 
     // Apply capability gate first, then the asset routes.
     mountTarget.use(this._routePrefix, assetsCapabilityGate, assetsRouter);

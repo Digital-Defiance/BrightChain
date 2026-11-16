@@ -22,7 +22,7 @@ export enum AssetErrorCode {
   CborDecodeFailed = 'CBOR_DECODE_FAILED',
   /** The decoded object is missing required fields. */
   MissingRequiredField = 'MISSING_REQUIRED_FIELD',
-  /** A field value is out of the allowed range (e.g., decimals > 18, memo > 256 bytes). */
+  /** A field value is out of the allowed range (e.g., decimals > 18). The 256-byte memo cap is not enforced at decode time so existing entries still replay; it is checked on submission. */
   FieldOutOfRange = 'FIELD_OUT_OF_RANGE',
 }
 

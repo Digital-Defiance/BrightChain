@@ -30,7 +30,7 @@
   "license": "MIT",
   "peerDependencies": {
     "@brightchain/brightchain-lib": "^0.33.0",
-    "@digitaldefiance/ecies-lib": "5.2.2"
+    "@digitaldefiance/ecies-lib": "5.2.3"
   },
   "dependencies": {
     "@noble/hashes": "^1.8.0",

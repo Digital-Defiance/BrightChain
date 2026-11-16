@@ -22,6 +22,8 @@ export {
   CODE_TO_ACTION_KIND,
 } from './lib/payloads/actionKind.js';
 
+// Memo / reason size limit
+export { MEMO_MAX_BYTES } from './lib/payloads/memoLimits.js';
 // Policy types
 export type { SupplyPolicy, TransferPolicy } from './lib/payloads/policies.js';
 
