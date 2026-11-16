@@ -19,7 +19,10 @@
 // Retry up to 2 extra times on ECONNRESET flakes under parallel load.
 jest.retryTimes(2, { logErrorsBeforeRetry: false });
 
-import type { IBrightChainApplication } from '@brightchain/brightchain-api-lib';
+import {
+  Constants,
+  type IBrightChainControllerApplication,
+} from '@brightchain/brightchain-api-lib';
 import {
   initializeBrightChain,
   MemoryBlockStore,
@@ -56,19 +59,26 @@ function makeDb(name = 'testdb'): BrightDb {
   return new BrightDb(store, { name, headRegistry: registry });
 }
 
-function createMockApplication(): IBrightChainApplication {
+function createMockApplication(): IBrightChainControllerApplication {
+  const entries = new Map<string, unknown>();
   return {
-    getConfig: jest.fn().mockReturnValue({}),
-    getAuthProvider: jest.fn().mockReturnValue(null),
-    getServiceContainer: jest.fn().mockReturnValue(new Map()),
-  } as unknown as IBrightChainApplication;
+    constants: Constants,
+    database: undefined,
+    authProvider: undefined,
+    services: {
+      register: (key: string, factory: () => unknown) => {
+        entries.set(key, factory());
+      },
+      get: (key: string) => entries.get(key),
+      has: (key: string) => entries.has(key),
+    },
+  };
 }
-
 // ─── Test Suite ──────────────────────────────────────────────────────────────
 
 describe('API Router Registration', () => {
   let db: BrightDb;
-  let app: IBrightChainApplication;
+  let app: IBrightChainControllerApplication;
 
   beforeEach(() => {
     db = makeDb();
@@ -144,7 +154,7 @@ describe('API Router Registration', () => {
 
 describe('Route Mounting Integration', () => {
   let db: BrightDb;
-  let mockApp: IBrightChainApplication;
+  let mockApp: IBrightChainControllerApplication;
   let expressApp: Express;
 
   beforeEach(() => {

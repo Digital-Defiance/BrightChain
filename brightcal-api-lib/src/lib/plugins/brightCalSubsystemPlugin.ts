@@ -7,8 +7,12 @@
  * routes on the Express app and registers calendar services in the
  * service container.
  *
- * IMPORTANT: This plugin imports its interface from @brightchain/brightchain-lib
- * (NOT from brightchain-api-lib) to break the circular dependency.
+ * IMPORTANT: This plugin imports its plugin interface (IAppSubsystemPlugin,
+ * ISubsystemContext) from @brightchain/brightchain-lib, not from
+ * brightchain-api-lib, to break the circular dependency. It does import the
+ * application type and the `Constants` value from brightchain-api-lib, which is
+ * safe because the plugin is only loaded by App.start(), after
+ * brightchain-api-lib has been evaluated.
  *
  * @see Requirements 11.1, 11.2, 11.3, 11.4, 11.5, 13.1, 13.2
  */

@@ -158,7 +158,7 @@ export class BrightChainDatabasePlugin<
    * @param app - The application instance (only services and environment are read).
    */
   override async init(app: IApplication<TID>): Promise<void> {
-    this._authProvider = new BrightChainAuthenticationProvider(app);
+    this._authProvider = new BrightChainAuthenticationProvider<TID>(app);
 
     // Register the SAME MemberStore instance that connect() created
     // (this._memberStore) rather than letting the base class create a
