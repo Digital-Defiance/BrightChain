@@ -19,7 +19,7 @@
     "@digitaldefiance/branded-interface": "0.0.5",
     "@digitaldefiance/ecies-lib": "5.2.3",
     "@digitaldefiance/node-ecies-lib": "5.2.3",
-    "@digitaldefiance/node-express-suite": "5.1.0",
+    "@digitaldefiance/node-express-suite": "6.0.0",
     "bcrypt": "^5.0.0 || ^6.0.0",
     "jsonwebtoken": "^9.0.0"
   },
@@ -27,7 +27,7 @@
     "@digitaldefiance/branded-interface": "0.0.5",
     "@digitaldefiance/ecies-lib": "5.2.3",
     "@digitaldefiance/node-ecies-lib": "5.2.3",
-    "@digitaldefiance/node-express-suite": "5.1.0",
+    "@digitaldefiance/node-express-suite": "6.0.0",
     "@types/bcrypt": "^6.0.0",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",

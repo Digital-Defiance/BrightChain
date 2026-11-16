@@ -10,7 +10,7 @@
     "@digitaldefiance/ecies-lib": "5.2.3",
     "@digitaldefiance/i18n-lib": "4.8.0",
     "@digitaldefiance/node-ecies-lib": "5.2.3",
-    "@digitaldefiance/node-express-suite": "5.1.0",
+    "@digitaldefiance/node-express-suite": "6.0.0",
     "express": "^5.1.0",
     "tslib": "^2.8.1"
   },
